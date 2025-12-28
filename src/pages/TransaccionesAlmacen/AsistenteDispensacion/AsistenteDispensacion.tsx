@@ -5,7 +5,7 @@ import StepOneComponent from './StepOneComponent';
 import StepOneComponentV2 from './StepOneComponent_v2';
 import StepTwoComponent from './StepTwoComponent';
 import StepThreeComponent from './StepThreeComponent';
-import {DispensacionDTO, InsumoDesglosado} from '../types';
+import {DispensacionDTO, InsumoDesglosado, LoteSeleccionado} from '../types';
 
 const steps = [
     {title:'Primero', description:'Identificar Orden'},
@@ -18,6 +18,7 @@ export function AsistenteDispensacion(){
     const [dispensacion, setDispensacion] = useState<DispensacionDTO | null>(null);
     const [insumosDesglosados, setInsumosDesglosados] = useState<InsumoDesglosado[]>([]);
     const [ordenProduccionId, setOrdenProduccionId] = useState<number | null>(null);
+    const [lotesPorMaterial, setLotesPorMaterial] = useState<Map<string, LoteSeleccionado[]>>(new Map());
 
     const renderStep = () => {
         if(activeStep===0){
@@ -38,10 +39,18 @@ export function AsistenteDispensacion(){
                 setDispensacion={setDispensacion}
                 insumosDesglosados={insumosDesglosados}
                 ordenProduccionId={ordenProduccionId}
+                lotesPorMaterial={lotesPorMaterial}
+                setLotesPorMaterial={setLotesPorMaterial}
             />;
         }
         if(activeStep===2){
-            return <StepThreeComponent setActiveStep={setActiveStep} dispensacion={dispensacion}/>;
+            return <StepThreeComponent 
+                setActiveStep={setActiveStep} 
+                dispensacion={dispensacion}
+                insumosDesglosados={insumosDesglosados}
+                ordenProduccionId={ordenProduccionId}
+                lotesPorMaterial={lotesPorMaterial}
+            />;
         }
     };
 

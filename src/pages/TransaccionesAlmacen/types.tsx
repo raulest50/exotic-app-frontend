@@ -226,6 +226,25 @@ export interface ItemDispensacionDTO {
 export interface DispensacionDTO {
     ordenProduccionId: number;
     items: ItemDispensacionDTO[];
+    /**
+     * Lista de IDs de usuarios responsables de realizar la dispensación.
+     * Puede ser undefined. Si se proporciona, debe tener al menos un usuario.
+     */
+    usuarioRealizadorIds?: number[];
+    /**
+     * ID del usuario que aprueba la dispensación.
+     * Puede ser undefined si no hay aprobador asignado.
+     */
+    usuarioAprobadorId?: number;
+    /**
+     * ID del usuario que realiza la operación (para compatibilidad).
+     * Si se proporciona usuarioRealizadorIds, se usa el primer ID de esa lista.
+     */
+    usuarioId?: number;
+    /**
+     * Observaciones adicionales sobre la dispensación.
+     */
+    observaciones?: string;
 }
 
 // ===== Dispensación No Planificada =====
@@ -276,6 +295,11 @@ export interface InsumoDesglosado {
     tipoUnidades: string;
     tipoProducto: string;
     lotesSeleccionados?: LoteSeleccionado[];
+    /**
+     * ID del seguimiento de orden de producción asociado a este insumo.
+     * Puede ser undefined si el insumo no está asociado a un seguimiento específico.
+     */
+    seguimientoId?: number;
 }
 
 // ===== Movimientos y Consolidado OCM =====

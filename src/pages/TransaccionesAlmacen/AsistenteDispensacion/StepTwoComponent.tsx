@@ -21,11 +21,17 @@ interface Props {
     setDispensacion: (dto: DispensacionDTO) => void;
     insumosDesglosados?: InsumoDesglosado[];
     ordenProduccionId?: number | null;
+    lotesPorMaterial?: Map<string, LoteSeleccionado[]>;
+    setLotesPorMaterial?: (lotes: Map<string, LoteSeleccionado[]>) => void;
 }
 
-export default function StepTwoComponent({setActiveStep, dispensacion, setDispensacion, insumosDesglosados, ordenProduccionId}: Props){
+export default function StepTwoComponent({setActiveStep, dispensacion, setDispensacion, insumosDesglosados, ordenProduccionId, lotesPorMaterial: lotesPorMaterialProp, setLotesPorMaterial: setLotesPorMaterialProp}: Props){
     // Estado para lotes seleccionados por material (key: productoId)
-    const [lotesPorMaterial, setLotesPorMaterial] = useState<Map<string, LoteSeleccionado[]>>(new Map());
+    // Si viene como prop, usarlo; sino crear estado local
+    const [lotesPorMaterialLocal, setLotesPorMaterialLocal] = useState<Map<string, LoteSeleccionado[]>>(new Map());
+    const lotesPorMaterial = lotesPorMaterialProp || lotesPorMaterialLocal;
+    const setLotesPorMaterial = setLotesPorMaterialProp || setLotesPorMaterialLocal;
+    
     const [modalAbierto, setModalAbierto] = useState<{productoId: string; productoNombre: string; cantidadRequerida: number} | null>(null);
 
     const handleAbrirModal = (insumo: InsumoDesglosado) => {
@@ -127,7 +133,19 @@ export default function StepTwoComponent({setActiveStep, dispensacion, setDispen
                     </Box>
                     <Flex w='40%' gap={4}>
                         <Button flex='1' onClick={()=>setActiveStep(0)}>Atrás</Button>
-                        <Button flex='1' colorScheme='teal' onClick={()=>setActiveStep(2)}>Continuar</Button>
+                        <Button 
+                            flex='1' 
+                            colorScheme='teal' 
+                            onClick={() => {
+                                // Guardar lotesPorMaterial antes de avanzar
+                                if (setLotesPorMaterial) {
+                                    setLotesPorMaterial(lotesPorMaterial);
+                                }
+                                setActiveStep(2);
+                            }}
+                        >
+                            Continuar
+                        </Button>
                     </Flex>
                 </Flex>
 

@@ -5,64 +5,475 @@ import {
     FormControl,
     FormLabel,
     Heading,
+    HStack,
+    IconButton,
     Input,
     Table,
     Tbody,
     Td,
     Text,
-    Tr
+    Th,
+    Thead,
+    Tr,
+    useToast,
+    VStack
 } from '@chakra-ui/react';
 import {useEffect, useState} from 'react';
-import {DispensacionDTO} from '../types';
+import {DispensacionDTO, InsumoDesglosado, LoteSeleccionado} from '../types';
+import UserPickerGeneric from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric';
+import {useAuth} from '../../../context/AuthContext';
+import {User} from '../../../pages/Usuarios/GestionUsuarios/types';
+import EndPointsURL from '../../../api/EndPointsURL';
+import axios from 'axios';
+import {DeleteIcon} from '@chakra-ui/icons';
+import DispensacionPDF_Generator_Class from './AsistenteDispensacionComponents/DispensacionPDF_Generator';
+
+const DispensacionPDF_Generator = new DispensacionPDF_Generator_Class();
 
 interface Props {
-    setActiveStep: (step:number)=>void;
+    setActiveStep: (step: number) => void;
     dispensacion: DispensacionDTO | null;
+    insumosDesglosados?: InsumoDesglosado[];
+    ordenProduccionId?: number | null;
+    lotesPorMaterial?: Map<string, LoteSeleccionado[]>;
 }
 
-export default function StepThreeComponent({setActiveStep, dispensacion}: Props){
+export default function StepThreeComponent({
+    setActiveStep,
+    dispensacion,
+    insumosDesglosados,
+    ordenProduccionId,
+    lotesPorMaterial
+}: Props) {
     const [token, setToken] = useState('');
     const [inputToken, setInputToken] = useState('');
+    const [usuariosRealizadores, setUsuariosRealizadores] = useState<User[]>([]);
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const toast = useToast();
+    const {user: currentUser} = useAuth();
+    const endPoints = new EndPointsURL();
 
-    useEffect(()=>{
+    useEffect(() => {
         const t = Math.floor(1000 + Math.random() * 9000).toString();
         setToken(t);
         setInputToken('');
     }, [dispensacion]);
 
-    const enviarDispensacion = async () => {
-        // TODO: implementar envío al backend
+    const handleSelectUser = (user: User) => {
+        // Evitar duplicados
+        if (!usuariosRealizadores.find(u => u.id === user.id)) {
+            setUsuariosRealizadores([...usuariosRealizadores, user]);
+        }
+        setIsPickerOpen(false);
     };
 
-    if(!dispensacion){
-        return <Text>No se ha cargado ninguna orden.</Text>;
+    const handleRemoveUser = (userId: number) => {
+        setUsuariosRealizadores(usuariosRealizadores.filter(u => u.id !== userId));
+    };
+
+    const canGeneratePDF = usuariosRealizadores.length > 0 && lotesPorMaterial && lotesPorMaterial.size > 0;
+    const canRegister = usuariosRealizadores.length > 0 && inputToken === token && !isLoading;
+
+    // Construir items para el DTO desde lotesPorMaterial e insumosDesglosados
+    const buildDispensacionItems = (): Array<{
+        seguimientoId: number;
+        cantidad: number;
+        loteId: number | null;
+        completarSeguimiento: boolean;
+    }> => {
+        const items: Array<{
+            seguimientoId: number;
+            productoId?: string;
+            cantidad: number;
+            loteId: number | null;
+            completarSeguimiento: boolean;
+        }> = [];
+
+        if (!lotesPorMaterial || !insumosDesglosados) {
+            return items;
+        }
+
+        // Iterar sobre cada material que tiene lotes seleccionados
+        lotesPorMaterial.forEach((lotes, productoId) => {
+            // Encontrar el insumo correspondiente para obtener seguimientoId si existe
+            const insumo = insumosDesglosados.find(i => i.productoId === productoId);
+
+            // Por cada lote seleccionado, crear un item
+            lotes.forEach(lote => {
+                const seguimientoId = insumo?.seguimientoId || 0;
+                items.push({
+                    seguimientoId: seguimientoId,
+                    productoId: seguimientoId === 0 ? productoId : undefined, // Solo incluir productoId si no hay seguimientoId
+                    cantidad: lote.cantidad,
+                    loteId: lote.loteId,
+                    completarSeguimiento: false // Por defecto, no completar seguimiento
+                });
+            });
+        });
+
+        return items;
+    };
+
+    const handleGeneratePDF = async () => {
+        if (!ordenProduccionId || !lotesPorMaterial || lotesPorMaterial.size === 0 || !insumosDesglosados) {
+            toast({
+                title: 'Error',
+                description: 'No hay información suficiente para generar el PDF',
+                status: 'error',
+                duration: 3000,
+                isClosable: true
+            });
+            return;
+        }
+
+        try {
+            // Construir items para el PDF
+            const items = Array<{
+                productoId: string;
+                productoNombre: string;
+                loteBatch?: string;
+                cantidad: number;
+                unidad: string;
+                fechaVencimiento?: string;
+            }>();
+
+            lotesPorMaterial.forEach((lotes, productoId) => {
+                const insumo = insumosDesglosados.find(i => i.productoId === productoId);
+                if (insumo) {
+                    lotes.forEach(lote => {
+                        items.push({
+                            productoId: productoId,
+                            productoNombre: insumo.productoNombre,
+                            loteBatch: lote.batchNumber,
+                            cantidad: lote.cantidad,
+                            unidad: insumo.tipoUnidades,
+                            fechaVencimiento: lote.expirationDate || undefined
+                        });
+                    });
+                }
+            });
+
+            await DispensacionPDF_Generator.downloadPDF_Dispensacion(
+                ordenProduccionId,
+                {
+                    productoNombre: 'Producto de la orden', // Podrías obtener esto de otro lugar si lo necesitas
+                    fechaCreacion: new Date().toISOString()
+                },
+                items,
+                usuariosRealizadores.map(u => ({
+                    id: u.id,
+                    nombreCompleto: u.nombreCompleto,
+                    username: u.username
+                })),
+                currentUser ? {
+                    id: currentUser.id,
+                    nombreCompleto: currentUser.nombreCompleto,
+                    username: currentUser.username
+                } : null,
+                dispensacion?.observaciones
+            );
+        } catch (error) {
+            console.error('Error al generar PDF:', error);
+            toast({
+                title: 'Error',
+                description: 'No se pudo generar el PDF',
+                status: 'error',
+                duration: 3000,
+                isClosable: true
+            });
+        }
+    };
+
+    const handleRegistrarDispensacion = async () => {
+        if (!ordenProduccionId) {
+            toast({
+                title: 'Error',
+                description: 'No se ha seleccionado una orden de producción',
+                status: 'error',
+                duration: 3000,
+                isClosable: true
+            });
+            return;
+        }
+
+        if (usuariosRealizadores.length === 0) {
+            toast({
+                title: 'Error',
+                description: 'Debe seleccionar al menos un usuario realizador',
+                status: 'error',
+                duration: 3000,
+                isClosable: true
+            });
+            return;
+        }
+
+        if (inputToken !== token) {
+            toast({
+                title: 'Error',
+                description: 'El token de verificación no coincide',
+                status: 'error',
+                duration: 3000,
+                isClosable: true
+            });
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            const items = buildDispensacionItems();
+
+            const dispensacionDTO: DispensacionDTO = {
+                ordenProduccionId: ordenProduccionId,
+                usuarioRealizadorIds: usuariosRealizadores.map(u => u.id),
+                usuarioAprobadorId: currentUser?.id,
+                usuarioId: usuariosRealizadores[0]?.id || currentUser?.id || 0, // Para compatibilidad
+                observaciones: dispensacion?.observaciones || '',
+                items: items.map(item => ({
+                    seguimientoId: item.seguimientoId,
+                    producto: {} as any, // No necesario en el DTO del backend
+                    lote: {} as any, // No necesario en el DTO del backend
+                    cantidadSugerida: item.cantidad,
+                    cantidad: item.cantidad
+                }))
+            };
+
+            // Convertir a formato del backend (DispensacionItemDTO[])
+            const backendDTO = {
+                ordenProduccionId: dispensacionDTO.ordenProduccionId,
+                usuarioRealizadorIds: dispensacionDTO.usuarioRealizadorIds,
+                usuarioAprobadorId: dispensacionDTO.usuarioAprobadorId,
+                usuarioId: dispensacionDTO.usuarioId,
+                observaciones: dispensacionDTO.observaciones,
+                items: items.map(item => ({
+                    seguimientoId: item.seguimientoId,
+                    productoId: item.productoId || undefined, // Incluir productoId si existe
+                    cantidad: item.cantidad,
+                    loteId: item.loteId,
+                    completarSeguimiento: item.completarSeguimiento
+                }))
+            };
+
+            const response = await axios.post(
+                endPoints.dispensacion,
+                backendDTO,
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            toast({
+                title: 'Éxito',
+                description: 'Dispensación registrada correctamente',
+                status: 'success',
+                duration: 3000,
+                isClosable: true
+            });
+
+            // Reiniciar el componente volviendo al primer paso después de un breve delay
+            setTimeout(() => {
+                setActiveStep(0);
+                setUsuariosRealizadores([]);
+                setInputToken('');
+            }, 1500);
+        } catch (error: any) {
+            console.error('Error al registrar dispensación:', error);
+            toast({
+                title: 'Error',
+                description: error.response?.data?.message || 'No se pudo registrar la dispensación',
+                status: 'error',
+                duration: 5000,
+                isClosable: true
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Construir tabla de resumen de items/lotes
+    const summaryItems = Array<{
+        productoId: string;
+        productoNombre: string;
+        loteBatch: string;
+        cantidad: number;
+        unidad: string;
+        fechaVencimiento?: string;
+    }>();
+
+    if (lotesPorMaterial && insumosDesglosados) {
+        lotesPorMaterial.forEach((lotes, productoId) => {
+            const insumo = insumosDesglosados.find(i => i.productoId === productoId);
+            if (insumo) {
+                lotes.forEach(lote => {
+                    summaryItems.push({
+                        productoId: productoId,
+                        productoNombre: insumo.productoNombre,
+                        loteBatch: lote.batchNumber,
+                        cantidad: lote.cantidad,
+                        unidad: insumo.tipoUnidades,
+                        fechaVencimiento: lote.expirationDate || undefined
+                    });
+                });
+            }
+        });
     }
 
     return (
-        <Box p='1em' bg='blue.50'>
-            <Flex direction='column' gap={4} align='center'>
-                <Heading fontFamily='Comfortaa Variable'>Revisar Dispensación</Heading>
-                <Table size='sm'>
+        <Box p='1em' bg='blue.50' minH='100vh'>
+            <Flex direction='column' gap={6} maxW='container.xl' mx='auto'>
+                <Heading fontFamily='Comfortaa Variable' textAlign='center'>
+                    Revisar y Registrar Dispensación
+                </Heading>
+
+                {/* Sección de Usuarios Realizadores */}
+                <Box bg='white' p={4} borderRadius='md' boxShadow='sm'>
+                    <Heading size='md' mb={4} fontFamily='Comfortaa Variable'>
+                        Usuarios Responsables de la Dispensación
+                    </Heading>
+                    <VStack align='stretch' gap={3}>
+                        <Button
+                            colorScheme='teal'
+                            onClick={() => setIsPickerOpen(true)}
+                            size='sm'
+                            w='fit-content'
+                        >
+                            Agregar Usuario
+                        </Button>
+                        {usuariosRealizadores.length > 0 ? (
+                            <Table size='sm' variant='simple'>
+                                <Thead>
+                                    <Tr>
+                                        <Th>Usuario</Th>
+                                        <Th>Nombre Completo</Th>
+                                        <Th>Acción</Th>
+                                    </Tr>
+                                </Thead>
+                                <Tbody>
+                                    {usuariosRealizadores.map(user => (
+                                        <Tr key={user.id}>
+                                            <Td>{user.username}</Td>
+                                            <Td>{user.nombreCompleto || 'N/A'}</Td>
+                                            <Td>
+                                                <IconButton
+                                                    aria-label='Eliminar usuario'
+                                                    icon={<DeleteIcon />}
+                                                    size='sm'
+                                                    colorScheme='red'
+                                                    variant='ghost'
+                                                    onClick={() => handleRemoveUser(user.id)}
+                                                />
+                                            </Td>
+                                        </Tr>
+                                    ))}
+                                </Tbody>
+                            </Table>
+                        ) : (
+                            <Text color='gray.500' fontStyle='italic'>
+                                No hay usuarios seleccionados. Debe agregar al menos uno.
+                            </Text>
+                        )}
+                    </VStack>
+                </Box>
+
+                {/* Usuario Aprobador (No editable) */}
+                <Box bg='white' p={4} borderRadius='md' boxShadow='sm'>
+                    <Heading size='md' mb={2} fontFamily='Comfortaa Variable'>
+                        Usuario Aprobador
+                    </Heading>
+                    <Text fontSize='md'>
+                        <strong>Usuario:</strong> {currentUser?.username || 'N/A'}
+                    </Text>
+                    <Text fontSize='md'>
+                        <strong>Nombre:</strong> {currentUser?.nombreCompleto || 'N/A'}
+                    </Text>
+                </Box>
+
+                {/* Resumen de Items y Lotes */}
+                <Box bg='white' p={4} borderRadius='md' boxShadow='sm'>
+                    <Heading size='md' mb={4} fontFamily='Comfortaa Variable'>
+                        Resumen de Materiales a Dispensar
+                    </Heading>
+                    {summaryItems.length > 0 ? (
+                        <Table size='sm' variant='striped'>
+                            <Thead>
+                                <Tr>
+                                    <Th>Material (ID)</Th>
+                                    <Th>Nombre</Th>
+                                    <Th>Lote (Batch)</Th>
+                                    <Th>Cantidad</Th>
+                                    <Th>Unidad</Th>
+                                    <Th>Fecha Vencimiento</Th>
+                                </Tr>
+                            </Thead>
                     <Tbody>
-                        {dispensacion.items.map((item,idx)=>(
+                                {summaryItems.map((item, idx) => (
                             <Tr key={idx}>
-                                <Td>{item.producto.nombre}</Td>
-                                <Td>{item.lote.batchNumber}</Td>
-                                <Td>{item.cantidad}</Td>
+                                        <Td>{item.productoId}</Td>
+                                        <Td>{item.productoNombre}</Td>
+                                        <Td>{item.loteBatch}</Td>
+                                        <Td>{item.cantidad.toFixed(2)}</Td>
+                                        <Td>{item.unidad}</Td>
+                                        <Td>{item.fechaVencimiento || 'N/A'}</Td>
                             </Tr>
                         ))}
                     </Tbody>
                 </Table>
-                <FormControl w='40%' isRequired>
-                    <FormLabel>Token de verificación</FormLabel>
-                    <Input value={inputToken} onChange={e=>setInputToken(e.target.value)} placeholder='Ingrese el token'/>
+                    ) : (
+                        <Text color='gray.500' fontStyle='italic'>
+                            No hay items para mostrar
+                        </Text>
+                    )}
+                </Box>
+
+                {/* Token de Verificación */}
+                <Box bg='white' p={4} borderRadius='md' boxShadow='sm'>
+                    <FormControl isRequired>
+                        <FormLabel fontFamily='Comfortaa Variable'>Token de Verificación</FormLabel>
+                        <Input
+                            value={inputToken}
+                            onChange={e => setInputToken(e.target.value)}
+                            placeholder='Ingrese el token de 4 dígitos'
+                            maxLength={4}
+                            type='text'
+                            pattern='[0-9]*'
+                        />
+                        <Text mt={2} fontSize='sm' color='gray.600'>
+                            Token generado: <strong>{token}</strong>
+                        </Text>
                 </FormControl>
-                <Text fontFamily='Comfortaa Variable'>Token: <strong>{token}</strong></Text>
-                <Flex w='40%' gap={4}>
-                    <Button flex='1' onClick={()=>setActiveStep(1)}>Atrás</Button>
-                    <Button flex='1' colorScheme='teal' onClick={enviarDispensacion} isDisabled={inputToken !== token}>Enviar</Button>
+                </Box>
+
+                {/* Botones de Acción */}
+                <Flex gap={4} justify='flex-end'>
+                    <Button onClick={() => setActiveStep(1)}>Atrás</Button>
+                    <Button
+                        colorScheme='blue'
+                        onClick={handleGeneratePDF}
+                        isDisabled={!canGeneratePDF}
+                    >
+                        Generar PDF
+                    </Button>
+                    <Button
+                        colorScheme='teal'
+                        onClick={handleRegistrarDispensacion}
+                        isDisabled={!canRegister}
+                        isLoading={isLoading}
+                        loadingText='Registrando...'
+                    >
+                        Registrar Dispensación
+                    </Button>
                 </Flex>
             </Flex>
+
+            {/* User Picker Modal */}
+            <UserPickerGeneric
+                isOpen={isPickerOpen}
+                onClose={() => setIsPickerOpen(false)}
+                onSelectUser={handleSelectUser}
+            />
         </Box>
     );
 }

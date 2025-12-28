@@ -99,6 +99,7 @@ export default class EndPointsURL{
 
     // salidas de almacen (dispensacion)
     public dispensacion_no_planificada: string;
+    public dispensacion: string;
     public recomendar_lotes_multiple: string;
 
     public listar_lotes_de_producto:string;
@@ -297,6 +298,7 @@ export default class EndPointsURL{
 
         // salidas de almacen (dispensacion)
         this.dispensacion_no_planificada = `${domain}/${salidas_almacen_res}/dispensacion-no-planificada`;
+        this.dispensacion = `${domain}/${salidas_almacen_res}/dispensacion`;
         this.recomendar_lotes_multiple = `${domain}/${salidas_almacen_res}/recomendar-lotes-multiple`;
 
         this.listar_lotes_de_producto = `${domain}/${salidas_almacen_res}/lotes-disponibles`;
