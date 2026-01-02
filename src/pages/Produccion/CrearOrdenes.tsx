@@ -40,8 +40,8 @@ export default function CrearOrdenes() {
     const [selectedVendedor, setSelectedVendedor] = useState<Vendedor | null>(null);
     const [isVendedorPickerOpen, setIsVendedorPickerOpen] = useState(false);
     const [numeroPedidoComercial, setNumeroPedidoComercial] = useState('');
-    const [areaOperativa, setAreaOperativa] = useState('');
-    const [departamentoOperativo, setDepartamentoOperativo] = useState('');
+    const [areaOperativa, setAreaOperativa] = useState('Producción');
+    const [departamentoOperativo, setDepartamentoOperativo] = useState('Dirección de Operaciones');
 
     // Nuevos estados para las fechas y el lote
     const [fechaLanzamiento, setFechaLanzamiento] = useState('');
