@@ -18,11 +18,11 @@ import axios from 'axios';
 
 const endPoints = new EndPointsURL();
 
-import { ProductStockDTO } from './types.tsx';
-import EndPointsURL from "../../api/EndPointsURL.tsx";
-import ListaProductos from './ListaProductos';
+import { ProductStockDTO } from '../types.tsx';
+import EndPointsURL from "../../../api/EndPointsURL.tsx";
+import ListaProductos from '../ListaProductos.tsx';
 
-function Inventario() {
+function InventarioConsolidadoTab() {
 
     const toast = useToast();
 
@@ -137,4 +137,4 @@ function Inventario() {
     );
 }
 
-export default Inventario;
+export default InventarioConsolidadoTab;

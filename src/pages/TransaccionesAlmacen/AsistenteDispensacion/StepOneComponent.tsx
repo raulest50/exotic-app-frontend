@@ -4,7 +4,6 @@ import {
     Button,
     Flex,
     Heading,
-    IconButton,
     Select,
     Table,
     Tbody,
@@ -15,10 +14,10 @@ import {
     Tr,
     useToast
 } from '@chakra-ui/react';
-import {RepeatIcon} from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
 import {DispensacionDTO, DispensacionFormularioDTO, InsumoDesglosado} from '../types';
+import FiltroODP_AsistDisp from './FiltroODP_AsistDisp';
 
 interface Props {
     setActiveStep: (step:number) => void;
@@ -57,10 +56,13 @@ export default function StepOneComponentV2({setActiveStep, setDispensacion, setI
     const [loadingOrden, setLoadingOrden] = useState<number | null>(null);
     const endpoints = useMemo(() => new EndPointsURL(), []);
 
-    const fetchOrdenes = async () => {
+    const fetchOrdenes = async (ordenId?: number) => {
         setLoading(true);
         try {
-            const endpoint = `${endpoints.dispensacion_odp_consulta}?page=${page}&size=${size}`;
+            let endpoint = `${endpoints.dispensacion_odp_consulta}?page=${page}&size=${size}`;
+            if (ordenId !== undefined) {
+                endpoint += `&ordenId=${ordenId}`;
+            }
             const resp = await axios.get<PaginatedResponse<OrdenDispensacionResumen>>(endpoint, {withCredentials: true});
             setOrdenes(resp.data.content ?? []);
             setTotalPages(resp.data.totalPages ?? 0);
@@ -69,6 +71,15 @@ export default function StepOneComponentV2({setActiveStep, setDispensacion, setI
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleRefresh = () => {
+        fetchOrdenes();
+    };
+
+    const handleSearchById = (ordenId: number) => {
+        setPage(0); // Reset to first page when searching
+        fetchOrdenes(ordenId);
     };
 
     useEffect(() => {
@@ -157,7 +168,11 @@ export default function StepOneComponentV2({setActiveStep, setDispensacion, setI
         <Box p='1em' backgroundColor='blue.50'>
             <Flex align='center' justify='space-between' mb={4} gap={4}>
                 <Heading fontFamily='Comfortaa Variable' size='md'>Órdenes de Producción abiertas/en progreso</Heading>
-                <IconButton aria-label='Refrescar' icon={<RepeatIcon />} onClick={fetchOrdenes} isLoading={loading} colorScheme='teal'/>
+                <FiltroODP_AsistDisp 
+                    onRefresh={handleRefresh} 
+                    onSearchById={handleSearchById} 
+                    isLoading={loading}
+                />
             </Flex>
             <Box bg='white' borderRadius='md' boxShadow='sm' overflowX='auto'>
                 <Table size='sm'>

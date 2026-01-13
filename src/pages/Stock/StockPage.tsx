@@ -9,7 +9,7 @@ import {
 } from "@chakra-ui/react";
 
 import MyHeader from '../../components/MyHeader.tsx';
-import Inventario from "./Inventario.tsx";
+import InventarioConsolidadoTab from "./InventarioConsolidado/InventarioConsolidadoTab.tsx";
 
 import { my_style_tab } from "../../styles/styles_general.tsx";
 
@@ -26,7 +26,7 @@ export default function StockPage() {
                 </TabList>
                 <TabPanels>
                     <TabPanel>
-                        <Inventario />
+                        <InventarioConsolidadoTab />
                     </TabPanel>
                 </TabPanels>
             </Tabs>
