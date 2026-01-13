@@ -21,12 +21,12 @@ import {
 import {useEffect, useState} from 'react';
 import {DispensacionDTO, InsumoDesglosado, LoteSeleccionado} from '../types';
 import UserPickerGeneric from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric';
-import {useAuth} from '../../../context/AuthContext';
 import {User} from '../../../pages/Usuarios/GestionUsuarios/types';
 import EndPointsURL from '../../../api/EndPointsURL';
 import axios from 'axios';
 import {DeleteIcon} from '@chakra-ui/icons';
 import DispensacionPDF_Generator_Class from './AsistenteDispensacionComponents/DispensacionPDF_Generator';
+import { getCurrentUser, User as CurrentUser } from '../../../api/UserApi';
 
 const DispensacionPDF_Generator = new DispensacionPDF_Generator_Class();
 
@@ -51,8 +51,50 @@ export default function StepThreeComponent({
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const toast = useToast();
-    const {user: currentUser} = useAuth();
+    const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
     const endPoints = new EndPointsURL();
+
+    // Obtener el usuario actual usando la API centralizada
+    useEffect(() => {
+        const fetchCurrentUser = async () => {
+            try {
+                const user = await getCurrentUser();
+                setCurrentUser(user);
+                // TEMPORAL: Automáticamente usar el usuario actual como único realizador
+                // TODO: Esta funcionalidad se moverá al backend en el futuro
+                // Por ahora, el selector de usuarios está oculto pero la lógica se mantiene
+                if (user) {
+                    // Convertir CurrentUser a User para compatibilidad con el resto del código
+                    // Solo establecer si no hay usuarios realizadores ya seleccionados
+                    setUsuariosRealizadores(prev => {
+                        if (prev.length === 0) {
+                            return [{
+                                id: user.id,
+                                cedula: user.cedula,
+                                username: user.username,
+                                nombreCompleto: user.nombreCompleto,
+                                estado: user.estado,
+                                accesos: []
+                            }];
+                        }
+                        return prev;
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching current user:', error);
+                toast({
+                    title: 'Error',
+                    description: 'No se pudo obtener la información del usuario actual.',
+                    status: 'error',
+                    duration: 5000,
+                    isClosable: true,
+                });
+            }
+        };
+
+        fetchCurrentUser();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Solo ejecutar una vez al montar el componente
 
     useEffect(() => {
         const t = Math.floor(1000 + Math.random() * 9000).toString();
@@ -328,8 +370,16 @@ export default function StepThreeComponent({
                     Revisar y Registrar Dispensación
                 </Heading>
 
-                {/* Sección de Usuarios Realizadores */}
-                <Box bg='white' p={4} borderRadius='md' boxShadow='sm'>
+                {/* Sección de Usuarios Realizadores - TEMPORALMENTE OCULTA */}
+                {/* TODO: Esta funcionalidad se moverá al backend en el futuro */}
+                {/* El código se mantiene intacto pero la UI está oculta para no romper la funcionalidad */}
+                <Box 
+                    bg='white' 
+                    p={4} 
+                    borderRadius='md' 
+                    boxShadow='sm'
+                    display='none' // Ocultar temporalmente la sección
+                >
                     <Heading size='md' mb={4} fontFamily='Comfortaa Variable'>
                         Usuarios Responsables de la Dispensación
                     </Heading>
@@ -339,6 +389,7 @@ export default function StepThreeComponent({
                             onClick={() => setIsPickerOpen(true)}
                             size='sm'
                             w='fit-content'
+                            isDisabled={true} // Deshabilitar también por seguridad
                         >
                             Agregar Usuario
                         </Button>

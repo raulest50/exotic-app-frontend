@@ -2,7 +2,7 @@ import {Box, Container, Flex, StepDescription, StepNumber, StepSeparator, StepSt
 import {Step, StepIcon, StepIndicator, Stepper, StepTitle} from '@chakra-ui/icons';
 import {useState} from 'react';
 import StepOneComponent from './StepOneComponent';
-import StepOneComponentV2 from './StepOneComponent_v2';
+import StepOneComponentV2 from './StepOneComponent.tsx';
 import StepTwoComponent from './StepTwoComponent';
 import StepThreeComponent from './StepThreeComponent';
 import {DispensacionDTO, InsumoDesglosado, LoteSeleccionado} from '../types';

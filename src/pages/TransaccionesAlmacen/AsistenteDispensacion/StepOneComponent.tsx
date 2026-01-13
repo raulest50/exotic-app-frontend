@@ -1,53 +1,217 @@
-import {useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {
+    Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
-    Input,
+    IconButton,
+    Select,
+    Table,
+    Tbody,
+    Td,
     Text,
+    Th,
+    Thead,
+    Tr,
     useToast
 } from '@chakra-ui/react';
+import {RepeatIcon} from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
-import {DispensacionDTO} from '../types';
+import {DispensacionDTO, DispensacionFormularioDTO, InsumoDesglosado} from '../types';
 
 interface Props {
     setActiveStep: (step:number) => void;
     setDispensacion: (dto: DispensacionDTO) => void;
+    setInsumosDesglosados?: (insumos: InsumoDesglosado[]) => void;
+    setOrdenProduccionId?: (id: number) => void;
 }
 
-export default function StepOneComponent({setActiveStep, setDispensacion}: Props){
-    const toast = useToast();
-    const [opId, setOpId] = useState('');
+interface OrdenDispensacionResumen {
+    ordenProduccionId?: number;
+    ordenId?: number;
+    productoNombre?: string;
+    producto?: {nombre?: string};
+    fechaInicio?: string;
+    fechaCreacion?: string;
+    estado?: string | number;
+    estadoOrden?: string | number;
+    items?: DispensacionDTO['items'];
+}
 
-    const onBuscar = async () => {
-        if(!opId){
-            toast({ title: 'Error', description: 'Ingrese un ID de orden de producción', status:'error', duration:3000, isClosable:true });
-            return;
-        }
-        try{
-            const endpoint = `${EndPointsURL.getDomain()}/salidas_almacen/formulario_dispensacion_sugerida?ordenProduccionId=${opId}`;
-            const resp = await axios.get<DispensacionDTO>(endpoint,{withCredentials:true});
-            setDispensacion(resp.data);
-            setActiveStep(1);
-        }catch(err){
-            toast({ title:'Orden no encontrada', description:'No existe una orden de producción con el id especificado', status:'error', duration:3000, isClosable:true });
+interface PaginatedResponse<T> {
+    content: T[];
+    totalPages: number;
+    totalElements: number;
+    number: number;
+    size: number;
+}
+
+export default function StepOneComponentV2({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId}: Props){
+    const toast = useToast();
+    const [ordenes, setOrdenes] = useState<OrdenDispensacionResumen[]>([]);
+    const [page, setPage] = useState(0);
+    const [size, setSize] = useState(10);
+    const [totalPages, setTotalPages] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [loadingOrden, setLoadingOrden] = useState<number | null>(null);
+    const endpoints = useMemo(() => new EndPointsURL(), []);
+
+    const fetchOrdenes = async () => {
+        setLoading(true);
+        try {
+            const endpoint = `${endpoints.dispensacion_odp_consulta}?page=${page}&size=${size}`;
+            const resp = await axios.get<PaginatedResponse<OrdenDispensacionResumen>>(endpoint, {withCredentials: true});
+            setOrdenes(resp.data.content ?? []);
+            setTotalPages(resp.data.totalPages ?? 0);
+        } catch (err) {
+            toast({title: 'Error al cargar órdenes', description: 'No fue posible obtener las órdenes de producción.', status: 'error', duration: 3000, isClosable: true});
+        } finally {
+            setLoading(false);
         }
     };
 
+    useEffect(() => {
+        fetchOrdenes();
+    }, [page, size]);
+
+    const formatFecha = (fecha?: string) => {
+        if(!fecha) return 'N/A';
+        const parsed = new Date(fecha);
+        return isNaN(parsed.getTime()) ? fecha : parsed.toLocaleString();
+    };
+
+    const formatEstado = (estado?: string | number) => {
+        if(typeof estado === 'number'){
+            if(estado === 0) return 'Abierta';
+            if(estado === 1) return 'En progreso';
+        }
+        return estado ?? 'Desconocido';
+    };
+
+    const mapDispensacionFormulario = (data: DispensacionFormularioDTO): DispensacionDTO => {
+        const dispensaciones = data.dispensaciones ?? [];
+        const lotesRecomendados = data.lotesRecomendados ?? [];
+        const items = dispensaciones.map((dispensacion) => {
+            const loteRecomendado = lotesRecomendados.find((lote) => lote.seguimientoId === dispensacion.seguimientoId);
+
+            return {
+                seguimientoId: dispensacion.seguimientoId,
+                producto: dispensacion.producto,
+                lote: {
+                    loteId: loteRecomendado?.loteId ?? 0,
+                    batchNumber: loteRecomendado?.batchNumber ?? 'N/A',
+                    cantidadDisponible: loteRecomendado?.cantidadDisponible ?? 0,
+                },
+                cantidadSugerida: loteRecomendado?.cantidadSugerida ?? 0,
+                cantidad: loteRecomendado?.cantidadSugerida ?? 0,
+            };
+        });
+
+        return {
+            ordenProduccionId: data.ordenProduccionId,
+            items,
+        };
+    };
+
+    const handleDispensacion = async (orden: OrdenDispensacionResumen) => {
+        const ordenId = orden.ordenProduccionId ?? orden.ordenId;
+
+        console.log("debug Hacer Dispensacion");
+        console.log(orden);
+
+        if(!ordenId){
+            toast({title: 'ID no disponible', description: 'La orden seleccionada no tiene un identificador válido.', status: 'warning', duration: 3000, isClosable: true});
+            return;
+        }
+        setLoadingOrden(ordenId);
+        try {
+            // Llamar al nuevo endpoint para obtener insumos desglosados
+            const endpoint = endpoints.insumos_desglosados_orden.replace('{ordenProduccionId}', ordenId.toString());
+            const resp = await axios.get<InsumoDesglosado[]>(endpoint, {withCredentials: true});
+            
+            // Almacenar los insumos desglosados y el ID de la orden
+            if(setInsumosDesglosados) {
+                setInsumosDesglosados(resp.data);
+            }
+            if(setOrdenProduccionId) {
+                setOrdenProduccionId(ordenId);
+            }
+            
+            // También mantener compatibilidad con el sistema anterior si es necesario
+            // Por ahora, crear un DispensacionDTO vacío para mantener la estructura
+            setDispensacion({ordenProduccionId: ordenId, items: []});
+            
+            setActiveStep(1);
+        } catch (err) {
+            console.error('Error fetching insumos desglosados:', err);
+            toast({title: 'Error al cargar insumos', description: 'No fue posible obtener la lista de materiales necesarios.', status: 'error', duration: 3000, isClosable: true});
+        } finally {
+            setLoadingOrden(null);
+        }
+    };
+
+    const isNextDisabled = useMemo(() => totalPages === 0 || page + 1 >= totalPages, [page, totalPages]);
+
     return (
-        <Flex p='1em' direction='column' backgroundColor='blue.50' gap={4} alignItems='center'>
-            <Heading fontFamily='Comfortaa Variable'>Identificar Orden de Producción</Heading>
-            <Text fontFamily='Comfortaa Variable'>Ingrese el id de la orden de producción para continuar con la dispensación.</Text>
-            <Flex w='40%' direction='column' gap={4}>
-                <FormControl isRequired>
-                    <FormLabel>Id Orden de Producción</FormLabel>
-                    <Input value={opId} onChange={e => setOpId(e.target.value)} />
-                </FormControl>
-                <Button colorScheme='teal' onClick={onBuscar}>Buscar</Button>
+        <Box p='1em' backgroundColor='blue.50'>
+            <Flex align='center' justify='space-between' mb={4} gap={4}>
+                <Heading fontFamily='Comfortaa Variable' size='md'>Órdenes de Producción abiertas/en progreso</Heading>
+                <IconButton aria-label='Refrescar' icon={<RepeatIcon />} onClick={fetchOrdenes} isLoading={loading} colorScheme='teal'/>
             </Flex>
-        </Flex>
+            <Box bg='white' borderRadius='md' boxShadow='sm' overflowX='auto'>
+                <Table size='sm'>
+                    <Thead>
+                        <Tr>
+                            <Th>ID</Th>
+                            <Th>Producto</Th>
+                            <Th>Fecha</Th>
+                            <Th>Estado</Th>
+                            <Th textAlign='center'>Acciones</Th>
+                        </Tr>
+                    </Thead>
+                    <Tbody>
+                        {ordenes.map((orden, index) => {
+                            const ordenId = orden.ordenProduccionId ?? orden.ordenId;
+                            return (
+                                <Tr key={ordenId ?? `orden-${index}`}>
+                                    <Td>{ordenId ?? 'N/A'}</Td>
+                                    <Td>{orden.productoNombre ?? orden.producto?.nombre ?? 'Sin nombre'}</Td>
+                                    <Td>{formatFecha(orden.fechaInicio ?? orden.fechaCreacion)}</Td>
+                                    <Td>{formatEstado(orden.estado ?? orden.estadoOrden)}</Td>
+                                    <Td>
+                                        <Flex justify='center'>
+                                            <Button colorScheme='teal' size='sm' onClick={() => handleDispensacion(orden)} isLoading={loadingOrden === ordenId}>
+                                                Hacer dispensación
+                                            </Button>
+                                        </Flex>
+                                    </Td>
+                                </Tr>
+                            );
+                        })}
+                        {ordenes.length === 0 && (
+                            <Tr>
+                                <Td colSpan={5}>
+                                    <Text textAlign='center' py={4}>{loading ? 'Cargando órdenes...' : 'No hay órdenes disponibles.'}</Text>
+                                </Td>
+                            </Tr>
+                        )}
+                    </Tbody>
+                </Table>
+            </Box>
+            <Flex mt={4} justify='space-between' align='center' gap={4}>
+                <Flex align='center' gap={2}>
+                    <Text>Tamaño de página:</Text>
+                    <Select value={size} onChange={(e) => {setPage(0); setSize(parseInt(e.target.value));}} width='80px'>
+                        {[5,10,20,50].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </Select>
+                </Flex>
+                <Flex align='center' gap={2}>
+                    <Button onClick={() => setPage((p) => Math.max(p - 1, 0))} isDisabled={page === 0 || loading}>Anterior</Button>
+                    <Text>Pagina {totalPages === 0 ? 0 : page + 1} de {totalPages}</Text>
+                    <Button onClick={() => setPage((p) => p + 1)} isDisabled={loading || isNextDisabled}>Siguiente</Button>
+                </Flex>
+            </Flex>
+        </Box>
     );
 }
