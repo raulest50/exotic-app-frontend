@@ -20,8 +20,8 @@ import {
 } from '@chakra-ui/react';
 import axios from 'axios';
 import DatePicker from '../../../components/MyDatePicker.tsx';
-import EndPointsURL from '../../../../api/EndPointsURL';
-import { TransaccionAlmacen } from '../../types';
+import EndPointsURL from '../../../../src/api/EndPointsURL';
+import { TransaccionAlmacen } from '../types.tsx';
 
 interface PageResponse {
     content: TransaccionAlmacen[];
