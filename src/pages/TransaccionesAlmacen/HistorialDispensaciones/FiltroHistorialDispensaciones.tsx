@@ -10,14 +10,13 @@ import {
     Radio,
     RadioGroup,
     Stack,
-    Text,
     VStack,
     HStack,
     Alert,
     AlertIcon,
     Divider,
 } from '@chakra-ui/react';
-import DatePicker from '../../../../components/MyDatePicker';
+import DatePicker from '../../../components/MyDatePicker.tsx';
 
 type Props = {};
 
