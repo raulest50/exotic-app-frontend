@@ -1,9 +1,9 @@
 import {Box, Button, Flex, FormControl, FormLabel, Heading, Input, Table, Tbody, Td, Text, Tr, useToast} from '@chakra-ui/react';
 import {useEffect, useState} from 'react';
-import {DispensacionDirectaDetalleItem, DispensacionNoPlanificadaDTO} from '../types';
-import EndPointsURL from '../../../api/EndPointsURL';
+import {DispensacionDirectaDetalleItem, DispensacionNoPlanificadaDTO} from '../../types.tsx';
+import EndPointsURL from '../../../../api/EndPointsURL.tsx';
 import axios from 'axios';
-import {useAuth} from '../../../context/AuthContext';
+import {useAuth} from '../../../../context/AuthContext.tsx';
 
 interface Props {
     items: DispensacionDirectaDetalleItem[];

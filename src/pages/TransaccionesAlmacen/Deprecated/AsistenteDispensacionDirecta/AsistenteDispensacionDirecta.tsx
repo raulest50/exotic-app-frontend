@@ -1,7 +1,7 @@
-import StepOneComponent from './StepOneComponent';
-import StepTwoComponent from './StepTwoComponent';
+import StepOneComponent from './StepOneComponent.tsx';
+import StepTwoComponent from './StepTwoComponent.tsx';
 import {useState} from 'react';
-import {DispensacionDirectaDetalleItem} from '../types';
+import {DispensacionDirectaDetalleItem} from '../../types.tsx';
 
 export function AsistenteDispensacionDirecta(){
     const [viewMode, setViewMode] = useState(0);

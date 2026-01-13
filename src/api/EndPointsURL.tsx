@@ -105,10 +105,12 @@ export default class EndPointsURL{
     public listar_lotes_de_producto:string;
     public lotes_disponibles_paginados: string;
     public insumos_desglosados_orden: string;
+    public historial_dispensacion_filter: string;
 
 
     // user resources (solo autenticacion)
     public whoami:string;
+    public me:string; // endpoint para obtener usuario completo
     public login:string;
     public request_reset_passw:string;
     public set_new_passw:string;
@@ -304,10 +306,12 @@ export default class EndPointsURL{
         this.listar_lotes_de_producto = `${domain}/${salidas_almacen_res}/lotes-disponibles`;
         this.lotes_disponibles_paginados = `${domain}/${salidas_almacen_res}/lotes-disponibles-paginados`;
         this.insumos_desglosados_orden = `${domain}/${salidas_almacen_res}/orden-produccion/{ordenProduccionId}/insumos-desglosados`;
+        this.historial_dispensacion_filter = `${domain}/${salidas_almacen_res}/historial_dispensacion_filter`;
 
 
         // user endpoints
         this.whoami = `${domain}/${auth_res}/whoami`;
+        this.me = `${domain}/${auth_res}/me`;
         this.login = `${domain}/${auth_res}/login`;
         this.request_reset_passw = `${domain}/${auth_res}/request_reset_passw`;
         this.set_new_passw = `${domain}/${auth_res}/set_new_passw`;

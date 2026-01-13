@@ -1,8 +1,8 @@
 import {Box, Button, Flex, Heading, Input, Table, Tbody, Td, Tr, useDisclosure, useToast} from '@chakra-ui/react';
-import MateriaPrimaPicker from '../components/MateriaPrimaPicker';
-import {Material, DispensacionDirectaItem, DispensacionDirectaDetalleItem, DispensacionNoPlanificadaDTO} from '../types';
+import MateriaPrimaPicker from '../../components/MateriaPrimaPicker.tsx';
+import {Material, DispensacionDirectaItem, DispensacionDirectaDetalleItem, DispensacionNoPlanificadaDTO} from '../../types.tsx';
 import {useState} from 'react';
-import EndPointsURL from '../../../api/EndPointsURL';
+import EndPointsURL from '../../../../api/EndPointsURL.tsx';
 import axios from 'axios';
 
 interface Props {

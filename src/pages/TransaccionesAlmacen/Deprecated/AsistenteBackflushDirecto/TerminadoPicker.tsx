@@ -18,8 +18,8 @@ import {
     Tr
 } from '@chakra-ui/react';
 import axios from 'axios';
-import EndPointsURL from '../../../api/EndPointsURL';
-import {Producto} from '../types';
+import EndPointsURL from '../../../../api/EndPointsURL.tsx';
+import {Producto} from '../../types.tsx';
 
 interface Props {
     isOpen: boolean;

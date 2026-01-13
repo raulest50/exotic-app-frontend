@@ -18,6 +18,9 @@ import {
     InputGroup,
     InputRightElement,
     IconButton,
+    Box,
+    Text,
+    Heading,
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
 import axios from 'axios';
@@ -26,6 +29,7 @@ import EndPointsURL from "../../api/EndPointsURL";
 import TerminadoSemiterminadoPicker from "./components/TerminadoSemiterminadoPicker";
 import TerSemiTerCard from "./components/TerSemiTerCard";
 import VendedorPicker from "../../components/Pickers/VendedorPicker/VendedorPicker";
+import { getCurrentUser, User } from "../../api/UserApi";
 
 const endPoints = new EndPointsURL();
 
@@ -50,6 +54,9 @@ export default function CrearOrdenes() {
 
     // Estado para la cantidad a producir
     const [cantidadProducir, setCantidadProducir] = useState(1);
+
+    // Estado para el usuario actual (aprobador)
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
 
     const handleSeleccionarProducto = () => {
         setIsPickerOpen(true);
@@ -160,6 +167,27 @@ export default function CrearOrdenes() {
         setSelectedVendedor(vendedor);
         setVendedorResponsableId(vendedor.cedula);
     };
+
+    // Efecto para obtener el usuario actual al cargar el componente
+    useEffect(() => {
+        const fetchCurrentUser = async () => {
+            try {
+                const user = await getCurrentUser();
+                setCurrentUser(user);
+            } catch (error) {
+                console.error('Error fetching current user:', error);
+                toast({
+                    title: 'Error',
+                    description: 'No se pudo obtener la información del usuario actual.',
+                    status: 'error',
+                    duration: 5000,
+                    isClosable: true,
+                });
+            }
+        };
+
+        fetchCurrentUser();
+    }, [toast]);
 
     // Efecto para actualizar canProduce cuando cambia la cantidad a producir
     useEffect(() => {
@@ -278,6 +306,26 @@ export default function CrearOrdenes() {
                     />
                 </FormControl>
             </HStack>
+
+            {/* Usuario Aprobador (No editable) */}
+            <Box bg="white" p={4} borderRadius="md" boxShadow="sm" mt="4">
+                <Heading size="md" mb={2}>
+                    Usuario Aprobador
+                </Heading>
+                <VStack align="start" spacing={2}>
+                    <Text fontSize="md">
+                        <strong>Usuario:</strong> {currentUser?.username || 'Cargando...'}
+                    </Text>
+                    <Text fontSize="md">
+                        <strong>Nombre:</strong> {currentUser?.nombreCompleto || 'N/A'}
+                    </Text>
+                    {currentUser?.email && (
+                        <Text fontSize="md">
+                            <strong>Email:</strong> {currentUser.email}
+                        </Text>
+                    )}
+                </VStack>
+            </Box>
 
             <Textarea
                 placeholder="Observaciones"

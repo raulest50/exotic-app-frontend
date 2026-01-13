@@ -15,9 +15,9 @@ import {
     useToast
 } from '@chakra-ui/react';
 import axios from 'axios';
-import EndPointsURL from '../../../api/EndPointsURL';
-import TerminadoPicker from './TerminadoPicker';
-import {Almacen, Movimiento, Producto, TipoMovimiento} from '../types';
+import EndPointsURL from '../../../../api/EndPointsURL.tsx';
+import TerminadoPicker from './TerminadoPicker.tsx';
+import {Almacen, Movimiento, Producto, TipoMovimiento} from '../../types.tsx';
 
 interface TerminadoSeleccionado {
     producto: Producto;

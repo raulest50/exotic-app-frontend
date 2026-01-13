@@ -2,8 +2,8 @@ import MyHeader from "../../components/MyHeader";
 import {Container, Tabs, TabList, TabPanels, Tab, TabPanel, Text} from "@chakra-ui/react";
 import AsistenteIngresoMercancia from "./AsistenteIngresoOCM/AsistenteIngresoMercancia";
 import {AsistenteDispensacion} from "./AsistenteDispensacion/AsistenteDispensacion.tsx";
-import {AsistenteDispensacionDirecta} from "./AsistenteDispensacionDirecta/AsistenteDispensacionDirecta.tsx";
-import {AsistenteBackflushDirecto} from "./AsistenteBackflushDirecto/AsistenteBackflushDirecto.tsx";
+import {AsistenteDispensacionDirecta} from "./Deprecated/AsistenteDispensacionDirecta/AsistenteDispensacionDirecta.tsx";
+import {AsistenteBackflushDirecto} from "./Deprecated/AsistenteBackflushDirecto/AsistenteBackflushDirecto.tsx";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
@@ -46,7 +46,8 @@ export default function TransaccionesAlmacenPage(){
             <Tabs>
                 <TabList>
                     <Tab> Ingreso OCM </Tab>
-                    <Tab> Dispensacion </Tab>
+                    <Tab> Hacer Dispensacion </Tab>
+                    <Tab> Historial Dispensaciones </Tab>
                     <Tab> Ingreso Producto Terminado </Tab>
                     {showDispensacionDirecta && <Tab> Dispensacion Directa </Tab>}
                     {showBackflushDirecto && <Tab> Backflush Directo </Tab>}
@@ -56,6 +57,10 @@ export default function TransaccionesAlmacenPage(){
 
                     <TabPanel>
                         <AsistenteIngresoMercancia/>
+                    </TabPanel>
+
+                    <TabPanel>
+                        <AsistenteDispensacion />
                     </TabPanel>
 
                     <TabPanel>

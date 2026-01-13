@@ -62,7 +62,7 @@ export default function Home(){
                         alignContent={'center'}
                     >
                         <Box transform="skewX(10deg)">
-                            <SplitText text="Version: Beta 1.3" />
+                            <SplitText text="Version: 1.4" />
                         </Box>
                     </Box>
 
