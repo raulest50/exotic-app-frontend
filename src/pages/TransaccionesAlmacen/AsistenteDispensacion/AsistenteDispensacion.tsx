@@ -19,6 +19,8 @@ export function AsistenteDispensacion(){
     const [insumosDesglosados, setInsumosDesglosados] = useState<InsumoDesglosado[]>([]);
     const [ordenProduccionId, setOrdenProduccionId] = useState<number | null>(null);
     const [lotesPorMaterial, setLotesPorMaterial] = useState<Map<string, LoteSeleccionado[]>>(new Map());
+    const [insumosAnidados, setInsumosAnidados] = useState<any[]>([]);
+    const [productoId, setProductoId] = useState<string | null>(null);
 
     const renderStep = () => {
         if(activeStep===0){
@@ -29,6 +31,8 @@ export function AsistenteDispensacion(){
                     setDispensacion={setDispensacion}
                     setInsumosDesglosados={setInsumosDesglosados}
                     setOrdenProduccionId={setOrdenProduccionId}
+                    setInsumosAnidados={setInsumosAnidados}
+                    setProductoId={setProductoId}
                 />
                 : <StepOneComponent setActiveStep={setActiveStep} setDispensacion={setDispensacion}/>;
         }
@@ -41,6 +45,8 @@ export function AsistenteDispensacion(){
                 ordenProduccionId={ordenProduccionId}
                 lotesPorMaterial={lotesPorMaterial}
                 setLotesPorMaterial={setLotesPorMaterial}
+                insumosAnidados={insumosAnidados}
+                productoId={productoId}
             />;
         }
         if(activeStep===2){

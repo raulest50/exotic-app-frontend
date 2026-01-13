@@ -8,6 +8,8 @@ import { ProductoSemiter } from "../../types.tsx";
 
 interface ModificarSemiTerMFWizardProps {
     producto: ProductoSemiter;
+    onClose?: () => void;
+    refreshSearch?: () => void;
 }
 
 const steps = [
@@ -17,7 +19,7 @@ const steps = [
     { title: 'Cuarto', description: 'Confirmar modificación' },
 ];
 
-export default function ModificarSemiTerMFWizard({ producto }: ModificarSemiTerMFWizardProps) {
+export default function ModificarSemiTerMFWizard({ producto, onClose, refreshSearch }: ModificarSemiTerMFWizardProps) {
     const { activeStep, setActiveStep } = useSteps({
         index: 1,
         count: steps.length,
@@ -48,7 +50,7 @@ export default function ModificarSemiTerMFWizard({ producto }: ModificarSemiTerM
             return <StepThree_ModProdMF setActiveStep={setActiveStep} semioter2={semioter2!} setSemioter3={setSemioter3} />;
         }
         if (activeStep === 3) {
-            return <StepFour_ModProdMF setActiveStep={setActiveStep} semioter3={semioter3!} onReset={handleReset} />;
+            return <StepFour_ModProdMF setActiveStep={setActiveStep} semioter3={semioter3!} onReset={handleReset} onClose={onClose} refreshSearch={refreshSearch} />;
         }
     }
 

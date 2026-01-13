@@ -16,7 +16,8 @@ import {
     Thead,
     Tr,
     useToast,
-    VStack
+    VStack,
+    Tag
 } from '@chakra-ui/react';
 import {useEffect, useState} from 'react';
 import {DispensacionDTO, InsumoDesglosado, LoteSeleccionado} from '../types';
@@ -141,6 +142,12 @@ export default function StepThreeComponent({
             // Encontrar el insumo correspondiente para obtener seguimientoId si existe
             const insumo = insumosDesglosados.find(i => i.productoId === productoId);
 
+            // Filtrar productos no inventariables: solo incluir si es inventariable
+            // Si inventareable es undefined o null, asumir true (comportamiento por defecto)
+            if (insumo && insumo.inventareable === false) {
+                return; // Saltar productos no inventariables
+            }
+
             // Por cada lote seleccionado, crear un item
             lotes.forEach(lote => {
                 const seguimientoId = insumo?.seguimientoId || 0;
@@ -183,6 +190,11 @@ export default function StepThreeComponent({
             lotesPorMaterial.forEach((lotes, productoId) => {
                 const insumo = insumosDesglosados.find(i => i.productoId === productoId);
                 if (insumo) {
+                    // Filtrar productos no inventariables: solo incluir si es inventariable
+                    // Si inventareable es undefined o null, asumir true (comportamiento por defecto)
+                    if (insumo.inventareable === false) {
+                        return; // Saltar productos no inventariables
+                    }
                     lotes.forEach(lote => {
                         items.push({
                             productoId: productoId,

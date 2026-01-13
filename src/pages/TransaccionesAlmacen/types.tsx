@@ -300,6 +300,22 @@ export interface InsumoDesglosado {
      * Puede ser undefined si el insumo no está asociado a un seguimiento específico.
      */
     seguimientoId?: number;
+    /**
+     * Estructura anidada de subinsumos (para semiterminados).
+     * Solo presente cuando el insumo es un semiterminado que contiene otros insumos.
+     */
+    subInsumos?: InsumoDesglosado[];
+    /**
+     * Tipo de producto para identificar semiterminados ('S') vs materiales ('M').
+     * Usado para determinar si mostrar botón de lotes y estilo visual.
+     */
+    tipo_producto?: string;
+    /**
+     * Indica si el producto es inventariable (true) o no (false, como el agua).
+     * Los productos no inventariables se muestran en la tabla pero no requieren lotes
+     * y no se incluyen en la dispensación final.
+     */
+    inventareable?: boolean;
 }
 
 // ===== Movimientos y Consolidado OCM =====

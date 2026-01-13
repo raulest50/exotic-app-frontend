@@ -24,9 +24,11 @@ interface Props {
     setActiveStep: (step: number) => void;
     semioter3: ProductoSemiter;
     onReset: () => void;
+    onClose?: () => void;
+    refreshSearch?: () => void;
 }
 
-export default function StepFour_ModProdMF({ setActiveStep, semioter3, onReset }: Props) {
+export default function StepFour_ModProdMF({ setActiveStep, semioter3, onReset, onClose, refreshSearch }: Props) {
     const toast = useToast();
     const [loading, setLoading] = useState(false);
     const endPoints = new EndPointsURL();
@@ -43,7 +45,16 @@ export default function StepFour_ModProdMF({ setActiveStep, semioter3, onReset }
                 duration: 3000,
                 isClosable: true,
             });
-            onReset();
+            // Cerrar el wizard y volver al tab de modificaciones
+            if (typeof onClose === "function") {
+                if (typeof refreshSearch === "function") {
+                    refreshSearch();
+                }
+                onClose();
+            } else {
+                // Fallback: solo resetear si no hay onClose
+                onReset();
+            }
         } catch (e) {
             toast({
                 title: "Error",

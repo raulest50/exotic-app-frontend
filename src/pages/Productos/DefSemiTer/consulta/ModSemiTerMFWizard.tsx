@@ -33,7 +33,7 @@ export default function ModSemiTerMFWizard({ producto, onClose, refreshSearch }:
                 <Heading size="lg">Modificar Semi/Terminado</Heading>
                 <Box />
             </Flex>
-            <ModificarSemiTerMFWizard producto={productoSemiter} />
+            <ModificarSemiTerMFWizard producto={productoSemiter} onClose={onClose} refreshSearch={refreshSearch} />
         </Box>
     );
 }

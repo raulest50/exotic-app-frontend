@@ -8,7 +8,6 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
 import { useAuth } from "../../context/AuthContext";
-import { getAccessLevel } from "../../api/UserApi";
 import AjustesInventarioTab from "./AjustesInventario/AjustesInventarioTab";
 import {HistorialDispensaciones} from "./HistorialDispensaciones/HistorialDispensaciones.tsx";
 
@@ -16,24 +15,8 @@ import {HistorialDispensaciones} from "./HistorialDispensaciones/HistorialDispen
 export default function TransaccionesAlmacenPage(){
     const [showDispensacionDirecta, setShowDispensacionDirecta] = useState(false);
     const [showBackflushDirecto, setShowBackflushDirecto] = useState(false);
-    const [almacenAccessLevel, setAlmacenAccessLevel] = useState<number>(0);
     const { user } = useAuth();
     const endPoints = useMemo(() => new EndPointsURL(), []);
-
-    // Obtener el nivel de acceso del usuario para el módulo ALMACEN
-    useEffect(() => {
-        const fetchUserAccessLevel = async () => {
-            try {
-                const nivel = await getAccessLevel('ALMACEN');
-                setAlmacenAccessLevel(nivel || 0);
-            } catch (error) {
-                console.error("Error al obtener el nivel de acceso:", error);
-                setAlmacenAccessLevel(0);
-            }
-        };
-
-        fetchUserAccessLevel();
-    }, []);
 
     useEffect(() => {
         if (!user) return;
@@ -65,9 +48,7 @@ export default function TransaccionesAlmacenPage(){
                 <TabList>
                     <Tab> Ingreso OCM </Tab>
                     <Tab> Hacer Dispensacion </Tab>
-                    {(user === 'master' || almacenAccessLevel >= 2) && (
-                        <Tab> Historial Dispensaciones </Tab>
-                    )}
+                    <Tab> Historial Dispensaciones </Tab>
                     <Tab> Ingreso Producto Terminado </Tab>
                     {showDispensacionDirecta && <Tab> Dispensacion Directa </Tab>}
                     {showBackflushDirecto && <Tab> Backflush Directo </Tab>}
@@ -83,11 +64,9 @@ export default function TransaccionesAlmacenPage(){
                         <AsistenteDispensacion />
                     </TabPanel>
 
-                    {(user === 'master' || almacenAccessLevel >= 2) && (
-                        <TabPanel>
-                            <HistorialDispensaciones />
-                        </TabPanel>
-                    )}
+                    <TabPanel>
+                        <HistorialDispensaciones />
+                    </TabPanel>
 
                     <TabPanel>
                         <Text> Pendiente implementacion </Text>

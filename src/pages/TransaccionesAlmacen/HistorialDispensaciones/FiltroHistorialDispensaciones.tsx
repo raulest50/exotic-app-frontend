@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import {
     Box,
     Button,
@@ -9,40 +9,18 @@ import {
     Input,
     Radio,
     RadioGroup,
-    Select,
     Stack,
     VStack,
     HStack,
     Alert,
     AlertIcon,
     Divider,
-    useToast,
 } from '@chakra-ui/react';
-import axios from 'axios';
 import DatePicker from '../../../components/MyDatePicker.tsx';
-import EndPointsURL from '../../../../src/api/EndPointsURL';
-import { TransaccionAlmacen } from '../types.tsx';
 
-interface PageResponse {
-    content: TransaccionAlmacen[];
-    totalPages: number;
-    totalElements: number;
-    number: number;
-    size: number;
-}
-
-interface Props {
-    onSearchResults?: (data: PageResponse) => void;
-    onLoadingChange?: (loading: boolean) => void;
-    currentPage?: number;
-    onPageChange?: (page: number) => void;
-}
+type Props = {};
 
 export function FiltroHistorialDispensaciones(props: Props) {
-    const { onSearchResults, onLoadingChange, currentPage = 0, onPageChange, onSearchFunctionReady } = props;
-    const toast = useToast();
-    const endPoints = new EndPointsURL();
-
     // Estado para tipo de filtro de ID
     const [tipoFiltroId, setTipoFiltroId] = useState<0 | 1 | 2>(0);
     const [transaccionId, setTransaccionId] = useState<string>('');
@@ -54,14 +32,12 @@ export function FiltroHistorialDispensaciones(props: Props) {
     const [fechaFin, setFechaFin] = useState<string>('');
     const [fechaEspecifica, setFechaEspecifica] = useState<string>('');
 
-    // Estado para paginación (size fijo en 10)
-    const size = 10;
+    // Estado para paginación
+    const [page, setPage] = useState<number>(0);
+    const [size, setSize] = useState<number>(10);
 
-    // Estado para validación y loading
+    // Estado para validación
     const [errorMessage, setErrorMessage] = useState<string>('');
-    const [loading, setLoading] = useState<boolean>(false);
-    const [hasSearched, setHasSearched] = useState<boolean>(false);
-    const previousPageRef = useRef<number>(0);
 
     // Obtener fecha actual para DatePicker default
     const getTodayDate = (): string => {
@@ -70,7 +46,7 @@ export function FiltroHistorialDispensaciones(props: Props) {
     };
 
     // Validar formulario
-    const validarFormulario = useCallback((): boolean => {
+    const validarFormulario = (): boolean => {
         setErrorMessage('');
 
         // Validar que al menos un filtro esté activo
@@ -110,80 +86,26 @@ export function FiltroHistorialDispensaciones(props: Props) {
         }
 
         return true;
-    }, [tipoFiltroId, transaccionId, ordenProduccionId, tipoFiltroFecha, fechaInicio, fechaFin, fechaEspecifica]);
+    };
 
-    // Manejar búsqueda
-    const handleBuscar = useCallback(async (pageNumber: number = 0, skipValidation: boolean = false) => {
-        if (!skipValidation && !validarFormulario()) {
+    // Manejar búsqueda (sin implementar fetch aún)
+    const handleBuscar = () => {
+        if (!validarFormulario()) {
             return;
         }
 
-        setLoading(true);
-        if (onLoadingChange) {
-            onLoadingChange(true);
-        }
-
-        try {
-            // Construir el DTO de filtro
-            const filtroDTO = {
-                transaccionId: tipoFiltroId === 1 ? parseInt(transaccionId) : null,
-                ordenProduccionId: tipoFiltroId === 2 ? parseInt(ordenProduccionId) : null,
-                fechaInicio: tipoFiltroFecha === 1 ? fechaInicio : null,
-                fechaFin: tipoFiltroFecha === 1 ? fechaFin : null,
-                fechaEspecifica: tipoFiltroFecha === 2 ? fechaEspecifica : null,
-                tipoFiltroFecha: tipoFiltroFecha,
-                tipoFiltroId: tipoFiltroId,
-                page: pageNumber,
-                size: size,
-            };
-
-            const response = await axios.post<PageResponse>(
-                endPoints.historial_dispensacion_filter,
-                filtroDTO,
-                {
-                    withCredentials: true,
-                }
-            );
-
-            setHasSearched(true);
-            if (onSearchResults) {
-                onSearchResults(response.data);
-            }
-        } catch (error: any) {
-            console.error('Error al buscar dispensaciones:', error);
-            const errorMessage = error.response?.data?.message || 
-                error.message || 
-                'No se pudieron obtener las dispensaciones';
-            
-            toast({
-                title: 'Error',
-                description: errorMessage,
-                status: 'error',
-                duration: 5000,
-                isClosable: true,
-            });
-        } finally {
-            setLoading(false);
-            if (onLoadingChange) {
-                onLoadingChange(false);
-            }
-        }
-    }, [tipoFiltroId, transaccionId, ordenProduccionId, tipoFiltroFecha, fechaInicio, fechaFin, fechaEspecifica, onSearchResults, onLoadingChange, endPoints, toast, size, validarFormulario]);
-
-    // Re-ejecutar búsqueda cuando cambie la página (solo si ya se hizo una búsqueda previa)
-    useEffect(() => {
-        if (hasSearched && currentPage !== previousPageRef.current && currentPage >= 0) {
-            previousPageRef.current = currentPage;
-            handleBuscar(currentPage, true); // skipValidation = true porque ya validamos antes
-        }
-    }, [currentPage, hasSearched, handleBuscar]);
-
-    // Handler para cuando se hace click en buscar (siempre desde página 0)
-    const handleBuscarClick = () => {
-        if (onPageChange) {
-            onPageChange(0);
-        }
-        handleBuscar(0);
+        // TODO: Implementar fetch al endpoint
+        console.log('Búsqueda con filtros:', {
+            tipoFiltroId,
+            transaccionId: tipoFiltroId === 1 ? parseInt(transaccionId) : null,
+            ordenProduccionId: tipoFiltroId === 2 ? parseInt(ordenProduccionId) : null,
+            tipoFiltroFecha,
+            fechaInicio: tipoFiltroFecha === 1 ? fechaInicio : null,
+            fechaFin: tipoFiltroFecha === 1 ? fechaFin : null,
+            fechaEspecifica: tipoFiltroFecha === 2 ? fechaEspecifica : null,
+            page,
+            size,
+        });
     };
 
     // Limpiar formulario
@@ -195,11 +117,9 @@ export function FiltroHistorialDispensaciones(props: Props) {
         setFechaInicio('');
         setFechaFin('');
         setFechaEspecifica('');
+        setPage(0);
+        setSize(10);
         setErrorMessage('');
-        setHasSearched(false);
-        if (onPageChange) {
-            onPageChange(0);
-        }
     };
 
     return (
@@ -231,14 +151,14 @@ export function FiltroHistorialDispensaciones(props: Props) {
                     >
                         <Stack direction="row" spacing={4}>
                             <Radio value="0">Ninguno</Radio>
-                            <Radio value="1">Filtrar por ID Dispensación</Radio>
-                            <Radio value="2">Filtrar por ID de ODP relacionada</Radio>
+                            <Radio value="1">ID Transacción</Radio>
+                            <Radio value="2">ID Orden de Producción</Radio>
                         </Stack>
                     </RadioGroup>
 
                     {tipoFiltroId === 1 && (
                         <FormControl mt={4}>
-                            <FormLabel>ID de Dispensación</FormLabel>
+                            <FormLabel>ID de Transacción</FormLabel>
                             <Input
                                 type="number"
                                 value={transaccionId}
@@ -251,7 +171,7 @@ export function FiltroHistorialDispensaciones(props: Props) {
 
                     {tipoFiltroId === 2 && (
                         <FormControl mt={4}>
-                            <FormLabel>ID de ODP relacionada</FormLabel>
+                            <FormLabel>ID de Orden de Producción</FormLabel>
                             <Input
                                 type="number"
                                 value={ordenProduccionId}
@@ -270,21 +190,21 @@ export function FiltroHistorialDispensaciones(props: Props) {
                     <FormLabel fontWeight="bold" mb={3}>
                         Filtrar por Fecha
                     </FormLabel>
-                    <Select
+                    <RadioGroup
                         value={tipoFiltroFecha.toString()}
-                        onChange={(e) => {
-                            const value = parseInt(e.target.value) as 0 | 1 | 2;
-                            setTipoFiltroFecha(value);
+                        onChange={(value) => {
+                            setTipoFiltroFecha(parseInt(value) as 0 | 1 | 2);
                             setFechaInicio('');
                             setFechaFin('');
                             setFechaEspecifica('');
                         }}
-                        maxW="300px"
                     >
-                        <option value="0">Ninguno</option>
-                        <option value="1">Rango de Fechas</option>
-                        <option value="2">Fecha Específica</option>
-                    </Select>
+                        <Stack direction="row" spacing={4}>
+                            <Radio value="0">Ninguno</Radio>
+                            <Radio value="1">Rango de Fechas</Radio>
+                            <Radio value="2">Fecha Específica</Radio>
+                        </Stack>
+                    </RadioGroup>
 
                     {tipoFiltroFecha === 1 && (
                         <HStack spacing={4} mt={4}>
@@ -319,17 +239,41 @@ export function FiltroHistorialDispensaciones(props: Props) {
                     )}
                 </Box>
 
+                <Divider />
+
+                {/* Paginación */}
+                <Box>
+                    <FormLabel fontWeight="bold" mb={3}>
+                        Paginación
+                    </FormLabel>
+                    <HStack spacing={4}>
+                        <FormControl maxW="150px">
+                            <FormLabel fontSize="sm">Página</FormLabel>
+                            <Input
+                                type="number"
+                                value={page}
+                                onChange={(e) => setPage(Math.max(0, parseInt(e.target.value) || 0))}
+                                min="0"
+                            />
+                        </FormControl>
+                        <FormControl maxW="150px">
+                            <FormLabel fontSize="sm">Tamaño</FormLabel>
+                            <Input
+                                type="number"
+                                value={size}
+                                onChange={(e) => setSize(Math.max(1, parseInt(e.target.value) || 10))}
+                                min="1"
+                            />
+                        </FormControl>
+                    </HStack>
+                </Box>
+
                 {/* Botones de acción */}
                 <Flex justify="flex-end" gap={4} mt={4}>
-                    <Button colorScheme="gray" onClick={handleLimpiar} isDisabled={loading}>
+                    <Button colorScheme="gray" onClick={handleLimpiar}>
                         Limpiar
                     </Button>
-                    <Button 
-                        colorScheme="blue" 
-                        onClick={handleBuscarClick}
-                        isLoading={loading}
-                        loadingText="Buscando..."
-                    >
+                    <Button colorScheme="blue" onClick={handleBuscar}>
                         Buscar
                     </Button>
                 </Flex>
