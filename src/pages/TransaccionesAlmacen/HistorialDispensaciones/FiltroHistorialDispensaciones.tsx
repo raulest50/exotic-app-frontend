@@ -17,10 +17,14 @@ import {
     Grid,
 } from '@chakra-ui/react';
 import DatePicker from '../../../components/MyDatePicker.tsx';
+import { FiltroHistDispensacionDTO } from './types';
 
-type Props = {};
+interface Props {
+    onBuscar: (filtro: FiltroHistDispensacionDTO) => void;
+    onLimpiar?: () => void;
+}
 
-export function FiltroHistorialDispensaciones(props: Props) {
+export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
     // Estado para tipo de filtro de ID
     const [tipoFiltroId, setTipoFiltroId] = useState<0 | 1 | 2>(0);
     const [transaccionId, setTransaccionId] = useState<string>('');
@@ -31,11 +35,6 @@ export function FiltroHistorialDispensaciones(props: Props) {
     const [fechaInicio, setFechaInicio] = useState<string>('');
     const [fechaFin, setFechaFin] = useState<string>('');
     const [fechaEspecifica, setFechaEspecifica] = useState<string>('');
-
-    // Estado para paginación
-    const [page, setPage] = useState<number>(0);
-    const [size, setSize] = useState<number>(10);
-    const [totalPages, setTotalPages] = useState<number>(0);
 
     // Estado para validación
     const [errorMessage, setErrorMessage] = useState<string>('');
@@ -50,11 +49,7 @@ export function FiltroHistorialDispensaciones(props: Props) {
     const validarFormulario = (): boolean => {
         setErrorMessage('');
 
-        // Validar que al menos un filtro esté activo
-        if (tipoFiltroId === 0 && tipoFiltroFecha === 0) {
-            setErrorMessage('Debe seleccionar al menos un filtro (ID o fecha)');
-            return false;
-        }
+        // Permitir que ambos filtros estén en "Ninguno" (0) para retornar todas las transacciones
 
         // Validar filtro de ID
         if (tipoFiltroId === 1) {
@@ -89,14 +84,13 @@ export function FiltroHistorialDispensaciones(props: Props) {
         return true;
     };
 
-    // Manejar búsqueda (sin implementar fetch aún)
+    // Manejar búsqueda
     const handleBuscar = () => {
         if (!validarFormulario()) {
             return;
         }
 
-        // TODO: Implementar fetch al endpoint
-        console.log('Búsqueda con filtros:', {
+        const filtro: FiltroHistDispensacionDTO = {
             tipoFiltroId,
             transaccionId: tipoFiltroId === 1 ? parseInt(transaccionId) : null,
             ordenProduccionId: tipoFiltroId === 2 ? parseInt(ordenProduccionId) : null,
@@ -104,9 +98,11 @@ export function FiltroHistorialDispensaciones(props: Props) {
             fechaInicio: tipoFiltroFecha === 1 ? fechaInicio : null,
             fechaFin: tipoFiltroFecha === 1 ? fechaFin : null,
             fechaEspecifica: tipoFiltroFecha === 2 ? fechaEspecifica : null,
-            page,
-            size,
-        });
+            page: 0, // Siempre resetear a página 0 en nueva búsqueda
+            size: 10, // Tamaño por defecto, se manejará en el componente padre
+        };
+
+        onBuscar(filtro);
     };
 
     // Limpiar formulario
@@ -118,10 +114,10 @@ export function FiltroHistorialDispensaciones(props: Props) {
         setFechaInicio('');
         setFechaFin('');
         setFechaEspecifica('');
-        setPage(0);
-        setSize(10);
-        setTotalPages(0);
         setErrorMessage('');
+        if (onLimpiar) {
+            onLimpiar();
+        }
     };
 
     return (
@@ -246,21 +242,6 @@ export function FiltroHistorialDispensaciones(props: Props) {
                 </Box>
 
                 <Divider />
-
-                {/* Paginación */}
-                <Flex justify='space-between' align='center' gap={4}>
-                    <Flex align='center' gap={2}>
-                        <Text>Tamaño de página:</Text>
-                        <Select value={size} onChange={(e) => {setPage(0); setSize(parseInt(e.target.value));}} width='80px'>
-                            {[5,10,20,50].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                        </Select>
-                    </Flex>
-                    <Flex align='center' gap={2}>
-                        <Button onClick={() => setPage((p) => Math.max(p - 1, 0))} isDisabled={page === 0}>Anterior</Button>
-                        <Text>Pagina {totalPages === 0 ? 0 : page + 1} de {totalPages}</Text>
-                        <Button onClick={() => setPage((p) => p + 1)} isDisabled={totalPages === 0 || page + 1 >= totalPages}>Siguiente</Button>
-                    </Flex>
-                </Flex>
 
                 {/* Botones de acción */}
                 <Flex justify="flex-end" gap={4} mt={4}>
