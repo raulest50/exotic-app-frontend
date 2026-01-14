@@ -7,6 +7,7 @@ export function KardexTab(props: Props) {
     return (
         <Flex>
 
+
         </Flex>
     );
 }

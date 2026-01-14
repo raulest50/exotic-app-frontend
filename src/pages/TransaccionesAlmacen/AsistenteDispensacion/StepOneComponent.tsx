@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
-import {DispensacionDTO, DispensacionFormularioDTO, InsumoDesglosado} from '../types';
+import {DispensacionDTO, DispensacionFormularioDTO, InsumoDesglosado, InsumosDesglosadosResponse} from '../types';
 import FiltroODP_AsistDisp from './FiltroODP_AsistDisp';
 
 interface Props {
@@ -49,7 +49,7 @@ interface PaginatedResponse<T> {
     size: number;
 }
 
-export default function StepOneComponentV2({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId, setInsumosAnidados, setProductoId}: Props){
+export default function StepOneComponentV2({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId, setInsumosAnidados, setProductoId, setInsumosEmpaque}: Props){
     const toast = useToast();
     const [ordenes, setOrdenes] = useState<OrdenDispensacionResumen[]>([]);
     const [page, setPage] = useState(0);
@@ -141,13 +141,16 @@ export default function StepOneComponentV2({setActiveStep, setDispensacion, setI
         }
         setLoadingOrden(ordenId);
         try {
-            // Llamar al nuevo endpoint para obtener insumos desglosados (flat)
+            // Llamar al endpoint para obtener insumos desglosados (ahora incluye materiales de empaque)
             const endpoint = endpoints.insumos_desglosados_orden.replace('{ordenProduccionId}', ordenId.toString());
-            const resp = await axios.get<InsumoDesglosado[]>(endpoint, {withCredentials: true});
+            const resp = await axios.get<InsumosDesglosadosResponse>(endpoint, {withCredentials: true});
             
-            // Almacenar los insumos desglosados y el ID de la orden
+            // Separar insumos de receta e insumos de empaque
             if(setInsumosDesglosados) {
-                setInsumosDesglosados(resp.data);
+                setInsumosDesglosados(resp.data.insumosReceta || []);
+            }
+            if(setInsumosEmpaque) {
+                setInsumosEmpaque(resp.data.insumosEmpaque || []);
             }
             if(setOrdenProduccionId) {
                 setOrdenProduccionId(ordenId);

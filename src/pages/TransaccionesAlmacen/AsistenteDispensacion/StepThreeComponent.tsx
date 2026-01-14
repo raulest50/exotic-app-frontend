@@ -37,6 +37,8 @@ interface Props {
     insumosDesglosados?: InsumoDesglosado[];
     ordenProduccionId?: number | null;
     lotesPorMaterial?: Map<string, LoteSeleccionado[]>;
+    insumosEmpaque?: InsumoDesglosado[];
+    lotesPorMaterialEmpaque?: Map<string, LoteSeleccionado[]>;
 }
 
 export default function StepThreeComponent({
@@ -44,7 +46,9 @@ export default function StepThreeComponent({
     dispensacion,
     insumosDesglosados,
     ordenProduccionId,
-    lotesPorMaterial
+    lotesPorMaterial,
+    insumosEmpaque = [],
+    lotesPorMaterialEmpaque
 }: Props) {
     const [token, setToken] = useState('');
     const [inputToken, setInputToken] = useState('');
@@ -115,7 +119,9 @@ export default function StepThreeComponent({
         setUsuariosRealizadores(usuariosRealizadores.filter(u => u.id !== userId));
     };
 
-    const canGeneratePDF = usuariosRealizadores.length > 0 && lotesPorMaterial && lotesPorMaterial.size > 0;
+    const canGeneratePDF = usuariosRealizadores.length > 0 && 
+        ((lotesPorMaterial && lotesPorMaterial.size > 0) || 
+         (lotesPorMaterialEmpaque && lotesPorMaterialEmpaque.size > 0));
     const canRegister = usuariosRealizadores.length > 0 && inputToken === token && !isLoading;
 
     // Construir items para el DTO desde lotesPorMaterial e insumosDesglosados
@@ -137,7 +143,7 @@ export default function StepThreeComponent({
             return items;
         }
 
-        // Iterar sobre cada material que tiene lotes seleccionados
+        // Iterar sobre cada material que tiene lotes seleccionados (receta)
         lotesPorMaterial.forEach((lotes, productoId) => {
             // Encontrar el insumo correspondiente para obtener seguimientoId si existe
             const insumo = insumosDesglosados.find(i => i.productoId === productoId);
@@ -160,6 +166,29 @@ export default function StepThreeComponent({
                 });
             });
         });
+
+        // Iterar sobre cada material de empaque que tiene lotes seleccionados
+        if (lotesPorMaterialEmpaque && insumosEmpaque) {
+            lotesPorMaterialEmpaque.forEach((lotes, productoId) => {
+                const insumo = insumosEmpaque.find(i => i.productoId === productoId);
+
+                // Filtrar productos no inventariables
+                if (insumo && insumo.inventareable === false) {
+                    return; // Saltar productos no inventariables
+                }
+
+                // Por cada lote seleccionado, crear un item (sin seguimientoId para materiales de empaque)
+                lotes.forEach(lote => {
+                    items.push({
+                        seguimientoId: 0, // Materiales de empaque no tienen seguimientoId
+                        productoId: productoId, // Siempre incluir productoId para materiales de empaque
+                        cantidad: lote.cantidad,
+                        loteId: lote.loteId,
+                        completarSeguimiento: false
+                    });
+                });
+            });
+        }
 
         return items;
     };
@@ -207,6 +236,28 @@ export default function StepThreeComponent({
                     });
                 }
             });
+
+            // Incluir materiales de empaque en el PDF
+            if (lotesPorMaterialEmpaque && insumosEmpaque) {
+                lotesPorMaterialEmpaque.forEach((lotes, productoId) => {
+                    const insumo = insumosEmpaque.find(i => i.productoId === productoId);
+                    if (insumo) {
+                        if (insumo.inventareable === false) {
+                            return; // Saltar productos no inventariables
+                        }
+                        lotes.forEach(lote => {
+                            items.push({
+                                productoId: productoId,
+                                productoNombre: insumo.productoNombre,
+                                loteBatch: lote.batchNumber,
+                                cantidad: lote.cantidad,
+                                unidad: insumo.tipoUnidades,
+                                fechaVencimiento: lote.expirationDate || undefined
+                            });
+                        });
+                    }
+                });
+            }
 
             await DispensacionPDF_Generator.downloadPDF_Dispensacion(
                 ordenProduccionId,
@@ -355,8 +406,10 @@ export default function StepThreeComponent({
         cantidad: number;
         unidad: string;
         fechaVencimiento?: string;
+        esEmpaque?: boolean;
     }>();
 
+    // Agregar materiales de receta al resumen
     if (lotesPorMaterial && insumosDesglosados) {
         lotesPorMaterial.forEach((lotes, productoId) => {
             const insumo = insumosDesglosados.find(i => i.productoId === productoId);
@@ -368,7 +421,28 @@ export default function StepThreeComponent({
                         loteBatch: lote.batchNumber,
                         cantidad: lote.cantidad,
                         unidad: insumo.tipoUnidades,
-                        fechaVencimiento: lote.expirationDate || undefined
+                        fechaVencimiento: lote.expirationDate || undefined,
+                        esEmpaque: false
+                    });
+                });
+            }
+        });
+    }
+
+    // Agregar materiales de empaque al resumen
+    if (lotesPorMaterialEmpaque && insumosEmpaque) {
+        lotesPorMaterialEmpaque.forEach((lotes, productoId) => {
+            const insumo = insumosEmpaque.find(i => i.productoId === productoId);
+            if (insumo) {
+                lotes.forEach(lote => {
+                    summaryItems.push({
+                        productoId: productoId,
+                        productoNombre: insumo.productoNombre,
+                        loteBatch: lote.batchNumber,
+                        cantidad: lote.cantidad,
+                        unidad: insumo.tipoUnidades,
+                        fechaVencimiento: lote.expirationDate || undefined,
+                        esEmpaque: true
                     });
                 });
             }
@@ -475,7 +549,14 @@ export default function StepThreeComponent({
                                 {summaryItems.map((item, idx) => (
                             <Tr key={idx}>
                                         <Td>{item.productoId}</Td>
-                                        <Td>{item.productoNombre}</Td>
+                                        <Td>
+                                            {item.productoNombre}
+                                            {item.esEmpaque && (
+                                                <Tag ml={2} size="sm" colorScheme="blue" variant="outline">
+                                                    Empaque
+                                                </Tag>
+                                            )}
+                                        </Td>
                                         <Td>{item.loteBatch}</Td>
                                         <Td>{item.cantidad.toFixed(2)}</Td>
                                         <Td>{item.unidad}</Td>

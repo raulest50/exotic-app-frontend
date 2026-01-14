@@ -29,6 +29,9 @@ interface Props {
     setLotesPorMaterial?: (lotes: Map<string, LoteSeleccionado[]>) => void;
     insumosAnidados?: any[];
     productoId?: string | null;
+    insumosEmpaque?: InsumoDesglosado[];
+    lotesPorMaterialEmpaque?: Map<string, LoteSeleccionado[]>;
+    setLotesPorMaterialEmpaque?: (lotes: Map<string, LoteSeleccionado[]>) => void;
 }
 
 type InsumoWithStockResponse = Omit<InsumoWithStock, 'tipo_producto' | 'subInsumos'> & {
@@ -47,7 +50,10 @@ export default function StepTwoComponent({
     lotesPorMaterial: lotesPorMaterialProp, 
     setLotesPorMaterial: setLotesPorMaterialProp,
     insumosAnidados = [],
-    productoId
+    productoId,
+    insumosEmpaque = [],
+    lotesPorMaterialEmpaque: lotesPorMaterialEmpaqueProp,
+    setLotesPorMaterialEmpaque: setLotesPorMaterialEmpaqueProp
 }: Props){
     // Estado para lotes seleccionados por material (key: productoId)
     // Si viene como prop, usarlo; sino crear estado local
@@ -55,7 +61,12 @@ export default function StepTwoComponent({
     const lotesPorMaterial = lotesPorMaterialProp || lotesPorMaterialLocal;
     const setLotesPorMaterial = setLotesPorMaterialProp || setLotesPorMaterialLocal;
     
-    const [modalAbierto, setModalAbierto] = useState<{productoId: string; productoNombre: string; cantidadRequerida: number} | null>(null);
+    // Estado para lotes seleccionados por material de empaque
+    const [lotesPorMaterialEmpaqueLocal, setLotesPorMaterialEmpaqueLocal] = useState<Map<string, LoteSeleccionado[]>>(new Map());
+    const lotesPorMaterialEmpaque = lotesPorMaterialEmpaqueProp || lotesPorMaterialEmpaqueLocal;
+    const setLotesPorMaterialEmpaque = setLotesPorMaterialEmpaqueProp || setLotesPorMaterialEmpaqueLocal;
+    
+    const [modalAbierto, setModalAbierto] = useState<{productoId: string; productoNombre: string; cantidadRequerida: number; esEmpaque?: boolean} | null>(null);
     
     // Estado para controlar qué semiterminados están expandidos
     const [expandedSemiterminados, setExpandedSemiterminados] = useState<Record<string, boolean>>({});
@@ -72,10 +83,16 @@ export default function StepTwoComponent({
         setModalAbierto(null);
     };
 
-    const handleAceptarLotes = (productoId: string, lotes: LoteSeleccionado[]) => {
+    const handleAceptarLotes = (productoId: string, lotes: LoteSeleccionado[], esEmpaque: boolean = false) => {
+        if (esEmpaque) {
+            const nuevoMap = new Map(lotesPorMaterialEmpaque);
+            nuevoMap.set(productoId, lotes);
+            setLotesPorMaterialEmpaque(nuevoMap);
+        } else {
         const nuevoMap = new Map(lotesPorMaterial);
         nuevoMap.set(productoId, lotes);
         setLotesPorMaterial(nuevoMap);
+        }
     };
 
     const formatDate = (date: string | null | undefined): string => {
@@ -294,6 +311,72 @@ export default function StepTwoComponent({
         return <>{elements}</>;
     };
 
+    // Función para renderizar materiales de empaque (sin anidación)
+    const renderInsumoEmpaque = (insumo: InsumoDesglosado) => {
+        const lotesSeleccionados = lotesPorMaterialEmpaque.get(insumo.productoId) || [];
+        const esInvent = esInventariable(insumo);
+
+        return (
+            <>
+                <Tr key={insumo.productoId}>
+                    <Td>{insumo.productoId}</Td>
+                    <Td fontWeight="medium">
+                        {insumo.productoNombre}
+                        {!esInvent && (
+                            <Tag ml={2} size="sm" colorScheme="gray" variant="outline">
+                                No inventariable
+                            </Tag>
+                        )}
+                        <Tag ml={2} size="sm" colorScheme="blue" variant="outline">
+                            Empaque
+                        </Tag>
+                    </Td>
+                    <Td>{insumo.cantidadTotalRequerida.toFixed(2)}</Td>
+                    <Td>{insumo.tipoUnidades}</Td>
+                    <Td>
+                        {esInvent ? (
+                            <Button
+                                size='sm'
+                                colorScheme='blue'
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setModalAbierto({
+                                        productoId: insumo.productoId,
+                                        productoNombre: insumo.productoNombre,
+                                        cantidadRequerida: insumo.cantidadTotalRequerida,
+                                        esEmpaque: true
+                                    });
+                                }}
+                            >
+                                Definir Lotes
+                            </Button>
+                        ) : (
+                            <Text fontSize='xs' color='gray.500' fontStyle='italic'>
+                                No requiere lote
+                            </Text>
+                        )}
+                    </Td>
+                </Tr>
+                {/* Subrows para lotes seleccionados */}
+                {esInvent && lotesSeleccionados.length > 0 && lotesSeleccionados.map((lote) => (
+                    <Tr key={`${insumo.productoId}-lote-${lote.loteId}`} bg='gray.50'>
+                        <Td></Td>
+                        <Td pl={8} fontSize='xs' color='gray.600'>
+                            └─ Lote: {lote.batchNumber}
+                        </Td>
+                        <Td fontSize='xs' color='gray.600'>
+                            {lote.cantidad.toFixed(2)}
+                        </Td>
+                        <Td fontSize='xs' color='gray.600'>
+                            {formatDate(lote.expirationDate)}
+                        </Td>
+                        <Td></Td>
+                    </Tr>
+                ))}
+            </>
+        );
+    };
+
     // Si hay insumos desglosados, mostrar esos; sino, usar el sistema anterior
     if(insumosProcesados && insumosProcesados.length > 0) {
         return (
@@ -331,6 +414,33 @@ export default function StepTwoComponent({
                             </Tbody>
                         </Table>
                     </Box>
+                    {/* Tabla de materiales de empaque */}
+                    {insumosEmpaque && insumosEmpaque.length > 0 && (
+                        <>
+                            <Heading fontFamily='Comfortaa Variable' size='md' mt={6}>
+                                Materiales de Empaque
+                            </Heading>
+                            <Text fontFamily='Comfortaa Variable' fontSize='sm' color='gray.600'>
+                                Materiales de empaque requeridos para la orden de producción
+                            </Text>
+                            <Box bg='white' borderRadius='md' boxShadow='sm' overflowX='auto' w='full' maxW='1200px'>
+                                <Table size='sm'>
+                                    <Thead>
+                                        <Tr>
+                                            <Th>ID Producto</Th>
+                                            <Th>Nombre</Th>
+                                            <Th>Cantidad Requerida</Th>
+                                            <Th>Unidad</Th>
+                                            <Th>Acción</Th>
+                                        </Tr>
+                                    </Thead>
+                                    <Tbody>
+                                        {insumosEmpaque.map((insumo) => renderInsumoEmpaque(insumo))}
+                                    </Tbody>
+                                </Table>
+                            </Box>
+                        </>
+                    )}
                     <Flex w='40%' gap={4}>
                         <Button flex='1' onClick={()=>setActiveStep(0)}>Atrás</Button>
                         <Button 
@@ -341,8 +451,47 @@ export default function StepTwoComponent({
                                 if (setLotesPorMaterial) {
                                     setLotesPorMaterial(lotesPorMaterial);
                                 }
+                                if (setLotesPorMaterialEmpaque) {
+                                    setLotesPorMaterialEmpaque(lotesPorMaterialEmpaque);
+                                }
                                 setActiveStep(2);
                             }}
+                            isDisabled={(() => {
+                                // Función recursiva para obtener todos los materiales inventariables (incluyendo subinsumos)
+                                const obtenerMaterialesInventariables = (insumos: InsumoDesglosado[]): InsumoDesglosado[] => {
+                                    const materiales: InsumoDesglosado[] = [];
+                                    insumos.forEach(insumo => {
+                                        const esSemi = esSemiterminado(insumo);
+                                        const tieneSubInsumos = insumo.subInsumos && insumo.subInsumos.length > 0;
+                                        const esMaterial = !esSemi && !tieneSubInsumos;
+                                        
+                                        if (esMaterial && esInventariable(insumo)) {
+                                            materiales.push(insumo);
+                                        }
+                                        
+                                        if (tieneSubInsumos && insumo.subInsumos) {
+                                            materiales.push(...obtenerMaterialesInventariables(insumo.subInsumos));
+                                        }
+                                    });
+                                    return materiales;
+                                };
+                                
+                                // Validar materiales de receta inventariables
+                                const todosMaterialesInventariables = obtenerMaterialesInventariables(insumosProcesados);
+                                const todosTienenLotesReceta = todosMaterialesInventariables.every(material => {
+                                    const lotes = lotesPorMaterial.get(material.productoId);
+                                    return lotes && lotes.length > 0;
+                                });
+                                
+                                // Validar materiales de empaque inventariables
+                                const materialesEmpaqueInventariables = insumosEmpaque.filter(insumo => esInventariable(insumo));
+                                const todosTienenLotesEmpaque = materialesEmpaqueInventariables.every(material => {
+                                    const lotes = lotesPorMaterialEmpaque.get(material.productoId);
+                                    return lotes && lotes.length > 0;
+                                });
+                                
+                                return !todosTienenLotesReceta || !todosTienenLotesEmpaque;
+                            })()}
                         >
                             Continuar
                         </Button>
@@ -354,7 +503,7 @@ export default function StepTwoComponent({
                     <LotePickerDispensacion
                         isOpen={true}
                         onClose={handleCerrarModal}
-                        onAccept={(lotes) => handleAceptarLotes(modalAbierto.productoId, lotes)}
+                        onAccept={(lotes) => handleAceptarLotes(modalAbierto.productoId, lotes, modalAbierto.esEmpaque || false)}
                         productoId={modalAbierto.productoId}
                         productoNombre={modalAbierto.productoNombre}
                         cantidadRequerida={modalAbierto.cantidadRequerida}

@@ -279,6 +279,11 @@ export interface DispensacionNoPlanificadaDTO {
 
 // ===== Insumos Desglosados y Selección de Lotes =====
 
+export interface InsumosDesglosadosResponse {
+    insumosReceta: InsumoDesglosado[];
+    insumosEmpaque: InsumoDesglosado[];
+}
+
 export interface LoteSeleccionado {
     loteId: number;
     batchNumber: string;
