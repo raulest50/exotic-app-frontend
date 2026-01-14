@@ -7,14 +7,14 @@ import {
     FormLabel,
     Heading,
     Input,
-    Radio,
-    RadioGroup,
-    Stack,
+    Select,
+    Text,
     VStack,
     HStack,
     Alert,
     AlertIcon,
     Divider,
+    Grid,
 } from '@chakra-ui/react';
 import DatePicker from '../../../components/MyDatePicker.tsx';
 
@@ -35,6 +35,7 @@ export function FiltroHistorialDispensaciones(props: Props) {
     // Estado para paginación
     const [page, setPage] = useState<number>(0);
     const [size, setSize] = useState<number>(10);
+    const [totalPages, setTotalPages] = useState<number>(0);
 
     // Estado para validación
     const [errorMessage, setErrorMessage] = useState<string>('');
@@ -119,6 +120,7 @@ export function FiltroHistorialDispensaciones(props: Props) {
         setFechaEspecifica('');
         setPage(0);
         setSize(10);
+        setTotalPages(0);
         setErrorMessage('');
     };
 
@@ -141,46 +143,49 @@ export function FiltroHistorialDispensaciones(props: Props) {
                     <FormLabel fontWeight="bold" mb={3}>
                         Filtrar por ID
                     </FormLabel>
-                    <RadioGroup
-                        value={tipoFiltroId.toString()}
-                        onChange={(value) => {
-                            setTipoFiltroId(parseInt(value) as 0 | 1 | 2);
-                            setTransaccionId('');
-                            setOrdenProduccionId('');
-                        }}
-                    >
-                        <Stack direction="row" spacing={4}>
-                            <Radio value="0">Ninguno</Radio>
-                            <Radio value="1">ID Transacción</Radio>
-                            <Radio value="2">ID Orden de Producción</Radio>
-                        </Stack>
-                    </RadioGroup>
-
-                    {tipoFiltroId === 1 && (
-                        <FormControl mt={4}>
-                            <FormLabel>ID de Transacción</FormLabel>
-                            <Input
-                                type="number"
-                                value={transaccionId}
-                                onChange={(e) => setTransaccionId(e.target.value)}
-                                placeholder="Ej: 123"
-                                min="1"
-                            />
+                    <Grid templateColumns="repeat(12, 1fr)" gap={4} alignItems="end">
+                        <FormControl gridColumn="span 4">
+                            <Select
+                                value={tipoFiltroId.toString()}
+                                onChange={(e) => {
+                                    const value = parseInt(e.target.value) as 0 | 1 | 2;
+                                    setTipoFiltroId(value);
+                                    setTransaccionId('');
+                                    setOrdenProduccionId('');
+                                }}
+                            >
+                                <option value="0">Ninguno</option>
+                                <option value="1">ID Transacción</option>
+                                <option value="2">ID Orden de Producción</option>
+                            </Select>
                         </FormControl>
-                    )}
 
-                    {tipoFiltroId === 2 && (
-                        <FormControl mt={4}>
-                            <FormLabel>ID de Orden de Producción</FormLabel>
-                            <Input
-                                type="number"
-                                value={ordenProduccionId}
-                                onChange={(e) => setOrdenProduccionId(e.target.value)}
-                                placeholder="Ej: 456"
-                                min="1"
-                            />
-                        </FormControl>
-                    )}
+                        {tipoFiltroId === 1 && (
+                            <FormControl gridColumn="span 8">
+                                <FormLabel>ID de Transacción</FormLabel>
+                                <Input
+                                    type="number"
+                                    value={transaccionId}
+                                    onChange={(e) => setTransaccionId(e.target.value)}
+                                    placeholder="Ej: 123"
+                                    min="1"
+                                />
+                            </FormControl>
+                        )}
+
+                        {tipoFiltroId === 2 && (
+                            <FormControl gridColumn="span 8">
+                                <FormLabel>ID de Orden de Producción</FormLabel>
+                                <Input
+                                    type="number"
+                                    value={ordenProduccionId}
+                                    onChange={(e) => setOrdenProduccionId(e.target.value)}
+                                    placeholder="Ej: 456"
+                                    min="1"
+                                />
+                            </FormControl>
+                        )}
+                    </Grid>
                 </Box>
 
                 <Divider />
@@ -190,83 +195,72 @@ export function FiltroHistorialDispensaciones(props: Props) {
                     <FormLabel fontWeight="bold" mb={3}>
                         Filtrar por Fecha
                     </FormLabel>
-                    <RadioGroup
-                        value={tipoFiltroFecha.toString()}
-                        onChange={(value) => {
-                            setTipoFiltroFecha(parseInt(value) as 0 | 1 | 2);
-                            setFechaInicio('');
-                            setFechaFin('');
-                            setFechaEspecifica('');
-                        }}
-                    >
-                        <Stack direction="row" spacing={4}>
-                            <Radio value="0">Ninguno</Radio>
-                            <Radio value="1">Rango de Fechas</Radio>
-                            <Radio value="2">Fecha Específica</Radio>
-                        </Stack>
-                    </RadioGroup>
+                    <Grid templateColumns="repeat(12, 1fr)" gap={4} alignItems="end">
+                        <FormControl gridColumn="span 4">
+                            <Select
+                                value={tipoFiltroFecha.toString()}
+                                onChange={(e) => {
+                                    const value = parseInt(e.target.value) as 0 | 1 | 2;
+                                    setTipoFiltroFecha(value);
+                                    setFechaInicio('');
+                                    setFechaFin('');
+                                    setFechaEspecifica('');
+                                }}
+                            >
+                                <option value="0">Ninguno</option>
+                                <option value="1">Rango de Fechas</option>
+                                <option value="2">Fecha Específica</option>
+                            </Select>
+                        </FormControl>
 
-                    {tipoFiltroFecha === 1 && (
-                        <HStack spacing={4} mt={4}>
-                            <Box flex={1}>
+                        {tipoFiltroFecha === 1 && (
+                            <Box gridColumn="span 8">
+                                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                                    <DatePicker
+                                        date={fechaInicio}
+                                        setDate={setFechaInicio}
+                                        defaultDate={getTodayDate()}
+                                        label="Fecha Inicio"
+                                    />
+                                    <DatePicker
+                                        date={fechaFin}
+                                        setDate={setFechaFin}
+                                        defaultDate={getTodayDate()}
+                                        label="Fecha Fin"
+                                    />
+                                </Grid>
+                            </Box>
+                        )}
+
+                        {tipoFiltroFecha === 2 && (
+                            <Box gridColumn="span 8">
                                 <DatePicker
-                                    date={fechaInicio}
-                                    setDate={setFechaInicio}
+                                    date={fechaEspecifica}
+                                    setDate={setFechaEspecifica}
                                     defaultDate={getTodayDate()}
-                                    label="Fecha Inicio"
+                                    label="Fecha Específica"
                                 />
                             </Box>
-                            <Box flex={1}>
-                                <DatePicker
-                                    date={fechaFin}
-                                    setDate={setFechaFin}
-                                    defaultDate={getTodayDate()}
-                                    label="Fecha Fin"
-                                />
-                            </Box>
-                        </HStack>
-                    )}
-
-                    {tipoFiltroFecha === 2 && (
-                        <Box mt={4} maxW="300px">
-                            <DatePicker
-                                date={fechaEspecifica}
-                                setDate={setFechaEspecifica}
-                                defaultDate={getTodayDate()}
-                                label="Fecha Específica"
-                            />
-                        </Box>
-                    )}
+                        )}
+                    </Grid>
                 </Box>
 
                 <Divider />
 
                 {/* Paginación */}
-                <Box>
-                    <FormLabel fontWeight="bold" mb={3}>
-                        Paginación
-                    </FormLabel>
-                    <HStack spacing={4}>
-                        <FormControl maxW="150px">
-                            <FormLabel fontSize="sm">Página</FormLabel>
-                            <Input
-                                type="number"
-                                value={page}
-                                onChange={(e) => setPage(Math.max(0, parseInt(e.target.value) || 0))}
-                                min="0"
-                            />
-                        </FormControl>
-                        <FormControl maxW="150px">
-                            <FormLabel fontSize="sm">Tamaño</FormLabel>
-                            <Input
-                                type="number"
-                                value={size}
-                                onChange={(e) => setSize(Math.max(1, parseInt(e.target.value) || 10))}
-                                min="1"
-                            />
-                        </FormControl>
-                    </HStack>
-                </Box>
+                <Flex justify='space-between' align='center' gap={4}>
+                    <Flex align='center' gap={2}>
+                        <Text>Tamaño de página:</Text>
+                        <Select value={size} onChange={(e) => {setPage(0); setSize(parseInt(e.target.value));}} width='80px'>
+                            {[5,10,20,50].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </Select>
+                    </Flex>
+                    <Flex align='center' gap={2}>
+                        <Button onClick={() => setPage((p) => Math.max(p - 1, 0))} isDisabled={page === 0}>Anterior</Button>
+                        <Text>Pagina {totalPages === 0 ? 0 : page + 1} de {totalPages}</Text>
+                        <Button onClick={() => setPage((p) => p + 1)} isDisabled={totalPages === 0 || page + 1 >= totalPages}>Siguiente</Button>
+                    </Flex>
+                </Flex>
 
                 {/* Botones de acción */}
                 <Flex justify="flex-end" gap={4} mt={4}>
