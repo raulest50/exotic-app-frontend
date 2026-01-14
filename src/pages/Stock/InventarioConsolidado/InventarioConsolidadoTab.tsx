@@ -20,7 +20,7 @@ const endPoints = new EndPointsURL();
 
 import { ProductStockDTO } from '../types.tsx';
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
-import ListaProductos from '../ListaProductos.tsx';
+import ListaProductos from './ListaProductos.tsx';
 
 function InventarioConsolidadoTab() {
 

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {IngresoOCM_DTA, OrdenCompra} from "../../types.tsx";
 import {
     Button,
@@ -15,7 +15,7 @@ import { FaFolderOpen } from "react-icons/fa";
 import { FaFileCircleQuestion } from "react-icons/fa6";
 import { FaFileCircleCheck } from "react-icons/fa6";
 
-import { useAuth } from '../../../../context/AuthContext.tsx';
+import { getCurrentUser, User } from '../../../../api/UserApi';
 
 interface StepTwoComponentProps {
     setActiveStep: (step: number) => void;
@@ -29,12 +29,24 @@ export default function StepTwoComponent({
                                              setIngresoOCM_DTA,
                                          }: StepTwoComponentProps) {
 
-    const { user } = useAuth();
-
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [file, setFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const cameraInputRef = useRef<HTMLInputElement>(null);
     const toast = useToast();
+
+    // Obtener el usuario actual usando la API centralizada
+    useEffect(() => {
+        const fetchCurrentUser = async () => {
+            try {
+                const user = await getCurrentUser();
+                setCurrentUser(user);
+            } catch (error) {
+                console.error('Error fetching current user:', error);
+            }
+        };
+        fetchCurrentUser();
+    }, []);
 
     // Handles file selection from either input
     const handleFileChange = (
@@ -125,7 +137,7 @@ export default function StepTwoComponent({
                         observaciones: ""
                     },
                     ordenCompraMateriales: orden!,
-                    userId: user?.toString(),
+                    userId: currentUser?.id.toString(),
                     observaciones: "",
                     file: file,
                 };
@@ -134,7 +146,7 @@ export default function StepTwoComponent({
             // Mantener los movimientos existentes y actualizar solo el archivo y usuario
             return {
                 ...prevState,
-                userId: user?.toString(),
+                userId: currentUser?.id.toString(),
                 file: file
             };
         });

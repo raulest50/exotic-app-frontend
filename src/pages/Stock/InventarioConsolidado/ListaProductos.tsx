@@ -6,10 +6,10 @@ import {
 } from "@chakra-ui/react";
 import { useState } from 'react';
 import axios from 'axios';
-import EndPointsURL from "../../api/EndPointsURL.tsx";
-import { ProductStockDTO } from './types.tsx';
-import MyPagination from '../../components/MyPagination';
-import MovimientosExcelModal from './MovimientosExcelModal';
+import EndPointsURL from "../../../api/EndPointsURL.tsx";
+import { ProductStockDTO } from '../types.tsx';
+import MyPagination from '../../../components/MyPagination.tsx';
+import MovimientosExcelModal from './MovimientosExcelModal.tsx';
 
 const endPoints = new EndPointsURL();
 
