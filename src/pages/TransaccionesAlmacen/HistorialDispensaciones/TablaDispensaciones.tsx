@@ -84,7 +84,7 @@ export default function TablaDispensaciones({
                             <Tr key={dispensacion.transaccionId}>
                                 <Td>{dispensacion.transaccionId}</Td>
                                 <Td>
-                                    {dispensacion.tipoEntidadCausante === 'OP' 
+                                    {(dispensacion.tipoEntidadCausante === 'OD' || dispensacion.tipoEntidadCausante === 'OP') && dispensacion.idEntidadCausante > 0
                                         ? dispensacion.idEntidadCausante 
                                         : '-'}
                                 </Td>
@@ -97,7 +97,7 @@ export default function TablaDispensaciones({
                                 </Td>
                                 <Td>
                                     <Flex justify='center'>
-                                        {dispensacion.tipoEntidadCausante === 'OP' ? (
+                                        {(dispensacion.tipoEntidadCausante === 'OD' || dispensacion.tipoEntidadCausante === 'OP') && dispensacion.idEntidadCausante > 0 ? (
                                             <Button
                                                 colorScheme='orange'
                                                 size='sm'
