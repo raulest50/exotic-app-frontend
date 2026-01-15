@@ -2,30 +2,39 @@ import {Box, Button, Collapse, Flex, Heading, Spinner, Table, Tbody, Td, Text, T
 import {Fragment, useEffect, useMemo, useState} from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
-import {MovimientoDetalle} from '../types';
+import {MovimientoDetalle, TransaccionAlmacenDetalle} from '../types';
 import {FiltroHistDispensacionDTO, PaginatedResponse, TransaccionAlmacen} from '../HistorialDispensaciones/types';
 
 interface Props {
     ordenProduccionId?: number | null;
-    onTotalesChange?: (totales: Map<string, number>) => void;
+    dispensaciones?: TransaccionAlmacenDetalle[];
 }
 
 export default function ResumenHistorialDispensaciones({
     ordenProduccionId,
-    onTotalesChange
+    dispensaciones
 }: Props) {
     const [loading, setLoading] = useState(false);
-    const [dispensaciones, setDispensaciones] = useState<TransaccionAlmacen[]>([]);
+    const [dispensacionesState, setDispensacionesState] = useState<TransaccionAlmacenDetalle[]>([]);
     const [movimientosPorTransaccion, setMovimientosPorTransaccion] = useState<Record<number, MovimientoDetalle[]>>({});
     const [expanded, setExpanded] = useState<Record<number, boolean>>({});
     const endpoints = useMemo(() => new EndPointsURL(), []);
 
     useEffect(() => {
         const fetchHistorial = async () => {
+            if (dispensaciones) {
+                setDispensacionesState(dispensaciones);
+                const movimientosMap: Record<number, MovimientoDetalle[]> = {};
+                dispensaciones.forEach((transaccion) => {
+                    movimientosMap[transaccion.transaccionId] = transaccion.movimientos ?? [];
+                });
+                setMovimientosPorTransaccion(movimientosMap);
+                return;
+            }
+
             if (!ordenProduccionId) {
-                setDispensaciones([]);
+                setDispensacionesState([]);
                 setMovimientosPorTransaccion({});
-                onTotalesChange?.(new Map());
                 return;
             }
             setLoading(true);
@@ -45,7 +54,6 @@ export default function ResumenHistorialDispensaciones({
                 const transacciones = (resp.data.content ?? []).filter(
                     t => t.tipoEntidadCausante === 'OD' || t.tipoEntidadCausante === 'OP'
                 );
-                setDispensaciones(transacciones);
 
                 const movimientosEntries = await Promise.all(
                     transacciones.map(async (transaccion) => {
@@ -67,21 +75,24 @@ export default function ResumenHistorialDispensaciones({
                 });
                 setMovimientosPorTransaccion(movimientosMap);
 
-                const totales = new Map<string, number>();
-                movimientosEntries.forEach(([, movimientos]) => {
-                    movimientos.forEach((mov) => {
-                        const prev = totales.get(mov.productoId) ?? 0;
-                        totales.set(mov.productoId, prev + mov.cantidad);
-                    });
-                });
-                onTotalesChange?.(totales);
+                const detalles: TransaccionAlmacenDetalle[] = transacciones.map(transaccion => ({
+                    transaccionId: transaccion.transaccionId,
+                    fechaTransaccion: transaccion.fechaTransaccion,
+                    idEntidadCausante: transaccion.idEntidadCausante,
+                    tipoEntidadCausante: transaccion.tipoEntidadCausante,
+                    observaciones: transaccion.observaciones,
+                    estadoContable: transaccion.estadoContable,
+                    usuarioAprobador: transaccion.usuarioAprobador,
+                    movimientos: movimientosMap[transaccion.transaccionId] ?? []
+                }));
+                setDispensacionesState(detalles);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchHistorial();
-    }, [ordenProduccionId, endpoints, onTotalesChange]);
+    }, [ordenProduccionId, endpoints, dispensaciones]);
 
     const toggleExpanded = (transaccionId: number) => {
         setExpanded(prev => ({
@@ -99,7 +110,7 @@ export default function ResumenHistorialDispensaciones({
                 <Flex justify="center" py={6}>
                     <Spinner />
                 </Flex>
-            ) : dispensaciones.length === 0 ? (
+            ) : dispensacionesState.length === 0 ? (
                 <Text fontSize="sm" color="gray.600">
                     No hay dispensaciones registradas para esta orden.
                 </Text>
@@ -115,7 +126,7 @@ export default function ResumenHistorialDispensaciones({
                             </Tr>
                         </Thead>
                         <Tbody>
-                            {dispensaciones.map((disp) => (
+                            {dispensacionesState.map((disp) => (
                                 <Fragment key={disp.transaccionId}>
                                     <Tr key={disp.transaccionId}>
                                         <Td>{disp.transaccionId}</Td>

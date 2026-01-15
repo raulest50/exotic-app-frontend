@@ -305,6 +305,7 @@ export interface LoteSeleccionado {
 }
 
 export interface InsumoDesglosado {
+    insumoId?: number;
     productoId: string;
     productoNombre: string;
     cantidadTotalRequerida: number;
@@ -332,6 +333,27 @@ export interface InsumoDesglosado {
      * y no se incluyen en la dispensación final.
      */
     inventareable?: boolean;
+}
+
+export interface TransaccionAlmacenDetalle {
+    transaccionId: number;
+    fechaTransaccion: string;
+    idEntidadCausante: number;
+    tipoEntidadCausante: string;
+    observaciones?: string;
+    estadoContable: string;
+    usuarioAprobador?: {
+        userId: number;
+        nombre?: string;
+    };
+    movimientos: MovimientoDetalle[];
+}
+
+export interface DispensacionResumenResponse {
+    insumosReceta: InsumoDesglosado[];
+    insumosEmpaque: InsumoDesglosado[];
+    casePack?: CasePackResponseDTO | null;
+    historialDispensaciones: TransaccionAlmacenDetalle[];
 }
 
 // ===== Movimientos y Consolidado OCM =====

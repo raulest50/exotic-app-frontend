@@ -126,6 +126,48 @@ export default function StepThreeComponent({
          (lotesPorMaterialEmpaque && lotesPorMaterialEmpaque.size > 0));
     const canRegister = usuariosRealizadores.length > 0 && inputToken === token && !isLoading;
 
+    const findInsumoById = (insumos: InsumoDesglosado[] | undefined, insumoId: number): InsumoDesglosado | undefined => {
+        if (!insumos) return undefined;
+        for (const insumo of insumos) {
+            if (insumo.insumoId === insumoId) {
+                return insumo;
+            }
+            if (insumo.subInsumos && insumo.subInsumos.length > 0) {
+                const found = findInsumoById(insumo.subInsumos, insumoId);
+                if (found) return found;
+            }
+        }
+        return undefined;
+    };
+
+    const findInsumoByProductoId = (insumos: InsumoDesglosado[] | undefined, productoId: string): InsumoDesglosado | undefined => {
+        if (!insumos) return undefined;
+        for (const insumo of insumos) {
+            if (insumo.productoId === productoId) {
+                return insumo;
+            }
+            if (insumo.subInsumos && insumo.subInsumos.length > 0) {
+                const found = findInsumoByProductoId(insumo.subInsumos, productoId);
+                if (found) return found;
+            }
+        }
+        return undefined;
+    };
+
+    const findInsumoByKey = (insumoKey: string): InsumoDesglosado | undefined => {
+        if (insumoKey.startsWith('insumo-')) {
+            const id = Number(insumoKey.replace('insumo-', ''));
+            if (!isNaN(id)) {
+                return findInsumoById(insumosDesglosados, id);
+            }
+        }
+        if (insumoKey.startsWith('producto-')) {
+            const productoId = insumoKey.replace('producto-', '');
+            return findInsumoByProductoId(insumosDesglosados, productoId);
+        }
+        return findInsumoByProductoId(insumosDesglosados, insumoKey);
+    };
+
     // Construir items para el DTO desde lotesPorMaterial e insumosDesglosados
     const buildDispensacionItems = (): Array<{
         seguimientoId: number;
@@ -146,9 +188,9 @@ export default function StepThreeComponent({
         }
 
         // Iterar sobre cada material que tiene lotes seleccionados (receta)
-        lotesPorMaterial.forEach((lotes, productoId) => {
-            // Encontrar el insumo correspondiente para obtener seguimientoId si existe
-            const insumo = insumosDesglosados.find(i => i.productoId === productoId);
+        lotesPorMaterial.forEach((lotes, insumoKey) => {
+            const insumo = findInsumoByKey(insumoKey);
+            const productoId = insumo?.productoId ?? (insumoKey.startsWith('producto-') ? insumoKey.replace('producto-', '') : insumoKey);
 
             // Filtrar productos no inventariables: solo incluir si es inventariable
             // Si inventareable es undefined o null, asumir true (comportamiento por defecto)
@@ -218,8 +260,9 @@ export default function StepThreeComponent({
                 fechaVencimiento?: string;
             }>();
 
-            lotesPorMaterial.forEach((lotes, productoId) => {
-                const insumo = insumosDesglosados.find(i => i.productoId === productoId);
+            lotesPorMaterial.forEach((lotes, insumoKey) => {
+                const insumo = findInsumoByKey(insumoKey);
+                const productoId = insumo?.productoId ?? (insumoKey.startsWith('producto-') ? insumoKey.replace('producto-', '') : insumoKey);
                 if (insumo) {
                     // Filtrar productos no inventariables: solo incluir si es inventariable
                     // Si inventareable es undefined o null, asumir true (comportamiento por defecto)
@@ -414,8 +457,9 @@ export default function StepThreeComponent({
 
     // Agregar materiales de receta al resumen
     if (lotesPorMaterial && insumosDesglosados) {
-        lotesPorMaterial.forEach((lotes, productoId) => {
-            const insumo = insumosDesglosados.find(i => i.productoId === productoId);
+        lotesPorMaterial.forEach((lotes, insumoKey) => {
+            const insumo = findInsumoByKey(insumoKey);
+            const productoId = insumo?.productoId ?? (insumoKey.startsWith('producto-') ? insumoKey.replace('producto-', '') : insumoKey);
             if (insumo) {
                 lotes.forEach(lote => {
                     summaryItems.push({

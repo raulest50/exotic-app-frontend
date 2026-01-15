@@ -106,6 +106,7 @@ export default class EndPointsURL{
     public listar_lotes_de_producto:string;
     public lotes_disponibles_paginados: string;
     public insumos_desglosados_orden: string;
+    public dispensacion_resumen_odp: string;
     public historial_dispensacion_filter: string;
 
 
@@ -308,6 +309,7 @@ export default class EndPointsURL{
         this.listar_lotes_de_producto = `${domain}/${salidas_almacen_res}/lotes-disponibles`;
         this.lotes_disponibles_paginados = `${domain}/${salidas_almacen_res}/lotes-disponibles-paginados`;
         this.insumos_desglosados_orden = `${domain}/${salidas_almacen_res}/orden-produccion/{ordenProduccionId}/insumos-desglosados`;
+        this.dispensacion_resumen_odp = `${domain}/${salidas_almacen_res}/orden-produccion/{ordenProduccionId}/dispensacion-resumen`;
         this.historial_dispensacion_filter = `${domain}/${salidas_almacen_res}/historial_dispensacion_filter`;
 
 

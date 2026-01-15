@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
-import {CasePackResponseDTO, DispensacionDTO, DispensacionFormularioDTO, InsumoDesglosado, InsumosDesglosadosResponse} from '../types';
+import {CasePackResponseDTO, DispensacionDTO, DispensacionFormularioDTO, DispensacionResumenResponse, InsumoDesglosado, TransaccionAlmacenDetalle} from '../types';
 import FiltroODP_AsistDisp from './FiltroODP_AsistDisp';
 
 interface Props {
@@ -29,6 +29,7 @@ interface Props {
     setInsumosEmpaque?: (insumos: InsumoDesglosado[]) => void;
     setCasePack?: (casePack: CasePackResponseDTO | null) => void;
     setCantidadProducir?: (cantidad: number | null) => void;
+    setHistorialDispensaciones?: (historial: TransaccionAlmacenDetalle[]) => void;
     refreshToken?: number;
 }
 
@@ -54,7 +55,7 @@ interface PaginatedResponse<T> {
     size: number;
 }
 
-export default function StepOneComponentV2({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId, setInsumosAnidados, setProductoId, setInsumosEmpaque, setCasePack, setCantidadProducir, refreshToken}: Props){
+export default function StepOneComponentV2({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId, setInsumosAnidados, setProductoId, setInsumosEmpaque, setCasePack, setCantidadProducir, setHistorialDispensaciones, refreshToken}: Props){
     const toast = useToast();
     const [ordenes, setOrdenes] = useState<OrdenDispensacionResumen[]>([]);
     const [page, setPage] = useState(0);
@@ -151,16 +152,20 @@ export default function StepOneComponentV2({setActiveStep, setDispensacion, setI
         }
         setLoadingOrden(ordenId);
         try {
-            // Llamar al endpoint para obtener insumos desglosados (ahora incluye materiales de empaque)
-            const endpoint = endpoints.insumos_desglosados_orden.replace('{ordenProduccionId}', ordenId.toString());
-            const resp = await axios.get<InsumosDesglosadosResponse>(endpoint, {withCredentials: true});
-            
-            // Separar insumos de receta e insumos de empaque
-            if(setInsumosDesglosados) {
+            const endpoint = endpoints.dispensacion_resumen_odp.replace('{ordenProduccionId}', ordenId.toString());
+            const resp = await axios.get<DispensacionResumenResponse>(endpoint, {withCredentials: true});
+
+            if (setInsumosDesglosados) {
                 setInsumosDesglosados(resp.data.insumosReceta || []);
             }
-            if(setInsumosEmpaque) {
+            if (setInsumosEmpaque) {
                 setInsumosEmpaque(resp.data.insumosEmpaque || []);
+            }
+            if (setCasePack) {
+                setCasePack(resp.data.casePack ?? null);
+            }
+            if (setHistorialDispensaciones) {
+                setHistorialDispensaciones(resp.data.historialDispensaciones || []);
             }
             if(setOrdenProduccionId) {
                 setOrdenProduccionId(ordenId);
@@ -169,30 +174,11 @@ export default function StepOneComponentV2({setActiveStep, setDispensacion, setI
                 setCantidadProducir(orden.cantidadProducir ?? null);
             }
             
-            // Si tenemos productoId, obtener estructura anidada para visualización jerárquica
-            if (productoId && setInsumosAnidados && setProductoId) {
-                try {
-                    const nestedEndpoint = endpoints.insumos_with_stock.replace('{id}', encodeURIComponent(productoId));
-                    const nestedResp = await axios.get<any[]>(nestedEndpoint, {withCredentials: true});
-                    const nestedData = Array.isArray(nestedResp.data) ? nestedResp.data : nestedResp.data?.content ?? [];
-                    setInsumosAnidados(nestedData);
-                    setProductoId(productoId);
-                } catch (nestedErr) {
-                    console.warn('No se pudo obtener estructura anidada, se usará estructura plana:', nestedErr);
-                    // Continuar sin estructura anidada (fallback a estructura plana)
-                    setInsumosAnidados([]);
-                }
+            if (setInsumosAnidados) {
+                setInsumosAnidados([]);
             }
-
-            if (productoId && setCasePack) {
-                try {
-                    const casePackEndpoint = endpoints.case_pack_terminado.replace('{id}', encodeURIComponent(productoId));
-                    const casePackResp = await axios.get<CasePackResponseDTO>(casePackEndpoint, {withCredentials: true});
-                    setCasePack(casePackResp.data ?? null);
-                } catch (casePackErr) {
-                    console.warn('No se pudo obtener CasePack del terminado:', casePackErr);
-                    setCasePack(null);
-                }
+            if (setProductoId && productoId) {
+                setProductoId(productoId);
             }
             
             // También mantener compatibilidad con el sistema anterior si es necesario

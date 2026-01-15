@@ -1,6 +1,7 @@
 import React from 'react';
-import {Box, Button, Collapse, Table, Tbody, Td, Text, Th, Thead, Tr, Tag} from '@chakra-ui/react';
+import {Box, Button, Collapse, IconButton, Table, Tbody, Td, Text, Th, Thead, Tr, Tag} from '@chakra-ui/react';
 import {FaChevronDown, FaChevronUp} from 'react-icons/fa';
+import {DeleteIcon} from '@chakra-ui/icons';
 import {InsumoDesglosado, LoteSeleccionado} from '../types';
 
 interface Props {
@@ -9,6 +10,9 @@ interface Props {
     onDefinirLotes: (insumo: InsumoDesglosado) => void;
     expandedSemiterminados: Record<string, boolean>;
     onToggleSemiterminado: (productoId: string) => void;
+    historicoPorProducto?: Map<string, LoteSeleccionado[]>;
+    getInsumoKey: (insumo: InsumoDesglosado) => string;
+    onRemoveLote: (insumoKey: string, loteId: number) => void;
 }
 
 export default function TablaDispensacionInsumos({
@@ -16,7 +20,10 @@ export default function TablaDispensacionInsumos({
     lotesPorMaterial,
     onDefinirLotes,
     expandedSemiterminados,
-    onToggleSemiterminado
+    onToggleSemiterminado,
+    historicoPorProducto,
+    getInsumoKey,
+    onRemoveLote
 }: Props) {
     const formatDate = (date: string | null | undefined): string => {
         if (!date) return 'N/A';
@@ -36,11 +43,13 @@ export default function TablaDispensacionInsumos({
     };
 
     const renderInsumoRecursivo = (insumo: InsumoDesglosado, nivel: number = 0, parentId: string = '') => {
-        const reactKey = `${parentId}-${insumo.productoId}`;
+        const insumoKey = getInsumoKey(insumo);
+        const reactKey = `${parentId}-${insumoKey}`;
         const esSemi = esSemiterminado(insumo);
         const tieneSubInsumos = insumo.subInsumos && insumo.subInsumos.length > 0;
         const isExpanded = expandedSemiterminados[insumo.productoId] || false;
-        const lotesSeleccionados = lotesPorMaterial.get(insumo.productoId) || [];
+        const lotesSeleccionados = lotesPorMaterial.get(insumoKey) || [];
+        const historico = historicoPorProducto?.get(insumo.productoId) || [];
         const esMaterial = !esSemi && !tieneSubInsumos;
         const esInvent = esInventariable(insumo);
 
@@ -107,10 +116,42 @@ export default function TablaDispensacionInsumos({
         if (esMaterial && lotesSeleccionados.length > 0) {
             lotesSeleccionados.forEach((lote) => {
                 elements.push(
-                    <Tr key={`${insumo.productoId}-lote-${lote.loteId}`} bg='gray.50'>
+                    <Tr key={`${insumoKey}-lote-${lote.loteId}`} bg='gray.50'>
                         <Td></Td>
                         <Td pl={8} fontSize='xs' color='gray.600'>
                             └─ Lote: {lote.batchNumber}
+                        </Td>
+                        <Td fontSize='xs' color='gray.600'>
+                            {Math.abs(lote.cantidad).toFixed(2)}
+                        </Td>
+                        <Td fontSize='xs' color='gray.600'>
+                            {formatDate(lote.expirationDate)}
+                        </Td>
+                        <Td>
+                            <IconButton
+                                aria-label="Eliminar lote"
+                                icon={<DeleteIcon />}
+                                size="xs"
+                                colorScheme="red"
+                                variant="ghost"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRemoveLote(insumoKey, lote.loteId);
+                                }}
+                            />
+                        </Td>
+                    </Tr>
+                );
+            });
+        }
+
+        if (esMaterial && historico.length > 0) {
+            historico.forEach((lote) => {
+                elements.push(
+                    <Tr key={`${insumoKey}-hist-${lote.batchNumber}-${lote.loteId}`} bg='gray.100'>
+                        <Td></Td>
+                        <Td pl={8} fontSize='xs' color='gray.600'>
+                            └─ Histórico: {lote.batchNumber}
                         </Td>
                         <Td fontSize='xs' color='gray.600'>
                             {lote.cantidad.toFixed(2)}

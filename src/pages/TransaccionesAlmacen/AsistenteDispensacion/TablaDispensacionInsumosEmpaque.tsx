@@ -1,5 +1,6 @@
 import React from 'react';
-import {Box, Button, Table, Tbody, Td, Text, Th, Thead, Tr, Tag} from '@chakra-ui/react';
+import {Box, Button, IconButton, Table, Tbody, Td, Text, Th, Thead, Tr, Tag} from '@chakra-ui/react';
+import {DeleteIcon} from '@chakra-ui/icons';
 import {InsumoDesglosado, LoteSeleccionado} from '../types';
 
 interface Props {
@@ -7,13 +8,17 @@ interface Props {
     lotesPorMaterialEmpaque: Map<string, LoteSeleccionado[]>;
     getCantidadEmpaque: (insumo: InsumoDesglosado) => number;
     onDefinirLotesEmpaque: (insumo: InsumoDesglosado, cantidadEmpaque: number) => void;
+    historicoPorProducto?: Map<string, LoteSeleccionado[]>;
+    onRemoveLoteEmpaque: (productoId: string, loteId: number) => void;
 }
 
 export default function TablaDispensacionInsumosEmpaque({
     insumosEmpaque,
     lotesPorMaterialEmpaque,
     getCantidadEmpaque,
-    onDefinirLotesEmpaque
+    onDefinirLotesEmpaque,
+    historicoPorProducto,
+    onRemoveLoteEmpaque
 }: Props) {
     const formatDate = (date: string | null | undefined): string => {
         if (!date) return 'N/A';
@@ -32,6 +37,7 @@ export default function TablaDispensacionInsumosEmpaque({
         const lotesSeleccionados = lotesPorMaterialEmpaque.get(insumo.productoId) || [];
         const esInvent = esInventariable(insumo);
         const cantidadEmpaque = getCantidadEmpaque(insumo);
+        const historico = historicoPorProducto?.get(insumo.productoId) || [];
 
         return (
             <React.Fragment key={insumo.productoId}>
@@ -74,6 +80,33 @@ export default function TablaDispensacionInsumosEmpaque({
                         <Td></Td>
                         <Td pl={8} fontSize='xs' color='gray.600'>
                             └─ Lote: {lote.batchNumber}
+                        </Td>
+                        <Td fontSize='xs' color='gray.600'>
+                            {Math.abs(lote.cantidad).toFixed(2)}
+                        </Td>
+                        <Td fontSize='xs' color='gray.600'>
+                            {formatDate(lote.expirationDate)}
+                        </Td>
+                        <Td>
+                            <IconButton
+                                aria-label="Eliminar lote"
+                                icon={<DeleteIcon />}
+                                size="xs"
+                                colorScheme="red"
+                                variant="ghost"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRemoveLoteEmpaque(insumo.productoId, lote.loteId);
+                                }}
+                            />
+                        </Td>
+                    </Tr>
+                ))}
+                {esInvent && historico.length > 0 && historico.map((lote) => (
+                    <Tr key={`${insumo.productoId}-hist-${lote.batchNumber}-${lote.loteId}`} bg='gray.100'>
+                        <Td></Td>
+                        <Td pl={8} fontSize='xs' color='gray.600'>
+                            └─ Histórico: {lote.batchNumber}
                         </Td>
                         <Td fontSize='xs' color='gray.600'>
                             {lote.cantidad.toFixed(2)}

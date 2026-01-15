@@ -1,10 +1,10 @@
 import {Box, Button, Flex, Heading, Text} from '@chakra-ui/react';
 import React, {useEffect, useMemo, useState} from 'react';
-import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, LoteSeleccionado} from '../types';
+import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
 import {LotePickerDispensacion} from './AsistenteDispensacionComponents/LotePickerDispensacion';
 import {InsumoWithStock} from '../../Produccion/types';
 import ResumenHistorialDispensaciones from './ResumenHistorialDispensaciones';
-import {getAccessLevel} from '../../../api/UserApi';
+import {getAccessLevel, getCurrentUser} from '../../../api/UserApi';
 import TablaDispensacionInsumos from './TablaDispensacionInsumos';
 import TablaDispensacionInsumosEmpaque from './TablaDispensacionInsumosEmpaque';
 
@@ -22,6 +22,7 @@ interface Props {
     unitsPerCase?: number;
     casePack?: CasePackResponseDTO | null;
     cantidadProducir?: number | null;
+    historialDispensaciones?: TransaccionAlmacenDetalle[];
     lotesPorMaterialEmpaque?: Map<string, LoteSeleccionado[]>;
     setLotesPorMaterialEmpaque?: (lotes: Map<string, LoteSeleccionado[]>) => void;
 }
@@ -47,6 +48,7 @@ export default function StepTwoComponent({
     unitsPerCase,
     casePack,
     cantidadProducir,
+    historialDispensaciones = [],
     lotesPorMaterialEmpaque: lotesPorMaterialEmpaqueProp,
     setLotesPorMaterialEmpaque: setLotesPorMaterialEmpaqueProp
 }: Props){
@@ -61,15 +63,23 @@ export default function StepTwoComponent({
     const lotesPorMaterialEmpaque = lotesPorMaterialEmpaqueProp || lotesPorMaterialEmpaqueLocal;
     const setLotesPorMaterialEmpaque = setLotesPorMaterialEmpaqueProp || setLotesPorMaterialEmpaqueLocal;
     
-    const [modalAbierto, setModalAbierto] = useState<{productoId: string; productoNombre: string; cantidadRequerida: number; esEmpaque?: boolean} | null>(null);
+    const [modalAbierto, setModalAbierto] = useState<{insumoKey: string; productoId: string; productoNombre: string; cantidadRequerida: number; esEmpaque?: boolean} | null>(null);
     
     // Estado para controlar qué semiterminados están expandidos
     const [expandedSemiterminados, setExpandedSemiterminados] = useState<Record<string, boolean>>({});
-    const [totalesHistorico, setTotalesHistorico] = useState<Map<string, number>>(new Map());
     const [accessLevel, setAccessLevel] = useState<number | null>(null);
+    const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+
+    const getInsumoKey = (insumo: InsumoDesglosado): string => {
+        if (typeof insumo.insumoId === 'number') {
+            return `insumo-${insumo.insumoId}`;
+        }
+        return `producto-${insumo.productoId}`;
+    };
 
     const handleAbrirModal = (insumo: InsumoDesglosado) => {
         setModalAbierto({
+            insumoKey: getInsumoKey(insumo),
             productoId: insumo.productoId,
             productoNombre: insumo.productoNombre,
             cantidadRequerida: insumo.cantidadTotalRequerida
@@ -80,16 +90,30 @@ export default function StepTwoComponent({
         setModalAbierto(null);
     };
 
-    const handleAceptarLotes = (productoId: string, lotes: LoteSeleccionado[], esEmpaque: boolean = false) => {
+    const handleAceptarLotes = (insumoKey: string, lotes: LoteSeleccionado[], esEmpaque: boolean = false) => {
         if (esEmpaque) {
             const nuevoMap = new Map(lotesPorMaterialEmpaque);
-            nuevoMap.set(productoId, lotes);
+            nuevoMap.set(insumoKey, lotes);
             setLotesPorMaterialEmpaque(nuevoMap);
         } else {
         const nuevoMap = new Map(lotesPorMaterial);
-        nuevoMap.set(productoId, lotes);
+        nuevoMap.set(insumoKey, lotes);
         setLotesPorMaterial(nuevoMap);
         }
+    };
+
+    const handleRemoveLote = (insumoKey: string, loteId: number) => {
+        const nuevoMap = new Map(lotesPorMaterial);
+        const actuales = nuevoMap.get(insumoKey) || [];
+        nuevoMap.set(insumoKey, actuales.filter(lote => lote.loteId !== loteId));
+        setLotesPorMaterial(nuevoMap);
+    };
+
+    const handleRemoveLoteEmpaque = (productoId: string, loteId: number) => {
+        const nuevoMap = new Map(lotesPorMaterialEmpaque);
+        const actuales = nuevoMap.get(productoId) || [];
+        nuevoMap.set(productoId, actuales.filter(lote => lote.loteId !== loteId));
+        setLotesPorMaterialEmpaque(nuevoMap);
     };
 
     // Función para normalizar insumos anidados del backend
@@ -199,15 +223,24 @@ export default function StepTwoComponent({
                 setAccessLevel(null);
             }
         };
+        const fetchUser = async () => {
+            try {
+                const user = await getCurrentUser();
+                setCurrentUsername(user?.username ?? null);
+            } catch {
+                setCurrentUsername(null);
+            }
+        };
         fetchAccessLevel();
+        fetchUser();
     }, []);
 
     const totalesSeleccionados = useMemo(() => {
         const map = new Map<string, number>();
-        lotesPorMaterial.forEach((lotes, productoId) => {
+        lotesPorMaterial.forEach((lotes, insumoKey) => {
             const total = lotes.reduce((suma, lote) => suma + lote.cantidad, 0);
             if (total > 0) {
-                map.set(productoId, total);
+                map.set(insumoKey, total);
             }
         });
         lotesPorMaterialEmpaque.forEach((lotes, productoId) => {
@@ -242,15 +275,59 @@ export default function StepTwoComponent({
         return insumosEmpaque.filter(insumo => esInventariable(insumo));
     }, [insumosEmpaque]);
 
+    const historialPorProducto = useMemo(() => {
+        const map = new Map<string, LoteSeleccionado[]>();
+        historialDispensaciones.forEach((disp) => {
+            disp.movimientos.forEach((mov) => {
+                const cantidad = Math.abs(mov.cantidad);
+                const lote: LoteSeleccionado = {
+                    loteId: 0,
+                    batchNumber: mov.batchNumber || 'N/A',
+                    cantidad,
+                    cantidadDisponible: cantidad,
+                    productionDate: mov.productionDate || null,
+                    expirationDate: mov.expirationDate || null
+                };
+                const prev = map.get(mov.productoId) ?? [];
+                map.set(mov.productoId, [...prev, lote]);
+            });
+        });
+        return map;
+    }, [historialDispensaciones]);
+
+    const totalesHistorico = useMemo(() => {
+        const map = new Map<string, number>();
+        historialDispensaciones.forEach((disp) => {
+            disp.movimientos.forEach((mov) => {
+                const prev = map.get(mov.productoId) ?? 0;
+                map.set(mov.productoId, prev + Math.abs(mov.cantidad));
+            });
+        });
+        return map;
+    }, [historialDispensaciones]);
+
     const excedidos = useMemo(() => {
         const excedidosLocal: {productoId: string; requerido: number; total: number}[] = [];
         const tolerance = 0.01;
 
+        const requeridoPorProducto = new Map<string, number>();
+        const seleccionadoPorProducto = new Map<string, number>();
         materialesInventariables.forEach((material) => {
-            const requerido = material.cantidadTotalRequerida;
-            const total = (totalesHistorico.get(material.productoId) ?? 0) + (totalesSeleccionados.get(material.productoId) ?? 0);
+            requeridoPorProducto.set(
+                material.productoId,
+                (requeridoPorProducto.get(material.productoId) ?? 0) + material.cantidadTotalRequerida
+            );
+            const insumoKey = getInsumoKey(material);
+            const seleccionado = totalesSeleccionados.get(insumoKey) ?? 0;
+            seleccionadoPorProducto.set(
+                material.productoId,
+                (seleccionadoPorProducto.get(material.productoId) ?? 0) + seleccionado
+            );
+        });
+        requeridoPorProducto.forEach((requerido, productoId) => {
+            const total = (totalesHistorico.get(productoId) ?? 0) + (seleccionadoPorProducto.get(productoId) ?? 0);
             if (total - requerido > tolerance) {
-                excedidosLocal.push({productoId: material.productoId, requerido, total});
+                excedidosLocal.push({productoId, requerido, total});
             }
         });
 
@@ -265,7 +342,7 @@ export default function StepTwoComponent({
         return excedidosLocal;
     }, [materialesInventariables, materialesEmpaqueInventariables, totalesHistorico, totalesSeleccionados, getCantidadEmpaque]);
 
-    const requiereNivel2 = excedidos.length > 0 && (accessLevel === null || accessLevel < 2);
+    const requiereNivel2 = excedidos.length > 0 && (accessLevel === null || accessLevel < 2) && currentUsername !== 'master';
 
     // Función para manejar el clic en el botón de expandir/colapsar
     const toggleSemiterminado = (productoId: string) => {
@@ -290,6 +367,9 @@ export default function StepTwoComponent({
                         onDefinirLotes={handleAbrirModal}
                         expandedSemiterminados={expandedSemiterminados}
                         onToggleSemiterminado={toggleSemiterminado}
+                        historicoPorProducto={historialPorProducto}
+                        getInsumoKey={getInsumoKey}
+                        onRemoveLote={handleRemoveLote}
                     />
                     {/* Tabla de materiales de empaque */}
                     {insumosEmpaque && insumosEmpaque.length > 0 && (
@@ -304,8 +384,11 @@ export default function StepTwoComponent({
                                 insumosEmpaque={insumosEmpaque}
                                 lotesPorMaterialEmpaque={lotesPorMaterialEmpaque}
                                 getCantidadEmpaque={getCantidadEmpaque}
+                                historicoPorProducto={historialPorProducto}
+                                onRemoveLoteEmpaque={handleRemoveLoteEmpaque}
                                 onDefinirLotesEmpaque={(insumo, cantidadEmpaque) => {
                                     setModalAbierto({
+                                        insumoKey: insumo.productoId,
                                         productoId: insumo.productoId,
                                         productoNombre: insumo.productoNombre,
                                         cantidadRequerida: cantidadEmpaque,
@@ -317,7 +400,7 @@ export default function StepTwoComponent({
                     )}
                     <ResumenHistorialDispensaciones
                         ordenProduccionId={ordenProduccionId ?? null}
-                        onTotalesChange={setTotalesHistorico}
+                        dispensaciones={historialDispensaciones}
                     />
                     <Flex w='40%' gap={4}>
                         <Button flex='1' onClick={()=>setActiveStep(0)}>Atrás</Button>
@@ -352,7 +435,7 @@ export default function StepTwoComponent({
                     <LotePickerDispensacion
                         isOpen={true}
                         onClose={handleCerrarModal}
-                        onAccept={(lotes) => handleAceptarLotes(modalAbierto.productoId, lotes, modalAbierto.esEmpaque || false)}
+                        onAccept={(lotes) => handleAceptarLotes(modalAbierto.insumoKey, lotes, modalAbierto.esEmpaque || false)}
                         productoId={modalAbierto.productoId}
                         productoNombre={modalAbierto.productoNombre}
                         cantidadRequerida={modalAbierto.cantidadRequerida}

@@ -5,7 +5,7 @@ import StepOneComponent from './StepOneComponent';
 import StepOneComponentV2 from './StepOneComponent.tsx';
 import StepTwoComponent from './StepTwoComponent';
 import StepThreeComponent from './StepThreeComponent';
-import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, LoteSeleccionado} from '../types';
+import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
 
 const steps = [
     {title:'Primero', description:'Identificar Orden'},
@@ -26,6 +26,7 @@ export function AsistenteDispensacion(){
     const [cantidadProducir, setCantidadProducir] = useState<number | null>(null);
     const [lotesPorMaterialEmpaque, setLotesPorMaterialEmpaque] = useState<Map<string, LoteSeleccionado[]>>(new Map());
     const [refreshToken, setRefreshToken] = useState(0);
+    const [historialDispensaciones, setHistorialDispensaciones] = useState<TransaccionAlmacenDetalle[]>([]);
 
     const renderStep = () => {
         if(activeStep===0){
@@ -41,6 +42,7 @@ export function AsistenteDispensacion(){
                     setInsumosEmpaque={setInsumosEmpaque}
                     setCasePack={setCasePack}
                     setCantidadProducir={setCantidadProducir}
+                    setHistorialDispensaciones={setHistorialDispensaciones}
                     refreshToken={refreshToken}
                 />
                 : <StepOneComponent setActiveStep={setActiveStep} setDispensacion={setDispensacion}/>;
@@ -59,6 +61,7 @@ export function AsistenteDispensacion(){
                 insumosEmpaque={insumosEmpaque}
                 casePack={casePack}
                 cantidadProducir={cantidadProducir}
+                historialDispensaciones={historialDispensaciones}
                 lotesPorMaterialEmpaque={lotesPorMaterialEmpaque}
                 setLotesPorMaterialEmpaque={setLotesPorMaterialEmpaque}
             />;
