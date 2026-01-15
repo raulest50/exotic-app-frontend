@@ -14,6 +14,7 @@ export default class EndPointsURL{
     public search_terminado_byname:string;
     public search_terminados_picker:string;
     public search_semi_byname_4pd:string;
+    public case_pack_terminado: string;
 
     public save_mprima_v2: string;
 
@@ -222,6 +223,7 @@ export default class EndPointsURL{
         this.search_terminado_byname = `${domain}/${productos_res}/search_terminados`;
         this.search_terminados_picker = `${domain}/${productos_res}/search_terminados_picker`;
         this.search_semi_byname_4pd = `${domain}/${productos_res}/search_semi_4pd`;
+        this.case_pack_terminado = `${domain}/${productos_res}/terminado/{id}/case-pack`;
 
         this.carga_masiva_mprims = `${domain}/${productos_res}/bulk_upload_excel`;
         this.consulta_productos = `${domain}/${productos_res}/consulta1`;

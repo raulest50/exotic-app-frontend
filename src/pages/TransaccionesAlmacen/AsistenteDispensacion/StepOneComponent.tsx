@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
-import {DispensacionDTO, DispensacionFormularioDTO, InsumoDesglosado, InsumosDesglosadosResponse} from '../types';
+import {CasePackResponseDTO, DispensacionDTO, DispensacionFormularioDTO, InsumoDesglosado, InsumosDesglosadosResponse} from '../types';
 import FiltroODP_AsistDisp from './FiltroODP_AsistDisp';
 
 interface Props {
@@ -26,6 +26,9 @@ interface Props {
     setOrdenProduccionId?: (id: number) => void;
     setInsumosAnidados?: (insumos: any[]) => void;
     setProductoId?: (id: string) => void;
+    setInsumosEmpaque?: (insumos: InsumoDesglosado[]) => void;
+    setCasePack?: (casePack: CasePackResponseDTO | null) => void;
+    setCantidadProducir?: (cantidad: number | null) => void;
 }
 
 interface OrdenDispensacionResumen {
@@ -34,6 +37,7 @@ interface OrdenDispensacionResumen {
     productoId?: string;
     productoNombre?: string;
     producto?: {nombre?: string};
+    cantidadProducir?: number;
     fechaInicio?: string;
     fechaCreacion?: string;
     estado?: string | number;
@@ -49,7 +53,7 @@ interface PaginatedResponse<T> {
     size: number;
 }
 
-export default function StepOneComponentV2({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId, setInsumosAnidados, setProductoId, setInsumosEmpaque}: Props){
+export default function StepOneComponentV2({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId, setInsumosAnidados, setProductoId, setInsumosEmpaque, setCasePack, setCantidadProducir}: Props){
     const toast = useToast();
     const [ordenes, setOrdenes] = useState<OrdenDispensacionResumen[]>([]);
     const [page, setPage] = useState(0);
@@ -155,6 +159,9 @@ export default function StepOneComponentV2({setActiveStep, setDispensacion, setI
             if(setOrdenProduccionId) {
                 setOrdenProduccionId(ordenId);
             }
+            if (setCantidadProducir) {
+                setCantidadProducir(orden.cantidadProducir ?? null);
+            }
             
             // Si tenemos productoId, obtener estructura anidada para visualización jerárquica
             if (productoId && setInsumosAnidados && setProductoId) {
@@ -168,6 +175,17 @@ export default function StepOneComponentV2({setActiveStep, setDispensacion, setI
                     console.warn('No se pudo obtener estructura anidada, se usará estructura plana:', nestedErr);
                     // Continuar sin estructura anidada (fallback a estructura plana)
                     setInsumosAnidados([]);
+                }
+            }
+
+            if (productoId && setCasePack) {
+                try {
+                    const casePackEndpoint = endpoints.case_pack_terminado.replace('{id}', encodeURIComponent(productoId));
+                    const casePackResp = await axios.get<CasePackResponseDTO>(casePackEndpoint, {withCredentials: true});
+                    setCasePack(casePackResp.data ?? null);
+                } catch (casePackErr) {
+                    console.warn('No se pudo obtener CasePack del terminado:', casePackErr);
+                    setCasePack(null);
                 }
             }
             

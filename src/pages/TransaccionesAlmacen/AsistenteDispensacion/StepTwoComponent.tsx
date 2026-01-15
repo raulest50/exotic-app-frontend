@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react';
 import React, {useState, useMemo} from 'react';
 import {FaChevronDown, FaChevronUp} from 'react-icons/fa';
-import {DispensacionDTO, InsumoDesglosado, LoteSeleccionado} from '../types';
+import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, LoteSeleccionado} from '../types';
 import {LotePickerDispensacion} from './AsistenteDispensacionComponents/LotePickerDispensacion';
 import {InsumoWithStock} from '../../Produccion/types';
 
@@ -30,6 +30,9 @@ interface Props {
     insumosAnidados?: any[];
     productoId?: string | null;
     insumosEmpaque?: InsumoDesglosado[];
+    unitsPerCase?: number;
+    casePack?: CasePackResponseDTO | null;
+    cantidadProducir?: number | null;
     lotesPorMaterialEmpaque?: Map<string, LoteSeleccionado[]>;
     setLotesPorMaterialEmpaque?: (lotes: Map<string, LoteSeleccionado[]>) => void;
 }
@@ -52,6 +55,9 @@ export default function StepTwoComponent({
     insumosAnidados = [],
     productoId,
     insumosEmpaque = [],
+    unitsPerCase,
+    casePack,
+    cantidadProducir,
     lotesPorMaterialEmpaque: lotesPorMaterialEmpaqueProp,
     setLotesPorMaterialEmpaque: setLotesPorMaterialEmpaqueProp
 }: Props){
@@ -169,6 +175,37 @@ export default function StepTwoComponent({
     const esInventariable = (insumo: InsumoDesglosado): boolean => {
         // Si inventareable es undefined o null, asumir true (comportamiento por defecto)
         return insumo.inventareable !== false;
+    };
+
+    const casePackEmpaqueMap = useMemo(() => {
+        const map = new Map<string, number>();
+        if (casePack?.insumosEmpaque && casePack.insumosEmpaque.length > 0) {
+            casePack.insumosEmpaque.forEach(insumo => {
+                if (insumo.materialId) {
+                    map.set(insumo.materialId, insumo.cantidad);
+                }
+            });
+        }
+        return map;
+    }, [casePack]);
+
+    const getCantidadEmpaque = (insumo: InsumoDesglosado): number => {
+        const unitsPerCaseValue = casePack?.unitsPerCase ?? unitsPerCase;
+        const unitsPerCaseValid = typeof unitsPerCaseValue === 'number' && unitsPerCaseValue > 0;
+        const cantidadOrden = typeof cantidadProducir === 'number' && cantidadProducir > 0
+            ? cantidadProducir
+            : null;
+        const baseCantidad = casePackEmpaqueMap.get(insumo.productoId);
+
+        if (unitsPerCaseValid && cantidadOrden !== null && baseCantidad !== undefined) {
+            return (cantidadOrden / unitsPerCaseValue) * baseCantidad;
+        }
+
+        if (unitsPerCaseValid) {
+            return insumo.cantidadTotalRequerida / unitsPerCaseValue;
+        }
+
+        return insumo.cantidadTotalRequerida;
     };
 
     // Función para manejar el clic en el botón de expandir/colapsar
@@ -315,6 +352,7 @@ export default function StepTwoComponent({
     const renderInsumoEmpaque = (insumo: InsumoDesglosado) => {
         const lotesSeleccionados = lotesPorMaterialEmpaque.get(insumo.productoId) || [];
         const esInvent = esInventariable(insumo);
+        const cantidadEmpaque = getCantidadEmpaque(insumo);
 
         return (
             <>
@@ -331,7 +369,7 @@ export default function StepTwoComponent({
                             Empaque
                         </Tag>
                     </Td>
-                    <Td>{insumo.cantidadTotalRequerida.toFixed(2)}</Td>
+                    <Td>{cantidadEmpaque.toFixed(2)}</Td>
                     <Td>{insumo.tipoUnidades}</Td>
                     <Td>
                         {esInvent ? (
@@ -343,7 +381,7 @@ export default function StepTwoComponent({
                                     setModalAbierto({
                                         productoId: insumo.productoId,
                                         productoNombre: insumo.productoNombre,
-                                        cantidadRequerida: insumo.cantidadTotalRequerida,
+                                        cantidadRequerida: cantidadEmpaque,
                                         esEmpaque: true
                                     });
                                 }}

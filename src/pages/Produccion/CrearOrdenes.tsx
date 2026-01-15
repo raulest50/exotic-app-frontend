@@ -7,6 +7,7 @@ import {
     VStack,
     useToast,
     FormControl,
+    FormErrorMessage,
     FormLabel,
     Input,
     HStack,
@@ -67,6 +68,24 @@ export default function CrearOrdenes() {
             toast({
                 title: 'Datos incompletos',
                 description: 'Selecciona un producto y especifica al menos una cantidad a producir para crear la orden.',
+                status: 'warning',
+                duration: 5000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        const unitsPerCase = selectedProducto.producto.casePack?.unitsPerCase;
+        const shouldValidateCasePack =
+            selectedProducto.producto.tipo_producto === 'T' &&
+            typeof unitsPerCase === 'number' &&
+            unitsPerCase > 0;
+        const isMultipleValid = !shouldValidateCasePack || (cantidadProducir % unitsPerCase === 0);
+
+        if (!isMultipleValid) {
+            toast({
+                title: 'Cantidad inválida',
+                description: `La cantidad a producir debe ser múltiplo de ${unitsPerCase}.`,
                 status: 'warning',
                 duration: 5000,
                 isClosable: true,
@@ -199,6 +218,13 @@ export default function CrearOrdenes() {
         }
     }, [cantidadProducir, selectedProducto]);
 
+    const unitsPerCase = selectedProducto?.producto.casePack?.unitsPerCase;
+    const shouldValidateCasePack =
+        selectedProducto?.producto.tipo_producto === 'T' &&
+        typeof unitsPerCase === 'number' &&
+        unitsPerCase > 0;
+    const isMultipleValid = !shouldValidateCasePack || (cantidadProducir % unitsPerCase === 0);
+
     return (
         <VStack align="stretch">
             <TerSemiTerCard
@@ -209,7 +235,7 @@ export default function CrearOrdenes() {
             />
 
             <HStack spacing={4} mt="4">
-                <FormControl>
+                <FormControl isInvalid={shouldValidateCasePack && !isMultipleValid}>
                     <FormLabel>Asesor</FormLabel>
                     <InputGroup>
                         <Input
@@ -283,6 +309,11 @@ export default function CrearOrdenes() {
                             <NumberDecrementStepper />
                         </NumberInputStepper>
                     </NumberInput>
+                    {shouldValidateCasePack && !isMultipleValid && (
+                        <FormErrorMessage>
+                            Debe ser múltiplo de {unitsPerCase} unidades por caja.
+                        </FormErrorMessage>
+                    )}
                 </FormControl>
             </HStack>
 

@@ -18,7 +18,7 @@ import {
     useToast, useDisclosure,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
-import {Insumo, Material, Producto} from "../../types.tsx";
+import { CasePack, Insumo, Material, Producto } from "../../types.tsx";
 import { ArrowBackIcon, EditIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
@@ -28,8 +28,9 @@ import {IVA_VALUES} from "../../types.tsx";
 import {Authority} from "../../../../api/global_types.tsx";
 import DeleteProductoDialog from './DeleteProductoDialog.tsx';
 import InsumoListCard from './InsumoListCard.tsx';
+import CardPackagingInfo from './CardPackagingInfo.tsx';
 
-type ProductoDetalle = (Producto | Material) & { insumos?: Insumo[] };
+type ProductoDetalle = (Producto | Material) & { insumos?: Insumo[]; casePack?: CasePack };
 
 type Props = {
     producto: Producto;
@@ -368,6 +369,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     // Determinar si es un material (tipo_producto === 'M')
     const isMaterial = producto.tipo_producto === 'M';
     const isSemiOTerminado = producto.tipo_producto === 'S' || producto.tipo_producto === 'T';
+    const isTerminado = producto.tipo_producto === 'T';
     const canUseWizard = canEdit && isSemiOTerminado && !editMode;
 
     // Mapear tipo de producto a texto legible
@@ -583,6 +585,10 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                         )}
                     </CardBody>
                 </Card>
+            )}
+
+            {isTerminado && (
+                <CardPackagingInfo casePack={productoData.casePack} />
             )}
 
             <Card variant="outline" boxShadow="md">

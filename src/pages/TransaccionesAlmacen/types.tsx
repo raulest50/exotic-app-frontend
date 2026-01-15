@@ -284,6 +284,17 @@ export interface InsumosDesglosadosResponse {
     insumosEmpaque: InsumoDesglosado[];
 }
 
+export interface InsumoEmpaqueCasePackDTO {
+    materialId: string | null;
+    cantidad: number;
+    uom?: string | null;
+}
+
+export interface CasePackResponseDTO {
+    unitsPerCase: number | null;
+    insumosEmpaque: InsumoEmpaqueCasePackDTO[];
+}
+
 export interface LoteSeleccionado {
     loteId: number;
     batchNumber: string;

@@ -4,6 +4,7 @@
 // Summary: Tipos para planeación y seguimiento de órdenes de producción, incluyendo insumos y productos con stock.
 // src/models/types.ts
 
+import type { CasePack } from "../Productos/types.tsx";
 import {Node, ProcesoNode} from "../Productos/types.tsx";
 
 export interface Producto{
@@ -18,6 +19,7 @@ export interface Producto{
     ivaPercentual?: number;
     categoriaId?: number;      // Añadir esta propiedad
     categoriaNombre?: string;  // Añadir esta propiedad
+    casePack?: CasePack;
 }
 
 export interface Insumo {

@@ -92,7 +92,8 @@ export default function TerminadoSemiterminadoPicker({isOpen, onClose, onConfirm
                 const producto = {
                     ...terminado,
                     categoriaId,
-                    categoriaNombre
+                    categoriaNombre,
+                    casePack: terminado.casePack
                 };
 
                 return {
