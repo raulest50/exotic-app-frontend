@@ -235,6 +235,11 @@ export async function getCurrentUser(): Promise<User> {
  * 
  * Esta función es útil para verificar permisos específicos. Retorna el número
  * del nivel de acceso o null si el usuario no tiene acceso a ese módulo.
+ *
+ * moduloAcceso disponibles (según Home.tsx / Modulo):
+ * USUARIOS, PRODUCTOS, PRODUCCION, STOCK, PROVEEDORES, COMPRAS, SEGUIMIENTO_PRODUCCION,
+ * CLIENTES, VENTAS, TRANSACCIONES_ALMACEN, ACTIVOS, CONTABILIDAD, PERSONAL_PLANTA,
+ * BINTELLIGENCE, ADMINISTRACION_ALERTAS, CRONOGRAMA, ORGANIGRAMA, PAGOS_PROVEEDORES.
  * 
  * @param modulo - Nombre del módulo a verificar (ej: "PRODUCCION", "USUARIOS", "COMPRAS")
  * @returns Promise que resuelve con el nivel de acceso (número >= 1) o null si no tiene acceso

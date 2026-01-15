@@ -25,6 +25,7 @@ export function AsistenteDispensacion(){
     const [casePack, setCasePack] = useState<CasePackResponseDTO | null>(null);
     const [cantidadProducir, setCantidadProducir] = useState<number | null>(null);
     const [lotesPorMaterialEmpaque, setLotesPorMaterialEmpaque] = useState<Map<string, LoteSeleccionado[]>>(new Map());
+    const [refreshToken, setRefreshToken] = useState(0);
 
     const renderStep = () => {
         if(activeStep===0){
@@ -40,6 +41,7 @@ export function AsistenteDispensacion(){
                     setInsumosEmpaque={setInsumosEmpaque}
                     setCasePack={setCasePack}
                     setCantidadProducir={setCantidadProducir}
+                    refreshToken={refreshToken}
                 />
                 : <StepOneComponent setActiveStep={setActiveStep} setDispensacion={setDispensacion}/>;
         }
@@ -70,6 +72,7 @@ export function AsistenteDispensacion(){
                 lotesPorMaterial={lotesPorMaterial}
                 insumosEmpaque={insumosEmpaque}
                 lotesPorMaterialEmpaque={lotesPorMaterialEmpaque}
+                onDispensacionSuccess={() => setRefreshToken(prev => prev + 1)}
             />;
         }
     };

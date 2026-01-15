@@ -39,6 +39,7 @@ interface Props {
     lotesPorMaterial?: Map<string, LoteSeleccionado[]>;
     insumosEmpaque?: InsumoDesglosado[];
     lotesPorMaterialEmpaque?: Map<string, LoteSeleccionado[]>;
+    onDispensacionSuccess?: () => void;
 }
 
 export default function StepThreeComponent({
@@ -48,7 +49,8 @@ export default function StepThreeComponent({
     ordenProduccionId,
     lotesPorMaterial,
     insumosEmpaque = [],
-    lotesPorMaterialEmpaque
+    lotesPorMaterialEmpaque,
+    onDispensacionSuccess
 }: Props) {
     const [token, setToken] = useState('');
     const [inputToken, setInputToken] = useState('');
@@ -377,6 +379,7 @@ export default function StepThreeComponent({
                 duration: 3000,
                 isClosable: true
             });
+            onDispensacionSuccess?.();
 
             // Reiniciar el componente volviendo al primer paso después de un breve delay
             setTimeout(() => {

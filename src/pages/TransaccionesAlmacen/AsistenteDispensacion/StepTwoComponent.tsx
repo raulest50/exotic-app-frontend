@@ -1,23 +1,12 @@
-import {
-    Box,
-    Button,
-    Flex,
-    Heading,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    Tag,
-    Collapse
-} from '@chakra-ui/react';
-import React, {useState, useMemo} from 'react';
-import {FaChevronDown, FaChevronUp} from 'react-icons/fa';
+import {Box, Button, Flex, Heading, Text} from '@chakra-ui/react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, LoteSeleccionado} from '../types';
 import {LotePickerDispensacion} from './AsistenteDispensacionComponents/LotePickerDispensacion';
 import {InsumoWithStock} from '../../Produccion/types';
+import ResumenHistorialDispensaciones from './ResumenHistorialDispensaciones';
+import {getAccessLevel} from '../../../api/UserApi';
+import TablaDispensacionInsumos from './TablaDispensacionInsumos';
+import TablaDispensacionInsumosEmpaque from './TablaDispensacionInsumosEmpaque';
 
 interface Props {
     setActiveStep: (step:number)=>void;
@@ -76,6 +65,8 @@ export default function StepTwoComponent({
     
     // Estado para controlar qué semiterminados están expandidos
     const [expandedSemiterminados, setExpandedSemiterminados] = useState<Record<string, boolean>>({});
+    const [totalesHistorico, setTotalesHistorico] = useState<Map<string, number>>(new Map());
+    const [accessLevel, setAccessLevel] = useState<number | null>(null);
 
     const handleAbrirModal = (insumo: InsumoDesglosado) => {
         setModalAbierto({
@@ -98,15 +89,6 @@ export default function StepTwoComponent({
         const nuevoMap = new Map(lotesPorMaterial);
         nuevoMap.set(productoId, lotes);
         setLotesPorMaterial(nuevoMap);
-        }
-    };
-
-    const formatDate = (date: string | null | undefined): string => {
-        if (!date) return 'N/A';
-        try {
-            return new Date(date).toLocaleDateString('es-ES');
-        } catch {
-            return 'N/A';
         }
     };
 
@@ -208,211 +190,89 @@ export default function StepTwoComponent({
         return insumo.cantidadTotalRequerida;
     };
 
+    useEffect(() => {
+        const fetchAccessLevel = async () => {
+            try {
+                const level = await getAccessLevel('TRANSACCIONES_ALMACEN');
+                setAccessLevel(level);
+            } catch {
+                setAccessLevel(null);
+            }
+        };
+        fetchAccessLevel();
+    }, []);
+
+    const totalesSeleccionados = useMemo(() => {
+        const map = new Map<string, number>();
+        lotesPorMaterial.forEach((lotes, productoId) => {
+            const total = lotes.reduce((suma, lote) => suma + lote.cantidad, 0);
+            if (total > 0) {
+                map.set(productoId, total);
+            }
+        });
+        lotesPorMaterialEmpaque.forEach((lotes, productoId) => {
+            const total = lotes.reduce((suma, lote) => suma + lote.cantidad, 0);
+            if (total > 0) {
+                map.set(productoId, (map.get(productoId) ?? 0) + total);
+            }
+        });
+        return map;
+    }, [lotesPorMaterial, lotesPorMaterialEmpaque]);
+
+    const materialesInventariables = useMemo(() => {
+        const materiales: InsumoDesglosado[] = [];
+        const collect = (insumos: InsumoDesglosado[]) => {
+            insumos.forEach(insumo => {
+                const esSemi = esSemiterminado(insumo);
+                const tieneSubInsumos = insumo.subInsumos && insumo.subInsumos.length > 0;
+                const esMaterial = !esSemi && !tieneSubInsumos;
+                if (esMaterial && esInventariable(insumo)) {
+                    materiales.push(insumo);
+                }
+                if (tieneSubInsumos && insumo.subInsumos) {
+                    collect(insumo.subInsumos);
+                }
+            });
+        };
+        collect(insumosProcesados);
+        return materiales;
+    }, [insumosProcesados]);
+
+    const materialesEmpaqueInventariables = useMemo(() => {
+        return insumosEmpaque.filter(insumo => esInventariable(insumo));
+    }, [insumosEmpaque]);
+
+    const excedidos = useMemo(() => {
+        const excedidosLocal: {productoId: string; requerido: number; total: number}[] = [];
+        const tolerance = 0.01;
+
+        materialesInventariables.forEach((material) => {
+            const requerido = material.cantidadTotalRequerida;
+            const total = (totalesHistorico.get(material.productoId) ?? 0) + (totalesSeleccionados.get(material.productoId) ?? 0);
+            if (total - requerido > tolerance) {
+                excedidosLocal.push({productoId: material.productoId, requerido, total});
+            }
+        });
+
+        materialesEmpaqueInventariables.forEach((material) => {
+            const requerido = getCantidadEmpaque(material);
+            const total = (totalesHistorico.get(material.productoId) ?? 0) + (totalesSeleccionados.get(material.productoId) ?? 0);
+            if (total - requerido > tolerance) {
+                excedidosLocal.push({productoId: material.productoId, requerido, total});
+            }
+        });
+
+        return excedidosLocal;
+    }, [materialesInventariables, materialesEmpaqueInventariables, totalesHistorico, totalesSeleccionados, getCantidadEmpaque]);
+
+    const requiereNivel2 = excedidos.length > 0 && (accessLevel === null || accessLevel < 2);
+
     // Función para manejar el clic en el botón de expandir/colapsar
     const toggleSemiterminado = (productoId: string) => {
         setExpandedSemiterminados(prev => ({
             ...prev,
             [productoId]: !prev[productoId]
         }));
-    };
-
-    // Componente recursivo para renderizar insumos y sus subinsumos
-    const renderInsumoRecursivo = (insumo: InsumoDesglosado, nivel: number = 0, parentId: string = '') => {
-        const reactKey = `${parentId}-${insumo.productoId}`;
-        const esSemi = esSemiterminado(insumo);
-        const tieneSubInsumos = insumo.subInsumos && insumo.subInsumos.length > 0;
-        const isExpanded = expandedSemiterminados[insumo.productoId] || false;
-        const lotesSeleccionados = lotesPorMaterial.get(insumo.productoId) || [];
-        const esMaterial = !esSemi && !tieneSubInsumos; // Solo materiales (leaf nodes) pueden tener lotes
-        const esInvent = esInventariable(insumo); // Verificar si es inventariable
-
-        const elements = [];
-
-        // Añadir la fila principal
-        elements.push(
-            <Tr 
-                key={`row-${reactKey}`}
-                bg={esSemi ? `purple.${50 + nivel * 10}` : undefined}
-                borderLeftWidth={esSemi ? "4px" : "0"}
-                borderLeftColor="purple.400"
-                cursor={(esSemi && tieneSubInsumos) ? "pointer" : "default"}
-                _hover={(esSemi && tieneSubInsumos) ? { bg: "purple.100" } : { bg: "gray.100" }}
-                onClick={(e) => {
-                    if (esSemi && tieneSubInsumos) {
-                        toggleSemiterminado(insumo.productoId);
-                    }
-                }}
-            >
-                <Td>{insumo.productoId}</Td>
-                <Td fontWeight="medium">
-                    {nivel > 0 && <Box as="span" ml={`${nivel * 0.5}rem`} />}
-                    {insumo.productoNombre}
-                    {esSemi && (
-                        <Tag ml={2} size="sm" colorScheme="purple">
-                            Semiterminado
-                        </Tag>
-                    )}
-                    {!esInvent && (
-                        <Tag ml={2} size="sm" colorScheme="gray" variant="outline">
-                            No inventariable
-                        </Tag>
-                    )}
-                </Td>
-                <Td>{insumo.cantidadTotalRequerida.toFixed(2)}</Td>
-                <Td>{insumo.tipoUnidades}</Td>
-                <Td>
-                    {esMaterial && esInvent ? (
-                        <Button
-                            size='sm'
-                            colorScheme='teal'
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleAbrirModal(insumo);
-                            }}
-                        >
-                            Definir Lotes
-                        </Button>
-                    ) : esMaterial && !esInvent ? (
-                        <Text fontSize='xs' color='gray.500' fontStyle='italic'>
-                            No requiere lote
-                        </Text>
-                    ) : (
-                        esSemi && tieneSubInsumos && (
-                            <Box color="purple.500" display="inline-flex" alignItems="center">
-                                {isExpanded ? <FaChevronUp /> : <FaChevronDown />}
-                            </Box>
-                        )
-                    )}
-                </Td>
-            </Tr>
-        );
-
-        // Añadir subrows para lotes seleccionados (solo para materiales)
-        if (esMaterial && lotesSeleccionados.length > 0) {
-            lotesSeleccionados.forEach((lote) => {
-                elements.push(
-                    <Tr key={`${insumo.productoId}-lote-${lote.loteId}`} bg='gray.50'>
-                        <Td></Td>
-                        <Td pl={8} fontSize='xs' color='gray.600'>
-                            └─ Lote: {lote.batchNumber}
-                        </Td>
-                        <Td fontSize='xs' color='gray.600'>
-                            {lote.cantidad.toFixed(2)}
-                        </Td>
-                        <Td fontSize='xs' color='gray.600'>
-                            {formatDate(lote.expirationDate)}
-                        </Td>
-                        <Td></Td>
-                    </Tr>
-                );
-            });
-        }
-
-        // Añadir la fila de subinsumos si es necesario
-        if (tieneSubInsumos && isExpanded) {
-            elements.push(
-                <Tr key={`subrow-${reactKey}`}>
-                    <Td colSpan={5} p={0}>
-                        <Collapse in={isExpanded} animateOpacity>
-                            <Box 
-                                p={4} 
-                                bg="gray.50" 
-                                borderWidth="1px" 
-                                borderColor="purple.200"
-                                borderRadius="md"
-                                m={2}
-                            >
-                                <Table variant="simple" size="sm" colorScheme="purple">
-                                    <Thead bg="purple.100">
-                                        <Tr>
-                                            <Th>ID Producto</Th>
-                                            <Th>Componente</Th>
-                                            <Th>Cantidad Requerida</Th>
-                                            <Th>Unidad</Th>
-                                            <Th>Acción</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
-                                        {insumo.subInsumos?.map(subInsumo => 
-                                            renderInsumoRecursivo(subInsumo, nivel + 1, insumo.productoId)
-                                        )}
-                                    </Tbody>
-                                </Table>
-                            </Box>
-                        </Collapse>
-                    </Td>
-                </Tr>
-            );
-        }
-
-        return <>{elements}</>;
-    };
-
-    // Función para renderizar materiales de empaque (sin anidación)
-    const renderInsumoEmpaque = (insumo: InsumoDesglosado) => {
-        const lotesSeleccionados = lotesPorMaterialEmpaque.get(insumo.productoId) || [];
-        const esInvent = esInventariable(insumo);
-        const cantidadEmpaque = getCantidadEmpaque(insumo);
-
-        return (
-            <>
-                <Tr key={insumo.productoId}>
-                    <Td>{insumo.productoId}</Td>
-                    <Td fontWeight="medium">
-                        {insumo.productoNombre}
-                        {!esInvent && (
-                            <Tag ml={2} size="sm" colorScheme="gray" variant="outline">
-                                No inventariable
-                            </Tag>
-                        )}
-                        <Tag ml={2} size="sm" colorScheme="blue" variant="outline">
-                            Empaque
-                        </Tag>
-                    </Td>
-                    <Td>{cantidadEmpaque.toFixed(2)}</Td>
-                    <Td>{insumo.tipoUnidades}</Td>
-                    <Td>
-                        {esInvent ? (
-                            <Button
-                                size='sm'
-                                colorScheme='blue'
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setModalAbierto({
-                                        productoId: insumo.productoId,
-                                        productoNombre: insumo.productoNombre,
-                                        cantidadRequerida: cantidadEmpaque,
-                                        esEmpaque: true
-                                    });
-                                }}
-                            >
-                                Definir Lotes
-                            </Button>
-                        ) : (
-                            <Text fontSize='xs' color='gray.500' fontStyle='italic'>
-                                No requiere lote
-                            </Text>
-                        )}
-                    </Td>
-                </Tr>
-                {/* Subrows para lotes seleccionados */}
-                {esInvent && lotesSeleccionados.length > 0 && lotesSeleccionados.map((lote) => (
-                    <Tr key={`${insumo.productoId}-lote-${lote.loteId}`} bg='gray.50'>
-                        <Td></Td>
-                        <Td pl={8} fontSize='xs' color='gray.600'>
-                            └─ Lote: {lote.batchNumber}
-                        </Td>
-                        <Td fontSize='xs' color='gray.600'>
-                            {lote.cantidad.toFixed(2)}
-                        </Td>
-                        <Td fontSize='xs' color='gray.600'>
-                            {formatDate(lote.expirationDate)}
-                        </Td>
-                        <Td></Td>
-                    </Tr>
-                ))}
-            </>
-        );
     };
 
     // Si hay insumos desglosados, mostrar esos; sino, usar el sistema anterior
@@ -424,34 +284,13 @@ export default function StepTwoComponent({
                     <Text fontFamily='Comfortaa Variable' fontSize='sm' color='gray.600'>
                         Lista completa desglosada de materiales base requeridos para la orden de producción
                     </Text>
-                    <Box bg='white' borderRadius='md' boxShadow='sm' overflowX='auto' w='full' maxW='1200px'>
-                        <Table size='sm'>
-                            <Thead>
-                                <Tr>
-                                    <Th>ID Producto</Th>
-                                    <Th>Nombre</Th>
-                                    <Th>Cantidad Requerida</Th>
-                                    <Th>Unidad</Th>
-                                    <Th>Acción</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
-                                {insumosProcesados.length === 0 ? (
-                                    <Tr>
-                                        <Td colSpan={5} textAlign='center' py={4}>
-                                            <Text>No hay materiales registrados</Text>
-                                        </Td>
-                                    </Tr>
-                                ) : (
-                                    insumosProcesados.map((insumo) => 
-                                        <React.Fragment key={insumo.productoId}>
-                                            {renderInsumoRecursivo(insumo)}
-                                        </React.Fragment>
-                                    )
-                                )}
-                            </Tbody>
-                        </Table>
-                    </Box>
+                    <TablaDispensacionInsumos
+                        insumos={insumosProcesados}
+                        lotesPorMaterial={lotesPorMaterial}
+                        onDefinirLotes={handleAbrirModal}
+                        expandedSemiterminados={expandedSemiterminados}
+                        onToggleSemiterminado={toggleSemiterminado}
+                    />
                     {/* Tabla de materiales de empaque */}
                     {insumosEmpaque && insumosEmpaque.length > 0 && (
                         <>
@@ -461,24 +300,25 @@ export default function StepTwoComponent({
                             <Text fontFamily='Comfortaa Variable' fontSize='sm' color='gray.600'>
                                 Materiales de empaque requeridos para la orden de producción
                             </Text>
-                            <Box bg='white' borderRadius='md' boxShadow='sm' overflowX='auto' w='full' maxW='1200px'>
-                                <Table size='sm'>
-                                    <Thead>
-                                        <Tr>
-                                            <Th>ID Producto</Th>
-                                            <Th>Nombre</Th>
-                                            <Th>Cantidad Requerida</Th>
-                                            <Th>Unidad</Th>
-                                            <Th>Acción</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
-                                        {insumosEmpaque.map((insumo) => renderInsumoEmpaque(insumo))}
-                                    </Tbody>
-                                </Table>
-                            </Box>
+                            <TablaDispensacionInsumosEmpaque
+                                insumosEmpaque={insumosEmpaque}
+                                lotesPorMaterialEmpaque={lotesPorMaterialEmpaque}
+                                getCantidadEmpaque={getCantidadEmpaque}
+                                onDefinirLotesEmpaque={(insumo, cantidadEmpaque) => {
+                                    setModalAbierto({
+                                        productoId: insumo.productoId,
+                                        productoNombre: insumo.productoNombre,
+                                        cantidadRequerida: cantidadEmpaque,
+                                        esEmpaque: true
+                                    });
+                                }}
+                            />
                         </>
                     )}
+                    <ResumenHistorialDispensaciones
+                        ordenProduccionId={ordenProduccionId ?? null}
+                        onTotalesChange={setTotalesHistorico}
+                    />
                     <Flex w='40%' gap={4}>
                         <Button flex='1' onClick={()=>setActiveStep(0)}>Atrás</Button>
                         <Button 
@@ -494,46 +334,17 @@ export default function StepTwoComponent({
                                 }
                                 setActiveStep(2);
                             }}
-                            isDisabled={(() => {
-                                // Función recursiva para obtener todos los materiales inventariables (incluyendo subinsumos)
-                                const obtenerMaterialesInventariables = (insumos: InsumoDesglosado[]): InsumoDesglosado[] => {
-                                    const materiales: InsumoDesglosado[] = [];
-                                    insumos.forEach(insumo => {
-                                        const esSemi = esSemiterminado(insumo);
-                                        const tieneSubInsumos = insumo.subInsumos && insumo.subInsumos.length > 0;
-                                        const esMaterial = !esSemi && !tieneSubInsumos;
-                                        
-                                        if (esMaterial && esInventariable(insumo)) {
-                                            materiales.push(insumo);
-                                        }
-                                        
-                                        if (tieneSubInsumos && insumo.subInsumos) {
-                                            materiales.push(...obtenerMaterialesInventariables(insumo.subInsumos));
-                                        }
-                                    });
-                                    return materiales;
-                                };
-                                
-                                // Validar materiales de receta inventariables
-                                const todosMaterialesInventariables = obtenerMaterialesInventariables(insumosProcesados);
-                                const todosTienenLotesReceta = todosMaterialesInventariables.every(material => {
-                                    const lotes = lotesPorMaterial.get(material.productoId);
-                                    return lotes && lotes.length > 0;
-                                });
-                                
-                                // Validar materiales de empaque inventariables
-                                const materialesEmpaqueInventariables = insumosEmpaque.filter(insumo => esInventariable(insumo));
-                                const todosTienenLotesEmpaque = materialesEmpaqueInventariables.every(material => {
-                                    const lotes = lotesPorMaterialEmpaque.get(material.productoId);
-                                    return lotes && lotes.length > 0;
-                                });
-                                
-                                return !todosTienenLotesReceta || !todosTienenLotesEmpaque;
-                            })()}
+                            isDisabled={requiereNivel2}
                         >
                             Continuar
                         </Button>
                     </Flex>
+                    {requiereNivel2 && (
+                        <Text fontSize="sm" color="red.600" textAlign="center">
+                            La suma de dispensaciones supera la receta. Solo usuarios nivel 2 del módulo
+                            TRANSACCIONES_ALMACEN pueden continuar con esa dispensación.
+                        </Text>
+                    )}
                 </Flex>
 
                 {/* Modal para seleccionar lotes */}

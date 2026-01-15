@@ -174,10 +174,10 @@ export function LotePickerDispensacion({
     };
 
     const sumaCantidades = calcularSumaCantidades();
-    const cantidadValida = Math.abs(sumaCantidades - cantidadRequerida) < 0.01; // Tolerancia para comparación de decimales
+    const cantidadExcede = sumaCantidades - cantidadRequerida > 0.01; // Tolerancia para comparación de decimales
 
     const handleAceptar = () => {
-        if (cantidadValida) {
+        if (!cantidadExcede) {
             onAccept(lotesSeleccionados);
             onClose();
         }
@@ -201,8 +201,15 @@ export function LotePickerDispensacion({
                 <ModalBody>
                     <Flex direction="column" gap={4}>
                         <Text fontSize="sm" color="gray.600">
-                            Cantidad requerida: <strong>{cantidadRequerida.toFixed(2)}</strong>
+                            Cantidad requerida: <strong>{cantidadRequerida.toFixed(2)}</strong> ·
+                            Seleccionada: <strong>{sumaCantidades.toFixed(2)}</strong>
                         </Text>
+                        {cantidadExcede && (
+                            <Alert status="warning" size="sm">
+                                <AlertIcon />
+                                La cantidad seleccionada no puede superar la requerida.
+                            </Alert>
+                        )}
                         
                         <Flex gap={4} direction={{base: 'column', lg: 'row'}}>
                             {/* Panel Izquierdo: Lotes Disponibles */}
@@ -361,10 +368,10 @@ export function LotePickerDispensacion({
                                             <Text fontSize="sm">
                                                 Suma total: <strong>{sumaCantidades.toFixed(2)}</strong>
                                             </Text>
-                                            {!cantidadValida && (
+                                            {cantidadExcede && (
                                                 <Alert status="warning" mt={2} size="sm">
                                                     <AlertIcon />
-                                                    La suma de cantidades ({sumaCantidades.toFixed(2)}) debe ser exactamente igual a la cantidad requerida ({cantidadRequerida.toFixed(2)})
+                                                    La suma de cantidades ({sumaCantidades.toFixed(2)}) no puede superar la cantidad requerida ({cantidadRequerida.toFixed(2)}).
                                                 </Alert>
                                             )}
                                         </Box>
@@ -381,7 +388,7 @@ export function LotePickerDispensacion({
                     <Button
                         colorScheme="teal"
                         onClick={handleAceptar}
-                        isDisabled={!cantidadValida || lotesSeleccionados.length === 0}
+                        isDisabled={cantidadExcede}
                     >
                         Aceptar
                     </Button>

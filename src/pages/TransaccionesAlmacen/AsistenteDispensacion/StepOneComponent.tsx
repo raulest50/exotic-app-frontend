@@ -29,6 +29,7 @@ interface Props {
     setInsumosEmpaque?: (insumos: InsumoDesglosado[]) => void;
     setCasePack?: (casePack: CasePackResponseDTO | null) => void;
     setCantidadProducir?: (cantidad: number | null) => void;
+    refreshToken?: number;
 }
 
 interface OrdenDispensacionResumen {
@@ -53,7 +54,7 @@ interface PaginatedResponse<T> {
     size: number;
 }
 
-export default function StepOneComponentV2({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId, setInsumosAnidados, setProductoId, setInsumosEmpaque, setCasePack, setCantidadProducir}: Props){
+export default function StepOneComponentV2({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId, setInsumosAnidados, setProductoId, setInsumosEmpaque, setCasePack, setCantidadProducir, refreshToken}: Props){
     const toast = useToast();
     const [ordenes, setOrdenes] = useState<OrdenDispensacionResumen[]>([]);
     const [page, setPage] = useState(0);
@@ -92,6 +93,11 @@ export default function StepOneComponentV2({setActiveStep, setDispensacion, setI
     useEffect(() => {
         fetchOrdenes();
     }, [page, size]);
+
+    useEffect(() => {
+        setPage(0);
+        fetchOrdenes();
+    }, [refreshToken]);
 
     const formatFecha = (fecha?: string) => {
         if(!fecha) return 'N/A';
