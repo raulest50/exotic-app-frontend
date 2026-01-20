@@ -18,7 +18,7 @@ export default function ProduccionPage(){
 
     return(
         <Container minW={['auto', 'container.lg', 'container.xl']} w={'full'} h={'full'}>
-            <MyHeader title={'Ordenes De ProduccionPage'}/>
+            <MyHeader title={'Produccion'}/>
 
             <Tabs>
 

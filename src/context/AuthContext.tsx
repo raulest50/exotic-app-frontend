@@ -4,6 +4,7 @@ import axios from 'axios';
 import EndPointsURL from "../api/EndPointsURL.tsx";
 // IMPORTANT: Install jwt-decode package with: bun add jwt-decode
 import { jwtDecode } from 'jwt-decode';
+import { clearUserCache } from "../api/UserApi";
 
 // 1) Describe each authority object
 /*interface Authority {
@@ -110,6 +111,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const login = async (username: string, password: string) => {
 //         console.log('AuthContext - Iniciando proceso de login para usuario:', username);
         try {
+            // Limpiar caché del usuario previo (si existía)
+            clearUserCache();
+
             // Usar el nuevo endpoint de autenticación JWT
 //             console.log('AuthContext - Enviando solicitud a:', endPoints.login);
             const response = await fetch(endPoints.login, {
@@ -189,6 +193,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 //         console.log('AuthContext - Usuario establecido a null');
         setRoles([]);
 //         console.log('AuthContext - Roles establecidos a array vacío');
+        // Limpiar caché del usuario actual para evitar datos stale tras relogin
+        clearUserCache();
         // Eliminar el header de autorización
         delete axios.defaults.headers.common['Authorization'];
 //         console.log('AuthContext - Header de autorización eliminado');
