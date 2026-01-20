@@ -87,7 +87,7 @@ export function CerrarOrdenDialog({ isOpen, onClose, orden, setActiveStep }: Cer
             });
 
             handleClose();
-            setActiveStep(0); // Retornar a StepZeroComponent_v2
+            setActiveStep(0); // Retornar a IngresoOCMStep0SelectPurchaseOrder
         } catch (error: any) {
             console.error('Error al cerrar la orden:', error);
             const errorMessage = error.response?.data?.error || 

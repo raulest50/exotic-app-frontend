@@ -1,4 +1,4 @@
-// StepTwo.tsx
+// SemiterminadosStep1DefineInputs.tsx
 import React, { useState, useEffect } from "react";
 import { Producto, Insumo, ProductoSemiter } from "../../../../types.tsx";
 import {Button, Flex, HStack, StatHelpText, useToast, VStack} from "@chakra-ui/react";

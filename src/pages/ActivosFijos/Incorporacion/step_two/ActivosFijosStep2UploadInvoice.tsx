@@ -19,7 +19,7 @@ type Props = {
     incorporacionActivoDto: IncorporacionActivoDto;
 };
 
-export function StepTwoDocSuppIaf({
+export function ActivosFijosStep2UploadInvoice({
     setActiveStep,
     setIncorporacionActivoHeader,
     incorporacionActivoDto

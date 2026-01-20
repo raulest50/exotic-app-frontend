@@ -26,7 +26,7 @@ interface Props {
     onReset: () => void;
 }
 
-export default function StepFour({ setActiveStep, semioter3, onReset }: Props) {
+export default function SemiterminadosStep3Confirmation({ setActiveStep, semioter3, onReset }: Props) {
     const toast = useToast();
     const [loading, setLoading] = useState(false);
     const endPoints = new EndPointsURL();

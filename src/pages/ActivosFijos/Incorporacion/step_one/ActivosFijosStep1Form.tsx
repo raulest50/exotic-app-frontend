@@ -23,7 +23,7 @@ type Props = {
     ordenCompraActivo: OrdenCompraActivo;
 };
 
-export function StepOneFormulario({ 
+export function ActivosFijosStep1Form({
     setActiveStep, 
     setIncorporacionActivoHeader, 
     incorporacionActivoDto, 

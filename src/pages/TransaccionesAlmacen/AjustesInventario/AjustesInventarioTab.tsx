@@ -18,9 +18,9 @@ import { useMemo, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import { Producto } from "../../Productos/types.tsx";
-import Step1SelProdAdjInv from "./Step1_SelProd_AdjInv.tsx";
-import Step2FillData from "./Step2_FillData.tsx";
-import Step3SendAjuste from "./Step3_SendAjuste.tsx";
+import AjustesInventarioStep0SelectProducts from "./Step1_SelProd_AdjInv.tsx";
+import AjustesInventarioStep1SpecifyQuantities from "./Step2_FillData.tsx";
+import AjustesInventarioStep2ReviewSubmit from "./Step3_SendAjuste.tsx";
 import { useAuth } from "../../../context/AuthContext.tsx";
 
 const steps = [
@@ -209,7 +209,7 @@ export default function AjustesInventarioTab(){
     const renderStepContent = () => {
         if (activeStep === 0) {
             return (
-                <Step1SelProdAdjInv
+                <AjustesInventarioStep0SelectProducts
                     searchText={searchText}
                     setSearchText={setSearchText}
                     chkbox={chkbox}
@@ -229,7 +229,7 @@ export default function AjustesInventarioTab(){
 
         if (activeStep === 1) {
             return (
-                <Step2FillData
+                <AjustesInventarioStep1SpecifyQuantities
                     selectedProducts={selectedProducts}
                     quantities={quantities}
                     onChangeQuantity={handleChangeQuantity}
@@ -242,7 +242,7 @@ export default function AjustesInventarioTab(){
         }
 
         return (
-            <Step3SendAjuste
+            <AjustesInventarioStep2ReviewSubmit
                 selectedProducts={selectedProducts}
                 quantities={quantities}
                 lotIds={lotIds}

@@ -25,7 +25,7 @@ interface Step2FillDataProps {
     // to avoid coupling this component to a specific Producto shape.
 }
 
-export default function Step2FillData({
+export default function AjustesInventarioStep1SpecifyQuantities({
     selectedProducts,
     quantities,
     onChangeQuantity,

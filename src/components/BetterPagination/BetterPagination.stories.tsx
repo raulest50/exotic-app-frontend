@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, VStack, Text } from '@chakra-ui/react';
-import BetterPagination from './BetterPagination';
+import BetterPagination from './BetterPagination.tsx';
 
 export const Default = () => {
   const [page, setPage] = useState(0);

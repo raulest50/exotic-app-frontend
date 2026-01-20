@@ -30,7 +30,7 @@ type Props = {
     ordenCompraActivo: OrdenCompraActivo;
 };
 
-export function StepThreeValSend({
+export function ActivosFijosStep3ReviewSubmit({
     setActiveStep,
     incorporacionActivoDto,
     ordenCompraActivo

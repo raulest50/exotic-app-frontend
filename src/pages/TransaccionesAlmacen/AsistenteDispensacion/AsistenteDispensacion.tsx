@@ -1,10 +1,9 @@
 import {Box, Container, Flex, StepDescription, StepNumber, StepSeparator, StepStatus, useSteps} from '@chakra-ui/react';
 import {Step, StepIcon, StepIndicator, Stepper, StepTitle} from '@chakra-ui/icons';
 import {useState} from 'react';
-import StepOneComponent from './StepOneComponent';
-import StepOneComponentV2 from './StepOneComponent.tsx';
-import StepTwoComponent from './StepTwoComponent';
-import StepThreeComponent from './StepThreeComponent';
+import DispensacionStep1SelectOrder from './DispensacionStep1SelectOrder.tsx';
+import DispensacionStep2EditItems from './DispensacionStep2EditItems.tsx';
+import DispensacionStep3ReviewSubmit from './DispensacionStep3ReviewSubmit.tsx';
 import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
 
 const steps = [
@@ -30,25 +29,22 @@ export function AsistenteDispensacion(){
 
     const renderStep = () => {
         if(activeStep===0){
-            const useStepOneV2 = true;
-            return useStepOneV2
-                ? <StepOneComponentV2 
-                    setActiveStep={setActiveStep} 
-                    setDispensacion={setDispensacion}
-                    setInsumosDesglosados={setInsumosDesglosados}
-                    setOrdenProduccionId={setOrdenProduccionId}
-                    setInsumosAnidados={setInsumosAnidados}
-                    setProductoId={setProductoId}
-                    setInsumosEmpaque={setInsumosEmpaque}
-                    setCasePack={setCasePack}
-                    setCantidadProducir={setCantidadProducir}
-                    setHistorialDispensaciones={setHistorialDispensaciones}
-                    refreshToken={refreshToken}
-                />
-                : <StepOneComponent setActiveStep={setActiveStep} setDispensacion={setDispensacion}/>;
+            return <DispensacionStep1SelectOrder
+                setActiveStep={setActiveStep}
+                setDispensacion={setDispensacion}
+                setInsumosDesglosados={setInsumosDesglosados}
+                setOrdenProduccionId={setOrdenProduccionId}
+                setInsumosAnidados={setInsumosAnidados}
+                setProductoId={setProductoId}
+                setInsumosEmpaque={setInsumosEmpaque}
+                setCasePack={setCasePack}
+                setCantidadProducir={setCantidadProducir}
+                setHistorialDispensaciones={setHistorialDispensaciones}
+                refreshToken={refreshToken}
+            />;
         }
         if(activeStep===1){
-            return <StepTwoComponent 
+            return <DispensacionStep2EditItems
                 setActiveStep={setActiveStep} 
                 dispensacion={dispensacion} 
                 setDispensacion={setDispensacion}
@@ -67,7 +63,7 @@ export function AsistenteDispensacion(){
             />;
         }
         if(activeStep===2){
-            return <StepThreeComponent 
+            return <DispensacionStep3ReviewSubmit
                 setActiveStep={setActiveStep} 
                 dispensacion={dispensacion}
                 insumosDesglosados={insumosDesglosados}

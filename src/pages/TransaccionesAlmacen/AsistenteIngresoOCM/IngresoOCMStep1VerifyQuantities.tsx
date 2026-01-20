@@ -1,4 +1,4 @@
-// RecibirMercancia/StepOneComponent.tsx
+// RecibirMercancia/IngresoOCMStep1VerifyQuantities.tsx
 import {
     Box,
     Button,
@@ -32,7 +32,7 @@ interface StepOneComponentProps {
     setIngresoOCM_DTA: (ingresoOCM_DTA: IngresoOCM_DTA) => void;
 }
 
-export default function StepOneComponent({
+export default function IngresoOCMStep1VerifyQuantities({
     setActiveStep,
     orden,
     setIngresoOCM_DTA,
@@ -215,7 +215,7 @@ export default function StepOneComponent({
                 ordenCompraMateriales: orden,
                 userId: undefined,
                 observaciones: "",
-                file: new File([], "placeholder") // Se reemplazará en StepTwo
+                file: new File([], "placeholder") // Se reemplazará en SemiterminadosStep1DefineInputs
             };
 
             setIngresoOCM_DTA(ingresoOCM_DTA);

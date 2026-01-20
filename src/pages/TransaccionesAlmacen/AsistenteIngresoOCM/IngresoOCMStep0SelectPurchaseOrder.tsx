@@ -34,7 +34,7 @@ interface StepOneComponentProps {
 
 
 
-export default function StepZeroComponent_v2({
+export default function IngresoOCMStep0SelectPurchaseOrder({
     setActiveStep,
     setSelectedOrder,
 }: StepOneComponentProps) {

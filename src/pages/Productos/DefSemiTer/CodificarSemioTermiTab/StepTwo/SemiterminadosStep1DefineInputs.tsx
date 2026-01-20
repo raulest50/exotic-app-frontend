@@ -1,4 +1,4 @@
-// StepTwo.tsx
+// SemiterminadosStep1DefineInputs.tsx
 import React, { useState, useEffect } from "react";
 import { Producto, Insumo, ProductoSemiter } from "../../../types.tsx";
 import {Button, Flex, HStack, StatHelpText, useToast, VStack} from "@chakra-ui/react";
@@ -14,7 +14,7 @@ interface Props {
     setSemioter2: (semioter: ProductoSemiter) => void;
 }
 
-const StepTwo: React.FC<Props> = ({ setActiveStep, semioter, setSemioter2 }) => {
+const SemiterminadosStep1DefineInputs: React.FC<Props> = ({ setActiveStep, semioter, setSemioter2 }) => {
     const toast = useToast();
     const [selectedInsumos, setSelectedInsumos] = useState<Insumo[]>([]);
     const [costo, setCosto] = useState(0);
@@ -154,4 +154,4 @@ const StepTwo: React.FC<Props> = ({ setActiveStep, semioter, setSemioter2 }) => 
     );
 };
 
-export default StepTwo;
+export default SemiterminadosStep1DefineInputs;

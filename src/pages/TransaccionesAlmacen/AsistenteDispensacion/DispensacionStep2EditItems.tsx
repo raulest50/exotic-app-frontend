@@ -1,4 +1,4 @@
-import {Box, Button, Flex, Heading, Text} from '@chakra-ui/react';
+import {Alert, AlertIcon, AlertTitle, AlertDescription, Box, Button, Flex, Heading, Text} from '@chakra-ui/react';
 import React, {useEffect, useMemo, useState} from 'react';
 import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
 import {LotePickerDispensacion} from './AsistenteDispensacionComponents/LotePickerDispensacion';
@@ -34,7 +34,7 @@ type InsumoWithStockResponse = Omit<InsumoWithStock, 'tipo_producto' | 'subInsum
     subInsumos?: InsumoWithStockResponse[];
 };
 
-export default function StepTwoComponent({
+export default function DispensacionStep2EditItems({
     setActiveStep, 
     dispensacion, 
     setDispensacion, 
@@ -342,7 +342,8 @@ export default function StepTwoComponent({
         return excedidosLocal;
     }, [materialesInventariables, materialesEmpaqueInventariables, totalesHistorico, totalesSeleccionados, getCantidadEmpaque]);
 
-    const requiereNivel2 = excedidos.length > 0 && (accessLevel === null || accessLevel < 2) && currentUsername !== 'master';
+    const requiereNivel3 = excedidos.length > 0 && (accessLevel === null || accessLevel < 3) && currentUsername !== 'master';
+    const tienePrivilegiosPeroHayExcedidos = excedidos.length > 0 && ((accessLevel !== null && accessLevel >= 3) || currentUsername === 'master');
 
     // Función para manejar el clic en el botón de expandir/colapsar
     const toggleSemiterminado = (productoId: string) => {
@@ -417,16 +418,58 @@ export default function StepTwoComponent({
                                 }
                                 setActiveStep(2);
                             }}
-                            isDisabled={requiereNivel2}
+                            isDisabled={requiereNivel3}
                         >
                             Continuar
                         </Button>
                     </Flex>
-                    {requiereNivel2 && (
-                        <Text fontSize="sm" color="red.600" textAlign="center">
-                            La suma de dispensaciones supera la receta. Solo usuarios nivel 2 del módulo
-                            TRANSACCIONES_ALMACEN pueden continuar con esa dispensación.
-                        </Text>
+                    {requiereNivel3 && (
+                        <Alert
+                            status="error"
+                            variant="left-accent"
+                            flexDirection="column"
+                            alignItems="center"
+                            justifyContent="center"
+                            textAlign="center"
+                            borderRadius="md"
+                            boxShadow="lg"
+                            p={6}
+                            w="full"
+                        >
+                            <AlertIcon boxSize="40px" mr={0} mb={2} />
+                            <AlertTitle mt={2} mb={2} fontSize="xl" fontWeight="bold">
+                                🚫 ERROR: Dispensación Excede la Receta
+                            </AlertTitle>
+                            <AlertDescription fontSize="md" maxW="container.md">
+                                La suma de dispensaciones <strong>supera la cantidad requerida por la receta</strong>.
+                                Solo usuarios con <strong>nivel 3 del módulo TRANSACCIONES_ALMACEN</strong> pueden
+                                continuar con esta dispensación.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    {tienePrivilegiosPeroHayExcedidos && (
+                        <Alert
+                            status="warning"
+                            variant="left-accent"
+                            flexDirection="column"
+                            alignItems="center"
+                            justifyContent="center"
+                            textAlign="center"
+                            borderRadius="md"
+                            boxShadow="lg"
+                            p={6}
+                            w="full"
+                        >
+                            <AlertIcon boxSize="40px" mr={0} mb={2} />
+                            <AlertTitle mt={2} mb={2} fontSize="xl" fontWeight="bold">
+                                ⚠️ ADVERTENCIA: Dispensación Excede la Receta
+                            </AlertTitle>
+                            <AlertDescription fontSize="md" maxW="container.md">
+                                La suma de dispensaciones <strong>supera la cantidad requerida por la receta</strong>.
+                                Esta operación es permitida debido a su nivel de acceso, pero debe tener precaución
+                                ya que <strong>NO es una operación normal</strong>.
+                            </AlertDescription>
+                        </Alert>
                     )}
                 </Flex>
 

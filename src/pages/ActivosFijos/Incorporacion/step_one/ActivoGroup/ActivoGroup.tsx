@@ -48,7 +48,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
     // Atributos comunes para todo el grupo
     const [tipoActivo, setTipoActivo] = useState<TipoActivo>(TipoActivo.EQUIPO); // Por defecto es EQUIPO
     const [brand, setBrand] = useState<string>("");
-    // NOTA: Inicializado con 1 en lugar de 0 para pasar la validación en StepOneFormulario.tsx
+    // NOTA: Inicializado con 1 en lugar de 0 para pasar la validación en ActivosFijosStep1Form.tsx
     // Esta es una solución temporal para evitar que el botón "Siguiente" se deshabilite cuando se selecciona "Activo de produccion"
     const [capacidad, setCapacidad] = useState<number>(1);
     const [unidadCapacidad, setUnidadCapacidad] = useState<UnidadesCapacidad>(UnidadesCapacidad.L);
@@ -132,7 +132,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                 tipo: newTipoActivo !== undefined ? newTipoActivo : tipoActivo,
                 // NOTA: Solución temporal - Agregar campos de capacidad y unidad de capacidad si el tipo es PRODUCCION
                 // Esto asegura que los activos existentes se actualicen con estos valores cuando se cambia el tipo
-                // y así pasen la validación en StepOneFormulario.tsx
+                // y así pasen la validación en ActivosFijosStep1Form.tsx
                 ...(newTipoActivo === TipoActivo.PRODUCCION && {
                     capacidad,
                     unidadCapacidad

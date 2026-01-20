@@ -42,7 +42,7 @@ interface Props {
     onComplete?: () => void; // Callback para cuando se complete la dispensación
 }
 
-export default function StepThreeAdicional({
+export default function DispensacionAdicionalStep2ReviewSubmit({
     setActiveStep,
     dispensacion,
     insumosDesglosados,

@@ -15,7 +15,7 @@ interface StepFourComponentProps {
     setActiveStep: (step: number) => void;
 }
 
-export default function StepFourComponent({setActiveStep}: StepFourComponentProps) {
+export default function IngresoOCMStep4Confirmation({setActiveStep}: StepFourComponentProps) {
 
     const onClickRegresar = () => {
         setActiveStep(0);

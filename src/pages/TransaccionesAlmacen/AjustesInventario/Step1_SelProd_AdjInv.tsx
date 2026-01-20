@@ -37,7 +37,7 @@ interface Step1SelProdProps {
     selectedProducts: Producto[];
 }
 
-export default function Step1SelProdAdjInv({
+export default function AjustesInventarioStep0SelectProducts({
     searchText,
     setSearchText,
     chkbox,

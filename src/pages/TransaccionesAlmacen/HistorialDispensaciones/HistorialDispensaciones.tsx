@@ -4,14 +4,14 @@ import { Step, StepIcon, StepIndicator, Stepper, StepTitle } from '@chakra-ui/ic
 import { useSteps } from '@chakra-ui/react';
 import { FiltroHistorialDispensaciones } from './FiltroHistorialDispensaciones.tsx';
 import TablaDispensaciones from './TablaDispensaciones.tsx';
-import BetterPagination from '../../../components/BetterPagination.tsx';
+import BetterPagination from '../../../components/BetterPagination/BetterPagination.tsx';
 import { TransaccionAlmacen, PaginatedResponse, FiltroHistDispensacionDTO } from './types';
 import { DispensacionDTO, InsumoDesglosado, LoteSeleccionado, InsumosDesglosadosResponse } from '../types';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import { useToast } from '@chakra-ui/react';
-import StepTwoAdicional from './StepTwoAdicional';
-import StepThreeAdicional from './StepThreeAdicional';
+import DispensacionAdicionalStep1EditItems from './DispensacionAdicionalStep1EditItems.tsx';
+import DispensacionAdicionalStep2ReviewSubmit from './DispensacionAdicionalStep2ReviewSubmit.tsx';
 
 const endpoints = new EndPointsURL();
 
@@ -211,7 +211,7 @@ export function HistorialDispensaciones() {
         }
         if (activeStep === 1) {
             return (
-                <StepTwoAdicional 
+                <DispensacionAdicionalStep1EditItems
                     setActiveStep={setActiveStep} 
                     dispensacion={dispensacionAdicional} 
                     setDispensacion={setDispensacionAdicional}
@@ -229,7 +229,7 @@ export function HistorialDispensaciones() {
         }
         if (activeStep === 2) {
             return (
-                <StepThreeAdicional 
+                <DispensacionAdicionalStep2ReviewSubmit
                     setActiveStep={setActiveStep} 
                     dispensacion={dispensacionAdicional}
                     insumosDesglosados={insumosDesglosadosAdicional}

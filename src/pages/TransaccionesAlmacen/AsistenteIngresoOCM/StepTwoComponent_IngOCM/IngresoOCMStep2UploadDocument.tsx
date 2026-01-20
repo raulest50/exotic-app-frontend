@@ -23,7 +23,7 @@ interface StepTwoComponentProps {
     setIngresoOCM_DTA: (ingresoOCM_DTA: IngresoOCM_DTA) => void;
 }
 
-export default function StepTwoComponent({
+export default function IngresoOCMStep2UploadDocument({
                                              setActiveStep,
                                              orden,
                                              setIngresoOCM_DTA,

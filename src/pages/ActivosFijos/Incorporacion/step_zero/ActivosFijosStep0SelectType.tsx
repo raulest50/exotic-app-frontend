@@ -22,7 +22,7 @@ type Props = {
  * @param setStep
  * @constructor
  */
-export function StepZeroTipoIngreso({
+export function ActivosFijosStep0SelectType({
                                         setActiveStep,
                                         setOrdenCompraActivo,
                                         setIncorporacionActivoHeader }: Props) {

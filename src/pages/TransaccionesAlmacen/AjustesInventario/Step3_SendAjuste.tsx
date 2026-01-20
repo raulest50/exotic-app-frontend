@@ -36,7 +36,7 @@ interface Step3SendAjusteProps {
     onRestart?: () => void;
 }
 
-export default function Step3SendAjuste({
+export default function AjustesInventarioStep2ReviewSubmit({
     selectedProducts,
     quantities,
     lotIds,

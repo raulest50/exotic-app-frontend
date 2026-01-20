@@ -10,12 +10,12 @@ import {
     useSteps,
 } from "@chakra-ui/react";
 import {Step, StepIcon, StepIndicator, Stepper, StepTitle} from "@chakra-ui/icons";
-import StepOne from "./StepOne/StepOne.tsx";
+import SemiterminadosStep0DefineProduct from "./StepOne/SemiterminadosStep0DefineProduct.tsx";
 import {useState, useEffect} from "react";
 import {ProductoSemiter} from "../../types.tsx";
-import StepTwo from "./StepTwo/StepTwo.tsx";
-import StepThree from "./StepThree/StepThree.tsx";
-import StepFour from "./StepFour/StepFour.tsx";
+import SemiterminadosStep1DefineInputs from "./StepTwo/SemiterminadosStep1DefineInputs.tsx";
+import SemiterminadosStep2DefineProcess from "./StepThree/SemiterminadosStep2DefineProcess.tsx";
+import SemiterminadosStep3Confirmation from "./StepFour/SemiterminadosStep3Confirmation.tsx";
 
 interface CodificarSemioTermiTabProps {
     isActive?: boolean;
@@ -57,7 +57,7 @@ export default function CodificarSemioTermiTab({ isActive = false }: CodificarSe
     function ConditionalRenderStep() {
         if (activeStep === 0) { // identificar la orden de compra
             return(
-                <StepOne 
+                <SemiterminadosStep0DefineProduct
                     setActiveStep={setActiveStep} 
                     setSemioter={setSemioter} 
                     refreshCategorias={refreshCategorias}
@@ -66,17 +66,17 @@ export default function CodificarSemioTermiTab({ isActive = false }: CodificarSe
         }
         if (activeStep === 1) { // verificar cantidades en el pedido
             return(
-                <StepTwo setActiveStep={setActiveStep} semioter={semioter!} setSemioter2={setSemioter2}/>
+                <SemiterminadosStep1DefineInputs setActiveStep={setActiveStep} semioter={semioter!} setSemioter2={setSemioter2}/>
             );
         }
         if (activeStep === 2) { // definir proceso de produccion
             return(
-                <StepThree setActiveStep={setActiveStep} semioter2={semioter2!} setSemioter3={setSemioter3}/>
+                <SemiterminadosStep2DefineProcess setActiveStep={setActiveStep} semioter2={semioter2!} setSemioter3={setSemioter3}/>
             );
         }
         if (activeStep === 3) { // confirmar y guardar
             return(
-                <StepFour setActiveStep={setActiveStep} semioter3={semioter3!} onReset={handleReset} />
+                <SemiterminadosStep3Confirmation setActiveStep={setActiveStep} semioter3={semioter3!} onReset={handleReset} />
             );
         }
     }

@@ -28,7 +28,7 @@ interface StepThreeComponentProps {
 
 const endpoints = new EndPointsURL();
 
-export default function StepThreeComponent({
+export default function IngresoOCMStep3ReviewSubmit({
                                              setActiveStep,
                                              docIngresoDTA,
                                          }: StepThreeComponentProps) {

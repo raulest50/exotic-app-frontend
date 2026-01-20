@@ -42,7 +42,7 @@ interface Props {
     onDispensacionSuccess?: () => void;
 }
 
-export default function StepThreeComponent({
+export default function DispensacionStep3ReviewSubmit({
     setActiveStep,
     dispensacion,
     insumosDesglosados,

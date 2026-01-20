@@ -2,10 +2,10 @@ import {useState} from 'react';
 import {Box, Flex, StepDescription, StepNumber, StepSeparator, StepStatus, useSteps} from '@chakra-ui/react';
 import {IncorporacionActivoDto, OrdenCompraActivo} from "../types.tsx";
 import {Step, StepIcon, StepIndicator, Stepper, StepTitle} from "@chakra-ui/icons";
-import {StepZeroTipoIngreso} from "./step_zero/StepZeroTipoIngreso.tsx";
-import {StepOneFormulario} from "./step_one/StepOneFormulario.tsx";
-import {StepTwoDocSuppIaf} from "./step_two/StepTwoDocSuppIAF.tsx";
-import {StepThreeValSend} from "./step_three/StepThreeValSend.tsx";
+import {ActivosFijosStep0SelectType} from "./step_zero/ActivosFijosStep0SelectType.tsx";
+import {ActivosFijosStep1Form} from "./step_one/ActivosFijosStep1Form.tsx";
+import {ActivosFijosStep2UploadInvoice} from "./step_two/ActivosFijosStep2UploadInvoice.tsx";
+import {ActivosFijosStep3ReviewSubmit} from "./step_three/ActivosFijosStep3ReviewSubmit.tsx";
 
 
 const steps = [
@@ -31,7 +31,7 @@ export function IncorporacionActivosFijos() {
     function ConditionalRender(){
         if(activeStep === 0){
             return(
-                <StepZeroTipoIngreso
+                <ActivosFijosStep0SelectType
                     setActiveStep={setActiveStep}
                     setOrdenCompraActivo={setOrdenCompraActivo}
                     setIncorporacionActivoHeader={setIncorporacionActivoDto}
@@ -40,7 +40,7 @@ export function IncorporacionActivosFijos() {
         }
         if(activeStep === 1){
             return(
-                <StepOneFormulario
+                <ActivosFijosStep1Form
                     setActiveStep={setActiveStep}
                     setIncorporacionActivoHeader={setIncorporacionActivoDto}
                     incorporacionActivoDto={incorporacionActivoDto}
@@ -50,7 +50,7 @@ export function IncorporacionActivosFijos() {
         }
         if(activeStep === 2){
             return(
-                <StepTwoDocSuppIaf
+                <ActivosFijosStep2UploadInvoice
                     setActiveStep={setActiveStep}
                     setIncorporacionActivoHeader={setIncorporacionActivoDto}
                     incorporacionActivoDto={incorporacionActivoDto}
@@ -59,7 +59,7 @@ export function IncorporacionActivosFijos() {
         }
         if(activeStep === 3){
             return(
-                <StepThreeValSend
+                <ActivosFijosStep3ReviewSubmit
                     setActiveStep={setActiveStep}
                     incorporacionActivoDto={incorporacionActivoDto}
                     ordenCompraActivo={ordenCompraActivo}

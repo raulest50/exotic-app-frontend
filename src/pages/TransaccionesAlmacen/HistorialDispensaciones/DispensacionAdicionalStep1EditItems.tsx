@@ -41,7 +41,7 @@ type InsumoWithStockResponse = Omit<InsumoWithStock, 'tipo_producto' | 'subInsum
     subInsumos?: InsumoWithStockResponse[];
 };
 
-export default function StepTwoAdicional({
+export default function DispensacionAdicionalStep1EditItems({
     setActiveStep, 
     dispensacion, 
     setDispensacion, 

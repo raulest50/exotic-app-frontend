@@ -1,4 +1,4 @@
-// StepOneComponent.tsx
+// IngresoOCMStep1VerifyQuantities.tsx
 import {
     Button,
     Flex, FormControl, FormLabel, GridItem, HStack, Input, Select, SimpleGrid, Textarea, useToast,
@@ -16,7 +16,7 @@ interface props {
     refreshCategorias?: number;
 }
 
-export default function StepOne({setActiveStep, setSemioter, refreshCategorias = 0}: props) {
+export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemioter, refreshCategorias = 0}: props) {
     // Local copy of the order's items to track verification state.
 
     const [productoId, setProductoId] = useState<string>("");
