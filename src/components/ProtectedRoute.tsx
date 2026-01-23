@@ -22,7 +22,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
         const hasAccess = isMaster || roles.includes(requiredModulo);
 
         if (!hasAccess) {
-            return <div>403 Forbidden: No tienes acceso al módulo {requiredModulo}</div>;
+            return <div>403 Prohibido: No tienes acceso al módulo {requiredModulo}</div>;
         }
     }
 

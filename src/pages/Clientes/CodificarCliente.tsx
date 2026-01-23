@@ -42,12 +42,12 @@ export default function CodificarCliente(){
 
     const validate = (): boolean => {
         if(!formData.nombre.trim() || !formData.email.trim() || !formData.telefono.trim() || !formData.direccion.trim()){
-            toast({title:'Campos obligatorios', description:'Nombre, email, teléfono y dirección son requeridos', status:'warning', duration:4000, isClosable:true});
+            toast({title:'Campos obligatorios', description:'Nombre, correo electrónico, teléfono y dirección son requeridos', status:'warning', duration:4000, isClosable:true});
             return false;
         }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if(!emailRegex.test(formData.email)){
-            toast({title:'Email inválido', status:'error', duration:4000, isClosable:true});
+            toast({title:'Correo electrónico inválido', status:'error', duration:4000, isClosable:true});
             return false;
         }
         const phoneRegex = /^\+?\d{7,}$/;
@@ -118,7 +118,7 @@ export default function CodificarCliente(){
                     </GridItem>
                     <GridItem>
                         <FormControl isRequired>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel>Correo Electrónico</FormLabel>
                             <Input type='email' value={formData.email} onChange={e=>handleChange('email',e.target.value)} />
                         </FormControl>
                     </GridItem>
@@ -159,7 +159,7 @@ export default function CodificarCliente(){
                             <VStack spacing={4} align='center'>
                                 <FormLabel>RUT</FormLabel>
                                 <Icon as={rutFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize='4em' color={rutFile ? 'green' : 'orange.500'} />
-                                <Button onClick={()=>rutInputRef.current?.click()}>Browse</Button>
+                                <Button onClick={()=>rutInputRef.current?.click()}>Examinar</Button>
                                 <Input type='file' ref={rutInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleRutChange}/>
                             </VStack>
                         </FormControl>
@@ -169,7 +169,7 @@ export default function CodificarCliente(){
                             <VStack spacing={4} align='center'>
                                 <FormLabel>Cámara y Comercio</FormLabel>
                                 <Icon as={camaraFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize='4em' color={camaraFile ? 'green' : 'orange.500'} />
-                                <Button onClick={()=>camaraInputRef.current?.click()}>Browse</Button>
+                                <Button onClick={()=>camaraInputRef.current?.click()}>Examinar</Button>
                                 <Input type='file' ref={camaraInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleCamaraChange}/>
                             </VStack>
                         </FormControl>

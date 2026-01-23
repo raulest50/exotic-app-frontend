@@ -195,8 +195,8 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
                         <HStack>
                             <Select value={tipoEnvio} onChange={e=>setTipoEnvio(e.target.value as TipoEnvio)}>
                                 <option value={TipoEnvio.MANUAL}>{TipoEnvio.MANUAL}</option>
-                                {hasEmail() && <option value={TipoEnvio.EMAIL}>{TipoEnvio.EMAIL}</option>}
-                                {hasPhone() && <option value={TipoEnvio.WHATSAPP}>{TipoEnvio.WHATSAPP}</option>}
+                                {hasEmail() && <option value={TipoEnvio.EMAIL}>CORREO ELECTRÓNICO</option>}
+                                {hasPhone() && <option value={TipoEnvio.WHATSAPP}>WHATSAPP</option>}
                             </Select>
                             <Input maxW='200px' value={inputCode} onChange={e=>setInputCode(e.target.value)} placeholder='Digite código'/>
                             <Button colorScheme='green' onClick={handleEnviar} isLoading={isLoading} loadingText='Enviando'>Enviar a Proveedor</Button>

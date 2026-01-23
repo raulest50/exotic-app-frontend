@@ -225,7 +225,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                         <Heading size="md">{item.nombre}</Heading>
                         <HStack spacing={2}>
                             <IconButton
-                                aria-label="Add activo"
+                                aria-label="Agregar activo"
                                 icon={<AddIcon />}
                                 colorScheme="green"
                                 size="sm"
@@ -233,7 +233,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                                 onClick={addActivo}
                             />
                             <IconButton
-                                aria-label="Remove activo"
+                                aria-label="Quitar activo"
                                 icon={<MinusIcon />}
                                 colorScheme="red"
                                 size="sm"

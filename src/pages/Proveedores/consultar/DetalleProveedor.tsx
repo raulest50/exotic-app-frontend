@@ -250,8 +250,8 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
             if (!contacto.email?.trim() || !emailRegex.test(contacto.email.trim())) {
                 if (showToast) {
                     toast({
-                        title: 'Email inválido',
-                        description: 'El email del contacto no tiene un formato válido.',
+                        title: 'Correo electrónico inválido',
+                        description: 'El correo electrónico del contacto no tiene un formato válido.',
                         status: 'error',
                         duration: 5000,
                         isClosable: true,
@@ -602,7 +602,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                                     />
                                                 </FormControl>
                                                 <FormControl mt={2}>
-                                                    <FormLabel>Email</FormLabel>
+                                                    <FormLabel>Correo Electrónico</FormLabel>
                                                     <Input
                                                         value={contacto.email}
                                                         onChange={(e) => handleContactChange(index, 'email', e.target.value)}
@@ -633,7 +633,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                                 <Text>{contacto.cel}</Text>
                                             </HStack>
                                             <HStack>
-                                                <Text fontWeight="bold">Email:</Text>
+                                                <Text fontWeight="bold">Correo Electrónico:</Text>
                                                 <Text>{contacto.email}</Text>
                                             </HStack>
                                         </GridItem>

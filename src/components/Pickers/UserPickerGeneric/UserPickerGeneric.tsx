@@ -148,7 +148,7 @@ const UserGenericPicker: React.FC<UserGenericPickerProps> = ({
                                 >
                                     <option value={SearchType.ID}>ID</option>
                                     <option value={SearchType.NAME}>Nombre</option>
-                                    <option value={SearchType.EMAIL}>Email</option>
+                                    <option value={SearchType.EMAIL}>Correo</option>
                                 </Select>
                                 <Button 
                                     colorScheme="blue" 

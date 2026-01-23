@@ -105,7 +105,7 @@ export function SelectCurrencyTrm({
                             readOnly={true}
                         />
                         <IconButton
-                            aria-label='Fetch latest TRM'
+                            aria-label='Obtener última TRM'
                             icon={loadingLatestTRM ? <Spinner size="sm" /> : <RepeatIcon/>}
                             onClick={() => fetchLatestTRM()}
                             isDisabled={loadingLatestTRM}
@@ -131,7 +131,7 @@ export function SelectCurrencyTrm({
                         />
                         <IconButton
                             flex={1}
-                            aria-label='Fetch TRM by Date'
+                            aria-label='Obtener TRM por fecha'
                             icon={loadingTRMByDate ? <Spinner size="sm" /> : <RepeatIcon/>}
                             onClick={() => fetchTRMbyDate()}
                             isDisabled={loadingTRMByDate}

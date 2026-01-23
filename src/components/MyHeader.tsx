@@ -97,7 +97,7 @@ function MyHeader({title,}:MyHeaderProps){
                 <IconButton
                     ml={'1em'} mr={'2em'} my={'0.2em'}
                     flex={1} colorScheme={'teal'}
-                    aria-label='back' fontSize={'3xl'} boxSize={'2em'} icon={<IoArrowBack/>}/>
+                    aria-label='atrás' fontSize={'3xl'} boxSize={'2em'} icon={<IoArrowBack/>}/>
             </NavLink>
             <Flex flex={2} minW={0} align={'baseline'}>
                 <Heading as={'h2'} size={'xl'} fontFamily={'Comfortaa Variable'}>{title}</Heading>

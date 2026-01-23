@@ -88,8 +88,8 @@ export function IncorporarPersonal() {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email.trim())) {
                 toast({
-                    title: 'Email inválido',
-                    description: 'El email no tiene un formato válido.',
+                    title: 'Correo electrónico inválido',
+                    description: 'El correo electrónico no tiene un formato válido.',
                     status: 'error',
                     duration: 5000,
                     isClosable: true,
@@ -269,7 +269,7 @@ export function IncorporarPersonal() {
 
                         <GridItem>
                             <FormControl>
-                                <FormLabel>Email</FormLabel>
+                                <FormLabel>Correo Electrónico</FormLabel>
                                 <Input
                                     type="email"
                                     value={email}

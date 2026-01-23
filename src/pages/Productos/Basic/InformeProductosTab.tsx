@@ -109,7 +109,7 @@ export default function InformeProductosTab() {
                     <Input
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
-                        placeholder="Enter product name"
+                        placeholder="Ingrese nombre del producto"
                         isDisabled={chkbox.length === 0}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
@@ -145,7 +145,7 @@ export default function InformeProductosTab() {
                 </FormControl>
 
                 <Button onClick={handleSearch} colorScheme="blue" isLoading={loading}>
-                    Search
+                    Buscar
                 </Button>
             </Flex>
 

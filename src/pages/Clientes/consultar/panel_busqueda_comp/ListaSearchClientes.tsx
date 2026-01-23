@@ -14,7 +14,7 @@ export function ListaSearchClientes({clientes,onVerDetalle}:Props){
                     <Tr>
                         <Th>ID</Th>
                         <Th>Nombre</Th>
-                        <Th>Email</Th>
+                        <Th>Correo Electrónico</Th>
                         <Th>Teléfono</Th>
                         <Th>Ver Detalle</Th>
                     </Tr>

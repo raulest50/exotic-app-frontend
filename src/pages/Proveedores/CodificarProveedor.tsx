@@ -159,8 +159,8 @@ function CodificarProveedor() {
             }
             if (!emailRegex.test(contacto.email.trim())) {
                 toast({
-                    title: 'Email inválido',
-                    description: 'El email del contacto no tiene un formato válido.',
+                    title: 'Correo electrónico inválido',
+                    description: 'El correo electrónico del contacto no tiene un formato válido.',
                     status: 'error',
                     duration: 5000,
                     isClosable: true,
@@ -532,13 +532,13 @@ function CodificarProveedor() {
                                     />
                                 </FormControl>
                                 <FormControl mt={2}>
-                                    <FormLabel>E-mail</FormLabel>
+                                    <FormLabel>Correo Electrónico</FormLabel>
                                     <Input
                                         value={contacto.email}
                                         onChange={(e) =>
                                             handleContactoChange(index, 'email', e.target.value)
                                         }
-                                        placeholder="Email"
+                                        placeholder="Correo Electrónico"
                                     />
                                 </FormControl>
                                 <Button
@@ -616,7 +616,7 @@ function CodificarProveedor() {
                                     boxSize="4em"
                                     color={rutFile ? "green" : "orange.500"}
                                 />
-                                <Button onClick={() => rutInputRef.current?.click()}>Browse</Button>
+                                <Button onClick={() => rutInputRef.current?.click()}>Examinar</Button>
                                 <Input
                                     type="file"
                                     ref={rutInputRef}
@@ -636,7 +636,7 @@ function CodificarProveedor() {
                                     boxSize="4em"
                                     color={camaraFile ? "green" : "orange.500"}
                                 />
-                                <Button onClick={() => camaraInputRef.current?.click()}>Browse</Button>
+                                <Button onClick={() => camaraInputRef.current?.click()}>Examinar</Button>
                                 <Input
                                     type="file"
                                     ref={camaraInputRef}

@@ -205,7 +205,7 @@ const VendedorPicker: React.FC<VendedorPickerProps> = ({
                                             <Tr>
                                                 <Th>ID</Th>
                                                 <Th>Nombre</Th>
-                                                <Th>Email</Th>
+                                                <Th>Correo Electrónico</Th>
                                                 <Th>Usuario</Th>
                                             </Tr>
                                         </Thead>

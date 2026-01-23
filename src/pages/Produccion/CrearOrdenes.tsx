@@ -352,7 +352,7 @@ export default function CrearOrdenes() {
                     </Text>
                     {currentUser?.email && (
                         <Text fontSize="md">
-                            <strong>Email:</strong> {currentUser.email}
+                            <strong>Correo Electrónico:</strong> {currentUser.email}
                         </Text>
                     )}
                 </VStack>

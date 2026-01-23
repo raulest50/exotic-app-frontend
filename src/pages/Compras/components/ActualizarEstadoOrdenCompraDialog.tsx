@@ -340,10 +340,10 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                                     >
                                         <option value={TipoEnvio.MANUAL}>{TipoEnvio.MANUAL}</option>
                                         {hasEmail() && (
-                                            <option value={TipoEnvio.EMAIL}>{TipoEnvio.EMAIL}</option>
+                                            <option value={TipoEnvio.EMAIL}>CORREO ELECTRÓNICO</option>
                                         )}
                                         {hasPhoneNumber() && (
-                                            <option value={TipoEnvio.WHATSAPP}>{TipoEnvio.WHATSAPP}</option>
+                                            <option value={TipoEnvio.WHATSAPP}>WHATSAPP</option>
                                         )}
                                     </Select>
                                 </FormControl>

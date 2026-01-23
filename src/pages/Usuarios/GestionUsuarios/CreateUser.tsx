@@ -43,10 +43,10 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
     const handleCreate = async () => {
         // Validate email
         if (!email) {
-            setEmailError('El email es requerido');
+            setEmailError('El correo electrónico es requerido');
             return;
         } else if (!validateEmail(email)) {
-            setEmailError('Por favor ingrese un email válido');
+            setEmailError('Por favor ingrese un correo electrónico válido');
             return;
         } else {
             setEmailError('');
@@ -130,7 +130,7 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
 
                 <GridItem>
                     <FormControl isRequired isInvalid={!!emailError}>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>Correo Electrónico</FormLabel>
                         <Input
                             autoComplete={"off"}
                             type="email" 

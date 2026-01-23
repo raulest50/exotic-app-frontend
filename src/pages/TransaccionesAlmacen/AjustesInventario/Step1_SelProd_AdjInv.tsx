@@ -120,7 +120,7 @@ export default function AjustesInventarioStep0SelectProducts({
                             isLoading={loading}
                             w={{ base: "full", xl: "auto" }}
                         >
-                            Search
+                            Buscar
                         </Button>
                     </Flex>
 

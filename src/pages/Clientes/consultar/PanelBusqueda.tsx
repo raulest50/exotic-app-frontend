@@ -67,7 +67,7 @@ export default function PanelBusqueda({setEstado, setClienteSeleccionado}:Props)
                             <Input value={nombre} onChange={e=>setNombre(e.target.value)} />
                         </FormControl>
                         <FormControl mb={4}>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel>Correo Electrónico</FormLabel>
                             <Input value={email} onChange={e=>setEmail(e.target.value)} />
                         </FormControl>
                     </>
@@ -77,7 +77,7 @@ export default function PanelBusqueda({setEstado, setClienteSeleccionado}:Props)
                         <FormLabel>Tipo de búsqueda</FormLabel>
                         <Select value={searchType} onChange={e=>setSearchType(e.target.value as SearchType)}>
                             <option value={SearchType.ID}>ID</option>
-                            <option value={SearchType.NOMBRE_O_EMAIL}>Nombre o Email</option>
+                            <option value={SearchType.NOMBRE_O_EMAIL}>Nombre o Correo</option>
                         </Select>
                     </FormControl>
                     <Button colorScheme='blue' onClick={()=>handleSearch(0)} isLoading={loading} flex={1} mt={6}>Buscar</Button>

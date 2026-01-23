@@ -58,7 +58,7 @@ export function DetalleCliente({cliente,setEstado,setClienteSeleccionado,refresh
         }
         const emailRegex=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if(!emailRegex.test(clienteData.email)){
-            toast({title:'Email inválido',status:'error',duration:4000,isClosable:true});
+            toast({title:'Correo electrónico inválido',status:'error',duration:4000,isClosable:true});
             return false;
         }
         const phoneRegex=/^\+?\d{7,}$/;
@@ -138,7 +138,7 @@ export function DetalleCliente({cliente,setEstado,setClienteSeleccionado,refresh
                             {editMode ? <Input value={clienteData.nombre} onChange={e=>handleInputChange('nombre',e.target.value)} /> : <Text>{cliente.nombre}</Text>}
                         </Box>
                         <Box>
-                            <Text fontWeight='bold'>Email:</Text>
+                            <Text fontWeight='bold'>Correo Electrónico:</Text>
                             {editMode ? <Input value={clienteData.email} onChange={e=>handleInputChange('email',e.target.value)} /> : <Text>{cliente.email}</Text>}
                         </Box>
                         <Box>
