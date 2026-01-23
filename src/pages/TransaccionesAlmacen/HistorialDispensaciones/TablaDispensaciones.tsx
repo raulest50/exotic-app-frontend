@@ -17,7 +17,9 @@ import { TransaccionAlmacen } from './types';
 interface TablaDispensacionesProps {
     dispensaciones: TransaccionAlmacen[];
     loading: boolean;
-    onDispensacionAdicional: (transaccionId: number, ordenProduccionId: number) => void;
+    onGenerarPDF: (transaccion: TransaccionAlmacen) => void;
+    onVerDetalle: (transaccion: TransaccionAlmacen) => void;
+    generandoPDF?: boolean;
 }
 
 const formatFecha = (fecha?: string) => {
@@ -55,7 +57,9 @@ const truncarTexto = (texto: string | undefined, maxLength: number = 50) => {
 export default function TablaDispensaciones({
     dispensaciones,
     loading,
-    onDispensacionAdicional,
+    onGenerarPDF,
+    onVerDetalle,
+    generandoPDF = false,
 }: TablaDispensacionesProps) {
     if (loading) {
         return (
@@ -96,18 +100,26 @@ export default function TablaDispensaciones({
                                     </Text>
                                 </Td>
                                 <Td>
-                                    <Flex justify='center'>
+                                    <Flex justify='center' gap={2}>
                                         {(dispensacion.tipoEntidadCausante === 'OD' || dispensacion.tipoEntidadCausante === 'OP') && dispensacion.idEntidadCausante > 0 ? (
-                                            <Button
-                                                colorScheme='orange'
-                                                size='sm'
-                                                onClick={() => onDispensacionAdicional(
-                                                    dispensacion.transaccionId,
-                                                    dispensacion.idEntidadCausante
-                                                )}
-                                            >
-                                                Dispensación Adicional
-                                            </Button>
+                                            <>
+                                                <Button
+                                                    colorScheme='blue'
+                                                    size='sm'
+                                                    onClick={() => onGenerarPDF(dispensacion)}
+                                                    isDisabled={generandoPDF}
+                                                    isLoading={generandoPDF}
+                                                >
+                                                    Generar PDF
+                                                </Button>
+                                                <Button
+                                                    colorScheme='teal'
+                                                    size='sm'
+                                                    onClick={() => onVerDetalle(dispensacion)}
+                                                >
+                                                    Ver detalle
+                                                </Button>
+                                            </>
                                         ) : (
                                             <Text fontSize="sm" color="gray.500">-</Text>
                                         )}

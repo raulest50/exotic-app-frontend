@@ -25,6 +25,7 @@ export default class DispensacionPDF_Generator {
      * @param usuariosRealizadores Lista de usuarios que realizan la dispensación
      * @param usuarioAprobador Usuario que aprueba la dispensación (puede ser null)
      * @param observaciones Observaciones adicionales (opcional)
+     * @param esBorrador Si es true, añade marca de agua "BORRADOR" al PDF (opcional)
      * @returns Promise con el documento PDF generado
      */
     public async generatePDF_Dispensacion(
@@ -40,7 +41,8 @@ export default class DispensacionPDF_Generator {
         }>,
         usuariosRealizadores: Array<{ id: number; nombreCompleto?: string; username: string }>,
         usuarioAprobador: { id: number; nombreCompleto?: string; username: string } | null,
-        observaciones?: string
+        observaciones?: string,
+        esBorrador?: boolean
     ): Promise<jsPDFWithAutoTable> {
         // Create a new jsPDF instance (A4 size, mm units)
         const doc = new jsPDF({ unit: "mm", format: "a4" }) as jsPDFWithAutoTable;
@@ -61,8 +63,18 @@ export default class DispensacionPDF_Generator {
         // --- Header Title ---
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
-        doc.text("DISPENSACIÓN DE MATERIALES", 105, currentY + 10, { align: "center" });
-        currentY += 15;
+        doc.text("DISPENSACIÓN DE MATERIALES", 105, currentY + 25, { align: "center" });
+        
+        // --- Borrador annotation in header if esBorrador is true ---
+        if (esBorrador === true) {
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(24);
+            doc.setTextColor(255, 0, 0); // Red color
+            doc.text("BORRADOR", 105, currentY + 35, { align: "center" });
+            doc.setTextColor(0, 0, 0); // Reset to black
+        }
+        
+        currentY += 28; // Título en Y=35, espacio 8, siguiente sección en Y=43
 
         // --- Company Info ---
         doc.setFont("helvetica", "normal");
@@ -78,7 +90,7 @@ export default class DispensacionPDF_Generator {
 
         // --- Order Information ---
         const detailX = 140;
-        let detailY = margin + 5;
+        let detailY = currentY; // Alineado con info empresa (43mm)
         doc.setFont("helvetica", "bold");
         doc.setFontSize(9);
         doc.text("INFORMACIÓN DE LA ORDEN", detailX, detailY);
@@ -192,6 +204,32 @@ export default class DispensacionPDF_Generator {
         doc.setFontSize(7);
         doc.text(`Documento generado el: ${fechaHora}`, margin, currentY, { align: "left" });
 
+        // --- Watermark "BORRADOR" if esBorrador is true ---
+        if (esBorrador === true) {
+            // Draw watermark text in center of page (diagonal effect using multiple text calls)
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(50);
+            
+            // Use a light gray color for watermark (simulating transparency)
+            doc.setTextColor(200, 200, 200);
+            
+            // Calculate center of page (A4 = 210mm x 297mm)
+            const centerX = 105;
+            const centerY = 148.5;
+            
+            // Draw "BORRADOR" text centered (will appear as watermark)
+            // Note: jsPDF doesn't support rotation directly, so we use centered text
+            // For a more visible watermark, we can draw it multiple times slightly offset
+            doc.text("BORRADOR", centerX, centerY, { align: "center" });
+            
+            // Draw additional text slightly offset for better visibility
+            doc.text("BORRADOR", centerX, centerY + 5, { align: "center" });
+            doc.text("BORRADOR", centerX, centerY - 5, { align: "center" });
+            
+            // Reset to black for any subsequent text
+            doc.setTextColor(0, 0, 0);
+        }
+
         return doc;
     }
 
@@ -204,6 +242,7 @@ export default class DispensacionPDF_Generator {
      * @param usuariosRealizadores Lista de usuarios que realizan la dispensación
      * @param usuarioAprobador Usuario que aprueba la dispensación
      * @param observaciones Observaciones adicionales
+     * @param esBorrador Si es true, añade marca de agua "BORRADOR" al PDF (opcional)
      */
     public async downloadPDF_Dispensacion(
         ordenProduccionId: number,
@@ -218,7 +257,8 @@ export default class DispensacionPDF_Generator {
         }>,
         usuariosRealizadores: Array<{ id: number; nombreCompleto?: string; username: string }>,
         usuarioAprobador: { id: number; nombreCompleto?: string; username: string } | null,
-        observaciones?: string
+        observaciones?: string,
+        esBorrador?: boolean
     ): Promise<void> {
         const doc = await this.generatePDF_Dispensacion(
             ordenProduccionId,
@@ -226,10 +266,12 @@ export default class DispensacionPDF_Generator {
             items,
             usuariosRealizadores,
             usuarioAprobador,
-            observaciones
+            observaciones,
+            esBorrador
         );
         const fecha = new Date().toISOString().split('T')[0];
-        doc.save(`dispensacion-op-${ordenProduccionId}-${fecha}.pdf`);
+        const suffix = esBorrador === true ? '-borrador' : '';
+        doc.save(`dispensacion-op-${ordenProduccionId}-${fecha}${suffix}.pdf`);
     }
 
     /**

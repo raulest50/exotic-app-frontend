@@ -321,7 +321,8 @@ export default function DispensacionStep3ReviewSubmit({
                     nombreCompleto: currentUser.nombreCompleto,
                     username: currentUser.username
                 } : null,
-                dispensacion?.observaciones
+                dispensacion?.observaciones,
+                true // esBorrador = true para el botón azul
             );
         } catch (error) {
             console.error('Error al generar PDF:', error);
@@ -414,6 +415,88 @@ export default function DispensacionStep3ReviewSubmit({
                     }
                 }
             );
+
+            // Generar PDF final (sin borrador) después de registrar exitosamente
+            try {
+                // Construir items para el PDF (mismo proceso que en handleGeneratePDF)
+                const pdfItems = Array<{
+                    productoId: string;
+                    productoNombre: string;
+                    loteBatch?: string;
+                    cantidad: number;
+                    unidad: string;
+                    fechaVencimiento?: string;
+                }>();
+
+                if (lotesPorMaterial && insumosDesglosados) {
+                    lotesPorMaterial.forEach((lotes, insumoKey) => {
+                        const insumo = findInsumoByKey(insumoKey);
+                        const productoId = insumo?.productoId ?? (insumoKey.startsWith('producto-') ? insumoKey.replace('producto-', '') : insumoKey);
+                        if (insumo) {
+                            if (insumo.inventareable === false) {
+                                return;
+                            }
+                            lotes.forEach(lote => {
+                                pdfItems.push({
+                                    productoId: productoId,
+                                    productoNombre: insumo.productoNombre,
+                                    loteBatch: lote.batchNumber,
+                                    cantidad: lote.cantidad,
+                                    unidad: insumo.tipoUnidades,
+                                    fechaVencimiento: lote.expirationDate || undefined
+                                });
+                            });
+                        }
+                    });
+                }
+
+                // Incluir materiales de empaque en el PDF
+                if (lotesPorMaterialEmpaque && insumosEmpaque) {
+                    lotesPorMaterialEmpaque.forEach((lotes, productoId) => {
+                        const insumo = insumosEmpaque.find(i => i.productoId === productoId);
+                        if (insumo) {
+                            if (insumo.inventareable === false) {
+                                return;
+                            }
+                            lotes.forEach(lote => {
+                                pdfItems.push({
+                                    productoId: productoId,
+                                    productoNombre: insumo.productoNombre,
+                                    loteBatch: lote.batchNumber,
+                                    cantidad: lote.cantidad,
+                                    unidad: insumo.tipoUnidades,
+                                    fechaVencimiento: lote.expirationDate || undefined
+                                });
+                            });
+                        }
+                    });
+                }
+
+                // Generar PDF sin borrador
+                await DispensacionPDF_Generator.downloadPDF_Dispensacion(
+                    ordenProduccionId,
+                    {
+                        productoNombre: 'Producto de la orden',
+                        fechaCreacion: new Date().toISOString()
+                    },
+                    pdfItems,
+                    usuariosRealizadores.map(u => ({
+                        id: u.id,
+                        nombreCompleto: u.nombreCompleto,
+                        username: u.username
+                    })),
+                    currentUser ? {
+                        id: currentUser.id,
+                        nombreCompleto: currentUser.nombreCompleto,
+                        username: currentUser.username
+                    } : null,
+                    dispensacion?.observaciones,
+                    false // esBorrador = false para el PDF final
+                );
+            } catch (pdfError) {
+                console.error('Error al generar PDF después de registrar:', pdfError);
+                // No bloquear el flujo si falla el PDF, solo loguear el error
+            }
 
             toast({
                 title: 'Éxito',
@@ -645,7 +728,7 @@ export default function DispensacionStep3ReviewSubmit({
                         onClick={handleGeneratePDF}
                         isDisabled={!canGeneratePDF}
                     >
-                        Generar PDF
+                        Generar borrador PDF
                     </Button>
                     <Button
                         colorScheme='teal'
