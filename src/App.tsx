@@ -1,8 +1,7 @@
-//import { useState } from 'react'
-//import reactLogo from './assets/react.svg'
-//import viteLogo from '/vite.svg'
+import { useEffect } from 'react'
 
 import './App.css'
+import EndPointsURL from './api/EndPointsURL'
 
 // Silenciar advertencias de deprecación de React Router
 window.REACT_ROUTER_SILENT_DEPRECATIONS = true;
@@ -260,6 +259,16 @@ const router = createBrowserRouter(
 )
 
 function App() {
+    useEffect(() => {
+        const env = EndPointsURL.getEnvironment();
+        const titles: Record<string, string> = {
+            local: 'Exotic (Local)',
+            staging: 'Exotic (Pruebas)',
+            production: 'Exotic'
+        };
+        document.title = titles[env];
+    }, []);
+
     return (
         <MasterDirectivesProvider>
             <NotificationsProvider>
