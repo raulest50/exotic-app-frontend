@@ -375,7 +375,7 @@ export default class EndPointsURL{
 
         // Entorno staging
         if (hostname.includes("staging")) {
-            return "https://lac-manufacture-backend-staging.onrender.com";
+            return "https://exotic-app-backend-staging.onrender.com";
         }
 
         // Producción (default)
