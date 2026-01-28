@@ -44,7 +44,7 @@ function MyHeader({title,}:MyHeaderProps){
             // Rutas sin módulo (o no definidas en enum Modulo)
             '': null,
             'informes': null,
-            'carga_masiva': null,
+            'operaciones_criticas_bd': null,
             'master_directives': null,
             'login': null,
             'reset-password': null,

@@ -24,36 +24,13 @@ import MyDatePicker from '../../../components/MyDatePicker';
 import DateRangePicker from '../../../components/DateRangePicker';
 import BetterPagination from '../../../components/BetterPagination/BetterPagination';
 import ProductoSelector, { ProductoMin } from '../../../components/ProductoSelector/ProductoSelector';
+import { KardexMovimientoRowDTO, KardexMovimientosPageDTO } from './types';
 
 const endPoints = new EndPointsURL();
 
 type Props = {};
 
 type ModoFecha = 'UNICA' | 'RANGO';
-
-interface KardexMovimientoRowDTO {
-  movimientoId: number;
-  cantidad: number;
-  entrada: number;
-  salida: number;
-  batchNumber?: string | null;
-  tipoMovimiento: string;
-  almacen: string;
-  fechaMovimiento: string;
-  saldo: number;
-}
-
-interface KardexMovimientosPageDTO {
-  productoId: string;
-  productoNombre: string;
-  tipoUnidades: string;
-  saldoInicial: number;
-  content: KardexMovimientoRowDTO[];
-  number: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-}
 
 export function KardexTab(_: Props) {
   const toast = useToast();
@@ -273,7 +250,7 @@ export function KardexTab(_: Props) {
                 <Tbody>
                   {data.content.map((row) => (
                     <Tr key={row.movimientoId}>
-                      <Td>{row.fechaMovimiento}</Td>
+                      <Td>{format(new Date(row.fechaMovimiento), 'dd/MM/yyyy HH:mm')}</Td>
                       <Td>{row.tipoMovimiento}</Td>
                       <Td>{row.almacen}</Td>
                       <Td>{row.batchNumber ?? ''}</Td>

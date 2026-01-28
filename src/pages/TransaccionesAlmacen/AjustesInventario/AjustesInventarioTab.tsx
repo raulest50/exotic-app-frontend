@@ -24,10 +24,10 @@ import AjustesInventarioStep2ReviewSubmit from "./Step3_SendAjuste.tsx";
 import { useAuth } from "../../../context/AuthContext.tsx";
 
 const steps = [
-    {title: "AjusteInvStep_Zero", description: "Selección de productos"},
-    {title: "AjusteInvStep_One", description: "Especificar cantidades"},
-    {title: "AjusteInvStep_Two", description: "Revisar y enviar"},
-    {title: "AjusteInvStep_Confirmation", description: "Confirmación"}
+    {title: "AjusteInvStep_Zero", label: "Seleccionar", description: "Selección de productos"},
+    {title: "AjusteInvStep_One", label: "Cantidades", description: "Especificar cantidades"},
+    {title: "AjusteInvStep_Two", label: "Revisar", description: "Revisar y enviar"},
+    {title: "AjusteInvStep_Confirmation", label: "Confirmar", description: "Confirmación"}
 ];
 
 export default function AjustesInventarioTab(){
@@ -275,7 +275,7 @@ export default function AjustesInventarioTab(){
                                 <StepStatus complete={<StepIcon />} incomplete={<StepNumber />} active={<StepNumber />}/>
                             </StepIndicator>
                             <Box flexShrink={'0'}>
-                                <StepTitle>{step.title}</StepTitle>
+                                <StepTitle>{step.label}</StepTitle>
                                 <StepDescription>{step.description}</StepDescription>
                             </Box>
                             {index < steps.length - 1 && <StepSeparator />}

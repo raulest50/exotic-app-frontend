@@ -20,7 +20,6 @@ export default class EndPointsURL{
 
     public search_p4_receta_v2: string;
 
-    public carga_masiva_mprims: string; // el primer endpoint para carga masiva
     public consulta_productos:string; // para buscar por categorias
 
     // notifications endpoint
@@ -131,10 +130,6 @@ export default class EndPointsURL{
     public save_integrante_personal: string;
     public search_integrantes_personal: string;
 
-    // bulk uploads por link
-    public bulk_upload_proveedores: string;
-    public bulk_upload_productos: string;
-
     // organigrama endpoints
     public get_all_cargos: string;
     public save_cargo_with_manual: string;
@@ -228,7 +223,6 @@ export default class EndPointsURL{
         this.search_semi_byname_4pd = `${domain}/${productos_res}/search_semi_4pd`;
         this.case_pack_terminado = `${domain}/${productos_res}/terminado/{id}/case-pack`;
 
-        this.carga_masiva_mprims = `${domain}/${productos_res}/bulk_upload_excel`;
         this.consulta_productos = `${domain}/${productos_res}/consulta1`;
 
         // Categorias endpoints
@@ -240,8 +234,6 @@ export default class EndPointsURL{
         this.search_proveedores = `${domain}/${proveedores_res}/search`;
         this.search_proveedores_pag = `${domain}/${proveedores_res}/search_pag`;
         this.update_proveedores = `${domain}/${proveedores_res}/{id}`;
-        this.bulk_upload_proveedores = `${domain}/api/bulk-upload/proveedores`;
-        this.bulk_upload_productos = `${domain}/api/bulk-upload/products`;
 
         // Clientes endpoints
         this.save_clientes = `${domain}/clientes/save`;
@@ -374,13 +366,27 @@ export default class EndPointsURL{
 
     // Method to return the correct domain name
     static getDomain(): string {
-        //console.log(window.location.hostname);
-        // Check if running on localhost
-        if (window.location.hostname === "localhost") {
-            return "http://localhost:8080"
-        } else {
-            return "https://lac-manufacture-backend.onrender.com";
+        const hostname = window.location.hostname;
+
+        // Entorno local
+        if (hostname === "localhost" || hostname === "127.0.0.1") {
+            return "http://localhost:8080";
         }
+
+        // Entorno staging
+        if (hostname.includes("staging")) {
+            return "https://lac-manufacture-backend-staging.onrender.com";
+        }
+
+        // Producción (default)
+        return "https://lac-manufacture-backend.onrender.com";
+    }
+
+    static getEnvironment(): 'local' | 'staging' | 'production' {
+        const hostname = window.location.hostname;
+        if (hostname === "localhost" || hostname === "127.0.0.1") return 'local';
+        if (hostname.includes("staging")) return 'staging';
+        return 'production';
     }
 
 

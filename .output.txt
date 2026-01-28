@@ -1,0 +1,251 @@
+node_modules/@chakra-ui/hooks/dist/types/use-disclosure.d.ts:1:8 - error TS1259: Module '"C:/Users/hardp/Desktop/exotic_ws/exotic-app-frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+1 import React from "react";
+         ~~~~~
+  node_modules/@types/react/index.d.ts:47:1
+    47 export = React;
+       ~~~~~~~~~~~~~~~
+    This module is declared with 'export =', and can only be used with a default import when using the 'esModuleInterop' flag.
+node_modules/@chakra-ui/react/dist/types/popover/popover-transition.d.ts:3:8 - error TS1259: Module '"C:/Users/hardp/Desktop/exotic_ws/exotic-app-frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+3 import React from "react";
+         ~~~~~
+  node_modules/@types/react/index.d.ts:47:1
+    47 export = React;
+       ~~~~~~~~~~~~~~~
+    This module is declared with 'export =', and can only be used with a default import when using the 'esModuleInterop' flag.
+node_modules/@chakra-ui/react/dist/types/popover/popover-transition.d.ts:4:84 - error TS2344: Type 'T' does not satisfy the constraint 'ElementType'.
+  Type 'string | number | symbol' is not assignable to type 'ElementType'.
+    Type 'string' is not assignable to type 'ElementType'.
+      Type 'T' is not assignable to type 'FunctionComponent<any>'.
+        Type 'string | number | symbol' is not assignable to type 'FunctionComponent<any>'.
+          Type 'string' is not assignable to type 'FunctionComponent<any>'.
+4 type HTMLMotionChakraProps<T extends keyof React.ReactHTML> = Omit<HTMLChakraProps<T>, keyof HTMLMotionProps<T>> & Omit<HTMLMotionProps<T>, "style" | "onDrag" | "onDragEnd" | "onDragStart" | "onAnimationStart" | "variants" | "transition" | "children"> & {
+                                                                                     ~
+node_modules/@chakra-ui/react/dist/types/popover/popover-transition.d.ts:4:110 - error TS2344: Type 'T' does not satisfy the constraint 'keyof HTMLElements'.
+  Type 'string | number | symbol' is not assignable to type 'keyof HTMLElements'.
+    Type 'string' is not assignable to type 'keyof HTMLElements'.
+4 type HTMLMotionChakraProps<T extends keyof React.ReactHTML> = Omit<HTMLChakraProps<T>, keyof HTMLMotionProps<T>> & Omit<HTMLMotionProps<T>, "style" | "onDrag" | "onDragEnd" | "onDragStart" | "onAnimationStart" | "variants" | "transition" | "children"> & {
+                                                                                                               ~
+node_modules/@chakra-ui/react/dist/types/popover/popover-transition.d.ts:4:137 - error TS2344: Type 'T' does not satisfy the constraint 'keyof HTMLElements'.
+  Type 'string | number | symbol' is not assignable to type 'keyof HTMLElements'.
+    Type 'string' is not assignable to type 'keyof HTMLElements'.
+4 type HTMLMotionChakraProps<T extends keyof React.ReactHTML> = Omit<HTMLChakraProps<T>, keyof HTMLMotionProps<T>> & Omit<HTMLMotionProps<T>, "style" | "onDrag" | "onDragEnd" | "onDragStart" | "onAnimationStart" | "variants" | "transition" | "children"> & {
+                                                                                                                                          ~
+node_modules/@chakra-ui/utils/dist/types/merge.d.ts:1:8 - error TS1259: Module '"C:/Users/hardp/Desktop/exotic_ws/exotic-app-frontend/node_modules/@types/lodash.mergewith/index"' can only be default-imported using the 'esModuleInterop' flag
+1 import mergeWith from "lodash.mergewith";
+         ~~~~~~~~~
+  node_modules/@types/lodash.mergewith/index.d.ts:4:1
+    4 export = mergeWith;
+      ~~~~~~~~~~~~~~~~~~~
+    This module is declared with 'export =', and can only be used with a default import when using the 'esModuleInterop' flag.
+node_modules/@chakra-ui/utils/dist/types/prop-types.d.ts:46:18 - error TS2320: Interface 'InputDOMAttributes' cannot simultaneously extend types 'InputDOMProps' and 'DOMAttributes<HTMLInputElement>'.
+  Named property 'onBeforeInput' of types 'InputDOMProps' and 'DOMAttributes<HTMLInputElement>' are not identical.
+46 export interface InputDOMAttributes extends InputDOMProps, DOMAttributes<HTMLInputElement> {
+                    ~~~~~~~~~~~~~~~~~~
+node_modules/@types/node/globals.d.ts:126:13 - error TS2403: Subsequent variable declarations must have the same type.  Variable 'AbortSignal' must be of type '{ new (): AbortSignal; prototype: AbortSignal; abort(reason?: any): AbortSignal; any(signals: AbortSignal[]): AbortSignal; timeout(milliseconds: number): AbortSignal; }', but here has type '{ new (): AbortSignal; prototype: AbortSignal; abort(reason?: any): AbortSignal; timeout(milliseconds: number): AbortSignal; }'.
+126 declare var AbortSignal: {
+                ~~~~~~~~~~~
+  node_modules/typescript/lib/lib.dom.d.ts:2773:13
+    2773 declare var AbortSignal: {
+                     ~~~~~~~~~~~
+    'AbortSignal' was also declared here.
+src/pages/Stock/Kardex/KardexTab.tsx:22:26 - error TS6142: Module '../../../api/EndPointsURL' was resolved to 'C:/Users/hardp/Desktop/exotic_ws/exotic-app-frontend/src/api/EndPointsURL.tsx', but '--jsx' is not set.
+22 import EndPointsURL from '../../../api/EndPointsURL';
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:23:26 - error TS6142: Module '../../../components/MyDatePicker' was resolved to 'C:/Users/hardp/Desktop/exotic_ws/exotic-app-frontend/src/components/MyDatePicker.tsx', but '--jsx' is not set.
+23 import MyDatePicker from '../../../components/MyDatePicker';
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:24:29 - error TS6142: Module '../../../components/DateRangePicker' was resolved to 'C:/Users/hardp/Desktop/exotic_ws/exotic-app-frontend/src/components/DateRangePicker.tsx', but '--jsx' is not set.
+24 import DateRangePicker from '../../../components/DateRangePicker';
+                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:25:30 - error TS6142: Module '../../../components/BetterPagination/BetterPagination' was resolved to 'C:/Users/hardp/Desktop/exotic_ws/exotic-app-frontend/src/components/BetterPagination/BetterPagination.tsx', but '--jsx' is not set.
+25 import BetterPagination from '../../../components/BetterPagination/BetterPagination';
+                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:26:47 - error TS6142: Module '../../../components/ProductoSelector/ProductoSelector' was resolved to 'C:/Users/hardp/Desktop/exotic_ws/exotic-app-frontend/src/components/ProductoSelector/ProductoSelector.tsx', but '--jsx' is not set.
+26 import ProductoSelector, { ProductoMin } from '../../../components/ProductoSelector/ProductoSelector';
+                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:27:66 - error TS6142: Module './types' was resolved to 'C:/Users/hardp/Desktop/exotic_ws/exotic-app-frontend/src/pages/Stock/Kardex/types.tsx', but '--jsx' is not set.
+27 import { KardexMovimientoRowDTO, KardexMovimientosPageDTO } from './types';
+                                                                    ~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:165:5 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+165     <VStack w="full" align="stretch" spacing={4}>
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:167:7 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+167       <Box p={4} borderWidth="1px" borderRadius="md">
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:168:9 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+168         <VStack align="stretch" spacing={4}>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:169:11 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+169           <HStack spacing={3} align="flex-end" flexWrap="wrap">
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:170:13 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+170             <FormControl>
+                ~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:171:15 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+171               <FormLabel>Producto</FormLabel>
+                  ~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:172:15 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+172               <HStack>
+                  ~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:173:17 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+173                 <Button onClick={() => setIsProductoSelectorOpen(true)}>Seleccionar</Button>
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:174:17 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+174                 <Text>
+                    ~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:180:13 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+180             <FormControl maxW="220px">
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:181:15 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+181               <FormLabel>Filtro de fecha</FormLabel>
+                  ~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:182:15 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+182               <Select value={modoFecha} onChange={(e) => setModoFecha(e.target.value as ModoFecha)}>
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:183:17 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+183                 <option value="UNICA">Fecha única</option>
+                    ~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:184:17 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+184                 <option value="RANGO">Rango de fechas</option>
+                    ~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:188:13 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+188             <Flex flex={1} minW="320px" justify="flex-start">
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:190:17 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+190                 <MyDatePicker
+                    ~~~~~~~~~~~~~
+191                   date={fechaUnica}
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+...
+194                   label="Fecha"
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+195                 />
+    ~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:197:17 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+197                 <DateRangePicker
+                    ~~~~~~~~~~~~~~~~
+198                   date1={fechaInicio}
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+...
+202                   flex_direction="row"
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+203                 />
+    ~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:207:13 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+207             <HStack>
+                ~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:208:15 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+208               <Button onClick={fetchKardex} isDisabled={!canQuery} isLoading={loading} loadingText="Cargando">
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:211:15 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+211               <Button colorScheme="teal" onClick={exportExcel} isDisabled={!canQuery}>
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:218:13 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+218             <Text color="red.500" fontSize="sm">
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:227:9 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+227         <Box>
+            ~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:228:11 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+228           <Text mb={2}>
+              ~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:229:13 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+229             <strong>Saldo inicial:</strong> {data.saldoInicial}
+                ~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:233:13 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+233             <Box p={4} borderWidth="1px" borderRadius="md">
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:234:15 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+234               <Text color="gray.600">No hay movimientos para los parámetros de búsqueda especificados.</Text>
+                  ~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:237:13 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+237             <Box borderWidth="1px" borderRadius="md" overflowX="auto">
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:238:15 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+238               <Table size="sm" variant="simple">
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:239:17 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+239                 <Thead>
+                    ~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:240:19 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+240                   <Tr>
+                      ~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:241:21 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+241                     <Th>Fecha</Th>
+                        ~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:242:21 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+242                     <Th>Tipo</Th>
+                        ~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:243:21 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+243                     <Th>Almacén</Th>
+                        ~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:244:21 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+244                     <Th>Lote</Th>
+                        ~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:245:21 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+245                     <Th isNumeric>Entrada</Th>
+                        ~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:246:21 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+246                     <Th isNumeric>Salida</Th>
+                        ~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:247:21 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+247                     <Th isNumeric>Saldo</Th>
+                        ~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:250:17 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+250                 <Tbody>
+                    ~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:252:21 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+252                     <Tr key={row.movimientoId}>
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:253:23 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+253                       <Td>{format(new Date(row.fechaMovimiento), 'dd/MM/yyyy HH:mm')}</Td>
+                          ~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:254:23 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+254                       <Td>{row.tipoMovimiento}</Td>
+                          ~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:255:23 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+255                       <Td>{row.almacen}</Td>
+                          ~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:256:23 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+256                       <Td>{row.batchNumber ?? ''}</Td>
+                          ~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:257:23 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+257                       <Td isNumeric>{row.entrada}</Td>
+                          ~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:258:23 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+258                       <Td isNumeric>{row.salida}</Td>
+                          ~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:259:23 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+259                       <Td isNumeric>{row.saldo}</Td>
+                          ~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:268:13 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+268             <Box mt={3}>
+                ~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:269:15 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+269               <BetterPagination
+                  ~~~~~~~~~~~~~~~~~
+270                 page={page}
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+...
+275                 onSizeChange={(newSize) => setSize(newSize)}
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+276               />
+    ~~~~~~~~~~~~~~~~
+src/pages/Stock/Kardex/KardexTab.tsx:283:7 - error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+283       <ProductoSelector
+          ~~~~~~~~~~~~~~~~~
+284         isOpen={isProductoSelectorOpen}
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+...
+287         title="Seleccionar producto (Material / Semi / Terminado)"
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+288       />
+    ~~~~~~~~
+Found 63 errors in 6 files.
+Errors  Files
+     1  node_modules/@chakra-ui/hooks/dist/types/use-disclosure.d.ts:1
+     4  node_modules/@chakra-ui/react/dist/types/popover/popover-transition.d.ts:3
+     1  node_modules/@chakra-ui/utils/dist/types/merge.d.ts:1
+     1  node_modules/@chakra-ui/utils/dist/types/prop-types.d.ts:46
+     1  node_modules/@types/node/globals.d.ts:126
+    55  src/pages/Stock/Kardex/KardexTab.tsx:22

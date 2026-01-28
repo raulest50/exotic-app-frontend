@@ -28,7 +28,7 @@ import UsuariosPage from "./pages/Usuarios/UsuariosPage.tsx";
 import MultiRoleProtectedRoute from "./components/MultiRoleProtectedRoute.tsx";
 
 import { Modulo } from "./pages/Usuarios/GestionUsuarios/types.tsx";
-import CargaMasivaPage from "./pages/CargaMasiva/CargaMasivaPage.tsx";
+import OperacionesCriticasBDPage from "./pages/OperacionesCriticasBD/OperacionesCriticasBDPage.tsx";
 import ActivosFijosPage from "./pages/ActivosFijos/ActivosFijosPage.tsx";
 import ContabilidadPage from "./pages/Contabilidad/ContabilidadPage.tsx";
 import PersonalPage from "./pages/Personal/PersonalPage.tsx";
@@ -41,6 +41,7 @@ import TransaccionesAlmacenPage from "./pages/TransaccionesAlmacen/Transacciones
 import ClientesPage from "./pages/Clientes/ClientesPage.tsx";
 import VentasPage from "./pages/Ventas/VentasPage.tsx";
 import PagosProveedoresPage from "./pages/PagosProveedores/PagosProveedoresPage.tsx";
+import { EnvironmentBadge } from "./components/EnvironmentBadge.tsx";
 
 const router = createBrowserRouter(
     createRoutesFromElements(
@@ -159,10 +160,10 @@ const router = createBrowserRouter(
                 />
 
                 <Route
-                    path="carga_masiva"
+                    path="operaciones_criticas_bd"
                     element={
                         <ProtectedRoute requiredModulo={""}>
-                            <CargaMasivaPage/>
+                            <OperacionesCriticasBDPage/>
                         </ProtectedRoute>
                     }
                 />
@@ -263,6 +264,7 @@ function App() {
         <MasterDirectivesProvider>
             <NotificationsProvider>
                 <RouterProvider router={router} />
+                <EnvironmentBadge />
             </NotificationsProvider>
         </MasterDirectivesProvider>
     )
