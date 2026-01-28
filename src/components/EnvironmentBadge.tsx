@@ -17,7 +17,7 @@ export const EnvironmentBadge = () => {
             px={3}
             py={1}
         >
-            {env === 'staging' ? 'STAGING' : 'LOCAL DEV'}
+            {env === 'staging' ? 'ENTORNO DE PRUEBAS' : 'LOCAL DEV'}
         </Badge>
     );
 };

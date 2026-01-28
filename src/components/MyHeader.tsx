@@ -1,6 +1,6 @@
 
 import {IoArrowBack} from "react-icons/io5";
-import {Flex, Spacer, Heading, IconButton, HStack, Tag, TagLabel} from '@chakra-ui/react'
+import {Box, Flex, Heading, IconButton, HStack, Tag, TagLabel} from '@chakra-ui/react'
 import {NavLink, useLocation} from "react-router-dom";
 import {useEffect, useMemo, useState} from "react";
 import {getCurrentUserWithAccess} from "../api/UserApi";
@@ -92,34 +92,34 @@ function MyHeader({title,}:MyHeaderProps){
     const shouldShowInfo = useMemo(() => Boolean(username), [username]);
 
     return(
-        <Flex pb={'0.2em'} direction={'row'} mb={'1em'} borderBottom={'0.04em solid'} align={'center'}>
+        <Flex w="full" minW={0} pb={'0.2em'} direction={'row'} mb={'1em'} borderBottom={'0.04em solid'} align={'center'}>
             <NavLink to={'/'}>
                 <IconButton
                     ml={'1em'} mr={'2em'} my={'0.2em'}
-                    flex={1} colorScheme={'teal'}
+                    colorScheme={'teal'}
                     aria-label='atrás' fontSize={'3xl'} boxSize={'2em'} icon={<IoArrowBack/>}/>
             </NavLink>
-            <Flex flex={2} minW={0} align={'baseline'}>
-                <Heading as={'h2'} size={'xl'} fontFamily={'Comfortaa Variable'}>{title}</Heading>
-                <Spacer />
-                {shouldShowInfo ? (
-                    <HStack spacing={2} minW={0} justify={'flex-end'} maxW={'45vw'}>
-                        <Tag size={'sm'} variant={'subtle'} colorScheme={'gray'}>
-                            <TagLabel isTruncated maxW={'28vw'}>
-                                {username}
+            <Box flex={1} minW={0} overflow="hidden" display="flex" alignItems="baseline">
+                <Heading as={'h2'} size={'xl'} fontFamily={'Comfortaa Variable'} noOfLines={1} minW={0}>
+                    {title}
+                </Heading>
+            </Box>
+            {shouldShowInfo ? (
+                <HStack flexShrink={0} spacing={2} align="center" ml={2}>
+                    <Tag size={'sm'} variant={'subtle'} colorScheme={'gray'} minW={0} maxW="200px">
+                        <TagLabel isTruncated>
+                            {username}
+                        </TagLabel>
+                    </Tag>
+                    {accessLevelDisplay ? (
+                        <Tag size={'sm'} variant={'outline'} colorScheme={'teal'}>
+                            <TagLabel whiteSpace={'nowrap'}>
+                                Nivel {accessLevelDisplay}
                             </TagLabel>
                         </Tag>
-                        {accessLevelDisplay ? (
-                            <Tag size={'sm'} variant={'outline'} colorScheme={'teal'}>
-                                <TagLabel whiteSpace={'nowrap'}>
-                                    Nivel {accessLevelDisplay}
-                                </TagLabel>
-                            </Tag>
-                        ) : null}
-                    </HStack>
-                ) : null}
-            </Flex>
-            <Spacer flex={2}/>
+                    ) : null}
+                </HStack>
+            ) : null}
         </Flex>
     )
 }
