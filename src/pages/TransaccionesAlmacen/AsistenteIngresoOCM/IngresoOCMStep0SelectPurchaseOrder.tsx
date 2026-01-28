@@ -21,11 +21,13 @@ import {
 } from "@chakra-ui/react";
 import { RepeatIcon } from "@chakra-ui/icons";
 import axios from "axios";
-import {useMemo, useState} from "react";
+import {useMemo, useRef, useState} from "react";
 import ProveedorFilterOCM from "../../Compras/components/ProveedorFilterOCM";
 import ProveedorPicker from "../../Compras/components/ProveedorPicker";
 import EndPointsURL from "../../../api/EndPointsURL";
 import {OrdenCompra, Proveedor} from "../types";
+import {PaginatedResponse} from "../HistorialDispensaciones/types";
+import BetterPagination from "../../../components/BetterPagination/BetterPagination";
 
 interface StepOneComponentProps {
     setActiveStep: (step: number) => void;
@@ -49,8 +51,12 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
     });
     const [fechaFin, setFechaFin] = useState<string>(() => new Date().toISOString().split("T")[0]);
     const [ordenes, setOrdenes] = useState<OrdenCompra[]>([]);
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [size, setSize] = useState(10);
     // Estado para controlar si se muestra precio total o porcentaje recibido
     const [mostrarPorcentaje, setMostrarPorcentaje] = useState(false);
+    const skipNextPageChangeRef = useRef(false);
 
     const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -60,25 +66,26 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
         return `${date}${timeSuffix}`;
     };
 
-    const fetchOrdenesPendientes = async () => {
+    const fetchOrdenesPendientes = async (pageNum: number, pageSize: number) => {
         setIsLoading(true);
         try {
-            const response = await axios.get<OrdenCompra[]>(
+            const response = await axios.get<PaginatedResponse<OrdenCompra>>(
                 endpoints.consulta_ocm_pendientes,
                 {
                     withCredentials: true,
                     params: {
-                        page: 0,
-                        size: 10,
+                        page: pageNum,
+                        size: pageSize,
                         fechaInicio: serializeDate(fechaInicio),
                         fechaFin: serializeDate(fechaFin, true),
                         proveedorId: proveedor?.id ?? undefined,
                     },
                 }
             );
-            const ordenesPendientes = response.data || [];
+            const data = response.data;
+            const content = data.content ?? [];
 
-            if (ordenesPendientes.length === 0) {
+            if (content.length === 0) {
                 toast({
                     title: "No se encontraron órdenes",
                     description: "No hay órdenes que coincidan con el filtro seleccionado.",
@@ -88,7 +95,10 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
                 });
             }
 
-            setOrdenes(ordenesPendientes);
+            setOrdenes(content);
+            setTotalPages(data.totalPages ?? 0);
+            setPage(data.number ?? pageNum);
+            setSize(data.size ?? pageSize);
         } catch (error: any) {
             console.error("Error fetching órdenes pendientes", error);
             toast({
@@ -101,6 +111,22 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handlePageChange = (newPage: number) => {
+        if (skipNextPageChangeRef.current) {
+            skipNextPageChangeRef.current = false;
+            return;
+        }
+        setPage(newPage);
+        fetchOrdenesPendientes(newPage, size);
+    };
+
+    const handleSizeChange = (newSize: number) => {
+        skipNextPageChangeRef.current = true;
+        setSize(newSize);
+        setPage(0);
+        fetchOrdenesPendientes(0, newSize);
     };
 
 
@@ -178,7 +204,7 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
 
                     <Button
                         colorScheme="teal"
-                        onClick={fetchOrdenesPendientes}
+                        onClick={() => fetchOrdenesPendientes(0, size)}
                         isLoading={isLoading}
                     >
                         Buscar
@@ -227,6 +253,16 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
                         </Tbody>
                     </Table>
                 </Box>
+                {totalPages > 0 && (
+                    <BetterPagination
+                        page={page}
+                        size={size}
+                        totalPages={totalPages}
+                        loading={isLoading}
+                        onPageChange={handlePageChange}
+                        onSizeChange={handleSizeChange}
+                    />
+                )}
             </VStack>
 
             <ProveedorPicker
