@@ -1,6 +1,7 @@
 import { Container, Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader";
 import { my_style_tab } from "../../styles/styles_general";
+import CargaMasivaTab from "./CargaMasiva/CargaMasivaTab";
 
 export default function OperacionesCriticasBDPage() {
     return (
@@ -14,7 +15,7 @@ export default function OperacionesCriticasBDPage() {
                     </TabList>
                     <TabPanels>
                         <TabPanel>
-                            {/* Contenido futuro de Carga Masiva */}
+                            <CargaMasivaTab />
                         </TabPanel>
                         <TabPanel>
                             {/* Contenido futuro de Eliminaciones Forzadas */}

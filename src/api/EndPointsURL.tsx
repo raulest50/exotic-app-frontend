@@ -130,6 +130,10 @@ export default class EndPointsURL{
     public save_integrante_personal: string;
     public search_integrantes_personal: string;
 
+    // carga masiva (operaciones criticas BD)
+    public carga_masiva_template_inventario: string;
+    public carga_masiva_ejecutar: string;
+
     // organigrama endpoints
     public get_all_cargos: string;
     public save_cargo_with_manual: string;
@@ -324,6 +328,10 @@ export default class EndPointsURL{
         // integrantes de personal endpoints
         this.save_integrante_personal = `${domain}/${personal_res}/save`;
         this.search_integrantes_personal = `${domain}/${personal_res}/search`;
+
+        // carga masiva (operaciones criticas BD)
+        this.carga_masiva_template_inventario = `${domain}/api/carga-masiva/template-inventario`;
+        this.carga_masiva_ejecutar = `${domain}/api/carga-masiva/ejecutar`;
 
         // contabilidad endpoints
         this.get_cuentas = `${domain}/${contabilidad_res}/cuentas`;
