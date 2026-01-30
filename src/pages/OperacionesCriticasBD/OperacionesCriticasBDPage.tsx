@@ -2,6 +2,7 @@ import { Container, Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakr
 import MyHeader from "../../components/MyHeader";
 import { my_style_tab } from "../../styles/styles_general";
 import CargaMasivaTab from "./CargaMasiva/CargaMasivaTab";
+import EliminacionForzada from "./EliminacionForzada/EliminacionForzada";
 
 export default function OperacionesCriticasBDPage() {
     return (
@@ -18,7 +19,7 @@ export default function OperacionesCriticasBDPage() {
                             <CargaMasivaTab />
                         </TabPanel>
                         <TabPanel>
-                            {/* Contenido futuro de Eliminaciones Forzadas */}
+                            <EliminacionForzada />
                         </TabPanel>
                     </TabPanels>
                 </Tabs>

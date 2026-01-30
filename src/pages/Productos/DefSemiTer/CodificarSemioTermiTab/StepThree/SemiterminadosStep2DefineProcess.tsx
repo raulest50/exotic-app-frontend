@@ -5,20 +5,18 @@ import {
     Flex, 
     FormControl, 
     FormLabel, 
-    NumberInput, 
-    NumberInputField,
     InputGroup,
     Input,
     InputRightElement,
     IconButton,
     HStack,
-    Box,
-    Text
+    Box
 } from "@chakra-ui/react";
 import { SearchIcon } from '@chakra-ui/icons';
 import { useState } from "react";
 import AreaPickerGeneric from "../../../../../components/Pickers/AreaPickerGeneric/AreaPickerGeneric.tsx";
 import PackagingTerminadoDefiner from "./PackagingTerminadoDefiner.tsx";
+import CustomDecimalInput from "../../../../../components/CustomDecimalInput/CustomDecimalInput.tsx";
 
 // Interface for AreaProduccion based on the backend model
 interface AreaProduccion {
@@ -119,13 +117,12 @@ export default function SemiterminadosStep2DefineProcess({ setActiveStep, semiot
             <HStack spacing={4} alignItems="flex-start">
                 <FormControl w="sm">
                     <FormLabel>Rendimiento Teórico</FormLabel>
-                    <NumberInput
-                        min={0}
+                    <CustomDecimalInput
                         value={rendimientoTeorico}
-                        onChange={(_, value) => setRendimientoTeorico(value)}
-                    >
-                        <NumberInputField />
-                    </NumberInput>
+                        onChange={setRendimientoTeorico}
+                        min={0}
+                        placeholder="0.0000"
+                    />
                 </FormControl>
 
                 <FormControl w="sm">

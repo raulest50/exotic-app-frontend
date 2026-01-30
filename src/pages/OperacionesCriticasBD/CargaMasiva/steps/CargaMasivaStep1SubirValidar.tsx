@@ -53,9 +53,24 @@ export default function CargaMasivaStep1SubirValidar({
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log("[CargaMasiva Step1] handleFileChange invoked", {
+            type: e.type,
+            target: e.target,
+            filesLength: e.target.files?.length ?? 0,
+        });
         const file = e.target.files?.[0];
         if (file) {
-            if (!isValidExcelExtension(file)) {
+            const ext = file.name.includes(".") ? file.name.slice(file.name.lastIndexOf(".")).toLowerCase() : "";
+            console.log("[CargaMasiva Step1] file received", {
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                extension: ext,
+            });
+            const extensionValid = isValidExcelExtension(file);
+            console.log("[CargaMasiva Step1] isValidExcelExtension result", extensionValid, "file.name:", file.name);
+            if (!extensionValid) {
+                console.log("[CargaMasiva Step1] Extension invalid, showing toast");
                 toast({
                     title: "Tipo de archivo no permitido",
                     description: "Solo se permiten archivos Excel (.xlsx, .xls)",
@@ -66,11 +81,14 @@ export default function CargaMasivaStep1SubirValidar({
                 e.target.value = "";
                 return;
             }
+            console.log("[CargaMasiva Step1] File accepted, updating state", file.name);
             setLocalExcelFile(file);
             setExcelFile(file);
             setExcel_is_valid(false);
             setValidationErrors([]);
             setLocalExcelData(null);
+        } else {
+            console.log("[CargaMasiva Step1] No file in event");
         }
     };
 
@@ -160,17 +178,28 @@ export default function CargaMasivaStep1SubirValidar({
                     return;
                 }
 
-                if (cantidadASumar === "" && nuevoCosto === "") {
-                    errors.push(`Fila ${rowNumber}: tanto cantidad_a_sumar como nuevo_costo están vacíos (al menos uno debe tener valor)`);
+                if (cantidadASumar === "") {
+                    errors.push(`Fila ${rowNumber}: cantidad_a_sumar está vacío (debe tener un valor)`);
                     return;
                 }
 
-                if (cantidadASumar !== "" && (typeof cantidadASumar !== "number" || isNaN(cantidadASumar))) {
-                    errors.push(`Fila ${rowNumber}: cantidad_a_sumar tiene un valor inválido`);
+                if (nuevoCosto === "") {
+                    errors.push(`Fila ${rowNumber}: nuevo_costo está vacío (debe tener un valor)`);
                     return;
                 }
 
-                if (nuevoCosto !== "" && (typeof nuevoCosto !== "number" || isNaN(nuevoCosto) || nuevoCosto < 0)) {
+                if (typeof cantidadASumar !== "number" || isNaN(cantidadASumar)) {
+                    errors.push(`Fila ${rowNumber}: cantidad_a_sumar tiene un valor inválido (debe ser un número)`);
+                    return;
+                }
+
+                const cantidadValida = cantidadASumar >= 0 || cantidadASumar === -1 || cantidadASumar === -7;
+                if (!cantidadValida) {
+                    errors.push(`Fila ${rowNumber}: cantidad_a_sumar inválido (solo se permiten números positivos, -1 o -7)`);
+                    return;
+                }
+
+                if (typeof nuevoCosto !== "number" || isNaN(nuevoCosto) || nuevoCosto < 0) {
                     errors.push(`Fila ${rowNumber}: nuevo_costo tiene un valor inválido (debe ser un número >= 0)`);
                     return;
                 }
@@ -229,7 +258,14 @@ export default function CargaMasivaStep1SubirValidar({
                 <Box p={5} borderWidth="1px" borderRadius="lg">
                     <VStack spacing={4} align="stretch">
                         <HStack spacing={4} alignItems="center">
-                            <Button onClick={() => inputRef.current?.click()}>Subir Excel</Button>
+                            <Button
+                                onClick={() => {
+                                    console.log("[CargaMasiva Step1] Subir Excel clicked, inputRef.current:", inputRef.current != null);
+                                    inputRef.current?.click();
+                                }}
+                            >
+                                Subir Excel
+                            </Button>
                             <Input
                                 type="file"
                                 ref={inputRef}
