@@ -31,11 +31,26 @@ export interface CustomDecimalInputProps extends Omit<InputProps, 'value' | 'onC
 }
 
 /**
- * Componente de input para valores decimales que permite una mejor UX:
- * - Permite borrar el campo completamente
- * - Permite escribir decimales empezando con punto (ej: ".32")
- * - Valida solo al perder el foco (onBlur)
- * - Mantiene estados temporales inválidos durante la edición
+ * Input decimal con validación estricta y UX optimizada para cantidades.
+ *
+ * REGLA DE VALIDACIÓN: Solo se consideran válidos valores donde value > min.
+ * Con min=0 (default), acepta únicamente números positivos (> 0). El valor 0
+ * se interpreta como "vacío" (sin valor ingresado) y nunca se propaga via onChange.
+ *
+ * CASOS DE USO:
+ * - Rendimiento teórico, cantidades a dispensar, cantidades a producir: min=0.
+ * - Cualquier campo donde la cantidad debe ser estrictamente positiva.
+ *
+ * VENTAJAS UX (vs Input type="number" / NumberInput de Chakra):
+ * - Permite borrar el campo completamente durante la edición.
+ * - Permite escribir decimales empezando con punto (ej: ".32").
+ * - Valida al perder el foco (onBlur), evitando bloqueos al teclear.
+ * - Mantiene estados temporales inválidos durante la edición.
+ * - inputMode="decimal" mejora el teclado en móviles.
+ *
+ * LIMITACIÓN: No permite confirmar explícitamente el valor del mínimo (ej: 0).
+ * Para "cantidad a dispensar" esto es deseado: 0 = no ingresado; use el botón
+ * Eliminar para quitar un lote en lugar de poner 0.
  */
 const CustomDecimalInput: React.FC<CustomDecimalInputProps> = ({
     value,

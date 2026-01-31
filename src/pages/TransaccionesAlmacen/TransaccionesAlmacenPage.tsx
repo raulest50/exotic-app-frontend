@@ -1,95 +1,83 @@
 import MyHeader from "../../components/MyHeader";
-import {Container, Tabs, TabList, TabPanels, Tab, TabPanel, Text} from "@chakra-ui/react";
+import { Container, Tabs, TabList, TabPanels, Tab, TabPanel, Text, Spinner } from "@chakra-ui/react";
 import AsistenteIngresoMercancia from "./AsistenteIngresoOCM/AsistenteIngresoMercancia";
-import {AsistenteDispensacion} from "./AsistenteDispensacion/AsistenteDispensacion.tsx";
-import {AsistenteDispensacionDirecta} from "./Deprecated/AsistenteDispensacionDirecta/AsistenteDispensacionDirecta.tsx";
-import {AsistenteBackflushDirecto} from "./Deprecated/AsistenteBackflushDirecto/AsistenteBackflushDirecto.tsx";
+import { AsistenteDispensacion } from "./AsistenteDispensacion/AsistenteDispensacion.tsx";
+import AjustesInventarioTab from "./AjustesInventario/AjustesInventarioTab";
+import { HistorialDispensaciones } from "./HistorialDispensaciones/HistorialDispensaciones.tsx";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
 import { useAuth } from "../../context/AuthContext";
-import AjustesInventarioTab from "./AjustesInventario/AjustesInventarioTab";
-import {HistorialDispensaciones} from "./HistorialDispensaciones/HistorialDispensaciones.tsx";
 
+interface SuperMasterConfig {
+    id: number;
+    habilitarEliminacionForzada: boolean;
+    habilitarCargaMasiva: boolean;
+    habilitarAjustesInventario: boolean;
+}
 
-export default function TransaccionesAlmacenPage(){
-    const [showDispensacionDirecta, setShowDispensacionDirecta] = useState(false);
-    const [showBackflushDirecto, setShowBackflushDirecto] = useState(false);
+export default function TransaccionesAlmacenPage() {
+    const [habilitarAjustesInventario, setHabilitarAjustesInventario] = useState(false);
+    const [loading, setLoading] = useState(true);
     const { user } = useAuth();
     const endPoints = useMemo(() => new EndPointsURL(), []);
 
     useEffect(() => {
         if (!user) return;
-
-        const fetchDirective = async (nombre: string) => {
+        const fetchConfig = async () => {
             try {
-                const res = await axios.get<{ valor: string }>(endPoints.get_master_directive(nombre));
-                return res.data.valor;
-            } catch (error) {
-                console.error(`Error fetching directive ${nombre}`, error);
-                return null;
+                const res = await axios.get<SuperMasterConfig>(endPoints.get_super_master_config);
+                setHabilitarAjustesInventario(res.data.habilitarAjustesInventario ?? false);
+            } catch (err) {
+                console.error("Error fetching Super Master config", err);
+                setHabilitarAjustesInventario(false);
+            } finally {
+                setLoading(false);
             }
         };
-
-        const loadDirectives = async () => {
-            const disp = await fetchDirective("Permitir Consumo No Planificado");
-            const back = await fetchDirective("Permitir Backflush No Planificado");
-            setShowDispensacionDirecta(disp === "true");
-            setShowBackflushDirecto(back === "true");
-        };
-
-        loadDirectives();
+        fetchConfig();
     }, [user, endPoints]);
 
-    return(
-        <Container minW={['auto', 'container.lg', 'container.xl']} w={'full'} h={'full'}>
-            <MyHeader title={'Ingreso a Almacen'}/>
+    if (loading) {
+        return (
+            <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
+                <MyHeader title="Ingreso a Almacen" />
+                <Spinner />
+            </Container>
+        );
+    }
+
+    return (
+        <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
+            <MyHeader title="Ingreso a Almacen" />
             <Tabs>
                 <TabList>
                     <Tab> Ingreso OCM </Tab>
                     <Tab> Hacer Dispensacion </Tab>
                     <Tab> Historial Dispensaciones </Tab>
                     <Tab> Ingreso Producto Terminado </Tab>
-                    {showDispensacionDirecta && <Tab> Dispensacion Directa </Tab>}
-                    {showBackflushDirecto && <Tab> Backflush Directo </Tab>}
-                    <Tab> Ajustes de Inventario </Tab>
+                    {habilitarAjustesInventario && <Tab> Ajustes de Inventario </Tab>}
                 </TabList>
                 <TabPanels>
-
                     <TabPanel>
-                        <AsistenteIngresoMercancia/>
+                        <AsistenteIngresoMercancia />
                     </TabPanel>
-
                     <TabPanel>
                         <AsistenteDispensacion />
                     </TabPanel>
-
                     <TabPanel>
                         <HistorialDispensaciones />
                     </TabPanel>
-
                     <TabPanel>
                         <Text> Pendiente implementacion </Text>
                     </TabPanel>
-
-                    {showDispensacionDirecta && (
+                    {habilitarAjustesInventario && (
                         <TabPanel>
-                            <AsistenteDispensacionDirecta />
+                            <AjustesInventarioTab />
                         </TabPanel>
                     )}
-
-                    {showBackflushDirecto && (
-                        <TabPanel>
-                            <AsistenteBackflushDirecto />
-                        </TabPanel>
-                    )}
-
-                    <TabPanel>
-                        <AjustesInventarioTab />
-                    </TabPanel>
-
                 </TabPanels>
             </Tabs>
         </Container>
-    )
+    );
 }

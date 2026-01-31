@@ -1,7 +1,10 @@
 // src/pages/Home.tsx
-import {SimpleGrid, Flex, Heading, Button, Spacer, Container, Box, HStack, Tooltip} from "@chakra-ui/react";
+import { SimpleGrid, Flex, Heading, Button, Spacer, Container, Box, HStack, Tooltip } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
 import SectionCard from "../components/SectionCard.tsx";
 import SplitText from "../components/SplitText.tsx";
+import SuperMasterOnboardingModal from "../components/SuperMasterOnboardingModal.tsx";
+import { getCurrentUser } from "../api/UserApi";
 import { PiDownloadDuotone } from "react-icons/pi";
 import { BsDatabaseCheck } from "react-icons/bs";
 import { AiOutlineAudit } from "react-icons/ai";
@@ -33,10 +36,20 @@ import { Modulo } from "./Usuarios/GestionUsuarios/types.tsx";
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationsContext';
 
-export default function Home(){
-
-    // pull out user, roles, logout from auth context
+export default function Home() {
     const { user, roles, logout } = useAuth();
+    const [showSuperMasterOnboarding, setShowSuperMasterOnboarding] = useState(false);
+
+    useEffect(() => {
+        if (user !== "super_master") return;
+        getCurrentUser()
+            .then((u) => {
+                if (!u.email || String(u.email).trim() === "") {
+                    setShowSuperMasterOnboarding(true);
+                }
+            })
+            .catch(() => {});
+    }, [user]);
 //     console.log('Home - Usuario actual:', user);
 //     console.log('Home - Roles del usuario:', roles);
 
@@ -119,11 +132,18 @@ export default function Home(){
                 <SectionCard to={'/Personal'} name={'Personal'} icon={PiMicrosoftTeamsLogoFill} supportedModules={[Modulo.PERSONAL_PLANTA]} currentAccesos={roles} notification={getNotificationForModule(Modulo.PERSONAL_PLANTA)}/>
                 <SectionCard to={'/Bintelligence'} name={'BI'} icon={MdOutlineInsights} supportedModules={[Modulo.BINTELLIGENCE]} currentAccesos={roles} notification={getNotificationForModule(Modulo.BINTELLIGENCE)}/>
                 <SectionCard to={'/administracion_alertas'} name={'Administracion Alertas'} icon={MdNotificationsActive} supportedModules={[Modulo.ADMINISTRACION_ALERTAS]} currentAccesos={roles} notification={getNotificationForModule(Modulo.ADMINISTRACION_ALERTAS)}/>
-                <SectionCard to={'/master_directives'} name={'Master Directives'} icon={FaCogs} supportedModules={[]} currentAccesos={roles} bgColor="red.100" notification={getNotificationForModule('MASTER_CONFIGS' as Modulo)}/>
+                {user === 'super_master' && (
+                    <SectionCard to={'/master_directives'} name={'Directivas Super Master'} icon={FaCogs} supportedModules={[]} currentAccesos={roles} bgColor="red.100" notification={getNotificationForModule('MASTER_CONFIGS' as Modulo)}/>
+                )}
                 <SectionCard to={'/cronograma'} name={'Cronograma'} icon={FaCalendarAlt} supportedModules={[Modulo.CRONOGRAMA]} currentAccesos={roles} notification={getNotificationForModule(Modulo.CRONOGRAMA)}/>
                 <SectionCard to={'/organigrama'} name={'Organigrama'} icon={FaSitemap} supportedModules={[Modulo.ORGANIGRAMA]} currentAccesos={roles} notification={getNotificationForModule(Modulo.ORGANIGRAMA)}/>
                 <SectionCard to={'/pagos-proveedores'} name={'Pagos a Proveedores'} icon={FaMoneyBillWave} supportedModules={[Modulo.PAGOS_PROVEEDORES]} currentAccesos={roles} notification={getNotificationForModule(Modulo.PAGOS_PROVEEDORES)}/>
             </SimpleGrid>
+            <SuperMasterOnboardingModal
+                isOpen={showSuperMasterOnboarding}
+                onClose={() => setShowSuperMasterOnboarding(false)}
+                onSuccess={() => setShowSuperMasterOnboarding(false)}
+            />
         </Container>
     );
 }

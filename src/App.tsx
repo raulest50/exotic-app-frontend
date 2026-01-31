@@ -25,6 +25,7 @@ import ResetPasswordPage from "./pages/LoginPage/ResetPasswordPage.tsx";
 import InformesPage from "./pages/Informes/InformesPage.tsx";
 import UsuariosPage from "./pages/Usuarios/UsuariosPage.tsx";
 import MultiRoleProtectedRoute from "./components/MultiRoleProtectedRoute.tsx";
+import SuperMasterProtectedRoute from "./components/SuperMasterProtectedRoute.tsx";
 
 import { Modulo } from "./pages/Usuarios/GestionUsuarios/types.tsx";
 import OperacionesCriticasBDPage from "./pages/OperacionesCriticasBD/OperacionesCriticasBDPage.tsx";
@@ -179,9 +180,9 @@ const router = createBrowserRouter(
                 <Route
                     path="master_directives"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[""]}>
+                        <SuperMasterProtectedRoute>
                             <MasterDirectivesPage/>
-                        </MultiRoleProtectedRoute>
+                        </SuperMasterProtectedRoute>
                     }
                 />
 

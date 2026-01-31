@@ -15,7 +15,6 @@ import {
     Tr,
     Th,
     Td,
-    Input,
     IconButton,
     Text,
     Box,
@@ -31,6 +30,7 @@ import {AddIcon, DeleteIcon, RepeatIcon} from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL';
 import {LoteSeleccionado} from '../../types';
+import CustomDecimalInput from '../../../../components/CustomDecimalInput/CustomDecimalInput';
 
 interface LoteRecomendadoDTO {
     loteId: number;
@@ -338,15 +338,14 @@ export function LotePickerDispensacion({
                                                             <Td>{lote.batchNumber}</Td>
                                                             <Td>{lote.cantidadDisponible.toFixed(2)}</Td>
                                                             <Td>
-                                                                <Input
-                                                                    type="number"
-                                                                    size="sm"
+                                                                <CustomDecimalInput
                                                                     value={lote.cantidad}
-                                                                    onChange={(e) => handleCantidadChange(lote.loteId, parseFloat(e.target.value) || 0)}
+                                                                    onChange={(v) => handleCantidadChange(lote.loteId, Math.min(v, lote.cantidadDisponible))}
                                                                     min={0}
-                                                                    max={lote.cantidadDisponible}
-                                                                    step="0.01"
+                                                                    size="sm"
                                                                     width="100px"
+                                                                    placeholder="0.00"
+                                                                    maxDecimals={4}
                                                                 />
                                                             </Td>
                                                             <Td>

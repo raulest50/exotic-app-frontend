@@ -22,7 +22,7 @@ interface ExcelRowData {
     nombre: string;
     costo: number;
     cantidad_consolidada: number;
-    cantidad_a_sumar: number | string;
+    nuevo_valor_absoluto: number | string;
     nuevo_costo: number | string;
 }
 
@@ -32,7 +32,7 @@ interface CargaMasivaStep1SubirValidarProps {
     setExcelData?: (data: ExcelRowData[] | null) => void;
 }
 
-const EXPECTED_HEADERS = ["productoid", "nombre", "costo", "cantidad_consolidada", "cantidad_a_sumar", "nuevo_costo"];
+const EXPECTED_HEADERS = ["productoid", "nombre", "costo", "cantidad_consolidada", "nuevo_valor_absoluto", "nuevo_costo"];
 
 export default function CargaMasivaStep1SubirValidar({
     setActiveStep,
@@ -142,7 +142,7 @@ export default function CargaMasivaStep1SubirValidar({
                 const nombreCell = row.getCell(2);
                 const costoCell = row.getCell(3);
                 const cantidadConsolidadaCell = row.getCell(4);
-                const cantidadASumarCell = row.getCell(5);
+                const nuevoValorAbsolutoCell = row.getCell(5);
                 const nuevoCostoCell = row.getCell(6);
 
                 const productoid = productoidCell.value?.toString()?.trim() || "";
@@ -153,13 +153,13 @@ export default function CargaMasivaStep1SubirValidar({
                         ? cantidadConsolidadaCell.value
                         : parseFloat(cantidadConsolidadaCell.value?.toString() || "0");
 
-                let cantidadASumar: number | string = "";
-                if (cantidadASumarCell.value !== null && cantidadASumarCell.value !== undefined) {
-                    if (typeof cantidadASumarCell.value === "number") {
-                        cantidadASumar = cantidadASumarCell.value;
+                let nuevoValorAbsoluto: number | string = "";
+                if (nuevoValorAbsolutoCell.value !== null && nuevoValorAbsolutoCell.value !== undefined) {
+                    if (typeof nuevoValorAbsolutoCell.value === "number") {
+                        nuevoValorAbsoluto = nuevoValorAbsolutoCell.value;
                     } else {
-                        const strValue = cantidadASumarCell.value.toString().trim();
-                        cantidadASumar = strValue === "" ? "" : parseFloat(strValue) || "";
+                        const strValue = nuevoValorAbsolutoCell.value.toString().trim();
+                        nuevoValorAbsoluto = strValue === "" ? "" : parseFloat(strValue) || "";
                     }
                 }
 
@@ -178,8 +178,8 @@ export default function CargaMasivaStep1SubirValidar({
                     return;
                 }
 
-                if (cantidadASumar === "") {
-                    errors.push(`Fila ${rowNumber}: cantidad_a_sumar está vacío (debe tener un valor)`);
+                if (nuevoValorAbsoluto === "") {
+                    errors.push(`Fila ${rowNumber}: nuevo_valor_absoluto está vacío (debe tener un valor)`);
                     return;
                 }
 
@@ -188,14 +188,14 @@ export default function CargaMasivaStep1SubirValidar({
                     return;
                 }
 
-                if (typeof cantidadASumar !== "number" || isNaN(cantidadASumar)) {
-                    errors.push(`Fila ${rowNumber}: cantidad_a_sumar tiene un valor inválido (debe ser un número)`);
+                if (typeof nuevoValorAbsoluto !== "number" || isNaN(nuevoValorAbsoluto)) {
+                    errors.push(`Fila ${rowNumber}: nuevo_valor_absoluto tiene un valor inválido (debe ser un número)`);
                     return;
                 }
 
-                const cantidadValida = cantidadASumar >= 0 || cantidadASumar === -1 || cantidadASumar === -7;
-                if (!cantidadValida) {
-                    errors.push(`Fila ${rowNumber}: cantidad_a_sumar inválido (solo se permiten números positivos, -1 o -7)`);
+                const valorAbsolutoValido = nuevoValorAbsoluto >= 0 || nuevoValorAbsoluto === -1 || nuevoValorAbsoluto === -7;
+                if (!valorAbsolutoValido) {
+                    errors.push(`Fila ${rowNumber}: nuevo_valor_absoluto inválido (solo se permiten números positivos, -1 o -7)`);
                     return;
                 }
 
@@ -209,7 +209,7 @@ export default function CargaMasivaStep1SubirValidar({
                     nombre,
                     costo,
                     cantidad_consolidada: cantidadConsolidada,
-                    cantidad_a_sumar: cantidadASumar,
+                    nuevo_valor_absoluto: nuevoValorAbsoluto,
                     nuevo_costo: nuevoCosto,
                 });
             });

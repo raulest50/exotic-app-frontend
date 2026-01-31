@@ -187,6 +187,12 @@ export default class EndPointsURL{
         return `${this.domain}/api/master-directives/${encodeURIComponent(nombre)}`;
     }
 
+    // super master ops endpoints
+    public get_super_master_config: string;
+    public update_super_master_config: string;
+    public send_super_master_verification_code: string;
+    public complete_super_master_profile: string;
+
     public domain: string;
 
     constructor() {
@@ -348,6 +354,12 @@ export default class EndPointsURL{
         // master directives endpoints
         this.get_master_directives = `${domain}/api/master-directives`;
         this.update_master_directive = `${domain}/api/master-directives/update`;
+
+        // super master ops endpoints
+        this.get_super_master_config = `${domain}/api/super-master-ops/config`;
+        this.update_super_master_config = `${domain}/api/super-master-ops/config`;
+        this.send_super_master_verification_code = `${domain}/api/super-master-ops/send-verification-code`;
+        this.complete_super_master_profile = `${domain}/api/super-master-ops/complete-profile`;
 
         // organigrama endpoints
         const organigrama_res = 'organigrama';

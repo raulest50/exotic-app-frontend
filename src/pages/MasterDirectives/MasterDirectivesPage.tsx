@@ -1,16 +1,13 @@
 import { useEffect, useState, useMemo } from "react";
 import {
     Container,
-    Select,
     Table,
     Thead,
     Tbody,
     Tr,
     Th,
     Td,
-    Input,
     Switch,
-    Textarea,
     Button,
     Icon,
     HStack,
@@ -23,50 +20,38 @@ import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
 import MyHeader from "../../components/MyHeader";
 
-interface MasterDirective {
+interface SuperMasterConfig {
     id: number;
-    nombre: string;
-    resumen: string;
-    valor: string;
-    tipoDato: "TEXTO" | "NUMERO" | "DECIMAL" | "BOOLEANO" | "FECHA" | "JSON";
-    grupo: string;
-    ayuda: string;
+    habilitarEliminacionForzada: boolean;
+    habilitarCargaMasiva: boolean;
+    habilitarAjustesInventario: boolean;
 }
 
-interface DirectiveState {
-    original: MasterDirective;
-    current: MasterDirective;
-    isUpdating: boolean;
-}
-
-interface DTOAllMasterDirectives {
-    masterDirectives: MasterDirective[];
-}
+const ROWS: { key: keyof Pick<SuperMasterConfig, "habilitarEliminacionForzada" | "habilitarCargaMasiva" | "habilitarAjustesInventario">; label: string; resumen: string }[] = [
+    { key: "habilitarEliminacionForzada", label: "Habilitar Eliminación Forzada", resumen: "Permite acceder a Eliminaciones Forzadas en Operaciones Críticas en BD" },
+    { key: "habilitarCargaMasiva", label: "Habilitar Carga Masiva", resumen: "Permite acceder a Carga Masiva en Operaciones Críticas en BD" },
+    { key: "habilitarAjustesInventario", label: "Habilitar Ajustes Inventario", resumen: "Permite acceder a Ajustes de Inventario en Transacciones de Almacén" },
+];
 
 export default function MasterDirectivesPage() {
-    const [directives, setDirectives] = useState<DirectiveState[]>([]);
-    const [selectedGroup, setSelectedGroup] = useState<string>("");
+    const [config, setConfig] = useState<SuperMasterConfig | null>(null);
+    const [draft, setDraft] = useState<SuperMasterConfig | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    const [updating, setUpdating] = useState<boolean>(false);
     const endPoints = useMemo(() => new EndPointsURL(), []);
     const toast = useToast();
 
     useEffect(() => {
-        const fetchDirectives = async () => {
+        const fetchConfig = async () => {
             try {
-                const res = await axios.get<DTOAllMasterDirectives>(endPoints.get_master_directives);
-                const data = res.data.masterDirectives;
-                const mapped: DirectiveState[] = data.map(md => ({
-                    original: md,
-                    current: { ...md },
-                    isUpdating: false,
-                }));
-                setDirectives(mapped);
-                const groups = Array.from(new Set(data.map(md => md.grupo)));
-                setSelectedGroup(groups[0] ?? "");
+                const res = await axios.get<SuperMasterConfig>(endPoints.get_super_master_config);
+                const data = res.data;
+                setConfig(data);
+                setDraft({ ...data });
             } catch (err) {
-                console.error("Error fetching master directives", err);
+                console.error("Error fetching Super Master config", err);
                 toast({
-                    title: "Failed to load master directives",
+                    title: "Error al cargar Directivas Super Master",
                     status: "error",
                     duration: 5000,
                     isClosable: true,
@@ -75,174 +60,102 @@ export default function MasterDirectivesPage() {
                 setLoading(false);
             }
         };
-        fetchDirectives();
+        fetchConfig();
     }, [endPoints, toast]);
 
-    const groups = Array.from(new Set(directives.map(d => d.current.grupo)));
-    const isAnyUpdating = directives.some(d => d.isUpdating);
+    const hasChanges =
+        draft != null &&
+        config != null &&
+        (draft.habilitarEliminacionForzada !== config.habilitarEliminacionForzada ||
+            draft.habilitarCargaMasiva !== config.habilitarCargaMasiva ||
+            draft.habilitarAjustesInventario !== config.habilitarAjustesInventario);
 
-    const updateDirectiveValue = (id: number, value: string) => {
-        setDirectives(prev =>
-            prev.map(d =>
-                d.original.id === id
-                    ? { ...d, current: { ...d.current, valor: value } }
-                    : d
-            )
-        );
+    const updateDraft = (key: keyof Pick<SuperMasterConfig, "habilitarEliminacionForzada" | "habilitarCargaMasiva" | "habilitarAjustesInventario">, value: boolean) => {
+        if (draft) setDraft({ ...draft, [key]: value });
     };
 
-    const renderValueInput = (directive: DirectiveState) => {
-        const value = directive.current.valor ?? "";
-        const onChange = (val: string) => updateDirectiveValue(directive.original.id, val);
-        switch (directive.current.tipoDato) {
-            case "BOOLEANO":
-                return (
-                    <Switch
-                        isChecked={value === "true"}
-                        onChange={e => onChange(e.target.checked ? "true" : "false")}
-                    />
-                );
-            case "NUMERO":
-                return (
-                    <Input type="number" value={value} onChange={e => onChange(e.target.value)} />
-                );
-            case "DECIMAL":
-                return (
-                    <Input
-                        type="number"
-                        step="0.01"
-                        value={value}
-                        onChange={e => onChange(e.target.value)}
-                    />
-                );
-            case "FECHA":
-                return (
-                    <Input type="date" value={value} onChange={e => onChange(e.target.value)} />
-                );
-            case "JSON":
-                return (
-                    <Textarea value={value} onChange={e => onChange(e.target.value)} />
-                );
-            default:
-                return <Input value={value} onChange={e => onChange(e.target.value)} />;
-        }
-    };
-
-    const handleUpdate = async (directive: DirectiveState) => {
-        setDirectives(prev =>
-            prev.map(d =>
-                d.original.id === directive.original.id
-                    ? { ...d, isUpdating: true }
-                    : d
-            )
-        );
+    const handleSave = async () => {
+        if (!draft || !hasChanges || updating) return;
+        setUpdating(true);
         try {
-            const body = {
-                oldMasterDirective: directive.original,
-                newMasterDirective: directive.current,
-            };
-            const res = await axios.put<MasterDirective>(endPoints.update_master_directive, body);
-            const updated = res.data;
-            setDirectives(prev =>
-                prev.map(d =>
-                    d.original.id === directive.original.id
-                        ? { original: updated, current: { ...updated }, isUpdating: false }
-                        : d
-                )
-            );
+            await axios.put(endPoints.update_super_master_config, draft);
+            setConfig({ ...draft });
             toast({
-                title: "Directive updated successfully",
+                title: "Directivas actualizadas",
                 status: "success",
                 duration: 5000,
                 isClosable: true,
             });
         } catch (err) {
-            console.error("Error updating master directive", err);
-            setDirectives(prev =>
-                prev.map(d =>
-                    d.original.id === directive.original.id
-                        ? { ...d, isUpdating: false }
-                        : d
-                )
-            );
+            console.error("Error updating Super Master config", err);
             toast({
-                title: "Failed to update directive",
+                title: "Error al actualizar directivas",
                 status: "error",
                 duration: 5000,
                 isClosable: true,
             });
+        } finally {
+            setUpdating(false);
         }
     };
 
-    if (loading) {
+    if (loading || !draft) {
         return (
             <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
-                <MyHeader title="Master Directives" />
+                <MyHeader title="Directivas Super Master" />
                 <Spinner />
             </Container>
         );
     }
 
-    const filtered = directives.filter(d => !selectedGroup || d.current.grupo === selectedGroup);
-
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
-            <MyHeader title="Master Directives" />
-            <Select
-                value={selectedGroup}
-                onChange={e => setSelectedGroup(e.target.value)}
-                mb={4}
-                w="sm"
-            >
-                {groups.map(g => (
-                    <option key={g} value={g}>
-                        {g}
-                    </option>
-                ))}
-            </Select>
+            <MyHeader title="Directivas Super Master" />
             <Table variant="simple">
                 <Thead>
                     <Tr>
                         <Th>Nombre</Th>
                         <Th>Valor</Th>
-                        <Th>Acciones</Th>
                     </Tr>
                 </Thead>
                 <Tbody>
-                    {filtered.map(d => {
-                        const hasChanges = d.current.valor !== d.original.valor;
+                    {ROWS.map(({ key, label, resumen }) => {
+                        const value = draft[key];
+                        const original = config[key];
+                        const hasRowChange = value !== original;
                         return (
-                            <Tr key={d.current.id}>
+                            <Tr key={key}>
                                 <Td>
-                                    <Text fontWeight="bold">{d.current.nombre}</Text>
+                                    <Text fontWeight="bold">{label}</Text>
                                     <Text fontSize="sm" color="gray.500">
-                                        {d.current.resumen}
+                                        {resumen}
                                     </Text>
                                 </Td>
                                 <Td>
                                     <HStack>
-                                        {renderValueInput(d)}
-                                        {hasChanges && (
+                                        <Switch
+                                            isChecked={value}
+                                            onChange={e => updateDraft(key, e.target.checked)}
+                                        />
+                                        {hasRowChange && (
                                             <Icon as={FaCircleExclamation} color="orange.400" />
                                         )}
                                     </HStack>
-                                </Td>
-                                <Td>
-                                    <Button
-                                        size="sm"
-                                        colorScheme="blue"
-                                        onClick={() => handleUpdate(d)}
-                                        isDisabled={!hasChanges || (isAnyUpdating && !d.isUpdating)}
-                                        isLoading={d.isUpdating}
-                                    >
-                                        Update
-                                    </Button>
                                 </Td>
                             </Tr>
                         );
                     })}
                 </Tbody>
             </Table>
+            <Button
+                mt={4}
+                colorScheme="blue"
+                onClick={handleSave}
+                isDisabled={!hasChanges || updating}
+                isLoading={updating}
+            >
+                Guardar cambios
+            </Button>
         </Container>
     );
 }

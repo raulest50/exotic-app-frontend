@@ -31,7 +31,7 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
     const [cel, setCel] = useState('');
     const [direccion, setDireccion] = useState('');
     const [fechaNacimiento, setFechaNacimiento] = useState('');
-
+    const [isLoading, setIsLoading] = useState(false);
 
     const toast = useToast();
 
@@ -52,6 +52,7 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
             setEmailError('');
         }
 
+        setIsLoading(true);
         try {
             await axios.post(`${EndPointsURL.getDomain()}/usuarios`, {
                 cedula: Number(cedula),
@@ -81,6 +82,8 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
                 duration: 5000,
                 isClosable: true,
             });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -176,8 +179,15 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
             </Grid>
 
             <Flex gap={4} mt={6}>
-                <Button colorScheme="blue" onClick={handleCreate}>Crear Usuario</Button>
-                <Button onClick={onCancel}>Cancelar</Button>
+                <Button
+                    colorScheme="blue"
+                    onClick={handleCreate}
+                    isLoading={isLoading}
+                    loadingText="Creando..."
+                >
+                    Crear Usuario
+                </Button>
+                <Button onClick={onCancel} isDisabled={isLoading}>Cancelar</Button>
             </Flex>
         </Box>
     );

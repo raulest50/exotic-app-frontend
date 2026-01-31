@@ -46,7 +46,7 @@ export default function CargaMasivaStep0Informacion({ setActiveStep }: CargaMasi
 
             toast({
                 title: "Plantilla descargada",
-                description: "Complete las columnas cantidad_a_sumar y nuevo_costo y suba el archivo en el siguiente paso.",
+                description: "Complete las columnas nuevo_valor_absoluto y nuevo_costo y suba el archivo en el siguiente paso.",
                 status: "success",
                 duration: 5000,
                 isClosable: true,
@@ -73,7 +73,7 @@ export default function CargaMasivaStep0Informacion({ setActiveStep }: CargaMasi
                 <Text>
                     Se descargará una plantilla Excel con todos los materiales inventariables (no incluye semiterminados ni terminados).
                     Las columnas son: <strong>productoid</strong>, <strong>nombre</strong>, <strong>costo</strong>, <strong>cantidad_consolidada</strong>,
-                    y dos columnas para completar: <strong>cantidad_a_sumar</strong> y <strong>nuevo_costo</strong> (esta última viene precargada con el costo actual).
+                    y dos columnas para completar: <strong>nuevo_valor_absoluto</strong> (nuevo valor consolidado deseado) y <strong>nuevo_costo</strong> (esta última viene precargada con el costo actual).
                 </Text>
                 <Flex gap={4} wrap="wrap">
                     <Button

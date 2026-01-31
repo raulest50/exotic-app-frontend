@@ -86,9 +86,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     const userRoles = decodedToken.accesos.split(',');
 //                     console.log('AuthContext - Roles encontrados en token:', userRoles);
                     setRoles(userRoles);
-                } else if (decodedToken.sub === 'master') {
-                    // Si el usuario es 'master', darle acceso a todo incondicionalmente
-//                     console.log('AuthContext - Usuario master, asignando ROLE_MASTER');
+                } else if (decodedToken.sub === 'master' || decodedToken.sub === 'super_master') {
+                    // Si el usuario es 'master' o 'super_master', darle acceso a todo incondicionalmente
                     setRoles(['ROLE_MASTER']);
                 } else {
                     // Sin accesos asignados, no debe tener acceso a ningún módulo
@@ -149,21 +148,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     const userRoles = decodedToken.accesos.split(',');
 //                     console.log('AuthContext - Roles encontrados en login:', userRoles);
                     setRoles(userRoles);
-                } else if (authData.username === 'master') {
-                    // Si el usuario es 'master', darle acceso a todo incondicionalmente
-//                     console.log('AuthContext - Usuario master en login, asignando ROLE_MASTER');
+                } else if (authData.username === 'master' || authData.username === 'super_master') {
                     setRoles(['ROLE_MASTER']);
                 } else {
-                    // Sin accesos asignados, no debe tener acceso a ningún módulo
-//                     console.log('AuthContext - No se encontraron accesos en login');
                     setRoles([]);
                 }
             } catch (error) {
                 console.error('AuthContext - Error decoding token en login:', error);
-                // Verificar si el usuario es 'master' incluso en caso de error
-                if (authData.username === 'master') {
-                    // Si el usuario es 'master', darle acceso a todo incondicionalmente
-//                     console.log('AuthContext - Usuario master en caso de error, asignando ROLE_MASTER');
+                if (authData.username === 'master' || authData.username === 'super_master') {
                     setRoles(['ROLE_MASTER']);
                 } else {
                     // Sin accesos asignados en caso de error, no debe tener acceso a ningún módulo
