@@ -10,8 +10,7 @@ import {my_style_tab} from "../../styles/styles_general.tsx";
 
 import CrearOrdenes from "./CrearOrdenes.tsx";
 import HistorialOrdenes from "./HistorialOrdenes.tsx";
-import PlaneacionProduccion from "./components/PlaneacionProduccion.tsx";
-import {WeekPlanningWizardTab} from "./WeekPlanningWizard/WeekPlanningWizardTab.tsx";
+import ConfLotesCategoriaTab from "./ConfLotesCategoriaTab.tsx";
 
 
 export default function ProduccionPage(){
@@ -23,28 +22,23 @@ export default function ProduccionPage(){
             <Tabs>
 
                 <TabList>
-                    <Tab sx={my_style_tab}> Simulacion de Produccion </Tab>
                     <Tab sx={my_style_tab}> Crear ODP Manualmente </Tab>
-                    <Tab sx={my_style_tab}> Master Production Schedule (MPS) </Tab>
                     <Tab sx={my_style_tab}> Historial </Tab>
+                    <Tab sx={my_style_tab}> Config. Lotes por Categoría </Tab>
                 </TabList>
 
                 <TabPanels>
-
-                    <TabPanel>
-                        <WeekPlanningWizardTab />
-                    </TabPanel>
 
                     <TabPanel>
                         <CrearOrdenes />
                     </TabPanel>
 
                     <TabPanel>
-                        <PlaneacionProduccion />
+                        <HistorialOrdenes/>
                     </TabPanel>
 
                     <TabPanel>
-                        <HistorialOrdenes/>
+                        <ConfLotesCategoriaTab />
                     </TabPanel>
 
                 </TabPanels>

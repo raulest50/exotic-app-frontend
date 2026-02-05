@@ -22,12 +22,16 @@ export default class EndPointsURL{
 
     public consulta_productos:string; // para buscar por categorias
 
+    public validador_prefijo_lote: string;
+
     // notifications endpoint
     public module_notifications: string;
 
     // categorias endpoints
     public get_categorias: string;
     public save_categoria: string;
+    public search_categorias_pag: string;
+    public update_categoria_lote_size: string;
 
 
     // Proveedores resouce
@@ -44,6 +48,7 @@ export default class EndPointsURL{
 
     // produccion resource
     public save_produccion:string;
+    public next_lote_produccion: string;
     public search_ordenes_within_range:string;
     public orden_seguimiento_update_estado:string;
     public orden_produccion_update_estado:string;
@@ -237,10 +242,13 @@ export default class EndPointsURL{
         this.case_pack_terminado = `${domain}/${productos_res}/terminado/{id}/case-pack`;
 
         this.consulta_productos = `${domain}/${productos_res}/consulta1`;
+        this.validador_prefijo_lote = `${domain}/${productos_res}/prefijo-lote/valido`;
 
         // Categorias endpoints
         this.get_categorias = `${domain}/categorias`;
         this.save_categoria = `${domain}/categorias`;
+        this.search_categorias_pag = `${domain}/categorias/search`;
+        this.update_categoria_lote_size = `${domain}/categorias/{categoriaId}/lote-size`;
 
         // Proveedores endpoints
         this.save_proveedores = `${domain}/${proveedores_res}/save`;
@@ -264,6 +272,7 @@ export default class EndPointsURL{
 
         // produccion endpoints
         this.save_produccion = `${domain}/${produccion_res}/save`;
+        this.next_lote_produccion = `${domain}/${produccion_res}/next-lote`;
         this.search_ordenes_within_range = `${domain}/${produccion_res}/search_within_range`;
         this.orden_seguimiento_update_estado = `${domain}/${produccion_res}/orden_seguimiento/{id}/update_estado`;
         this.orden_produccion_update_estado = `${domain}/${produccion_res}/orden_produccion/{id}/update_estado`;

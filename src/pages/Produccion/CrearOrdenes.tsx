@@ -159,7 +159,7 @@ export default function CrearOrdenes() {
         }
     };
 
-    const handlePickerConfirm = (producto: ProductoWithInsumos, canProduceFlag: boolean) => {
+    const handlePickerConfirm = async (producto: ProductoWithInsumos, canProduceFlag: boolean) => {
         setSelectedProducto(producto);
         // Verificar si hay suficiente stock considerando la cantidad a producir
         const canProduceWithQuantity = producto.insumos.every(
@@ -167,6 +167,36 @@ export default function CrearOrdenes() {
         );
         setCanProduce(canProduceWithQuantity);
         setIsPickerOpen(false);
+
+        // Generar número de lote para producto terminado con prefijoLote
+        const esTerminado = producto.producto.tipo_producto === 'T';
+        const prefijo = producto.producto.prefijoLote?.trim();
+        if (esTerminado && prefijo) {
+            try {
+                const url = `${endPoints.next_lote_produccion}?productoId=${encodeURIComponent(producto.producto.productoId)}`;
+                const response = await axios.get(url);
+                const lote = response.data?.lote;
+                if (lote) {
+                    setLoteBatchNumber(lote);
+                } else {
+                    setLoteBatchNumber('');
+                }
+            } catch (error) {
+                console.error('Error al obtener siguiente lote:', error);
+                setLoteBatchNumber('');
+                toast({
+                    title: 'Lote no generado',
+                    description: axios.isAxiosError(error) && error.response?.data?.error
+                        ? error.response.data.error
+                        : 'No se pudo generar el número de lote. Puede ingresarlo manualmente si aplica.',
+                    status: 'warning',
+                    duration: 5000,
+                    isClosable: true,
+                });
+            }
+        } else {
+            setLoteBatchNumber('');
+        }
     };
 
     const handlePickerClose = () => {
@@ -290,9 +320,14 @@ export default function CrearOrdenes() {
                 <FormControl>
                     <FormLabel>Lote</FormLabel>
                     <Input
-                        placeholder="Ingrese el número de lote"
+                        placeholder={
+                            selectedProducto?.producto.tipo_producto === 'T' && selectedProducto?.producto.prefijoLote
+                                ? 'Se genera al seleccionar el producto'
+                                : 'No aplica (solo terminados con prefijo de lote)'
+                        }
                         value={loteBatchNumber}
-                        onChange={(e) => setLoteBatchNumber(e.target.value)}
+                        isReadOnly
+                        bg="gray.50"
                     />
                 </FormControl>
 

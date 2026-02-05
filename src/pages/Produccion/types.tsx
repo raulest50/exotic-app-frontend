@@ -20,6 +20,7 @@ export interface Producto{
     categoriaId?: number;      // Añadir esta propiedad
     categoriaNombre?: string;  // Añadir esta propiedad
     casePack?: CasePack;
+    prefijoLote?: string;      // prefijo de lote para terminado (generación de lote)
 }
 
 export interface Insumo {
@@ -39,6 +40,7 @@ export interface Categoria {
     categoriaId: number;
     categoriaNombre: string;
     categoriaDescripcion: string;
+    loteSize?: number;
 }
 
 export interface Terminado extends Producto {

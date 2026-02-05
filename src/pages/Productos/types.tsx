@@ -29,6 +29,7 @@ export interface Producto{
     cantidadUnidad: string;
     fechaCreacion?: string;
     ivaPercentual?: number;
+    prefijoLote?: string; // solo producto terminado; prefijo de lote unico
 }
 
 export interface Material extends Producto{
@@ -113,6 +114,7 @@ export interface ProductoSemiter {
     categoria?: Categoria; // solo se usa para terminado, por ello es opcional
     inventareable?: boolean; // true para terminados, false para semiterminados
     casePack?: CasePack;
+    prefijoLote?: string; // prefijo de lote para producto terminado (unico)
 }
 
 export interface CasePack {
@@ -147,6 +149,7 @@ export interface Categoria{
      categoriaId: number;
      categoriaNombre: string;
      categoriaDescripcion: string;
+     loteSize?: number;
 }
 
 export interface RecursoProduccion {

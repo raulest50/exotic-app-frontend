@@ -2,12 +2,23 @@
 import {
     Button,
     Flex, FormControl, FormLabel, GridItem, HStack, Input, Select, SimpleGrid, Textarea, useToast,
-    Spinner, Text
+    Spinner, Text, IconButton, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
 } from "@chakra-ui/react";
-import {useState, useEffect} from "react";
+import { QuestionIcon, CheckIcon } from "@chakra-ui/icons";
+import { useState, useEffect } from "react";
 import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL.tsx';
-import {ProductoSemiter, UNIDADES, TIPOS_PRODUCTOS, Categoria} from "../../../types.tsx";
+import { ProductoSemiter, UNIDADES, TIPOS_PRODUCTOS, Categoria } from "../../../types.tsx";
+
+/** Calcula el prefijo de lote a partir del nombre: primera letra de cada palabra en mayúscula. */
+function calcularPrefijoDesdeNombre(nombre: string): string {
+    if (!nombre || !nombre.trim()) return "";
+    return nombre
+        .trim()
+        .split(/\s+/)
+        .map((palabra) => (palabra[0] ?? "").toUpperCase())
+        .join("");
+}
 
 
 interface props {
@@ -26,6 +37,12 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
     const [observaciones, setObservaciones] = useState<string>("");
     const [tipo_producto, setTipo_producto] = useState<string>(TIPOS_PRODUCTOS.terminado);
 
+    // Prefijo de lote (solo para terminados)
+    const [prefijoLote, setPrefijoLote] = useState<string>("");
+    const [modoPrefijoLote, setModoPrefijoLote] = useState<"automatico" | "editar">("automatico");
+    const [prefijoVerificado, setPrefijoVerificado] = useState<boolean>(false);
+    const [verificandoPrefijo, setVerificandoPrefijo] = useState<boolean>(false);
+
     // Estados para manejar categorías
     const [categoriasDisponibles, setCategoriasDisponibles] = useState<Categoria[]>([]);
     const [selectedCategoriaId, setSelectedCategoriaId] = useState<number | null>(null);
@@ -34,6 +51,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
 
     const endPoints = new EndPointsURL();
     const toast = useToast();
+    const { isOpen: isHelpOpen, onOpen: onHelpOpen, onClose: onHelpClose } = useDisclosure();
 
     // Función para cargar las categorías
     const fetchCategorias = async () => {
@@ -93,8 +111,23 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
     useEffect(() => {
         if (tipo_producto !== TIPOS_PRODUCTOS.terminado) {
             setSelectedCategoriaId(null);
+            setPrefijoLote("");
+            setPrefijoVerificado(false);
+            setModoPrefijoLote("automatico");
+        } else {
+            setModoPrefijoLote("automatico");
+            setPrefijoLote(calcularPrefijoDesdeNombre(nombre));
+            setPrefijoVerificado(false);
         }
     }, [tipo_producto]);
+
+    // Actualizar prefijo en tiempo real cuando el nombre cambia (modo automático, solo terminados)
+    useEffect(() => {
+        if (tipo_producto === TIPOS_PRODUCTOS.terminado && modoPrefijoLote === "automatico") {
+            setPrefijoLote(calcularPrefijoDesdeNombre(nombre));
+            setPrefijoVerificado(false);
+        }
+    }, [nombre, modoPrefijoLote, tipo_producto]);
 
     const onClickBorrarCampos = () => {
         setProductoId("");
@@ -102,7 +135,72 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
         setCantidadUnidad("");
         setObservaciones("");
         setSelectedCategoriaId(null);
-    }
+        setPrefijoLote("");
+        setPrefijoVerificado(false);
+        setModoPrefijoLote("automatico");
+    };
+
+    const handleToggleModoPrefijo = () => {
+        if (modoPrefijoLote === "automatico") {
+            setModoPrefijoLote("editar");
+        } else {
+            setModoPrefijoLote("automatico");
+            setPrefijoLote(calcularPrefijoDesdeNombre(nombre));
+            setPrefijoVerificado(false);
+        }
+    };
+
+    const handleVerificarPrefijo = async () => {
+        const valor = (prefijoLote ?? "").trim();
+        if (!valor) {
+            toast({
+                title: "Validación",
+                description: "Ingrese un prefijo de lote antes de verificar.",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+        setVerificandoPrefijo(true);
+        try {
+            const params = new URLSearchParams({ prefijoLote: valor });
+            const url = `${endPoints.validador_prefijo_lote}?${params.toString()}`;
+            const response = await axios.get(url);
+            const valido = response.data?.valido === true;
+            setPrefijoVerificado(valido);
+            if (valido) {
+                toast({
+                    title: "Prefijo válido",
+                    description: "El prefijo de lote está disponible.",
+                    status: "success",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            } else {
+                toast({
+                    title: "Prefijo no disponible",
+                    description: response.data?.mensaje ?? "El prefijo ya está asignado a otro producto terminado.",
+                    status: "warning",
+                    duration: 4000,
+                    isClosable: true,
+                });
+            }
+        } catch (error) {
+            setPrefijoVerificado(false);
+            toast({
+                title: "Error",
+                description: axios.isAxiosError(error) && error.response?.data?.mensaje
+                    ? error.response.data.mensaje
+                    : "No se pudo verificar el prefijo de lote.",
+                status: "error",
+                duration: 4000,
+                isClosable: true,
+            });
+        } finally {
+            setVerificandoPrefijo(false);
+        }
+    };
 
     const ValidarDatos = (): boolean => {
         // Check if productoId is empty
@@ -186,6 +284,30 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
             return false;
         }
 
+        // Validar prefijo de lote para productos terminados
+        if (tipo_producto === TIPOS_PRODUCTOS.terminado) {
+            if (!prefijoLote || !prefijoLote.trim()) {
+                toast({
+                    title: "Validación",
+                    description: "El prefijo de lote es requerido para productos terminados.",
+                    status: "warning",
+                    duration: 3000,
+                    isClosable: true,
+                });
+                return false;
+            }
+            if (!prefijoVerificado) {
+                toast({
+                    title: "Validación",
+                    description: "Debe verificar que el prefijo de lote sea único antes de continuar.",
+                    status: "warning",
+                    duration: 3000,
+                    isClosable: true,
+                });
+                return false;
+            }
+        }
+
         return true;
     };
 
@@ -202,7 +324,8 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                 cantidadUnidad: cantidadUnidad!,
                 tipo_producto: tipo_producto,
                 categoria: tipo_producto === TIPOS_PRODUCTOS.terminado ? selectedCategoria : undefined,
-                inventareable: tipo_producto === TIPOS_PRODUCTOS.terminado
+                inventareable: tipo_producto === TIPOS_PRODUCTOS.terminado,
+                prefijoLote: tipo_producto === TIPOS_PRODUCTOS.terminado ? (prefijoLote?.trim() || undefined) : undefined,
             };
             setSemioter(semioter);
             setActiveStep(1);
@@ -303,6 +426,54 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                     </FormControl>
                 </GridItem>
 
+                <GridItem colSpan={3} display={tipo_producto === TIPOS_PRODUCTOS.terminado ? "flex" : "none"}>
+                    <FormControl isRequired={tipo_producto === TIPOS_PRODUCTOS.terminado}>
+                        <FormLabel>Prefijo de lote</FormLabel>
+                        <HStack align="center" spacing={2}>
+                            <Input
+                                value={prefijoLote}
+                                onChange={(e) => {
+                                    setPrefijoLote(e.target.value);
+                                    setPrefijoVerificado(false);
+                                }}
+                                variant="filled"
+                                placeholder="Ej: TRK, SLA"
+                                maxLength={20}
+                                isReadOnly={modoPrefijoLote === "automatico"}
+                                flex="1"
+                            />
+                            <Button
+                                size="sm"
+                                variant={modoPrefijoLote === "automatico" ? "solid" : "outline"}
+                                colorScheme="teal"
+                                onClick={handleToggleModoPrefijo}
+                            >
+                                {modoPrefijoLote === "automatico" ? "Automático" : "Editar"}
+                            </Button>
+                            <IconButton
+                                aria-label="Verificar prefijo único"
+                                icon={<CheckIcon />}
+                                size="sm"
+                                colorScheme={prefijoVerificado ? "green" : "gray"}
+                                onClick={handleVerificarPrefijo}
+                                isLoading={verificandoPrefijo}
+                                isDisabled={!prefijoLote?.trim()}
+                            />
+                            <IconButton
+                                aria-label="Ayuda prefijo de lote"
+                                icon={<QuestionIcon />}
+                                size="sm"
+                                variant="outline"
+                                onClick={onHelpOpen}
+                            />
+                        </HStack>
+                        {prefijoVerificado && (
+                            <Text color="green.600" fontSize="sm" mt={1}>
+                                Prefijo verificado y disponible.
+                            </Text>
+                        )}
+                    </FormControl>
+                </GridItem>
 
                 <GridItem colSpan={3}>
                     <FormControl>
@@ -332,12 +503,39 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                     onClick={onClickSiguiente}
                     isDisabled={
                         tipo_producto === TIPOS_PRODUCTOS.terminado &&
-                        (categoriasDisponibles.length === 0 || !selectedCategoriaId)
+                        (categoriasDisponibles.length === 0 || !selectedCategoriaId || !prefijoVerificado)
                     }
                 >
                     Siguiente
                 </Button>
             </HStack>
+
+            <Modal isOpen={isHelpOpen} onClose={onHelpClose} size="md">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Prefijo de lote</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody pb={4}>
+                        <Text mb={2}>
+                            El prefijo de lote identifica de forma única a cada producto terminado y se usa para generar
+                            los números de lote al crear órdenes de producción (por ejemplo: TRK-0000001-26).
+                        </Text>
+                        <Text mb={2}>
+                            <strong>Modo automático:</strong> El prefijo se calcula a partir del nombre del producto,
+                            tomando la primera letra de cada palabra en mayúscula. Ejemplo: &quot;Tratamiento Rizo Kids&quot; → TRK,
+                            &quot;Shampoo Liso Adulto&quot; → SLA.
+                        </Text>
+                        <Text mb={2}>
+                            <strong>Modo editar:</strong> Puede definir un prefijo propio si lo desea. El prefijo debe ser
+                            único entre todos los productos terminados.
+                        </Text>
+                        <Text mb={2}>
+                            Use el botón con el símbolo de verificación (✓) para comprobar que el prefijo no esté ya
+                            asignado a otro producto. El botón &quot;Siguiente&quot; solo se habilita después de verificar el prefijo.
+                        </Text>
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
         </Flex>
     );
 }

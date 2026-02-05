@@ -14,12 +14,13 @@
 import {
     Flex, Box, Heading, Text, Button, VStack, HStack, 
     Grid, GridItem, Card, CardHeader, CardBody, 
-    FormControl, Select, Input, Textarea,
+    FormControl, Select, Input, Textarea, IconButton,
     useToast, useDisclosure,
+    Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { CasePack, Insumo, Material, Producto } from "../../types.tsx";
-import { ArrowBackIcon, EditIcon } from '@chakra-ui/icons';
+import { ArrowBackIcon, EditIcon, CheckIcon, QuestionIcon, WarningIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
 import { useAuth } from '../../../../context/AuthContext.tsx';
@@ -45,11 +46,14 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     const [isFormValid, setIsFormValid] = useState<boolean>(true);
     const [hasChanges, setHasChanges] = useState<boolean>(false);
     const [isLoadingDetalle, setIsLoadingDetalle] = useState<boolean>(false);
+    const [prefijoVerificado, setPrefijoVerificado] = useState<boolean>(false);
+    const [verificandoPrefijo, setVerificandoPrefijo] = useState<boolean>(false);
     const toast = useToast();
     const endPoints = new EndPointsURL();
     const { user } = useAuth();
     const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
     const { isOpen: isForceDeleteOpen, onOpen: onForceDeleteOpen, onClose: onForceDeleteClose } = useDisclosure();
+    const { isOpen: isHelpPrefijoOpen, onOpen: onHelpPrefijoOpen, onClose: onHelpPrefijoClose } = useDisclosure();
 
     const handleDeleteProduct = async () => {
         try {
@@ -187,6 +191,9 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
             ...productoData,
             [field]: value
         });
+        if (field === 'prefijoLote') {
+            setPrefijoVerificado(false);
+        }
     };
 
     // Cargar detalles cuando faltan los insumos en productos semiterminados o terminados
@@ -285,6 +292,23 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
             return false;
         }
 
+        // Validar prefijo de lote para productos terminados
+        if (producto.tipo_producto === 'T') {
+            const prefijoValue = (productoData as Producto).prefijoLote;
+            if (prefijoValue == null || (typeof prefijoValue === 'string' && prefijoValue.trim() === '')) {
+                if (showToast) {
+                    toast({
+                        title: "Validación fallida",
+                        description: "El prefijo de lote es requerido para productos terminados.",
+                        status: "warning",
+                        duration: 3000,
+                        isClosable: true,
+                    });
+                }
+                return false;
+            }
+        }
+
         return true;
     };
 
@@ -306,7 +330,66 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
             return true;
         }
 
+        // Si es terminado, verificar cambios en prefijoLote
+        if (producto.tipo_producto === 'T' && 
+            (productoData as Producto).prefijoLote !== (producto as Producto).prefijoLote) {
+            return true;
+        }
+
         return false;
+    };
+
+    // Verificar que el prefijo de lote sea único (endpoint con productoId para excluir el actual)
+    const handleVerificarPrefijo = async () => {
+        const valor = ((productoData as Producto).prefijoLote ?? '').trim();
+        if (!valor) {
+            toast({
+                title: "Validación",
+                description: "Ingrese un prefijo de lote antes de verificar.",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+        setVerificandoPrefijo(true);
+        try {
+            const params = new URLSearchParams({ prefijoLote: valor, productoId: productoData.productoId });
+            const url = `${endPoints.validador_prefijo_lote}?${params.toString()}`;
+            const response = await axios.get(url);
+            const valido = response.data?.valido === true;
+            setPrefijoVerificado(valido);
+            if (valido) {
+                toast({
+                    title: "Prefijo válido",
+                    description: "El prefijo de lote está disponible.",
+                    status: "success",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            } else {
+                toast({
+                    title: "Prefijo no disponible",
+                    description: response.data?.mensaje ?? "El prefijo ya está asignado a otro producto terminado.",
+                    status: "warning",
+                    duration: 4000,
+                    isClosable: true,
+                });
+            }
+        } catch (error) {
+            setPrefijoVerificado(false);
+            toast({
+                title: "Error",
+                description: axios.isAxiosError(error) && error.response?.data?.mensaje
+                    ? error.response.data.mensaje
+                    : "No se pudo verificar el prefijo de lote.",
+                status: "error",
+                duration: 4000,
+                isClosable: true,
+            });
+        } finally {
+            setVerificandoPrefijo(false);
+        }
     };
 
     // Validar el formulario y verificar cambios cuando cambian los datos
@@ -372,6 +455,20 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     const isTerminado = producto.tipo_producto === 'T';
     const canUseWizard = canEdit && isSemiOTerminado && !editMode;
 
+    const prefijoUnchanged = ((productoData as Producto).prefijoLote ?? '').trim() === ((producto as Producto).prefijoLote ?? '').trim();
+    const canSavePrefijo = prefijoUnchanged || prefijoVerificado;
+
+    const isGuardarDisabled = !isFormValid || !hasChanges || (isTerminado && !canSavePrefijo);
+    const guardarDisabledReason: string | null = isGuardarDisabled
+        ? !hasChanges
+            ? 'No hay cambios en los datos.'
+            : isTerminado && !canSavePrefijo
+                ? 'Verifique el prefijo de lote con el botón (✓) para habilitar Guardar.'
+                : !isFormValid
+                    ? `Revise los campos requeridos o los valores (nombre, cantidad por unidad, IVA${isTerminado ? ', prefijo de lote' : ''}).`
+                    : null
+        : null;
+
     // Mapear tipo de producto a texto legible
     const getTipoProductoText = (tipo: string): string => {
         switch (tipo) {
@@ -399,30 +496,39 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     const renderActionButtons = () => {
         if (editMode) {
             return (
-                <HStack>
-                    {isMaterial && (
-                        <Button colorScheme="red" onClick={onDeleteOpen}>
-                            Eliminar
+                <VStack align="stretch" spacing={2}>
+                    <HStack>
+                        {isMaterial && (
+                            <Button colorScheme="red" onClick={onDeleteOpen}>
+                                Eliminar
+                            </Button>
+                        )}
+                        <Button
+                            colorScheme="red"
+                            variant="outline"
+                            onClick={() => {
+                                setEditMode(false);
+                                setProductoData({...producto});
+                                setPrefijoVerificado(false);
+                            }}
+                        >
+                            Cancelar
                         </Button>
+                        <Button
+                            colorScheme="green"
+                            onClick={handleSaveChanges}
+                            isDisabled={isGuardarDisabled}
+                        >
+                            Guardar
+                        </Button>
+                    </HStack>
+                    {guardarDisabledReason && (
+                        <Flex align="center" gap={2} fontSize="sm" color="orange.600">
+                            <WarningIcon boxSize={4} flexShrink={0} />
+                            <Text>{guardarDisabledReason}</Text>
+                        </Flex>
                     )}
-                    <Button
-                        colorScheme="red"
-                        variant="outline"
-                        onClick={() => {
-                            setEditMode(false);
-                            setProductoData({...producto});
-                        }}
-                    >
-                        Cancelar
-                    </Button>
-                    <Button
-                        colorScheme="green"
-                        onClick={handleSaveChanges}
-                        isDisabled={!isFormValid || !hasChanges}
-                    >
-                        Guardar
-                    </Button>
-                </HStack>
+                </VStack>
             );
         }
 
@@ -502,6 +608,46 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                             </FormControl>
                                         ) : (
                                             <Text>{getTipoMaterialText((producto as Material).tipoMaterial)}</Text>
+                                        )}
+                                    </Box>
+                                )}
+                                {isTerminado && (
+                                    <Box>
+                                        <Text fontWeight="bold">Prefijo de lote:</Text>
+                                        {editMode ? (
+                                            <FormControl mt={2}>
+                                                <HStack align="center" spacing={2}>
+                                                    <Input
+                                                        value={(productoData as Producto).prefijoLote ?? ''}
+                                                        onChange={(e) => handleInputChange('prefijoLote', e.target.value)}
+                                                        placeholder="Ej: TRK, SLA"
+                                                        flex="1"
+                                                    />
+                                                    <IconButton
+                                                        aria-label="Verificar prefijo único"
+                                                        icon={<CheckIcon />}
+                                                        size="sm"
+                                                        colorScheme={prefijoVerificado ? "green" : "gray"}
+                                                        onClick={handleVerificarPrefijo}
+                                                        isLoading={verificandoPrefijo}
+                                                        isDisabled={!(productoData as Producto).prefijoLote?.trim()}
+                                                    />
+                                                    <IconButton
+                                                        aria-label="Ayuda prefijo de lote"
+                                                        icon={<QuestionIcon />}
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={onHelpPrefijoOpen}
+                                                    />
+                                                </HStack>
+                                                {prefijoVerificado && (
+                                                    <Text color="green.600" fontSize="sm" mt={1}>
+                                                        Prefijo verificado y disponible.
+                                                    </Text>
+                                                )}
+                                            </FormControl>
+                                        ) : (
+                                            <Text>{(productoData as Producto).prefijoLote ?? '—'}</Text>
                                         )}
                                     </Box>
                                 )}
@@ -627,6 +773,36 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                 onClose={onForceDeleteClose}
                 onConfirm={handleForceDeleteProduct}
             />
+            <Modal isOpen={isHelpPrefijoOpen} onClose={onHelpPrefijoClose} size="md">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Prefijo de lote</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody pb={4}>
+                        <Text mb={2}>
+                            El prefijo de lote identifica de forma única a cada producto terminado y se usa para generar
+                            los números de lote al crear órdenes de producción (por ejemplo: TRK-0000001-26).
+                        </Text>
+                        <Text mb={2}>
+                            <strong>Modo automático:</strong> El prefijo se calcula a partir del nombre del producto,
+                            tomando la primera letra de cada palabra en mayúscula. Ejemplo: &quot;Tratamiento Rizo Kids&quot; → TRK,
+                            &quot;Shampoo Liso Adulto&quot; → SLA.
+                        </Text>
+                        <Text mb={2}>
+                            <strong>Modo editar:</strong> Puede definir un prefijo propio si lo desea. El prefijo debe ser
+                            único entre todos los productos terminados.
+                        </Text>
+                        <Text mb={2}>
+                            Use el botón con el símbolo de verificación (✓) para comprobar que el prefijo no esté ya
+                            asignado a otro producto.
+                        </Text>
+                        <Text mb={2}>
+                            <strong>Al editar:</strong> Si modifica el prefijo de lote, debe verificar de nuevo con el botón (✓).
+                            El botón Guardar solo se habilita después de verificar el prefijo cuando hubo cambios en él.
+                        </Text>
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 }
