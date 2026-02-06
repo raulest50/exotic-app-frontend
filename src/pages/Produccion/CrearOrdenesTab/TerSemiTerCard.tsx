@@ -23,10 +23,10 @@ import {
     Button,
 } from '@chakra-ui/react';
 import { FaSearch, FaChevronDown, FaChevronUp, FaList } from 'react-icons/fa';
-import { ProductoWithInsumos, InsumoWithStock } from '../types';
+import { ProductoWithInsumos, InsumoWithStock } from '../types.tsx';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import EndPointsURL from '../../../api/EndPointsURL';
+import EndPointsURL from '../../../api/EndPointsURL.tsx';
 
 interface TerSemiTerCardProps {
     productoSeleccionado: ProductoWithInsumos | null;

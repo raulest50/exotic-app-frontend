@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import EndPointsURL from '../../api/EndPointsURL.tsx';
-import MyPagination from '../../components/MyPagination.tsx';
+import EndPointsURL from '../../../api/EndPointsURL.tsx';
+import MyPagination from '../../../components/MyPagination.tsx';
 import {
     Flex,
     Box,
@@ -27,8 +27,8 @@ import {
 } from '@chakra-ui/react';
 import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import { RiSave3Fill } from 'react-icons/ri';
-import CustomIntegerInput from '../../components/CustomIntegerInput/CustomIntegerInput.tsx';
-import { Categoria } from './types.tsx';
+import CustomIntegerInput from '../../../components/CustomIntegerInput/CustomIntegerInput.tsx';
+import { Categoria } from '../types.tsx';
 
 const PAGE_SIZE = 10;
 

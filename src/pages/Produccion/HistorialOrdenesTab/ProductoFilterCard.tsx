@@ -1,6 +1,6 @@
 import { Card, CardBody, HStack, IconButton, Text, Button, VStack } from "@chakra-ui/react";
 import { FaSearch } from "react-icons/fa";
-import { ProductoWithInsumos } from "../types";
+import { ProductoWithInsumos } from "../types.tsx";
 
 interface ProductoFilterCardProps {
     selectedProducto: ProductoWithInsumos | null;

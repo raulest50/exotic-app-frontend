@@ -17,16 +17,16 @@ import {
     Box,
     useOutsideClick
 } from "@chakra-ui/react";
-import DateRangePicker from "../../components/DateRangePicker";
-import MyPagination from "../../components/MyPagination";
+import DateRangePicker from "../../../components/DateRangePicker.tsx";
+import MyPagination from "../../../components/MyPagination.tsx";
 import axios from "axios";
-import { OrdenProduccionDTO, OrdenSeguimientoDTO, ProductoWithInsumos } from "./types"; // Adjust the path as needed
+import { OrdenProduccionDTO, OrdenSeguimientoDTO, ProductoWithInsumos } from "../types.tsx"; // Adjust the path as needed
 import { format } from "date-fns";
-import EndPointsURL from "../../api/EndPointsURL.tsx";
-import TerminadoSemiterminadoPicker from "./components/TerminadoSemiterminadoPicker";
-import ProductoFilterCard from "./components/ProductoFilterCard";
-import OrdenProduccionDialogDetalles from "./components/OrdenProduccionDialogDetalles";
-import ODP_PDF_Generator from "./ODP_PDF_Generator.tsx";
+import EndPointsURL from "../../../api/EndPointsURL.tsx";
+import TerminadoSemiterminadoPicker from "../components/TerminadoSemiterminadoPicker.tsx";
+import ProductoFilterCard from "./ProductoFilterCard.tsx";
+import OrdenProduccionDialogDetalles from "./OrdenProduccionDialogDetalles.tsx";
+import ODP_PDF_Generator from "../components/ODP_PDF_Generator.tsx";
 
 const endPoints = new EndPointsURL();
 
@@ -130,7 +130,7 @@ interface ContextMenuState {
     orden: OrdenProduccionDTO;
 }
 
-export default function HistorialOrdenes() {
+export default function HistorialOrdenesTab() {
     const [date1, setDate1] = useState(format(new Date(), "yyyy-MM-dd"));
     const [date2, setDate2] = useState(format(new Date(), "yyyy-MM-dd"));
 

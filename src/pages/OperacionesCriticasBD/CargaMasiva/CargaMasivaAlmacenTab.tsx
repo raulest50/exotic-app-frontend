@@ -10,62 +10,50 @@ import {
 } from "@chakra-ui/react";
 import { Step, StepIcon, StepIndicator, Stepper, StepTitle } from "@chakra-ui/icons";
 import { useState } from "react";
-import EliminacionStep0SelectEntityType from "./EliminacionStep0SelectEntityType.tsx";
-import EliminacionOCMStep1SelectAndStudy from "./OrdenCompra/EliminacionOCMStep1SelectAndStudy";
-import EliminacionOCMStep2StudyResult from "./OrdenCompra/EliminacionOCMStep2StudyResult";
-import type { OrdenCompraMateriales } from "../../Compras/types";
-import type { EstudiarEliminacionOCMResponseDTO } from "./types";
+import CargaMasivaStep0Informacion from "./steps/CargaMasivaStep0Informacion";
+import CargaMasivaStep1SubirValidar from "./steps/CargaMasivaStep1SubirValidar";
+import CargaMasivaStep2Ejecutar from "./steps/CargaMasivaStep2Ejecutar";
 
 const steps = [
-    { title: "Tipo de entidad", description: "Seleccionar tipo de entidad a eliminar" },
-    { title: "Seleccionar y estudiar", description: "Elegir registro y estudiar dependencias" },
-    { title: "Resultado del estudio", description: "Ver dependencias que bloquean la eliminación" },
+    { title: "Información y plantilla", description: "Descargar plantilla Excel" },
+    { title: "Subir y validar Excel", description: "Subir archivo y validar" },
+    { title: "Realizar carga masiva", description: "Ejecutar actualización" },
 ];
 
-export type TipoEntidadEliminacion = "ORDEN_COMPRA";
-
-export default function EliminacionForzada() {
+export default function CargaMasivaAlmacenTab() {
     const { activeStep, setActiveStep } = useSteps({
         index: 0,
         count: steps.length,
     });
 
-    const [tipoEntidad, setTipoEntidad] = useState<TipoEntidadEliminacion | null>(null);
-    const [ordenSeleccionada, setOrdenSeleccionada] = useState<OrdenCompraMateriales | null>(null);
-    const [studyResult, setStudyResult] = useState<EstudiarEliminacionOCMResponseDTO | null>(null);
+    const [excelFile, setExcelFile] = useState<File | null>(null);
+    const [excelData, setExcelData] = useState<any[] | null>(null);
 
     const handleReset = () => {
-        setTipoEntidad(null);
-        setOrdenSeleccionada(null);
-        setStudyResult(null);
+        setExcelFile(null);
+        setExcelData(null);
         setActiveStep(0);
     };
 
     function ConditionalRenderStep() {
         if (activeStep === 0) {
-            return (
-                <EliminacionStep0SelectEntityType
-                    setActiveStep={setActiveStep}
-                    setTipoEntidad={setTipoEntidad}
-                />
-            );
+            return <CargaMasivaStep0Informacion setActiveStep={setActiveStep} />;
         }
         if (activeStep === 1) {
             return (
-                <EliminacionOCMStep1SelectAndStudy
+                <CargaMasivaStep1SubirValidar
                     setActiveStep={setActiveStep}
-                    ordenSeleccionada={ordenSeleccionada}
-                    setOrdenSeleccionada={setOrdenSeleccionada}
-                    setStudyResult={setStudyResult}
+                    setExcelFile={setExcelFile}
+                    setExcelData={setExcelData}
                 />
             );
         }
         if (activeStep === 2) {
             return (
-                <EliminacionOCMStep2StudyResult
+                <CargaMasivaStep2Ejecutar
                     setActiveStep={setActiveStep}
-                    studyResult={studyResult}
-                    onReset={handleReset}
+                    excelFile={excelFile}
+                    onSuccess={handleReset}
                 />
             );
         }
@@ -93,7 +81,7 @@ export default function EliminacionForzada() {
                         </Step>
                     ))}
                 </Stepper>
-                <ConditionalRenderStep />
+                {ConditionalRenderStep()}
             </Flex>
         </Container>
     );

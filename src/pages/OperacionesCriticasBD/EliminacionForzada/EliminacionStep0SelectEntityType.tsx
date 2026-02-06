@@ -15,7 +15,7 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
-import type { TipoEntidadEliminacion } from "../EliminacionForzada";
+import type { TipoEntidadEliminacion } from "./EliminacionForzada.tsx";
 
 interface EliminacionOCMStep0SelectEntityTypeProps {
     setActiveStep: (step: number) => void;
@@ -26,7 +26,7 @@ const ENTITY_OPTIONS: { id: TipoEntidadEliminacion; label: string; description: 
     { id: "ORDEN_COMPRA", label: "Orden de compra", description: "Eliminación forzada de Orden de Compra de Materiales (OCM)" },
 ];
 
-export default function EliminacionOCMStep0SelectEntityType({
+export default function EliminacionStep0SelectEntityType({
     setActiveStep,
     setTipoEntidad,
 }: EliminacionOCMStep0SelectEntityTypeProps) {
@@ -52,7 +52,7 @@ export default function EliminacionOCMStep0SelectEntityType({
                     onClick={onOpen}
                     alignSelf="flex-start"
                 >
-                    Seleccionar tipo de entidad
+                    Siguiente
                 </Button>
             </VStack>
 

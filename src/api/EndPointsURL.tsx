@@ -138,9 +138,12 @@ export default class EndPointsURL{
     // carga masiva (operaciones criticas BD)
     public carga_masiva_template_inventario: string;
     public carga_masiva_ejecutar: string;
+    public carga_masiva_materiales_template: string;
+    public carga_masiva_terminados_template: string;
 
     // eliminaciones forzadas (operaciones criticas BD)
     public estudiar_eliminacion_orden_compra: string;
+    public ejecutar_eliminacion_orden_compra: string;
 
     // organigrama endpoints
     public get_all_cargos: string;
@@ -350,9 +353,12 @@ export default class EndPointsURL{
         // carga masiva (operaciones criticas BD)
         this.carga_masiva_template_inventario = `${domain}/api/carga-masiva/template-inventario`;
         this.carga_masiva_ejecutar = `${domain}/api/carga-masiva/ejecutar`;
+        this.carga_masiva_materiales_template = `${domain}/api/carga-masiva-materiales/template`;
+        this.carga_masiva_terminados_template = `${domain}/api/carga-masiva-terminados/template`;
 
         // eliminaciones forzadas (operaciones criticas BD)
         this.estudiar_eliminacion_orden_compra = `${domain}/api/eliminaciones-forzadas/estudiar/orden-compra`;
+        this.ejecutar_eliminacion_orden_compra = `${domain}/api/eliminaciones-forzadas/orden-compra`;
 
         // contabilidad endpoints
         this.get_cuentas = `${domain}/${contabilidad_res}/cuentas`;

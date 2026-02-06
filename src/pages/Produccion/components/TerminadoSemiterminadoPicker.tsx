@@ -18,8 +18,8 @@ import {
     useToast
 } from '@chakra-ui/react';
 import axios from 'axios';
-import EndPointsURL from '../../../api/EndPointsURL';
-import {Producto, ProductoWithInsumos, InsumoWithStock, ProductoStockDTO, Terminado} from '../types';
+import EndPointsURL from '../../../api/EndPointsURL.tsx';
+import {Producto, ProductoWithInsumos, InsumoWithStock, ProductoStockDTO, Terminado} from '../types.tsx';
 
 interface TerminadoSemiterminadoPickerProps {
     isOpen: boolean;

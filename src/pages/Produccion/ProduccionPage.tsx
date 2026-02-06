@@ -8,9 +8,10 @@ import MyHeader from '../../components/MyHeader.tsx';
 
 import {my_style_tab} from "../../styles/styles_general.tsx";
 
-import CrearOrdenes from "./CrearOrdenes.tsx";
-import HistorialOrdenes from "./HistorialOrdenes.tsx";
-import ConfLotesCategoriaTab from "./ConfLotesCategoriaTab.tsx";
+import CrearOrdenesTab from "./CrearOrdenesTab/CrearOrdenesTab.tsx";
+import HistorialOrdenesTab from "./HistorialOrdenesTab/HistorialOrdenesTab.tsx";
+import ConfLotesCategoriaTab from "./ConLotesCategoriaTab/ConfLotesCategoriaTab.tsx";
+import {PlaneacionProduccionTab} from "./PlaneacionProduccionTab/PlaneacionProduccionTab.tsx";
 
 
 export default function ProduccionPage(){
@@ -25,20 +26,25 @@ export default function ProduccionPage(){
                     <Tab sx={my_style_tab}> Crear ODP Manualmente </Tab>
                     <Tab sx={my_style_tab}> Historial </Tab>
                     <Tab sx={my_style_tab}> Config. Lotes por Categoría </Tab>
+                    <Tab sx={my_style_tab}> Planeacion Produccion </Tab>
                 </TabList>
 
                 <TabPanels>
 
                     <TabPanel>
-                        <CrearOrdenes />
+                        <CrearOrdenesTab />
                     </TabPanel>
 
                     <TabPanel>
-                        <HistorialOrdenes/>
+                        <HistorialOrdenesTab/>
                     </TabPanel>
 
                     <TabPanel>
                         <ConfLotesCategoriaTab />
+                    </TabPanel>
+
+                    <TabPanel>
+                        <PlaneacionProduccionTab />
                     </TabPanel>
 
                 </TabPanels>

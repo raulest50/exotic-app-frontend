@@ -10,24 +10,24 @@ import {
 } from "@chakra-ui/react";
 import { Step, StepIcon, StepIndicator, Stepper, StepTitle } from "@chakra-ui/icons";
 import { useState } from "react";
-import CargaMasivaStep0Informacion from "./steps/CargaMasivaStep0Informacion";
-import CargaMasivaStep1SubirValidar from "./steps/CargaMasivaStep1SubirValidar";
-import CargaMasivaStep2Ejecutar from "./steps/CargaMasivaStep2Ejecutar";
+import CargaMasivaMaterialesStep0Informacion from "./steps/CargaMasivaMaterialesStep0Informacion";
+import CargaMasivaMaterialesStep1SubirValidar from "./steps/CargaMasivaMaterialesStep1SubirValidar";
+import CargaMasivaMaterialesStep2Ejecutar from "./steps/CargaMasivaMaterialesStep2Ejecutar";
 
 const steps = [
     { title: "Información y plantilla", description: "Descargar plantilla Excel" },
     { title: "Subir y validar Excel", description: "Subir archivo y validar" },
-    { title: "Realizar carga masiva", description: "Ejecutar actualización" },
+    { title: "Realizar carga masiva", description: "Ejecutar alta de materiales" },
 ];
 
-export default function CargaMasivaTab() {
+export default function CargaMasivaMaterialesTab() {
     const { activeStep, setActiveStep } = useSteps({
         index: 0,
         count: steps.length,
     });
 
     const [excelFile, setExcelFile] = useState<File | null>(null);
-    const [excelData, setExcelData] = useState<any[] | null>(null);
+    const [excelData, setExcelData] = useState<unknown[] | null>(null);
 
     const handleReset = () => {
         setExcelFile(null);
@@ -37,11 +37,11 @@ export default function CargaMasivaTab() {
 
     function ConditionalRenderStep() {
         if (activeStep === 0) {
-            return <CargaMasivaStep0Informacion setActiveStep={setActiveStep} />;
+            return <CargaMasivaMaterialesStep0Informacion setActiveStep={setActiveStep} />;
         }
         if (activeStep === 1) {
             return (
-                <CargaMasivaStep1SubirValidar
+                <CargaMasivaMaterialesStep1SubirValidar
                     setActiveStep={setActiveStep}
                     setExcelFile={setExcelFile}
                     setExcelData={setExcelData}
@@ -50,7 +50,7 @@ export default function CargaMasivaTab() {
         }
         if (activeStep === 2) {
             return (
-                <CargaMasivaStep2Ejecutar
+                <CargaMasivaMaterialesStep2Ejecutar
                     setActiveStep={setActiveStep}
                     excelFile={excelFile}
                     onSuccess={handleReset}

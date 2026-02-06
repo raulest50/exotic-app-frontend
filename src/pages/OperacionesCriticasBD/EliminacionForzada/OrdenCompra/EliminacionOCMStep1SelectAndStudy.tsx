@@ -70,32 +70,31 @@ export default function EliminacionOCMStep1SelectAndStudy({
                     El estudio mostrará todos los registros que referencian esta orden (ítems, lotes,
                     transacciones de almacén, asientos contables) y que habría que eliminar o ajustar.
                 </Text>
-                <Flex gap={3} align="center" flexWrap="wrap">
-                    <Button colorScheme="teal" onClick={onOpen} variant="outline">
-                        {ordenSeleccionada
-                            ? `Orden #${ordenSeleccionada.ordenCompraId} - ${ordenSeleccionada.proveedor?.nombre ?? "Sin proveedor"}`
-                            : "Seleccionar orden de compra"}
-                    </Button>
-                    {ordenSeleccionada && (
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            colorScheme="red"
-                            onClick={() => setOrdenSeleccionada(null)}
-                        >
-                            Limpiar
-                        </Button>
-                    )}
-                </Flex>
                 <Button
+                    w="full"
+                    justifyContent="flex-start"
                     colorScheme="teal"
-                    onClick={handleEstudiarEliminacion}
-                    isDisabled={ordenSeleccionada == null}
-                    isLoading={isStudying}
-                    loadingText="Estudiando..."
+                    onClick={onOpen}
+                    variant="outline"
                 >
-                    Estudiar eliminación
+                    {ordenSeleccionada
+                        ? `Orden #${ordenSeleccionada.ordenCompraId} - ${ordenSeleccionada.proveedor?.nombre ?? "Sin proveedor"}`
+                        : "Seleccionar orden de compra"}
                 </Button>
+                <Flex gap={3} w="full" justify="space-between">
+                    <Button variant="outline" onClick={() => setActiveStep(0)}>
+                        Atrás
+                    </Button>
+                    <Button
+                        colorScheme="teal"
+                        onClick={handleEstudiarEliminacion}
+                        isDisabled={ordenSeleccionada == null}
+                        isLoading={isStudying}
+                        loadingText="Estudiando..."
+                    >
+                        Estudiar eliminación y continuar
+                    </Button>
+                </Flex>
             </VStack>
 
             <OrdenCompraPicker

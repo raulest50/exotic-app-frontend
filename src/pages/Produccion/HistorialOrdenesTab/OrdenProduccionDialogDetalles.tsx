@@ -24,8 +24,8 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import EndPointsURL from "../../../api/EndPointsURL";
-import { OrdenProduccionDTO } from "../types";
+import EndPointsURL from "../../../api/EndPointsURL.tsx";
+import { OrdenProduccionDTO } from "../types.tsx";
 
 interface OrdenProduccionDialogDetallesProps {
     isOpen: boolean;

@@ -1,8 +1,8 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import axios from "axios";
-import EndPointsURL from "../../api/EndPointsURL";
-import { InsumoWithStock, OrdenProduccionDTO } from "./types";
+import EndPointsURL from "../../../api/EndPointsURL.tsx";
+import { InsumoWithStock, OrdenProduccionDTO } from "../types.tsx";
 
 interface AutoTableProperties {
     finalY: number;

@@ -10,8 +10,12 @@ import {
     Th,
     Thead,
     Tr,
+    useToast,
     VStack,
 } from "@chakra-ui/react";
+import axios from "axios";
+import { useMemo, useState } from "react";
+import EndPointsURL from "../../../../api/EndPointsURL";
 import type { EstudiarEliminacionOCMResponseDTO } from "../types";
 
 interface EliminacionOCMStep2StudyResultProps {
@@ -34,13 +38,51 @@ export default function EliminacionOCMStep2StudyResult({
     studyResult,
     onReset,
 }: EliminacionOCMStep2StudyResultProps) {
+    const [isExecuting, setIsExecuting] = useState(false);
+    const endpoints = useMemo(() => new EndPointsURL(), []);
+    const toast = useToast();
+
+    const handleEjecutarEliminacion = async () => {
+        if (!studyResult) return;
+        const ordenCompraId = studyResult.ordenCompraId;
+        setIsExecuting(true);
+        try {
+            const url = `${endpoints.ejecutar_eliminacion_orden_compra}/${ordenCompraId}`;
+            await axios.delete(url, { withCredentials: true });
+            toast({
+                title: "Eliminación ejecutada",
+                description: "La orden de compra y sus dependencias se han eliminado correctamente.",
+                status: "success",
+                duration: 5000,
+                isClosable: true,
+            });
+            onReset();
+        } catch (error: unknown) {
+            console.error("Error al ejecutar eliminación", error);
+            const message = axios.isAxiosError(error) && error.response?.data?.message
+                ? String(error.response.data.message)
+                : "No se pudo ejecutar la eliminación.";
+            toast({
+                title: "Error",
+                description: message,
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setIsExecuting(false);
+        }
+    };
+
     if (!studyResult) {
         return (
             <Box>
                 <Text color="gray.600">No hay resultado de estudio disponible.</Text>
-                <Button mt={4} onClick={() => setActiveStep(1)}>
-                    Volver a seleccionar
-                </Button>
+                <Flex gap={3} mt={4}>
+                    <Button variant="outline" onClick={() => setActiveStep(1)}>
+                        Atrás
+                    </Button>
+                </Flex>
             </Box>
         );
     }
@@ -210,12 +252,17 @@ export default function EliminacionOCMStep2StudyResult({
                 )}
             </Box>
 
-            <Flex gap={3} mt={4}>
+            <Flex gap={3} mt={4} w="full" justify="space-between">
                 <Button variant="outline" onClick={() => setActiveStep(1)}>
-                    Volver a seleccionar orden
+                    Atrás
                 </Button>
-                <Button colorScheme="teal" onClick={onReset}>
-                    Iniciar de nuevo
+                <Button
+                    colorScheme="teal"
+                    onClick={handleEjecutarEliminacion}
+                    isLoading={isExecuting}
+                    loadingText="Ejecutando..."
+                >
+                    Ejecutar eliminación
                 </Button>
             </Flex>
         </VStack>

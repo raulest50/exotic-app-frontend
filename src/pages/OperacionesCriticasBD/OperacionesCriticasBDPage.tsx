@@ -4,7 +4,9 @@ import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
 import MyHeader from "../../components/MyHeader";
 import { my_style_tab } from "../../styles/styles_general";
-import CargaMasivaTab from "./CargaMasiva/CargaMasivaTab";
+import CargaMasivaAlmacenTab from "./CargaMasiva/CargaMasivaAlmacenTab.tsx";
+import CargaMasivaMaterialesTab from "./CargaMasivaMateriales/CargaMasivaMaterialesTab";
+import CargaMasivaTerminadosTab from "./CargaMasivaTerminados/CargaMasivaTerminadosTab";
 import EliminacionForzada from "./EliminacionForzada/EliminacionForzada";
 
 interface SuperMasterConfig {
@@ -61,13 +63,25 @@ export default function OperacionesCriticasBDPage() {
             <Flex direction="column" w="full" h="full">
                 <Tabs>
                     <TabList>
-                        {showCargaMasiva && <Tab sx={my_style_tab}>Carga Masiva</Tab>}
+                        {showCargaMasiva && <Tab sx={my_style_tab}>Carga Masiva Almacén</Tab>}
+                        {showCargaMasiva && <Tab sx={my_style_tab}>Carga Masiva Materiales</Tab>}
+                        {showCargaMasiva && <Tab sx={my_style_tab}>Carga Masiva Terminados</Tab>}
                         {showEliminacionForzada && <Tab sx={my_style_tab}>Eliminaciones Forzadas</Tab>}
                     </TabList>
                     <TabPanels>
                         {showCargaMasiva && (
                             <TabPanel>
-                                <CargaMasivaTab />
+                                <CargaMasivaAlmacenTab />
+                            </TabPanel>
+                        )}
+                        {showCargaMasiva && (
+                            <TabPanel>
+                                <CargaMasivaMaterialesTab />
+                            </TabPanel>
+                        )}
+                        {showCargaMasiva && (
+                            <TabPanel>
+                                <CargaMasivaTerminadosTab />
                             </TabPanel>
                         )}
                         {showEliminacionForzada && (
