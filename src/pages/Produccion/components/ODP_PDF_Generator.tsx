@@ -436,7 +436,7 @@ export default class ODP_PDF_Generator {
         doc.setFontSize(9);
         const productoInfo = [
             `Producto: ${orden.productoNombre}`,
-            `Lote: ______________________`,
+            `Lote: ${orden.loteAsignado?.trim() ? orden.loteAsignado : "______________________"}`,
             `Cantidad a producir: ${this.formatNullableNumber(orden.cantidadProducir)}`,
             `Pedido comercial: ${orden.numeroPedidoComercial ?? "No especificado"}`,
             `Área operativa: ${orden.areaOperativa ?? "No especificada"}`,

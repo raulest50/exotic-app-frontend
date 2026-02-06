@@ -104,6 +104,7 @@ export interface OrdenProduccionDTO {
     numeroPedidoComercial: string | null;
     areaOperativa: string | null;
     departamentoOperativo: string | null;
+    loteAsignado?: string | null;
     observaciones: string | null;
     ordenesSeguimiento: OrdenSeguimientoDTO[];
 }

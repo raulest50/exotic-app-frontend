@@ -2,7 +2,14 @@ import {
     Box,
     Button,
     Flex,
+    Table,
+    TableContainer,
+    Tbody,
+    Td,
     Text,
+    Th,
+    Thead,
+    Tr,
     useToast,
     VStack,
 } from "@chakra-ui/react";
@@ -13,6 +20,35 @@ import EndPointsURL from "../../../../api/EndPointsURL";
 interface CargaMasivaMaterialesStep0InformacionProps {
     setActiveStep: (step: number) => void;
 }
+
+const EXAMPLE_ROWS = [
+    {
+        producto_id: "EJEMPLO_MP01",
+        nombre: "Materia prima ejemplo",
+        observaciones: "",
+        costo: 100,
+        iva_percentual: 19,
+        tipo_unidades: "KG",
+        cantidad_unidad: 1,
+        stock_minimo: 0,
+        ficha_tecnica_url: "",
+        tipo_material: 1,
+        punto_reorden: -1,
+    },
+    {
+        producto_id: "EJEMPLO_EMP02",
+        nombre: "Material de empaque ejemplo",
+        observaciones: "",
+        costo: 50,
+        iva_percentual: 5,
+        tipo_unidades: "U",
+        cantidad_unidad: 1,
+        stock_minimo: 0,
+        ficha_tecnica_url: "",
+        tipo_material: 2,
+        punto_reorden: -1,
+    },
+];
 
 export default function CargaMasivaMaterialesStep0Informacion({ setActiveStep }: CargaMasivaMaterialesStep0InformacionProps) {
     const toast = useToast();
@@ -71,9 +107,49 @@ export default function CargaMasivaMaterialesStep0Informacion({ setActiveStep }:
         <Box p={4}>
             <VStack align="stretch" spacing={6}>
                 <Text>
-                    Se descargará una plantilla Excel vacía para registrar materiales (ROH) en bloque.
-                    Columnas: <strong>producto_id</strong>, <strong>nombre</strong>, <strong>observaciones</strong>, <strong>costo</strong>, <strong>iva_percentual</strong>, <strong>tipo_unidades</strong> (L, KG, U), <strong>cantidad_unidad</strong>, <strong>stock_minimo</strong>, <strong>inventareable</strong> (true/false), <strong>ficha_tecnica_url</strong>, <strong>tipo_material</strong> (1=Materia Prima, 2=Material de Empaque), <strong>punto_reorden</strong> (-1 para ignorar alertas).
+                    Se descargará una plantilla Excel vacía para registrar materiales (ROH) en bloque. Todos los materiales de esta carga se consideran <strong>inventariables</strong>.
                 </Text>
+                <Text>
+                    <strong>Obligatorios:</strong> producto_id, nombre, costo, iva_percentual (0, 5 o 19), tipo_unidades (L, KG o U), cantidad_unidad, tipo_material (1 = Materia Prima, 2 = Material de Empaque).
+                </Text>
+                <Text>
+                    <strong>Opcionales:</strong> observaciones, stock_minimo, ficha_tecnica_url, punto_reorden (-1 para ignorar alertas).
+                </Text>
+
+                <Text fontWeight="semibold" mt={2}>
+                    Ejemplos de filas válidas (solo referencia)
+                </Text>
+                <TableContainer borderWidth="1px" borderRadius="md" overflowX="auto">
+                    <Table size="sm" variant="simple">
+                        <Thead>
+                            <Tr>
+                                <Th>producto_id</Th>
+                                <Th>nombre</Th>
+                                <Th>costo</Th>
+                                <Th>iva_%</Th>
+                                <Th>tipo_unid</Th>
+                                <Th>cant_unid</Th>
+                                <Th>tipo_mat</Th>
+                                <Th>punto_reorden</Th>
+                            </Tr>
+                        </Thead>
+                        <Tbody>
+                            {EXAMPLE_ROWS.map((row, idx) => (
+                                <Tr key={idx}>
+                                    <Td>{row.producto_id}</Td>
+                                    <Td>{row.nombre}</Td>
+                                    <Td>{row.costo}</Td>
+                                    <Td>{row.iva_percentual}</Td>
+                                    <Td>{row.tipo_unidades}</Td>
+                                    <Td>{row.cantidad_unidad}</Td>
+                                    <Td>{row.tipo_material}</Td>
+                                    <Td>{row.punto_reorden}</Td>
+                                </Tr>
+                            ))}
+                        </Tbody>
+                    </Table>
+                </TableContainer>
+
                 <Flex gap={4} wrap="wrap">
                     <Button
                         colorScheme="teal"
