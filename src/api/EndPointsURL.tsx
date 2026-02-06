@@ -144,6 +144,8 @@ export default class EndPointsURL{
     // eliminaciones forzadas (operaciones criticas BD)
     public estudiar_eliminacion_orden_compra: string;
     public ejecutar_eliminacion_orden_compra: string;
+    public estudiar_eliminacion_orden_produccion: string;
+    public ejecutar_eliminacion_orden_produccion: string;
 
     // organigrama endpoints
     public get_all_cargos: string;
@@ -359,6 +361,8 @@ export default class EndPointsURL{
         // eliminaciones forzadas (operaciones criticas BD)
         this.estudiar_eliminacion_orden_compra = `${domain}/api/eliminaciones-forzadas/estudiar/orden-compra`;
         this.ejecutar_eliminacion_orden_compra = `${domain}/api/eliminaciones-forzadas/orden-compra`;
+        this.estudiar_eliminacion_orden_produccion = `${domain}/api/eliminaciones-forzadas/estudiar/orden-produccion`;
+        this.ejecutar_eliminacion_orden_produccion = `${domain}/api/eliminaciones-forzadas/orden-produccion`;
 
         // contabilidad endpoints
         this.get_cuentas = `${domain}/${contabilidad_res}/cuentas`;

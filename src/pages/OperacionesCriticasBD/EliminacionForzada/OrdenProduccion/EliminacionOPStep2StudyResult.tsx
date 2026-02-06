@@ -19,11 +19,11 @@ import {
 import axios from "axios";
 import { useMemo, useState } from "react";
 import EndPointsURL from "../../../../api/EndPointsURL";
-import type { EstudiarEliminacionOCMResponseDTO } from "../types";
+import type { EstudiarEliminacionOPResponseDTO } from "../types";
 
-interface EliminacionOCMStep2StudyResultProps {
+interface EliminacionOPStep2StudyResultProps {
     setActiveStep: (step: number) => void;
-    studyResult: EstudiarEliminacionOCMResponseDTO | null;
+    studyResultOP: EstudiarEliminacionOPResponseDTO | null;
     onReset: () => void;
 }
 
@@ -36,35 +36,37 @@ function formatDate(value: string | null): string {
     }
 }
 
-export default function EliminacionOCMStep2StudyResult({
+export default function EliminacionOPStep2StudyResult({
     setActiveStep,
-    studyResult,
+    studyResultOP,
     onReset,
-}: EliminacionOCMStep2StudyResultProps) {
+}: EliminacionOPStep2StudyResultProps) {
     const [isExecuting, setIsExecuting] = useState(false);
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const toast = useToast();
 
     const handleEjecutarEliminacion = async () => {
-        if (!studyResult || !studyResult.eliminable) return;
-        const ordenCompraId = studyResult.ordenCompraId;
+        if (!studyResultOP || !studyResultOP.eliminable) return;
+        const ordenProduccionId = studyResultOP.ordenProduccionId;
         setIsExecuting(true);
         try {
-            const url = `${endpoints.ejecutar_eliminacion_orden_compra}/${ordenCompraId}`;
+            const url = `${endpoints.ejecutar_eliminacion_orden_produccion}/${ordenProduccionId}`;
             await axios.delete(url, { withCredentials: true });
             toast({
                 title: "Eliminación ejecutada",
-                description: "La orden de compra y sus dependencias se han eliminado correctamente.",
+                description:
+                    "La orden de producción y sus dependencias se han eliminado correctamente.",
                 status: "success",
                 duration: 5000,
                 isClosable: true,
             });
             onReset();
         } catch (error: unknown) {
-            console.error("Error al ejecutar eliminación", error);
-            const message = axios.isAxiosError(error) && error.response?.data?.message
-                ? String(error.response.data.message)
-                : "No se pudo ejecutar la eliminación.";
+            console.error("Error al ejecutar eliminación OP", error);
+            const message =
+                axios.isAxiosError(error) && error.response?.data?.message
+                    ? String(error.response.data.message)
+                    : "No se pudo ejecutar la eliminación.";
             toast({
                 title: "Error",
                 description: message,
@@ -77,7 +79,7 @@ export default function EliminacionOCMStep2StudyResult({
         }
     };
 
-    if (!studyResult) {
+    if (!studyResultOP) {
         return (
             <Box>
                 <Text color="gray.600">No hay resultado de estudio disponible.</Text>
@@ -91,27 +93,28 @@ export default function EliminacionOCMStep2StudyResult({
     }
 
     const {
-        ordenCompraId,
+        ordenProduccionId,
         eliminable,
-        itemsOrdenCompra,
+        ordenesSeguimiento,
         lotes,
         transaccionesAlmacen,
         asientosContables,
-    } = studyResult;
+    } = studyResultOP;
 
     return (
         <VStack align="stretch" spacing={6}>
             <Heading size="md">
-                Resultado del estudio de eliminación - Orden de compra #{ordenCompraId}
+                Resultado del estudio - Orden de producción #{ordenProduccionId}
             </Heading>
 
             {!eliminable && (
                 <Alert status="warning">
                     <AlertIcon />
                     <AlertDescription>
-                        No se puede eliminar esta orden de compra porque tiene transacciones de
-                        almacén asociadas (ingresos de mercancía, etc.). Solo se permite eliminación
-                        forzada cuando no hay transacciones vinculadas.
+                        No se puede eliminar esta orden de producción porque tiene
+                        transacciones de almacén asociadas (dispensaciones u otras).
+                        Solo se permite eliminación forzada cuando no hay
+                        transacciones vinculadas.
                     </AlertDescription>
                 </Alert>
             )}
@@ -120,46 +123,43 @@ export default function EliminacionOCMStep2StudyResult({
                 <Alert status="info">
                     <AlertIcon />
                     <AlertDescription>
-                        Esta orden no tiene transacciones de almacén. Se puede ejecutar la
-                        eliminación (se desvincularán lotes y se eliminarán ítems y la orden).
+                        Esta orden no tiene transacciones de almacén. Se puede
+                        ejecutar la eliminación (se eliminarán los lotes
+                        reservados y la orden con sus seguimientos).
                     </AlertDescription>
                 </Alert>
             )}
 
             <Text color="gray.600">
-                Registros asociados a esta orden de compra:
+                Registros asociados a esta orden de producción:
             </Text>
 
-            {/* Items orden compra */}
+            {/* Órdenes de seguimiento */}
             <Box>
                 <Heading size="sm" mb={2}>
-                    Ítems de orden de compra ({itemsOrdenCompra.length})
+                    Órdenes de seguimiento ({ordenesSeguimiento.length})
                 </Heading>
-                {itemsOrdenCompra.length > 0 ? (
+                {ordenesSeguimiento.length > 0 ? (
                     <Table size="sm" variant="simple">
                         <Thead>
                             <Tr>
-                                <Th>Item ID</Th>
-                                <Th>Producto</Th>
-                                <Th>Cantidad</Th>
-                                <Th>Precio unit.</Th>
-                                <Th>Subtotal</Th>
+                                <Th>Seguimiento ID</Th>
+                                <Th>Estado</Th>
+                                <Th>Producto (insumo)</Th>
                             </Tr>
                         </Thead>
                         <Tbody>
-                            {itemsOrdenCompra.map((item) => (
-                                <Tr key={item.itemOrdenId}>
-                                    <Td>{item.itemOrdenId}</Td>
-                                    <Td>{item.productId ?? "-"}</Td>
-                                    <Td>{item.cantidad}</Td>
-                                    <Td>{item.precioUnitario.toLocaleString()}</Td>
-                                    <Td>{item.subTotal.toLocaleString()}</Td>
+                            {ordenesSeguimiento.map((seg) => (
+                                <Tr key={seg.seguimientoId}>
+                                    <Td>{seg.seguimientoId}</Td>
+                                    <Td>{seg.estado}</Td>
+                                    <Td>{seg.productoId ?? "-"}</Td>
                                 </Tr>
                             ))}
                         </Tbody>
                     </Table>
                 ) : (
-                    <Text color="gray.500">Ningún ítem.</Text>
+                    <Text color="gray.500">Ninguna.</Text>
                 )}
             </Box>
 
@@ -183,8 +183,16 @@ export default function EliminacionOCMStep2StudyResult({
                                 <Tr key={lote.id}>
                                     <Td>{lote.id}</Td>
                                     <Td>{lote.batchNumber}</Td>
-                                    <Td>{lote.productionDate ? formatDate(lote.productionDate) : "-"}</Td>
-                                    <Td>{lote.expirationDate ? formatDate(lote.expirationDate) : "-"}</Td>
+                                    <Td>
+                                        {lote.productionDate
+                                            ? formatDate(lote.productionDate)
+                                            : "-"}
+                                    </Td>
+                                    <Td>
+                                        {lote.expirationDate
+                                            ? formatDate(lote.expirationDate)
+                                            : "-"}
+                                    </Td>
                                 </Tr>
                             ))}
                         </Tbody>
@@ -202,13 +210,21 @@ export default function EliminacionOCMStep2StudyResult({
                 {transaccionesAlmacen.length > 0 ? (
                     <VStack align="stretch" spacing={3}>
                         {transaccionesAlmacen.map((ta) => (
-                            <Box key={ta.transaccionId} borderWidth="1px" borderRadius="md" p={3}>
+                            <Box
+                                key={ta.transaccionId}
+                                borderWidth="1px"
+                                borderRadius="md"
+                                p={3}
+                            >
                                 <Text fontWeight="medium">
-                                    Transacción #{ta.transaccionId} - {formatDate(ta.fechaTransaccion)} -{" "}
+                                    Transacción #{ta.transaccionId} -{" "}
+                                    {formatDate(ta.fechaTransaccion)} -{" "}
                                     {ta.estadoContable ?? "-"}
                                 </Text>
                                 {ta.observaciones && (
-                                    <Text fontSize="sm" color="gray.600">{ta.observaciones}</Text>
+                                    <Text fontSize="sm" color="gray.600">
+                                        {ta.observaciones}
+                                    </Text>
                                 )}
                                 {ta.movimientos && ta.movimientos.length > 0 && (
                                     <Table size="sm" mt={2} variant="simple">
@@ -230,7 +246,9 @@ export default function EliminacionOCMStep2StudyResult({
                                                     <Td>{m.cantidad}</Td>
                                                     <Td>{m.tipoMovimiento ?? "-"}</Td>
                                                     <Td>{m.almacen ?? "-"}</Td>
-                                                    <Td>{formatDate(m.fechaMovimiento)}</Td>
+                                                    <Td>
+                                                        {formatDate(m.fechaMovimiento)}
+                                                    </Td>
                                                 </Tr>
                                             ))}
                                         </Tbody>

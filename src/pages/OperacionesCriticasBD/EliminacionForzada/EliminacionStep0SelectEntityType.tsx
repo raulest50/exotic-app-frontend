@@ -24,6 +24,7 @@ interface EliminacionOCMStep0SelectEntityTypeProps {
 
 const ENTITY_OPTIONS: { id: TipoEntidadEliminacion; label: string; description: string }[] = [
     { id: "ORDEN_COMPRA", label: "Orden de compra", description: "Eliminación forzada de Orden de Compra de Materiales (OCM)" },
+    { id: "ORDEN_PRODUCCION", label: "Orden de producción", description: "Eliminación forzada de Orden de Producción (solo si no tiene transacciones de almacén)" },
 ];
 
 export default function EliminacionStep0SelectEntityType({

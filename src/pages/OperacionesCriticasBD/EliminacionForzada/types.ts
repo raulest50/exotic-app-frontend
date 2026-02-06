@@ -42,7 +42,23 @@ export interface TransaccionAlmacenResumenDTO {
 
 export interface EstudiarEliminacionOCMResponseDTO {
     ordenCompraId: number;
+    eliminable: boolean;
     itemsOrdenCompra: ItemOrdenCompraResumenDTO[];
+    lotes: LoteResumenDTO[];
+    transaccionesAlmacen: TransaccionAlmacenResumenDTO[];
+    asientosContables: AsientoContableResumenDTO[];
+}
+
+export interface OrdenSeguimientoResumenDTO {
+    seguimientoId: number;
+    estado: number;
+    productoId: string | null;
+}
+
+export interface EstudiarEliminacionOPResponseDTO {
+    ordenProduccionId: number;
+    eliminable: boolean;
+    ordenesSeguimiento: OrdenSeguimientoResumenDTO[];
     lotes: LoteResumenDTO[];
     transaccionesAlmacen: TransaccionAlmacenResumenDTO[];
     asientosContables: AsientoContableResumenDTO[];

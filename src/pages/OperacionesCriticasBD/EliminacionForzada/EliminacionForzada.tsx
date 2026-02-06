@@ -13,8 +13,14 @@ import { useState } from "react";
 import EliminacionStep0SelectEntityType from "./EliminacionStep0SelectEntityType.tsx";
 import EliminacionOCMStep1SelectAndStudy from "./OrdenCompra/EliminacionOCMStep1SelectAndStudy";
 import EliminacionOCMStep2StudyResult from "./OrdenCompra/EliminacionOCMStep2StudyResult";
+import EliminacionOPStep1SelectAndStudy from "./OrdenProduccion/EliminacionOPStep1SelectAndStudy";
+import EliminacionOPStep2StudyResult from "./OrdenProduccion/EliminacionOPStep2StudyResult";
+import type { OrdenProduccionPickItem } from "./OrdenProduccion/OrdenProduccionPicker";
 import type { OrdenCompraMateriales } from "../../Compras/types";
-import type { EstudiarEliminacionOCMResponseDTO } from "./types";
+import type {
+    EstudiarEliminacionOCMResponseDTO,
+    EstudiarEliminacionOPResponseDTO,
+} from "./types";
 
 const steps = [
     { title: "Tipo de entidad", description: "Seleccionar tipo de entidad a eliminar" },
@@ -22,7 +28,7 @@ const steps = [
     { title: "Resultado del estudio", description: "Ver dependencias que bloquean la eliminación" },
 ];
 
-export type TipoEntidadEliminacion = "ORDEN_COMPRA";
+export type TipoEntidadEliminacion = "ORDEN_COMPRA" | "ORDEN_PRODUCCION";
 
 export default function EliminacionForzada() {
     const { activeStep, setActiveStep } = useSteps({
@@ -33,11 +39,17 @@ export default function EliminacionForzada() {
     const [tipoEntidad, setTipoEntidad] = useState<TipoEntidadEliminacion | null>(null);
     const [ordenSeleccionada, setOrdenSeleccionada] = useState<OrdenCompraMateriales | null>(null);
     const [studyResult, setStudyResult] = useState<EstudiarEliminacionOCMResponseDTO | null>(null);
+    const [ordenProduccionSeleccionada, setOrdenProduccionSeleccionada] =
+        useState<OrdenProduccionPickItem | null>(null);
+    const [studyResultOP, setStudyResultOP] =
+        useState<EstudiarEliminacionOPResponseDTO | null>(null);
 
     const handleReset = () => {
         setTipoEntidad(null);
         setOrdenSeleccionada(null);
         setStudyResult(null);
+        setOrdenProduccionSeleccionada(null);
+        setStudyResultOP(null);
         setActiveStep(0);
     };
 
@@ -51,6 +63,16 @@ export default function EliminacionForzada() {
             );
         }
         if (activeStep === 1) {
+            if (tipoEntidad === "ORDEN_PRODUCCION") {
+                return (
+                    <EliminacionOPStep1SelectAndStudy
+                        setActiveStep={setActiveStep}
+                        ordenProduccionSeleccionada={ordenProduccionSeleccionada}
+                        setOrdenProduccionSeleccionada={setOrdenProduccionSeleccionada}
+                        setStudyResultOP={setStudyResultOP}
+                    />
+                );
+            }
             return (
                 <EliminacionOCMStep1SelectAndStudy
                     setActiveStep={setActiveStep}
@@ -61,6 +83,15 @@ export default function EliminacionForzada() {
             );
         }
         if (activeStep === 2) {
+            if (tipoEntidad === "ORDEN_PRODUCCION") {
+                return (
+                    <EliminacionOPStep2StudyResult
+                        setActiveStep={setActiveStep}
+                        studyResultOP={studyResultOP}
+                        onReset={handleReset}
+                    />
+                );
+            }
             return (
                 <EliminacionOCMStep2StudyResult
                     setActiveStep={setActiveStep}
