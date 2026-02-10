@@ -93,6 +93,7 @@ export default function TerminadoSemiterminadoPicker({isOpen, onClose, onConfirm
                     ...terminado,
                     categoriaId,
                     categoriaNombre,
+                    categoria: terminado.categoria,
                     casePack: terminado.casePack
                 };
 

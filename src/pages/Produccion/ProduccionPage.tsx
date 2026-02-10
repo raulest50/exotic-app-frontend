@@ -10,7 +10,7 @@ import {my_style_tab} from "../../styles/styles_general.tsx";
 
 import CrearOrdenesTab from "./CrearOrdenesTab/CrearOrdenesTab.tsx";
 import HistorialOrdenesTab from "./HistorialOrdenesTab/HistorialOrdenesTab.tsx";
-import ConfLotesCategoriaTab from "./ConLotesCategoriaTab/ConfLotesCategoriaTab.tsx";
+import ConfLotesCategoriaTab from "./ConfLotesCategoriaTab/ConfLotesCategoriaTab.tsx";
 import {PlaneacionProduccionTab} from "./PlaneacionProduccionTab/PlaneacionProduccionTab.tsx";
 
 

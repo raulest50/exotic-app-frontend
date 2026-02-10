@@ -19,6 +19,7 @@ export interface Producto{
     ivaPercentual?: number;
     categoriaId?: number;      // Añadir esta propiedad
     categoriaNombre?: string;  // Añadir esta propiedad
+    categoria?: Categoria;
     casePack?: CasePack;
     prefijoLote?: string;      // prefijo de lote para terminado (generación de lote)
 }

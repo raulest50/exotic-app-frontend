@@ -7,7 +7,6 @@ import {
     VStack,
     useToast,
     FormControl,
-    FormErrorMessage,
     FormLabel,
     Input,
     HStack,
@@ -68,24 +67,6 @@ export default function CrearOrdenesTab() {
             toast({
                 title: 'Datos incompletos',
                 description: 'Selecciona un producto y especifica al menos una cantidad a producir para crear la orden.',
-                status: 'warning',
-                duration: 5000,
-                isClosable: true,
-            });
-            return;
-        }
-
-        const unitsPerCase = selectedProducto.producto.casePack?.unitsPerCase;
-        const shouldValidateCasePack =
-            selectedProducto.producto.tipo_producto === 'T' &&
-            typeof unitsPerCase === 'number' &&
-            unitsPerCase > 0;
-        const isMultipleValid = !shouldValidateCasePack || (cantidadProducir % unitsPerCase === 0);
-
-        if (!isMultipleValid) {
-            toast({
-                title: 'Cantidad inválida',
-                description: `La cantidad a producir debe ser múltiplo de ${unitsPerCase}.`,
                 status: 'warning',
                 duration: 5000,
                 isClosable: true,
@@ -161,9 +142,22 @@ export default function CrearOrdenesTab() {
 
     const handlePickerConfirm = async (producto: ProductoWithInsumos, _canProduceFlag: boolean) => {
         setSelectedProducto(producto);
-        // Verificar si hay suficiente stock considerando la cantidad a producir
+        const loteSize = producto.producto.tipo_producto === 'T'
+            ? (producto.producto.categoria?.loteSize ?? 0)
+            : 0;
+        const newCantidad = loteSize > 0 ? loteSize : 1;
+        setCantidadProducir(newCantidad);
+        if (producto.producto.tipo_producto === 'T' && loteSize <= 0) {
+            toast({
+                title: 'Tamaño de lote no configurado',
+                description: 'La categoría de este producto no tiene tamaño de lote. Se usará 1 unidad. Configure el tamaño en "Config. Lotes por Categoría" si aplica.',
+                status: 'info',
+                duration: 5000,
+                isClosable: true,
+            });
+        }
         const canProduceWithQuantity = producto.insumos.every(
-            insumo => insumo.stockActual >= (insumo.cantidadRequerida * cantidadProducir)
+            insumo => insumo.stockActual >= (insumo.cantidadRequerida * newCantidad)
         );
         setCanProduce(canProduceWithQuantity);
         setIsPickerOpen(false);
@@ -248,12 +242,9 @@ export default function CrearOrdenesTab() {
         }
     }, [cantidadProducir, selectedProducto]);
 
-    const unitsPerCase = selectedProducto?.producto.casePack?.unitsPerCase;
-    const shouldValidateCasePack =
+    const isLoteSizeFixed =
         selectedProducto?.producto.tipo_producto === 'T' &&
-        typeof unitsPerCase === 'number' &&
-        unitsPerCase > 0;
-    const isMultipleValid = !shouldValidateCasePack || (cantidadProducir % unitsPerCase === 0);
+        (selectedProducto?.producto.categoria?.loteSize ?? 0) > 0;
 
     return (
         <VStack align="stretch">
@@ -265,7 +256,7 @@ export default function CrearOrdenesTab() {
             />
 
             <HStack spacing={4} mt="4">
-                <FormControl isInvalid={shouldValidateCasePack && !isMultipleValid}>
+                <FormControl>
                     <FormLabel>Asesor</FormLabel>
                     <InputGroup>
                         <Input
@@ -333,21 +324,20 @@ export default function CrearOrdenesTab() {
 
                 <FormControl>
                     <FormLabel>Cantidad a producir</FormLabel>
-                    <NumberInput
-                        min={1}
-                        value={cantidadProducir}
-                        onChange={(valueString) => setCantidadProducir(Number(valueString))}
-                    >
-                        <NumberInputField />
-                        <NumberInputStepper>
-                            <NumberIncrementStepper />
-                            <NumberDecrementStepper />
-                        </NumberInputStepper>
-                    </NumberInput>
-                    {shouldValidateCasePack && !isMultipleValid && (
-                        <FormErrorMessage>
-                            Debe ser múltiplo de {unitsPerCase} unidades por caja.
-                        </FormErrorMessage>
+                    {isLoteSizeFixed ? (
+                        <Input value={cantidadProducir} isReadOnly bg="gray.50" />
+                    ) : (
+                        <NumberInput
+                            min={1}
+                            value={cantidadProducir}
+                            onChange={(valueString) => setCantidadProducir(Number(valueString))}
+                        >
+                            <NumberInputField />
+                            <NumberInputStepper>
+                                <NumberIncrementStepper />
+                                <NumberDecrementStepper />
+                            </NumberInputStepper>
+                        </NumberInput>
                     )}
                 </FormControl>
             </HStack>

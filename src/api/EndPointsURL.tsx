@@ -142,6 +142,9 @@ export default class EndPointsURL{
     public carga_masiva_materiales_validar: string;
     public carga_masiva_materiales_ejecutar: string;
     public carga_masiva_terminados_template: string;
+    public carga_masiva_terminados_template_sin_insumos: string;
+    public carga_masiva_terminados_validar_sin_insumos: string;
+    public carga_masiva_terminados_ejecutar_sin_insumos: string;
 
     // eliminaciones forzadas (operaciones criticas BD)
     public estudiar_eliminacion_orden_compra: string;
@@ -361,6 +364,9 @@ export default class EndPointsURL{
         this.carga_masiva_materiales_validar = `${domain}/api/carga-masiva-materiales/validar`;
         this.carga_masiva_materiales_ejecutar = `${domain}/api/carga-masiva-materiales/ejecutar`;
         this.carga_masiva_terminados_template = `${domain}/api/carga-masiva-terminados/template`;
+        this.carga_masiva_terminados_template_sin_insumos = `${domain}/api/carga-masiva-terminados/template-sin-insumos`;
+        this.carga_masiva_terminados_validar_sin_insumos = `${domain}/api/carga-masiva-terminados/validar-sin-insumos`;
+        this.carga_masiva_terminados_ejecutar_sin_insumos = `${domain}/api/carga-masiva-terminados/ejecutar-sin-insumos`;
 
         // eliminaciones forzadas (operaciones criticas BD)
         this.estudiar_eliminacion_orden_compra = `${domain}/api/eliminaciones-forzadas/estudiar/orden-compra`;
