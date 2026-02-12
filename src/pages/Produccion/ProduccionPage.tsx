@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from 'react';
 import {Container, Tabs, TabList, Tab, TabPanels, TabPanel
 } from "@chakra-ui/react";
 
@@ -12,9 +13,26 @@ import CrearOrdenesTab from "./CrearOrdenesTab/CrearOrdenesTab.tsx";
 import HistorialOrdenesTab from "./HistorialOrdenesTab/HistorialOrdenesTab.tsx";
 import ConfLotesCategoriaTab from "./ConfLotesCategoriaTab/ConfLotesCategoriaTab.tsx";
 import {PlaneacionProduccionTab} from "./PlaneacionProduccionTab/PlaneacionProduccionTab.tsx";
+import { useAuth } from '../../context/AuthContext';
+import { getAccessLevel } from '../../api/UserApi';
 
 
 export default function ProduccionPage(){
+    const { user } = useAuth();
+    const [produccionAccessLevel, setProduccionAccessLevel] = useState<number | null>(null);
+
+    useEffect(() => {
+        const fetchAccessLevel = async () => {
+            try {
+                const level = await getAccessLevel('PRODUCCION');
+                setProduccionAccessLevel(level);
+            } catch (error) {
+                console.error('Error fetching access level:', error);
+                setProduccionAccessLevel(null);
+            }
+        };
+        fetchAccessLevel();
+    }, []);
 
     return(
         <Container minW={['auto', 'container.lg', 'container.xl']} w={'full'} h={'full'}>
@@ -25,7 +43,9 @@ export default function ProduccionPage(){
                 <TabList>
                     <Tab sx={my_style_tab}> Crear ODP Manualmente </Tab>
                     <Tab sx={my_style_tab}> Historial </Tab>
-                    <Tab sx={my_style_tab}> Config. Lotes por Categoría </Tab>
+                    {(user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3)) && (
+                        <Tab sx={my_style_tab}> Config. Lotes por Categoría </Tab>
+                    )}
                     <Tab sx={my_style_tab}> Planeacion Produccion </Tab>
                 </TabList>
 
@@ -39,9 +59,11 @@ export default function ProduccionPage(){
                         <HistorialOrdenesTab/>
                     </TabPanel>
 
-                    <TabPanel>
-                        <ConfLotesCategoriaTab />
-                    </TabPanel>
+                    {(user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3)) && (
+                        <TabPanel>
+                            <ConfLotesCategoriaTab />
+                        </TabPanel>
+                    )}
 
                     <TabPanel>
                         <PlaneacionProduccionTab />

@@ -8,6 +8,7 @@ import {
     useToast,
     FormControl,
     FormLabel,
+    FormErrorMessage,
     Input,
     HStack,
     NumberInput,
@@ -21,20 +22,32 @@ import {
     Box,
     Text,
     Heading,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalCloseButton,
+    ModalFooter,
+    Spinner,
+    Icon,
 } from '@chakra-ui/react';
-import { SearchIcon } from '@chakra-ui/icons';
+import { SearchIcon, LockIcon, UnlockIcon, CheckIcon } from '@chakra-ui/icons';
+import { FaQuestionCircle } from 'react-icons/fa';
 import axios from 'axios';
 import {ProductoWithInsumos, Vendedor} from "../types.tsx";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import TerminadoSemiterminadoPicker from "../components/TerminadoSemiterminadoPicker.tsx";
 import TerSemiTerCard from "./TerSemiTerCard.tsx";
 import VendedorPicker from "../../../components/Pickers/VendedorPicker/VendedorPicker.tsx";
-import { getCurrentUser, User } from "../../../api/UserApi.tsx";
+import { getCurrentUser, User, getAccessLevel } from "../../../api/UserApi.tsx";
+import { useAuth } from '../../../context/AuthContext';
 
 const endPoints = new EndPointsURL();
 
 export default function CrearOrdenesTab() {
     const toast = useToast();
+    const { user } = useAuth();
 
     const [selectedProducto, setSelectedProducto] = useState<ProductoWithInsumos | null>(null);
     const [canProduce, setCanProduce] = useState(false);
@@ -51,12 +64,21 @@ export default function CrearOrdenesTab() {
     const [fechaLanzamiento, setFechaLanzamiento] = useState('');
     const [fechaFinalPlanificada, setFechaFinalPlanificada] = useState('');
     const [loteBatchNumber, setLoteBatchNumber] = useState('');
+    const [originalLote, setOriginalLote] = useState('');
 
     // Estado para la cantidad a producir
     const [cantidadProducir, setCantidadProducir] = useState(1);
 
     // Estado para el usuario actual (aprobador)
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+    // Estados para control de edición de lote (nivel 3)
+    const [produccionAccessLevel, setProduccionAccessLevel] = useState<number | null>(null);
+    const [isLoteEditable, setIsLoteEditable] = useState<boolean>(false);
+    const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
+    const [isCheckingLote, setIsCheckingLote] = useState<boolean>(false);
+    const [loteValidationStatus, setLoteValidationStatus] = useState<'idle' | 'valid' | 'invalid' | 'checking'>('idle');
+    const [loteValidationMessage, setLoteValidationMessage] = useState<string>('');
 
     const handleSeleccionarProducto = () => {
         setIsPickerOpen(true);
@@ -67,6 +89,18 @@ export default function CrearOrdenesTab() {
             toast({
                 title: 'Datos incompletos',
                 description: 'Selecciona un producto y especifica al menos una cantidad a producir para crear la orden.',
+                status: 'warning',
+                duration: 5000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        // Si el lote está en modo editable, verificar que se haya validado
+        if (isLoteEditable && loteValidationStatus !== 'valid') {
+            toast({
+                title: 'Validación requerida',
+                description: 'Debes verificar la disponibilidad del lote antes de crear la orden.',
                 status: 'warning',
                 duration: 5000,
                 isClosable: true,
@@ -122,12 +156,16 @@ export default function CrearOrdenesTab() {
             setFechaLanzamiento('');
             setFechaFinalPlanificada('');
             setLoteBatchNumber('');
+            setOriginalLote('');
             setCantidadProducir(1);
             setNumeroPedidoComercial('');
             setAreaOperativa('');
             setDepartamentoOperativo('');
             setSelectedVendedor(null);
             setVendedorResponsableId(1); // Reset to default value
+            setIsLoteEditable(false);
+            setLoteValidationStatus('idle');
+            setLoteValidationMessage('');
         } catch (error) {
             console.error('Error creating orden de producción:', error);
             toast({
@@ -172,8 +210,13 @@ export default function CrearOrdenesTab() {
                 const lote = response.data?.lote;
                 if (lote) {
                     setLoteBatchNumber(lote);
+                    setOriginalLote(lote); // Guardar el lote generado automáticamente
+                    setIsLoteEditable(false); // Reset lock state
+                    setLoteValidationStatus('idle'); // Reset validation
+                    setLoteValidationMessage(''); // Reset message
                 } else {
                     setLoteBatchNumber('');
+                    setOriginalLote('');
                 }
             } catch (error) {
                 console.error('Error al obtener siguiente lote:', error);
@@ -190,11 +233,107 @@ export default function CrearOrdenesTab() {
             }
         } else {
             setLoteBatchNumber('');
+            setOriginalLote('');
         }
     };
 
     const handlePickerClose = () => {
         setIsPickerOpen(false);
+    };
+
+    const handleToggleLoteEdit = () => {
+        if (!(user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3))) {
+            return;
+        }
+
+        if (!isLoteEditable) {
+            // Desbloquear: guardar el lote actual y permitir edición
+            setOriginalLote(loteBatchNumber);
+            setIsLoteEditable(true);
+        } else {
+            // Bloquear: restaurar el lote original y resetear validación
+            setLoteBatchNumber(originalLote);
+            setIsLoteEditable(false);
+            setLoteValidationStatus('idle');
+            setLoteValidationMessage('');
+        }
+    };
+
+    const handleCheckLoteDisponible = async () => {
+        if (!loteBatchNumber.trim()) {
+            toast({
+                title: 'Lote vacío',
+                description: 'Ingresa un número de lote para verificar.',
+                status: 'warning',
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        // Validación básica de formato
+        if (!loteBatchNumber.includes('-')) {
+            toast({
+                title: 'Formato inválido',
+                description: 'El número de lote debe seguir el formato PREFIJO-NNNNNNN-YY.',
+                status: 'warning',
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        setIsCheckingLote(true);
+        setLoteValidationStatus('checking');
+
+        try {
+            const url = `${endPoints.check_lote_disponible}?batchNumber=${encodeURIComponent(loteBatchNumber.trim())}`;
+            const response = await axios.get(url);
+            const disponible = response.data?.disponible;
+
+            if (disponible) {
+                setLoteValidationStatus('valid');
+                setLoteValidationMessage('');
+                toast({
+                    title: 'Lote disponible',
+                    description: 'El número de lote está disponible para usar.',
+                    status: 'success',
+                    duration: 3000,
+                    isClosable: true,
+                });
+            } else {
+                setLoteValidationStatus('invalid');
+                setLoteValidationMessage('El número de lote ya está en uso');
+                toast({
+                    title: 'Lote no disponible',
+                    description: 'Este número de lote ya está registrado en el sistema.',
+                    status: 'error',
+                    duration: 5000,
+                    isClosable: true,
+                });
+            }
+        } catch (error) {
+            console.error('Error checking lote availability:', error);
+            setLoteValidationStatus('invalid');
+            setLoteValidationMessage('Error al verificar disponibilidad');
+            toast({
+                title: 'Error',
+                description: 'No se pudo verificar la disponibilidad del lote. Intenta nuevamente.',
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setIsCheckingLote(false);
+        }
+    };
+
+    const handleOpenInfoModal = () => {
+        setIsInfoModalOpen(true);
+    };
+
+    const handleCloseInfoModal = () => {
+        setIsInfoModalOpen(false);
     };
 
     // Handlers for VendedorPicker
@@ -231,6 +370,20 @@ export default function CrearOrdenesTab() {
 
         fetchCurrentUser();
     }, [toast]);
+
+    // Efecto para obtener el nivel de acceso de producción
+    useEffect(() => {
+        const fetchAccessLevel = async () => {
+            try {
+                const level = await getAccessLevel('PRODUCCION');
+                setProduccionAccessLevel(level);
+            } catch (error) {
+                console.error('Error fetching access level:', error);
+                setProduccionAccessLevel(null);
+            }
+        };
+        fetchAccessLevel();
+    }, []);
 
     // Efecto para actualizar canProduce cuando cambia la cantidad a producir
     useEffect(() => {
@@ -308,18 +461,67 @@ export default function CrearOrdenesTab() {
 
             {/* Campos para lote y cantidad a producir */}
             <HStack spacing={4} mt="4">
-                <FormControl>
+                <FormControl isInvalid={loteValidationStatus === 'invalid'}>
                     <FormLabel>Lote</FormLabel>
-                    <Input
-                        placeholder={
-                            selectedProducto?.producto.tipo_producto === 'T' && selectedProducto?.producto.prefijoLote
-                                ? 'Se genera al seleccionar el producto'
-                                : 'No aplica (solo terminados con prefijo de lote)'
-                        }
-                        value={loteBatchNumber}
-                        isReadOnly
-                        bg="gray.50"
-                    />
+                    <InputGroup>
+                        <Input
+                            placeholder={
+                                selectedProducto?.producto.tipo_producto === 'T' && selectedProducto?.producto.prefijoLote
+                                    ? 'Se genera al seleccionar el producto'
+                                    : 'No aplica (solo terminados con prefijo de lote)'
+                            }
+                            value={loteBatchNumber}
+                            isReadOnly={!isLoteEditable || !(user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3))}
+                            bg={isLoteEditable && (user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3)) ? "white" : "gray.50"}
+                            onChange={(e) => {
+                                setLoteBatchNumber(e.target.value);
+                                // Resetear validación cuando el usuario escribe
+                                if (loteValidationStatus !== 'idle') {
+                                    setLoteValidationStatus('idle');
+                                    setLoteValidationMessage('');
+                                }
+                            }}
+                        />
+                        <InputRightElement width="auto">
+                            <HStack spacing={1}>
+                                {(user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3)) && (
+                                    <>
+                                        <IconButton
+                                            aria-label={isLoteEditable ? "Bloquear edición de lote" : "Desbloquear edición de lote"}
+                                            icon={isLoteEditable ? <UnlockIcon /> : <LockIcon />}
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={handleToggleLoteEdit}
+                                        />
+                                        {isLoteEditable && (
+                                            <IconButton
+                                                aria-label="Verificar disponibilidad del lote"
+                                                icon={isCheckingLote ? <Spinner size="sm" /> : <CheckIcon />}
+                                                size="sm"
+                                                variant="ghost"
+                                                colorScheme={loteValidationStatus === 'valid' ? 'green' : loteValidationStatus === 'invalid' ? 'red' : 'gray'}
+                                                onClick={handleCheckLoteDisponible}
+                                                isDisabled={!loteBatchNumber.trim() || isCheckingLote}
+                                            />
+                                        )}
+                                        <IconButton
+                                            aria-label="Información sobre edición de lote"
+                                            icon={<Icon as={FaQuestionCircle} boxSize={5} />}
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={handleOpenInfoModal}
+                                        />
+                                    </>
+                                )}
+                            </HStack>
+                        </InputRightElement>
+                    </InputGroup>
+                    {loteValidationStatus === 'invalid' && (
+                        <FormErrorMessage>{loteValidationMessage || 'El número de lote ya está en uso'}</FormErrorMessage>
+                    )}
+                    {loteValidationStatus === 'valid' && (
+                        <Text fontSize="sm" color="green.500">El número de lote está disponible</Text>
+                    )}
                 </FormControl>
 
                 <FormControl>
@@ -391,7 +593,11 @@ export default function CrearOrdenesTab() {
             />
             <Button
                 onClick={handleCrearOrden}
-                isDisabled={!selectedProducto || cantidadProducir < 1}
+                isDisabled={
+                    !selectedProducto ||
+                    cantidadProducir < 1 ||
+                    (isLoteEditable && loteValidationStatus !== 'valid')
+                }
                 mt="4"
                 colorScheme="blue"
             >
@@ -407,6 +613,45 @@ export default function CrearOrdenesTab() {
                 onClose={handleVendedorPickerClose}
                 onSelectVendedor={handleSelectVendedor}
             />
+            <Modal isOpen={isInfoModalOpen} onClose={handleCloseInfoModal} size="lg">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Edición Manual de Números de Lote</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <VStack align="stretch" spacing={4}>
+                            <Text>
+                                <strong>Acceso Restringido:</strong> Esta funcionalidad está disponible exclusivamente para usuarios con nivel de acceso 3 o superior al módulo de Producción.
+                            </Text>
+                            <Text>
+                                <strong>Patrón de Generación Automática:</strong> El sistema genera automáticamente los números de lote siguiendo el formato <strong>PREFIJO-NNNNNNN-YY</strong>, donde:
+                            </Text>
+                            <Box pl={4}>
+                                <Text>• <strong>PREFIJO:</strong> Identificador único del producto (ej: "STD")</Text>
+                                <Text>• <strong>NNNNNNN:</strong> Número secuencial de 7 dígitos que se incrementa automáticamente</Text>
+                                <Text>• <strong>YY:</strong> Año de 2 dígitos (ej: "26" para 2026)</Text>
+                            </Box>
+                            <Text>
+                                <strong>Ejemplo:</strong> Si el último lote generado fue <strong>STD-0000009-26</strong>, el siguiente será <strong>STD-0000010-26</strong>.
+                            </Text>
+                            <Text>
+                                <strong>Uso de la Edición Manual:</strong> Esta funcionalidad permite a usuarios autorizados adelantar el número secuencial del lote. Por ejemplo, si los lotes van consecutivamente en <strong>STD-0000009-26</strong>, puedes cambiarlo manualmente a <strong>STD-0000015-26</strong> para que los siguientes lotes continúen desde el 16, 17, etc.
+                            </Text>
+                            <Text>
+                                <strong>Validación de Disponibilidad:</strong> Cuando desbloquees el campo y modifiques el número de lote, utiliza el botón de verificación (✓) para comprobar que el número ingresado no esté ya en uso. El sistema validará que el lote sea único antes de permitir crear la orden.
+                            </Text>
+                            <Text>
+                                <strong>Importante:</strong> Utiliza esta función con precaución, ya que modifica la secuencia normal de numeración. Asegúrate de que el número ingresado sea mayor al último lote registrado para evitar duplicados y siempre verifica la disponibilidad antes de crear la orden.
+                            </Text>
+                        </VStack>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button colorScheme="blue" onClick={handleCloseInfoModal}>
+                            Entendido
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
         </VStack>
     );
 }
