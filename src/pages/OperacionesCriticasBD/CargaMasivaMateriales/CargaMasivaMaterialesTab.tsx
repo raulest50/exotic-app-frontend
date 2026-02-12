@@ -27,11 +27,9 @@ export default function CargaMasivaMaterialesTab() {
     });
 
     const [excelFile, setExcelFile] = useState<File | null>(null);
-    const [excelData, setExcelData] = useState<unknown[] | null>(null);
 
     const handleReset = () => {
         setExcelFile(null);
-        setExcelData(null);
         setActiveStep(0);
     };
 
@@ -44,7 +42,6 @@ export default function CargaMasivaMaterialesTab() {
                 <CargaMasivaMaterialesStep1SubirValidar
                     setActiveStep={setActiveStep}
                     setExcelFile={setExcelFile}
-                    setExcelData={setExcelData}
                 />
             );
         }

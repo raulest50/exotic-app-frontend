@@ -8,6 +8,7 @@ import CargaMasivaAlmacenTab from "./CargaMasiva/CargaMasivaAlmacenTab.tsx";
 import CargaMasivaMaterialesTab from "./CargaMasivaMateriales/CargaMasivaMaterialesTab";
 import CargaMasivaTerminadosTab from "./CargaMasivaTerminados/CargaMasivaTerminadosTab";
 import EliminacionForzada from "./EliminacionForzada/EliminacionForzada";
+import ExportacionDatosTab from "./ExportacionDatos/ExportacionDatosTab.tsx";
 
 interface SuperMasterConfig {
     id: number;
@@ -67,6 +68,7 @@ export default function OperacionesCriticasBDPage() {
                         {showCargaMasiva && <Tab sx={my_style_tab}>Carga Masiva Materiales</Tab>}
                         {showCargaMasiva && <Tab sx={my_style_tab}>Carga Masiva Terminados</Tab>}
                         {showEliminacionForzada && <Tab sx={my_style_tab}>Eliminaciones Forzadas</Tab>}
+                        <Tab sx={my_style_tab} > Exportacion Datos </Tab>
                     </TabList>
                     <TabPanels>
                         {showCargaMasiva && (
@@ -89,6 +91,9 @@ export default function OperacionesCriticasBDPage() {
                                 <EliminacionForzada />
                             </TabPanel>
                         )}
+                        <TabPanel>
+                            <ExportacionDatosTab />
+                        </TabPanel>
                     </TabPanels>
                 </Tabs>
             </Flex>

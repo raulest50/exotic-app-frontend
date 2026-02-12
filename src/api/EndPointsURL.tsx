@@ -153,6 +153,9 @@ export default class EndPointsURL{
     public estudiar_eliminacion_orden_produccion: string;
     public ejecutar_eliminacion_orden_produccion: string;
 
+    // exportacion de datos (operaciones criticas BD)
+    public exportacion_materiales_excel: string;
+
     // organigrama endpoints
     public get_all_cargos: string;
     public save_cargo_with_manual: string;
@@ -375,6 +378,9 @@ export default class EndPointsURL{
         this.ejecutar_eliminacion_orden_compra = `${domain}/api/eliminaciones-forzadas/orden-compra`;
         this.estudiar_eliminacion_orden_produccion = `${domain}/api/eliminaciones-forzadas/estudiar/orden-produccion`;
         this.ejecutar_eliminacion_orden_produccion = `${domain}/api/eliminaciones-forzadas/orden-produccion`;
+
+        // exportacion de datos (operaciones criticas BD)
+        this.exportacion_materiales_excel = `${domain}/api/exportacion-datos/materiales/excel`;
 
         // contabilidad endpoints
         this.get_cuentas = `${domain}/${contabilidad_res}/cuentas`;
