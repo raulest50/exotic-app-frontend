@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { FaCube } from 'react-icons/fa';
 import { FaCubes } from 'react-icons/fa6';
 import ConfirmarExportacionMaterialesModal from './ConfirmarExportacionMaterialesModal';
+import ConfirmarExportacionTerminadosModal from './ConfirmarExportacionTerminadosModal';
 import EntidadExportSelectCard from './EntidadExportSelectCard';
 
 interface ExportacionDatosTabProps {}
 
 function ExportacionDatosTab(_props:ExportacionDatosTabProps) {
     const [isModalMaterialesOpen, setIsModalMaterialesOpen] = useState(false);
+    const [isModalTerminadosOpen, setIsModalTerminadosOpen] = useState(false);
 
     return (
         <Container maxW="container.xl" py={6}>
@@ -24,6 +26,7 @@ function ExportacionDatosTab(_props:ExportacionDatosTabProps) {
                     titulo="Terminado"
                     descripcion="Exportar datos de productos terminados"
                     icono={FaCubes}
+                    onClick={() => setIsModalTerminadosOpen(true)}
                 />
             </SimpleGrid>
 
@@ -31,6 +34,11 @@ function ExportacionDatosTab(_props:ExportacionDatosTabProps) {
                 isOpen={isModalMaterialesOpen}
                 onClose={() => setIsModalMaterialesOpen(false)}
                 onConfirm={() => setIsModalMaterialesOpen(false)}
+            />
+            <ConfirmarExportacionTerminadosModal
+                isOpen={isModalTerminadosOpen}
+                onClose={() => setIsModalTerminadosOpen(false)}
+                onConfirm={() => setIsModalTerminadosOpen(false)}
             />
         </Container>
     );

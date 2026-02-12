@@ -155,6 +155,7 @@ export default class EndPointsURL{
 
     // exportacion de datos (operaciones criticas BD)
     public exportacion_materiales_excel: string;
+    public exportacion_terminados_excel: string;
 
     // organigrama endpoints
     public get_all_cargos: string;
@@ -381,6 +382,7 @@ export default class EndPointsURL{
 
         // exportacion de datos (operaciones criticas BD)
         this.exportacion_materiales_excel = `${domain}/api/exportacion-datos/materiales/excel`;
+        this.exportacion_terminados_excel = `${domain}/api/exportacion-datos/terminados/excel`;
 
         // contabilidad endpoints
         this.get_cuentas = `${domain}/${contabilidad_res}/cuentas`;
