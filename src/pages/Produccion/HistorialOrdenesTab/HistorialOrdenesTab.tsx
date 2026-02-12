@@ -119,6 +119,7 @@ const normalizeOrdenProduccion = (orden: any): OrdenProduccionDTO => {
         numeroPedidoComercial: toNullableString(orden?.numeroPedidoComercial),
         areaOperativa: toNullableString(orden?.areaOperativa),
         departamentoOperativo: toNullableString(orden?.departamentoOperativo),
+        loteAsignado: toNullableString(orden?.loteAsignado),
         observaciones: toNullableString(orden?.observaciones),
         ordenesSeguimiento,
     };
