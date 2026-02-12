@@ -216,10 +216,9 @@ export default function SinInsumosStep2SubirValidar({
 
             const formData = new FormData();
             formData.append("file", file);
-            const token = localStorage.getItem("authToken");
             const response = await axios.post<ValidationResultDTO>(endpoints.carga_masiva_terminados_validar_sin_insumos, formData, {
                 withCredentials: true,
-                headers: token ? { Authorization: `Bearer ${token}` } : {},
+                headers: { "Content-Type": "multipart/form-data" },
             });
 
             const result = response.data;

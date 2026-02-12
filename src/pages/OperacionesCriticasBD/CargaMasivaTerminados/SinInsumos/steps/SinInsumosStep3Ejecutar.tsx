@@ -69,11 +69,10 @@ export default function SinInsumosStep3Ejecutar({
         try {
             const formData = new FormData();
             formData.append("file", excelFile);
-            const token = localStorage.getItem("authToken");
 
             const response = await axios.post<ValidationResultDTO>(endpoints.carga_masiva_terminados_ejecutar_sin_insumos, formData, {
                 withCredentials: true,
-                headers: token ? { Authorization: `Bearer ${token}` } : {},
+                headers: { "Content-Type": "multipart/form-data" },
             });
 
             const result = response.data;
