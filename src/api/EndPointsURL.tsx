@@ -197,7 +197,8 @@ export default class EndPointsURL{
     public crear_area_produccion: string;
     public area_prod_search_by_name: string;
 
-
+    // planeacion de produccion endpoints
+    public planeacion_asociar_terminados: string;
 
     // master directives endpoints
     public get_master_directives: string;
@@ -237,6 +238,7 @@ export default class EndPointsURL{
         const procesos_produccion_res = 'api/procesos-produccion';
         const user_management_res = 'usuarios';
         const area_produccion_res = 'api/areas-produccion';
+        const planeacion_produccion_res = 'planeacion_produccion';
 
         // productos endpoints
         this.search_mprima = `${domain}/${productos_res}/search_mprima`;
@@ -425,6 +427,9 @@ export default class EndPointsURL{
         // AreaProduccion endpoints
         this.crear_area_produccion = `${domain}/${area_produccion_res}/crear`;
         this.area_prod_search_by_name = `${domain}/${area_produccion_res}/search_by_name`;
+
+        // Planeacion de produccion endpoints
+        this.planeacion_asociar_terminados = `${domain}/${planeacion_produccion_res}/asociar_terminados`;
 
     }
 

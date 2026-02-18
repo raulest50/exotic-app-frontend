@@ -54,3 +54,7 @@ production/
 *.patch
 *storybook.log
 src/stories/*
+
+informe_ventas.xls
+informe_ventas.xlsx
+informe_ventas.csv
