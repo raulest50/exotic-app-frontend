@@ -13,6 +13,7 @@ import InventarioConsolidadoTab from "./InventarioConsolidado/InventarioConsolid
 
 import { my_style_tab } from "../../styles/styles_general.tsx";
 import { KardexTab } from "./Kardex/KardexTab.tsx";
+import HistorialTransaccionesAlmacenTab from "./HistorialTransaccionesAlamacen/HistorialTransaccionesAlmacenTab.tsx";
 
 
 export default function StockPage() {
@@ -25,6 +26,7 @@ export default function StockPage() {
                 <TabList>
                     <Tab sx={my_style_tab}>Consolidado</Tab>
                     <Tab sx={my_style_tab}>Kardex</Tab>
+                    <Tab sx={my_style_tab}>Historial Transacciones de Almacen</Tab>
                 </TabList>
                 <TabPanels>
 
@@ -34,6 +36,10 @@ export default function StockPage() {
 
                     <TabPanel>
                         <KardexTab />
+                    </TabPanel>
+
+                    <TabPanel>
+                        <HistorialTransaccionesAlmacenTab />
                     </TabPanel>
 
                 </TabPanels>

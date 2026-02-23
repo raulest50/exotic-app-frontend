@@ -32,16 +32,18 @@ interface Props {
     onMovimientosChange: (movimientos: Movimiento[]) => void;
     onExcludedChange?: (excluded: boolean) => void;
     isExcluded?: boolean;
+    cantidadYaRecibida?: number;
 }
 
-export function CardIngresoMaterial({ item, onMovimientosChange, onExcludedChange, isExcluded = false }: Props) {
+export function CardIngresoMaterial({ item, onMovimientosChange, onExcludedChange, isExcluded = false, cantidadYaRecibida = 0 }: Props) {
     const toast = useToast();
+    const maxPermitido = Math.max(item.cantidad - cantidadYaRecibida, 0);
     const [lotes, setLotes] = useState<LoteConCantidad[]>([
         {
             batchNumber: '',
             productionDate: '',
             expirationDate: '',
-            cantidad: item.cantidad
+            cantidad: Math.min(item.cantidad, maxPermitido)
         }
     ]);
     const [isExpanded, setIsExpanded] = useState(false);
@@ -101,12 +103,11 @@ export function CardIngresoMaterial({ item, onMovimientosChange, onExcludedChang
                 cantidad: 0
             }]);
         } else {
-            // Si se desmarca, restaurar lote inicial
             setLotes([{
                 batchNumber: '',
                 productionDate: '',
                 expirationDate: '',
-                cantidad: item.cantidad
+                cantidad: Math.min(item.cantidad, maxPermitido)
             }]);
         }
     };
@@ -158,7 +159,7 @@ export function CardIngresoMaterial({ item, onMovimientosChange, onExcludedChang
     };
 
     const totalCantidad = lotes.reduce((sum, lote) => sum + lote.cantidad, 0);
-    const isValid = excluded || (totalCantidad <= item.cantidad && totalCantidad > 0);
+    const isValid = excluded || (totalCantidad <= maxPermitido + 0.01 && totalCantidad > 0);
 
     return (
         <>
@@ -176,7 +177,14 @@ export function CardIngresoMaterial({ item, onMovimientosChange, onExcludedChang
                     </Flex>
                 </Td>
                 <Td>{item.material.productoId}</Td>
-                <Td>{item.cantidad} {item.material.tipoUnidades}</Td>
+                <Td>
+                    {item.cantidad} {item.material.tipoUnidades}
+                    {cantidadYaRecibida > 0 && (
+                        <Text fontSize="xs" color="blue.600">
+                            (Recibido: {cantidadYaRecibida.toFixed(2)}, Restante: {maxPermitido.toFixed(2)})
+                        </Text>
+                    )}
+                </Td>
                 <Td>
                     {excluded ? (
                         <Badge colorScheme="gray" fontSize="md">
@@ -276,7 +284,7 @@ export function CardIngresoMaterial({ item, onMovimientosChange, onExcludedChang
                                                     value={lote.cantidad}
                                                     onChange={(e) => handleLoteChange(index, 'cantidad', parseInt(e.target.value) || 0)}
                                                     min={0}
-                                                    max={item.cantidad}
+                                                    max={maxPermitido}
                                                     w="100px"
                                                 />
                                             </Td>
@@ -297,7 +305,8 @@ export function CardIngresoMaterial({ item, onMovimientosChange, onExcludedChang
                             
                             {!isValid && (
                                 <Text color="red.500" mt={2} fontSize="sm">
-                                    La suma de las cantidades debe ser mayor a 0 y no debe exceder {item.cantidad}.
+                                    La suma de las cantidades debe ser mayor a 0 y no debe exceder {maxPermitido.toFixed(2)}
+                                    {cantidadYaRecibida > 0 && ` (ordenado: ${item.cantidad}, ya recibido: ${cantidadYaRecibida.toFixed(2)})`}.
                                 </Text>
                             )}
                         </Box>

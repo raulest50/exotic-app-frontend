@@ -1,5 +1,9 @@
 // RecibirMercancia/IngresoOCMStep1VerifyQuantities.tsx
 import {
+    Alert,
+    AlertDescription,
+    AlertIcon,
+    AlertTitle,
     Box,
     Button,
     Flex,
@@ -17,7 +21,7 @@ import {
     HStack,
 } from "@chakra-ui/react";
 import { useEffect, useState, useMemo } from "react";
-import { OrdenCompra, ItemOrdenCompra, IngresoOCM_DTA, TipoEntidadCausante, Movimiento, TransaccionAlmacen } from "../types";
+import { OrdenCompra, ItemOrdenCompra, IngresoOCM_DTA, TipoEntidadCausante, Movimiento, TransaccionAlmacen, ConsolidadoOCMResponse } from "../types";
 import { CardIngresoMaterial } from "./componentes/CardIngresoMaterial";
 import { ListaTransaccionesAlmacen } from "./StepTwoComponent_IngOCM/ListaTransaccionesAlmacen";
 import { ListaMaterialesIngresoDesgloce } from "./StepTwoComponent_IngOCM/ListaMaterialesIngresoDesgloce";
@@ -55,10 +59,17 @@ export default function IngresoOCMStep1VerifyQuantities({
     const [transacciones, setTransacciones] = useState<TransaccionAlmacen[]>([]);
     const [loadingTransacciones, setLoadingTransacciones] = useState(false);
 
-    // Consultar transacciones cuando cambia la orden
+    // Cantidades ya recibidas por productoId (de recepciones previas)
+    const [recibidoPorProducto, setRecibidoPorProducto] = useState<Map<string, number>>(new Map());
+
+    const MAX_RECEPCIONES = 2;
+    const limiteRecepcionesAlcanzado = transacciones.length >= MAX_RECEPCIONES;
+
+    // Consultar transacciones y consolidado cuando cambia la orden
     useEffect(() => {
         if (!orden?.ordenCompraId) {
             setTransacciones([]);
+            setRecibidoPorProducto(new Map());
             return;
         }
 
@@ -79,7 +90,6 @@ export default function IngresoOCMStep1VerifyQuantities({
                 setTransacciones(response.data || []);
             } catch (error: any) {
                 console.error('Error fetching transacciones:', error);
-                // Si el endpoint no está disponible (405), simplemente no mostrar transacciones
                 if (error.response?.status !== 405) {
                     toast({
                         title: 'Error al cargar transacciones',
@@ -95,7 +105,26 @@ export default function IngresoOCMStep1VerifyQuantities({
             }
         };
 
+        const fetchConsolidado = async () => {
+            try {
+                const url = endpoints.consolidado_materiales_ocm.replace(
+                    '{ordenCompraId}', orden.ordenCompraId!.toString()
+                );
+                const response = await axios.get<ConsolidadoOCMResponse>(url, {
+                    withCredentials: true,
+                });
+                const map = new Map<string, number>();
+                (response.data.materiales ?? []).forEach((mat) => {
+                    map.set(mat.productoId, mat.cantidadTotal);
+                });
+                setRecibidoPorProducto(map);
+            } catch {
+                setRecibidoPorProducto(new Map());
+            }
+        };
+
         fetchTransacciones();
+        fetchConsolidado();
     }, [orden?.ordenCompraId, endpoints, toast]);
 
     // Initialize token whenever `orden` changes
@@ -143,34 +172,32 @@ export default function IngresoOCMStep1VerifyQuantities({
 
     // Check that all movimientos are valid (permitir recepciones parciales)
     const movimientosValidos = () => {
-        if (!orden) return false;
+        if (!orden || limiteRecepcionesAlcanzado) return false;
 
-        // Verificar que al menos un material tenga movimientos válidos
         let tieneAlMenosUnoValido = false;
 
         for (let index = 0; index < orden.itemsOrdenCompra.length; index++) {
             const estaExcluido = materialesExcluidos[index] || false;
             
-            // Si está excluido, continuar con el siguiente
             if (estaExcluido) continue;
 
             const movimientos = movimientosPorItem[index] || [];
             
-            // Si no tiene movimientos y no está excluido, es inválido
             if (movimientos.length === 0) {
                 return false;
             }
 
-            // Verificar que la suma de cantidades sea correcta
+            const item = orden.itemsOrdenCompra[index];
+            const yaRecibido = recibidoPorProducto.get(item.material.productoId) ?? 0;
+            const maxPermitido = item.cantidad - yaRecibido;
             const totalCantidad = movimientos.reduce((sum, mov) => sum + mov.cantidad, 0);
-            if (totalCantidad <= 0 || totalCantidad > orden.itemsOrdenCompra[index].cantidad) {
+            if (totalCantidad <= 0 || totalCantidad > maxPermitido + 0.01) {
                 return false;
             }
 
             tieneAlMenosUnoValido = true;
         }
 
-        // Debe haber al menos un material válido recibido
         return tieneAlMenosUnoValido;
     };
 
@@ -251,10 +278,37 @@ export default function IngresoOCMStep1VerifyQuantities({
                     </Text>
                 </Flex>
 
-                <Text fontFamily="Comfortaa Variable" textAlign="center">
-                    Para cada material, ingrese la información de los lotes recibidos o márquelo como excluido si no será recibido en esta transacción. 
-                    Puede agregar hasta 3 lotes por material. La suma de las cantidades no debe exceder la cantidad ordenada.
-                </Text>
+                {limiteRecepcionesAlcanzado && (
+                    <Alert
+                        status="error"
+                        variant="left-accent"
+                        flexDirection="column"
+                        alignItems="center"
+                        justifyContent="center"
+                        textAlign="center"
+                        borderRadius="md"
+                        boxShadow="lg"
+                        p={6}
+                        w="full"
+                    >
+                        <AlertIcon boxSize="40px" mr={0} mb={2} />
+                        <AlertTitle mt={2} mb={2} fontSize="lg" fontWeight="bold">
+                            Limite de recepciones alcanzado
+                        </AlertTitle>
+                        <AlertDescription fontSize="md">
+                            Esta orden de compra ya tiene {transacciones.length} recepciones registradas.
+                            No se permiten mas de {MAX_RECEPCIONES} recepciones parciales por orden de compra.
+                            Puede cerrar la orden si ya se recibieron todos los materiales necesarios.
+                        </AlertDescription>
+                    </Alert>
+                )}
+
+                {!limiteRecepcionesAlcanzado && (
+                    <Text fontFamily="Comfortaa Variable" textAlign="center">
+                        Para cada material, ingrese la información de los lotes recibidos o márquelo como excluido si no será recibido en esta transacción. 
+                        Puede agregar hasta 3 lotes por material. La suma de las cantidades no debe exceder la cantidad restante por recibir.
+                    </Text>
+                )}
 
                 {/* Resumen de recepción */}
                 {(() => {
@@ -297,6 +351,7 @@ export default function IngresoOCMStep1VerifyQuantities({
                                     onMovimientosChange={(movimientos) => handleMovimientosChange(idx, movimientos)}
                                     onExcludedChange={(excluded) => handleExcludedChange(idx, excluded)}
                                     isExcluded={materialesExcluidos[idx] || false}
+                                    cantidadYaRecibida={recibidoPorProducto.get(item.material.productoId) ?? 0}
                                 />
                             ))}
                         </Tbody>
@@ -327,15 +382,16 @@ export default function IngresoOCMStep1VerifyQuantities({
                 {/* Continuar y Cerrar Orden */}
                 <Flex w="40%">
                     <HStack spacing={4} w="full">
-                        <Button
-                            colorScheme="teal"
-                            flex="1"
-                            isDisabled={!movimientosValidos()}
-                            onClick={onClickContinuar}
-                        >
-                            Continuar
-                        </Button>
-                        {/* Botón Cerrar Orden - solo se muestra si hay al menos una entrega parcial */}
+                        {!limiteRecepcionesAlcanzado && (
+                            <Button
+                                colorScheme="teal"
+                                flex="1"
+                                isDisabled={!movimientosValidos()}
+                                onClick={onClickContinuar}
+                            >
+                                Continuar
+                            </Button>
+                        )}
                         {transacciones.length > 0 && (
                             <Button
                                 colorScheme="red"
