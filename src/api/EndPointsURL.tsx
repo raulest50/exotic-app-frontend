@@ -95,7 +95,6 @@ export default class EndPointsURL{
     public save_ajuste_inventario: string;
     public kardex_movimientos: string;
     public kardex_exportar_excel: string;
-    public historial_transacciones_almacen: string;
 
     public save_doc_ingreso_oc: string;
     public backflush_no_planificado: string;
@@ -326,7 +325,6 @@ export default class EndPointsURL{
         this.save_ajuste_inventario = `${domain}/${movimientos_res}/ajustes`;
         this.kardex_movimientos = `${domain}/inventario/kardex/movimientos`;
         this.kardex_exportar_excel = `${domain}/inventario/kardex/exportar-excel`;
-        this.historial_transacciones_almacen = `${domain}/${movimientos_res}/historial_transacciones_almacen`;
 
         this.save_doc_ingreso_oc = `${domain}/${movimientos_res}/save_doc_ingreso_oc`;
         this.backflush_no_planificado = `${domain}/${movimientos_res}/backflush_no_planificado`;
