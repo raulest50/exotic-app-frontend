@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
     Box,
     Button,
@@ -14,6 +15,13 @@ import AveriaProduccionStep0SelectArea from './steps/AveriaProduccionStep0Select
 import AveriaProduccionStep1SelectOrder from './steps/AveriaProduccionStep1SelectOrder';
 import AveriaProduccionStep2ListAverias from './steps/AveriaProduccionStep2ListAverias';
 import AveriaProduccionStep3ReviewSubmit from './steps/AveriaProduccionStep3ReviewSubmit';
+
+export interface AreaProduccion {
+    areaId: number;
+    nombre: string;
+    descripcion: string;
+    responsableArea?: any;
+}
 
 interface WizardAveriaProduccionProps {
     onBack: () => void;
@@ -32,13 +40,22 @@ export default function WizardAveriaProduccion({ onBack }: WizardAveriaProduccio
         count: steps.length,
     });
 
+    const [selectedArea, setSelectedArea] = useState<AreaProduccion | null>(null);
+
     const handleReset = () => {
+        setSelectedArea(null);
         setActiveStep(0);
     };
 
     function ConditionalRenderStep() {
         if (activeStep === 0) {
-            return <AveriaProduccionStep0SelectArea setActiveStep={setActiveStep} />;
+            return (
+                <AveriaProduccionStep0SelectArea
+                    setActiveStep={setActiveStep}
+                    selectedArea={selectedArea}
+                    onSelectArea={setSelectedArea}
+                />
+            );
         }
         if (activeStep === 1) {
             return <AveriaProduccionStep1SelectOrder setActiveStep={setActiveStep} />;
