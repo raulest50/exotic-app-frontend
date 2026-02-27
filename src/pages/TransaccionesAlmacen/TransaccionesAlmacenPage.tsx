@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
 import { useAuth } from "../../context/AuthContext";
+import GestionAveriasTab from "./GestionAverias/GestionAveriasTab.tsx";
 
 interface SuperMasterConfig {
     id: number;
@@ -49,13 +50,14 @@ export default function TransaccionesAlmacenPage() {
 
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
-            <MyHeader title="Ingreso a Almacen" />
+            <MyHeader title="Transacciones De Almacen" />
             <Tabs>
                 <TabList>
                     <Tab> Ingreso OCM </Tab>
                     <Tab> Hacer Dispensacion </Tab>
                     <Tab> Historial Dispensaciones </Tab>
                     <Tab> Ingreso Producto Terminado </Tab>
+                    <Tab> Gestion Averias </Tab>
                     {habilitarAjustesInventario && <Tab> Ajustes de Inventario </Tab>}
                 </TabList>
                 <TabPanels>
@@ -68,9 +70,15 @@ export default function TransaccionesAlmacenPage() {
                     <TabPanel>
                         <HistorialDispensaciones />
                     </TabPanel>
+
                     <TabPanel>
                         <Text> Pendiente implementacion </Text>
                     </TabPanel>
+
+                    <TabPanel>
+                        <GestionAveriasTab />
+                    </TabPanel>
+
                     {habilitarAjustesInventario && (
                         <TabPanel>
                             <AjustesInventarioTab />

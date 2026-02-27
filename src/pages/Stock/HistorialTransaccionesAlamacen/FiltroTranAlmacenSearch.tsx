@@ -12,16 +12,34 @@ import TerminadoPicker, {TerminadoPickerResult} from "../../../components/Picker
 import DateRangePicker from "../../../components/DateRangePicker.tsx";
 import MyDatePicker from "../../../components/MyDatePicker.tsx";
 
-function FiltroTranAlmacenSearch(props) {
+export interface FiltroHistorialTransaccionesDTO {
+    tipoEntidadCausante: string;
+    tipoFiltroFecha: number;
+    fechaInicio?: string | null;
+    fechaFin?: string | null;
+    fechaEspecifica?: string | null;
+    proveedorId?: string | null;
+    tipoFiltroId?: number;
+    transaccionId?: number | null;
+    ordenProduccionId?: number | null;
+    productoTerminadoId?: string | null;
+    page: number;
+    size: number;
+}
 
-    // La idea es que cada Mode para el conditional render corresponda a una entidad caudante
-    // de @TransaccionAlmacen ( Ver model en el backend )
+interface FiltroTranAlmacenSearchProps {
+    onBuscar: (filtro: FiltroHistorialTransaccionesDTO) => void;
+    loading: boolean;
+}
+
+function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchProps) {
+
     enum MODE {
-        OCM = 'OCM', // orden de compra de materiales
-        OP = 'OP', // orden de produccion, se usa para backflush, ingreso de producto terminado a almacen
-        OAA = 'OAA', // ajustes de almacen
-        OD = 'OD', // dispensacion de materiales
-        CM = 'CM', // carga masiva de inventario
+        OCM = 'OCM',
+        OP = 'OP',
+        OAA = 'OAA',
+        OD = 'OD',
+        CM = 'CM',
     }
 
     const [viewMode, setViewMode] = useState(MODE.OCM);
@@ -31,8 +49,8 @@ function FiltroTranAlmacenSearch(props) {
     const {isOpen: isProveedorPickerOpen, onOpen: onOpenProveedorPicker, onClose: onCloseProveedorPicker} = useDisclosure();
 
     // --- Date state (shared across modes) ---
-    type DateMode = 'range' | 'single';
-    const [dateMode, setDateMode] = useState<DateMode>('range');
+    type DateMode = 'none' | 'range' | 'single';
+    const [dateMode, setDateMode] = useState<DateMode>('none');
     const today = format(new Date(), 'yyyy-MM-dd');
     const [fechaInicio, setFechaInicio] = useState(today);
     const [fechaFin, setFechaFin] = useState(today);
@@ -45,15 +63,55 @@ function FiltroTranAlmacenSearch(props) {
     const [selectedTerminado, setSelectedTerminado] = useState<TerminadoPickerResult | null>(null);
     const {isOpen: isTerminadoPickerOpen, onOpen: onOpenTerminadoPicker, onClose: onCloseTerminadoPicker} = useDisclosure();
 
+    function buildFiltroDTO(): FiltroHistorialTransaccionesDTO {
+        const filtro: FiltroHistorialTransaccionesDTO = {
+            tipoEntidadCausante: viewMode,
+            tipoFiltroFecha: dateMode === 'none' ? 0 : dateMode === 'range' ? 1 : 2,
+            page: 0,
+            size: 10,
+        };
+
+        if (dateMode === 'range') {
+            filtro.fechaInicio = fechaInicio;
+            filtro.fechaFin = fechaFin;
+        } else if (dateMode === 'single') {
+            filtro.fechaEspecifica = fechaEspecifica;
+        }
+
+        if (viewMode === MODE.OCM && proveedor) {
+            filtro.proveedorId = proveedor.id;
+        }
+
+        if (viewMode === MODE.OD) {
+            filtro.tipoFiltroId = odTipoFiltroId;
+            if (odTipoFiltroId === 1 && odTransaccionId) {
+                filtro.transaccionId = parseInt(odTransaccionId);
+            }
+            if (odTipoFiltroId === 2 && odOrdenProduccionId) {
+                filtro.ordenProduccionId = parseInt(odOrdenProduccionId);
+            }
+            if (selectedTerminado) {
+                filtro.productoTerminadoId = selectedTerminado.productoId;
+            }
+        }
+
+        return filtro;
+    }
+
+    function handleBuscar() {
+        onBuscar(buildFiltroDTO());
+    }
+
     function DateModeSelector() {
         return (
-            <>
+            <Flex gap={4} alignItems="flex-start">
                 <FormControl maxW="220px">
                     <FormLabel>Modo de Fecha</FormLabel>
                     <Select
                         value={dateMode}
                         onChange={(e) => setDateMode(e.target.value as DateMode)}
                     >
+                        <option value="none">Ninguno</option>
                         <option value="range">Rango de Fechas</option>
                         <option value="single">Fecha Específica</option>
                     </Select>
@@ -86,12 +144,12 @@ function FiltroTranAlmacenSearch(props) {
                         />
                     </Box>
                 </Box>
-            </>
+            </Flex>
         );
     }
 
     function ConditionalRender(){
-        if(viewMode === MODE.OCM){ // ingreso materiales OCM
+        if(viewMode === MODE.OCM){
             return (
                 <>
                     <ProveedorFilterOCM
@@ -111,10 +169,9 @@ function FiltroTranAlmacenSearch(props) {
             )
         }
 
-        if(viewMode === MODE.OD){ // Dispensacion
+        if(viewMode === MODE.OD){
             return (
                 <>
-                    {/* Filtro por ID */}
                     <FormControl maxW="220px">
                         <FormLabel>Filtrar por ID</FormLabel>
                         <Select
@@ -154,7 +211,6 @@ function FiltroTranAlmacenSearch(props) {
 
                     <DateModeSelector />
 
-                    {/* Filtro por Producto Terminado */}
                     <Card variant="outline" borderColor="purple.200" minW="280px">
                         <CardBody>
                             <HStack justifyContent="space-between" alignItems="flex-start">
@@ -205,20 +261,23 @@ function FiltroTranAlmacenSearch(props) {
             )
         }
 
-        if(viewMode === MODE.OAA){ // Ajustes de Almacen
+        if(viewMode === MODE.OAA){
             return (
-                <>
-
-                </>
+                <DateModeSelector />
             )
         }
 
+        if(viewMode === MODE.CM){
+            return (
+                <DateModeSelector />
+            )
+        }
 
     }
 
     return (
         <Box w="full" p={6} borderWidth="1px" borderRadius="lg" boxShadow="md">
-            <Flex gap={4} wrap="wrap" alignItems="flex-end">
+            <Flex gap={4} wrap="wrap" alignItems="flex-start">
                 <FormControl maxW="300px">
                     <FormLabel>Tipo de Transacción</FormLabel>
                     <Select
@@ -234,6 +293,16 @@ function FiltroTranAlmacenSearch(props) {
                 </FormControl>
 
                 <ConditionalRender />
+
+                <Button
+                    colorScheme="blue"
+                    onClick={handleBuscar}
+                    isLoading={loading}
+                    loadingText="Buscando..."
+                >
+                    Buscar
+                </Button>
+
             </Flex>
         </Box>
     );

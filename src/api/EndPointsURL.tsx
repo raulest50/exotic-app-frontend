@@ -98,6 +98,7 @@ export default class EndPointsURL{
 
     public save_doc_ingreso_oc: string;
     public backflush_no_planificado: string;
+    public historial_transacciones_filter: string;
 
     // ingresos almacen resource
     public consulta_ocm_pendientes: string;
@@ -328,6 +329,7 @@ export default class EndPointsURL{
 
         this.save_doc_ingreso_oc = `${domain}/${movimientos_res}/save_doc_ingreso_oc`;
         this.backflush_no_planificado = `${domain}/${movimientos_res}/backflush_no_planificado`;
+        this.historial_transacciones_filter = `${domain}/${movimientos_res}/historial_transacciones_filter`;
 
 
         // ingresos almacen endpoints
