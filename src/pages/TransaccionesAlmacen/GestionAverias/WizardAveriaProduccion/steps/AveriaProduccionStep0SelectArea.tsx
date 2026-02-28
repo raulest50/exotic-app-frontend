@@ -19,6 +19,7 @@ import {
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL.tsx';
+import BetterPagination from '../../../../../components/BetterPagination/BetterPagination';
 import { AreaProduccion } from '../WizardAveriaProduccion';
 
 const endPoints = new EndPointsURL();
@@ -33,8 +34,6 @@ interface AveriaProduccionStep0SelectAreaProps {
     onSelectArea: (area: AreaProduccion | null) => void;
 }
 
-const RESULTS_PER_PAGE = 10;
-
 export default function AveriaProduccionStep0SelectArea({
     setActiveStep,
     selectedArea,
@@ -44,7 +43,8 @@ export default function AveriaProduccionStep0SelectArea({
     const [areas, setAreas] = useState<AreaProduccion[]>([]);
     const [selectedAreaId, setSelectedAreaId] = useState<number | null>(selectedArea?.areaId ?? null);
     const [isLoading, setIsLoading] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
     const toast = useToast();
 
     const handleSearch = async () => {
@@ -57,7 +57,7 @@ export default function AveriaProduccionStep0SelectArea({
             setAreas(response.data);
             setSelectedAreaId(null);
             onSelectArea(null);
-            setCurrentPage(1);
+            setCurrentPage(0);
         } catch (error) {
             console.error('Error searching Areas:', error);
             toast({
@@ -89,15 +89,9 @@ export default function AveriaProduccionStep0SelectArea({
         }
     };
 
-    const totalPages = Math.ceil(areas.length / RESULTS_PER_PAGE);
-    const startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
-    const currentAreas = areas.slice(startIndex, startIndex + RESULTS_PER_PAGE);
-
-    const goToPage = (page: number) => {
-        if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page);
-        }
-    };
+    const totalPages = Math.ceil(areas.length / pageSize);
+    const startIndex = currentPage * pageSize;
+    const currentAreas = areas.slice(startIndex, startIndex + pageSize);
 
     return (
         <Box p={4}>
@@ -156,29 +150,14 @@ export default function AveriaProduccionStep0SelectArea({
                                 </Tbody>
                             </Table>
 
-                            {totalPages > 1 && (
-                                <Flex justifyContent="center" mt={4}>
-                                    <Button
-                                        size="sm"
-                                        onClick={() => goToPage(currentPage - 1)}
-                                        isDisabled={currentPage === 1}
-                                        mr={2}
-                                    >
-                                        Anterior
-                                    </Button>
-                                    <Text alignSelf="center" mx={2}>
-                                        Página {currentPage} de {totalPages}
-                                    </Text>
-                                    <Button
-                                        size="sm"
-                                        onClick={() => goToPage(currentPage + 1)}
-                                        isDisabled={currentPage === totalPages}
-                                        ml={2}
-                                    >
-                                        Siguiente
-                                    </Button>
-                                </Flex>
-                            )}
+                            <BetterPagination
+                                page={currentPage}
+                                size={pageSize}
+                                totalPages={totalPages}
+                                loading={isLoading}
+                                onPageChange={setCurrentPage}
+                                onSizeChange={setPageSize}
+                            />
                         </>
                     ) : (
                         <Text textAlign="center" color="gray.500">

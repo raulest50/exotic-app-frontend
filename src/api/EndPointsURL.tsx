@@ -58,6 +58,7 @@ export default class EndPointsURL{
     public search_ordenes_by_responsable:string;
     public produccion_terminado_data4pdf: string;
     public dispensacion_odp_consulta: string;
+    public search_orden_by_lote: string;
 
     // recursos de produccion
     public save_recurso_produccion:string;
@@ -300,6 +301,7 @@ export default class EndPointsURL{
         this.search_ordenes_by_responsable = `${domain}/${produccion_res}/ordenes_produccion/responsable/{responsableId}`;
         this.produccion_terminado_data4pdf = `${domain}/${produccion_res}/terminado/{id}/data4pdf`;
         this.dispensacion_odp_consulta = `${domain}/${produccion_res}/dispensacion_odp_consulta`;
+        this.search_orden_by_lote = `${domain}/${produccion_res}/search_by_lote`;
 
         // recursos de produccion endpoints
         this.save_recurso_produccion = `${domain}/${recursos_produccion_res}`;

@@ -23,6 +23,20 @@ export interface AreaProduccion {
     responsableArea?: any;
 }
 
+export interface OrdenProduccionDTO {
+    ordenId: number;
+    loteAsignado: string;
+    productoId: string;
+    productoNombre: string;
+    estadoOrden: number;
+    cantidadProducir: number;
+    fechaCreacion: string;
+    observaciones: string;
+    areaOperativa: string;
+    departamentoOperativo: string;
+    numeroPedidoComercial: string;
+}
+
 interface WizardAveriaProduccionProps {
     onBack: () => void;
 }
@@ -41,9 +55,11 @@ export default function WizardAveriaProduccion({ onBack }: WizardAveriaProduccio
     });
 
     const [selectedArea, setSelectedArea] = useState<AreaProduccion | null>(null);
+    const [selectedOrden, setSelectedOrden] = useState<OrdenProduccionDTO | null>(null);
 
     const handleReset = () => {
         setSelectedArea(null);
+        setSelectedOrden(null);
         setActiveStep(0);
     };
 
@@ -58,7 +74,14 @@ export default function WizardAveriaProduccion({ onBack }: WizardAveriaProduccio
             );
         }
         if (activeStep === 1) {
-            return <AveriaProduccionStep1SelectOrder setActiveStep={setActiveStep} />;
+            return (
+                <AveriaProduccionStep1SelectOrder
+                    setActiveStep={setActiveStep}
+                    selectedArea={selectedArea}
+                    selectedOrden={selectedOrden}
+                    onSelectOrden={setSelectedOrden}
+                />
+            );
         }
         if (activeStep === 2) {
             return <AveriaProduccionStep2ListAverias setActiveStep={setActiveStep} />;
