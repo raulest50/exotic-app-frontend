@@ -40,6 +40,8 @@ export function AsistenteDispensacion(){
                 setCasePack={setCasePack}
                 setCantidadProducir={setCantidadProducir}
                 setHistorialDispensaciones={setHistorialDispensaciones}
+                setLotesPorMaterial={setLotesPorMaterial}
+                setLotesPorMaterialEmpaque={setLotesPorMaterialEmpaque}
                 refreshToken={refreshToken}
             />;
         }

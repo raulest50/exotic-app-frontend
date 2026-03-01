@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
-import {CasePackResponseDTO, DispensacionDTO, DispensacionFormularioDTO, DispensacionResumenResponse, InsumoDesglosado, TransaccionAlmacenDetalle} from '../types';
+import {CasePackResponseDTO, DispensacionDTO, DispensacionFormularioDTO, DispensacionResumenResponse, InsumoDesglosado, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
 import FiltroODP_AsistDisp from './FiltroODP_AsistDisp';
 
 interface Props {
@@ -30,6 +30,8 @@ interface Props {
     setCasePack?: (casePack: CasePackResponseDTO | null) => void;
     setCantidadProducir?: (cantidad: number | null) => void;
     setHistorialDispensaciones?: (historial: TransaccionAlmacenDetalle[]) => void;
+    setLotesPorMaterial?: (lotes: Map<string, LoteSeleccionado[]>) => void;
+    setLotesPorMaterialEmpaque?: (lotes: Map<string, LoteSeleccionado[]>) => void;
     refreshToken?: number;
 }
 
@@ -55,7 +57,7 @@ interface PaginatedResponse<T> {
     size: number;
 }
 
-export default function DispensacionStep1SelectOrder({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId, setInsumosAnidados, setProductoId, setInsumosEmpaque, setCasePack, setCantidadProducir, setHistorialDispensaciones, refreshToken}: Props){
+export default function DispensacionStep1SelectOrder({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId, setInsumosAnidados, setProductoId, setInsumosEmpaque, setCasePack, setCantidadProducir, setHistorialDispensaciones, setLotesPorMaterial, setLotesPorMaterialEmpaque, refreshToken}: Props){
     const toast = useToast();
     const [ordenes, setOrdenes] = useState<OrdenDispensacionResumen[]>([]);
     const [page, setPage] = useState(0);
@@ -184,7 +186,15 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
             // También mantener compatibilidad con el sistema anterior si es necesario
             // Por ahora, crear un DispensacionDTO vacío para mantener la estructura
             setDispensacion({ordenProduccionId: ordenId, items: []});
-            
+
+            // Resetear lotes seleccionados al iniciar nueva dispensación
+            if (setLotesPorMaterial) {
+                setLotesPorMaterial(new Map());
+            }
+            if (setLotesPorMaterialEmpaque) {
+                setLotesPorMaterialEmpaque(new Map());
+            }
+
             setActiveStep(1);
         } catch (err) {
             console.error('Error fetching insumos desglosados:', err);

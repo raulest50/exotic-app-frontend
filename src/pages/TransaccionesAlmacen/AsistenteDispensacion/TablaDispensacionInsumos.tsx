@@ -78,11 +78,6 @@ export default function TablaDispensacionInsumos({
                             Semiterminado
                         </Tag>
                     )}
-                    {!esInvent && (
-                        <Tag ml={2} size="sm" colorScheme="gray" variant="outline">
-                            No inventariable
-                        </Tag>
-                    )}
                 </Td>
                 <Td>{insumo.cantidadTotalRequerida.toFixed(2)}</Td>
                 <Td>{insumo.tipoUnidades}</Td>

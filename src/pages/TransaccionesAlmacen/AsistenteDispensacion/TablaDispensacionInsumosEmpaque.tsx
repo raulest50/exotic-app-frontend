@@ -45,11 +45,6 @@ export default function TablaDispensacionInsumosEmpaque({
                     <Td>{insumo.productoId}</Td>
                     <Td fontWeight="medium">
                         {insumo.productoNombre}
-                        {!esInvent && (
-                            <Tag ml={2} size="sm" colorScheme="gray" variant="outline">
-                                No inventariable
-                            </Tag>
-                        )}
                         <Tag ml={2} size="sm" colorScheme="blue" variant="outline">
                             Empaque
                         </Tag>

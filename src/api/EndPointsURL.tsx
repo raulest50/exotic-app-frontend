@@ -59,6 +59,7 @@ export default class EndPointsURL{
     public produccion_terminado_data4pdf: string;
     public dispensacion_odp_consulta: string;
     public search_orden_by_lote: string;
+    public averias_items_dispensados: string;
 
     // recursos de produccion
     public save_recurso_produccion:string;
@@ -241,6 +242,7 @@ export default class EndPointsURL{
         const user_management_res = 'usuarios';
         const area_produccion_res = 'api/areas-produccion';
         const planeacion_produccion_res = 'planeacion_produccion';
+        const averias_res = 'api/averias';
 
         // productos endpoints
         this.search_mprima = `${domain}/${productos_res}/search_mprima`;
@@ -301,7 +303,8 @@ export default class EndPointsURL{
         this.search_ordenes_by_responsable = `${domain}/${produccion_res}/ordenes_produccion/responsable/{responsableId}`;
         this.produccion_terminado_data4pdf = `${domain}/${produccion_res}/terminado/{id}/data4pdf`;
         this.dispensacion_odp_consulta = `${domain}/${produccion_res}/dispensacion_odp_consulta`;
-        this.search_orden_by_lote = `${domain}/${produccion_res}/search_by_lote`;
+        this.search_orden_by_lote = `${domain}/${averias_res}/search_orden_by_lote`;
+        this.averias_items_dispensados = `${domain}/${averias_res}/orden/{ordenProduccionId}/items-dispensados`;
 
         // recursos de produccion endpoints
         this.save_recurso_produccion = `${domain}/${recursos_produccion_res}`;
