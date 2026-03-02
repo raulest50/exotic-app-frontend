@@ -90,6 +90,11 @@ export default function ConsultaAreasOperativasTab() {
         setAreaSeleccionada(null);
     };
 
+    const handleAreaUpdated = (updatedArea: AreaOperativa) => {
+        setAreas(prev => prev.map(a => a.areaId === updatedArea.areaId ? updatedArea : a));
+        setAreaSeleccionada(updatedArea);
+    };
+
     return (
         <VStack w="full" spacing={4} align="stretch">
             <FiltroAreasOperativas
@@ -133,6 +138,7 @@ export default function ConsultaAreasOperativasTab() {
                 isOpen={isDialogOpen}
                 onClose={handleCerrarDialog}
                 area={areaSeleccionada}
+                onAreaUpdated={handleAreaUpdated}
             />
         </VStack>
     );

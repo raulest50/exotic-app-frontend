@@ -19,6 +19,12 @@ export interface SearchAreaOperativaDTO {
     areaId?: number;
 }
 
+export interface UpdateAreaOperativaDTO {
+    nombre: string;
+    descripcion: string;
+    responsableId: number;
+}
+
 export interface PaginatedResponse<T> {
     content: T[];
     totalPages: number;

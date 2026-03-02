@@ -201,6 +201,7 @@ export default class EndPointsURL{
     public crear_area_produccion: string;
     public area_prod_search_by_name: string;
     public search_areas_operativas: string;
+    public update_area_operativa: string;
 
     // planeacion de produccion endpoints
     public planeacion_asociar_terminados: string;
@@ -438,6 +439,7 @@ export default class EndPointsURL{
         this.crear_area_produccion = `${domain}/${area_produccion_res}/crear`;
         this.area_prod_search_by_name = `${domain}/${area_produccion_res}/search_by_name`;
         this.search_areas_operativas = `${domain}/${area_produccion_res}/search`;
+        this.update_area_operativa = `${domain}/${area_produccion_res}/{areaId}`;
 
         // Planeacion de produccion endpoints
         this.planeacion_asociar_terminados = `${domain}/${planeacion_produccion_res}/asociar_terminados`;
