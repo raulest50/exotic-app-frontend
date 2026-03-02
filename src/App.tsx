@@ -15,7 +15,7 @@ import StockPage from "./pages/Stock/StockPage.tsx";
 import ProduccionPage from "./pages/Produccion/ProduccionPage.tsx";
 
 import {createBrowserRouter, createRoutesFromElements, Route, RouterProvider} from "react-router-dom"
-import Responsable_1 from "./pages/Operarios/Responsable_1.tsx";
+import GestionAreasOperativasPage from "./pages/GestionAreasOperativas/GestionAreasOperativasPage.tsx";
 
 import ProveedoresPage from "./pages/Proveedores/ProveedoresPage.tsx";
 import ComprasPage from "./pages/Compras/ComprasPage.tsx";
@@ -65,10 +65,10 @@ const router = createBrowserRouter(
 
                 {/* Worker routes */}
                 <Route
-                    path="asistente_produccion"
+                    path="gestion_areas_operativas"
                     element={
                         <MultiRoleProtectedRoute supportedModules={[Modulo.SEGUIMIENTO_PRODUCCION]}>
-                            <Responsable_1/>
+                            <GestionAreasOperativasPage/>
                         </MultiRoleProtectedRoute>
                     }
                 />

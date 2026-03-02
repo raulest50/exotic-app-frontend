@@ -6,8 +6,8 @@
  * 
  * Descripción:
  * Componente principal que gestiona las pestañas de la sección de Definición de Procesos.
- * Incluye pestañas para definir procesos, consultar procesos, crear y consultar recursos
- * de producción, y crear áreas de producción.
+ * Incluye pestañas para definir procesos, consultar procesos, y crear y consultar recursos
+ * de producción.
  */
 
 import {Button, Flex, Tab, TabList, TabPanel, TabPanels, Tabs} from '@chakra-ui/react';
@@ -15,7 +15,6 @@ import {FaArrowLeft} from 'react-icons/fa';
 import DefinicionProcesosTab from './ProcesosProduccion/DefinicionProcesosTab.tsx';
 import CrearRecursoProduccion from './RecursosProduccion/CrearRecursoProduccion.tsx';
 import ConsultaRecursosProduccion from './RecursosProduccion/ConsultaRecursosProduccion.tsx';
-import CrearAreaProduccionTab from './CreadorProcesos/CrearAreaProduccionTab.tsx';
 import {my_style_tab} from '../../../styles/styles_general.tsx';
 import {ConsultaProcesosProduccion} from "./ProcesosProduccion/ConsultaProcesosProduccion.tsx";
 
@@ -35,7 +34,6 @@ export function DefinicionProcesosTabs({onBack}: Props) {
                     <Tab sx={my_style_tab}>Consultar Procesos de Produccion</Tab>
                     <Tab sx={my_style_tab}>Crear Recurso Producción</Tab>
                     <Tab sx={my_style_tab}>Consulta Recursos Producción</Tab>
-                    <Tab sx={my_style_tab}>Crear Área Producción</Tab>
                 </TabList>
                 <TabPanels>
                     <TabPanel>
@@ -49,9 +47,6 @@ export function DefinicionProcesosTabs({onBack}: Props) {
                     </TabPanel>
                     <TabPanel>
                         <ConsultaRecursosProduccion />
-                    </TabPanel>
-                    <TabPanel>
-                        <CrearAreaProduccionTab />
                     </TabPanel>
                 </TabPanels>
             </Tabs>

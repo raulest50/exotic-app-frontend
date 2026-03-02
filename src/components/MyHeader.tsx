@@ -28,7 +28,7 @@ function MyHeader({title,}:MyHeaderProps){
             'stock': Modulo.STOCK,
             'proveedores': Modulo.PROVEEDORES,
             'compras': Modulo.COMPRAS,
-            'asistente_produccion': Modulo.SEGUIMIENTO_PRODUCCION,
+            'gestion_areas_operativas': Modulo.SEGUIMIENTO_PRODUCCION,
             'clientes': Modulo.CLIENTES,
             'ventas': Modulo.VENTAS,
             'transacciones_almacen': Modulo.TRANSACCIONES_ALMACEN,

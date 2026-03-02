@@ -16,12 +16,11 @@ import {
 } from '@chakra-ui/react';
 import axios from 'axios';
 import { SearchIcon } from '@chakra-ui/icons';
-import EndPointsURL from '../../../../api/EndPointsURL.tsx';
-import { input_style } from '../../../../styles/styles_general.tsx';
-import UserGenericPicker from '../../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
-import { User } from '../../../../pages/Usuarios/GestionUsuarios/types';
+import EndPointsURL from '../../../api/EndPointsURL.tsx';
+import { input_style } from '../../../styles/styles_general.tsx';
+import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
+import { User } from '../../Usuarios/GestionUsuarios/types';
 
-// Interface for AreaProduccion based on the backend model
 interface AreaProduccion {
     areaId?: number;
     nombre: string;
@@ -29,7 +28,6 @@ interface AreaProduccion {
     responsableArea?: User;
 }
 
-// DTO for creating AreaProduccion
 interface AreaProduccionDTO {
     nombre: string;
     descripcion: string;
@@ -47,7 +45,6 @@ function CrearAreaProduccionTab() {
     const toast = useToast();
     const endPoints = new EndPointsURL();
 
-    // Validate form fields
     const validateForm = () => {
         const newErrors: { nombre?: string, responsable?: string } = {};
         
@@ -63,7 +60,6 @@ function CrearAreaProduccionTab() {
         return Object.keys(newErrors).length === 0;
     };
 
-    // Clear form fields
     const clearFields = () => {
         setNombre('');
         setDescripcion('');
@@ -71,7 +67,6 @@ function CrearAreaProduccionTab() {
         setErrors({});
     };
 
-    // Handle form submission
     const handleSubmit = async () => {
         if (!validateForm()) {
             toast({
@@ -121,17 +116,14 @@ function CrearAreaProduccionTab() {
         }
     };
 
-    // Handle opening the user picker
     const handleOpenUserPicker = () => {
         setIsUserPickerOpen(true);
     };
 
-    // Handle closing the user picker
     const handleCloseUserPicker = () => {
         setIsUserPickerOpen(false);
     };
 
-    // Handle selecting a user from the picker
     const handleSelectUser = (user: User) => {
         setResponsable(user);
         if (errors.responsable) {
@@ -139,7 +131,6 @@ function CrearAreaProduccionTab() {
         }
     };
 
-    // Check if form is valid for submission
     const isFormValid = nombre.trim() !== '' && responsable !== null;
 
     return (

@@ -236,13 +236,13 @@ useEffect(() => {
     ]
   },
   [Modulo.SEGUIMIENTO_PRODUCCION]: {
-    title: 'Módulo de Seguimiento de Producción',
-    description: 'Monitoreo y seguimiento de procesos productivos',
+    title: 'Módulo de Gestión de Áreas Operativas',
+    description: 'Gestión y configuración de áreas operativas de producción',
     implementationDetails: false,
     levels: [
-      { level: 1, description: 'Visualización del estado de producción.' },
-      { level: 2, description: 'Registro de avances de producción.' },
-      { level: 3, description: 'Control total del seguimiento productivo.' }
+      { level: 1, description: 'Visualización de áreas operativas.' },
+      { level: 2, description: 'Creación y edición de áreas operativas.' },
+      { level: 3, description: 'Control total de áreas operativas.' }
     ]
   },
   [Modulo.TRANSACCIONES_ALMACEN]: {

@@ -25,8 +25,7 @@
  *       ├── Definición de Procesos (DefinicionProcesosTab.tsx)
  *       ├── Consultar Procesos de Producción (ConsultaProcesosProduccion.tsx)
  *       ├── Crear Recurso Producción (CrearRecursoProduccion.tsx)
- *       ├── Consulta Recursos Producción (ConsultaRecursosProduccion.tsx)
- *       └── Crear Área Producción (CrearAreaProduccionTab.tsx)
+ *       └── Consulta Recursos Producción (ConsultaRecursosProduccion.tsx)
  */
 
 import {useState, useEffect} from 'react';

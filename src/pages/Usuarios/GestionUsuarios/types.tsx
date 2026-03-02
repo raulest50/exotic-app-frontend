@@ -1,5 +1,5 @@
 // Path: src/pages/Usuarios/GestionUsuarios/types.tsx
-// Used in: src/App.tsx; src/pages/Home.tsx; src/pages/Usuarios/InfoNiveles.tsx; src/pages/Productos/DefProcesses/CreadorProcesos/CrearAreaProduccionTab.tsx; src/api/ModulesNotifications.tsx; src/context/NotificationsContext.tsx; src/components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx; src/components/Pickers/UserPickerGeneric/UserPickerGeneric.stories.tsx; src/pages/Ventas/TabsContent/CrearVendedor.tsx
+// Used in: src/App.tsx; src/pages/Home.tsx; src/pages/Usuarios/InfoNiveles.tsx; src/pages/GestionAreasOperativas/CrearAreaProduccion/CrearAreaProduccionTab.tsx; src/api/ModulesNotifications.tsx; src/context/NotificationsContext.tsx; src/components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx; src/components/Pickers/UserPickerGeneric/UserPickerGeneric.stories.tsx; src/pages/Ventas/TabsContent/CrearVendedor.tsx
 // Summary: Tipos compartidos para usuarios, roles y módulos usados en navegación, notificaciones y pickers de usuario.
 
 
@@ -36,7 +36,7 @@ export enum Modulo {
     STOCK = "STOCK", // ruta /stock
     PROVEEDORES = "PROVEEDORES", // ruta /Proveedores
     COMPRAS = "COMPRAS", // ruta /compras
-    SEGUIMIENTO_PRODUCCION = "SEGUIMIENTO_PRODUCCION", // ruta /asistente_produccion
+    SEGUIMIENTO_PRODUCCION = "SEGUIMIENTO_PRODUCCION", // ruta /gestion_areas_operativas
     CLIENTES = "CLIENTES", // ruta /clientes
     VENTAS = "VENTAS", // ruta /ventas
     TRANSACCIONES_ALMACEN = "TRANSACCIONES_ALMACEN", // ruta /transacciones_almacen

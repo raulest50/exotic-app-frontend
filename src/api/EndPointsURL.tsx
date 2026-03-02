@@ -200,6 +200,7 @@ export default class EndPointsURL{
     //enpoints para management de Areas de Produccion (AreaProduccion)
     public crear_area_produccion: string;
     public area_prod_search_by_name: string;
+    public search_areas_operativas: string;
 
     // planeacion de produccion endpoints
     public planeacion_asociar_terminados: string;
@@ -436,6 +437,7 @@ export default class EndPointsURL{
         // AreaProduccion endpoints
         this.crear_area_produccion = `${domain}/${area_produccion_res}/crear`;
         this.area_prod_search_by_name = `${domain}/${area_produccion_res}/search_by_name`;
+        this.search_areas_operativas = `${domain}/${area_produccion_res}/search`;
 
         // Planeacion de produccion endpoints
         this.planeacion_asociar_terminados = `${domain}/${planeacion_produccion_res}/asociar_terminados`;
