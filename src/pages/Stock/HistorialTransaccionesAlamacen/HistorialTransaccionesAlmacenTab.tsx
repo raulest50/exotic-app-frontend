@@ -113,6 +113,7 @@ function HistorialTransaccionesAlmacenTab() {
                         transacciones={transacciones}
                         loading={loading}
                         onVerDetalle={handleVerDetalle}
+                        tipoEntidadCausante={filtroActual?.tipoEntidadCausante}
                     />
 
                     {totalPages > 0 && (

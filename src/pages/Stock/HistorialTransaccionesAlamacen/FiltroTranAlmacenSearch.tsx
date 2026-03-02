@@ -20,6 +20,7 @@ export interface FiltroHistorialTransaccionesDTO {
     fechaEspecifica?: string | null;
     proveedorId?: string | null;
     tipoFiltroId?: number;
+    loteAsignado?: string | null;
     transaccionId?: number | null;
     ordenProduccionId?: number | null;
     productoTerminadoId?: string | null;
@@ -57,9 +58,8 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
     const [fechaEspecifica, setFechaEspecifica] = useState(today);
 
     // --- OD state ---
-    const [odTipoFiltroId, setOdTipoFiltroId] = useState<0 | 1 | 2>(0);
-    const [odTransaccionId, setOdTransaccionId] = useState('');
-    const [odOrdenProduccionId, setOdOrdenProduccionId] = useState('');
+    const [odTipoFiltroId, setOdTipoFiltroId] = useState<0 | 1>(0);
+    const [odLoteAsignado, setOdLoteAsignado] = useState('');
     const [selectedTerminado, setSelectedTerminado] = useState<TerminadoPickerResult | null>(null);
     const {isOpen: isTerminadoPickerOpen, onOpen: onOpenTerminadoPicker, onClose: onCloseTerminadoPicker} = useDisclosure();
 
@@ -84,11 +84,8 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
 
         if (viewMode === MODE.OD) {
             filtro.tipoFiltroId = odTipoFiltroId;
-            if (odTipoFiltroId === 1 && odTransaccionId) {
-                filtro.transaccionId = parseInt(odTransaccionId);
-            }
-            if (odTipoFiltroId === 2 && odOrdenProduccionId) {
-                filtro.ordenProduccionId = parseInt(odOrdenProduccionId);
+            if (odTipoFiltroId === 1 && odLoteAsignado) {
+                filtro.loteAsignado = odLoteAsignado;
             }
             if (selectedTerminado) {
                 filtro.productoTerminadoId = selectedTerminado.productoId;
@@ -173,39 +170,31 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
             return (
                 <>
                     <FormControl maxW="220px">
-                        <FormLabel>Filtrar por ID</FormLabel>
+                        <FormLabel>Filtrar por</FormLabel>
                         <Select
                             value={odTipoFiltroId.toString()}
                             onChange={(e) => {
-                                const value = parseInt(e.target.value) as 0 | 1 | 2;
+                                const value = parseInt(e.target.value) as 0 | 1;
                                 setOdTipoFiltroId(value);
-                                setOdTransaccionId('');
-                                setOdOrdenProduccionId('');
+                                setOdLoteAsignado('');
                             }}
                         >
                             <option value="0">Ninguno</option>
-                            <option value="1">ID Transacción</option>
-                            <option value="2">ID Orden de Producción</option>
+                            <option value="1">Lote de Fabricación</option>
                         </Select>
                     </FormControl>
 
                     <FormControl
-                        maxW="200px"
+                        maxW="220px"
                         visibility={odTipoFiltroId === 0 ? "hidden" : "visible"}
                         pointerEvents={odTipoFiltroId === 0 ? "none" : "auto"}
                     >
-                        <FormLabel>
-                            {odTipoFiltroId === 2 ? "ID Orden de Producción" : "ID de Transacción"}
-                        </FormLabel>
+                        <FormLabel>Lote de Fabricación</FormLabel>
                         <Input
-                            type="number"
-                            value={odTipoFiltroId === 1 ? odTransaccionId : odOrdenProduccionId}
-                            onChange={(e) => {
-                                if (odTipoFiltroId === 1) setOdTransaccionId(e.target.value);
-                                else setOdOrdenProduccionId(e.target.value);
-                            }}
-                            placeholder={odTipoFiltroId === 2 ? "Ej: 456" : "Ej: 123"}
-                            min="1"
+                            type="text"
+                            value={odLoteAsignado}
+                            onChange={(e) => setOdLoteAsignado(e.target.value)}
+                            placeholder="Ej: L-2025-001"
                         />
                     </FormControl>
 

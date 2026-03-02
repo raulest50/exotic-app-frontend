@@ -18,6 +18,7 @@ interface TablaTranAlmacenProps {
     transacciones: TransaccionAlmacen[];
     loading: boolean;
     onVerDetalle: (transaccion: TransaccionAlmacen) => void;
+    tipoEntidadCausante?: string;
 }
 
 const formatFecha = (fecha?: string) => {
@@ -64,10 +65,24 @@ const truncarTexto = (texto: string | undefined, maxLength: number = 50) => {
     return texto.substring(0, maxLength) + '...';
 };
 
+const getColumnHeader = (tipo?: string) => {
+    switch (tipo) {
+        case 'OCM': return 'ID OCM';
+        case 'OD': return 'Lote Producción';
+        default: return 'ID Entidad Causante';
+    }
+};
+
+const getCellValue = (t: TransaccionAlmacen, tipo?: string) => {
+    if (tipo === 'OD') return t.loteAsignado || '-';
+    return t.idEntidadCausante > 0 ? t.idEntidadCausante : '-';
+};
+
 export default function TablaTranAlmacen({
     transacciones,
     loading,
     onVerDetalle,
+    tipoEntidadCausante,
 }: TablaTranAlmacenProps) {
     if (loading) {
         return (
@@ -84,7 +99,7 @@ export default function TablaTranAlmacen({
                     <Thead>
                         <Tr>
                             <Th>ID Transacción</Th>
-                            <Th>ID Entidad Causante</Th>
+                            <Th>{getColumnHeader(tipoEntidadCausante)}</Th>
                             <Th>Tipo</Th>
                             <Th>Fecha</Th>
                             <Th>Estado Contable</Th>
@@ -96,7 +111,7 @@ export default function TablaTranAlmacen({
                         {transacciones.map((t) => (
                             <Tr key={t.transaccionId}>
                                 <Td>{t.transaccionId}</Td>
-                                <Td>{t.idEntidadCausante > 0 ? t.idEntidadCausante : '-'}</Td>
+                                <Td>{getCellValue(t, tipoEntidadCausante)}</Td>
                                 <Td>{formatTipoEntidad(t.tipoEntidadCausante)}</Td>
                                 <Td>{formatFecha(t.fechaTransaccion)}</Td>
                                 <Td>{formatEstadoContable(t.estadoContable)}</Td>

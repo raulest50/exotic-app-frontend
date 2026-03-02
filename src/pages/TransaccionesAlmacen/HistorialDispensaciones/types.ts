@@ -5,6 +5,7 @@ export interface TransaccionAlmacen {
     tipoEntidadCausante: string; // 'OD' | 'OP' | 'OCM' | 'OTA' | 'OAA' - viene como string del backend
     observaciones?: string;
     estadoContable: string; // 'PENDIENTE' | 'CONTABILIZADA' | 'NO_APLICA' - viene como string del backend
+    loteAsignado?: string;
     usuarioAprobador?: {
         userId: number; // Long en backend, number en TypeScript
         nombre?: string; // nombreCompleto en backend
