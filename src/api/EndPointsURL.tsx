@@ -60,6 +60,7 @@ export default class EndPointsURL{
     public dispensacion_odp_consulta: string;
     public search_orden_by_lote: string;
     public averias_items_dispensados: string;
+    public averias_registrar: string;
 
     // recursos de produccion
     public save_recurso_produccion:string;
@@ -305,6 +306,7 @@ export default class EndPointsURL{
         this.dispensacion_odp_consulta = `${domain}/${produccion_res}/dispensacion_odp_consulta`;
         this.search_orden_by_lote = `${domain}/${averias_res}/search_orden_by_lote`;
         this.averias_items_dispensados = `${domain}/${averias_res}/orden/{ordenProduccionId}/items-dispensados`;
+        this.averias_registrar = `${domain}/${averias_res}/registrar`;
 
         // recursos de produccion endpoints
         this.save_recurso_produccion = `${domain}/${recursos_produccion_res}`;

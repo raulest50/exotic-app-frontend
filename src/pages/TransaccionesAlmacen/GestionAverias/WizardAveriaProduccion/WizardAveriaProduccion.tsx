@@ -110,7 +110,15 @@ export default function WizardAveriaProduccion({ onBack }: WizardAveriaProduccio
             );
         }
         if (activeStep === 3) {
-            return <AveriaProduccionStep3ReviewSubmit setActiveStep={setActiveStep} onReset={handleReset} />;
+            return (
+                <AveriaProduccionStep3ReviewSubmit
+                    setActiveStep={setActiveStep}
+                    onReset={handleReset}
+                    selectedArea={selectedArea}
+                    selectedOrden={selectedOrden}
+                    averiaItems={averiaItems}
+                />
+            );
         }
         return null;
     }

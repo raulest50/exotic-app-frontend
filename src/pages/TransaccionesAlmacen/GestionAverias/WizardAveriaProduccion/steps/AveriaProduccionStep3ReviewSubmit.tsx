@@ -1,24 +1,191 @@
-import { Box, Button, Flex, Text } from '@chakra-ui/react';
+import { useMemo, useState } from 'react';
+import {
+    Alert,
+    AlertDescription,
+    AlertIcon,
+    Box,
+    Button,
+    Flex,
+    Heading,
+    Table,
+    Tbody,
+    Td,
+    Text,
+    Textarea,
+    Th,
+    Thead,
+    Tr,
+    VStack,
+} from '@chakra-ui/react';
+import axios from 'axios';
+import EndPointsURL from '../../../../../api/EndPointsURL';
+import { useAuth } from '../../../../../context/AuthContext';
+import {
+    AreaProduccion,
+    AveriaItemSeleccionado,
+    OrdenProduccionDTO,
+} from '../WizardAveriaProduccion';
 
 interface AveriaProduccionStep3ReviewSubmitProps {
     setActiveStep: (step: number) => void;
     onReset: () => void;
+    selectedArea: AreaProduccion | null;
+    selectedOrden: OrdenProduccionDTO | null;
+    averiaItems: AveriaItemSeleccionado[];
 }
 
-export default function AveriaProduccionStep3ReviewSubmit({ setActiveStep, onReset }: AveriaProduccionStep3ReviewSubmitProps) {
+export default function AveriaProduccionStep3ReviewSubmit({
+    setActiveStep,
+    onReset,
+    selectedArea,
+    selectedOrden,
+    averiaItems,
+}: AveriaProduccionStep3ReviewSubmitProps) {
+    const endPoints = useMemo(() => new EndPointsURL(), []);
+    const { user } = useAuth();
+
+    const [observaciones, setObservaciones] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submissionError, setSubmissionError] = useState<string | null>(null);
+    const [submissionSuccess, setSubmissionSuccess] = useState(false);
+
+    const handleSubmit = async () => {
+        if (!selectedArea || !selectedOrden || averiaItems.length === 0) return;
+
+        setSubmissionError(null);
+        setIsSubmitting(true);
+
+        try {
+            const payload = {
+                ordenProduccionId: selectedOrden.ordenId,
+                areaProduccionId: selectedArea.areaId,
+                observaciones: observaciones.trim() || null,
+                username: user ?? '',
+                items: averiaItems.map(item => ({
+                    productoId: item.productoId,
+                    cantidadAveria: item.cantidadAveria,
+                })),
+            };
+
+            await axios.post(endPoints.averias_registrar, payload);
+            setSubmissionSuccess(true);
+        } catch (error) {
+            console.error('Error registrando reporte de avería:', error);
+            setSubmissionError('No se pudo registrar el reporte de avería. Intenta nuevamente.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    if (submissionSuccess) {
+        return (
+            <Box p={4}>
+                <Alert status="success" borderRadius="md" mb={6}>
+                    <AlertIcon />
+                    <AlertDescription>
+                        El reporte de avería se registró exitosamente.
+                    </AlertDescription>
+                </Alert>
+                <Button colorScheme="blue" onClick={onReset}>
+                    Nuevo Reporte
+                </Button>
+            </Box>
+        );
+    }
+
     return (
         <Box p={4}>
-            <Text fontSize="lg" fontWeight="bold" mb={4}>
+            <Heading size="md" mb={6}>
                 Paso 3: Validar y Realizar Transacción de Almacén
-            </Text>
-            <Text mb={6} color="gray.600">
-                (Contenido por implementar)
-            </Text>
+            </Heading>
+
+            <VStack align="stretch" spacing={5} mb={6}>
+                {/* Area info */}
+                <Box bg="gray.50" p={4} borderRadius="md">
+                    <Text fontWeight="bold" mb={1}>Área Operativa</Text>
+                    <Text>{selectedArea?.nombre ?? '—'}</Text>
+                </Box>
+
+                {/* Orden info */}
+                <Box bg="gray.50" p={4} borderRadius="md">
+                    <Text fontWeight="bold" mb={1}>Orden de Producción</Text>
+                    <Flex gap={8} wrap="wrap">
+                        <Box>
+                            <Text fontSize="sm" color="gray.500">Lote</Text>
+                            <Text>{selectedOrden?.loteAsignado ?? '—'}</Text>
+                        </Box>
+                        <Box>
+                            <Text fontSize="sm" color="gray.500">Producto</Text>
+                            <Text>{selectedOrden?.productoNombre ?? '—'}</Text>
+                        </Box>
+                        <Box>
+                            <Text fontSize="sm" color="gray.500">Cantidad a Producir</Text>
+                            <Text>{selectedOrden?.cantidadProducir ?? '—'}</Text>
+                        </Box>
+                    </Flex>
+                </Box>
+
+                {/* Items table */}
+                <Box>
+                    <Text fontWeight="bold" mb={2}>Materiales a Reportar como Avería</Text>
+                    <Box overflowX="auto">
+                        <Table size="sm" variant="simple">
+                            <Thead>
+                                <Tr>
+                                    <Th>Producto ID</Th>
+                                    <Th>Nombre</Th>
+                                    <Th>Unidades</Th>
+                                    <Th isNumeric>Cantidad Avería</Th>
+                                </Tr>
+                            </Thead>
+                            <Tbody>
+                                {averiaItems.map(item => (
+                                    <Tr key={item.productoId}>
+                                        <Td>{item.productoId}</Td>
+                                        <Td>{item.productoNombre}</Td>
+                                        <Td>{item.tipoUnidades}</Td>
+                                        <Td isNumeric>{item.cantidadAveria}</Td>
+                                    </Tr>
+                                ))}
+                            </Tbody>
+                        </Table>
+                    </Box>
+                </Box>
+
+                {/* Observaciones */}
+                <Box>
+                    <Text fontWeight="bold" mb={2}>Observaciones (opcional)</Text>
+                    <Textarea
+                        value={observaciones}
+                        onChange={e => setObservaciones(e.target.value)}
+                        placeholder="Escriba observaciones adicionales sobre este reporte de avería..."
+                        size="sm"
+                        resize="vertical"
+                    />
+                </Box>
+            </VStack>
+
+            {submissionError && (
+                <Alert status="error" borderRadius="md" mb={4}>
+                    <AlertIcon />
+                    <AlertDescription>{submissionError}</AlertDescription>
+                </Alert>
+            )}
+
             <Flex gap={4}>
-                <Button variant="outline" onClick={() => setActiveStep(2)}>
+                <Button
+                    variant="outline"
+                    onClick={() => setActiveStep(2)}
+                    isDisabled={isSubmitting}
+                >
                     Anterior
                 </Button>
-                <Button colorScheme="green">
+                <Button
+                    colorScheme="green"
+                    onClick={handleSubmit}
+                    isLoading={isSubmitting}
+                    loadingText="Registrando..."
+                >
                     Ejecutar Transacción
                 </Button>
             </Flex>
