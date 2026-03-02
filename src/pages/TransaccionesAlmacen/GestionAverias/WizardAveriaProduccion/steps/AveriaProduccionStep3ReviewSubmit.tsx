@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     Alert,
     AlertDescription,
@@ -6,7 +6,10 @@ import {
     Box,
     Button,
     Flex,
+    FormControl,
+    FormLabel,
     Heading,
+    Input,
     Table,
     Tbody,
     Td,
@@ -48,6 +51,14 @@ export default function AveriaProduccionStep3ReviewSubmit({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionError, setSubmissionError] = useState<string | null>(null);
     const [submissionSuccess, setSubmissionSuccess] = useState(false);
+    const [token, setToken] = useState('');
+    const [inputToken, setInputToken] = useState('');
+
+    useEffect(() => {
+        const t = Math.floor(1000 + Math.random() * 9000).toString();
+        setToken(t);
+        setInputToken('');
+    }, []);
 
     const handleSubmit = async () => {
         if (!selectedArea || !selectedOrden || averiaItems.length === 0) return;
@@ -163,6 +174,23 @@ export default function AveriaProduccionStep3ReviewSubmit({
                         resize="vertical"
                     />
                 </Box>
+
+                {/* Token de verificación */}
+                <Box bg="white" p={4} borderRadius="md" borderWidth="1px">
+                    <FormControl isRequired>
+                        <FormLabel>Token de Verificación</FormLabel>
+                        <Input
+                            value={inputToken}
+                            onChange={e => setInputToken(e.target.value)}
+                            placeholder="Ingrese el token de 4 dígitos"
+                            maxLength={4}
+                            type="text"
+                        />
+                        <Text mt={2} fontSize="sm" color="gray.600">
+                            Token generado: <strong>{token}</strong>
+                        </Text>
+                    </FormControl>
+                </Box>
             </VStack>
 
             {submissionError && (
@@ -183,6 +211,7 @@ export default function AveriaProduccionStep3ReviewSubmit({
                 <Button
                     colorScheme="green"
                     onClick={handleSubmit}
+                    isDisabled={inputToken !== token}
                     isLoading={isSubmitting}
                     loadingText="Registrando..."
                 >
