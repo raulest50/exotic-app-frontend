@@ -71,13 +71,6 @@ export interface ProductoWithInsumos {
     insumos: InsumoWithStock[];
 }
 
-export interface OrdenSeguimientoDTO {
-    seguimientoId: number;
-    insumoNombre: string;
-    cantidadRequerida: number;
-    estado: number; // 0: pendiente, 1: finalizada
-}
-
 export interface Vendedor {
     cedula: number;
     nombres: string;
@@ -107,5 +100,4 @@ export interface OrdenProduccionDTO {
     departamentoOperativo: string | null;
     loteAsignado?: string | null;
     observaciones: string | null;
-    ordenesSeguimiento: OrdenSeguimientoDTO[];
 }

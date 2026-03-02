@@ -51,7 +51,6 @@ export default class EndPointsURL{
     public next_lote_produccion: string;
     public check_lote_disponible: string;
     public search_ordenes_within_range:string;
-    public orden_seguimiento_update_estado:string;
     public orden_produccion_update_estado:string;
     public is_deletable_orden_produccion: string;
     public cancel_orden_produccion: string;
@@ -61,6 +60,7 @@ export default class EndPointsURL{
     public search_orden_by_lote: string;
     public averias_items_dispensados: string;
     public averias_registrar: string;
+    public averias_historial: string;
 
     // recursos de produccion
     public save_recurso_produccion:string;
@@ -297,7 +297,6 @@ export default class EndPointsURL{
         this.next_lote_produccion = `${domain}/${produccion_res}/next-lote`;
         this.check_lote_disponible = `${domain}/${produccion_res}/lote/disponible`;
         this.search_ordenes_within_range = `${domain}/${produccion_res}/search_within_range`;
-        this.orden_seguimiento_update_estado = `${domain}/${produccion_res}/orden_seguimiento/{id}/update_estado`;
         this.orden_produccion_update_estado = `${domain}/${produccion_res}/orden_produccion/{id}/update_estado`;
         this.is_deletable_orden_produccion = `${domain}/${produccion_res}/orden_produccion/{id}/is_deletable`;
         this.cancel_orden_produccion = `${domain}/${produccion_res}/orden_produccion/{id}/cancel`;
@@ -307,6 +306,7 @@ export default class EndPointsURL{
         this.search_orden_by_lote = `${domain}/${averias_res}/search_orden_by_lote`;
         this.averias_items_dispensados = `${domain}/${averias_res}/orden/{ordenProduccionId}/items-dispensados`;
         this.averias_registrar = `${domain}/${averias_res}/registrar`;
+        this.averias_historial = `${domain}/${averias_res}/orden/{ordenProduccionId}/historial`;
 
         // recursos de produccion endpoints
         this.save_recurso_produccion = `${domain}/${recursos_produccion_res}`;

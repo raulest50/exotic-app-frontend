@@ -39,6 +39,8 @@ export function KardexTab(_: Props) {
   const [isProductoSelectorOpen, setIsProductoSelectorOpen] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState<ProductoMin | null>(null);
 
+  const [almacen, setAlmacen] = useState<string>('GENERAL');
+
   const [modoFecha, setModoFecha] = useState<ModoFecha>('UNICA');
   const [fechaUnica, setFechaUnica] = useState(today);
   const [fechaInicio, setFechaInicio] = useState(today);
@@ -68,12 +70,13 @@ export function KardexTab(_: Props) {
   const requestPayload = useMemo(() => {
     return {
       productoId: String(selectedProducto?.productoId ?? ''),
+      almacen,
       startDate,
       endDate,
       page,
       size,
     };
-  }, [selectedProducto, startDate, endDate, page, size]);
+  }, [selectedProducto, almacen, startDate, endDate, page, size]);
 
   const fetchKardex = async () => {
     if (!canQuery) return;
@@ -132,6 +135,7 @@ export function KardexTab(_: Props) {
     try {
       const resp = await axios.post(endPoints.kardex_exportar_excel, {
         productoId: String(selectedProducto?.productoId ?? ''),
+        almacen,
         startDate,
         endDate,
       }, { responseType: 'blob' });
@@ -159,7 +163,7 @@ export function KardexTab(_: Props) {
   useEffect(() => {
     setPage(0);
     setData(null);
-  }, [selectedProducto?.productoId, startDate, endDate, modoFecha]);
+  }, [selectedProducto?.productoId, almacen, startDate, endDate, modoFecha]);
 
   return (
     <VStack w="full" align="stretch" spacing={4}>
@@ -175,6 +179,14 @@ export function KardexTab(_: Props) {
                   {selectedProducto ? `${selectedProducto.productoId} - ${selectedProducto.nombre}` : 'Sin selección'}
                 </Text>
               </HStack>
+            </FormControl>
+
+            <FormControl maxW="200px">
+              <FormLabel>Almacén</FormLabel>
+              <Select value={almacen} onChange={(e) => setAlmacen(e.target.value)}>
+                <option value="GENERAL">General</option>
+                <option value="AVERIAS">Averías</option>
+              </Select>
             </FormControl>
 
             <FormControl maxW="220px">

@@ -170,65 +170,50 @@ export default function DispensacionStep3ReviewSubmit({
 
     // Construir items para el DTO desde lotesPorMaterial e insumosDesglosados
     const buildDispensacionItems = (): Array<{
-        seguimientoId: number;
+        productoId: string;
         cantidad: number;
         loteId: number | null;
-        completarSeguimiento: boolean;
     }> => {
         const items: Array<{
-            seguimientoId: number;
-            productoId?: string;
+            productoId: string;
             cantidad: number;
             loteId: number | null;
-            completarSeguimiento: boolean;
         }> = [];
 
         if (!lotesPorMaterial || !insumosDesglosados) {
             return items;
         }
 
-        // Iterar sobre cada material que tiene lotes seleccionados (receta)
         lotesPorMaterial.forEach((lotes, insumoKey) => {
             const insumo = findInsumoByKey(insumoKey);
             const productoId = insumo?.productoId ?? (insumoKey.startsWith('producto-') ? insumoKey.replace('producto-', '') : insumoKey);
 
-            // Filtrar productos no inventariables: solo incluir si es inventariable
-            // Si inventareable es undefined o null, asumir true (comportamiento por defecto)
             if (insumo && insumo.inventareable === false) {
-                return; // Saltar productos no inventariables
+                return;
             }
 
-            // Por cada lote seleccionado, crear un item
             lotes.forEach(lote => {
-                const seguimientoId = insumo?.seguimientoId || 0;
                 items.push({
-                    seguimientoId: seguimientoId,
-                    productoId: seguimientoId === 0 ? productoId : undefined, // Solo incluir productoId si no hay seguimientoId
+                    productoId: productoId,
                     cantidad: lote.cantidad,
                     loteId: lote.loteId,
-                    completarSeguimiento: false // Por defecto, no completar seguimiento
                 });
             });
         });
 
-        // Iterar sobre cada material de empaque que tiene lotes seleccionados
         if (lotesPorMaterialEmpaque && insumosEmpaque) {
             lotesPorMaterialEmpaque.forEach((lotes, productoId) => {
                 const insumo = insumosEmpaque.find(i => i.productoId === productoId);
 
-                // Filtrar productos no inventariables
                 if (insumo && insumo.inventareable === false) {
-                    return; // Saltar productos no inventariables
+                    return;
                 }
 
-                // Por cada lote seleccionado, crear un item (sin seguimientoId para materiales de empaque)
                 lotes.forEach(lote => {
                     items.push({
-                        seguimientoId: 0, // Materiales de empaque no tienen seguimientoId
-                        productoId: productoId, // Siempre incluir productoId para materiales de empaque
+                        productoId: productoId,
                         cantidad: lote.cantidad,
                         loteId: lote.loteId,
-                        completarSeguimiento: false
                     });
                 });
             });
@@ -382,9 +367,8 @@ export default function DispensacionStep3ReviewSubmit({
                 usuarioId: usuariosRealizadores[0]?.id || currentUser?.id || 0, // Para compatibilidad
                 observaciones: dispensacion?.observaciones || '',
                 items: items.map(item => ({
-                    seguimientoId: item.seguimientoId,
-                    producto: {} as any, // No necesario en el DTO del backend
-                    lote: {} as any, // No necesario en el DTO del backend
+                    producto: {} as any,
+                    lote: {} as any,
                     cantidadSugerida: item.cantidad,
                     cantidad: item.cantidad
                 }))
@@ -398,11 +382,9 @@ export default function DispensacionStep3ReviewSubmit({
                 usuarioId: dispensacionDTO.usuarioId,
                 observaciones: dispensacionDTO.observaciones,
                 items: items.map(item => ({
-                    seguimientoId: item.seguimientoId,
-                    productoId: item.productoId || undefined, // Incluir productoId si existe
+                    productoId: item.productoId,
                     cantidad: item.cantidad,
                     loteId: item.loteId,
-                    completarSeguimiento: item.completarSeguimiento
                 }))
             };
 

@@ -49,16 +49,9 @@ export interface EstudiarEliminacionOCMResponseDTO {
     asientosContables: AsientoContableResumenDTO[];
 }
 
-export interface OrdenSeguimientoResumenDTO {
-    seguimientoId: number;
-    estado: number;
-    productoId: string | null;
-}
-
 export interface EstudiarEliminacionOPResponseDTO {
     ordenProduccionId: number;
     eliminable: boolean;
-    ordenesSeguimiento: OrdenSeguimientoResumenDTO[];
     lotes: LoteResumenDTO[];
     transaccionesAlmacen: TransaccionAlmacenResumenDTO[];
     asientosContables: AsientoContableResumenDTO[];

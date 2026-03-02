@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
     Box,
     Button,
+    Divider,
     Flex,
     Heading,
     IconButton,
@@ -33,6 +34,21 @@ import {
 
 const endPoints = new EndPointsURL();
 
+interface HistorialAveriaItem {
+    productoId: string;
+    productoNombre: string;
+    tipoUnidades: string;
+    cantidadAveria: number;
+}
+
+interface HistorialAveria {
+    transaccionId: number;
+    fechaTransaccion: string;
+    observaciones: string | null;
+    usuarioAprobador: string | null;
+    items: HistorialAveriaItem[];
+}
+
 interface AveriaProduccionStep2ListAveriasProps {
     setActiveStep: (step: number) => void;
     selectedArea: AreaProduccion | null;
@@ -50,6 +66,8 @@ export default function AveriaProduccionStep2ListAverias({
 }: AveriaProduccionStep2ListAveriasProps) {
     const [itemsDispensados, setItemsDispensados] = useState<ItemDispensadoAveria[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [historialAverias, setHistorialAverias] = useState<HistorialAveria[]>([]);
+    const [isLoadingHistorial, setIsLoadingHistorial] = useState(false);
     const toast = useToast();
 
     const selectedIds = new Set(averiaItems.map((i) => i.productoId));
@@ -57,6 +75,7 @@ export default function AveriaProduccionStep2ListAverias({
     useEffect(() => {
         if (selectedOrden) {
             fetchItemsDispensados(selectedOrden.ordenId);
+            fetchHistorialAverias(selectedOrden.ordenId);
         }
     }, [selectedOrden]);
 
@@ -80,6 +99,22 @@ export default function AveriaProduccionStep2ListAverias({
             });
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const fetchHistorialAverias = async (ordenId: number) => {
+        setIsLoadingHistorial(true);
+        try {
+            const url = endPoints.averias_historial.replace(
+                '{ordenProduccionId}',
+                String(ordenId),
+            );
+            const response = await axios.get(url);
+            setHistorialAverias(response.data);
+        } catch (error) {
+            console.error('Error fetching historial averías:', error);
+        } finally {
+            setIsLoadingHistorial(false);
         }
     };
 
@@ -254,6 +289,63 @@ export default function AveriaProduccionStep2ListAverias({
                     )}
                 </Box>
             </SimpleGrid>
+
+            {/* Historial de averías reportadas */}
+            <Box mt={6} borderWidth="1px" borderRadius="md" p={4}>
+                <Heading size="sm" mb={3}>
+                    Averías Reportadas Anteriormente
+                </Heading>
+                {isLoadingHistorial ? (
+                    <Text color="gray.500" textAlign="center">Cargando historial...</Text>
+                ) : historialAverias.length > 0 ? (
+                    <VStack spacing={0} align="stretch" divider={<Divider />}>
+                        {historialAverias.map((tx) => (
+                            <Box key={tx.transaccionId} py={3}>
+                                <Flex gap={4} mb={2} wrap="wrap" fontSize="sm">
+                                    <Text>
+                                        <strong>Fecha:</strong>{' '}
+                                        {new Date(tx.fechaTransaccion).toLocaleString()}
+                                    </Text>
+                                    {tx.usuarioAprobador && (
+                                        <Text>
+                                            <strong>Usuario:</strong> {tx.usuarioAprobador}
+                                        </Text>
+                                    )}
+                                    {tx.observaciones && (
+                                        <Text>
+                                            <strong>Obs:</strong> {tx.observaciones}
+                                        </Text>
+                                    )}
+                                </Flex>
+                                <Box overflowX="auto">
+                                    <Table size="sm" variant="simple">
+                                        <Thead>
+                                            <Tr>
+                                                <Th>Producto</Th>
+                                                <Th>Unidades</Th>
+                                                <Th isNumeric>Cantidad Avería</Th>
+                                            </Tr>
+                                        </Thead>
+                                        <Tbody>
+                                            {tx.items.map((item) => (
+                                                <Tr key={item.productoId}>
+                                                    <Td fontSize="sm">{item.productoNombre}</Td>
+                                                    <Td fontSize="sm">{item.tipoUnidades}</Td>
+                                                    <Td isNumeric fontSize="sm">{item.cantidadAveria}</Td>
+                                                </Tr>
+                                            ))}
+                                        </Tbody>
+                                    </Table>
+                                </Box>
+                            </Box>
+                        ))}
+                    </VStack>
+                ) : (
+                    <Text color="gray.500" textAlign="center">
+                        No hay averías reportadas para esta orden.
+                    </Text>
+                )}
+            </Box>
 
             <Flex gap={4} pt={4}>
                 <Button variant="outline" onClick={() => setActiveStep(1)}>

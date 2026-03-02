@@ -20,7 +20,7 @@ import {
 import DateRangePicker from "../../../components/DateRangePicker.tsx";
 import MyPagination from "../../../components/MyPagination.tsx";
 import axios from "axios";
-import { OrdenProduccionDTO, OrdenSeguimientoDTO, ProductoWithInsumos } from "../types.tsx"; // Adjust the path as needed
+import { OrdenProduccionDTO, ProductoWithInsumos } from "../types.tsx";
 import { format } from "date-fns";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import TerminadoSemiterminadoPicker from "../components/TerminadoSemiterminadoPicker.tsx";
@@ -63,37 +63,7 @@ const toNullableNumber = (value: unknown): number | null => {
     return Number.isFinite(numberValue) ? numberValue : null;
 };
 
-const normalizeOrdenSeguimiento = (seguimiento: unknown): OrdenSeguimientoDTO | null => {
-    if (!seguimiento || typeof seguimiento !== "object") {
-        return null;
-    }
-
-    const seg = seguimiento as Partial<OrdenSeguimientoDTO> & {
-        seguimientoId?: unknown;
-        insumoNombre?: unknown;
-        cantidadRequerida?: unknown;
-        estado?: unknown;
-    };
-
-    if (typeof seg.seguimientoId !== "number") {
-        return null;
-    }
-
-    return {
-        seguimientoId: seg.seguimientoId,
-        insumoNombre: toNullableString(seg.insumoNombre) ?? "",
-        cantidadRequerida: Number(seg.cantidadRequerida ?? 0),
-        estado: Number(seg.estado ?? 0),
-    };
-};
-
 const normalizeOrdenProduccion = (orden: any): OrdenProduccionDTO => {
-    const ordenesSeguimiento = Array.isArray(orden?.ordenesSeguimiento)
-        ? (orden.ordenesSeguimiento as unknown[])
-              .map(normalizeOrdenSeguimiento)
-              .filter((item): item is OrdenSeguimientoDTO => item !== null)
-        : [];
-
     const productoIdRaw = orden?.productoId ?? orden?.producto?.productoId ?? orden?.producto?.codigo ?? orden?.producto?.codigoProducto;
     const productoNombreRaw = orden?.productoNombre ?? orden?.producto?.nombre;
     const productoTipoRaw = orden?.productoTipo ?? orden?.producto_tipo ?? orden?.producto?.tipo_producto ?? orden?.producto?.tipoProducto;
@@ -121,7 +91,6 @@ const normalizeOrdenProduccion = (orden: any): OrdenProduccionDTO => {
         departamentoOperativo: toNullableString(orden?.departamentoOperativo),
         loteAsignado: toNullableString(orden?.loteAsignado),
         observaciones: toNullableString(orden?.observaciones),
-        ordenesSeguimiento,
     };
 };
 

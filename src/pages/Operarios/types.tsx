@@ -4,13 +4,6 @@
 // Used in: src/pages/Operarios/OrdenProduccionCard.tsx; src/pages/Operarios/WorkLoad.tsx
 // Summary: DTOs for órdenes de producción y seguimiento que se muestran en cards y cargas de trabajo.
 
-export interface OrdenSeguimientoDTO {
-    seguimientoId: number;
-    insumoNombre: string;
-    cantidadRequerida: number;
-    estado: number; // 0: pendiente, 1: finalizada
-}
-
 export interface OrdenProduccionDTO {
     ordenId: number;
     productoNombre: string;
@@ -18,7 +11,6 @@ export interface OrdenProduccionDTO {
     estadoOrden: number; // 0: en producción, 1: terminada
     responsableId: number;
     observaciones: string;
-    ordenesSeguimiento: OrdenSeguimientoDTO[];
 }
 
 

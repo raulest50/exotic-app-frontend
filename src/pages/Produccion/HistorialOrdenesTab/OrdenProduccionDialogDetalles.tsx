@@ -14,11 +14,7 @@ import {
     ModalHeader,
     ModalOverlay,
     Stack,
-    Table,
-    Tbody,
-    Td,
     Text,
-    Tr,
     Button,
     useToast,
 } from "@chakra-ui/react";
@@ -175,29 +171,6 @@ export default function OrdenProduccionDialogDetalles({
                         <Box>
                             <Text fontWeight="bold">Observaciones</Text>
                             <Text whiteSpace="pre-wrap">{formatValue(orden.observaciones)}</Text>
-                        </Box>
-
-                        <Box>
-                            <Text fontWeight="bold" mb={2}>
-                                Seguimiento de insumos
-                            </Text>
-                            {orden.ordenesSeguimiento.length === 0 ? (
-                                <Text fontSize="sm" color="gray.600">
-                                    No hay seguimiento registrado.
-                                </Text>
-                            ) : (
-                                <Table size="sm" variant="simple">
-                                    <Tbody>
-                                        {orden.ordenesSeguimiento.map((seguimiento) => (
-                                            <Tr key={seguimiento.seguimientoId}>
-                                                <Td>{seguimiento.insumoNombre}</Td>
-                                                <Td>Cant.: {seguimiento.cantidadRequerida}</Td>
-                                                <Td>Estado: {seguimiento.estado}</Td>
-                                            </Tr>
-                                        ))}
-                                    </Tbody>
-                                </Table>
-                            )}
                         </Box>
 
                         {isDeletable && (

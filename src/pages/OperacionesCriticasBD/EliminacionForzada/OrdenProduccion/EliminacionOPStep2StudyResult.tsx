@@ -95,7 +95,6 @@ export default function EliminacionOPStep2StudyResult({
     const {
         ordenProduccionId,
         eliminable,
-        ordenesSeguimiento,
         lotes,
         transaccionesAlmacen,
         asientosContables,
@@ -125,7 +124,7 @@ export default function EliminacionOPStep2StudyResult({
                     <AlertDescription>
                         Esta orden no tiene transacciones de almacén. Se puede
                         ejecutar la eliminación (se eliminarán los lotes
-                        reservados y la orden con sus seguimientos).
+                        reservados y la orden).
                     </AlertDescription>
                 </Alert>
             )}
@@ -133,35 +132,6 @@ export default function EliminacionOPStep2StudyResult({
             <Text color="gray.600">
                 Registros asociados a esta orden de producción:
             </Text>
-
-            {/* Órdenes de seguimiento */}
-            <Box>
-                <Heading size="sm" mb={2}>
-                    Órdenes de seguimiento ({ordenesSeguimiento.length})
-                </Heading>
-                {ordenesSeguimiento.length > 0 ? (
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>Seguimiento ID</Th>
-                                <Th>Estado</Th>
-                                <Th>Producto (insumo)</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            {ordenesSeguimiento.map((seg) => (
-                                <Tr key={seg.seguimientoId}>
-                                    <Td>{seg.seguimientoId}</Td>
-                                    <Td>{seg.estado}</Td>
-                                    <Td>{seg.productoId ?? "-"}</Td>
-                                </Tr>
-                            ))}
-                        </Tbody>
-                    </Table>
-                ) : (
-                    <Text color="gray.500">Ninguna.</Text>
-                )}
-            </Box>
 
             {/* Lotes */}
             <Box>

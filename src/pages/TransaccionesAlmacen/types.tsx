@@ -193,28 +193,7 @@ export interface LoteDispensacion {
     cantidadDisponible: number;
 }
 
-export interface DispensacionFormularioItemDTO {
-    seguimientoId: number;
-    producto: Producto;
-    cantidadSolicitada: number;
-}
-
-export interface DispensacionFormularioLoteDTO {
-    seguimientoId: number;
-    loteId: number;
-    batchNumber: string;
-    cantidadDisponible: number;
-    cantidadSugerida: number;
-}
-
-export interface DispensacionFormularioDTO {
-    ordenProduccionId: number;
-    dispensaciones: DispensacionFormularioItemDTO[];
-    lotesRecomendados: DispensacionFormularioLoteDTO[];
-}
-
 export interface ItemDispensacionDTO {
-    seguimientoId: number;
     producto: Producto;
     lote: LoteDispensacion;
     /** Cantidad sugerida por el backend */
@@ -312,11 +291,6 @@ export interface InsumoDesglosado {
     tipoUnidades: string;
     tipoProducto: string;
     lotesSeleccionados?: LoteSeleccionado[];
-    /**
-     * ID del seguimiento de orden de producción asociado a este insumo.
-     * Puede ser undefined si el insumo no está asociado a un seguimiento específico.
-     */
-    seguimientoId?: number;
     /**
      * Estructura anidada de subinsumos (para semiterminados).
      * Solo presente cuando el insumo es un semiterminado que contiene otros insumos.

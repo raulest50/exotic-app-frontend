@@ -148,7 +148,6 @@ export default function DispensacionStep2EditItems({
                     tipoUnidades: flatData?.tipoUnidades ?? insumo.tipoUnidades ?? 'KG',
                     tipoProducto: flatData?.tipoProducto ?? (insumo.tipo_producto === 'S' ? 'SEMITERMINADO' : 'MATERIAL'),
                     tipo_producto: insumo.tipo_producto,
-                    seguimientoId: flatData?.seguimientoId,
                     lotesSeleccionados: flatData?.lotesSeleccionados,
                     inventareable: inventareable,
                     subInsumos: insumo.subInsumos && insumo.subInsumos.length > 0 

@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
-import {CasePackResponseDTO, DispensacionDTO, DispensacionFormularioDTO, DispensacionResumenResponse, InsumoDesglosado, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
+import {CasePackResponseDTO, DispensacionDTO, DispensacionResumenResponse, InsumoDesglosado, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
 import FiltroODP_AsistDisp from './FiltroODP_AsistDisp';
 
 interface Props {
@@ -114,31 +114,6 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
             if(estado === 1) return 'En progreso';
         }
         return estado ?? 'Desconocido';
-    };
-
-    const mapDispensacionFormulario = (data: DispensacionFormularioDTO): DispensacionDTO => {
-        const dispensaciones = data.dispensaciones ?? [];
-        const lotesRecomendados = data.lotesRecomendados ?? [];
-        const items = dispensaciones.map((dispensacion) => {
-            const loteRecomendado = lotesRecomendados.find((lote) => lote.seguimientoId === dispensacion.seguimientoId);
-
-            return {
-                seguimientoId: dispensacion.seguimientoId,
-                producto: dispensacion.producto,
-                lote: {
-                    loteId: loteRecomendado?.loteId ?? 0,
-                    batchNumber: loteRecomendado?.batchNumber ?? 'N/A',
-                    cantidadDisponible: loteRecomendado?.cantidadDisponible ?? 0,
-                },
-                cantidadSugerida: loteRecomendado?.cantidadSugerida ?? 0,
-                cantidad: loteRecomendado?.cantidadSugerida ?? 0,
-            };
-        });
-
-        return {
-            ordenProduccionId: data.ordenProduccionId,
-            items,
-        };
     };
 
     const handleDispensacion = async (orden: OrdenDispensacionResumen) => {
