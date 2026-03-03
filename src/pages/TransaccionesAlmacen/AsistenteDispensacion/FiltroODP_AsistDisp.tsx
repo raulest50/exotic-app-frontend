@@ -10,28 +10,29 @@ import {RepeatIcon, SearchIcon} from '@chakra-ui/icons';
 
 interface Props {
     onRefresh: () => void;
-    onSearchById: (ordenId: number) => void;
+    onSearchByLote: (lote: string) => void;
     isLoading: boolean;
 }
 
-type FiltroTipo = 'sin_filtro' | 'filtro_por_id';
+type FiltroTipo = 'sin_filtro' | 'filtro_por_lote';
 
-export default function FiltroODP_AsistDisp({onRefresh, onSearchById, isLoading}: Props) {
+export default function FiltroODP_AsistDisp({onRefresh, onSearchByLote, isLoading}: Props) {
     const [tipoFiltro, setTipoFiltro] = useState<FiltroTipo>('sin_filtro');
-    const [ordenIdInput, setOrdenIdInput] = useState<string>('');
+    const [loteInput, setLoteInput] = useState<string>('');
 
     const handleFiltroChange = (value: string) => {
         const nuevoTipo = value as FiltroTipo;
         setTipoFiltro(nuevoTipo);
         if (nuevoTipo === 'sin_filtro') {
-            setOrdenIdInput('');
+            setLoteInput('');
+            onRefresh();
         }
     };
 
     const handleSearch = () => {
-        const ordenId = parseInt(ordenIdInput.trim());
-        if (!isNaN(ordenId) && ordenId > 0) {
-            onSearchById(ordenId);
+        const lote = loteInput.trim();
+        if (lote.length > 0) {
+            onSearchByLote(lote);
         }
     };
 
@@ -46,11 +47,11 @@ export default function FiltroODP_AsistDisp({onRefresh, onSearchById, isLoading}
             <Select
                 value={tipoFiltro}
                 onChange={(e) => handleFiltroChange(e.target.value)}
-                width='150px'
+                width='170px'
                 size='md'
             >
                 <option value='sin_filtro'>Sin filtro</option>
-                <option value='filtro_por_id'>Filtro por ID</option>
+                <option value='filtro_por_lote'>Filtro por Lote</option>
             </Select>
             
             {tipoFiltro === 'sin_filtro' && (
@@ -64,17 +65,16 @@ export default function FiltroODP_AsistDisp({onRefresh, onSearchById, isLoading}
                 />
             )}
             
-            {tipoFiltro === 'filtro_por_id' && (
+            {tipoFiltro === 'filtro_por_lote' && (
                 <>
                     <Input
-                        placeholder='ID de orden'
-                        value={ordenIdInput}
-                        onChange={(e) => setOrdenIdInput(e.target.value)}
+                        placeholder='Número de lote'
+                        value={loteInput}
+                        onChange={(e) => setLoteInput(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        width='150px'
+                        width='200px'
                         size='md'
-                        type='number'
-                        min={1}
+                        type='text'
                     />
                     <Button
                         leftIcon={<SearchIcon />}
@@ -82,7 +82,7 @@ export default function FiltroODP_AsistDisp({onRefresh, onSearchById, isLoading}
                         isLoading={isLoading}
                         colorScheme='teal'
                         size='md'
-                        isDisabled={!ordenIdInput.trim() || isNaN(parseInt(ordenIdInput.trim())) || parseInt(ordenIdInput.trim()) <= 0}
+                        isDisabled={!loteInput.trim()}
                     >
                         Buscar
                     </Button>
@@ -91,4 +91,3 @@ export default function FiltroODP_AsistDisp({onRefresh, onSearchById, isLoading}
         </HStack>
     );
 }
-

@@ -57,6 +57,7 @@ export default class EndPointsURL{
     public search_ordenes_by_responsable:string;
     public produccion_terminado_data4pdf: string;
     public dispensacion_odp_consulta: string;
+    public dispensacion_odp_busqueda_lote: string;
     public search_orden_by_lote: string;
     public averias_items_dispensados: string;
     public averias_registrar: string;
@@ -305,6 +306,7 @@ export default class EndPointsURL{
         this.search_ordenes_by_responsable = `${domain}/${produccion_res}/ordenes_produccion/responsable/{responsableId}`;
         this.produccion_terminado_data4pdf = `${domain}/${produccion_res}/terminado/{id}/data4pdf`;
         this.dispensacion_odp_consulta = `${domain}/${produccion_res}/dispensacion_odp_consulta`;
+        this.dispensacion_odp_busqueda_lote = `${domain}/${produccion_res}/dispensacion_odp_busqueda_lote`;
         this.search_orden_by_lote = `${domain}/${averias_res}/search_orden_by_lote`;
         this.averias_items_dispensados = `${domain}/${averias_res}/orden/{ordenProduccionId}/items-dispensados`;
         this.averias_registrar = `${domain}/${averias_res}/registrar`;

@@ -46,6 +46,7 @@ interface OrdenDispensacionResumen {
     fechaCreacion?: string;
     estado?: string | number;
     estadoOrden?: string | number;
+    loteAsignado?: string;
     items?: DispensacionDTO['items'];
 }
 
@@ -67,12 +68,16 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
     const [loadingOrden, setLoadingOrden] = useState<number | null>(null);
     const endpoints = useMemo(() => new EndPointsURL(), []);
 
-    const fetchOrdenes = async (ordenId?: number) => {
+    const [loteFilter, setLoteFilter] = useState<string | undefined>(undefined);
+
+    const fetchOrdenes = async (loteAsignado?: string) => {
         setLoading(true);
         try {
-            let endpoint = `${endpoints.dispensacion_odp_consulta}?page=${page}&size=${size}`;
-            if (ordenId !== undefined) {
-                endpoint += `&ordenId=${ordenId}`;
+            let endpoint: string;
+            if (loteAsignado !== undefined) {
+                endpoint = `${endpoints.dispensacion_odp_busqueda_lote}?loteAsignado=${encodeURIComponent(loteAsignado)}&page=${page}&size=${size}`;
+            } else {
+                endpoint = `${endpoints.dispensacion_odp_consulta}?page=${page}&size=${size}`;
             }
             const resp = await axios.get<PaginatedResponse<OrdenDispensacionResumen>>(endpoint, {withCredentials: true});
             setOrdenes(resp.data.content ?? []);
@@ -85,20 +90,23 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
     };
 
     const handleRefresh = () => {
+        setLoteFilter(undefined);
         fetchOrdenes();
     };
 
-    const handleSearchById = (ordenId: number) => {
-        setPage(0); // Reset to first page when searching
-        fetchOrdenes(ordenId);
+    const handleSearchByLote = (lote: string) => {
+        setPage(0);
+        setLoteFilter(lote);
+        fetchOrdenes(lote);
     };
 
     useEffect(() => {
-        fetchOrdenes();
+        fetchOrdenes(loteFilter);
     }, [page, size]);
 
     useEffect(() => {
         setPage(0);
+        setLoteFilter(undefined);
         fetchOrdenes();
     }, [refreshToken]);
 
@@ -187,7 +195,7 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
                 <Heading fontFamily='Comfortaa Variable' size='md'>Órdenes de Producción abiertas/en progreso</Heading>
                 <FiltroODP_AsistDisp 
                     onRefresh={handleRefresh} 
-                    onSearchById={handleSearchById} 
+                    onSearchByLote={handleSearchByLote} 
                     isLoading={loading}
                 />
             </Flex>
@@ -195,7 +203,7 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
                 <Table size='sm'>
                     <Thead>
                         <Tr>
-                            <Th>ID</Th>
+                            <Th>Lote</Th>
                             <Th>Producto</Th>
                             <Th>Fecha</Th>
                             <Th>Estado</Th>
@@ -207,7 +215,7 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
                             const ordenId = orden.ordenProduccionId ?? orden.ordenId;
                             return (
                                 <Tr key={ordenId ?? `orden-${index}`}>
-                                    <Td>{ordenId ?? 'N/A'}</Td>
+                                    <Td>{orden.loteAsignado ?? 'N/A'}</Td>
                                     <Td>{orden.productoNombre ?? orden.producto?.nombre ?? 'Sin nombre'}</Td>
                                     <Td>{formatFecha(orden.fechaInicio ?? orden.fechaCreacion)}</Td>
                                     <Td>{formatEstado(orden.estado ?? orden.estadoOrden)}</Td>
