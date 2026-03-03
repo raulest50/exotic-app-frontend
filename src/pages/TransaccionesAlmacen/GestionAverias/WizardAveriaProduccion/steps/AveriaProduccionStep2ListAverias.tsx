@@ -70,7 +70,8 @@ export default function AveriaProduccionStep2ListAverias({
     const [isLoadingHistorial, setIsLoadingHistorial] = useState(false);
     const toast = useToast();
 
-    const selectedIds = new Set(averiaItems.map((i) => i.productoId));
+    const itemKey = (i: { productoId: string; loteId: number }) => `${i.productoId}|${i.loteId}`;
+    const selectedKeys = new Set(averiaItems.map((i) => itemKey(i)));
 
     useEffect(() => {
         if (selectedOrden) {
@@ -119,18 +120,18 @@ export default function AveriaProduccionStep2ListAverias({
     };
 
     const handleSeleccionar = (item: ItemDispensadoAveria) => {
-        if (selectedIds.has(item.productoId)) return;
+        if (selectedKeys.has(itemKey(item))) return;
         setAveriaItems([...averiaItems, { ...item, cantidadAveria: 0 }]);
     };
 
-    const handleRemover = (productoId: string) => {
-        setAveriaItems(averiaItems.filter((i) => i.productoId !== productoId));
+    const handleRemover = (key: string) => {
+        setAveriaItems(averiaItems.filter((i) => itemKey(i) !== key));
     };
 
-    const handleCantidadChange = (productoId: string, value: number) => {
+    const handleCantidadChange = (key: string, value: number) => {
         setAveriaItems(
             averiaItems.map((i) =>
-                i.productoId === productoId ? { ...i, cantidadAveria: value } : i,
+                itemKey(i) === key ? { ...i, cantidadAveria: value } : i,
             ),
         );
     };
@@ -177,6 +178,7 @@ export default function AveriaProduccionStep2ListAverias({
                                 <Thead>
                                     <Tr>
                                         <Th>Producto</Th>
+                                        <Th>Lote</Th>
                                         <Th isNumeric>Dispensada</Th>
                                         <Th isNumeric>Averiada</Th>
                                         <Th isNumeric>Disponible</Th>
@@ -185,15 +187,19 @@ export default function AveriaProduccionStep2ListAverias({
                                 </Thead>
                                 <Tbody>
                                     {itemsDispensados.map((item) => {
-                                        const isSelected = selectedIds.has(item.productoId);
+                                        const key = itemKey(item);
+                                        const isSelected = selectedKeys.has(key);
                                         return (
                                             <Tr
-                                                key={item.productoId}
+                                                key={key}
                                                 opacity={isSelected ? 0.5 : 1}
                                             >
                                                 <Td>
                                                     <Text fontSize="sm">{item.productoNombre}</Text>
                                                     <Text fontSize="xs" color="gray.500">{item.tipoUnidades}</Text>
+                                                </Td>
+                                                <Td>
+                                                    <Text fontSize="sm">{item.batchNumber}</Text>
                                                 </Td>
                                                 <Td isNumeric>{item.cantidadDispensada}</Td>
                                                 <Td isNumeric>{item.cantidadAveriadaPrevia}</Td>
@@ -229,58 +235,61 @@ export default function AveriaProduccionStep2ListAverias({
                     </Heading>
                     {averiaItems.length > 0 ? (
                         <VStack spacing={3} align="stretch">
-                            {averiaItems.map((item) => (
-                                <Box
-                                    key={item.productoId}
-                                    p={3}
-                                    borderWidth="1px"
-                                    borderRadius="md"
-                                    borderColor="teal.200"
-                                    bg="teal.50"
-                                >
-                                    <Flex justify="space-between" align="start" mb={2}>
-                                        <Box>
-                                            <Text fontSize="sm" fontWeight="semibold">
-                                                {item.productoNombre}
+                            {averiaItems.map((item) => {
+                                const key = itemKey(item);
+                                return (
+                                    <Box
+                                        key={key}
+                                        p={3}
+                                        borderWidth="1px"
+                                        borderRadius="md"
+                                        borderColor="teal.200"
+                                        bg="teal.50"
+                                    >
+                                        <Flex justify="space-between" align="start" mb={2}>
+                                            <Box>
+                                                <Text fontSize="sm" fontWeight="semibold">
+                                                    {item.productoNombre}
+                                                </Text>
+                                                <Text fontSize="xs" color="gray.500">
+                                                    Lote: {item.batchNumber} | Disponible: {item.cantidadDisponibleAveria} {item.tipoUnidades}
+                                                </Text>
+                                            </Box>
+                                            <IconButton
+                                                aria-label="Eliminar"
+                                                icon={<FiX />}
+                                                size="sm"
+                                                colorScheme="red"
+                                                variant="ghost"
+                                                onClick={() => handleRemover(key)}
+                                            />
+                                        </Flex>
+                                        <Flex align="center" gap={2}>
+                                            <Text fontSize="sm" whiteSpace="nowrap">Cant. Avería:</Text>
+                                            <NumberInput
+                                                size="sm"
+                                                min={0.01}
+                                                max={item.cantidadDisponibleAveria}
+                                                step={0.01}
+                                                precision={2}
+                                                value={item.cantidadAveria || ''}
+                                                onChange={(_, val) => handleCantidadChange(key, val)}
+                                            >
+                                                <NumberInputField />
+                                                <NumberInputStepper>
+                                                    <NumberIncrementStepper />
+                                                    <NumberDecrementStepper />
+                                                </NumberInputStepper>
+                                            </NumberInput>
+                                        </Flex>
+                                        {item.cantidadAveria > item.cantidadDisponibleAveria && (
+                                            <Text fontSize="xs" color="red.500" mt={1}>
+                                                Excede la cantidad disponible ({item.cantidadDisponibleAveria})
                                             </Text>
-                                            <Text fontSize="xs" color="gray.500">
-                                                Disponible: {item.cantidadDisponibleAveria} {item.tipoUnidades}
-                                            </Text>
-                                        </Box>
-                                        <IconButton
-                                            aria-label="Eliminar"
-                                            icon={<FiX />}
-                                            size="sm"
-                                            colorScheme="red"
-                                            variant="ghost"
-                                            onClick={() => handleRemover(item.productoId)}
-                                        />
-                                    </Flex>
-                                    <Flex align="center" gap={2}>
-                                        <Text fontSize="sm" whiteSpace="nowrap">Cant. Avería:</Text>
-                                        <NumberInput
-                                            size="sm"
-                                            min={0.01}
-                                            max={item.cantidadDisponibleAveria}
-                                            step={0.01}
-                                            precision={2}
-                                            value={item.cantidadAveria || ''}
-                                            onChange={(_, val) => handleCantidadChange(item.productoId, val)}
-                                        >
-                                            <NumberInputField />
-                                            <NumberInputStepper>
-                                                <NumberIncrementStepper />
-                                                <NumberDecrementStepper />
-                                            </NumberInputStepper>
-                                        </NumberInput>
-                                    </Flex>
-                                    {item.cantidadAveria > item.cantidadDisponibleAveria && (
-                                        <Text fontSize="xs" color="red.500" mt={1}>
-                                            Excede la cantidad disponible ({item.cantidadDisponibleAveria})
-                                        </Text>
-                                    )}
-                                </Box>
-                            ))}
+                                        )}
+                                    </Box>
+                                );
+                            })}
                         </VStack>
                     ) : (
                         <Text color="gray.500" textAlign="center">

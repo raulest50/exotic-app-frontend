@@ -74,6 +74,7 @@ export default function AveriaProduccionStep3ReviewSubmit({
                 username: user ?? '',
                 items: averiaItems.map(item => ({
                     productoId: item.productoId,
+                    loteId: item.loteId,
                     cantidadAveria: item.cantidadAveria,
                 })),
             };
@@ -145,15 +146,17 @@ export default function AveriaProduccionStep3ReviewSubmit({
                                 <Tr>
                                     <Th>Producto ID</Th>
                                     <Th>Nombre</Th>
+                                    <Th>Lote</Th>
                                     <Th>Unidades</Th>
                                     <Th isNumeric>Cantidad Avería</Th>
                                 </Tr>
                             </Thead>
                             <Tbody>
                                 {averiaItems.map(item => (
-                                    <Tr key={item.productoId}>
+                                    <Tr key={`${item.productoId}|${item.loteId}`}>
                                         <Td>{item.productoId}</Td>
                                         <Td>{item.productoNombre}</Td>
+                                        <Td>{item.batchNumber}</Td>
                                         <Td>{item.tipoUnidades}</Td>
                                         <Td isNumeric>{item.cantidadAveria}</Td>
                                     </Tr>

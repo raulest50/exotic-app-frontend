@@ -41,6 +41,8 @@ export interface ItemDispensadoAveria {
     productoId: string;
     productoNombre: string;
     tipoUnidades: string;
+    loteId: number;
+    batchNumber: string;
     cantidadDispensada: number;
     cantidadAveriadaPrevia: number;
     cantidadDisponibleAveria: number;
