@@ -41,6 +41,7 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
         OAA = 'OAA',
         OD = 'OD',
         CM = 'CM',
+        RA = 'RA',
     }
 
     const [viewMode, setViewMode] = useState(MODE.OCM);
@@ -262,6 +263,12 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
             )
         }
 
+        if(viewMode === MODE.RA){
+            return (
+                <DateModeSelector />
+            )
+        }
+
     }
 
     return (
@@ -278,6 +285,7 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
                         <option value={MODE.OAA}>Ajustes de Almacén</option>
                         <option value={MODE.OD}>Dispensación de Materiales</option>
                         <option value={MODE.CM}>Carga Masiva de Inventario</option>
+                        <option value={MODE.RA}>Reporte de Avería</option>
                     </Select>
                 </FormControl>
 

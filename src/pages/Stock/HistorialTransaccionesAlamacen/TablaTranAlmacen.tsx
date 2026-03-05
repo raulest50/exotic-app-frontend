@@ -55,6 +55,7 @@ const formatTipoEntidad = (tipo?: string) => {
         'OAA': 'Ajuste Almacén',
         'OD': 'Dispensación',
         'CM': 'Carga Masiva',
+        'RA': 'Reporte Avería',
     };
     return tipos[tipo] || tipo;
 };
