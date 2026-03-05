@@ -44,6 +44,7 @@ export default function AveriaAlmacenStep0SelectMaterial({
             loteId: pickerItem.loteId,
             batchNumber: pickerItem.batchNumber,
             cantidadDisponible: pickerItem.cantidadDisponible,
+            cantidadAveria: 0,
         };
 
         const exists = selectedItems.some(

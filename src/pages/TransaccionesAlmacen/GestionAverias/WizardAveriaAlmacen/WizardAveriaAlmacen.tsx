@@ -12,8 +12,8 @@ import {
 } from '@chakra-ui/react';
 import { Step, StepIcon, StepIndicator, Stepper, StepTitle } from '@chakra-ui/icons';
 import AveriaAlmacenStep0SelectMaterial from './steps/AveriaAlmacenStep0SelectMaterial';
-import AveriaAlmacenStep1Placeholder from './steps/AveriaAlmacenStep1Placeholder';
-import AveriaAlmacenStep2Placeholder from './steps/AveriaAlmacenStep2Placeholder';
+import AveriaAlmacenStep1Quantities from './steps/AveriaAlmacenStep1Quantities';
+import AveriaAlmacenStep2ReviewSubmit from './steps/AveriaAlmacenStep2ReviewSubmit';
 
 export interface AveriaAlmacenItem {
     productoId: string;
@@ -22,6 +22,7 @@ export interface AveriaAlmacenItem {
     loteId: number;
     batchNumber: string;
     cantidadDisponible: number;
+    cantidadAveria: number;
 }
 
 interface WizardAveriaAlmacenProps {
@@ -30,7 +31,7 @@ interface WizardAveriaAlmacenProps {
 
 const steps = [
     { title: 'Selección de Materiales', description: 'Buscar por lote' },
-    { title: 'Detalles', description: 'Información adicional' },
+    { title: 'Cantidades Averiadas', description: 'Especificar cantidades' },
     { title: 'Confirmar', description: 'Validar y ejecutar' },
 ];
 
@@ -59,16 +60,19 @@ export default function WizardAveriaAlmacen({ onBack }: WizardAveriaAlmacenProps
         }
         if (activeStep === 1) {
             return (
-                <AveriaAlmacenStep1Placeholder
+                <AveriaAlmacenStep1Quantities
                     setActiveStep={setActiveStep}
+                    selectedItems={selectedItems}
+                    setSelectedItems={setSelectedItems}
                 />
             );
         }
         if (activeStep === 2) {
             return (
-                <AveriaAlmacenStep2Placeholder
+                <AveriaAlmacenStep2ReviewSubmit
                     setActiveStep={setActiveStep}
                     onReset={handleReset}
+                    selectedItems={selectedItems}
                 />
             );
         }

@@ -63,6 +63,7 @@ export default class EndPointsURL{
     public averias_registrar: string;
     public averias_historial: string;
     public averias_almacen_search_material_by_lote: string;
+    public averias_almacen_registrar: string;
 
     // recursos de produccion
     public save_recurso_produccion:string;
@@ -313,6 +314,7 @@ export default class EndPointsURL{
         this.averias_registrar = `${domain}/${averias_res}/registrar`;
         this.averias_historial = `${domain}/${averias_res}/orden/{ordenProduccionId}/historial`;
         this.averias_almacen_search_material_by_lote = `${domain}/${averias_res}/almacen/search-material-by-lote`;
+        this.averias_almacen_registrar = `${domain}/${averias_res}/almacen/registrar`;
 
         // recursos de produccion endpoints
         this.save_recurso_produccion = `${domain}/${recursos_produccion_res}`;
