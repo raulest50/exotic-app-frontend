@@ -20,7 +20,7 @@ import {
     Tag
 } from '@chakra-ui/react';
 import {useEffect, useState} from 'react';
-import {DispensacionDTO, InsumoDesglosado, LoteSeleccionado} from '../types';
+import {DispensacionDTO, InsumoDesglosado, ItemPendienteReposicion, LoteSeleccionado} from '../types';
 import UserPickerGeneric from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric';
 import {User} from '../../../pages/Usuarios/GestionUsuarios/types';
 import EndPointsURL from '../../../api/EndPointsURL';
@@ -39,6 +39,8 @@ interface Props {
     lotesPorMaterial?: Map<string, LoteSeleccionado[]>;
     insumosEmpaque?: InsumoDesglosado[];
     lotesPorMaterialEmpaque?: Map<string, LoteSeleccionado[]>;
+    itemsPendientesReposicion?: ItemPendienteReposicion[];
+    lotesPorReposicionAveria?: Map<string, LoteSeleccionado[]>;
     onDispensacionSuccess?: () => void;
 }
 
@@ -50,6 +52,8 @@ export default function DispensacionStep3ReviewSubmit({
     lotesPorMaterial,
     insumosEmpaque = [],
     lotesPorMaterialEmpaque,
+    itemsPendientesReposicion = [],
+    lotesPorReposicionAveria,
     onDispensacionSuccess
 }: Props) {
     const [token, setToken] = useState('');
@@ -123,7 +127,8 @@ export default function DispensacionStep3ReviewSubmit({
 
     const canGeneratePDF = usuariosRealizadores.length > 0 && 
         ((lotesPorMaterial && lotesPorMaterial.size > 0) || 
-         (lotesPorMaterialEmpaque && lotesPorMaterialEmpaque.size > 0));
+         (lotesPorMaterialEmpaque && lotesPorMaterialEmpaque.size > 0) ||
+         (lotesPorReposicionAveria && lotesPorReposicionAveria.size > 0));
     const canRegister = usuariosRealizadores.length > 0 && inputToken === token && !isLoading;
 
     const findInsumoById = (insumos: InsumoDesglosado[] | undefined, insumoId: number): InsumoDesglosado | undefined => {
@@ -359,44 +364,79 @@ export default function DispensacionStep3ReviewSubmit({
 
         try {
             const items = buildDispensacionItems();
+            const tieneItemsNormales = items.length > 0;
 
-            const dispensacionDTO: DispensacionDTO = {
+            // Construir items de reposición por avería
+            const repoItems: Array<{productoId: string; cantidad: number; loteId: number | null}> = [];
+            if (lotesPorReposicionAveria) {
+                lotesPorReposicionAveria.forEach((lotes, productoId) => {
+                    lotes.forEach(lote => {
+                        repoItems.push({
+                            productoId,
+                            cantidad: lote.cantidad,
+                            loteId: lote.loteId,
+                        });
+                    });
+                });
+            }
+            const tieneItemsReposicion = repoItems.length > 0;
+
+            if (!tieneItemsNormales && !tieneItemsReposicion) {
+                toast({
+                    title: 'Sin items',
+                    description: 'No hay materiales seleccionados para dispensar.',
+                    status: 'warning',
+                    duration: 3000,
+                    isClosable: true
+                });
+                setIsLoading(false);
+                return;
+            }
+
+            const baseDTO = {
                 ordenProduccionId: ordenProduccionId,
                 usuarioRealizadorIds: usuariosRealizadores.map(u => u.id),
                 usuarioAprobadorId: currentUser?.id,
-                usuarioId: usuariosRealizadores[0]?.id || currentUser?.id || 0, // Para compatibilidad
+                usuarioId: usuariosRealizadores[0]?.id || currentUser?.id || 0,
                 observaciones: dispensacion?.observaciones || '',
-                items: items.map(item => ({
-                    producto: {} as any,
-                    lote: {} as any,
-                    cantidadSugerida: item.cantidad,
-                    cantidad: item.cantidad
-                }))
             };
 
-            // Convertir a formato del backend (DispensacionItemDTO[])
-            const backendDTO = {
-                ordenProduccionId: dispensacionDTO.ordenProduccionId,
-                usuarioRealizadorIds: dispensacionDTO.usuarioRealizadorIds,
-                usuarioAprobadorId: dispensacionDTO.usuarioAprobadorId,
-                usuarioId: dispensacionDTO.usuarioId,
-                observaciones: dispensacionDTO.observaciones,
-                items: items.map(item => ({
-                    productoId: item.productoId,
-                    cantidad: item.cantidad,
-                    loteId: item.loteId,
-                }))
-            };
+            // 1. Enviar dispensación normal si hay items
+            if (tieneItemsNormales) {
+                const backendDTO = {
+                    ...baseDTO,
+                    items: items.map(item => ({
+                        productoId: item.productoId,
+                        cantidad: item.cantidad,
+                        loteId: item.loteId,
+                    }))
+                };
 
-            const response = await axios.post(
-                endPoints.dispensacion,
-                backendDTO,
-                {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
+                await axios.post(
+                    endPoints.dispensacion,
+                    backendDTO,
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
+            }
+
+            // 2. Enviar reposición por avería si hay items
+            if (tieneItemsReposicion) {
+                const repoDTO = {
+                    ...baseDTO,
+                    observaciones: (baseDTO.observaciones ? baseDTO.observaciones + ' | ' : '') + 'Reposición por avería',
+                    items: repoItems.map(item => ({
+                        productoId: item.productoId,
+                        cantidad: item.cantidad,
+                        loteId: item.loteId,
+                    }))
+                };
+
+                await axios.post(
+                    endPoints.dispensacion_reposicion_averia,
+                    repoDTO,
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
+            }
 
             // Generar PDF final (sin borrador) después de registrar exitosamente
             try {
@@ -561,6 +601,36 @@ export default function DispensacionStep3ReviewSubmit({
         });
     }
 
+    // Construir resumen de items de reposición por avería
+    const reposicionItems = Array<{
+        productoId: string;
+        productoNombre: string;
+        loteBatch: string;
+        cantidad: number;
+        unidad: string;
+        fechaVencimiento?: string;
+    }>();
+
+    if (lotesPorReposicionAveria && itemsPendientesReposicion.length > 0) {
+        lotesPorReposicionAveria.forEach((lotes, productoId) => {
+            const item = itemsPendientesReposicion.find(i => i.productoId === productoId);
+            if (item) {
+                lotes.forEach(lote => {
+                    reposicionItems.push({
+                        productoId: productoId,
+                        productoNombre: item.productoNombre,
+                        loteBatch: lote.batchNumber,
+                        cantidad: lote.cantidad,
+                        unidad: item.tipoUnidades,
+                        fechaVencimiento: lote.expirationDate || undefined,
+                    });
+                });
+            }
+        });
+    }
+
+    const tieneReposicion = reposicionItems.length > 0;
+
     return (
         <Box p='1em' bg='blue.50' minH='100vh'>
             <Flex direction='column' gap={6} maxW='container.xl' mx='auto'>
@@ -683,6 +753,44 @@ export default function DispensacionStep3ReviewSubmit({
                         </Text>
                     )}
                 </Box>
+
+                {/* Resumen de Reposición por Avería */}
+                {tieneReposicion && (
+                    <Box bg='white' p={4} borderRadius='md' boxShadow='sm' borderLeft='4px solid' borderLeftColor='orange.400'>
+                        <Heading size='md' mb={4} fontFamily='Comfortaa Variable' color='orange.700'>
+                            Reposición de Material por Averías
+                        </Heading>
+                        <Table size='sm' variant='striped'>
+                            <Thead>
+                                <Tr>
+                                    <Th>Material (ID)</Th>
+                                    <Th>Nombre</Th>
+                                    <Th>Lote (Batch)</Th>
+                                    <Th>Cantidad</Th>
+                                    <Th>Unidad</Th>
+                                    <Th>Fecha Vencimiento</Th>
+                                </Tr>
+                            </Thead>
+                            <Tbody>
+                                {reposicionItems.map((item, idx) => (
+                                    <Tr key={`repo-${idx}`}>
+                                        <Td>{item.productoId}</Td>
+                                        <Td>
+                                            {item.productoNombre}
+                                            <Tag ml={2} size="sm" colorScheme="orange" variant="solid">
+                                                Reposición Avería
+                                            </Tag>
+                                        </Td>
+                                        <Td>{item.loteBatch}</Td>
+                                        <Td>{item.cantidad.toFixed(2)}</Td>
+                                        <Td>{item.unidad}</Td>
+                                        <Td>{item.fechaVencimiento || 'N/A'}</Td>
+                                    </Tr>
+                                ))}
+                            </Tbody>
+                        </Table>
+                    </Box>
+                )}
 
                 {/* Token de Verificación */}
                 <Box bg='white' p={4} borderRadius='md' boxShadow='sm'>

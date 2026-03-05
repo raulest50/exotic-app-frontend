@@ -4,7 +4,7 @@ import {useState} from 'react';
 import DispensacionStep1SelectOrder from './DispensacionStep1SelectOrder.tsx';
 import DispensacionStep2EditItems from './DispensacionStep2EditItems.tsx';
 import DispensacionStep3ReviewSubmit from './DispensacionStep3ReviewSubmit.tsx';
-import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
+import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, ItemPendienteReposicion, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
 
 const steps = [
     {title:'Primero', description:'Identificar Orden'},
@@ -26,6 +26,8 @@ export function AsistenteDispensacion(){
     const [lotesPorMaterialEmpaque, setLotesPorMaterialEmpaque] = useState<Map<string, LoteSeleccionado[]>>(new Map());
     const [refreshToken, setRefreshToken] = useState(0);
     const [historialDispensaciones, setHistorialDispensaciones] = useState<TransaccionAlmacenDetalle[]>([]);
+    const [itemsPendientesReposicion, setItemsPendientesReposicion] = useState<ItemPendienteReposicion[]>([]);
+    const [lotesPorReposicionAveria, setLotesPorReposicionAveria] = useState<Map<string, LoteSeleccionado[]>>(new Map());
 
     const renderStep = () => {
         if(activeStep===0){
@@ -42,6 +44,8 @@ export function AsistenteDispensacion(){
                 setHistorialDispensaciones={setHistorialDispensaciones}
                 setLotesPorMaterial={setLotesPorMaterial}
                 setLotesPorMaterialEmpaque={setLotesPorMaterialEmpaque}
+                setItemsPendientesReposicion={setItemsPendientesReposicion}
+                setLotesPorReposicionAveria={setLotesPorReposicionAveria}
                 refreshToken={refreshToken}
             />;
         }
@@ -62,6 +66,9 @@ export function AsistenteDispensacion(){
                 historialDispensaciones={historialDispensaciones}
                 lotesPorMaterialEmpaque={lotesPorMaterialEmpaque}
                 setLotesPorMaterialEmpaque={setLotesPorMaterialEmpaque}
+                itemsPendientesReposicion={itemsPendientesReposicion}
+                lotesPorReposicionAveria={lotesPorReposicionAveria}
+                setLotesPorReposicionAveria={setLotesPorReposicionAveria}
             />;
         }
         if(activeStep===2){
@@ -73,6 +80,8 @@ export function AsistenteDispensacion(){
                 lotesPorMaterial={lotesPorMaterial}
                 insumosEmpaque={insumosEmpaque}
                 lotesPorMaterialEmpaque={lotesPorMaterialEmpaque}
+                itemsPendientesReposicion={itemsPendientesReposicion}
+                lotesPorReposicionAveria={lotesPorReposicionAveria}
                 onDispensacionSuccess={() => setRefreshToken(prev => prev + 1)}
             />;
         }

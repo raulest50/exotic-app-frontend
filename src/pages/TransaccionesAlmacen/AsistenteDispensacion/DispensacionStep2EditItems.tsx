@@ -1,12 +1,13 @@
 import {Alert, AlertIcon, AlertTitle, AlertDescription, Box, Button, Flex, Heading, Text} from '@chakra-ui/react';
 import React, {useEffect, useMemo, useState} from 'react';
-import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
+import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, ItemPendienteReposicion, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
 import {LotePickerDispensacion} from './AsistenteDispensacionComponents/LotePickerDispensacion';
 import {InsumoWithStock} from '../../Produccion/types';
 import ResumenHistorialDispensaciones from './ResumenHistorialDispensaciones';
 import {getAccessLevel, getCurrentUser} from '../../../api/UserApi';
 import TablaDispensacionInsumos from './TablaDispensacionInsumos';
 import TablaDispensacionInsumosEmpaque from './TablaDispensacionInsumosEmpaque';
+import SeccionReposicionAverias from './SeccionReposicionAverias';
 
 interface Props {
     setActiveStep: (step:number)=>void;
@@ -25,6 +26,9 @@ interface Props {
     historialDispensaciones?: TransaccionAlmacenDetalle[];
     lotesPorMaterialEmpaque?: Map<string, LoteSeleccionado[]>;
     setLotesPorMaterialEmpaque?: (lotes: Map<string, LoteSeleccionado[]>) => void;
+    itemsPendientesReposicion?: ItemPendienteReposicion[];
+    lotesPorReposicionAveria?: Map<string, LoteSeleccionado[]>;
+    setLotesPorReposicionAveria?: (lotes: Map<string, LoteSeleccionado[]>) => void;
 }
 
 type InsumoWithStockResponse = Omit<InsumoWithStock, 'tipo_producto' | 'subInsumos'> & {
@@ -50,7 +54,10 @@ export default function DispensacionStep2EditItems({
     cantidadProducir,
     historialDispensaciones = [],
     lotesPorMaterialEmpaque: lotesPorMaterialEmpaqueProp,
-    setLotesPorMaterialEmpaque: setLotesPorMaterialEmpaqueProp
+    setLotesPorMaterialEmpaque: setLotesPorMaterialEmpaqueProp,
+    itemsPendientesReposicion = [],
+    lotesPorReposicionAveria,
+    setLotesPorReposicionAveria
 }: Props){
     // Estado para lotes seleccionados por material (key: productoId)
     // Si viene como prop, usarlo; sino crear estado local
@@ -402,6 +409,13 @@ export default function DispensacionStep2EditItems({
                         ordenProduccionId={ordenProduccionId ?? null}
                         dispensaciones={historialDispensaciones}
                     />
+                    {lotesPorReposicionAveria && setLotesPorReposicionAveria && (
+                        <SeccionReposicionAverias
+                            itemsPendientes={itemsPendientesReposicion}
+                            lotesPorReposicionAveria={lotesPorReposicionAveria}
+                            setLotesPorReposicionAveria={setLotesPorReposicionAveria}
+                        />
+                    )}
                     <Flex w='40%' gap={4}>
                         <Button flex='1' onClick={()=>setActiveStep(0)}>Atrás</Button>
                         <Button 

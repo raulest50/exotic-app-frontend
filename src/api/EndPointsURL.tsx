@@ -122,6 +122,7 @@ export default class EndPointsURL{
     public insumos_desglosados_orden: string;
     public dispensacion_resumen_odp: string;
     public historial_dispensacion_filter: string;
+    public dispensacion_reposicion_averia: string;
 
 
     // user resources (solo autenticacion)
@@ -364,6 +365,7 @@ export default class EndPointsURL{
         this.insumos_desglosados_orden = `${domain}/${salidas_almacen_res}/orden-produccion/{ordenProduccionId}/insumos-desglosados`;
         this.dispensacion_resumen_odp = `${domain}/${salidas_almacen_res}/orden-produccion/{ordenProduccionId}/dispensacion-resumen`;
         this.historial_dispensacion_filter = `${domain}/${salidas_almacen_res}/historial_dispensacion_filter`;
+        this.dispensacion_reposicion_averia = `${domain}/${salidas_almacen_res}/dispensacion-reposicion-averia`;
 
 
         // user endpoints

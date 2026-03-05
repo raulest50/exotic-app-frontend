@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
-import {CasePackResponseDTO, DispensacionDTO, DispensacionResumenResponse, InsumoDesglosado, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
+import {CasePackResponseDTO, DispensacionDTO, DispensacionResumenResponse, InsumoDesglosado, ItemPendienteReposicion, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
 import FiltroODP_AsistDisp from './FiltroODP_AsistDisp';
 
 interface Props {
@@ -32,6 +32,8 @@ interface Props {
     setHistorialDispensaciones?: (historial: TransaccionAlmacenDetalle[]) => void;
     setLotesPorMaterial?: (lotes: Map<string, LoteSeleccionado[]>) => void;
     setLotesPorMaterialEmpaque?: (lotes: Map<string, LoteSeleccionado[]>) => void;
+    setItemsPendientesReposicion?: (items: ItemPendienteReposicion[]) => void;
+    setLotesPorReposicionAveria?: (lotes: Map<string, LoteSeleccionado[]>) => void;
     refreshToken?: number;
 }
 
@@ -58,7 +60,7 @@ interface PaginatedResponse<T> {
     size: number;
 }
 
-export default function DispensacionStep1SelectOrder({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId, setInsumosAnidados, setProductoId, setInsumosEmpaque, setCasePack, setCantidadProducir, setHistorialDispensaciones, setLotesPorMaterial, setLotesPorMaterialEmpaque, refreshToken}: Props){
+export default function DispensacionStep1SelectOrder({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId, setInsumosAnidados, setProductoId, setInsumosEmpaque, setCasePack, setCantidadProducir, setHistorialDispensaciones, setLotesPorMaterial, setLotesPorMaterialEmpaque, setItemsPendientesReposicion, setLotesPorReposicionAveria, refreshToken}: Props){
     const toast = useToast();
     const [ordenes, setOrdenes] = useState<OrdenDispensacionResumen[]>([]);
     const [page, setPage] = useState(0);
@@ -170,12 +172,19 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
             // Por ahora, crear un DispensacionDTO vacío para mantener la estructura
             setDispensacion({ordenProduccionId: ordenId, items: []});
 
+            if (setItemsPendientesReposicion) {
+                setItemsPendientesReposicion(resp.data.itemsPendientesReposicion || []);
+            }
+
             // Resetear lotes seleccionados al iniciar nueva dispensación
             if (setLotesPorMaterial) {
                 setLotesPorMaterial(new Map());
             }
             if (setLotesPorMaterialEmpaque) {
                 setLotesPorMaterialEmpaque(new Map());
+            }
+            if (setLotesPorReposicionAveria) {
+                setLotesPorReposicionAveria(new Map());
             }
 
             setActiveStep(1);

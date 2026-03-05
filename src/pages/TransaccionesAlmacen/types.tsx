@@ -323,11 +323,21 @@ export interface TransaccionAlmacenDetalle {
     movimientos: MovimientoDetalle[];
 }
 
+export interface ItemPendienteReposicion {
+    productoId: string;
+    productoNombre: string;
+    tipoUnidades: string;
+    cantidadAveriada: number;
+    cantidadRepuesta: number;
+    cantidadPendiente: number;
+}
+
 export interface DispensacionResumenResponse {
     insumosReceta: InsumoDesglosado[];
     insumosEmpaque: InsumoDesglosado[];
     casePack?: CasePackResponseDTO | null;
     historialDispensaciones: TransaccionAlmacenDetalle[];
+    itemsPendientesReposicion?: ItemPendienteReposicion[];
 }
 
 // ===== Movimientos y Consolidado OCM =====
