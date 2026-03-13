@@ -4,6 +4,8 @@ import {
     Button,
     ButtonGroup,
     Flex,
+    NumberInput,
+    NumberInputField,
     Spinner,
     Text,
     VStack,
@@ -38,6 +40,7 @@ export default function Step1CalcularDistribucion({ excelFile, setActiveStep }: 
     const [modo, setModo] = useState<ModoDistribucion>("valor");
     const [page, setPage] = useState(0);
     const [size, setSize] = useState(20);
+    const [necesidades, setNecesidades] = useState<Record<string, number>>({});
 
     useEffect(() => {
         if (!excelFile) {
@@ -165,6 +168,7 @@ export default function Step1CalcularDistribucion({ excelFile, setActiveStep }: 
                             <Th isNumeric>Valor Total</Th>
                             <Th isNumeric>% Participación</Th>
                             <Th isNumeric>% Acumulado</Th>
+                            <Th isNumeric>Necesidad</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
@@ -195,6 +199,22 @@ export default function Step1CalcularDistribucion({ excelFile, setActiveStep }: 
                                         color={isParetoRow ? "orange.600" : undefined}
                                     >
                                         {acum.toFixed(2)}%
+                                    </Td>
+                                    <Td isNumeric>
+                                        <NumberInput
+                                            size="sm"
+                                            min={0}
+                                            value={necesidades[fila.terminado.productoId] ?? ""}
+                                            onChange={(_, valueAsNumber) =>
+                                                setNecesidades(prev => ({
+                                                    ...prev,
+                                                    [fila.terminado.productoId]: isNaN(valueAsNumber) ? 0 : valueAsNumber,
+                                                }))
+                                            }
+                                            w="110px"
+                                        >
+                                            <NumberInputField textAlign="right" placeholder="0" />
+                                        </NumberInput>
                                     </Td>
                                 </Tr>
                             );
