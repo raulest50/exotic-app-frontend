@@ -25,6 +25,7 @@ interface EliminacionOCMStep0SelectEntityTypeProps {
 const ENTITY_OPTIONS: { id: TipoEntidadEliminacion; label: string; description: string }[] = [
     { id: "ORDEN_COMPRA", label: "Orden de compra", description: "Eliminación forzada de Orden de Compra de Materiales (OCM)" },
     { id: "ORDEN_PRODUCCION", label: "Orden de producción", description: "Eliminación forzada de Orden de Producción (solo si no tiene transacciones de almacén)" },
+    { id: "PURGA_COMPLETA_TERMINADOS", label: "Purga Completa Terminados", description: "Elimina todos los terminados y sus datos relacionados. Solo disponible en local y staging." },
 ];
 
 export default function EliminacionStep0SelectEntityType({
@@ -45,7 +46,8 @@ export default function EliminacionStep0SelectEntityType({
                 <Heading size="md">Seleccione el tipo de entidad a eliminar</Heading>
                 <Text color="gray.600">
                     Elija el tipo de registro sobre el cual desea realizar una eliminación forzada.
-                    En el siguiente paso podrá seleccionar el registro concreto y estudiar las dependencias.
+                    En el siguiente paso podrá seleccionar el registro concreto o confirmar una
+                    operación masiva, según el tipo elegido.
                 </Text>
                 <Button
                     leftIcon={<AddIcon />}

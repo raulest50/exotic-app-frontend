@@ -12,14 +12,17 @@ import {
 import {Step, StepIcon, StepIndicator, Stepper, StepTitle} from "@chakra-ui/icons";
 import Step0CargarValidarExcel from "./Step0CargarValidarExcel/Step0CargarValidarExcel.tsx";
 import Step1CalcularDistribucion from "./Step1CalcularDistribucion/Step1CalcularDistribucion.tsx";
+import Step2PlaneacionProduccion from "./Step1VisualizarDistribucion/Step2PlaneacionProduccion.tsx";
+import type { TerminadoConVentas } from "./PlaneacionProduccionService.tsx";
 
 type Props = {
     isActive?: boolean;
 };
 
 const steps = [
-    { title: 'Primero', description: 'Cargar y Validar Excel' },
-    { title: 'Segundo', description: 'Visualizar Distribución' },
+    { title: 'Primero',  description: 'Cargar y Validar Excel' },
+    { title: 'Segundo',  description: 'Visualizar Distribución' },
+    { title: 'Tercero',  description: 'Planeación de Producción' },
 ];
 
 export const PlaneacionProduccionTab = (props: Props) => {
@@ -30,6 +33,8 @@ export const PlaneacionProduccionTab = (props: Props) => {
     });
 
     const [excelFile, setExcelFile] = useState<File | null>(null);
+    const [rawData, setRawData] = useState<TerminadoConVentas[]>([]);
+    const [necesidades, setNecesidades] = useState<Record<string, number>>({});
 
     function ConditionalRenderStep() {
         if (activeStep === 0) {
@@ -39,13 +44,31 @@ export const PlaneacionProduccionTab = (props: Props) => {
         }
         if (activeStep === 1) {
             return(
-                <Step1CalcularDistribucion excelFile={excelFile} setActiveStep={setActiveStep} />
+                <Step1CalcularDistribucion
+                    excelFile={excelFile}
+                    setActiveStep={setActiveStep}
+                    rawData={rawData}
+                    setRawData={setRawData}
+                    necesidades={necesidades}
+                    setNecesidades={setNecesidades}
+                />
+            );
+        }
+        if (activeStep === 2) {
+            return(
+                <Step2PlaneacionProduccion
+                    rawData={rawData}
+                    necesidades={necesidades}
+                    setActiveStep={setActiveStep}
+                />
             );
         }
     }
 
     const handleReset = () => {
         setExcelFile(null);
+        setRawData([]);
+        setNecesidades({});
         setActiveStep(0);
     };
 

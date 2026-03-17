@@ -3,7 +3,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useState } from "react";
 import Step0SelectTipoCarga, { TipoCargaTerminado } from "./Step0SelectTipoCarga";
 import CargaMasivaTerminadosSinInsumosFlow from "./SinInsumos/CargaMasivaTerminadosSinInsumosFlow";
-import PlaceholderSoloInsumos from "./SoloInsumos/PlaceholderSoloInsumos";
+import CargaMasivaTerminadosSoloInsumosFlow from "./SoloInsumos/CargaMasivaTerminadosSoloInsumosFlow";
 import PlaceholderConProcesoCompleto from "./ConProcesoCompleto/PlaceholderConProcesoCompleto";
 
 export default function CargaMasivaTerminadosTab() {
@@ -33,7 +33,12 @@ export default function CargaMasivaTerminadosTab() {
     if (tipoCargaSeleccionado === "solo_insumos") {
         return (
             <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
-                <PlaceholderSoloInsumos onVolver={() => setTipoCargaSeleccionado(null)} />
+                <Flex direction="column" gap={4} w="full" h="full">
+                    <Button leftIcon={<FaArrowLeft />} w="fit-content" onClick={() => setTipoCargaSeleccionado(null)}>
+                        Volver
+                    </Button>
+                    <CargaMasivaTerminadosSoloInsumosFlow />
+                </Flex>
             </Container>
         );
     }

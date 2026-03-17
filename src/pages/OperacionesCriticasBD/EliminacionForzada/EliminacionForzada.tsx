@@ -15,20 +15,26 @@ import EliminacionOCMStep1SelectAndStudy from "./OrdenCompra/EliminacionOCMStep1
 import EliminacionOCMStep2StudyResult from "./OrdenCompra/EliminacionOCMStep2StudyResult";
 import EliminacionOPStep1SelectAndStudy from "./OrdenProduccion/EliminacionOPStep1SelectAndStudy";
 import EliminacionOPStep2StudyResult from "./OrdenProduccion/EliminacionOPStep2StudyResult";
+import EliminacionPurgaTerminadosStep1Informacion from "./PurgaTerminados/EliminacionPurgaTerminadosStep1Informacion";
+import EliminacionPurgaTerminadosStep2Ejecutar from "./PurgaTerminados/EliminacionPurgaTerminadosStep2Ejecutar";
 import type { OrdenProduccionPickItem } from "./OrdenProduccion/OrdenProduccionPicker";
 import type { OrdenCompraMateriales } from "../../Compras/types";
 import type {
+    EliminacionTerminadosBatchResultDTO,
     EstudiarEliminacionOCMResponseDTO,
     EstudiarEliminacionOPResponseDTO,
 } from "./types";
 
 const steps = [
     { title: "Tipo de entidad", description: "Seleccionar tipo de entidad a eliminar" },
-    { title: "Seleccionar y estudiar", description: "Elegir registro y estudiar dependencias" },
-    { title: "Resultado del estudio", description: "Ver dependencias que bloquean la eliminación" },
+    { title: "Preparar operación", description: "Seleccionar el registro o confirmar la acción" },
+    { title: "Confirmación / resultado", description: "Revisar el resumen y ejecutar la operación" },
 ];
 
-export type TipoEntidadEliminacion = "ORDEN_COMPRA" | "ORDEN_PRODUCCION";
+export type TipoEntidadEliminacion =
+    | "ORDEN_COMPRA"
+    | "ORDEN_PRODUCCION"
+    | "PURGA_COMPLETA_TERMINADOS";
 
 export default function EliminacionForzada() {
     const { activeStep, setActiveStep } = useSteps({
@@ -43,6 +49,8 @@ export default function EliminacionForzada() {
         useState<OrdenProduccionPickItem | null>(null);
     const [studyResultOP, setStudyResultOP] =
         useState<EstudiarEliminacionOPResponseDTO | null>(null);
+    const [resultPurgaTerminados, setResultPurgaTerminados] =
+        useState<EliminacionTerminadosBatchResultDTO | null>(null);
 
     const handleReset = () => {
         setTipoEntidad(null);
@@ -50,6 +58,7 @@ export default function EliminacionForzada() {
         setStudyResult(null);
         setOrdenProduccionSeleccionada(null);
         setStudyResultOP(null);
+        setResultPurgaTerminados(null);
         setActiveStep(0);
     };
 
@@ -63,6 +72,9 @@ export default function EliminacionForzada() {
             );
         }
         if (activeStep === 1) {
+            if (tipoEntidad === "PURGA_COMPLETA_TERMINADOS") {
+                return <EliminacionPurgaTerminadosStep1Informacion setActiveStep={setActiveStep} />;
+            }
             if (tipoEntidad === "ORDEN_PRODUCCION") {
                 return (
                     <EliminacionOPStep1SelectAndStudy
@@ -83,6 +95,16 @@ export default function EliminacionForzada() {
             );
         }
         if (activeStep === 2) {
+            if (tipoEntidad === "PURGA_COMPLETA_TERMINADOS") {
+                return (
+                    <EliminacionPurgaTerminadosStep2Ejecutar
+                        setActiveStep={setActiveStep}
+                        resultPurgaTerminados={resultPurgaTerminados}
+                        setResultPurgaTerminados={setResultPurgaTerminados}
+                        onReset={handleReset}
+                    />
+                );
+            }
             if (tipoEntidad === "ORDEN_PRODUCCION") {
                 return (
                     <EliminacionOPStep2StudyResult

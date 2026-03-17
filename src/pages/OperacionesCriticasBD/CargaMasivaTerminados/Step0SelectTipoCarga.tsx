@@ -8,7 +8,7 @@ import {
     SimpleGrid,
     Text,
 } from "@chakra-ui/react";
-import { FaPlus, FaListUl, FaCogs } from "react-icons/fa";
+import { FaPlus, FaListUl } from "react-icons/fa";
 import { AiFillProduct } from "react-icons/ai";
 import { LiaProjectDiagramSolid } from "react-icons/lia";
 
@@ -74,7 +74,7 @@ export default function Step0SelectTipoCarga({ onSelect }: Step0SelectTipoCargaP
                             <Icon as={FaPlus} boxSize="2em" />
                             <Icon as={FaListUl} boxSize="3.5em" />
                         </Flex>
-                        <Text textAlign="center">Carga masiva con lista de insumos (próximamente)</Text>
+                        <Text textAlign="center">Carga masiva con lista de insumos usando el JSON exportado por el sistema</Text>
                     </CardBody>
                 </Card>
 

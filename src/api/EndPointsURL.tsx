@@ -154,12 +154,15 @@ export default class EndPointsURL{
     public carga_masiva_terminados_template_sin_insumos: string;
     public carga_masiva_terminados_validar_sin_insumos: string;
     public carga_masiva_terminados_ejecutar_sin_insumos: string;
+    public carga_masiva_terminados_validar_json_con_insumos: string;
+    public carga_masiva_terminados_ejecutar_json_con_insumos: string;
 
     // eliminaciones forzadas (operaciones criticas BD)
     public estudiar_eliminacion_orden_compra: string;
     public ejecutar_eliminacion_orden_compra: string;
     public estudiar_eliminacion_orden_produccion: string;
     public ejecutar_eliminacion_orden_produccion: string;
+    public ejecutar_purga_completa_terminados: string;
 
     // exportacion de datos (operaciones criticas BD)
     public exportacion_materiales_excel: string;
@@ -395,12 +398,15 @@ export default class EndPointsURL{
         this.carga_masiva_terminados_template_sin_insumos = `${domain}/api/carga-masiva-terminados/template-sin-insumos`;
         this.carga_masiva_terminados_validar_sin_insumos = `${domain}/api/carga-masiva-terminados/validar-sin-insumos`;
         this.carga_masiva_terminados_ejecutar_sin_insumos = `${domain}/api/carga-masiva-terminados/ejecutar-sin-insumos`;
+        this.carga_masiva_terminados_validar_json_con_insumos = `${domain}/api/carga-masiva-terminados/validar-json-con-insumos`;
+        this.carga_masiva_terminados_ejecutar_json_con_insumos = `${domain}/api/carga-masiva-terminados/ejecutar-json-con-insumos`;
 
         // eliminaciones forzadas (operaciones criticas BD)
         this.estudiar_eliminacion_orden_compra = `${domain}/api/eliminaciones-forzadas/estudiar/orden-compra`;
         this.ejecutar_eliminacion_orden_compra = `${domain}/api/eliminaciones-forzadas/orden-compra`;
         this.estudiar_eliminacion_orden_produccion = `${domain}/api/eliminaciones-forzadas/estudiar/orden-produccion`;
         this.ejecutar_eliminacion_orden_produccion = `${domain}/api/eliminaciones-forzadas/orden-produccion`;
+        this.ejecutar_purga_completa_terminados = `${domain}/api/eliminaciones-forzadas/terminados`;
 
         // exportacion de datos (operaciones criticas BD)
         this.exportacion_materiales_excel = `${domain}/api/exportacion-datos/materiales/excel`;

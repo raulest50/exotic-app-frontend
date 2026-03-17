@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     Box,
     Button,
@@ -30,17 +30,26 @@ import {
 interface Step1CalcularDistribucionProps {
     excelFile: File | null;
     setActiveStep: (step: number) => void;
+    rawData: TerminadoConVentas[];
+    setRawData: (data: TerminadoConVentas[]) => void;
+    necesidades: Record<string, number>;
+    setNecesidades: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }
 
-export default function Step1CalcularDistribucion({ excelFile, setActiveStep }: Step1CalcularDistribucionProps) {
+export default function Step1CalcularDistribucion({
+    excelFile,
+    setActiveStep,
+    rawData,
+    setRawData,
+    necesidades,
+    setNecesidades,
+}: Step1CalcularDistribucionProps) {
     const [isLoading, setIsLoading] = useState(true);
-    const [rawData, setRawData] = useState<TerminadoConVentas[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     const [modo, setModo] = useState<ModoDistribucion>("valor");
     const [page, setPage] = useState(0);
     const [size, setSize] = useState(20);
-    const [necesidades, setNecesidades] = useState<Record<string, number>>({});
 
     useEffect(() => {
         if (!excelFile) {
@@ -230,6 +239,16 @@ export default function Step1CalcularDistribucion({ excelFile, setActiveStep }: 
                 onPageChange={setPage}
                 onSizeChange={setSize}
             />
+
+            <Flex justify="flex-end" pt={2}>
+                <Button
+                    colorScheme="teal"
+                    onClick={() => setActiveStep(2)}
+                    isDisabled={distribucion.length === 0}
+                >
+                    Siguiente
+                </Button>
+            </Flex>
         </VStack>
     );
 }

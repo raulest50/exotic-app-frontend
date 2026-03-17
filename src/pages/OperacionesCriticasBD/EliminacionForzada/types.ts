@@ -56,3 +56,19 @@ export interface EstudiarEliminacionOPResponseDTO {
     transaccionesAlmacen: TransaccionAlmacenResumenDTO[];
     asientosContables: AsientoContableResumenDTO[];
 }
+
+export interface EliminacionBatchFailureDTO {
+    productoId: string;
+    reason: string;
+}
+
+export interface EliminacionTerminadosBatchResultDTO {
+    permitted: boolean;
+    executed: boolean;
+    message: string;
+    totalTerminados: number;
+    eliminados: number;
+    fallidos: number;
+    productoIdsProcesados: string[];
+    failures: EliminacionBatchFailureDTO[];
+}
