@@ -48,6 +48,7 @@ export default class EndPointsURL{
 
     // produccion resource
     public save_produccion:string;
+    public save_produccion_multiple: string;
     public next_lote_produccion: string;
     public check_lote_disponible: string;
     public search_ordenes_within_range:string;
@@ -304,6 +305,7 @@ export default class EndPointsURL{
 
         // produccion endpoints
         this.save_produccion = `${domain}/${produccion_res}/save`;
+        this.save_produccion_multiple = `${domain}/${produccion_res}/save-multiple`;
         this.next_lote_produccion = `${domain}/${produccion_res}/next-lote`;
         this.check_lote_disponible = `${domain}/${produccion_res}/lote/disponible`;
         this.search_ordenes_within_range = `${domain}/${produccion_res}/search_within_range`;

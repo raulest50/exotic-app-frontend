@@ -43,7 +43,21 @@ import VendedorPicker from "../../../components/Pickers/VendedorPicker/VendedorP
 import { getCurrentUser, User, getAccessLevel } from "../../../api/UserApi.tsx";
 import { useAuth } from '../../../context/AuthContext';
 
+type LoteValidationStatus = 'idle' | 'valid' | 'invalid' | 'checking';
+
 const endPoints = new EndPointsURL();
+
+function generateConsecutiveLotes(firstLote: string, n: number): string[] {
+    const parts = firstLote.split('-');
+    if (parts.length !== 3) return Array(n).fill(firstLote);
+    const prefix = parts[0];
+    const seq = parseInt(parts[1], 10);
+    const year = parts[2];
+    if (isNaN(seq)) return Array(n).fill(firstLote);
+    return Array.from({ length: n }, (_, i) =>
+        `${prefix}-${String(seq + i).padStart(7, '0')}-${year}`
+    );
+}
 
 export default function CrearOrdenesTab() {
     const toast = useToast();
@@ -60,28 +74,50 @@ export default function CrearOrdenesTab() {
     const [areaOperativa, setAreaOperativa] = useState('Producción');
     const [departamentoOperativo, setDepartamentoOperativo] = useState('Dirección de Operaciones');
 
-    // Nuevos estados para las fechas y el lote
     const [fechaLanzamiento, setFechaLanzamiento] = useState('');
     const [fechaFinalPlanificada, setFechaFinalPlanificada] = useState('');
-    const [loteBatchNumber, setLoteBatchNumber] = useState('');
-    const [originalLote, setOriginalLote] = useState('');
 
-    // Estado para la cantidad a producir
+    // cantidadProducir is always read-only (driven by loteSize of the product's category)
     const [cantidadProducir, setCantidadProducir] = useState(1);
 
-    // Estado para el usuario actual (aprobador)
+    // Number of production orders to create simultaneously
+    const [cantidadLotes, setCantidadLotes] = useState(1);
+
+    // Array states: one entry per lote
+    const [loteBatchNumbers, setLoteBatchNumbers] = useState<string[]>([]);
+    const [originalLotes, setOriginalLotes] = useState<string[]>([]);
+    const [loteValidations, setLoteValidations] = useState<LoteValidationStatus[]>([]);
+    const [isLotesEditable, setIsLotesEditable] = useState<boolean[]>([]);
+    const [isCheckingLotes, setIsCheckingLotes] = useState<boolean[]>([]);
+
     const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-    // Estados para control de edición de lote (nivel 3)
     const [produccionAccessLevel, setProduccionAccessLevel] = useState<number | null>(null);
-    const [isLoteEditable, setIsLoteEditable] = useState<boolean>(false);
     const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
-    const [isCheckingLote, setIsCheckingLote] = useState<boolean>(false);
-    const [loteValidationStatus, setLoteValidationStatus] = useState<'idle' | 'valid' | 'invalid' | 'checking'>('idle');
-    const [loteValidationMessage, setLoteValidationMessage] = useState<string>('');
 
-    const handleSeleccionarProducto = () => {
-        setIsPickerOpen(true);
+    const canEditLote = user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3);
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+
+    const resetLoteArrays = (n: number, lotes: string[]) => {
+        setLoteBatchNumbers(lotes);
+        setOriginalLotes([...lotes]);
+        setIsLotesEditable(Array(n).fill(false));
+        setLoteValidations(Array(n).fill('idle') as LoteValidationStatus[]);
+        setIsCheckingLotes(Array(n).fill(false));
+    };
+
+    // ── handlers ─────────────────────────────────────────────────────────────
+
+    const handleSeleccionarProducto = () => setIsPickerOpen(true);
+
+    const handleCantidadLotesChange = (valueString: string) => {
+        const newCantidad = Math.max(1, parseInt(valueString, 10) || 1);
+        setCantidadLotes(newCantidad);
+        if (originalLotes.length === 0) return;
+        const baseLote = originalLotes[0];
+        if (!baseLote) return;
+        const generated = generateConsecutiveLotes(baseLote, newCantidad);
+        resetLoteArrays(newCantidad, generated);
     };
 
     const handleCrearOrden = async () => {
@@ -96,11 +132,25 @@ export default function CrearOrdenesTab() {
             return;
         }
 
-        // Si el lote está en modo editable, verificar que se haya validado
-        if (isLoteEditable && loteValidationStatus !== 'valid') {
+        const loteSize = selectedProducto?.producto.categoria?.loteSize ?? 0;
+        if (loteSize <= 0) {
+            toast({
+                title: 'Categoría sin tamaño de lote',
+                description: 'La categoría de este producto no tiene tamaño de lote configurado. No se puede crear la orden.',
+                status: 'warning',
+                duration: 5000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        const hasUnvalidatedEditable = isLotesEditable.some(
+            (editable, i) => editable && loteValidations[i] !== 'valid'
+        );
+        if (hasUnvalidatedEditable) {
             toast({
                 title: 'Validación requerida',
-                description: 'Debes verificar la disponibilidad del lote antes de crear la orden.',
+                description: 'Debes verificar la disponibilidad de todos los lotes desbloqueados antes de crear las órdenes.',
                 status: 'warning',
                 duration: 5000,
                 isClosable: true,
@@ -128,46 +178,67 @@ export default function CrearOrdenesTab() {
             return trimmedValue === '' ? null : `${trimmedValue}T00:00:00`;
         };
 
-        const payload = {
-            productoId: selectedProducto.producto.productoId,
-            cantidadProducir: cantidadProducir,
-            observaciones: toNullableString(observaciones),
-            fechaLanzamiento: toNullableDate(fechaLanzamiento),
-            fechaFinalPlanificada: toNullableDate(fechaFinalPlanificada),
-            numeroPedidoComercial: toNullableString(numeroPedidoComercial),
-            areaOperativa: toNullableString(areaOperativa),
-            departamentoOperativo: toNullableString(departamentoOperativo),
-            loteBatchNumber: toNullableString(loteBatchNumber),
-            vendedorResponsableId: vendedorResponsableId,
-        };
-
         try {
-            await axios.post(endPoints.save_produccion, payload);
+            if (cantidadLotes === 1) {
+                const payload = {
+                    productoId: selectedProducto.producto.productoId,
+                    cantidadProducir: cantidadProducir,
+                    observaciones: toNullableString(observaciones),
+                    fechaLanzamiento: toNullableDate(fechaLanzamiento),
+                    fechaFinalPlanificada: toNullableDate(fechaFinalPlanificada),
+                    numeroPedidoComercial: toNullableString(numeroPedidoComercial),
+                    areaOperativa: toNullableString(areaOperativa),
+                    departamentoOperativo: toNullableString(departamentoOperativo),
+                    loteBatchNumber: toNullableString(loteBatchNumbers[0] ?? ''),
+                    vendedorResponsableId: vendedorResponsableId,
+                };
+                await axios.post(endPoints.save_produccion, payload);
+            } else {
+                const payload = {
+                    productoId: selectedProducto.producto.productoId,
+                    cantidadProducir: cantidadProducir,
+                    observaciones: toNullableString(observaciones),
+                    fechaLanzamiento: toNullableDate(fechaLanzamiento),
+                    fechaFinalPlanificada: toNullableDate(fechaFinalPlanificada),
+                    numeroPedidoComercial: toNullableString(numeroPedidoComercial),
+                    areaOperativa: toNullableString(areaOperativa),
+                    departamentoOperativo: toNullableString(departamentoOperativo),
+                    loteBatchNumbers: loteBatchNumbers
+                        .map(l => toNullableString(l) ?? '')
+                        .filter(Boolean),
+                    vendedorResponsableId: vendedorResponsableId,
+                };
+                await axios.post(endPoints.save_produccion_multiple, payload);
+            }
+
             toast({
-                title: 'Orden de Producción creada',
-                description: 'La orden se ha creado correctamente.',
+                title: cantidadLotes === 1
+                    ? 'Orden de Producción creada'
+                    : `${cantidadLotes} Órdenes de Producción creadas`,
+                description: cantidadLotes === 1
+                    ? 'La orden se ha creado correctamente.'
+                    : `Se han creado ${cantidadLotes} órdenes de producción correctamente.`,
                 status: 'success',
                 duration: 5000,
                 isClosable: true,
             });
+
+            // Reset all form state
             setSelectedProducto(null);
             setCanProduce(false);
             setObservaciones('');
             setFechaLanzamiento('');
             setFechaFinalPlanificada('');
-            setLoteBatchNumber('');
-            setOriginalLote('');
             setCantidadProducir(1);
+            setCantidadLotes(1);
             setNumeroPedidoComercial('');
             setAreaOperativa('');
             setDepartamentoOperativo('');
             setSelectedVendedor(null);
-            setVendedorResponsableId(1); // Reset to default value
-            setIsLoteEditable(false);
-            setLoteValidationStatus('idle');
-            setLoteValidationMessage('');
+            setVendedorResponsableId(1);
+            resetLoteArrays(0, []);
         } catch (error) {
-            console.error('Error creating orden de producción:', error);
+            console.error('Error creating orden(es) de producción:', error);
             toast({
                 title: 'Error',
                 description: 'No se pudo crear la orden de producción.',
@@ -185,42 +256,41 @@ export default function CrearOrdenesTab() {
             : 0;
         const newCantidad = loteSize > 0 ? loteSize : 1;
         setCantidadProducir(newCantidad);
+
         if (producto.producto.tipo_producto === 'T' && loteSize <= 0) {
             toast({
                 title: 'Tamaño de lote no configurado',
-                description: 'La categoría de este producto no tiene tamaño de lote. Se usará 1 unidad. Configure el tamaño en "Config. Lotes por Categoría" si aplica.',
-                status: 'info',
+                description: 'La categoría de este producto no tiene tamaño de lote. Configure el tamaño en "Config. Lotes por Categoría".',
+                status: 'warning',
                 duration: 5000,
                 isClosable: true,
             });
         }
+
         const canProduceWithQuantity = producto.insumos.every(
             insumo => insumo.stockActual >= (insumo.cantidadRequerida * newCantidad)
         );
         setCanProduce(canProduceWithQuantity);
         setIsPickerOpen(false);
 
-        // Generar número de lote para producto terminado con prefijoLote
+        // Reset cantidad lotes to 1 when changing product
+        setCantidadLotes(1);
+
         const esTerminado = producto.producto.tipo_producto === 'T';
         const prefijo = producto.producto.prefijoLote?.trim();
         if (esTerminado && prefijo) {
             try {
                 const url = `${endPoints.next_lote_produccion}?productoId=${encodeURIComponent(producto.producto.productoId)}`;
                 const response = await axios.get(url);
-                const lote = response.data?.lote;
-                if (lote) {
-                    setLoteBatchNumber(lote);
-                    setOriginalLote(lote); // Guardar el lote generado automáticamente
-                    setIsLoteEditable(false); // Reset lock state
-                    setLoteValidationStatus('idle'); // Reset validation
-                    setLoteValidationMessage(''); // Reset message
+                const firstLote = response.data?.lote;
+                if (firstLote) {
+                    resetLoteArrays(1, [firstLote]);
                 } else {
-                    setLoteBatchNumber('');
-                    setOriginalLote('');
+                    resetLoteArrays(0, []);
                 }
             } catch (error) {
                 console.error('Error al obtener siguiente lote:', error);
-                setLoteBatchNumber('');
+                resetLoteArrays(0, []);
                 toast({
                     title: 'Lote no generado',
                     description: axios.isAxiosError(error) && error.response?.data?.error
@@ -232,35 +302,41 @@ export default function CrearOrdenesTab() {
                 });
             }
         } else {
-            setLoteBatchNumber('');
-            setOriginalLote('');
+            resetLoteArrays(0, []);
         }
     };
 
-    const handlePickerClose = () => {
-        setIsPickerOpen(false);
-    };
+    const handlePickerClose = () => setIsPickerOpen(false);
 
-    const handleToggleLoteEdit = () => {
-        if (!(user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3))) {
-            return;
-        }
-
-        if (!isLoteEditable) {
-            // Desbloquear: guardar el lote actual y permitir edición
-            setOriginalLote(loteBatchNumber);
-            setIsLoteEditable(true);
+    const handleToggleLoteEdit = (index: number) => {
+        if (!canEditLote) return;
+        const newEditable = [...isLotesEditable];
+        if (!newEditable[index]) {
+            // Unlock: save the current value as original
+            const newOriginals = [...originalLotes];
+            newOriginals[index] = loteBatchNumbers[index];
+            setOriginalLotes(newOriginals);
+            newEditable[index] = true;
         } else {
-            // Bloquear: restaurar el lote original y resetear validación
-            setLoteBatchNumber(originalLote);
-            setIsLoteEditable(false);
-            setLoteValidationStatus('idle');
-            setLoteValidationMessage('');
+            // Lock: restore the original value and reset validation
+            setLoteBatchNumbers(prev => {
+                const updated = [...prev];
+                updated[index] = originalLotes[index];
+                return updated;
+            });
+            newEditable[index] = false;
+            setLoteValidations(prev => {
+                const updated = [...prev];
+                updated[index] = 'idle';
+                return updated;
+            });
         }
+        setIsLotesEditable(newEditable);
     };
 
-    const handleCheckLoteDisponible = async () => {
-        if (!loteBatchNumber.trim()) {
+    const handleCheckLoteDisponible = async (index: number) => {
+        const lote = loteBatchNumbers[index];
+        if (!lote?.trim()) {
             toast({
                 title: 'Lote vacío',
                 description: 'Ingresa un número de lote para verificar.',
@@ -270,9 +346,7 @@ export default function CrearOrdenesTab() {
             });
             return;
         }
-
-        // Validación básica de formato
-        if (!loteBatchNumber.includes('-')) {
+        if (!lote.includes('-')) {
             toast({
                 title: 'Formato inválido',
                 description: 'El número de lote debe seguir el formato PREFIJO-NNNNNNN-YY.',
@@ -283,39 +357,44 @@ export default function CrearOrdenesTab() {
             return;
         }
 
-        setIsCheckingLote(true);
-        setLoteValidationStatus('checking');
+        setIsCheckingLotes(prev => {
+            const updated = [...prev];
+            updated[index] = true;
+            return updated;
+        });
+        setLoteValidations(prev => {
+            const updated = [...prev];
+            updated[index] = 'checking';
+            return updated;
+        });
 
         try {
-            const url = `${endPoints.check_lote_disponible}?batchNumber=${encodeURIComponent(loteBatchNumber.trim())}`;
+            const url = `${endPoints.check_lote_disponible}?batchNumber=${encodeURIComponent(lote.trim())}`;
             const response = await axios.get(url);
             const disponible = response.data?.disponible;
 
-            if (disponible) {
-                setLoteValidationStatus('valid');
-                setLoteValidationMessage('');
-                toast({
-                    title: 'Lote disponible',
-                    description: 'El número de lote está disponible para usar.',
-                    status: 'success',
-                    duration: 3000,
-                    isClosable: true,
-                });
-            } else {
-                setLoteValidationStatus('invalid');
-                setLoteValidationMessage('El número de lote ya está en uso');
-                toast({
-                    title: 'Lote no disponible',
-                    description: 'Este número de lote ya está registrado en el sistema.',
-                    status: 'error',
-                    duration: 5000,
-                    isClosable: true,
-                });
-            }
+            setLoteValidations(prev => {
+                const updated = [...prev];
+                updated[index] = disponible ? 'valid' : 'invalid';
+                return updated;
+            });
+
+            toast({
+                title: disponible ? 'Lote disponible' : 'Lote no disponible',
+                description: disponible
+                    ? 'El número de lote está disponible para usar.'
+                    : 'Este número de lote ya está registrado en el sistema.',
+                status: disponible ? 'success' : 'error',
+                duration: disponible ? 3000 : 5000,
+                isClosable: true,
+            });
         } catch (error) {
             console.error('Error checking lote availability:', error);
-            setLoteValidationStatus('invalid');
-            setLoteValidationMessage('Error al verificar disponibilidad');
+            setLoteValidations(prev => {
+                const updated = [...prev];
+                updated[index] = 'invalid';
+                return updated;
+            });
             toast({
                 title: 'Error',
                 description: 'No se pudo verificar la disponibilidad del lote. Intenta nuevamente.',
@@ -324,38 +403,32 @@ export default function CrearOrdenesTab() {
                 isClosable: true,
             });
         } finally {
-            setIsCheckingLote(false);
+            setIsCheckingLotes(prev => {
+                const updated = [...prev];
+                updated[index] = false;
+                return updated;
+            });
         }
     };
 
-    const handleOpenInfoModal = () => {
-        setIsInfoModalOpen(true);
-    };
+    const handleOpenInfoModal = () => setIsInfoModalOpen(true);
+    const handleCloseInfoModal = () => setIsInfoModalOpen(false);
 
-    const handleCloseInfoModal = () => {
-        setIsInfoModalOpen(false);
-    };
-
-    // Handlers for VendedorPicker
-    const handleOpenVendedorPicker = () => {
-        setIsVendedorPickerOpen(true);
-    };
-
-    const handleVendedorPickerClose = () => {
-        setIsVendedorPickerOpen(false);
-    };
+    const handleOpenVendedorPicker = () => setIsVendedorPickerOpen(true);
+    const handleVendedorPickerClose = () => setIsVendedorPickerOpen(false);
 
     const handleSelectVendedor = (vendedor: Vendedor) => {
         setSelectedVendedor(vendedor);
         setVendedorResponsableId(vendedor.cedula);
     };
 
-    // Efecto para obtener el usuario actual al cargar el componente
+    // ── effects ───────────────────────────────────────────────────────────────
+
     useEffect(() => {
         const fetchCurrentUser = async () => {
             try {
-                const user = await getCurrentUser();
-                setCurrentUser(user);
+                const u = await getCurrentUser();
+                setCurrentUser(u);
             } catch (error) {
                 console.error('Error fetching current user:', error);
                 toast({
@@ -367,11 +440,9 @@ export default function CrearOrdenesTab() {
                 });
             }
         };
-
         fetchCurrentUser();
     }, [toast]);
 
-    // Efecto para obtener el nivel de acceso de producción
     useEffect(() => {
         const fetchAccessLevel = async () => {
             try {
@@ -385,7 +456,6 @@ export default function CrearOrdenesTab() {
         fetchAccessLevel();
     }, []);
 
-    // Efecto para actualizar canProduce cuando cambia la cantidad a producir
     useEffect(() => {
         if (selectedProducto) {
             const canProduceWithQuantity = selectedProducto.insumos.every(
@@ -395,9 +465,18 @@ export default function CrearOrdenesTab() {
         }
     }, [cantidadProducir, selectedProducto]);
 
-    const isLoteSizeFixed =
-        selectedProducto?.producto.tipo_producto === 'T' &&
-        (selectedProducto?.producto.categoria?.loteSize ?? 0) > 0;
+    // ── derived values ────────────────────────────────────────────────────────
+
+    const noLoteSize = !selectedProducto ||
+        ((selectedProducto?.producto.categoria?.loteSize ?? 0) <= 0);
+
+    const anyLoteEditableButNotValid = isLotesEditable.some(
+        (editable, i) => editable && loteValidations[i] !== 'valid'
+    );
+
+    const hasLotes = loteBatchNumbers.length > 0;
+
+    // ── render ────────────────────────────────────────────────────────────────
 
     return (
         <VStack align="stretch">
@@ -413,7 +492,9 @@ export default function CrearOrdenesTab() {
                     <FormLabel>Asesor</FormLabel>
                     <InputGroup>
                         <Input
-                            value={selectedVendedor ? `${selectedVendedor.cedula} - ${selectedVendedor.nombres} ${selectedVendedor.apellidos}` : ''}
+                            value={selectedVendedor
+                                ? `${selectedVendedor.cedula} - ${selectedVendedor.nombres} ${selectedVendedor.apellidos}`
+                                : ''}
                             placeholder="Seleccione un vendedor"
                             isReadOnly
                         />
@@ -438,7 +519,6 @@ export default function CrearOrdenesTab() {
                 </FormControl>
             </HStack>
 
-            {/* Nuevos campos para fechas */}
             <HStack spacing={4} mt="4">
                 <FormControl>
                     <FormLabel>Fecha de lanzamiento</FormLabel>
@@ -459,92 +539,31 @@ export default function CrearOrdenesTab() {
                 </FormControl>
             </HStack>
 
-            {/* Campos para lote y cantidad a producir */}
+            {/* Cantidad a producir (always read-only) + Cantidad de lotes */}
             <HStack spacing={4} mt="4">
-                <FormControl isInvalid={loteValidationStatus === 'invalid'}>
-                    <FormLabel>Lote</FormLabel>
-                    <InputGroup>
-                        <Input
-                            placeholder={
-                                selectedProducto?.producto.tipo_producto === 'T' && selectedProducto?.producto.prefijoLote
-                                    ? 'Se genera al seleccionar el producto'
-                                    : 'No aplica (solo terminados con prefijo de lote)'
-                            }
-                            value={loteBatchNumber}
-                            isReadOnly={!isLoteEditable || !(user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3))}
-                            bg={isLoteEditable && (user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3)) ? "white" : "gray.50"}
-                            onChange={(e) => {
-                                setLoteBatchNumber(e.target.value);
-                                // Resetear validación cuando el usuario escribe
-                                if (loteValidationStatus !== 'idle') {
-                                    setLoteValidationStatus('idle');
-                                    setLoteValidationMessage('');
-                                }
-                            }}
-                        />
-                        <InputRightElement width="auto">
-                            <HStack spacing={1}>
-                                {(user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3)) && (
-                                    <>
-                                        <IconButton
-                                            aria-label={isLoteEditable ? "Bloquear edición de lote" : "Desbloquear edición de lote"}
-                                            icon={isLoteEditable ? <UnlockIcon /> : <LockIcon />}
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={handleToggleLoteEdit}
-                                        />
-                                        {isLoteEditable && (
-                                            <IconButton
-                                                aria-label="Verificar disponibilidad del lote"
-                                                icon={isCheckingLote ? <Spinner size="sm" /> : <CheckIcon />}
-                                                size="sm"
-                                                variant="ghost"
-                                                colorScheme={loteValidationStatus === 'valid' ? 'green' : loteValidationStatus === 'invalid' ? 'red' : 'gray'}
-                                                onClick={handleCheckLoteDisponible}
-                                                isDisabled={!loteBatchNumber.trim() || isCheckingLote}
-                                            />
-                                        )}
-                                        <IconButton
-                                            aria-label="Información sobre edición de lote"
-                                            icon={<Icon as={FaQuestionCircle} boxSize={5} />}
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={handleOpenInfoModal}
-                                        />
-                                    </>
-                                )}
-                            </HStack>
-                        </InputRightElement>
-                    </InputGroup>
-                    {loteValidationStatus === 'invalid' && (
-                        <FormErrorMessage>{loteValidationMessage || 'El número de lote ya está en uso'}</FormErrorMessage>
-                    )}
-                    {loteValidationStatus === 'valid' && (
-                        <Text fontSize="sm" color="green.500">El número de lote está disponible</Text>
-                    )}
+                <FormControl>
+                    <FormLabel>Cantidad a producir</FormLabel>
+                    <Input value={cantidadProducir} isReadOnly bg="gray.50" />
                 </FormControl>
 
                 <FormControl>
-                    <FormLabel>Cantidad a producir</FormLabel>
-                    {isLoteSizeFixed ? (
-                        <Input value={cantidadProducir} isReadOnly bg="gray.50" />
-                    ) : (
-                        <NumberInput
-                            min={1}
-                            value={cantidadProducir}
-                            onChange={(valueString) => setCantidadProducir(Number(valueString))}
-                        >
-                            <NumberInputField />
-                            <NumberInputStepper>
-                                <NumberIncrementStepper />
-                                <NumberDecrementStepper />
-                            </NumberInputStepper>
-                        </NumberInput>
-                    )}
+                    <FormLabel>Cantidad de lotes</FormLabel>
+                    <NumberInput
+                        min={1}
+                        precision={0}
+                        value={cantidadLotes}
+                        onChange={handleCantidadLotesChange}
+                        isDisabled={!selectedProducto || noLoteSize}
+                    >
+                        <NumberInputField />
+                        <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                        </NumberInputStepper>
+                    </NumberInput>
                 </FormControl>
             </HStack>
 
-            {/* Campos para área y departamento */}
             <HStack spacing={4} mt="4">
                 <FormControl>
                     <FormLabel>Área</FormLabel>
@@ -565,7 +584,7 @@ export default function CrearOrdenesTab() {
                 </FormControl>
             </HStack>
 
-            {/* Usuario Aprobador (No editable) */}
+            {/* Usuario Aprobador (no editable) */}
             <Box bg="white" p={4} borderRadius="md" boxShadow="sm" mt="4">
                 <Heading size="md" mb={2}>
                     Usuario Aprobador
@@ -591,18 +610,126 @@ export default function CrearOrdenesTab() {
                 onChange={(e) => setObservaciones(e.target.value)}
                 mt="4"
             />
+
+            {/* Dynamic lote fields section */}
+            {hasLotes && (
+                <Box mt="4" p={4} bg="gray.50" borderRadius="md" borderWidth="1px">
+                    <HStack justify="space-between" mb={3}>
+                        <Heading size="sm">
+                            Lotes de Producción ({cantidadLotes})
+                        </Heading>
+                        {canEditLote && (
+                            <IconButton
+                                aria-label="Información sobre edición de lote"
+                                icon={<Icon as={FaQuestionCircle} boxSize={5} />}
+                                size="sm"
+                                variant="ghost"
+                                onClick={handleOpenInfoModal}
+                            />
+                        )}
+                    </HStack>
+
+                    <Box
+                        maxH={cantidadLotes > 5 ? '320px' : undefined}
+                        overflowY={cantidadLotes > 5 ? 'auto' : undefined}
+                        pr={cantidadLotes > 5 ? 2 : 0}
+                    >
+                        <VStack spacing={3}>
+                            {loteBatchNumbers.map((lote, i) => (
+                                <FormControl
+                                    key={i}
+                                    isInvalid={loteValidations[i] === 'invalid'}
+                                    w="100%"
+                                >
+                                    <FormLabel fontSize="sm">Lote {i + 1}</FormLabel>
+                                    <InputGroup>
+                                        <Input
+                                            placeholder="Número de lote"
+                                            value={lote}
+                                            isReadOnly={!isLotesEditable[i] || !canEditLote}
+                                            bg={isLotesEditable[i] && canEditLote ? 'white' : 'gray.100'}
+                                            onChange={(e) => {
+                                                setLoteBatchNumbers(prev => {
+                                                    const updated = [...prev];
+                                                    updated[i] = e.target.value;
+                                                    return updated;
+                                                });
+                                                if (loteValidations[i] !== 'idle') {
+                                                    setLoteValidations(prev => {
+                                                        const updated = [...prev];
+                                                        updated[i] = 'idle';
+                                                        return updated;
+                                                    });
+                                                }
+                                            }}
+                                        />
+                                        <InputRightElement width="auto">
+                                            <HStack spacing={1}>
+                                                {canEditLote && (
+                                                    <>
+                                                        <IconButton
+                                                            aria-label={isLotesEditable[i]
+                                                                ? 'Bloquear edición de lote'
+                                                                : 'Desbloquear edición de lote'}
+                                                            icon={isLotesEditable[i]
+                                                                ? <UnlockIcon />
+                                                                : <LockIcon />}
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() => handleToggleLoteEdit(i)}
+                                                        />
+                                                        {isLotesEditable[i] && (
+                                                            <IconButton
+                                                                aria-label="Verificar disponibilidad del lote"
+                                                                icon={isCheckingLotes[i]
+                                                                    ? <Spinner size="sm" />
+                                                                    : <CheckIcon />}
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                colorScheme={
+                                                                    loteValidations[i] === 'valid' ? 'green' :
+                                                                    loteValidations[i] === 'invalid' ? 'red' : 'gray'
+                                                                }
+                                                                onClick={() => handleCheckLoteDisponible(i)}
+                                                                isDisabled={!lote.trim() || isCheckingLotes[i]}
+                                                            />
+                                                        )}
+                                                    </>
+                                                )}
+                                            </HStack>
+                                        </InputRightElement>
+                                    </InputGroup>
+                                    {loteValidations[i] === 'invalid' && (
+                                        <FormErrorMessage>El número de lote ya está en uso</FormErrorMessage>
+                                    )}
+                                    {loteValidations[i] === 'valid' && (
+                                        <Text fontSize="sm" color="green.500">
+                                            El número de lote está disponible
+                                        </Text>
+                                    )}
+                                </FormControl>
+                            ))}
+                        </VStack>
+                    </Box>
+                </Box>
+            )}
+
             <Button
                 onClick={handleCrearOrden}
                 isDisabled={
                     !selectedProducto ||
                     cantidadProducir < 1 ||
-                    (isLoteEditable && loteValidationStatus !== 'valid')
+                    noLoteSize ||
+                    anyLoteEditableButNotValid
                 }
                 mt="4"
                 colorScheme="blue"
             >
-                Crear Orden de Producción
+                {cantidadLotes === 1
+                    ? 'Crear Orden de Producción'
+                    : `Crear ${cantidadLotes} Órdenes de Producción`}
             </Button>
+
             <TerminadoSemiterminadoPicker
                 isOpen={isPickerOpen}
                 onClose={handlePickerClose}
@@ -613,6 +740,7 @@ export default function CrearOrdenesTab() {
                 onClose={handleVendedorPickerClose}
                 onSelectVendedor={handleSelectVendedor}
             />
+
             <Modal isOpen={isInfoModalOpen} onClose={handleCloseInfoModal} size="lg">
                 <ModalOverlay />
                 <ModalContent>
