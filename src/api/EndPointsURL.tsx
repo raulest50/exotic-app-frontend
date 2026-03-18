@@ -137,6 +137,7 @@ export default class EndPointsURL{
     public get_all_users: string;
     public deactivate_user: string;
     public activate_user: string;
+    public update_user_info: string;
 
     public search_user_by_dto: string;
 
@@ -383,6 +384,7 @@ export default class EndPointsURL{
         this.get_all_users = `${domain}/${user_management_res}`;
         this.deactivate_user = `${domain}/${user_management_res}/{userId}/deactivate`;
         this.activate_user = `${domain}/${user_management_res}/{userId}/activate`;
+        this.update_user_info = `${domain}/${user_management_res}/{userId}/info`;
 
         this.search_user_by_dto = `${domain}/${user_management_res}/search_by_dto`;
 

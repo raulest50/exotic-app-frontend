@@ -3,8 +3,9 @@ import {useEffect, useState} from 'react';
 import {
     Box, Button, Flex, Spacer, Table,
     Tbody, Td, Th, Thead, Tr, Text,
-    useToast
+    useToast, Menu, MenuButton, MenuList, MenuItem, IconButton
 } from '@chakra-ui/react';
+import { BsThreeDotsVertical } from 'react-icons/bs';
 import axios from 'axios';
 import ModuleSelectionDialog, { ModuleItem } from './ModuleSelectionDialog.tsx';
 import {User, Acceso} from './types.tsx';
@@ -13,9 +14,10 @@ import EndPointsURL from "../../../api/EndPointsURL.tsx";
 
 type Props = {
     setViewMode: (viewMode: number) => void;
+    onEditUser: (user: User) => void;
 }
 
-export default function UserViewer({setViewMode}:Props) {
+export default function UserViewer({setViewMode, onEditUser}:Props) {
 
     const [users, setUsers] = useState<User[]>([]);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -363,6 +365,7 @@ export default function UserViewer({setViewMode}:Props) {
                                 <Th>Username</Th>
                                 <Th>Nombre Completo</Th>
                                 <Th>Estado</Th>
+                                <Th>Acciones</Th>
                             </Tr>
                         </Thead>
                         <Tbody>
@@ -385,6 +388,26 @@ export default function UserViewer({setViewMode}:Props) {
                                     <Td>{user.username}</Td>
                                     <Td>{user.nombreCompleto}</Td>
                                     <Td>{user.username.toLowerCase() === 'master' ? 'Activo' : user.estado === 1 ? 'Activo' : 'Inactivo'}</Td>
+                                    <Td onClick={(e) => e.stopPropagation()}>
+                                        <Menu>
+                                            <MenuButton
+                                                as={IconButton}
+                                                icon={<BsThreeDotsVertical />}
+                                                variant="ghost"
+                                                size="sm"
+                                                aria-label="Acciones"
+                                                isDisabled={
+                                                    isLoading ||
+                                                    ['master', 'super_master'].includes(user.username.toLowerCase())
+                                                }
+                                            />
+                                            <MenuList>
+                                                <MenuItem onClick={() => onEditUser(user)}>
+                                                    Editar campos
+                                                </MenuItem>
+                                            </MenuList>
+                                        </Menu>
+                                    </Td>
                                 </Tr>
                             ))}
                         </Tbody>

@@ -20,6 +20,7 @@ export interface User {
     username: string;
     nombreCompleto?: string;
     password?: string;
+    email?: string;
     cel?: string;
     direccion?: string;
     fechaNacimiento?: string; // ISO format, e.g., '2025-05-06'

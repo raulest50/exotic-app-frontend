@@ -273,7 +273,7 @@ export default function HistorialOrdenesTab() {
                 <Table variant="simple">
                     <Thead>
                         <Tr>
-                            <Th>ID</Th>
+                            <Th>Lote</Th>
                             <Th>Producto</Th>
                             <Th>Fechas</Th>
                             <Th>Estado</Th>
@@ -290,7 +290,7 @@ export default function HistorialOrdenesTab() {
                                 onContextMenu={(e) => handleContextMenu(e, orden)}
                                 _hover={{ bg: 'blue.100', cursor: 'pointer' }}
                             >
-                                <Td>{orden.ordenId}</Td>
+                                <Td>{orden.loteAsignado ?? "-"}</Td>
                                 <Td>
                                     <Text fontWeight="medium">{orden.productoNombre || "-"}</Text>
                                     {orden.productoId && (
