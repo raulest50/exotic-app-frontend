@@ -1,5 +1,5 @@
 import MyHeader from "../../components/MyHeader";
-import { Container, Tabs, TabList, TabPanels, Tab, TabPanel, Text, Spinner } from "@chakra-ui/react";
+import { Container, Tabs, TabList, TabPanels, Tab, TabPanel, Spinner } from "@chakra-ui/react";
 import AsistenteIngresoMercancia from "./AsistenteIngresoOCM/AsistenteIngresoMercancia";
 import { AsistenteDispensacion } from "./AsistenteDispensacion/AsistenteDispensacion.tsx";
 import AjustesInventarioTab from "./AjustesInventario/AjustesInventarioTab";
@@ -9,6 +9,7 @@ import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
 import { useAuth } from "../../context/AuthContext";
 import GestionAveriasTab from "./GestionAverias/GestionAveriasTab.tsx";
+import { AsistenteIngresoTerminados } from "./AsistenteIngresoTerminados/AsistenteIngresoTerminados";
 
 interface SuperMasterConfig {
     id: number;
@@ -72,7 +73,7 @@ export default function TransaccionesAlmacenPage() {
                     </TabPanel>
 
                     <TabPanel>
-                        <Text> Pendiente implementacion </Text>
+                        <AsistenteIngresoTerminados />
                     </TabPanel>
 
                     <TabPanel>

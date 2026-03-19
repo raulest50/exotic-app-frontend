@@ -66,6 +66,10 @@ export default class EndPointsURL{
     public averias_almacen_search_material_by_lote: string;
     public averias_almacen_registrar: string;
 
+    // ingreso terminados almacen
+    public buscar_op_por_lote_terminados: string;
+    public registrar_ingreso_terminado: string;
+
     // recursos de produccion
     public save_recurso_produccion:string;
     public search_recurso_produccion:string;
@@ -170,6 +174,7 @@ export default class EndPointsURL{
     public exportacion_materiales_excel: string;
     public exportacion_terminados_excel: string;
     public exportacion_terminados_json_con_insumos: string;
+    public exportacion_proveedores_json_con_contactos: string;
 
     // organigrama endpoints
     public get_all_cargos: string;
@@ -256,6 +261,7 @@ export default class EndPointsURL{
         const area_produccion_res = 'api/areas-produccion';
         const planeacion_produccion_res = 'planeacion_produccion';
         const averias_res = 'api/averias';
+        const ingresos_terminados_res = 'ingresos_terminados_almacen';
 
         // productos endpoints
         this.search_mprima = `${domain}/${productos_res}/search_mprima`;
@@ -323,6 +329,10 @@ export default class EndPointsURL{
         this.averias_historial = `${domain}/${averias_res}/orden/{ordenProduccionId}/historial`;
         this.averias_almacen_search_material_by_lote = `${domain}/${averias_res}/almacen/search-material-by-lote`;
         this.averias_almacen_registrar = `${domain}/${averias_res}/almacen/registrar`;
+
+        // ingreso terminados almacen endpoints
+        this.buscar_op_por_lote_terminados = `${domain}/${ingresos_terminados_res}/buscar-op-por-lote`;
+        this.registrar_ingreso_terminado = `${domain}/${ingresos_terminados_res}/registrar`;
 
         // recursos de produccion endpoints
         this.save_recurso_produccion = `${domain}/${recursos_produccion_res}`;
@@ -416,6 +426,7 @@ export default class EndPointsURL{
         this.exportacion_materiales_excel = `${domain}/api/exportacion-datos/materiales/excel`;
         this.exportacion_terminados_excel = `${domain}/api/exportacion-datos/terminados/excel`;
         this.exportacion_terminados_json_con_insumos = `${domain}/api/exportacion-datos/terminados/json-con-insumos`;
+        this.exportacion_proveedores_json_con_contactos = `${domain}/api/exportacion-datos/proveedores/json-con-contactos`;
 
         // contabilidad endpoints
         this.get_cuentas = `${domain}/${contabilidad_res}/cuentas`;
