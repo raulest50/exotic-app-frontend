@@ -27,6 +27,11 @@ export default class EndPointsURL{
     // notifications endpoint
     public module_notifications: string;
 
+    // maestra notificaciones management endpoints
+    public get_maestra_notificaciones: string;
+    public add_user_to_notificacion: string;
+    public remove_user_from_notificacion: string;
+
     // categorias endpoints
     public get_categorias: string;
     public save_categoria: string;
@@ -465,6 +470,12 @@ export default class EndPointsURL{
 
         // notifications endpoint
         this.module_notifications = `${domain}/notificaciones/notifications4user`;
+
+        // maestra notificaciones management endpoints
+        const maestra_notif_res = 'api/maestra-notificaciones';
+        this.get_maestra_notificaciones = `${domain}/${maestra_notif_res}`;
+        this.add_user_to_notificacion = `${domain}/${maestra_notif_res}/{notificacionId}/users/{userId}`;
+        this.remove_user_from_notificacion = `${domain}/${maestra_notif_res}/{notificacionId}/users/{userId}`;
 
         // AreaProduccion endpoints
         this.crear_area_produccion = `${domain}/${area_produccion_res}/crear`;

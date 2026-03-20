@@ -2,6 +2,7 @@ import {Container, Tabs, TabList, TabPanels, Tab, TabPanel} from "@chakra-ui/rea
 import MyHeader from "../../components/MyHeader.tsx";
 import UserFullRoleCRUD from "./GestionUsuarios/UserFullRoleCRUD.tsx";
 import InfoNiveles from "./InfoNiveles.tsx";
+import GestionNotificacionesTab from "./GestionNotificaciones/GestionNotificacionesTab.tsx";
 
 
 export default function UsuariosPage(){
@@ -12,7 +13,8 @@ export default function UsuariosPage(){
             <Tabs>
                 <TabList>
                     <Tab>Gestion de Usuarios</Tab>
-                    <Tab> Info Niveles de Acceso </Tab>
+                    <Tab>Info Niveles de Acceso</Tab>
+                    <Tab>Notificaciones</Tab>
                 </TabList>
                 <TabPanels>
                     <TabPanel>
@@ -20,6 +22,9 @@ export default function UsuariosPage(){
                     </TabPanel>
                     <TabPanel>
                         <InfoNiveles />
+                    </TabPanel>
+                    <TabPanel>
+                        <GestionNotificacionesTab />
                     </TabPanel>
                 </TabPanels>
             </Tabs>
