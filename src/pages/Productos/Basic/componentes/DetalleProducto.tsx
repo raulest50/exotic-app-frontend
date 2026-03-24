@@ -14,7 +14,7 @@
 import {
     Flex, Box, Heading, Text, Button, VStack, HStack, 
     Grid, GridItem, Card, CardHeader, CardBody, 
-    FormControl, Select, Input, Textarea,
+    FormControl, FormHelperText, Select, Input, Textarea,
     useToast, useDisclosure,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
@@ -28,6 +28,11 @@ import {IVA_VALUES} from "../../types.tsx";
 import {Authority} from "../../../../api/global_types.tsx";
 import DeleteProductoDialog from '../../DefSemiTer/consulta/DeleteProductoDialog.tsx';
 
+function isValidPuntoReorden(pr: number | undefined): boolean {
+    if (pr === undefined) return false;
+    return Number.isFinite(pr) && (pr === -1 || pr >= 0);
+}
+
 type Props = {
     producto: Producto;
     setEstado: (estado: number) => void;
@@ -40,10 +45,23 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
     const [productosAccessLevel, setProductosAccessLevel] = useState<number>(0);
     const [isFormValid, setIsFormValid] = useState<boolean>(true);
     const [hasChanges, setHasChanges] = useState<boolean>(false);
+    const [materialPuntoReordenInput, setMaterialPuntoReordenInput] = useState(() =>
+        producto.tipo_producto === 'M' ? String((producto as Material).puntoReorden ?? 0) : ''
+    );
     const toast = useToast();
     const endPoints = new EndPointsURL();
     const { user } = useAuth();
     const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+
+    useEffect(() => {
+        setProductoData({ ...producto });
+        setEditMode(false);
+        if (producto.tipo_producto === 'M') {
+            setMaterialPuntoReordenInput(String((producto as Material).puntoReorden ?? 0));
+        } else {
+            setMaterialPuntoReordenInput('');
+        }
+    }, [producto.productoId]);
 
     const handleDeleteProduct = async () => {
         try {
@@ -173,6 +191,23 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
             return false;
         }
 
+        if (producto.tipo_producto === 'M') {
+            const pr = Number(materialPuntoReordenInput.trim());
+            if (materialPuntoReordenInput.trim() === '' || !isValidPuntoReorden(pr)) {
+                if (showToast) {
+                    toast({
+                        title: "Validación fallida",
+                        description:
+                            "Punto de reorden: -1 (sin alertas), 0 (sin umbral definido) o un número mayor o igual a 0.",
+                        status: "warning",
+                        duration: 4000,
+                        isClosable: true,
+                    });
+                }
+                return false;
+            }
+        }
+
         return true;
     };
 
@@ -194,6 +229,15 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
             return true;
         }
 
+        if (producto.tipo_producto === 'M') {
+            const orig = (producto as Material).puntoReorden ?? 0;
+            const t = materialPuntoReordenInput.trim();
+            if (t === '') return true;
+            const pr = Number(t);
+            if (!isValidPuntoReorden(pr)) return true;
+            if (pr !== orig) return true;
+        }
+
         return false;
     };
 
@@ -206,7 +250,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
             const hasDataChanges = checkForChanges();
             setHasChanges(hasDataChanges);
         }
-    }, [productoData, editMode]);
+    }, [productoData, editMode, materialPuntoReordenInput, producto]);
 
     // Guardar cambios
     const handleSaveChanges = async () => {
@@ -215,9 +259,13 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
         }
 
         try {
-            // Llamada al endpoint de actualización
             const url = endPoints.update_producto.replace('{productoId}', productoData.productoId);
-            const response = await axios.put(url, productoData);
+            const puntoReorden = Number(materialPuntoReordenInput.trim());
+            const payload =
+                productoData.tipo_producto === 'M'
+                    ? { ...productoData, tipo_producto: 'M', puntoReorden }
+                    : productoData;
+            const response = await axios.put(url, payload);
 
             // Mostrar mensaje de éxito
             toast({
@@ -233,6 +281,11 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
 
             // Actualizar el producto en la vista local con los datos completos del servidor
             setProductoData(response.data);
+            if (response.data?.tipo_producto === 'M') {
+                setMaterialPuntoReordenInput(
+                    String((response.data as Material).puntoReorden ?? 0)
+                );
+            }
 
             // Actualizar también el producto seleccionado para mantener la consistencia
             // cuando se regrese a la vista de lista
@@ -290,7 +343,14 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                     <Button 
                         leftIcon={<EditIcon />} 
                         colorScheme="green" 
-                        onClick={() => setEditMode(true)}
+                        onClick={() => {
+                            if (producto.tipo_producto === 'M') {
+                                setMaterialPuntoReordenInput(
+                                    String((producto as Material).puntoReorden ?? 0)
+                                );
+                            }
+                            setEditMode(true);
+                        }}
                     >
                         Editar
                     </Button>
@@ -308,6 +368,11 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                             onClick={() => {
                                 setEditMode(false);
                                 setProductoData({...producto});
+                                if (producto.tipo_producto === 'M') {
+                                    setMaterialPuntoReordenInput(
+                                        String((producto as Material).puntoReorden ?? 0)
+                                    );
+                                }
                             }}
                         >
                             Cancelar
@@ -364,6 +429,33 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                             </FormControl>
                                         ) : (
                                             <Text>{getTipoMaterialText((producto as Material).tipoMaterial)}</Text>
+                                        )}
+                                    </Box>
+                                )}
+                                {isMaterial && (
+                                    <Box>
+                                        <Text fontWeight="bold">Punto de reorden:</Text>
+                                        {editMode ? (
+                                            <FormControl mt={2}>
+                                                <Input
+                                                    type="text"
+                                                    inputMode="decimal"
+                                                    value={materialPuntoReordenInput}
+                                                    onChange={(e) =>
+                                                        setMaterialPuntoReordenInput(e.target.value)
+                                                    }
+                                                />
+                                                <FormHelperText fontSize="xs">
+                                                    -1 sin alertas; 0 sin umbral definido; mayor a 0 alerta si
+                                                    stock es menor o igual.
+                                                </FormHelperText>
+                                            </FormControl>
+                                        ) : (
+                                            <Text>
+                                                {(producto as Material).puntoReorden !== undefined
+                                                    ? String((producto as Material).puntoReorden)
+                                                    : '—'}
+                                            </Text>
                                         )}
                                     </Box>
                                 )}

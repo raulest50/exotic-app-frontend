@@ -67,7 +67,7 @@ export default function CrearOrdenesTab() {
     const [canProduce, setCanProduce] = useState(false);
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [observaciones, setObservaciones] = useState('');
-    const [vendedorResponsableId, setVendedorResponsableId] = useState(1);
+    const [vendedorResponsableId, setVendedorResponsableId] = useState<number | null>(null);
     const [selectedVendedor, setSelectedVendedor] = useState<Vendedor | null>(null);
     const [isVendedorPickerOpen, setIsVendedorPickerOpen] = useState(false);
     const [numeroPedidoComercial, setNumeroPedidoComercial] = useState('');
@@ -235,7 +235,7 @@ export default function CrearOrdenesTab() {
             setAreaOperativa('');
             setDepartamentoOperativo('');
             setSelectedVendedor(null);
-            setVendedorResponsableId(1);
+            setVendedorResponsableId(null);
             resetLoteArrays(0, []);
         } catch (error) {
             console.error('Error creating orden(es) de producción:', error);
@@ -487,37 +487,39 @@ export default function CrearOrdenesTab() {
                 cantidadAProducir={cantidadProducir}
             />
 
-            <HStack spacing={4} mt="4">
-                <FormControl>
-                    <FormLabel>Asesor</FormLabel>
-                    <InputGroup>
-                        <Input
-                            value={selectedVendedor
-                                ? `${selectedVendedor.cedula} - ${selectedVendedor.nombres} ${selectedVendedor.apellidos}`
-                                : ''}
-                            placeholder="Seleccione un vendedor"
-                            isReadOnly
-                        />
-                        <InputRightElement>
-                            <IconButton
-                                aria-label="Buscar vendedor"
-                                icon={<SearchIcon />}
-                                size="sm"
-                                onClick={handleOpenVendedorPicker}
+            <Box display="none">
+                <HStack spacing={4} mt="4">
+                    <FormControl>
+                        <FormLabel>Asesor</FormLabel>
+                        <InputGroup>
+                            <Input
+                                value={selectedVendedor
+                                    ? `${selectedVendedor.cedula} - ${selectedVendedor.nombres} ${selectedVendedor.apellidos}`
+                                    : ''}
+                                placeholder="Seleccione un vendedor"
+                                isReadOnly
                             />
-                        </InputRightElement>
-                    </InputGroup>
-                </FormControl>
+                            <InputRightElement>
+                                <IconButton
+                                    aria-label="Buscar vendedor"
+                                    icon={<SearchIcon />}
+                                    size="sm"
+                                    onClick={handleOpenVendedorPicker}
+                                />
+                            </InputRightElement>
+                        </InputGroup>
+                    </FormControl>
 
-                <FormControl>
-                    <FormLabel>Número de pedido comercial</FormLabel>
-                    <Input
-                        placeholder="Ingrese el número de pedido comercial"
-                        value={numeroPedidoComercial}
-                        onChange={(e) => setNumeroPedidoComercial(e.target.value)}
-                    />
-                </FormControl>
-            </HStack>
+                    <FormControl>
+                        <FormLabel>Número de pedido comercial</FormLabel>
+                        <Input
+                            placeholder="Ingrese el número de pedido comercial"
+                            value={numeroPedidoComercial}
+                            onChange={(e) => setNumeroPedidoComercial(e.target.value)}
+                        />
+                    </FormControl>
+                </HStack>
+            </Box>
 
             <HStack spacing={4} mt="4">
                 <FormControl>

@@ -35,6 +35,8 @@ export interface Producto{
 export interface Material extends Producto{
     fichaTecnicaUrl?: string;
     tipoMaterial?: number; // 1: materia prima, 2: material de empaque
+    /** -1: sin alertas de reorden; 0: sin umbral definido; > 0: alertar si stock <= valor */
+    puntoReorden?: number;
 }
 
 export interface Insumo {

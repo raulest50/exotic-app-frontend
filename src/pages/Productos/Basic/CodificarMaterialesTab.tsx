@@ -5,6 +5,7 @@ import {
     GridItem,
     FormControl,
     FormLabel,
+    FormHelperText,
     Input,
     Textarea,
     Button,
@@ -33,6 +34,7 @@ function CodificarMaterialesTab() {
     const [url_ftecnica, setUrl_ftecnica] = useState('');
     const [tipoMaterial, setTipoMaterial] = useState(TIPOS_MATERIALES.materiaPrima);
     const [inventareable, setInventareable] = useState(true);
+    const [puntoReordenStr, setPuntoReordenStr] = useState('-1');
 
     const [ivaPercentage, setIvaPercentage] = useState(0);
 
@@ -52,6 +54,7 @@ function CodificarMaterialesTab() {
         setTipoMaterial(TIPOS_MATERIALES.materiaPrima);
         setTipo_unidad(UNIDADES.KG);
         setInventareable(true);
+        setPuntoReordenStr('-1');
     };
 
     // Validate data: all fields must be non-empty, codigo numeric, cantidad positive, and a PDF file must be loaded.
@@ -121,6 +124,17 @@ function CodificarMaterialesTab() {
             });
             return false;
         }
+        const pr = Number(puntoReordenStr);
+        if (puntoReordenStr.trim() === '' || !Number.isFinite(pr) || (pr !== -1 && pr < 0)) {
+            toast({
+                title: "Validation Error",
+                description: "Punto de reorden: -1 (sin alertas), 0 (sin umbral definido) o un número mayor o igual a 0.",
+                status: "warning",
+                duration: 4000,
+                isClosable: true,
+            });
+            return false;
+        }
         return true;
     };
 
@@ -165,6 +179,7 @@ function CodificarMaterialesTab() {
     const saveMateriaPrimSubmit = async () => {
         if (!validateData()) return;
 
+        const puntoReorden = Number(puntoReordenStr);
         const materiaPrima: Material = {
             productoId: codigo,
             nombre,
@@ -175,7 +190,8 @@ function CodificarMaterialesTab() {
             tipo_producto: TIPOS_PRODUCTOS.materiaPrima,
             tipoMaterial: tipoMaterial,
             inventareable,
-            ivaPercentual: ivaPercentage
+            ivaPercentual: ivaPercentage,
+            puntoReorden,
         };
 
         // Log the payload being sent to the backend
@@ -341,6 +357,22 @@ function CodificarMaterialesTab() {
                         <FormControl display="flex" alignItems="center">
                             <FormLabel mb="0">Inventareable</FormLabel>
                             <Switch isChecked={inventareable} onChange={(e) => setInventareable(e.target.checked)} />
+                        </FormControl>
+                    </GridItem>
+
+                    <GridItem colSpan={1}>
+                        <FormControl>
+                            <FormLabel>Punto de reorden</FormLabel>
+                            <Input
+                                type="number"
+                                step="any"
+                                value={puntoReordenStr}
+                                onChange={(e) => setPuntoReordenStr(e.target.value)}
+                                sx={input_style}
+                            />
+                            <FormHelperText fontSize="xs">
+                                -1 sin alertas; 0 sin umbral definido; mayor a 0 alerta si stock es menor o igual.
+                            </FormHelperText>
                         </FormControl>
                     </GridItem>
 
