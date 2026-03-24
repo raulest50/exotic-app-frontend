@@ -26,6 +26,7 @@ export default class EndPointsURL{
 
     // notifications endpoint
     public module_notifications: string;
+    public stock_materiales_punto_reorden: string;
 
     // maestra notificaciones management endpoints
     public get_maestra_notificaciones: string;
@@ -470,6 +471,7 @@ export default class EndPointsURL{
 
         // notifications endpoint
         this.module_notifications = `${domain}/notificaciones/notifications4user`;
+        this.stock_materiales_punto_reorden = `${domain}/notificaciones/stock/materiales-en-punto-reorden`;
 
         // maestra notificaciones management endpoints
         const maestra_notif_res = 'api/maestra-notificaciones';

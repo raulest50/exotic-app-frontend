@@ -10,6 +10,26 @@ export interface ModuleNotificationDTA {
     message: string;
     ordenesPendientesLiberar?: number | null;
     ordenesPendientesEnviar?: number | null;
+    materialesEnPuntoReorden?: number | null;
+}
+
+/** Respuesta paginada Spring para materiales en punto de reorden */
+export interface PageMaterialEnPuntoReorden {
+    content: MaterialEnPuntoReordenDTO[];
+    totalPages: number;
+    totalElements: number;
+    number: number;
+    size: number;
+}
+
+export interface MaterialEnPuntoReordenDTO {
+    productoId: string;
+    nombre: string;
+    tipoMaterial: number;
+    tipoMaterialLabel: string;
+    stockActual: number;
+    puntoReorden: number;
+    tipoUnidades: string;
 }
 
 // Hook personalizado para obtener notificaciones
