@@ -8,6 +8,8 @@ export interface ModuleNotificationDTA {
     modulo: Modulo;
     requireAtention: boolean;
     message: string;
+    ordenesPendientesLiberar?: number | null;
+    ordenesPendientesEnviar?: number | null;
 }
 
 // Hook personalizado para obtener notificaciones

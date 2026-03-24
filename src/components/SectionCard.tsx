@@ -1,9 +1,31 @@
 // src/components/SectionCard.tsx
-import { Card, CardHeader, CardBody, Heading, Icon, Box, IconButton, Popover, PopoverTrigger, PopoverContent, PopoverBody, PopoverArrow } from "@chakra-ui/react";
+import {
+    Card,
+    CardHeader,
+    CardBody,
+    Heading,
+    Icon,
+    IconButton,
+    Popover,
+    PopoverTrigger,
+    PopoverContent,
+    PopoverBody,
+    PopoverArrow,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
+    Button,
+    Text,
+    VStack,
+} from "@chakra-ui/react";
 import { IconType } from "react-icons";
-import { NavLink } from "react-router-dom";
+import { Link as RouterLink, NavLink } from "react-router-dom";
 import { MdNotificationsActive } from "react-icons/md";
 import { ModuleNotificationDTA } from "../api/ModulesNotifications";
+import { Modulo } from "../pages/Usuarios/GestionUsuarios/types.tsx";
 import { useState } from "react";
 
 interface SectionCardProps {
@@ -23,28 +45,12 @@ interface SectionCardProps {
 function SectionCard({ name, icon, to, supportedModules, currentAccesos, bgColor = "blue.100", notification }: SectionCardProps) {
     const [isOpen, setIsOpen] = useState(false);
 
-    // Log para depurar notificaciones
-//     console.log(`SectionCard ${name} - notification prop:`, notification);
-
-    // Log específico para COMPRAS
-    if (supportedModules && supportedModules.includes('COMPRAS')) {
-//         console.log('SectionCard COMPRAS - notification prop:', notification);
-//         console.log('SectionCard COMPRAS - requireAtention:', notification?.requireAtention);
-//         console.log('SectionCard COMPRAS - Condición de renderizado:', Boolean(notification && notification.requireAtention));
-    }
-
-    // If supportedModules is provided, check if there's at least one module
-    // in currentAccesos that is allowed, or if the user is "master".
-    // If not, do not render anything.
     if (supportedModules && currentAccesos) {
-        // Check if user is "master" (should have access to all modules)
         const isMaster = currentAccesos.includes('ROLE_MASTER');
-        // Check if user has access to at least one of the supported modules
         const hasAccess = isMaster || currentAccesos.some(acceso => supportedModules.includes(acceso));
         if (!hasAccess) return null;
     }
 
-    // Create style object with the provided background color
     const cardStyle = {
         p: "2em",
         m: "1em",
@@ -55,60 +61,114 @@ function SectionCard({ name, icon, to, supportedModules, currentAccesos, bgColor
         ":active": {
             bg: bgColor === "red.100" ? "red.800" : "blue.800",
         },
-        position: "relative", // Necesario para posicionar el icono de notificación
+        position: "relative",
     };
 
-    // Función para manejar el clic en el icono de notificación
     const handleNotificationClick = (e: React.MouseEvent) => {
-//         console.log(`SectionCard ${name} - Notification icon clicked`);
-        e.preventDefault(); // Prevenir la navegación
-        e.stopPropagation(); // Evitar que el evento se propague
-        setIsOpen(!isOpen); // Alternar el estado del popover
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(!isOpen);
     };
+
+    const isComprasNotification =
+        Boolean(notification?.requireAtention && notification.modulo === Modulo.COMPRAS);
+
+    const notificationBell = notification && notification.requireAtention && (
+        isComprasNotification ? (
+            <IconButton
+                aria-label="Notificación"
+                icon={<MdNotificationsActive />}
+                position="absolute"
+                top="0.5rem"
+                right="0.5rem"
+                size="sm"
+                colorScheme="red"
+                borderRadius="full"
+                onClick={handleNotificationClick}
+                zIndex={1}
+            />
+        ) : (
+            <Popover
+                isOpen={isOpen}
+                onClose={() => setIsOpen(false)}
+                placement="top"
+                closeOnBlur={true}
+            >
+                <PopoverTrigger>
+                    <IconButton
+                        aria-label="Notificación"
+                        icon={<MdNotificationsActive />}
+                        position="absolute"
+                        top="0.5rem"
+                        right="0.5rem"
+                        size="sm"
+                        colorScheme="red"
+                        borderRadius="full"
+                        onClick={handleNotificationClick}
+                        zIndex={1}
+                    />
+                </PopoverTrigger>
+                <PopoverContent>
+                    <PopoverArrow />
+                    <PopoverBody>{notification.message}</PopoverBody>
+                </PopoverContent>
+            </Popover>
+        )
+    );
+
+    const liberar = notification?.ordenesPendientesLiberar ?? 0;
+    const enviar = notification?.ordenesPendientesEnviar ?? 0;
 
     return (
-        <NavLink to={to}>
-            <Card h={"full"} sx={cardStyle}>
-                {/* Icono de notificación con Popover */}
-                {notification && notification.requireAtention && (
-//                     console.log(`SectionCard ${name} - Mostrando icono de notificación, requireAtention:`, notification.requireAtention),
-                    <Popover
-                        isOpen={isOpen}
-                        onClose={() => setIsOpen(false)}
-                        placement="top"
-                        closeOnBlur={true}
-                    >
-                        <PopoverTrigger>
-                            <IconButton
-                                aria-label="Notificación"
-                                icon={<MdNotificationsActive />}
-                                position="absolute"
-                                top="0.5rem"
-                                right="0.5rem"
-                                size="sm"
-                                colorScheme="red"
-                                borderRadius="full"
-                                onClick={handleNotificationClick}
-                                zIndex={1}
-                            />
-                        </PopoverTrigger>
-                        <PopoverContent>
-                            <PopoverArrow />
-                            <PopoverBody>{notification.message}</PopoverBody>
-                        </PopoverContent>
-                    </Popover>
-                )}
+        <>
+            <NavLink to={to}>
+                <Card h={"full"} sx={cardStyle}>
+                    {notificationBell}
 
-                <CardHeader h={"40%"} borderBottom="0.1em solid" alignContent={"center"}>
-                    <Heading as={"h2"} size={"sm"} fontFamily={"Comfortaa Variable"}>
-                        {name}
-                    </Heading>
-                </CardHeader>
-                <CardBody>
-                    <Icon boxSize={"4em"} as={icon} />
-                </CardBody>
-            </Card>
-        </NavLink>
+                    <CardHeader h={"40%"} borderBottom="0.1em solid" alignContent={"center"}>
+                        <Heading as={"h2"} size={"sm"} fontFamily={"Comfortaa Variable"}>
+                            {name}
+                        </Heading>
+                    </CardHeader>
+                    <CardBody>
+                        <Icon boxSize={"4em"} as={icon} />
+                    </CardBody>
+                </Card>
+            </NavLink>
+
+            {isComprasNotification && notification && (
+                <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} isCentered>
+                    <ModalOverlay />
+                    <ModalContent>
+                        <ModalHeader>Órdenes de compra pendientes</ModalHeader>
+                        <ModalBody>
+                            <VStack align="stretch" spacing={3}>
+                                <Text>{notification.message}</Text>
+                                <Text>
+                                    <strong>Pendientes por liberar:</strong> {liberar}
+                                </Text>
+                                <Text>
+                                    <strong>Pendientes por enviar al proveedor:</strong> {enviar}
+                                </Text>
+                            </VStack>
+                        </ModalBody>
+                        <ModalFooter gap={2}>
+                            <Button variant="ghost" onClick={() => setIsOpen(false)}>
+                                Cerrar
+                            </Button>
+                            <Button
+                                as={RouterLink}
+                                to={to}
+                                colorScheme="blue"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                Ir a {name}
+                            </Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </Modal>
+            )}
+        </>
     );
 }
 
