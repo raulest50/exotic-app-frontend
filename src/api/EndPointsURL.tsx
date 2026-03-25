@@ -238,6 +238,11 @@ export default class EndPointsURL{
         return `${this.domain}/api/master-directives/${encodeURIComponent(nombre)}`;
     }
 
+    /** GET Excel ingreso de materiales (BI). @param fecha ISO date YYYY-MM-DD */
+    public informesDiariosAlmacenIngresoMaterialesExcel(fecha: string): string {
+        return `${this.domain}/bi/informes-diarios/almacen/ingreso-materiales/excel?fecha=${encodeURIComponent(fecha)}`;
+    }
+
     // super master ops endpoints
     public get_super_master_config: string;
     public update_super_master_config: string;

@@ -18,6 +18,7 @@ import { FaShoppingCart } from "react-icons/fa";
 import { GiBuyCard } from "react-icons/gi";
 import { MdWarehouse } from "react-icons/md";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
+import InformeDiarioAlmacenPanel from "./InformeDiarioAlmacenPanel.tsx";
 
 type InformeDiarioKey = "almacen" | "compras" | "ventas";
 
@@ -142,7 +143,11 @@ export default function InformesDiariosTab() {
                         No se pudo contactar el servicio de informes diarios (normal si el backend no está en marcha).
                     </Text>
                 )}
-                <InformePlaceholder title={mainTitle} />
+                {selectedReport === "almacen" ? (
+                    <InformeDiarioAlmacenPanel />
+                ) : (
+                    <InformePlaceholder title={mainTitle} />
+                )}
             </Box>
         </Flex>
     );
