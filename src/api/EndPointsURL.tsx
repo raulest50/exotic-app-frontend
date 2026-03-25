@@ -227,6 +227,9 @@ export default class EndPointsURL{
     // planeacion de produccion endpoints
     public planeacion_asociar_terminados: string;
 
+    // BI — informes diarios
+    public informes_diarios_ping: string;
+
     // master directives endpoints
     public get_master_directives: string;
     public update_master_directive: string;
@@ -268,6 +271,7 @@ export default class EndPointsURL{
         const planeacion_produccion_res = 'planeacion_produccion';
         const averias_res = 'api/averias';
         const ingresos_terminados_res = 'ingresos_terminados_almacen';
+        const informes_diarios_res = 'bi/informes-diarios';
 
         // productos endpoints
         this.search_mprima = `${domain}/${productos_res}/search_mprima`;
@@ -487,6 +491,9 @@ export default class EndPointsURL{
 
         // Planeacion de produccion endpoints
         this.planeacion_asociar_terminados = `${domain}/${planeacion_produccion_res}/asociar_terminados`;
+
+        // BI — informes diarios
+        this.informes_diarios_ping = `${domain}/${informes_diarios_res}/ping`;
 
     }
 

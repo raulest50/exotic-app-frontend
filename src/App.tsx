@@ -22,7 +22,6 @@ import ComprasPage from "./pages/Compras/ComprasPage.tsx";
 import {ProtectedRoute} from "./components/ProtectedRoute.tsx";
 import LoginPanel from "./pages/LoginPage/LoginPanel.tsx";
 import ResetPasswordPage from "./pages/LoginPage/ResetPasswordPage.tsx";
-import InformesPage from "./pages/Informes/InformesPage.tsx";
 import UsuariosPage from "./pages/Usuarios/UsuariosPage.tsx";
 import MultiRoleProtectedRoute from "./components/MultiRoleProtectedRoute.tsx";
 import SuperMasterProtectedRoute from "./components/SuperMasterProtectedRoute.tsx";
@@ -141,14 +140,6 @@ const router = createBrowserRouter(
                         </MultiRoleProtectedRoute>
                     }
                 />
-                <Route
-                    path="informes"
-                    element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.PRODUCCION, Modulo.COMPRAS]}>
-                            <InformesPage/>
-                        </MultiRoleProtectedRoute>
-                    }
-                />
 
                 <Route
                     path="usuarios"
@@ -251,12 +242,7 @@ const router = createBrowserRouter(
 
             </Route>
         </>
-    ),
-    {
-        future: {
-            v7_startTransition: true
-        }
-    }
+    )
 )
 
 function App() {

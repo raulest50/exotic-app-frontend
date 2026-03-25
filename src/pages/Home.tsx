@@ -120,7 +120,6 @@ export default function Home() {
                 <SectionCard to={'/stock'} name={'Stock'} icon={BsDatabaseCheck} supportedModules={[Modulo.STOCK]} currentAccesos={roles} notification={getNotificationForModule(Modulo.STOCK)}/>
                 <SectionCard to={'/Proveedores'} name={'Proveedores'} icon={FaIndustry} supportedModules={[Modulo.PROVEEDORES]} currentAccesos={roles} notification={getNotificationForModule(Modulo.PROVEEDORES)}/>
                 <SectionCard to={'/compras'} name={'Compras'} icon={GiBuyCard} supportedModules={[Modulo.COMPRAS]} currentAccesos={roles} notification={getNotificationForModule(Modulo.COMPRAS)}/>
-                {/*<SectionCard to={'/informes'} name={'Informes'} icon={TbReportSearch} supportedModules={[Modulo.INFORMES]} currentAccesos={roles} notification={getNotificationForModule(Modulo.INFORMES)}/>*/}
                 <SectionCard to={'/gestion_areas_operativas'} name={'Gestión Áreas Operativas'} icon={FaCogs} supportedModules={[Modulo.SEGUIMIENTO_PRODUCCION]} currentAccesos={roles} notification={getNotificationForModule(Modulo.SEGUIMIENTO_PRODUCCION)}/>
                 <SectionCard to={'/clientes'} name={'Clientes'} icon={FaUsers} supportedModules={[Modulo.CLIENTES]} currentAccesos={roles} notification={getNotificationForModule(Modulo.CLIENTES)}/>
                 <SectionCard to={'/ventas'} name={'Ventas'} icon={FaShoppingCart} supportedModules={[Modulo.VENTAS]} currentAccesos={roles} notification={getNotificationForModule(Modulo.VENTAS)}/>
