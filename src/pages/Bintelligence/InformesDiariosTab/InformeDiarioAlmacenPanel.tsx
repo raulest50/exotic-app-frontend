@@ -26,7 +26,10 @@ export default function InformeDiarioAlmacenPanel() {
     const endPoints = useMemo(() => new EndPointsURL(), []);
 
     const canDownload =
-        tipoReporte === "ingreso_materiales" && fecha.length > 0;
+        fecha.length > 0 &&
+        (tipoReporte === "ingreso_materiales" ||
+            tipoReporte === "dispensacion_materiales" ||
+            tipoReporte === "ingreso_terminado");
 
     const triggerFileDownload = (data: ArrayBuffer, filename: string) => {
         const blob = new Blob([data], {
@@ -44,9 +47,19 @@ export default function InformeDiarioAlmacenPanel() {
         if (!canDownload) return;
         setDownloading(true);
         try {
-            const url = endPoints.informesDiariosAlmacenIngresoMaterialesExcel(fecha);
+            let url: string;
+            let filename: string;
+            if (tipoReporte === "ingreso_materiales") {
+                url = endPoints.informesDiariosAlmacenIngresoMaterialesExcel(fecha);
+                filename = `informe_ingreso_materiales_${fecha}.xlsx`;
+            } else if (tipoReporte === "dispensacion_materiales") {
+                url = endPoints.informesDiariosAlmacenDispensacionMaterialesExcel(fecha);
+                filename = `informe_dispensacion_materiales_${fecha}.xlsx`;
+            } else {
+                url = endPoints.informesDiariosAlmacenIngresoTerminadosExcel(fecha);
+                filename = `informe_ingreso_terminados_${fecha}.xlsx`;
+            }
             const response = await axios.get<ArrayBuffer>(url, { responseType: "arraybuffer" });
-            const filename = `informe_ingreso_materiales_${fecha}.xlsx`;
             triggerFileDownload(response.data, filename);
         } catch (e) {
             toast({
@@ -79,16 +92,9 @@ export default function InformeDiarioAlmacenPanel() {
                             onChange={(e) => setTipoReporte(e.target.value as TipoReporteAlmacen)}
                         >
                             <option value="ingreso_materiales">Ingreso materiales</option>
-                            <option value="dispensacion_materiales" disabled title="Próximamente">
-                                Dispensación materiales
-                            </option>
-                            <option value="ingreso_terminado" disabled title="Próximamente">
-                                Ingreso producto terminado
-                            </option>
+                            <option value="dispensacion_materiales">Dispensación materiales</option>
+                            <option value="ingreso_terminado">Ingreso producto terminado</option>
                         </Select>
-                        <Text fontSize="xs" color="gray.500" mt={1}>
-                            Dispensación e ingreso terminado estarán disponibles próximamente.
-                        </Text>
                     </FormControl>
                     <FormControl>
                         <FormLabel>Fecha del informe</FormLabel>

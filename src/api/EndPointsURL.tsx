@@ -243,6 +243,16 @@ export default class EndPointsURL{
         return `${this.domain}/bi/informes-diarios/almacen/ingreso-materiales/excel?fecha=${encodeURIComponent(fecha)}`;
     }
 
+    /** GET Excel dispensación de materiales (BI). @param fecha ISO date YYYY-MM-DD */
+    public informesDiariosAlmacenDispensacionMaterialesExcel(fecha: string): string {
+        return `${this.domain}/bi/informes-diarios/almacen/dispensacion-materiales/excel?fecha=${encodeURIComponent(fecha)}`;
+    }
+
+    /** GET Excel ingreso producto terminado (BI). @param fecha ISO date YYYY-MM-DD */
+    public informesDiariosAlmacenIngresoTerminadosExcel(fecha: string): string {
+        return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/excel?fecha=${encodeURIComponent(fecha)}`;
+    }
+
     // super master ops endpoints
     public get_super_master_config: string;
     public update_super_master_config: string;
