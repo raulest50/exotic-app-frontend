@@ -7,6 +7,8 @@ export interface AreaOperativa {
 export interface RutaProcesoNodeData {
     label: string;
     areaOperativa: AreaOperativa | null;
+    hasLeftHandle?: boolean;
+    hasRightHandle?: boolean;
 }
 
 export interface RutaProcesoNodeDTO {
@@ -16,6 +18,8 @@ export interface RutaProcesoNodeDTO {
     areaOperativaId: number | null;
     areaOperativaNombre: string | null;
     label: string;
+    hasLeftHandle: boolean;
+    hasRightHandle: boolean;
 }
 
 export interface RutaProcesoEdgeDTO {

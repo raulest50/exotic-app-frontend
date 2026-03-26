@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { Box, Flex, Button, Heading, Divider, useToast, Spinner, Text, IconButton } from "@chakra-ui/react";
-import { ArrowBackIcon, CloseIcon } from "@chakra-ui/icons";
+import { ArrowBackIcon, CloseIcon, AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import {
     ReactFlow,
     Node,
@@ -55,6 +55,20 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     const [isFullScreen, setIsFullScreen] = useState(false);
     const { fitView } = useReactFlow();
 
+    // Validation: check if all enabled handles are connected
+    const isRutaValid = useMemo(() => {
+        if (nodes.length === 0) return true;
+
+        for (const node of nodes) {
+            const hasLeft = node.data.hasLeftHandle !== false;
+            const hasRight = node.data.hasRightHandle !== false;
+
+            if (hasLeft && !edges.some(e => e.target === node.id)) return false;
+            if (hasRight && !edges.some(e => e.source === node.id)) return false;
+        }
+        return true;
+    }, [nodes, edges]);
+
     const endPoints = new EndPointsURL();
     const toast = useToast();
 
@@ -100,6 +114,8 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                             label: node.label || node.areaOperativaNombre || 'Sin asignar',
                             areaOperativaId: node.areaOperativaId,
                             areaOperativaNombre: node.areaOperativaNombre,
+                            hasLeftHandle: node.hasLeftHandle ?? true,
+                            hasRightHandle: node.hasRightHandle ?? true,
                         },
                     }));
 
@@ -151,6 +167,8 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                 label: area.nombre,
                 areaOperativaId: area.areaId,
                 areaOperativaNombre: area.nombre,
+                hasLeftHandle: true,
+                hasRightHandle: true,
             },
         };
         setNodes([...nodes, newNode]);
@@ -169,6 +187,8 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     areaOperativaId: node.data.areaOperativaId || null,
                     areaOperativaNombre: node.data.areaOperativaNombre || null,
                     label: node.data.label || '',
+                    hasLeftHandle: node.data.hasLeftHandle ?? true,
+                    hasRightHandle: node.data.hasRightHandle ?? true,
                 })),
                 edges: edges.map((edge) => ({
                     id: edge.id,
@@ -177,10 +197,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                 })),
             };
 
-            await axios.post(
-                endPoints.save_ruta_proceso_cat.replace('{categoriaId}', String(categoria.categoriaId)),
-                rutaDTO
-            );
+            await axios.post(endPoints.save_ruta_proceso_cat, rutaDTO);
 
             toast({
                 title: 'Guardado',
@@ -307,18 +324,46 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
                 </ReactFlow>
                 {isFullScreen && (
-                    <IconButton
-                        aria-label="Salir de pantalla completa"
-                        icon={<CloseIcon />}
-                        position="absolute"
-                        top={4}
-                        right={4}
-                        size="lg"
-                        colorScheme="purple"
-                        onClick={toggleFullScreen}
-                        zIndex={10000}
-                        boxShadow="lg"
-                    />
+                    <>
+                        <IconButton
+                            aria-label="Salir de pantalla completa"
+                            icon={<CloseIcon />}
+                            position="absolute"
+                            top={4}
+                            right={4}
+                            size="lg"
+                            colorScheme="purple"
+                            onClick={toggleFullScreen}
+                            zIndex={10000}
+                            boxShadow="lg"
+                        />
+                        <Flex
+                            position="absolute"
+                            bottom={4}
+                            left="50%"
+                            transform="translateX(-50%)"
+                            gap={4}
+                            zIndex={10000}
+                        >
+                            <Button
+                                colorScheme="purple"
+                                leftIcon={<AddIcon />}
+                                onClick={handleAddArea}
+                                boxShadow="lg"
+                            >
+                                Agregar Area
+                            </Button>
+                            <Button
+                                colorScheme="red"
+                                leftIcon={<DeleteIcon />}
+                                onClick={handleDeleteSelected}
+                                isDisabled={!selectedElement}
+                                boxShadow="lg"
+                            >
+                                Eliminar Seleccion
+                            </Button>
+                        </Flex>
+                    </>
                 )}
             </Box>
 
@@ -336,6 +381,8 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     colorScheme="green"
                     onClick={handleSave}
                     isLoading={saving}
+                    isDisabled={!isRutaValid}
+                    title={!isRutaValid ? "Hay handles sin conectar" : ""}
                 >
                     Guardar
                 </Button>

@@ -324,7 +324,7 @@ export default class EndPointsURL{
         // Ruta proceso cat endpoints
         const ruta_proceso_cat_res = 'api/ruta-proceso-cat';
         this.get_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/{categoriaId}`;
-        this.save_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/{categoriaId}`;
+        this.save_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/save_ruprocat`;
         this.delete_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/{categoriaId}`;
         this.check_rutas_exist_batch = `${domain}/${ruta_proceso_cat_res}/exists-batch`;
 
