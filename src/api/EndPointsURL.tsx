@@ -39,6 +39,12 @@ export default class EndPointsURL{
     public search_categorias_pag: string;
     public update_categoria_lote_size: string;
 
+    // ruta proceso cat endpoints
+    public get_ruta_proceso_cat: string;
+    public save_ruta_proceso_cat: string;
+    public delete_ruta_proceso_cat: string;
+    public check_rutas_exist_batch: string;
+
 
     // Proveedores resouce
     public save_proveedores:string;
@@ -314,6 +320,13 @@ export default class EndPointsURL{
         this.save_categoria = `${domain}/categorias`;
         this.search_categorias_pag = `${domain}/categorias/search`;
         this.update_categoria_lote_size = `${domain}/categorias/{categoriaId}/lote-size`;
+
+        // Ruta proceso cat endpoints
+        const ruta_proceso_cat_res = 'api/ruta-proceso-cat';
+        this.get_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/{categoriaId}`;
+        this.save_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/{categoriaId}`;
+        this.delete_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/{categoriaId}`;
+        this.check_rutas_exist_batch = `${domain}/${ruta_proceso_cat_res}/exists-batch`;
 
         // Proveedores endpoints
         this.save_proveedores = `${domain}/${proveedores_res}/save`;

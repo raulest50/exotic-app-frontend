@@ -11,7 +11,7 @@ import {my_style_tab} from "../../styles/styles_general.tsx";
 
 import CrearOrdenesTab from "./CrearOrdenesTab/CrearOrdenesTab.tsx";
 import HistorialOrdenesTab from "./HistorialOrdenesTab/HistorialOrdenesTab.tsx";
-import ConfLotesCategoriaTab from "./ConfLotesCategoriaTab/ConfLotesCategoriaTab.tsx";
+import ConfParamsCategoria from "./ConfParamsCategoria/ConfParamsCategoria.tsx";
 import {PlaneacionProduccionTab} from "./PlaneacionProduccionTab/PlaneacionProduccionTab.tsx";
 import { useAuth } from '../../context/AuthContext';
 import { getAccessLevel } from '../../api/UserApi';
@@ -44,7 +44,7 @@ export default function ProduccionPage(){
                     <Tab sx={my_style_tab}> Crear ODP Manualmente </Tab>
                     <Tab sx={my_style_tab}> Historial </Tab>
                     {(user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3)) && (
-                        <Tab sx={my_style_tab}> Config. Lotes por Categoría </Tab>
+                        <Tab sx={my_style_tab}> Parametros por Categoría </Tab>
                     )}
                     <Tab sx={my_style_tab}> Planeacion Produccion </Tab>
                 </TabList>
@@ -61,7 +61,7 @@ export default function ProduccionPage(){
 
                     {(user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3)) && (
                         <TabPanel>
-                            <ConfLotesCategoriaTab />
+                            <ConfParamsCategoria />
                         </TabPanel>
                     )}
 

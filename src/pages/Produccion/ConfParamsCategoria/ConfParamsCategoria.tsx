@@ -29,10 +29,11 @@ import { LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import { RiSave3Fill } from 'react-icons/ri';
 import CustomIntegerInput from '../../../components/CustomIntegerInput/CustomIntegerInput.tsx';
 import { Categoria } from '../types.tsx';
+import { RutaProcesoCatDesigner } from '../RutaProcesoCatDesigner';
 
 const PAGE_SIZE = 10;
 
-export default function ConfLotesCategoriaTab() {
+export default function ConfParamsCategoria() {
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [searchNombre, setSearchNombre] = useState('');
     const [page, setPage] = useState(0);
@@ -42,8 +43,42 @@ export default function ConfLotesCategoriaTab() {
     const [editingLoteSize, setEditingLoteSize] = useState<Record<number, number>>({});
     const [unlockedCategoriaIds, setUnlockedCategoriaIds] = useState<Record<number, boolean>>({});
     const [savingCategoriaId, setSavingCategoriaId] = useState<number | null>(null);
+    const [viewMode, setViewMode] = useState<'list' | 'designer'>('list');
+    const [selectedCategoria, setSelectedCategoria] = useState<Categoria | null>(null);
+    const [rutasExistentes, setRutasExistentes] = useState<Record<number, boolean>>({});
+    const [loadingRutas, setLoadingRutas] = useState(false);
     const endPoints = new EndPointsURL();
     const toast = useToast();
+
+    const openRutaDesigner = (categoria: Categoria) => {
+        setSelectedCategoria(categoria);
+        setViewMode('designer');
+    };
+
+    const backToList = () => {
+        setViewMode('list');
+        setSelectedCategoria(null);
+        // Refresh route existence when returning from designer
+        if (categorias.length > 0) {
+            const categoriaIds = categorias.map(c => c.categoriaId);
+            fetchRutasExistentes(categoriaIds);
+        }
+    };
+
+    const fetchRutasExistentes = async (categoriaIds: number[]) => {
+        if (categoriaIds.length === 0) return;
+        setLoadingRutas(true);
+        try {
+            const response = await axios.get(endPoints.check_rutas_exist_batch, {
+                params: { categoriaIds: categoriaIds.join(',') }
+            });
+            setRutasExistentes(response.data);
+        } catch (err) {
+            console.error('Error checking rutas existentes:', err);
+        } finally {
+            setLoadingRutas(false);
+        }
+    };
 
     const fetchCategorias = useCallback(
         async (pageNumber: number) => {
@@ -58,16 +93,22 @@ export default function ConfLotesCategoriaTab() {
                     params.nombre = searchNombre.trim();
                 }
                 const response = await axios.get(endPoints.search_categorias_pag, { params });
-                setCategorias(response.data.content);
+                const loadedCategorias: Categoria[] = response.data.content;
+                setCategorias(loadedCategorias);
                 setTotalPages(response.data.totalPages);
                 setPage(pageNumber);
                 setEditingLoteSize((prev) => {
                     const next: Record<number, number> = {};
-                    response.data.content.forEach((c: Categoria) => {
+                    loadedCategorias.forEach((c: Categoria) => {
                         next[c.categoriaId] = c.loteSize ?? 0;
                     });
                     return { ...prev, ...next };
                 });
+                // Fetch route existence for loaded categories
+                if (loadedCategorias.length > 0) {
+                    const categoriaIds = loadedCategorias.map(c => c.categoriaId);
+                    fetchRutasExistentes(categoriaIds);
+                }
             } catch (err) {
                 console.error('Error fetching categorias:', err);
                 setError('Error al cargar las categorías. Por favor, intente nuevamente.');
@@ -146,6 +187,15 @@ export default function ConfLotesCategoriaTab() {
         }
     };
 
+    if (viewMode === 'designer' && selectedCategoria) {
+        return (
+            <RutaProcesoCatDesigner
+                categoria={selectedCategoria}
+                onBack={backToList}
+            />
+        );
+    }
+
     return (
         <Flex direction="column" p={4}>
             <Box p={4} borderWidth="1px" borderRadius="lg" mb={4}>
@@ -202,6 +252,7 @@ export default function ConfLotesCategoriaTab() {
                                     <Th>ID</Th>
                                     <Th>Nombre</Th>
                                     <Th>Tamaño de lote</Th>
+                                    <Th>Ruta de Proceso</Th>
                                 </Tr>
                             </Thead>
                             <Tbody>
@@ -229,7 +280,7 @@ export default function ConfLotesCategoriaTab() {
                                                         <CustomIntegerInput
                                                             value={currentValue}
                                                             onChange={(v) => handleLoteSizeChange(catId, v)}
-                                                            disabled={!unlocked}
+                                                            isDisabled={!unlocked}
                                                             min={0}
                                                             placeholder="0"
                                                             width="100px"
@@ -246,6 +297,21 @@ export default function ConfLotesCategoriaTab() {
                                                             />
                                                         )}
                                                     </Flex>
+                                                );
+                                            })()}
+                                        </Td>
+                                        <Td>
+                                            {(() => {
+                                                const hasRuta = rutasExistentes[categoria.categoriaId] === true;
+                                                return (
+                                                    <Button
+                                                        size="sm"
+                                                        colorScheme={hasRuta ? 'purple' : 'teal'}
+                                                        onClick={() => openRutaDesigner(categoria)}
+                                                        isLoading={loadingRutas}
+                                                    >
+                                                        {hasRuta ? 'Editar Ruta Proc' : 'Crear Ruta Proc'}
+                                                    </Button>
                                                 );
                                             })()}
                                         </Td>
