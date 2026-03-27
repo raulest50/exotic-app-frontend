@@ -17,12 +17,11 @@ import InformeProductosTab from './InformeProductosTab.tsx';
 import {my_style_tab} from '../../../styles/styles_general.tsx';
 
 interface Props {
-    user: string | null;
     productosAccessLevel: number;
     onBack: () => void;
 }
 
-export function BasicOperationsTabs({user, productosAccessLevel, onBack}: Props) {
+export function BasicOperationsTabs({productosAccessLevel, onBack}: Props) {
     const [tabIndex, setTabIndex] = useState(0);
 
     return (
@@ -32,14 +31,14 @@ export function BasicOperationsTabs({user, productosAccessLevel, onBack}: Props)
             </Button>
             <Tabs isFitted gap="1em" variant="line" index={tabIndex} onChange={setTabIndex}>
                 <TabList>
-                    {(user === 'master' || productosAccessLevel >= 2) && (
+                    {productosAccessLevel >= 2 && (
                         <Tab sx={my_style_tab}>Codificar Material</Tab>
                     )}
                     <Tab sx={my_style_tab}>Consulta</Tab>
                 </TabList>
 
                 <TabPanels>
-                    {(user === 'master' || productosAccessLevel >= 2) && (
+                    {productosAccessLevel >= 2 && (
                         <TabPanel>
                             <CodificarMaterialesTab />
                         </TabPanel>

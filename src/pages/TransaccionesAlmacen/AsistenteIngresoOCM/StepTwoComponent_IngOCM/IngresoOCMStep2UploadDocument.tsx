@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {IngresoOCM_DTA, OrdenCompra} from "../../types.tsx";
 import {
     Button,
@@ -15,7 +15,7 @@ import { FaFolderOpen } from "react-icons/fa";
 import { FaFileCircleQuestion } from "react-icons/fa6";
 import { FaFileCircleCheck } from "react-icons/fa6";
 
-import { getCurrentUser, User } from '../../../../api/UserApi';
+import { useAuth } from '../../../../context/AuthContext';
 
 interface StepTwoComponentProps {
     setActiveStep: (step: number) => void;
@@ -29,24 +29,11 @@ export default function IngresoOCMStep2UploadDocument({
                                              setIngresoOCM_DTA,
                                          }: StepTwoComponentProps) {
 
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const { meProfile: currentUser } = useAuth();
     const [file, setFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const cameraInputRef = useRef<HTMLInputElement>(null);
     const toast = useToast();
-
-    // Obtener el usuario actual usando la API centralizada
-    useEffect(() => {
-        const fetchCurrentUser = async () => {
-            try {
-                const user = await getCurrentUser();
-                setCurrentUser(user);
-            } catch (error) {
-                console.error('Error fetching current user:', error);
-            }
-        };
-        fetchCurrentUser();
-    }, []);
 
     // Handles file selection from either input
     const handleFileChange = (

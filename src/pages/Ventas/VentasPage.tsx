@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
     Container,
     Tabs,
@@ -8,47 +8,14 @@ import {
     TabPanel,
     Text,
 } from "@chakra-ui/react";
-import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';
-import EndPointsURL from '../../api/EndPointsURL';
 import MyHeader from "../../components/MyHeader.tsx";
 import { my_style_tab } from "../../styles/styles_general.tsx";
 import CrearVendedor from './TabsContent/CrearVendedor';
-
-interface Authority {
-    authority: string;
-    nivel: string;
-}
-
-interface WhoAmIResponse {
-    authorities: Authority[];
-}
+import { Modulo } from '../Usuarios/GestionUsuarios/types.tsx';
+import { useModuleAccessLevel } from '../../auth/usePermissions';
 
 const VentasPage: React.FC = () => {
-    const [ventasAccessLevel, setVentasAccessLevel] = useState<number>(0);
-    const { user } = useAuth();
-    const endPoints = new EndPointsURL();
-
-    useEffect(() => {
-        const fetchVentasAccessLevel = async () => {
-            try {
-                const response = await axios.get<WhoAmIResponse>(endPoints.whoami);
-                const authorities = response.data.authorities;
-
-                const ventasAuthority = authorities.find(
-                    (auth) => auth.authority === 'ACCESO_VENTAS'
-                );
-
-                if (ventasAuthority) {
-                    setVentasAccessLevel(parseInt(ventasAuthority.nivel, 10));
-                }
-            } catch (error) {
-                console.error('Error al obtener el nivel de acceso para ventas:', error);
-            }
-        };
-
-        fetchVentasAccessLevel();
-    }, []);
+    const { nivel: ventasAccessLevel } = useModuleAccessLevel(Modulo.VENTAS);
 
 
     return (
@@ -59,7 +26,7 @@ const VentasPage: React.FC = () => {
                     <Tab sx={my_style_tab}>Crear Venta</Tab>
                     <Tab sx={my_style_tab}>Historial de Ventas</Tab>
                     <Tab sx={my_style_tab}>Reportes</Tab>
-                    {(user === 'master' || ventasAccessLevel >= 3) && (
+                    {ventasAccessLevel >= 3 && (
                         <Tab sx={my_style_tab}>Crear vendedor nuevo</Tab>
                     )}
                 </TabList>
@@ -76,7 +43,7 @@ const VentasPage: React.FC = () => {
                         {/* Contenido para reportes */}
                         <p>Reportes de ventas en desarrollo.</p>
                     </TabPanel>
-                    {(user === 'master' || ventasAccessLevel >= 3) && (
+                    {ventasAccessLevel >= 3 && (
                         <TabPanel>
                             <CrearVendedor />
                         </TabPanel>

@@ -1,10 +1,9 @@
 // src/pages/Home.tsx
-import { SimpleGrid, Flex, Heading, Button, Spacer, Container, Box, HStack, Tooltip } from "@chakra-ui/react";
+import { SimpleGrid, Flex, Heading, Button, Spacer, Container, Box, HStack, Tooltip, IconButton, useColorMode, useColorModeValue } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import SectionCard from "../components/SectionCard.tsx";
 import SplitText from "../components/SplitText.tsx";
 import SuperMasterOnboardingModal from "../components/SuperMasterOnboardingModal.tsx";
-import { getCurrentUser } from "../api/UserApi";
 import { PiDownloadDuotone } from "react-icons/pi";
 import { BsDatabaseCheck } from "react-icons/bs";
 import { AiOutlineAudit } from "react-icons/ai";
@@ -27,6 +26,7 @@ import { FaUsers } from "react-icons/fa"; // Nuevo icono para Clientes
 import { FaShoppingCart } from "react-icons/fa"; // Nuevo icono para Ventas
 import { FaMoneyBillWave } from "react-icons/fa"; // Icono para Pagos a Proveedores
 import { MdRefresh } from "react-icons/md"; // Icono para el botón de actualizar
+import { MoonIcon, SunIcon } from "@chakra-ui/icons"; // Iconos para modo oscuro
 
 import '@fontsource-variable/comfortaa'
 
@@ -36,19 +36,20 @@ import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationsContext';
 
 export default function Home() {
-    const { user, roles, logout } = useAuth();
+    const { user, roles, logout, meProfile, accesosReady } = useAuth();
     const [showSuperMasterOnboarding, setShowSuperMasterOnboarding] = useState(false);
+    const { colorMode, toggleColorMode } = useColorMode();
+
+    // Colores adaptativos para modo claro/oscuro
+    const versionBgColor = useColorModeValue("purple.200", "purple.600");
+    const userBgColor = useColorModeValue("green.200", "green.600");
 
     useEffect(() => {
-        if (user !== "super_master") return;
-        getCurrentUser()
-            .then((u) => {
-                if (!u.email || String(u.email).trim() === "") {
-                    setShowSuperMasterOnboarding(true);
-                }
-            })
-            .catch(() => {});
-    }, [user]);
+        if (user !== "super_master" || !accesosReady || !meProfile) return;
+        if (!meProfile.email || String(meProfile.email).trim() === "") {
+            setShowSuperMasterOnboarding(true);
+        }
+    }, [user, accesosReady, meProfile]);
 //     console.log('Home - Usuario actual:', user);
 //     console.log('Home - Roles del usuario:', roles);
 
@@ -70,7 +71,7 @@ export default function Home() {
                         transform="skewX(-20deg)"
                         pl="1em"
                         pr="1em"
-                        backgroundColor="purple.200"
+                        backgroundColor={versionBgColor}
                         alignContent={'center'}
                     >
                         <Box transform="skewX(10deg)">
@@ -82,7 +83,7 @@ export default function Home() {
                         transform="skewX(-20deg)" // Skews the entire outer box
                         pl="1em"
                         pr="1em"
-                        backgroundColor="green.200"
+                        backgroundColor={userBgColor}
                         alignContent={'center'}
                     >
                         <Box transform="skewX(10deg)"> {/* Counter-skews the content */}
@@ -101,6 +102,15 @@ export default function Home() {
                         >
                             Actualizar
                         </Button>
+                    </Tooltip>
+                    <Tooltip label={colorMode === 'light' ? 'Modo oscuro' : 'Modo claro'}>
+                        <IconButton
+                            size={'md'}
+                            aria-label="Toggle color mode"
+                            icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+                            onClick={toggleColorMode}
+                            variant={'ghost'}
+                        />
                     </Tooltip>
                     <Button
                         size={'lg'}
@@ -121,8 +131,10 @@ export default function Home() {
                 <SectionCard to={'/Proveedores'} name={'Proveedores'} icon={FaIndustry} supportedModules={[Modulo.PROVEEDORES]} currentAccesos={roles} notification={getNotificationForModule(Modulo.PROVEEDORES)}/>
                 <SectionCard to={'/compras'} name={'Compras'} icon={GiBuyCard} supportedModules={[Modulo.COMPRAS]} currentAccesos={roles} notification={getNotificationForModule(Modulo.COMPRAS)}/>
                 <SectionCard to={'/gestion_areas_operativas'} name={'Gestión Áreas Operativas'} icon={FaCogs} supportedModules={[Modulo.SEGUIMIENTO_PRODUCCION]} currentAccesos={roles} notification={getNotificationForModule(Modulo.SEGUIMIENTO_PRODUCCION)}/>
-                <SectionCard to={'/clientes'} name={'Clientes'} icon={FaUsers} supportedModules={[Modulo.CLIENTES]} currentAccesos={roles} notification={getNotificationForModule(Modulo.CLIENTES)}/>
-                <SectionCard to={'/ventas'} name={'Ventas'} icon={FaShoppingCart} supportedModules={[Modulo.VENTAS]} currentAccesos={roles} notification={getNotificationForModule(Modulo.VENTAS)}/>
+                {/* Módulo Clientes temporalmente oculto */}
+                {/* <SectionCard to={'/clientes'} name={'Clientes'} icon={FaUsers} supportedModules={[Modulo.CLIENTES]} currentAccesos={roles} notification={getNotificationForModule(Modulo.CLIENTES)}/> */}
+                {/* Módulo Ventas temporalmente oculto */}
+                {/* <SectionCard to={'/ventas'} name={'Ventas'} icon={FaShoppingCart} supportedModules={[Modulo.VENTAS]} currentAccesos={roles} notification={getNotificationForModule(Modulo.VENTAS)}/> */}
                 <SectionCard to={'/transacciones_almacen'} name={'Transacciones de Almacen'} icon={MdWarehouse} supportedModules={[Modulo.TRANSACCIONES_ALMACEN]} currentAccesos={roles} notification={getNotificationForModule(Modulo.TRANSACCIONES_ALMACEN)}/>
                 <SectionCard to={'/operaciones_criticas_bd'} name={'Operaciones Críticas en BD'} icon={FaFileUpload} supportedModules={[]} currentAccesos={roles} bgColor="red.100" notification={getNotificationForModule('CARGA_MASIVA' as Modulo)}/>
                 <SectionCard to={'/Activos'} name={'Activos Fijos'} icon={FaSteam} supportedModules={[Modulo.ACTIVOS]} currentAccesos={roles} notification={getNotificationForModule(Modulo.ACTIVOS)}/>
@@ -135,7 +147,8 @@ export default function Home() {
                 )}
                 <SectionCard to={'/cronograma'} name={'Cronograma'} icon={FaCalendarAlt} supportedModules={[Modulo.CRONOGRAMA]} currentAccesos={roles} notification={getNotificationForModule(Modulo.CRONOGRAMA)}/>
                 <SectionCard to={'/organigrama'} name={'Organigrama'} icon={FaSitemap} supportedModules={[Modulo.ORGANIGRAMA]} currentAccesos={roles} notification={getNotificationForModule(Modulo.ORGANIGRAMA)}/>
-                <SectionCard to={'/pagos-proveedores'} name={'Pagos a Proveedores'} icon={FaMoneyBillWave} supportedModules={[Modulo.PAGOS_PROVEEDORES]} currentAccesos={roles} notification={getNotificationForModule(Modulo.PAGOS_PROVEEDORES)}/>
+                {/* Módulo Pagos a Proveedores temporalmente oculto */}
+                {/* <SectionCard to={'/pagos-proveedores'} name={'Pagos a Proveedores'} icon={FaMoneyBillWave} supportedModules={[Modulo.PAGOS_PROVEEDORES]} currentAccesos={roles} notification={getNotificationForModule(Modulo.PAGOS_PROVEEDORES)}/> */}
             </SimpleGrid>
             <SuperMasterOnboardingModal
                 isOpen={showSuperMasterOnboarding}

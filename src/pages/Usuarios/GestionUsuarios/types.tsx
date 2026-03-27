@@ -8,10 +8,16 @@ export interface Role {
     name: string;
 }
 
-export interface Acceso {
+export interface TabAccesoFE {
     id: number;
+    tabId: string;
     nivel: number;
-    moduloAcceso: Modulo;
+}
+
+export interface ModuloAccesoFE {
+    id: number;
+    modulo: Modulo | string;
+    tabs: TabAccesoFE[];
 }
 
 export interface User {
@@ -25,7 +31,7 @@ export interface User {
     direccion?: string;
     fechaNacimiento?: string; // ISO format, e.g., '2025-05-06'
     estado: number;
-    accesos: Acceso[];
+    moduloAccesos?: ModuloAccesoFE[];
 }
 
 

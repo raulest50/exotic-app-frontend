@@ -20,12 +20,11 @@ import InformeProductosTabAdvanced from './consulta/InformeProductosTabAdvanced.
 import {my_style_tab} from '../../../styles/styles_general.tsx';
 
 interface Props {
-    user: string | null;
     productosAccessLevel: number;
     onBack: () => void;
 }
 
-export function TerminadosSemiterminadosTabs({user, productosAccessLevel, onBack}: Props) {
+export function TerminadosSemiterminadosTabs({productosAccessLevel, onBack}: Props) {
     const [tabIndex, setTabIndex] = useState(0);
 
     return (
@@ -35,31 +34,31 @@ export function TerminadosSemiterminadosTabs({user, productosAccessLevel, onBack
             </Button>
             <Tabs isFitted gap="1em" variant="line" index={tabIndex} onChange={setTabIndex}>
                 <TabList>
-                    {(user === 'master' || productosAccessLevel >= 2) && (
+                    {productosAccessLevel >= 2 && (
                         <Tab sx={my_style_tab}>Codificar Terminado/Semiterminado</Tab>
                     )}
-                    {(user === 'master' || productosAccessLevel >= 2) && (
+                    {productosAccessLevel >= 2 && (
                         <Tab sx={my_style_tab}>Categorías</Tab>
                     )}
                     {/* Nueva pestaña para la versión avanzada */}
-                    {(user === 'master' || productosAccessLevel >= 3) && (
+                    {productosAccessLevel >= 3 && (
                         <Tab sx={my_style_tab}>Modificaciones</Tab>
                     )}
                 </TabList>
 
                 <TabPanels>
-                    {(user === 'master' || productosAccessLevel >= 2) && (
+                    {productosAccessLevel >= 2 && (
                         <TabPanel>
                             <CodificarSemioTermiTab isActive={tabIndex === 0} />
                         </TabPanel>
                     )}
-                    {(user === 'master' || productosAccessLevel >= 2) && (
+                    {productosAccessLevel >= 2 && (
                         <TabPanel>
                             <CategoriasTab />
                         </TabPanel>
                     )}
                     {/* Panel para modificaciones */}
-                    {(user === 'master' || productosAccessLevel >= 3) && (
+                    {productosAccessLevel >= 3 && (
                         <TabPanel>
                             <InformeProductosTabAdvanced />
                         </TabPanel>

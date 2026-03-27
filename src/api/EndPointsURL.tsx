@@ -143,7 +143,6 @@ export default class EndPointsURL{
 
 
     // user resources (solo autenticacion)
-    public whoami:string;
     public me:string; // endpoint para obtener usuario completo
     public login:string;
     public request_reset_passw:string;
@@ -424,7 +423,6 @@ export default class EndPointsURL{
 
 
         // user endpoints
-        this.whoami = `${domain}/${auth_res}/whoami`;
         this.me = `${domain}/${auth_res}/me`;
         this.login = `${domain}/${auth_res}/login`;
         this.request_reset_passw = `${domain}/${auth_res}/request_reset_passw`;

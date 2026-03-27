@@ -8,8 +8,8 @@ import { FaFileCircleQuestion, FaFileCircleCheck } from 'react-icons/fa6';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import { Cliente } from '../types.tsx';
-import { useAuth } from '../../../context/AuthContext';
-import { Authority } from '../../../api/global_types.tsx';
+import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
+import { useModuleAccessLevel } from '../../../auth/usePermissions';
 
 interface Props{
     cliente: Cliente;
@@ -21,7 +21,6 @@ interface Props{
 export function DetalleCliente({cliente,setEstado,setClienteSeleccionado,refreshSearch}:Props){
     const [editMode,setEditMode] = useState(false);
     const [clienteData,setClienteData] = useState<Cliente>({...cliente});
-    const [clientesAccessLevel,setClientesAccessLevel]=useState(0);
     const [rutFile,setRutFile] = useState<File|null>(null);
     const [camaraFile,setCamaraFile] = useState<File|null>(null);
     const rutInputRef = useRef<HTMLInputElement>(null);
@@ -29,18 +28,7 @@ export function DetalleCliente({cliente,setEstado,setClienteSeleccionado,refresh
     const toast = useToast();
     const endPoints = new EndPointsURL();
     const {user} = useAuth();
-
-    useEffect(()=>{
-        const fetchLevel = async ()=>{
-            try{
-                const resp = await axios.get(endPoints.whoami);
-                const auths:Authority[] = resp.data.authorities;
-                const cAuth = auths.find(a=>a.authority==='ACCESO_CLIENTES');
-                if(cAuth) setClientesAccessLevel(parseInt(cAuth.nivel));
-            }catch(e){ console.error(e); }
-        };
-        fetchLevel();
-    },[]);
+    const { nivel: clientesAccessLevel } = useModuleAccessLevel(Modulo.CLIENTES);
 
     const handleBack=()=>{
         setEstado(0);
@@ -113,7 +101,7 @@ export function DetalleCliente({cliente,setEstado,setClienteSeleccionado,refresh
         }
     };
 
-    const canEdit = user==='master' || clientesAccessLevel>=3;
+    const canEdit = clientesAccessLevel >= 3;
 
     return (
         <Box p={5} bg='white' borderRadius='md' boxShadow='base'>

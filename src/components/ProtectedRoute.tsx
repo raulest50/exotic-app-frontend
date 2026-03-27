@@ -2,6 +2,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { isMasterLike } from '../auth/accessHelpers';
 
 type ProtectedRouteProps = {
     children: JSX.Element;  // The actual page we want to render
@@ -18,8 +19,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
 
     // 2) If a required module is specified, check if user has access to it or is master
     if (requiredModulo) {
-        const isMaster = roles.includes('ROLE_MASTER');
-        const hasAccess = isMaster || roles.includes(requiredModulo);
+        const hasAccess = isMasterLike(roles, user) || roles.includes(requiredModulo);
 
         if (!hasAccess) {
             return <div>403 Prohibido: No tienes acceso al módulo {requiredModulo}</div>;

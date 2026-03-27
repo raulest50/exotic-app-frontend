@@ -3,11 +3,10 @@ import {FaTools, FaBoxOpen, FaCogs} from 'react-icons/fa';
 
 interface Props {
     setViewMode: (mode: 'menu' | 'basic' | 'terminados' | 'procesos') => void;
-    user: string | null;
     productosAccessLevel: number;
 }
 
-export function ProductosMenuSelection({setViewMode, user, productosAccessLevel}: Props) {
+export function ProductosMenuSelection({setViewMode, productosAccessLevel}: Props) {
     return (
         <Flex direction={"column"} gap={10} w="full">
             <Heading as="h2" size="lg" textAlign="center" mb={6} fontFamily="Arimo">
@@ -66,7 +65,7 @@ export function ProductosMenuSelection({setViewMode, user, productosAccessLevel}
                 </Card>
 
                 {/* Definicion Procesos card, only for privileged users */}
-                {(user === 'master' || productosAccessLevel >= 2) && (
+                {productosAccessLevel >= 2 && (
                     <Card
                         h="250px"
                         cursor="pointer"

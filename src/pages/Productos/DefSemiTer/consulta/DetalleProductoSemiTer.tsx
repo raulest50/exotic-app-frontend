@@ -23,11 +23,11 @@ import { CasePack, Insumo, Material, Producto } from "../../types.tsx";
 import { ArrowBackIcon, EditIcon, CheckIcon, QuestionIcon, WarningIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
-import { useAuth } from '../../../../context/AuthContext.tsx';
 import {IVA_VALUES} from "../../types.tsx";
 
-import {Authority} from "../../../../api/global_types.tsx";
 import DeleteProductoDialog from './DeleteProductoDialog.tsx';
+import { Modulo } from '../../../Usuarios/GestionUsuarios/types.tsx';
+import { useModuleAccessLevel } from '../../../../auth/usePermissions';
 import InsumoListCard from './InsumoListCard.tsx';
 import CardPackagingInfo from './CardPackagingInfo.tsx';
 
@@ -42,7 +42,6 @@ type Props = {
 export default function DetalleProductoSemiTer({producto, setEstado, setProductoSeleccionado, refreshSearch}: Props) {
     const [editMode, setEditMode] = useState(false);
     const [productoData, setProductoData] = useState<ProductoDetalle>({...producto});
-    const [productosAccessLevel, setProductosAccessLevel] = useState<number>(0);
     const [isFormValid, setIsFormValid] = useState<boolean>(true);
     const [hasChanges, setHasChanges] = useState<boolean>(false);
     const [isLoadingDetalle, setIsLoadingDetalle] = useState<boolean>(false);
@@ -50,7 +49,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     const [verificandoPrefijo, setVerificandoPrefijo] = useState<boolean>(false);
     const toast = useToast();
     const endPoints = new EndPointsURL();
-    const { user } = useAuth();
+    const { nivel: productosAccessLevel } = useModuleAccessLevel(Modulo.PRODUCTOS);
     const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
     const { isOpen: isForceDeleteOpen, onOpen: onForceDeleteOpen, onClose: onForceDeleteClose } = useDisclosure();
     const { isOpen: isHelpPrefijoOpen, onOpen: onHelpPrefijoOpen, onClose: onHelpPrefijoClose } = useDisclosure();
@@ -151,28 +150,6 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
             return false;
         }
     };
-
-    // Obtener el nivel de acceso del usuario para el módulo PRODUCTOS
-    useEffect(() => {
-        const fetchUserAccessLevel = async () => {
-            try {
-                const response = await axios.get(endPoints.whoami);
-                const authorities = response.data.authorities;
-
-                const productosAuthority = authorities.find(
-                    (auth:Authority) => auth.authority === "ACCESO_PRODUCTOS"
-                );
-
-                if (productosAuthority) {
-                    setProductosAccessLevel(parseInt(productosAuthority.nivel));
-                }
-            } catch (error) {
-                console.error("Error al obtener el nivel de acceso:", error);
-            }
-        };
-
-        fetchUserAccessLevel();
-    }, []);
 
     const handleBack = () => {
         setEstado(0);
@@ -447,7 +424,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     };
 
     // Verificar si el usuario tiene permisos para editar
-    const canEdit = user === 'master' || productosAccessLevel >= 3;
+    const canEdit = productosAccessLevel >= 3;
 
     // Determinar si es un material (tipo_producto === 'M')
     const isMaterial = producto.tipo_producto === 'M';

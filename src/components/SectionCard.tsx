@@ -29,6 +29,7 @@ import {
     TableContainer,
     Spinner,
     Center,
+    useColorModeValue,
 } from "@chakra-ui/react";
 import { IconType } from "react-icons";
 import { Link as RouterLink, NavLink } from "react-router-dom";
@@ -42,6 +43,8 @@ import {
 import EndPointsURL from "../api/EndPointsURL";
 import { Modulo } from "../pages/Usuarios/GestionUsuarios/types.tsx";
 import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { isMasterLike } from "../auth/accessHelpers";
 import BetterPagination from "./BetterPagination/BetterPagination";
 
 interface SectionCardProps {
@@ -65,6 +68,7 @@ function formatQty(v: number): string {
 }
 
 function SectionCard({ name, icon, to, supportedModules, currentAccesos, bgColor = "blue.100", notification }: SectionCardProps) {
+    const { user: authUsername } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [stockPage, setStockPage] = useState(0);
     const [stockSize, setStockSize] = useState(10);
@@ -73,21 +77,37 @@ function SectionCard({ name, icon, to, supportedModules, currentAccesos, bgColor
     const [stockLoading, setStockLoading] = useState(false);
     const [stockError, setStockError] = useState<string | null>(null);
 
-    if (supportedModules && currentAccesos) {
-        const isMaster = currentAccesos.includes('ROLE_MASTER');
-        const hasAccess = isMaster || currentAccesos.some(acceso => supportedModules.includes(acceso));
+    if (supportedModules != null && currentAccesos != null) {
+        const hasAccess =
+            isMasterLike(currentAccesos, authUsername) ||
+            supportedModules.some((m) => currentAccesos.includes(m));
         if (!hasAccess) return null;
     }
+
+    // Colores adaptativos para modo claro/oscuro
+    const isRedCard = bgColor === "red.100";
+    const cardBg = useColorModeValue(
+        bgColor,
+        isRedCard ? "red.700" : "blue.700"
+    );
+    const cardHoverBg = useColorModeValue(
+        isRedCard ? "red.300" : "blue.300",
+        isRedCard ? "red.600" : "blue.600"
+    );
+    const cardActiveBg = useColorModeValue(
+        isRedCard ? "red.800" : "blue.800",
+        isRedCard ? "red.400" : "blue.400"
+    );
 
     const cardStyle = {
         p: "2em",
         m: "1em",
-        bg: bgColor,
+        bg: cardBg,
         ":hover": {
-            bg: bgColor === "red.100" ? "red.300" : "blue.300",
+            bg: cardHoverBg,
         },
         ":active": {
-            bg: bgColor === "red.100" ? "red.800" : "blue.800",
+            bg: cardActiveBg,
         },
         position: "relative",
     };

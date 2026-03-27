@@ -72,23 +72,25 @@ const router = createBrowserRouter(
                     }
                 />
 
-                <Route
+                {/* Módulo Clientes temporalmente oculto */}
+                {/* <Route
                     path="clientes"
                     element={
                         <MultiRoleProtectedRoute supportedModules={[Modulo.CLIENTES]}>
                             <ClientesPage/>
                         </MultiRoleProtectedRoute>
                     }
-                />
+                /> */}
 
-                <Route
+                {/* Módulo Ventas temporalmente oculto */}
+                {/* <Route
                     path="ventas"
                     element={
                         <MultiRoleProtectedRoute supportedModules={[Modulo.VENTAS]}>
                             <VentasPage/>
                         </MultiRoleProtectedRoute>
                     }
-                />
+                /> */}
 
                 <Route
                     path="transacciones_almacen"
@@ -231,14 +233,15 @@ const router = createBrowserRouter(
                     }
                 />
 
-                <Route
+                {/* Módulo Pagos a Proveedores temporalmente oculto */}
+                {/* <Route
                     path="pagos-proveedores"
                     element={
                         <MultiRoleProtectedRoute supportedModules={[Modulo.PAGOS_PROVEEDORES]}>
                             <PagosProveedoresPage/>
                         </MultiRoleProtectedRoute>
                     }
-                />
+                /> */}
 
             </Route>
         </>

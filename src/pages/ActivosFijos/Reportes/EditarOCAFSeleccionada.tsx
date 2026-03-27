@@ -25,8 +25,6 @@ import MyDatePicker from "../../../components/MyDatePicker";
 import { format } from "date-fns";
 import { formatCOP } from '../../../utils/formatters';
 import { SelectCurrencyTrm } from "../../../components/SelectCurrencyTRM/SelectCurrencyTRM";
-import { useAuth } from '../../../context/AuthContext';
-
 type Props = {
     ocaf: OrdenCompraActivo;
     onVolver: () => void;
@@ -38,7 +36,6 @@ export function EditarOCAFSeleccionada({ ocaf, onVolver, accessLevel }: Props) {
     const [listaItemsOrdenCompra, setListaItemsOrdenCompra] = useState<ItemOrdenCompraActivo[]>(ocaf.itemsOrdenCompra || []);
     const [isFormValid, setIsFormValid] = useState(false);
     const [isEditable, setIsEditable] = useState(false);
-    const { user } = useAuth();
 
     // Estados para los campos editables
     const [condicionPago, setCondicionPago] = useState(ocaf.condicionPago || "0");
@@ -60,8 +57,8 @@ export function EditarOCAFSeleccionada({ ocaf, onVolver, accessLevel }: Props) {
 
     // Verificar si el usuario tiene permisos para editar
     useEffect(() => {
-        setIsEditable((user === 'master' || accessLevel >= 2) && ocaf.estado <= 0);
-    }, [user, accessLevel, ocaf.estado]);
+        setIsEditable(accessLevel >= 2 && ocaf.estado <= 0);
+    }, [accessLevel, ocaf.estado]);
 
     // Función para actualizar el valor de TRM
     const handleTrmUpdate = (value: number) => {

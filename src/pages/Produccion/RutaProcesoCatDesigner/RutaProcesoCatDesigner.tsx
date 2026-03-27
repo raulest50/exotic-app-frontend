@@ -84,10 +84,6 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
             const targetNode = nodes.find((n) => n.id === conn.target);
             if (!sourceNode || !targetNode) return false;
 
-            // Check if source already has an outgoing edge
-            const hasOutput = edges.some((edge) => edge.source === sourceNode.id);
-            if (hasOutput) return false;
-
             // Only allow area to area connections
             return sourceNode.type === "areaOperativaNode" && targetNode.type === "areaOperativaNode";
         },

@@ -40,8 +40,10 @@ import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import TerminadoSemiterminadoPicker from "../components/TerminadoSemiterminadoPicker.tsx";
 import TerSemiTerCard from "./TerSemiTerCard.tsx";
 import VendedorPicker from "../../../components/Pickers/VendedorPicker/VendedorPicker.tsx";
-import { getCurrentUser, User, getAccessLevel } from "../../../api/UserApi.tsx";
+import type { User } from "../../../api/UserApi.tsx";
 import { useAuth } from '../../../context/AuthContext';
+import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
+import { useModuleAccessLevel } from '../../../auth/usePermissions';
 
 type LoteValidationStatus = 'idle' | 'valid' | 'invalid' | 'checking';
 
@@ -61,7 +63,8 @@ function generateConsecutiveLotes(firstLote: string, n: number): string[] {
 
 export default function CrearOrdenesTab() {
     const toast = useToast();
-    const { user } = useAuth();
+    const { meProfile } = useAuth();
+    const { nivel: produccionAccessLevel } = useModuleAccessLevel(Modulo.PRODUCCION);
 
     const [selectedProducto, setSelectedProducto] = useState<ProductoWithInsumos | null>(null);
     const [canProduce, setCanProduce] = useState(false);
@@ -90,11 +93,10 @@ export default function CrearOrdenesTab() {
     const [isLotesEditable, setIsLotesEditable] = useState<boolean[]>([]);
     const [isCheckingLotes, setIsCheckingLotes] = useState<boolean[]>([]);
 
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [produccionAccessLevel, setProduccionAccessLevel] = useState<number | null>(null);
     const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
 
-    const canEditLote = user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3);
+    const canEditLote = produccionAccessLevel >= 3;
+    const currentUser: User | null = meProfile;
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
@@ -423,38 +425,6 @@ export default function CrearOrdenesTab() {
     };
 
     // ── effects ───────────────────────────────────────────────────────────────
-
-    useEffect(() => {
-        const fetchCurrentUser = async () => {
-            try {
-                const u = await getCurrentUser();
-                setCurrentUser(u);
-            } catch (error) {
-                console.error('Error fetching current user:', error);
-                toast({
-                    title: 'Error',
-                    description: 'No se pudo obtener la información del usuario actual.',
-                    status: 'error',
-                    duration: 5000,
-                    isClosable: true,
-                });
-            }
-        };
-        fetchCurrentUser();
-    }, [toast]);
-
-    useEffect(() => {
-        const fetchAccessLevel = async () => {
-            try {
-                const level = await getAccessLevel('PRODUCCION');
-                setProduccionAccessLevel(level);
-            } catch (error) {
-                console.error('Error fetching access level:', error);
-                setProduccionAccessLevel(null);
-            }
-        };
-        fetchAccessLevel();
-    }, []);
 
     useEffect(() => {
         if (selectedProducto) {

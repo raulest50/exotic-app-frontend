@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from 'react';
 import {Container, Tabs, TabList, Tab, TabPanels, TabPanel
 } from "@chakra-ui/react";
 
@@ -13,26 +12,12 @@ import CrearOrdenesTab from "./CrearOrdenesTab/CrearOrdenesTab.tsx";
 import HistorialOrdenesTab from "./HistorialOrdenesTab/HistorialOrdenesTab.tsx";
 import ConfParamsCategoria from "./ConfParamsCategoria/ConfParamsCategoria.tsx";
 import {PlaneacionProduccionTab} from "./PlaneacionProduccionTab/PlaneacionProduccionTab.tsx";
-import { useAuth } from '../../context/AuthContext';
-import { getAccessLevel } from '../../api/UserApi';
+import { Modulo } from '../Usuarios/GestionUsuarios/types.tsx';
+import { useModuleAccessLevel } from '../../auth/usePermissions';
 
 
 export default function ProduccionPage(){
-    const { user } = useAuth();
-    const [produccionAccessLevel, setProduccionAccessLevel] = useState<number | null>(null);
-
-    useEffect(() => {
-        const fetchAccessLevel = async () => {
-            try {
-                const level = await getAccessLevel('PRODUCCION');
-                setProduccionAccessLevel(level);
-            } catch (error) {
-                console.error('Error fetching access level:', error);
-                setProduccionAccessLevel(null);
-            }
-        };
-        fetchAccessLevel();
-    }, []);
+    const { nivel: produccionAccessLevel } = useModuleAccessLevel(Modulo.PRODUCCION);
 
     return(
         <Container minW={['auto', 'container.lg', 'container.xl']} w={'full'} h={'full'}>
@@ -43,7 +28,7 @@ export default function ProduccionPage(){
                 <TabList>
                     <Tab sx={my_style_tab}> Crear ODP Manualmente </Tab>
                     <Tab sx={my_style_tab}> Historial </Tab>
-                    {(user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3)) && (
+                    {produccionAccessLevel >= 3 && (
                         <Tab sx={my_style_tab}> Parametros por Categoría </Tab>
                     )}
                     <Tab sx={my_style_tab}> Planeacion Produccion </Tab>
@@ -59,7 +44,7 @@ export default function ProduccionPage(){
                         <HistorialOrdenesTab/>
                     </TabPanel>
 
-                    {(user === 'master' || (produccionAccessLevel !== null && produccionAccessLevel >= 3)) && (
+                    {produccionAccessLevel >= 3 && (
                         <TabPanel>
                             <ConfParamsCategoria />
                         </TabPanel>

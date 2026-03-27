@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Container, Flex, Select, Button, Spinner } from '@chakra-ui/react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import EndPointsURL from '../../../api/EndPointsURL';
+import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
+import { useModuleAccessLevel } from '../../../auth/usePermissions';
 import DateRangePicker from '../../../components/DateRangePicker';
 import MyPagination from '../../../components/MyPagination';
 import { OrdenCompraActivo } from '../types';
@@ -17,25 +19,11 @@ export function ReportesTabAf() {
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [accessLevel, setAccessLevel] = useState(0);
+    const { nivel: accessLevel } = useModuleAccessLevel(Modulo.ACTIVOS);
     // Nuevo estado para la orden seleccionada para editar/ver
     const [ordenToEdit, setOrdenToEdit] = useState<OrdenCompraActivo | null>(null);
 
     const endPoints = new EndPointsURL();
-
-    // Obtener el nivel de acceso del usuario
-    useEffect(() => {
-        const fetchAccess = async () => {
-            try {
-                const resp = await axios.get(endPoints.whoami);
-                const auth = resp.data.authorities?.find((a: any) => a.authority === 'ACCESO_ACTIVOS');
-                if (auth) setAccessLevel(parseInt(auth.nivel));
-            } catch (e) {
-                console.error(e);
-            }
-        };
-        fetchAccess();
-    }, []);
 
     const onClickBuscar = async (page = 0) => {
         setLoading(true);

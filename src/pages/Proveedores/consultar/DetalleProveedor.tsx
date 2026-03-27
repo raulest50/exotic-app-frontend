@@ -10,8 +10,8 @@ import { ArrowBackIcon, EditIcon } from '@chakra-ui/icons';
 import { FaFileCircleQuestion, FaFileCircleCheck } from "react-icons/fa6";
 import axios from 'axios';
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
-import { useAuth } from '../../../context/AuthContext';
-import {Authority} from "../../../api/global_types.tsx";
+import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
+import { useModuleAccessLevel } from '../../../auth/usePermissions';
 
 type Props = {
     proveedor: Proveedor;
@@ -27,7 +27,6 @@ type Props = {
 export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado, refreshSearch}: Props) {
     const [editMode, setEditMode] = useState(false);
     const [proveedorData, setProveedorData] = useState<Proveedor>({...proveedor});
-    const [proveedoresAccessLevel, setProveedoresAccessLevel] = useState<number>(0);
     const [rutFile, setRutFile] = useState<File | null>(null);
     const [camaraFile, setCamaraFile] = useState<File | null>(null);
     const [isFormValid, setIsFormValid] = useState<boolean>(true);
@@ -36,29 +35,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
     const camaraInputRef = useRef<HTMLInputElement>(null);
     const toast = useToast();
     const endPoints = new EndPointsURL();
-    const { user } = useAuth();
-
-    // Obtener el nivel de acceso del usuario para el módulo PROVEEDORES
-    useEffect(() => {
-        const fetchUserAccessLevel = async () => {
-            try {
-                const response = await axios.get(endPoints.whoami);
-                const authorities = response.data.authorities;
-
-                const proveedoresAuthority = authorities.find(
-                    (auth:Authority) => auth.authority === "ACCESO_PROVEEDORES"
-                );
-
-                if (proveedoresAuthority) {
-                    setProveedoresAccessLevel(parseInt(proveedoresAuthority.nivel));
-                }
-            } catch (error) {
-                console.error("Error al obtener el nivel de acceso:", error);
-            }
-        };
-
-        fetchUserAccessLevel();
-    }, []);
+    const { nivel: proveedoresAccessLevel } = useModuleAccessLevel(Modulo.PROVEEDORES);
 
     // Inicializar un contacto vacío si el proveedor no tiene contactos
     useEffect(() => {
@@ -393,7 +370,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
     };
 
     // Verificar si el usuario tiene permisos para editar
-    const canEdit = user === 'master' || proveedoresAccessLevel >= 3;
+    const canEdit = proveedoresAccessLevel >= 3;
 
     return (
         <Box p={5} bg="white" borderRadius="md" boxShadow="base">

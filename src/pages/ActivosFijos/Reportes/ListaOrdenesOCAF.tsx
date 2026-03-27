@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
     Table,
     Thead,
@@ -17,9 +17,8 @@ import {
 import { FiMoreVertical, FiEye, FiXCircle, FiEdit } from 'react-icons/fi';
 import { OrdenCompraActivo, getEstadoOCAFText } from '../types';
 import { formatCOP } from '../../../utils/formatters';
-import axios from 'axios';
-import EndPointsURL from '../../../api/EndPointsURL';
-import { useAuth } from '../../../context/AuthContext';
+import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
+import { useModuleAccessLevel } from '../../../auth/usePermissions';
 import DialogCancelarOCAF from './Dialogs/DialogCancelarOCAF';
 import DialogLiberarEnviarOCAF from './Dialogs/DialogLiberarEnviarOCAF';
 
@@ -32,22 +31,7 @@ const ListaOrdenesOCAF: React.FC<Props> = ({ ordenes, onEditarOrden }) => {
     const hoverBg = useColorModeValue('gray.100', 'gray.700');
     const [ordenToCancel, setOrdenToCancel] = useState<OrdenCompraActivo | null>(null);
     const [ordenToUpdate, setOrdenToUpdate] = useState<OrdenCompraActivo | null>(null);
-    const [accessLevel, setAccessLevel] = useState(0);
-    const { user } = useAuth();
-    const endpoints = new EndPointsURL();
-
-    useEffect(() => {
-        const fetchAccess = async () => {
-            try {
-                const resp = await axios.get(endpoints.whoami);
-                const auth = resp.data.authorities?.find((a: any) => a.authority === 'ACCESO_ACTIVOS');
-                if (auth) setAccessLevel(parseInt(auth.nivel));
-            } catch (e) {
-                console.error(e);
-            }
-        };
-        fetchAccess();
-    }, []);
+    const { nivel: accessLevel } = useModuleAccessLevel(Modulo.ACTIVOS);
 
     return (
         <>
@@ -97,12 +81,12 @@ const ListaOrdenesOCAF: React.FC<Props> = ({ ordenes, onEditarOrden }) => {
                                         <MenuItem icon={<FiEye />} onClick={() => onEditarOrden && onEditarOrden(orden)}>
                                             Ver detalle
                                         </MenuItem>
-                                        {(user === 'master' || accessLevel >= 2) && (
+                                        {accessLevel >= 2 && (
                                             <MenuItem icon={<FiEdit />} onClick={() => setOrdenToUpdate(orden)}>
                                                 Liberar / Enviar
                                             </MenuItem>
                                         )}
-                                        {(user === 'master' || accessLevel >= 2) && (
+                                        {accessLevel >= 2 && (
                                             <MenuItem icon={<FiXCircle />} onClick={() => setOrdenToCancel(orden)}>
                                                 Cancelar orden de compra AF
                                             </MenuItem>

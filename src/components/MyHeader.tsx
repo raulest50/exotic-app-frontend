@@ -2,10 +2,10 @@
 import {IoArrowBack} from "react-icons/io5";
 import {Box, Flex, Heading, IconButton, HStack, Tag, TagLabel} from '@chakra-ui/react'
 import {NavLink, useLocation} from "react-router-dom";
-import {useEffect, useMemo, useState} from "react";
-import {getCurrentUserWithAccess} from "../api/UserApi";
+import {useMemo} from "react";
 import {Modulo} from "../pages/Usuarios/GestionUsuarios/types";
 import {useAuth} from "../context/AuthContext";
+import {isMasterLike, maxNivelForModule} from "../auth/accessHelpers";
 
 
 
@@ -15,7 +15,7 @@ interface MyHeaderProps{
 
 function MyHeader({title,}:MyHeaderProps){
     const location = useLocation();
-    const { user: username } = useAuth();
+    const { user: username, moduloAccesos, roles, accesosReady } = useAuth();
 
     const moduloActual = useMemo(() => {
         const segment = (location.pathname.split('/')[1] ?? '').toLowerCase();
@@ -53,41 +53,12 @@ function MyHeader({title,}:MyHeaderProps){
         return routeToModulo[segment] ?? null;
     }, [location.pathname]);
 
-    const [accessLevelDisplay, setAccessLevelDisplay] = useState<string | null>(null);
-
-    useEffect(() => {
-        let cancelled = false;
-
-        (async () => {
-            // Reiniciar el nivel cada vez que cambie ruta/usuario
-            setAccessLevelDisplay(null);
-
-            try {
-                if (!username || !moduloActual) {
-                    return;
-                }
-
-                const isMasterUsername = username.toLowerCase() === 'master';
-                if (isMasterUsername) {
-                    setAccessLevelDisplay('∞');
-                    return;
-                }
-
-                const expandedUser = await getCurrentUserWithAccess();
-                if (cancelled) return;
-
-                const acceso = expandedUser.accesos.find(a => a.moduloAcceso === moduloActual);
-                setAccessLevelDisplay(acceso ? String(acceso.nivel) : null);
-            } catch {
-                if (cancelled) return;
-                setAccessLevelDisplay(null);
-            }
-        })();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [moduloActual, username]);
+    const accessLevelDisplay = useMemo(() => {
+        if (!username || !moduloActual || !accesosReady) return null;
+        if (isMasterLike(roles, username)) return '∞';
+        const maxNivel = maxNivelForModule(moduloAccesos, moduloActual);
+        return maxNivel != null ? String(maxNivel) : null;
+    }, [username, moduloActual, accesosReady, roles, moduloAccesos]);
 
     const shouldShowInfo = useMemo(() => Boolean(username), [username]);
 

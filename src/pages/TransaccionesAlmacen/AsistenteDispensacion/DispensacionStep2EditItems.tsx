@@ -4,7 +4,8 @@ import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, ItemPendienteRep
 import {LotePickerDispensacion} from './AsistenteDispensacionComponents/LotePickerDispensacion';
 import {InsumoWithStock} from '../../Produccion/types';
 import ResumenHistorialDispensaciones from './ResumenHistorialDispensaciones';
-import {getAccessLevel, getCurrentUser} from '../../../api/UserApi';
+import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
+import { useModuleAccessLevel } from '../../../auth/usePermissions';
 import TablaDispensacionInsumos from './TablaDispensacionInsumos';
 import TablaDispensacionInsumosEmpaque from './TablaDispensacionInsumosEmpaque';
 import SeccionReposicionAverias from './SeccionReposicionAverias';
@@ -59,6 +60,8 @@ export default function DispensacionStep2EditItems({
     lotesPorReposicionAveria,
     setLotesPorReposicionAveria
 }: Props){
+    const { nivel: transaccionesNivel, isMaster } = useModuleAccessLevel(Modulo.TRANSACCIONES_ALMACEN);
+
     // Estado para lotes seleccionados por material (key: productoId)
     // Si viene como prop, usarlo; sino crear estado local
     const [lotesPorMaterialLocal, setLotesPorMaterialLocal] = useState<Map<string, LoteSeleccionado[]>>(new Map());
@@ -74,9 +77,6 @@ export default function DispensacionStep2EditItems({
     
     // Estado para controlar qué semiterminados están expandidos
     const [expandedSemiterminados, setExpandedSemiterminados] = useState<Record<string, boolean>>({});
-    const [accessLevel, setAccessLevel] = useState<number | null>(null);
-    const [currentUsername, setCurrentUsername] = useState<string | null>(null);
-
     const getInsumoKey = (insumo: InsumoDesglosado): string => {
         if (typeof insumo.insumoId === 'number') {
             return `insumo-${insumo.insumoId}`;
@@ -220,27 +220,6 @@ export default function DispensacionStep2EditItems({
         return insumo.cantidadTotalRequerida;
     };
 
-    useEffect(() => {
-        const fetchAccessLevel = async () => {
-            try {
-                const level = await getAccessLevel('TRANSACCIONES_ALMACEN');
-                setAccessLevel(level);
-            } catch {
-                setAccessLevel(null);
-            }
-        };
-        const fetchUser = async () => {
-            try {
-                const user = await getCurrentUser();
-                setCurrentUsername(user?.username ?? null);
-            } catch {
-                setCurrentUsername(null);
-            }
-        };
-        fetchAccessLevel();
-        fetchUser();
-    }, []);
-
     const totalesSeleccionados = useMemo(() => {
         const map = new Map<string, number>();
         lotesPorMaterial.forEach((lotes, insumoKey) => {
@@ -348,8 +327,8 @@ export default function DispensacionStep2EditItems({
         return excedidosLocal;
     }, [materialesInventariables, materialesEmpaqueInventariables, totalesHistorico, totalesSeleccionados, getCantidadEmpaque]);
 
-    const requiereNivel3 = excedidos.length > 0 && (accessLevel === null || accessLevel < 3) && currentUsername !== 'master';
-    const tienePrivilegiosPeroHayExcedidos = excedidos.length > 0 && ((accessLevel !== null && accessLevel >= 3) || currentUsername === 'master');
+    const requiereNivel3 = excedidos.length > 0 && !isMaster && transaccionesNivel < 3;
+    const tienePrivilegiosPeroHayExcedidos = excedidos.length > 0 && (isMaster || transaccionesNivel >= 3);
 
     // Función para manejar el clic en el botón de expandir/colapsar
     const toggleSemiterminado = (productoId: string) => {
