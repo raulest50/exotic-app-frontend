@@ -5,7 +5,7 @@ import {NavLink, useLocation} from "react-router-dom";
 import {useMemo} from "react";
 import {Modulo} from "../pages/Usuarios/GestionUsuarios/types";
 import {useAuth} from "../context/AuthContext";
-import {isMasterLike, maxNivelForModule} from "../auth/accessHelpers";
+import {maxNivelForModule} from "../auth/accessHelpers";
 
 
 
@@ -15,7 +15,7 @@ interface MyHeaderProps{
 
 function MyHeader({title,}:MyHeaderProps){
     const location = useLocation();
-    const { user: username, moduloAccesos, roles, accesosReady } = useAuth();
+    const { user: username, moduloAccesos, isMasterLike, accesosReady } = useAuth();
 
     const moduloActual = useMemo(() => {
         const segment = (location.pathname.split('/')[1] ?? '').toLowerCase();
@@ -36,7 +36,9 @@ function MyHeader({title,}:MyHeaderProps){
             'contabilidad': Modulo.CONTABILIDAD,
             'personal': Modulo.PERSONAL_PLANTA,
             'bintelligence': Modulo.BINTELLIGENCE,
+            'operaciones_criticas_bd': Modulo.OPERACIONES_CRITICAS_BD,
             'administracion_alertas': Modulo.ADMINISTRACION_ALERTAS,
+            'master_directives': Modulo.MASTER_DIRECTIVES,
             'cronograma': Modulo.CRONOGRAMA,
             'organigrama': Modulo.ORGANIGRAMA,
             'pagos-proveedores': Modulo.PAGOS_PROVEEDORES,
@@ -44,8 +46,6 @@ function MyHeader({title,}:MyHeaderProps){
             // Rutas sin módulo (o no definidas en enum Modulo)
             '': null,
             'informes': null,
-            'operaciones_criticas_bd': null,
-            'master_directives': null,
             'login': null,
             'reset-password': null,
         };
@@ -55,10 +55,10 @@ function MyHeader({title,}:MyHeaderProps){
 
     const accessLevelDisplay = useMemo(() => {
         if (!username || !moduloActual || !accesosReady) return null;
-        if (isMasterLike(roles, username)) return '∞';
+        if (isMasterLike) return '∞';
         const maxNivel = maxNivelForModule(moduloAccesos, moduloActual);
         return maxNivel != null ? String(maxNivel) : null;
-    }, [username, moduloActual, accesosReady, roles, moduloAccesos]);
+    }, [username, moduloActual, accesosReady, isMasterLike, moduloAccesos]);
 
     const shouldShowInfo = useMemo(() => Boolean(username), [username]);
 

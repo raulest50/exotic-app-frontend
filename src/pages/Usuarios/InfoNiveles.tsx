@@ -1,29 +1,27 @@
-// src/pages/Usuarios/InfoNiveles.tsx
-import { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Input, 
-  InputGroup, 
-  InputLeftElement, 
-  Text, 
-  Heading, 
-  Flex, 
-  Tag, 
-  TagLabel, 
-  Accordion, 
-  AccordionItem, 
-  AccordionButton, 
-  AccordionPanel, 
+import { useEffect, useState } from "react";
+import {
+  Accordion,
+  AccordionButton,
   AccordionIcon,
-  Divider,
+  AccordionItem,
+  AccordionPanel,
   Alert,
   AlertIcon,
-  Code
-} from '@chakra-ui/react';
-import { SearchIcon } from '@chakra-ui/icons';
-import { Modulo } from './GestionUsuarios/types';
+  Box,
+  Code,
+  Divider,
+  Flex,
+  Heading,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Tag,
+  TagLabel,
+  Text,
+} from "@chakra-ui/react";
+import { SearchIcon } from "@chakra-ui/icons";
+import { Modulo } from "./GestionUsuarios/types";
 
-// Interfaces para la estructura de documentación de módulos
 interface ModuleLevel {
   level: number;
   description: string;
@@ -37,336 +35,343 @@ interface ModuleDoc {
   levels: ModuleLevel[];
 }
 
-// Tipo que mapea los valores del enum Modulo a objetos ModuleDoc
 type ModuleDocsType = {
   [key in Modulo]: ModuleDoc;
 };
 
-// Documentación para cada módulo y nivel de acceso
 const moduleDocs: ModuleDocsType = {
-  [Modulo.PRODUCTOS]: {
-    title: 'Módulo de Productos',
-    description: 'Gestión del catálogo de productos',
-    implementationDetails: true,
-    implementationCode: `
-// Obtener el nivel de acceso
-useEffect(() => {
-    const fetchUserAccessLevel = async () => {
-        try {
-            const response = await axios.get<WhoAmIResponse>(endPoints.whoami);
-            const authorities = response.data.authorities;
-
-            // Buscar la autoridad para el módulo PRODUCTOS
-            const productosAuthority = authorities.find(
-                auth => auth.authority === "ACCESO_PRODUCTOS"
-            );
-
-            // Si se encuentra, establecer el nivel de acceso
-            if (productosAuthority) {
-                setProductosAccessLevel(parseInt(productosAuthority.nivel));
-            }
-        } catch (error) {
-            console.error("Error al obtener el nivel de acceso:", error);
-        }
-    };
-
-    fetchUserAccessLevel();
-}, []);
-
-// Renderizado condicional de pestañas
-<TabList>
-    {/* Solo mostrar las pestañas de creación si el usuario es master o tiene nivel 2 o superior */}
-    {(user === 'master' || productosAccessLevel >= 2) && (
-        <Tab sx={my_style_tab}>Codificar Material</Tab>
-    )}
-    <Tab sx={my_style_tab}>Consulta</Tab>
-    {(user === 'master' || productosAccessLevel >= 2) && (
-        <Tab sx={my_style_tab}>Crear Terminado/Semiterminado</Tab>
-    )}
-</TabList>`,
-    levels: [
-      { level: 1, description: 'Solo permite acceder a la pestaña de "Consulta" para visualizar productos existentes.' },
-      { level: 2, description: 'Permite acceder a todas las pestañas, incluyendo "Codificar Material" y "Crear Terminado/Semiterminado".' },
-      { level: 3, description: 'Acceso completo a todas las funcionalidades del módulo.' }
-    ]
-  },
-  [Modulo.COMPRAS]: {
-    title: 'Módulo de Compras',
-    description: 'Gestión de órdenes de compra y adquisiciones',
-    implementationDetails: true,
-    implementationCode: `
-// Solo mostrar la opción de actualizar estado si el usuario es master o tiene nivel de acceso 2 o superior
-{(user === 'master' || comprasAccessLevel >= 2) && (
-    <Box
-        p={1}
-        _hover={{ bg: 'gray.100', cursor: 'pointer' }}
-        onClick={handleActualizarOrden}
-    >
-        Actualizar Estado de la Orden
-    </Box>
-)}`,
-    levels: [
-      { level: 1, description: 'Permite crear y visualizar órdenes de compra.' },
-      { level: 2, description: 'Lo mismo que en nivel 1 + permite cancelar, liberar y enviar Ordenes de Compra.' },
-      //{ level: 3, description: 'Acceso completo a todas las funcionalidades del módulo.' }
-    ]
-  },
-  [Modulo.PROVEEDORES]: {
-    title: 'Módulo de Proveedores',
-    description: 'Gestión de proveedores y sus catálogos',
-    implementationDetails: true,
-    implementationCode: `
-// Obtener el nivel de acceso
-useEffect(() => {
-    const fetchUserAccessLevel = async () => {
-        try {
-            const response = await axios.get<WhoAmIResponse>(endPoints.whoami);
-            const authorities = response.data.authorities;
-
-            // Buscar la autoridad para el módulo PROVEEDORES
-            const proveedoresAuthority = authorities.find(
-                auth => auth.authority === "ACCESO_PROVEEDORES"
-            );
-
-            // Si se encuentra, establecer el nivel de acceso
-            if (proveedoresAuthority) {
-                setProveedoresAccessLevel(parseInt(proveedoresAuthority.nivel));
-            }
-        } catch (error) {
-            console.error("Error al obtener el nivel de acceso:", error);
-        }
-    };
-
-    fetchUserAccessLevel();
-}, []);
-
-// Renderizado condicional de pestañas
-<TabList>
-    {/* Solo mostrar la pestaña de codificar si el usuario es master o tiene nivel 2 o superior */}
-    {(user === 'master' || proveedoresAccessLevel >= 2) && (
-        <Tab sx={my_style_tab}> Codificar Proveedor </Tab>
-    )}
-    <Tab sx={my_style_tab}> Consultar Proveedores </Tab>
-</TabList>`,
-    levels: [
-      { level: 1, description: 'Solo permite acceder a la pestaña de "Consultar Proveedores" para visualizar proveedores existentes.' },
-      { level: 2, description: 'Permite acceder a todas las pestañas, incluyendo "Codificar Proveedor" para crear nuevos proveedores.' },
-      { level: 3, description: 'Acceso completo a todas las funcionalidades del módulo.' }
-    ]
-  },
-  [Modulo.VENTAS]: {
-    title: 'Módulo de Ventas',
-    description: 'Gestión integral de operaciones y reportes de ventas',
-    implementationDetails: true,
-    implementationCode: `
-// Obtener el nivel de acceso para ventas
-useEffect(() => {
-    const fetchVentasAccessLevel = async () => {
-        try {
-            const response = await axios.get<WhoAmIResponse>(endPoints.whoami);
-            const authorities = response.data.authorities;
-
-            const ventasAuthority = authorities.find(
-                auth => auth.authority === "ACCESO_VENTAS"
-            );
-
-            if (ventasAuthority) {
-                setVentasAccessLevel(parseInt(ventasAuthority.nivel, 10));
-            }
-        } catch (error) {
-            console.error("Error al obtener el nivel de acceso para ventas:", error);
-        }
-    };
-
-    fetchVentasAccessLevel();
-}, []);
-
-// Renderizado condicional de pestañas
-<TabList>
-    <Tab sx={my_style_tab}>Crear Venta</Tab>
-    <Tab sx={my_style_tab}>Historial de Ventas</Tab>
-    <Tab sx={my_style_tab}>Reportes</Tab>
-    {(user === 'master' || ventasAccessLevel >= 3) && (
-        <Tab sx={my_style_tab}>Crear vendedor nuevo</Tab>
-    )}
-</TabList>
-
-<TabPanels>
-    {/* Contenido de las pestañas existentes */}
-    {(user === 'master' || ventasAccessLevel >= 3) && (
-        <TabPanel>
-            <p>Formulario para registrar nuevos vendedores próximamente.</p>
-        </TabPanel>
-    )}
-</TabPanels>`,
-    levels: [
-      { level: 1, description: 'Permite consultar la información de ventas existentes.' },
-      { level: 2, description: 'Permite gestionar ventas estándar: crear, editar y revisar reportes.' },
-      { level: 3, description: 'Incluye los permisos de niveles 1 y 2 y puede crear un nuevo vendedor.' }
-    ]
-  },
   [Modulo.USUARIOS]: {
-    title: 'Módulo de Usuarios',
-    description: 'Gestión de usuarios y asignación de accesos',
+    title: "Modulo de Usuarios",
+    description: "Gestion de usuarios y asignacion de accesos",
     implementationDetails: false,
     levels: [
-      { level: 1, description: 'Visualización de usuarios existentes.' },
-      { level: 2, description: 'Creación y modificación de usuarios.' },
-      { level: 3, description: 'Gestión completa de usuarios y sus accesos.' }
-    ]
+      { level: 1, description: "Visualizacion de usuarios existentes." },
+      { level: 2, description: "Creacion y modificacion de usuarios." },
+      { level: 3, description: "Gestion completa de usuarios y sus accesos." },
+    ],
+  },
+  [Modulo.PRODUCTOS]: {
+    title: "Modulo de Productos",
+    description: "Gestion del catalogo de productos",
+    implementationDetails: true,
+    implementationCode: `
+import { useAccessSnapshot } from "../../../auth/usePermissions";
+import { moduleAccessRule } from "../../../auth/accessHelpers";
+import { Modulo } from "../../Usuarios/GestionUsuarios/types";
+
+const access = useAccessSnapshot();
+
+const tabs = [
+  {
+    label: "Codificar Material",
+    accesoValido: moduleAccessRule(Modulo.PRODUCTOS, 2),
+  },
+  {
+    label: "Consulta",
+    accesoValido: moduleAccessRule(Modulo.PRODUCTOS, 1),
+  },
+];
+
+const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));`,
+    levels: [
+      { level: 1, description: 'Solo permite acceder a "Consulta" para visualizar productos existentes.' },
+      { level: 2, description: "Permite acceder a tabs de creacion y mantenimiento del modulo." },
+      { level: 3, description: "Acceso completo a todas las funcionalidades del modulo." },
+    ],
   },
   [Modulo.PRODUCCION]: {
-    title: 'Módulo de Producción',
-    description: 'Gestión de órdenes de producción y procesos productivos',
+    title: "Modulo de Produccion",
+    description: "Gestion de ordenes de produccion y procesos productivos",
     implementationDetails: false,
     levels: [
-      { level: 1, description: 'Visualización de información de producción.' },
-      { level: 2, description: 'Creación y modificación de órdenes de producción.' },
-      { level: 3, description: 'Gestión completa del proceso productivo.' }
-    ]
+      { level: 1, description: "Visualizacion de informacion de produccion." },
+      { level: 2, description: "Creacion y modificacion de ordenes de produccion." },
+      { level: 3, description: "Gestion completa del proceso productivo." },
+    ],
   },
   [Modulo.STOCK]: {
-    title: 'Módulo de Stock',
-    description: 'Gestión de inventario y existencias',
+    title: "Modulo de Stock",
+    description: "Gestion de inventario y existencias",
     implementationDetails: false,
     levels: [
-      { level: 1, description: 'Visualización de niveles de stock.' },
-      { level: 2, description: 'Registro de movimientos de inventario.' },
-      { level: 3, description: 'Control total del inventario.' }
-    ]
+      { level: 1, description: "Visualizacion de niveles de stock." },
+      { level: 2, description: "Registro de movimientos de inventario." },
+      { level: 3, description: "Control total del inventario." },
+    ],
+  },
+  [Modulo.PROVEEDORES]: {
+    title: "Modulo de Proveedores",
+    description: "Gestion de proveedores y sus catalogos",
+    implementationDetails: true,
+    implementationCode: `
+import { useAccessSnapshot } from "../../auth/usePermissions";
+import { moduleAccessRule } from "../../auth/accessHelpers";
+import { Modulo } from "../Usuarios/GestionUsuarios/types";
+
+const access = useAccessSnapshot();
+
+const tabs = [
+  {
+    label: "Codificar Proveedor",
+    accesoValido: moduleAccessRule(Modulo.PROVEEDORES, 2),
+  },
+  {
+    label: "Consultar Proveedores",
+    accesoValido: moduleAccessRule(Modulo.PROVEEDORES, 1),
+  },
+];
+
+const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));`,
+    levels: [
+      { level: 1, description: 'Solo permite acceder a "Consultar Proveedores".' },
+      { level: 2, description: 'Permite acceder tambien a "Codificar Proveedor".' },
+      { level: 3, description: "Acceso completo a todas las funcionalidades del modulo." },
+    ],
+  },
+  [Modulo.COMPRAS]: {
+    title: "Modulo de Compras",
+    description: "Gestion de ordenes de compra y adquisiciones",
+    implementationDetails: true,
+    implementationCode: `
+import { effectiveMaxNivelForModule } from "../../auth/accessHelpers";
+import { useAuth } from "../../context/AuthContext";
+import { Modulo } from "../Usuarios/GestionUsuarios/types";
+
+const { moduloAccesos, isMasterLike } = useAuth();
+const comprasAccessLevel = effectiveMaxNivelForModule(
+  isMasterLike,
+  moduloAccesos,
+  Modulo.COMPRAS
+);
+
+{comprasAccessLevel >= 2 && (
+  <Box onClick={handleActualizarOrden}>
+    Actualizar Estado de la Orden
+  </Box>
+)}`,
+    levels: [
+      { level: 1, description: "Permite crear y visualizar ordenes de compra." },
+      { level: 2, description: "Incluye nivel 1 y permite cancelar, liberar y enviar ordenes." },
+    ],
   },
   [Modulo.SEGUIMIENTO_PRODUCCION]: {
-    title: 'Módulo de Gestión de Áreas Operativas',
-    description: 'Gestión y configuración de áreas operativas de producción',
+    title: "Modulo de Gestion de Areas Operativas",
+    description: "Gestion y configuracion de areas operativas de produccion",
     implementationDetails: false,
     levels: [
-      { level: 1, description: 'Visualización de áreas operativas.' },
-      { level: 2, description: 'Creación y edición de áreas operativas.' },
-      { level: 3, description: 'Control total de áreas operativas.' }
-    ]
+      { level: 1, description: "Visualizacion de areas operativas." },
+      { level: 2, description: "Creacion y edicion de areas operativas." },
+      { level: 3, description: "Control total de areas operativas." },
+    ],
+  },
+  [Modulo.CLIENTES]: {
+    title: "Modulo de Clientes",
+    description: "Gestion de clientes y relaciones comerciales",
+    implementationDetails: false,
+    levels: [
+      { level: 1, description: "Consulta de clientes existentes." },
+      { level: 2, description: "Creacion y actualizacion de clientes." },
+      { level: 3, description: "Acceso completo al modulo." },
+    ],
+  },
+  [Modulo.VENTAS]: {
+    title: "Modulo de Ventas",
+    description: "Gestion integral de operaciones y reportes de ventas",
+    implementationDetails: true,
+    implementationCode: `
+import { useAccessSnapshot } from "../../auth/usePermissions";
+import { moduleAccessRule } from "../../auth/accessHelpers";
+import { Modulo } from "../Usuarios/GestionUsuarios/types";
+
+const access = useAccessSnapshot();
+
+const tabs = [
+  { label: "Crear Venta", accesoValido: moduleAccessRule(Modulo.VENTAS, 1) },
+  { label: "Historial de Ventas", accesoValido: moduleAccessRule(Modulo.VENTAS, 1) },
+  { label: "Reportes", accesoValido: moduleAccessRule(Modulo.VENTAS, 1) },
+  { label: "Crear vendedor nuevo", accesoValido: moduleAccessRule(Modulo.VENTAS, 3) },
+];
+
+const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));`,
+    levels: [
+      { level: 1, description: "Permite consultar la informacion de ventas existentes." },
+      { level: 2, description: "Permite gestionar ventas estandar y revisar reportes." },
+      { level: 3, description: "Incluye niveles 1 y 2 y puede crear un nuevo vendedor." },
+    ],
   },
   [Modulo.TRANSACCIONES_ALMACEN]: {
-    title: 'Módulo de Transacciones de Almacén',
-    description: 'Gestión de movimientos y transacciones en almacén',
+    title: "Modulo de Transacciones de Almacen",
+    description: "Gestion de movimientos y transacciones en almacen",
     implementationDetails: false,
     levels: [
-      { level: 1, description: 'Visualización de transacciones.' },
-      { level: 2, description: 'Registro de entradas y salidas.' },
-      { level: 3, description: 'Control total de operaciones de almacén.' }
-    ]
+      { level: 1, description: "Visualizacion de transacciones." },
+      { level: 2, description: "Registro de entradas y salidas." },
+      { level: 3, description: "Control total de operaciones de almacen." },
+    ],
   },
   [Modulo.ACTIVOS]: {
-    title: 'Módulo de Activos Fijos',
-    description: 'Gestión de activos fijos y equipamiento',
+    title: "Modulo de Activos Fijos",
+    description: "Gestion de activos fijos y equipamiento",
     implementationDetails: false,
     levels: [
-      { level: 1, description: 'Visualización de activos.' },
-      { level: 2, description: 'nivel 1 + Crear Ordenes de compra para activos fijos' },
-      { level: 3, description: 'nivel 1 + 2 + Dar Ingreso a Activos Fijos' },
-      { level: 4, description: 'Control total de activos fijos y equipamiento' }  
-    ]
+      { level: 1, description: "Visualizacion de activos." },
+      { level: 2, description: "Nivel 1 + crear ordenes de compra para activos fijos." },
+      { level: 3, description: "Nivel 1 + 2 + dar ingreso a activos fijos." },
+      { level: 4, description: "Control total de activos fijos y equipamiento." },
+    ],
   },
   [Modulo.CONTABILIDAD]: {
-    title: 'Módulo de Contabilidad',
-    description: 'Gestión contable y financiera',
+    title: "Modulo de Contabilidad",
+    description: "Gestion contable y financiera",
     implementationDetails: false,
     levels: [
-      { level: 1, description: 'Visualización de información contable.' },
-      { level: 2, description: 'Registro de asientos contables.' },
-      { level: 3, description: 'Control total de la gestión contable.' }
-    ]
+      { level: 1, description: "Visualizacion de informacion contable." },
+      { level: 2, description: "Registro de asientos contables." },
+      { level: 3, description: "Control total de la gestion contable." },
+    ],
   },
   [Modulo.PERSONAL_PLANTA]: {
-    title: 'Módulo de Personal de Planta',
-    description: 'Gestión del personal operativo',
+    title: "Modulo de Personal de Planta",
+    description: "Gestion del personal operativo",
     implementationDetails: false,
     levels: [
-      { level: 1, description: 'Visualización de información del personal.' },
-      { level: 2, description: 'Registro y modificación de información del personal.' },
-      { level: 3, description: 'Control total de la gestión de personal.' }
-    ]
+      { level: 1, description: "Visualizacion de informacion del personal." },
+      { level: 2, description: "Registro y modificacion de informacion del personal." },
+      { level: 3, description: "Control total de la gestion de personal." },
+    ],
   },
   [Modulo.BINTELLIGENCE]: {
-    title: 'Módulo de Business Intelligence',
-    description: 'Análisis de datos y reportes avanzados',
+    title: "Modulo de Business Intelligence",
+    description: "Analisis de datos y reportes avanzados",
     implementationDetails: false,
     levels: [
-      { level: 1, description: 'Visualización de reportes predefinidos.' },
-      { level: 2, description: 'Creación de reportes personalizados.' },
-      { level: 3, description: 'Acceso total a herramientas de análisis.' }
-    ]
+      { level: 1, description: "Visualizacion de reportes predefinidos." },
+      { level: 2, description: "Creacion de reportes personalizados." },
+      { level: 3, description: "Acceso total a herramientas de analisis." },
+    ],
+  },
+  [Modulo.OPERACIONES_CRITICAS_BD]: {
+    title: "Modulo de Operaciones Criticas en BD",
+    description: "Herramientas operativas sensibles protegidas por reglas especiales y flags adicionales",
+    implementationDetails: false,
+    levels: [
+      { level: 1, description: "Acceso a las tabs habilitadas del modulo, sujeto a flags de super master." },
+      { level: 2, description: "Reservado para futuras distinciones finas dentro del modulo." },
+      { level: 3, description: "Acceso total del modulo, manteniendo el requisito extra de usuario master-like." },
+    ],
   },
   [Modulo.ADMINISTRACION_ALERTAS]: {
-    title: 'Módulo de Administración de Alertas',
-    description: 'Gestión de notificaciones y alertas del sistema',
+    title: "Modulo de Administracion de Alertas",
+    description: "Gestion de notificaciones y alertas del sistema",
     implementationDetails: false,
     levels: [
-      { level: 1, description: 'Visualización de alertas.' },
-      { level: 2, description: 'Configuración de alertas.' },
-      { level: 3, description: 'Administración completa del sistema de alertas.' }
-    ]
+      { level: 1, description: "Visualizacion de alertas." },
+      { level: 2, description: "Configuracion de alertas." },
+      { level: 3, description: "Administracion completa del sistema de alertas." },
+    ],
   },
   [Modulo.CRONOGRAMA]: {
-    title: 'Módulo de Cronograma',
-    description: 'Gestión de planificación y cronogramas',
+    title: "Modulo de Cronograma",
+    description: "Gestion de planificacion y cronogramas",
     implementationDetails: false,
     levels: [
-      { level: 1, description: 'Visualización de cronogramas.' },
-      { level: 2, description: 'Creación y modificación de eventos en cronogramas.' },
-      { level: 3, description: 'Control total de la planificación.' }
-    ]
-  }
+      { level: 1, description: "Visualizacion de cronogramas." },
+      { level: 2, description: "Creacion y modificacion de eventos en cronogramas." },
+      { level: 3, description: "Control total de la planificacion." },
+    ],
+  },
+  [Modulo.ORGANIGRAMA]: {
+    title: "Modulo de Organigrama",
+    description: "Gestion de estructura organizacional y cargos",
+    implementationDetails: false,
+    levels: [
+      { level: 1, description: "Consulta de la estructura organizacional." },
+      { level: 2, description: "Edicion de cargos y relaciones." },
+      { level: 3, description: "Control total del modulo." },
+    ],
+  },
+  [Modulo.PAGOS_PROVEEDORES]: {
+    title: "Modulo de Pagos a Proveedores",
+    description: "Gestion de pagos y conciliaciones con proveedores",
+    implementationDetails: false,
+    levels: [
+      { level: 1, description: "Consulta de pagos existentes." },
+      { level: 2, description: "Registro y actualizacion de pagos." },
+      { level: 3, description: "Control total del modulo." },
+    ],
+  },
+  [Modulo.MASTER_DIRECTIVES]: {
+    title: "Modulo de Master Directives",
+    description: "Configuracion avanzada reservada para super_master",
+    implementationDetails: false,
+    levels: [
+      { level: 1, description: "Acceso base al modulo, ademas restringido por la regla especial de super_master." },
+      { level: 2, description: "Reservado para futuras capacidades adicionales." },
+      { level: 3, description: "Control total del modulo, manteniendo la restriccion especial." },
+    ],
+  },
 };
 
 export default function InfoNiveles() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filteredModules, setFilteredModules] = useState<Modulo[]>(Object.keys(moduleDocs) as Modulo[]);
 
   useEffect(() => {
     if (searchTerm) {
-      const filtered = (Object.keys(moduleDocs) as Modulo[]).filter(key => 
-        key.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        moduleDocs[key].title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        moduleDocs[key].description.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = (Object.keys(moduleDocs) as Modulo[]).filter(
+        (key) =>
+          key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          moduleDocs[key].title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          moduleDocs[key].description.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredModules(filtered);
-    } else {
-      setFilteredModules(Object.keys(moduleDocs) as Modulo[]);
+      return;
     }
+
+    setFilteredModules(Object.keys(moduleDocs) as Modulo[]);
   }, [searchTerm]);
 
   return (
     <Box p={4}>
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
-        <Heading size="md">Documentación de Niveles de Acceso</Heading>
+        <Heading size="md">Documentacion de Niveles de Acceso</Heading>
         <Tag size="md" colorScheme="blue" borderRadius="full" px={3}>
-          <TagLabel>{Object.keys(moduleDocs).length} módulos</TagLabel>
+          <TagLabel>{Object.keys(moduleDocs).length} modulos</TagLabel>
         </Tag>
       </Flex>
 
       <Alert status="info" mb={4} variant="left-accent" borderRadius="md">
         <AlertIcon alignSelf="flex-start" mt={1} />
         <Box width="100%">
-          <Heading size="sm" mb={2} textAlign="left">Información General</Heading>
+          <Heading size="sm" mb={2} textAlign="left">
+            Informacion General
+          </Heading>
           <Text mb={3} textAlign="left">
-            El sistema utiliza 3 niveles de acceso para controlar las funcionalidades disponibles en cada módulo:
+            El sistema usa niveles de acceso por modulo y la UI toma como fuente de verdad el snapshot de
+            <Code mx={1}>GET /api/auth/me</Code>.
           </Text>
           <Flex direction="column" gap={2} ml={2} mb={3}>
             <Flex align="center">
-              <Tag size="sm" colorScheme="green" mr={2} minW="60px" justifyContent="center">Nivel 1</Tag>
-              <Text>Acceso básico (solo consulta)</Text>
+              <Tag size="sm" colorScheme="green" mr={2} minW="60px" justifyContent="center">
+                Nivel 1
+              </Tag>
+              <Text>Acceso basico</Text>
             </Flex>
             <Flex align="center">
-              <Tag size="sm" colorScheme="blue" mr={2} minW="60px" justifyContent="center">Nivel 2</Tag>
-              <Text>Acceso avanzado (consulta y creación/modificación)</Text>
+              <Tag size="sm" colorScheme="blue" mr={2} minW="60px" justifyContent="center">
+                Nivel 2
+              </Tag>
+              <Text>Consulta y creacion o modificacion</Text>
             </Flex>
             <Flex align="center">
-              <Tag size="sm" colorScheme="purple" mr={2} minW="60px" justifyContent="center">Nivel 3</Tag>
-              <Text>Acceso completo (todas las funcionalidades)</Text>
+              <Tag size="sm" colorScheme="purple" mr={2} minW="60px" justifyContent="center">
+                Nivel 3
+              </Tag>
+              <Text>Acceso completo del modulo</Text>
             </Flex>
           </Flex>
           <Text textAlign="left">
-            El usuario 'master' tiene acceso completo a todas las funcionalidades independientemente de los niveles.
+            Los usuarios master-like tienen bypass completo sobre las reglas declarativas de acceso.
           </Text>
         </Box>
       </Alert>
@@ -375,8 +380,8 @@ export default function InfoNiveles() {
         <InputLeftElement pointerEvents="none">
           <SearchIcon color="gray.300" />
         </InputLeftElement>
-        <Input 
-          placeholder="Buscar módulo por nombre o descripción..." 
+        <Input
+          placeholder="Buscar modulo por nombre o descripcion..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           size="md"
@@ -389,20 +394,22 @@ export default function InfoNiveles() {
       {filteredModules.length === 0 && (
         <Alert status="info" mb={4}>
           <AlertIcon />
-          No se encontraron módulos que coincidan con la búsqueda.
+          No se encontraron modulos que coincidan con la busqueda.
         </Alert>
       )}
 
       <Accordion allowMultiple>
-        {filteredModules.map(moduleKey => (
+        {filteredModules.map((moduleKey) => (
           <AccordionItem key={moduleKey} mb={2} borderWidth="1px" borderRadius="md">
             <h2>
-              <AccordionButton _expanded={{ bg: 'blue.50', color: 'blue.700' }}>
+              <AccordionButton _expanded={{ bg: "blue.50", color: "blue.700" }}>
                 <Box flex="1" textAlign="left">
                   <Flex alignItems="center">
-                    <Text fontWeight="bold" mr={2}>{moduleDocs[moduleKey as Modulo].title}</Text>
+                    <Text fontWeight="bold" mr={2}>
+                      {moduleDocs[moduleKey].title}
+                    </Text>
                     <Tag size="sm" colorScheme="gray" borderRadius="full">
-                      <TagLabel>{moduleDocs[moduleKey as Modulo].levels.length} niveles</TagLabel>
+                      <TagLabel>{moduleDocs[moduleKey].levels.length} niveles</TagLabel>
                     </Tag>
                   </Flex>
                 </Box>
@@ -410,14 +417,25 @@ export default function InfoNiveles() {
               </AccordionButton>
             </h2>
             <AccordionPanel pb={4}>
-              <Text mb={4}>{moduleDocs[moduleKey as Modulo].description}</Text>
+              <Text mb={4}>{moduleDocs[moduleKey].description}</Text>
 
-              <Heading size="sm" mb={3}>Niveles de Acceso:</Heading>
+              <Heading size="sm" mb={3}>
+                Niveles de Acceso:
+              </Heading>
               <Box borderLeft="2px solid" borderColor="gray.200" pl={4} mb={4}>
-                {moduleDocs[moduleKey as Modulo].levels.map(level => (
-                  <Box key={level.level} mb={3} p={3} bg="gray.50" borderRadius="md" 
-                       borderLeft="4px solid" borderLeftColor={getLevelColor(level.level)}
-                       boxShadow="sm" transition="all 0.2s" _hover={{ boxShadow: "md" }}>
+                {moduleDocs[moduleKey].levels.map((level) => (
+                  <Box
+                    key={level.level}
+                    mb={3}
+                    p={3}
+                    bg="gray.50"
+                    borderRadius="md"
+                    borderLeft="4px solid"
+                    borderLeftColor={getLevelColor(level.level)}
+                    boxShadow="sm"
+                    transition="all 0.2s"
+                    _hover={{ boxShadow: "md" }}
+                  >
                     <Flex align="center">
                       <Tag size="md" colorScheme={getColorSchemeForLevel(level.level)} mr={3}>
                         <TagLabel>Nivel {level.level}</TagLabel>
@@ -428,13 +446,15 @@ export default function InfoNiveles() {
                 ))}
               </Box>
 
-              {moduleDocs[moduleKey as Modulo].implementationDetails && (
+              {moduleDocs[moduleKey].implementationDetails && (
                 <>
                   <Divider my={4} />
-                  <Heading size="sm" mb={2}>Implementación:</Heading>
+                  <Heading size="sm" mb={2}>
+                    Implementacion:
+                  </Heading>
                   <Box bg="gray.50" p={3} borderRadius="md" overflowX="auto">
                     <Code display="block" whiteSpace="pre" p={2}>
-                      {moduleDocs[moduleKey as Modulo].implementationCode}
+                      {moduleDocs[moduleKey].implementationCode}
                     </Code>
                   </Box>
                 </>
@@ -444,7 +464,8 @@ export default function InfoNiveles() {
 
               <Box mt={2}>
                 <Text fontSize="sm" color="gray.600">
-                  Nota: Los niveles de acceso son acumulativos. Un usuario con nivel 3 también tiene los permisos de los niveles 1 y 2.
+                  Nota: los niveles son acumulativos. Un usuario con nivel superior conserva los permisos de
+                  los niveles anteriores.
                 </Text>
               </Box>
             </AccordionPanel>
@@ -455,24 +476,32 @@ export default function InfoNiveles() {
   );
 }
 
-// Función para asignar colores a los niveles
 function getColorSchemeForLevel(level: number): string {
   switch (level) {
-    case 1: return "green";
-    case 2: return "blue";
-    case 3: return "purple";
-    case 4: return "orange";
-    default: return "gray";
+    case 1:
+      return "green";
+    case 2:
+      return "blue";
+    case 3:
+      return "purple";
+    case 4:
+      return "orange";
+    default:
+      return "gray";
   }
 }
 
-// Función para obtener el color del borde izquierdo según el nivel
 function getLevelColor(level: number): string {
   switch (level) {
-    case 1: return "green.500";
-    case 2: return "blue.500";
-    case 3: return "purple.500";
-    case 4: return "orange.500";
-    default: return "gray.500";
+    case 1:
+      return "green.500";
+    case 2:
+      return "blue.500";
+    case 3:
+      return "purple.500";
+    case 4:
+      return "orange.500";
+    default:
+      return "gray.500";
   }
 }

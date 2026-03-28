@@ -7,7 +7,7 @@ import GestionNotificacionesTab from "./GestionNotificaciones/GestionNotificacio
 import { useAuth } from "../../context/AuthContext";
 import { Modulo } from "./GestionUsuarios/types.tsx";
 import { TABS_BY_MODULO } from "../../auth/moduleTabDefinitions.ts";
-import { canAccessTabOrMaster } from "../../auth/accessHelpers";
+import { canAccessTabFromSnapshot } from "../../auth/accessHelpers";
 
 const USUARIOS_TAB_CONTENT: Record<string, ReactNode> = {
     GESTION_USUARIOS: <UserFullRoleCRUD />,
@@ -22,11 +22,11 @@ const USUARIOS_TAB_LABELS: Record<string, string> = {
 };
 
 export default function UsuariosPage() {
-    const { moduloAccesos, accesosReady, roles, user } = useAuth();
+    const { moduloAccesos, accesosReady, isMasterLike } = useAuth();
     const tabDefs = TABS_BY_MODULO[Modulo.USUARIOS] ?? [];
 
     const visibleTabs = tabDefs.filter(
-        (d) => accesosReady && canAccessTabOrMaster(roles, user, moduloAccesos, Modulo.USUARIOS, d.tabId)
+        (d) => accesosReady && canAccessTabFromSnapshot({ isMasterLike, moduloAccesos }, Modulo.USUARIOS, d.tabId)
     );
 
     if (!accesosReady) {

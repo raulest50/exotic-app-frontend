@@ -11,7 +11,11 @@ type SuperMasterProtectedRouteProps = {
  * master and other users get 403 / redirect.
  */
 const SuperMasterProtectedRoute: React.FC<SuperMasterProtectedRouteProps> = ({ children }) => {
-    const { user } = useAuth();
+    const { user, accesosReady } = useAuth();
+
+    if (!accesosReady) {
+        return <div>Cargando accesos...</div>;
+    }
 
     if (!user) {
         return <Navigate to="/login" replace />;

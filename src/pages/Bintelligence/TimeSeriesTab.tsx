@@ -1,6 +1,6 @@
-import React from 'react';
+// import React from 'react';
 
-function TimeSeriesTab(props) {
+function TimeSeriesTab() {
     return (
         <div></div>
     );

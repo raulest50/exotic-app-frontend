@@ -43,18 +43,12 @@ import {
 import EndPointsURL from "../api/EndPointsURL";
 import { Modulo } from "../pages/Usuarios/GestionUsuarios/types.tsx";
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
-import { isMasterLike } from "../auth/accessHelpers";
 import BetterPagination from "./BetterPagination/BetterPagination";
 
 interface SectionCardProps {
     name: string;
     icon: IconType;
     to: string;
-    /** Modules allowed to see this card */
-    supportedModules?: string[];
-    /** Current accesses of the user */
-    currentAccesos?: string[];
     /** Background color of the card */
     bgColor?: string;
     /** Notification for this module */
@@ -67,8 +61,7 @@ function formatQty(v: number): string {
     return String(v);
 }
 
-function SectionCard({ name, icon, to, supportedModules, currentAccesos, bgColor = "blue.100", notification }: SectionCardProps) {
-    const { user: authUsername } = useAuth();
+function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: SectionCardProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [stockPage, setStockPage] = useState(0);
     const [stockSize, setStockSize] = useState(10);
@@ -76,13 +69,6 @@ function SectionCard({ name, icon, to, supportedModules, currentAccesos, bgColor
     const [stockTotalPages, setStockTotalPages] = useState(0);
     const [stockLoading, setStockLoading] = useState(false);
     const [stockError, setStockError] = useState<string | null>(null);
-
-    if (supportedModules != null && currentAccesos != null) {
-        const hasAccess =
-            isMasterLike(currentAccesos, authUsername) ||
-            supportedModules.some((m) => currentAccesos.includes(m));
-        if (!hasAccess) return null;
-    }
 
     // Colores adaptativos para modo claro/oscuro
     const isRedCard = bgColor === "red.100";

@@ -1,4 +1,4 @@
-import { Container, Flex, Tab, TabList, TabPanel, TabPanels, Tabs, Text, Spinner } from "@chakra-ui/react";
+import { Container, Flex, Tab, TabList, TabPanel, TabPanels, Tabs, Spinner, Text } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
@@ -9,6 +9,10 @@ import CargaMasivaMaterialesTab from "./CargaMasivaMateriales/CargaMasivaMateria
 import CargaMasivaTerminadosTab from "./CargaMasivaTerminados/CargaMasivaTerminadosTab";
 import EliminacionForzada from "./EliminacionForzada/EliminacionForzada";
 import ExportacionDatosTab from "./ExportacionDatos/ExportacionDatosTab.tsx";
+import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
+import { tabAccessRule } from "../../auth/accessHelpers.ts";
+import { useAccessSnapshot } from "../../auth/usePermissions";
+import type { AccessRule } from "../../auth/accessModel.ts";
 
 interface SuperMasterConfig {
     id: number;
@@ -20,6 +24,7 @@ interface SuperMasterConfig {
 export default function OperacionesCriticasBDPage() {
     const [config, setConfig] = useState<SuperMasterConfig | null>(null);
     const [loading, setLoading] = useState(true);
+    const access = useAccessSnapshot();
     const endPoints = useMemo(() => new EndPointsURL(), []);
 
     useEffect(() => {
@@ -40,7 +45,7 @@ export default function OperacionesCriticasBDPage() {
     if (loading) {
         return (
             <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
-                <MyHeader title="Operaciones Críticas en BD" />
+                <MyHeader title="Operaciones Criticas en BD" />
                 <Spinner />
             </Container>
         );
@@ -49,51 +54,64 @@ export default function OperacionesCriticasBDPage() {
     const showCargaMasiva = config?.habilitarCargaMasiva ?? false;
     const showEliminacionForzada = config?.habilitarEliminacionForzada ?? false;
 
-    if (!showCargaMasiva && !showEliminacionForzada) {
+    const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
+        {
+            key: "carga-masiva-almacen",
+            label: "Carga Masiva Almacen",
+            render: () => <CargaMasivaAlmacenTab />,
+            accesoValido: (snapshot) => showCargaMasiva && tabAccessRule(Modulo.OPERACIONES_CRITICAS_BD, "CARGA_MASIVA_ALMACEN", 1)(snapshot),
+        },
+        {
+            key: "carga-masiva-materiales",
+            label: "Carga Masiva Materiales",
+            render: () => <CargaMasivaMaterialesTab />,
+            accesoValido: (snapshot) => showCargaMasiva && tabAccessRule(Modulo.OPERACIONES_CRITICAS_BD, "CARGA_MASIVA_MATERIALES", 1)(snapshot),
+        },
+        {
+            key: "carga-masiva-terminados",
+            label: "Carga Masiva Terminados",
+            render: () => <CargaMasivaTerminadosTab />,
+            accesoValido: (snapshot) => showCargaMasiva && tabAccessRule(Modulo.OPERACIONES_CRITICAS_BD, "CARGA_MASIVA_TERMINADOS", 1)(snapshot),
+        },
+        {
+            key: "eliminaciones-forzadas",
+            label: "Eliminaciones Forzadas",
+            render: () => <EliminacionForzada />,
+            accesoValido: (snapshot) => showEliminacionForzada && tabAccessRule(Modulo.OPERACIONES_CRITICAS_BD, "ELIMINACIONES_FORZADAS", 1)(snapshot),
+        },
+        {
+            key: "exportacion-datos",
+            label: "Exportacion Datos",
+            render: () => <ExportacionDatosTab />,
+            accesoValido: tabAccessRule(Modulo.OPERACIONES_CRITICAS_BD, "EXPORTACION_DATOS", 1),
+        },
+    ];
+
+    const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));
+
+    if (visibleTabs.length === 0) {
         return (
             <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
-                <MyHeader title="Operaciones Críticas en BD" />
-                <Text mt={4}>Ninguna operación habilitada por Directivas Super Master.</Text>
+                <MyHeader title="Operaciones Criticas en BD" />
+                <Text mt={4}>No hay operaciones habilitadas para este modulo con la configuracion actual.</Text>
             </Container>
         );
     }
 
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
-            <MyHeader title="Operaciones Críticas en BD" />
+            <MyHeader title="Operaciones Criticas en BD" />
             <Flex direction="column" w="full" h="full">
                 <Tabs>
                     <TabList>
-                        {showCargaMasiva && <Tab sx={my_style_tab}>Carga Masiva Almacén</Tab>}
-                        {showCargaMasiva && <Tab sx={my_style_tab}>Carga Masiva Materiales</Tab>}
-                        {showCargaMasiva && <Tab sx={my_style_tab}>Carga Masiva Terminados</Tab>}
-                        {showEliminacionForzada && <Tab sx={my_style_tab}>Eliminaciones Forzadas</Tab>}
-                        <Tab sx={my_style_tab} > Exportacion Datos </Tab>
+                        {visibleTabs.map((tab) => (
+                            <Tab key={tab.key} sx={my_style_tab}>{tab.label}</Tab>
+                        ))}
                     </TabList>
                     <TabPanels>
-                        {showCargaMasiva && (
-                            <TabPanel>
-                                <CargaMasivaAlmacenTab />
-                            </TabPanel>
-                        )}
-                        {showCargaMasiva && (
-                            <TabPanel>
-                                <CargaMasivaMaterialesTab />
-                            </TabPanel>
-                        )}
-                        {showCargaMasiva && (
-                            <TabPanel>
-                                <CargaMasivaTerminadosTab />
-                            </TabPanel>
-                        )}
-                        {showEliminacionForzada && (
-                            <TabPanel>
-                                <EliminacionForzada />
-                            </TabPanel>
-                        )}
-                        <TabPanel>
-                            <ExportacionDatosTab />
-                        </TabPanel>
+                        {visibleTabs.map((tab) => (
+                            <TabPanel key={tab.key}>{tab.render()}</TabPanel>
+                        ))}
                     </TabPanels>
                 </Tabs>
             </Flex>

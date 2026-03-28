@@ -19,11 +19,10 @@ import GestionAreasOperativasPage from "./pages/GestionAreasOperativas/GestionAr
 
 import ProveedoresPage from "./pages/Proveedores/ProveedoresPage.tsx";
 import ComprasPage from "./pages/Compras/ComprasPage.tsx";
-import {ProtectedRoute} from "./components/ProtectedRoute.tsx";
+import AccessRoute from "./components/AccessRoute.tsx";
 import LoginPanel from "./pages/LoginPage/LoginPanel.tsx";
 import ResetPasswordPage from "./pages/LoginPage/ResetPasswordPage.tsx";
 import UsuariosPage from "./pages/Usuarios/UsuariosPage.tsx";
-import MultiRoleProtectedRoute from "./components/MultiRoleProtectedRoute.tsx";
 import SuperMasterProtectedRoute from "./components/SuperMasterProtectedRoute.tsx";
 
 import { Modulo } from "./pages/Usuarios/GestionUsuarios/types.tsx";
@@ -37,10 +36,8 @@ import MasterDirectivesPage from "./pages/MasterDirectives/MasterDirectivesPage.
 import CronogramaPage from "./pages/Cronograma/CronogramaPage.tsx";
 import OrganigramaPage from "./pages/Organigrama/OrganigramaPage.tsx";
 import TransaccionesAlmacenPage from "./pages/TransaccionesAlmacen/TransaccionesAlmacenPage.tsx";
-import ClientesPage from "./pages/Clientes/ClientesPage.tsx";
-import VentasPage from "./pages/Ventas/VentasPage.tsx";
-import PagosProveedoresPage from "./pages/PagosProveedores/PagosProveedoresPage.tsx";
 import { EnvironmentBadge } from "./components/EnvironmentBadge.tsx";
+import { canAccessModule, moduleAccessRule } from "./auth/accessHelpers.ts";
 
 const router = createBrowserRouter(
     createRoutesFromElements(
@@ -56,9 +53,9 @@ const router = createBrowserRouter(
                 <Route
                     index
                     element={
-                        <ProtectedRoute>
+                        <AccessRoute>
                             <Home />
-                        </ProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
@@ -66,9 +63,9 @@ const router = createBrowserRouter(
                 <Route
                     path="gestion_areas_operativas"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.SEGUIMIENTO_PRODUCCION]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.SEGUIMIENTO_PRODUCCION)}>
                             <GestionAreasOperativasPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
@@ -76,9 +73,9 @@ const router = createBrowserRouter(
                 {/* <Route
                     path="clientes"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.CLIENTES]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.CLIENTES)}>
                             <ClientesPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 /> */}
 
@@ -86,18 +83,18 @@ const router = createBrowserRouter(
                 {/* <Route
                     path="ventas"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.VENTAS]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.VENTAS)}>
                             <VentasPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 /> */}
 
                 <Route
                     path="transacciones_almacen"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.TRANSACCIONES_ALMACEN]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.TRANSACCIONES_ALMACEN)}>
                             <TransaccionesAlmacenPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
@@ -105,131 +102,133 @@ const router = createBrowserRouter(
                 <Route
                     path="producto"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.PRODUCTOS]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.PRODUCTOS)}>
                             <ProductosPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
                 <Route
                     path="produccion"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.PRODUCCION]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.PRODUCCION)}>
                             <ProduccionPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
                 <Route
                     path="stock"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.STOCK]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.STOCK)}>
                             <StockPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
                 <Route
                     path="proveedores"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.PROVEEDORES]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.PROVEEDORES)}>
                             <ProveedoresPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
                 <Route
                     path="compras"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.COMPRAS]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.COMPRAS)}>
                             <ComprasPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
                 <Route
                     path="usuarios"
                     element={
-                        <ProtectedRoute requiredModulo={Modulo.USUARIOS}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.USUARIOS)}>
                             <UsuariosPage/>
-                        </ProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
                 <Route
                     path="operaciones_criticas_bd"
                     element={
-                        <ProtectedRoute requiredModulo={""}>
+                        <AccessRoute accessRule={(access) => access.isMasterLike && canAccessModule(access.moduloAccesos, Modulo.OPERACIONES_CRITICAS_BD)}>
                             <OperacionesCriticasBDPage/>
-                        </ProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
                 <Route
                     path="administracion_alertas"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.ADMINISTRACION_ALERTAS]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.ADMINISTRACION_ALERTAS)}>
                             <AdministracionAlertasPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
                 <Route
                     path="master_directives"
                     element={
-                        <SuperMasterProtectedRoute>
-                            <MasterDirectivesPage/>
-                        </SuperMasterProtectedRoute>
+                        <AccessRoute accessRule={(access) => canAccessModule(access.moduloAccesos, Modulo.MASTER_DIRECTIVES)}>
+                            <SuperMasterProtectedRoute>
+                                <MasterDirectivesPage/>
+                            </SuperMasterProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
                 <Route
                     path="cronograma"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.CRONOGRAMA]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.CRONOGRAMA)}>
                             <CronogramaPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
                 <Route
                     path="organigrama"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.ORGANIGRAMA]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.ORGANIGRAMA)}>
                             <OrganigramaPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
                 <Route
                     path="activos"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.ACTIVOS]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.ACTIVOS)}>
                             <ActivosFijosPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
                 <Route
                     path="contabilidad"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.CONTABILIDAD]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.CONTABILIDAD)}>
                             <ContabilidadPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
                 <Route
                     path="personal"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.PERSONAL_PLANTA]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.PERSONAL_PLANTA)}>
                             <PersonalPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
                 <Route
                     path="bintelligence"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.BINTELLIGENCE]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.BINTELLIGENCE)}>
                             <BintelligencePage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 />
 
@@ -237,9 +236,9 @@ const router = createBrowserRouter(
                 {/* <Route
                     path="pagos-proveedores"
                     element={
-                        <MultiRoleProtectedRoute supportedModules={[Modulo.PAGOS_PROVEEDORES]}>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.PAGOS_PROVEEDORES)}>
                             <PagosProveedoresPage/>
-                        </MultiRoleProtectedRoute>
+                        </AccessRoute>
                     }
                 /> */}
 

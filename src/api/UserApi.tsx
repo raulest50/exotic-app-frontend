@@ -20,16 +20,11 @@ export interface User {
     estado: number;
 }
 
-export type AuthorityEntry = {
-    authority: string;
-    nivel: string;
-};
-
 /** Cuerpo de GET /api/auth/me (usar AuthContext para permisos; esto es solo para tipos/normalización). */
 export interface MeResponseRaw {
     user: User;
+    isMasterLike: boolean;
     accesos: unknown;
-    authorities: AuthorityEntry[];
 }
 
 export function normalizeModuloAccesosFromMe(raw: unknown): ModuloAccesoFE[] {
