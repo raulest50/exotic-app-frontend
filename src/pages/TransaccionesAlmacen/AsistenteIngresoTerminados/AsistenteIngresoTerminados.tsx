@@ -11,15 +11,15 @@ import {
 import { Step, StepIcon, StepIndicator, Stepper, StepTitle } from "@chakra-ui/icons";
 import { useState } from "react";
 import { useAuth } from "../../../context/AuthContext.tsx";
-import { IngresoTerminadoConsultaResponse, IngresoTerminadoDatos } from "./types.ts";
-import IngresoTerminadosStep0_BuscarLote from "./IngresoTerminadosStep0_BuscarLote.tsx";
-import IngresoTerminadosStep1_Digitacion from "./IngresoTerminadosStep1_Digitacion.tsx";
-import IngresoTerminadosStep2_Confirmacion from "./IngresoTerminadosStep2_Confirmacion.tsx";
+import { IngresoTerminadoValidado } from "./types.ts";
+import IngresoTerminadosStep0_DescargarPlantilla from "./IngresoTerminadosStep0_DescargarPlantilla.tsx";
+import IngresoTerminadosStep1_SubirValidar from "./IngresoTerminadosStep1_SubirValidar.tsx";
+import IngresoTerminadosStep2_RevisionConfirmacion from "./IngresoTerminadosStep2_RevisionConfirmacion.tsx";
 
 const steps = [
-    { title: "Paso 1", description: "Identificar Lote" },
-    { title: "Paso 2", description: "Digitación Ingreso" },
-    { title: "Paso 3", description: "Confirmación" },
+    { title: "Paso 1", description: "Descargar Plantilla" },
+    { title: "Paso 2", description: "Subir y Validar" },
+    { title: "Paso 3", description: "Confirmacion" },
 ];
 
 export function AsistenteIngresoTerminados() {
@@ -28,42 +28,36 @@ export function AsistenteIngresoTerminados() {
         count: steps.length,
     });
 
-    const [consultaResult, setConsultaResult] = useState<IngresoTerminadoConsultaResponse | null>(null);
-    const [ingresoDatos, setIngresoDatos] = useState<IngresoTerminadoDatos | null>(null);
+    const [ingresosValidados, setIngresosValidados] = useState<IngresoTerminadoValidado[]>([]);
 
     const { user } = useAuth();
 
     const handleSuccess = () => {
         // Reiniciar todo el wizard al paso 0
-        setConsultaResult(null);
-        setIngresoDatos(null);
+        setIngresosValidados([]);
         setActiveStep(0);
     };
 
     function ConditionalRenderStep() {
         if (activeStep === 0) {
             return (
-                <IngresoTerminadosStep0_BuscarLote
+                <IngresoTerminadosStep0_DescargarPlantilla
                     setActiveStep={setActiveStep}
-                    setConsultaResult={(result) => setConsultaResult(result)}
                 />
             );
         }
-        if (activeStep === 1 && consultaResult) {
+        if (activeStep === 1) {
             return (
-                <IngresoTerminadosStep1_Digitacion
-                    consultaResult={consultaResult}
+                <IngresoTerminadosStep1_SubirValidar
                     setActiveStep={setActiveStep}
-                    setIngresoDatos={setIngresoDatos}
-                    setConsultaResult={() => setConsultaResult(null)}
+                    setIngresosValidados={setIngresosValidados}
                 />
             );
         }
-        if (activeStep === 2 && consultaResult && ingresoDatos) {
+        if (activeStep === 2 && ingresosValidados.length > 0) {
             return (
-                <IngresoTerminadosStep2_Confirmacion
-                    consultaResult={consultaResult}
-                    ingresoDatos={ingresoDatos}
+                <IngresoTerminadosStep2_RevisionConfirmacion
+                    ingresosValidados={ingresosValidados}
                     username={user ?? undefined}
                     setActiveStep={setActiveStep}
                     onSuccess={handleSuccess}

@@ -202,9 +202,15 @@ export interface ItemDispensacionDTO {
     cantidad: number;
 }
 
+export interface AreaOperativaDestinoOption {
+    areaId: number;
+    areaNombre: string;
+}
+
 export interface DispensacionDTO {
     ordenProduccionId: number;
     items: ItemDispensacionDTO[];
+    areaOperativaDestinoId?: number;
     /**
      * Lista de IDs de usuarios responsables de realizar la dispensación.
      * Puede ser undefined. Si se proporciona, debe tener al menos un usuario.
@@ -347,6 +353,8 @@ export interface MovimientoDetalle {
     productoId: string;
     productoNombre: string;
     tipoUnidades: string;
+    areaOperativaId?: number;
+    areaOperativaNombre?: string;
     cantidad: number;
     batchNumber?: string;
     productionDate?: string;

@@ -75,6 +75,7 @@ export function AsistenteDispensacion(){
             return <DispensacionStep3ReviewSubmit
                 setActiveStep={setActiveStep} 
                 dispensacion={dispensacion}
+                setDispensacion={setDispensacion}
                 insumosDesglosados={insumosDesglosados}
                 ordenProduccionId={ordenProduccionId}
                 lotesPorMaterial={lotesPorMaterial}

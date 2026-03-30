@@ -146,6 +146,7 @@ export default function ResumenHistorialDispensaciones({
                                                         <Thead>
                                                             <Tr>
                                                                 <Th>Producto</Th>
+                                                                <Th>Área destino</Th>
                                                                 <Th>Cantidad</Th>
                                                                 <Th>Unidad</Th>
                                                                 <Th>Lote</Th>
@@ -155,6 +156,7 @@ export default function ResumenHistorialDispensaciones({
                                                             {(movimientosPorTransaccion[disp.transaccionId] ?? []).map((mov) => (
                                                                 <Tr key={`${disp.transaccionId}-${mov.movimientoId}`}>
                                                                     <Td>{mov.productoNombre || mov.productoId}</Td>
+                                                                    <Td>{mov.areaOperativaNombre || '-'}</Td>
                                                                     <Td>{mov.cantidad.toFixed(2)}</Td>
                                                                     <Td>{mov.tipoUnidades}</Td>
                                                                     <Td>{mov.batchNumber || '-'}</Td>
@@ -162,7 +164,7 @@ export default function ResumenHistorialDispensaciones({
                                                             ))}
                                                             {(movimientosPorTransaccion[disp.transaccionId] ?? []).length === 0 && (
                                                                 <Tr>
-                                                                    <Td colSpan={4}>
+                                                                    <Td colSpan={5}>
                                                                         <Text fontSize="xs" color="gray.500">
                                                                             No hay items para esta transacción.
                                                                         </Text>

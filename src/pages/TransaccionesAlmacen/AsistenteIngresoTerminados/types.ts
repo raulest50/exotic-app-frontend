@@ -51,3 +51,44 @@ export interface IngresoTerminadoDatos {
     /** Fecha de vencimiento en formato ISO YYYY-MM-DD */
     fechaVencimiento: string;
 }
+
+// ============================================================================
+// Nuevos tipos para el flujo basado en Excel (carga masiva de ingresos)
+// ============================================================================
+
+/** Datos validados del Excel subido - representa una fila del Excel procesada */
+export interface IngresoTerminadoValidado {
+    ordenId: number;
+    loteAsignado: string;
+    productoId: string;
+    productoNombre: string;
+    categoriaNombre: string;
+    cantidadEsperada: number;
+    cantidadIngresada: number;
+    fechaVencimiento: string; // YYYY-MM-DD
+    diferenciaPorcentaje: number; // Para mostrar en UI
+}
+
+/** Payload para registro masivo de ingresos */
+export interface RegistroMasivoPayload {
+    username: string;
+    ingresos: {
+        ordenProduccionId: number;
+        cantidadIngresada: number;
+        fechaVencimiento: string;
+    }[];
+}
+
+/** Error de validación individual */
+export interface ValidationError {
+    rowNumber: number;
+    loteAsignado: string;
+    message: string;
+}
+
+/** Respuesta de validación del Excel */
+export interface ValidacionExcelResponse {
+    valid: boolean;
+    errors: ValidationError[];
+    rowCount: number;
+}

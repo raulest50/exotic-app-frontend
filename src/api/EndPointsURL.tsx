@@ -84,6 +84,9 @@ export default class EndPointsURL{
     // ingreso terminados almacen
     public buscar_op_por_lote_terminados: string;
     public registrar_ingreso_terminado: string;
+    public ingreso_terminados_plantilla: string;
+    public ingreso_terminados_validar: string;
+    public ingreso_terminados_registrar_masivo: string;
 
     // recursos de produccion
     public save_recurso_produccion:string;
@@ -384,6 +387,9 @@ export default class EndPointsURL{
         // ingreso terminados almacen endpoints
         this.buscar_op_por_lote_terminados = `${domain}/${ingresos_terminados_res}/buscar-op-por-lote`;
         this.registrar_ingreso_terminado = `${domain}/${ingresos_terminados_res}/registrar`;
+        this.ingreso_terminados_plantilla = `${domain}/${ingresos_terminados_res}/plantilla`;
+        this.ingreso_terminados_validar = `${domain}/${ingresos_terminados_res}/validar`;
+        this.ingreso_terminados_registrar_masivo = `${domain}/${ingresos_terminados_res}/registrar-masivo`;
 
         // recursos de produccion endpoints
         this.save_recurso_produccion = `${domain}/${recursos_produccion_res}`;

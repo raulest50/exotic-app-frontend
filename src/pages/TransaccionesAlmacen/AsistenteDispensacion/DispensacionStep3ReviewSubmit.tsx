@@ -1,4 +1,6 @@
 import {
+    Alert,
+    AlertIcon,
     Box,
     Button,
     Flex,
@@ -8,6 +10,7 @@ import {
     HStack,
     IconButton,
     Input,
+    Select,
     Table,
     Tbody,
     Td,
@@ -19,8 +22,8 @@ import {
     VStack,
     Tag
 } from '@chakra-ui/react';
-import {useEffect, useState} from 'react';
-import {DispensacionDTO, InsumoDesglosado, ItemPendienteReposicion, LoteSeleccionado} from '../types';
+import {useEffect, useMemo, useState} from 'react';
+import {AreaOperativaDestinoOption, DispensacionDTO, InsumoDesglosado, ItemPendienteReposicion, LoteSeleccionado} from '../types';
 import UserPickerGeneric from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric';
 import {User} from '../../../pages/Usuarios/GestionUsuarios/types';
 import EndPointsURL from '../../../api/EndPointsURL';
@@ -34,6 +37,7 @@ const DispensacionPDF_Generator = new DispensacionPDF_Generator_Class();
 interface Props {
     setActiveStep: (step: number) => void;
     dispensacion: DispensacionDTO | null;
+    setDispensacion: (dto: DispensacionDTO) => void;
     insumosDesglosados?: InsumoDesglosado[];
     ordenProduccionId?: number | null;
     lotesPorMaterial?: Map<string, LoteSeleccionado[]>;
@@ -44,9 +48,15 @@ interface Props {
     onDispensacionSuccess?: () => void;
 }
 
+interface SeguimientoOrdenAreaProgressItem {
+    areaId: number;
+    areaNombre: string;
+}
+
 export default function DispensacionStep3ReviewSubmit({
     setActiveStep,
     dispensacion,
+    setDispensacion,
     insumosDesglosados,
     ordenProduccionId,
     lotesPorMaterial,
@@ -62,8 +72,10 @@ export default function DispensacionStep3ReviewSubmit({
     const [usuariosRealizadores, setUsuariosRealizadores] = useState<User[]>([]);
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [loadingAreasDestino, setLoadingAreasDestino] = useState(false);
+    const [areasDestinoDisponibles, setAreasDestinoDisponibles] = useState<AreaOperativaDestinoOption[]>([]);
     const toast = useToast();
-    const endPoints = new EndPointsURL();
+    const endPoints = useMemo(() => new EndPointsURL(), []);
 
     useEffect(() => {
         if (!currentUser) return;
@@ -86,6 +98,53 @@ export default function DispensacionStep3ReviewSubmit({
         setInputToken('');
     }, [dispensacion]);
 
+    useEffect(() => {
+        const fetchAreasDestino = async () => {
+            if (!ordenProduccionId) {
+                setAreasDestinoDisponibles([]);
+                return;
+            }
+
+            setLoadingAreasDestino(true);
+            try {
+                const endpoint = endPoints.seguimiento_progreso_orden.replace('{ordenId}', ordenProduccionId.toString());
+                const response = await axios.get<SeguimientoOrdenAreaProgressItem[]>(endpoint, {withCredentials: true});
+
+                const uniqueAreas = Array.from(
+                    new Map(
+                        (response.data ?? [])
+                            .filter(item => item.areaId !== -1)
+                            .map(item => [item.areaId, {areaId: item.areaId, areaNombre: item.areaNombre}])
+                    ).values()
+                );
+
+                setAreasDestinoDisponibles(uniqueAreas);
+
+                const selectedAreaIsValid = uniqueAreas.some(area => area.areaId === dispensacion?.areaOperativaDestinoId);
+                const nextSelectedAreaId =
+                    selectedAreaIsValid
+                        ? dispensacion?.areaOperativaDestinoId
+                        : uniqueAreas.length === 1
+                            ? uniqueAreas[0].areaId
+                            : undefined;
+
+                if (nextSelectedAreaId !== dispensacion?.areaOperativaDestinoId) {
+                    setDispensacion({
+                        ...(dispensacion ?? {ordenProduccionId, items: []}),
+                        areaOperativaDestinoId: nextSelectedAreaId,
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar áreas operativas destino:', error);
+                setAreasDestinoDisponibles([]);
+            } finally {
+                setLoadingAreasDestino(false);
+            }
+        };
+
+        fetchAreasDestino();
+    }, [dispensacion?.areaOperativaDestinoId, endPoints, ordenProduccionId, setDispensacion]);
+
     const handleSelectUser = (user: User) => {
         // Evitar duplicados
         if (!usuariosRealizadores.find(u => u.id === user.id)) {
@@ -102,7 +161,12 @@ export default function DispensacionStep3ReviewSubmit({
         ((lotesPorMaterial && lotesPorMaterial.size > 0) || 
          (lotesPorMaterialEmpaque && lotesPorMaterialEmpaque.size > 0) ||
          (lotesPorReposicionAveria && lotesPorReposicionAveria.size > 0));
-    const canRegister = usuariosRealizadores.length > 0 && inputToken === token && !isLoading;
+    const requiereAreaDestino = areasDestinoDisponibles.length > 0;
+    const canRegister = usuariosRealizadores.length > 0
+        && inputToken === token
+        && !isLoading
+        && !loadingAreasDestino
+        && (!requiereAreaDestino || !!dispensacion?.areaOperativaDestinoId);
 
     const findInsumoById = (insumos: InsumoDesglosado[] | undefined, insumoId: number): InsumoDesglosado | undefined => {
         if (!insumos) return undefined;
@@ -333,6 +397,17 @@ export default function DispensacionStep3ReviewSubmit({
             return;
         }
 
+        if (requiereAreaDestino && !dispensacion?.areaOperativaDestinoId) {
+            toast({
+                title: 'Error',
+                description: 'Debe seleccionar el área operativa destino de la dispensación.',
+                status: 'error',
+                duration: 3000,
+                isClosable: true
+            });
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -368,6 +443,7 @@ export default function DispensacionStep3ReviewSubmit({
 
             const baseDTO = {
                 ordenProduccionId: ordenProduccionId,
+                areaOperativaDestinoId: dispensacion?.areaOperativaDestinoId,
                 usuarioRealizadorIds: usuariosRealizadores.map(u => u.id),
                 usuarioAprobadorId: currentUser?.id,
                 usuarioId: usuariosRealizadores[0]?.id || currentUser?.id || 0,
@@ -388,7 +464,7 @@ export default function DispensacionStep3ReviewSubmit({
                 await axios.post(
                     endPoints.dispensacion,
                     backendDTO,
-                    { headers: { 'Content-Type': 'application/json' } }
+                    { headers: { 'Content-Type': 'application/json' }, withCredentials: true }
                 );
             }
 
@@ -407,7 +483,7 @@ export default function DispensacionStep3ReviewSubmit({
                 await axios.post(
                     endPoints.dispensacion_reposicion_averia,
                     repoDTO,
-                    { headers: { 'Content-Type': 'application/json' } }
+                    { headers: { 'Content-Type': 'application/json' }, withCredentials: true }
                 );
             }
 
@@ -681,6 +757,44 @@ export default function DispensacionStep3ReviewSubmit({
                     <Text fontSize='md'>
                         <strong>Nombre:</strong> {currentUser?.nombreCompleto || 'N/A'}
                     </Text>
+                </Box>
+
+                <Box bg='white' p={4} borderRadius='md' boxShadow='sm'>
+                    <Heading size='md' mb={4} fontFamily='Comfortaa Variable'>
+                        Área Operativa Destino
+                    </Heading>
+                    {loadingAreasDestino ? (
+                        <Text color='gray.600'>Cargando áreas operativas de la orden...</Text>
+                    ) : areasDestinoDisponibles.length > 0 ? (
+                        <FormControl isRequired>
+                            <FormLabel>Área que recibe la dispensación</FormLabel>
+                            <Select
+                                placeholder='Seleccione un área operativa'
+                                value={dispensacion?.areaOperativaDestinoId?.toString() ?? ''}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setDispensacion({
+                                        ...(dispensacion ?? {ordenProduccionId: ordenProduccionId ?? 0, items: []}),
+                                        areaOperativaDestinoId: value ? Number(value) : undefined,
+                                    });
+                                }}
+                            >
+                                {areasDestinoDisponibles.map(area => (
+                                    <option key={area.areaId} value={area.areaId}>
+                                        {area.areaNombre} (ID: {area.areaId})
+                                    </option>
+                                ))}
+                            </Select>
+                            <Text mt={2} fontSize='sm' color='gray.600'>
+                                Esta selección se guardará en la trazabilidad de la dispensación y habilitará automáticamente el avance de Almacén General.
+                            </Text>
+                        </FormControl>
+                    ) : (
+                        <Alert status='info' borderRadius='md'>
+                            <AlertIcon />
+                            Esta orden no tiene áreas operativas destino configuradas en su seguimiento. La dispensación se registrará sin área destino.
+                        </Alert>
+                    )}
                 </Box>
 
                 {/* Resumen de Items y Lotes */}

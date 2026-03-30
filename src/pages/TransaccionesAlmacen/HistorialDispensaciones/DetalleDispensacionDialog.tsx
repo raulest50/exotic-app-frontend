@@ -180,6 +180,7 @@ export default function DetalleDispensacionDialog({
                                             <Tr>
                                                 <Th>Producto ID</Th>
                                                 <Th>Nombre</Th>
+                                                <Th>Área destino</Th>
                                                 <Th>Cantidad</Th>
                                                 <Th>Unidad</Th>
                                                 <Th>Lote (Batch)</Th>
@@ -191,6 +192,7 @@ export default function DetalleDispensacionDialog({
                                                 <Tr key={mov.movimientoId}>
                                                     <Td>{mov.productoId || 'N/A'}</Td>
                                                     <Td>{mov.productoNombre || 'N/A'}</Td>
+                                                    <Td>{mov.areaOperativaNombre || '-'}</Td>
                                                     <Td>{mov.cantidad.toFixed(2)}</Td>
                                                     <Td>{mov.tipoUnidades || 'N/A'}</Td>
                                                     <Td>{mov.batchNumber || '-'}</Td>

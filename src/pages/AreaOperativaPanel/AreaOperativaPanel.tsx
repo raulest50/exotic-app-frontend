@@ -288,8 +288,9 @@ export default function AreaOperativaPanel() {
                                         colorScheme="green"
                                         leftIcon={<FiCheckCircle />}
                                         onClick={() => handleOpenModal(orden)}
+                                        isDisabled={orden.areaId === -1}
                                     >
-                                        Reportar Completado
+                                        {orden.areaId === -1 ? 'Se reporta al dispensar' : 'Reportar Completado'}
                                     </Button>
                                 </HStack>
                             </CardBody>
