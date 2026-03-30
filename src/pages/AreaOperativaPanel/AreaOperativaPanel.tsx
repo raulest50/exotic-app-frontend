@@ -28,7 +28,7 @@ import {
     useToast,
     Divider,
 } from '@chakra-ui/react';
-import { FiCheckCircle, FiClock, FiPackage, FiUser } from 'react-icons/fi';
+import { FiCheckCircle, FiClock, FiPackage, FiUser, FiLogOut } from 'react-icons/fi';
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL.tsx';
 import BetterPagination from '../../components/BetterPagination/BetterPagination.tsx';
@@ -68,7 +68,7 @@ interface PaginatedResponse<T> {
 }
 
 export default function AreaOperativaPanel() {
-    const { meProfile } = useAuth();
+    const { meProfile, logout } = useAuth();
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -185,13 +185,25 @@ export default function AreaOperativaPanel() {
         <VStack w="full" spacing={6} align="stretch" p={4}>
             {/* Header */}
             <Box>
-                <Heading size="lg" mb={2}>Panel de Area Operativa</Heading>
-                {meProfile && (
-                    <HStack spacing={2} color="gray.600">
-                        <FiUser />
-                        <Text>{meProfile.nombreCompleto || meProfile.username}</Text>
-                    </HStack>
-                )}
+                <HStack justify="space-between" align="start">
+                    <Box>
+                        <Heading size="lg" mb={2}>Panel de Area Operativa</Heading>
+                        {meProfile && (
+                            <HStack spacing={2} color="gray.600">
+                                <FiUser />
+                                <Text>{meProfile.nombreCompleto || meProfile.username}</Text>
+                            </HStack>
+                        )}
+                    </Box>
+                    <Button
+                        colorScheme="red"
+                        variant="outline"
+                        leftIcon={<FiLogOut />}
+                        onClick={logout}
+                    >
+                        Cerrar Sesión
+                    </Button>
+                </HStack>
             </Box>
 
             {/* Estadisticas */}

@@ -10,6 +10,12 @@ export interface AreaOperativa {
     } | null;
 }
 
+export const ALMACEN_GENERAL_AREA_ID = -1;
+
+export function isAlmacenGeneralArea(area: Pick<AreaOperativa, 'areaId'> | null | undefined): boolean {
+    return area?.areaId === ALMACEN_GENERAL_AREA_ID;
+}
+
 export type SearchType = 'NOMBRE' | 'RESPONSABLE' | 'ID';
 
 export interface SearchAreaOperativaDTO {

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
+    Alert,
+    AlertIcon,
     Box,
     Button,
     FormControl,
@@ -28,7 +30,7 @@ import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import { fetchUserAssignmentStatus } from '../../../api/userAssignmentStatus.ts';
 import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
 import { User } from '../../Usuarios/GestionUsuarios/types';
-import { AreaOperativa, UpdateAreaOperativaDTO } from './types';
+import { AreaOperativa, isAlmacenGeneralArea, UpdateAreaOperativaDTO } from './types';
 
 const endpoints = new EndPointsURL();
 
@@ -58,8 +60,12 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
     }, [isOpen]);
 
     if (!area) return null;
+    const isSpecialSystemArea = isAlmacenGeneralArea(area);
 
     const enterEditMode = () => {
+        if (isSpecialSystemArea) {
+            return;
+        }
         setEditNombre(area.nombre);
         setEditDescripcion(area.descripcion || '');
         setEditResponsable(
@@ -119,6 +125,7 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
     };
 
     const handleSave = async () => {
+        if (isSpecialSystemArea) return;
         if (!canSave || !editResponsable) return;
 
         setIsSaving(true);
@@ -169,6 +176,12 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
                 <ModalCloseButton isDisabled={isSaving} />
                 <ModalBody>
                     <VStack align="stretch" spacing={4}>
+                        {isSpecialSystemArea && (
+                            <Alert status="info" borderRadius="md">
+                                <AlertIcon />
+                                Almacen General es un area especial del sistema y solo puede consultarse desde este modulo.
+                            </Alert>
+                        )}
                         <Box>
                             <Text fontWeight="bold" mb={2} fontSize="md">Información del Área</Text>
 
@@ -272,13 +285,15 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
                         </>
                     ) : (
                         <>
-                            <Button
-                                colorScheme="yellow"
-                                leftIcon={<FiEdit />}
-                                onClick={enterEditMode}
-                            >
-                                Editar
-                            </Button>
+                            {!isSpecialSystemArea && (
+                                <Button
+                                    colorScheme="yellow"
+                                    leftIcon={<FiEdit />}
+                                    onClick={enterEditMode}
+                                >
+                                    Editar
+                                </Button>
+                            )}
                             <Button colorScheme="blue" onClick={onClose}>
                                 Cerrar
                             </Button>
@@ -287,11 +302,13 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
                 </ModalFooter>
             </ModalContent>
 
-            <UserGenericPicker
-                isOpen={isUserPickerOpen}
-                onClose={() => setIsUserPickerOpen(false)}
-                onSelectUser={handleSelectUser}
-            />
+            {!isSpecialSystemArea && (
+                <UserGenericPicker
+                    isOpen={isUserPickerOpen}
+                    onClose={() => setIsUserPickerOpen(false)}
+                    onSelectUser={handleSelectUser}
+                />
+            )}
         </Modal>
     );
 }
