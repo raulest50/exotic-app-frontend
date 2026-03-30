@@ -66,6 +66,13 @@ export default function ProcesoNode(props: NodeProps) {
                         </HStack>
                     )}
 
+                    {String(data.areaOperativaNombre || "").trim() !== "" && (
+                        <HStack w="full">
+                            <Icon mr="1em" ml="1em" as={BiRename} w="2em" h="2em" color="purple.500" />
+                            <Text fontWeight="bold">Area: {String(data.areaOperativaNombre)}</Text>
+                        </HStack>
+                    )}
+
                     {/* Setup Time Row */}
                     {String(data.setupTime || "").trim() !== "" && (
                         <HStack w="full">

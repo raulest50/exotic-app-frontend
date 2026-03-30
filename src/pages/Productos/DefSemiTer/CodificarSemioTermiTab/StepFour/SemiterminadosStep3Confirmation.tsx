@@ -1,24 +1,25 @@
 import { useState } from "react";
 import {
+    Box,
     Button,
     Flex,
-    Box,
     Heading,
-    useToast,
-    Text,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    VStack,
-    OrderedList,
     ListItem,
+    OrderedList,
+    Table,
+    Tbody,
+    Td,
+    Text,
+    Th,
+    Thead,
+    Tr,
+    VStack,
+    useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
 import EndPointsURL from "../../../../../api/EndPointsURL.tsx";
-import { ProductoSemiter, TIPOS_PRODUCTOS, ProcesoProduccionNode } from "../../../types.tsx";
+import { ProductoSemiter, TIPOS_PRODUCTOS } from "../../../types.tsx";
+import { getProcessNodeSummaries, toProductoManufacturingPayload } from "../../../manufacturingMapper.ts";
 
 interface Props {
     setActiveStep: (step: number) => void;
@@ -34,9 +35,8 @@ export default function SemiterminadosStep3Confirmation({ setActiveStep, semiote
     const handleGuardar = async () => {
         try {
             setLoading(true);
-            // Agregar este console.log para imprimir el payload completo
-            console.log('Payload enviado al backend para producto terminado/semiterminado:', JSON.stringify(semioter3, null, 2));
-            await axios.post(endPoints.save_producto, semioter3);
+            const payload = toProductoManufacturingPayload(semioter3);
+            await axios.post(endPoints.create_producto_manufacturing, payload);
             toast({
                 title: "Producto guardado",
                 status: "success",
@@ -44,7 +44,8 @@ export default function SemiterminadosStep3Confirmation({ setActiveStep, semiote
                 isClosable: true,
             });
             onReset();
-        } catch (e) {
+        } catch (error) {
+            console.error("Error guardando producto con manufacturing:", error);
             toast({
                 title: "Error",
                 description: "No se pudo guardar el producto",
@@ -57,9 +58,7 @@ export default function SemiterminadosStep3Confirmation({ setActiveStep, semiote
         }
     };
 
-    const handleAtras = () => {
-        setActiveStep(2);
-    };
+    const procesos = getProcessNodeSummaries(semioter3.procesoProduccionCompleto);
 
     return (
         <Flex direction="column" align="center" gap={4} w="full">
@@ -73,11 +72,10 @@ export default function SemiterminadosStep3Confirmation({ setActiveStep, semiote
                         <Text><b>Unidades:</b> {semioter3.tipoUnidades}</Text>
                         <Text><b>Cantidad por unidad:</b> {semioter3.cantidadUnidad}</Text>
                         <Text><b>Costo:</b> {semioter3.costo}</Text>
-                        <Text><b>Inventariable:</b> {semioter3.inventareable ? "Sí" : "No"}</Text>
-                        {semioter3.observaciones && (
-                            <Text><b>Observaciones:</b> {semioter3.observaciones}</Text>
-                        )}
+                        <Text><b>Inventariable:</b> {semioter3.inventareable ? "Si" : "No"}</Text>
+                        {semioter3.observaciones && <Text><b>Observaciones:</b> {semioter3.observaciones}</Text>}
                     </VStack>
+
                     {semioter3.insumos && semioter3.insumos.length > 0 && (
                         <Box w="full">
                             <Heading size="sm" mb={2}>Insumos</Heading>
@@ -101,24 +99,22 @@ export default function SemiterminadosStep3Confirmation({ setActiveStep, semiote
                             </Table>
                         </Box>
                     )}
+
                     {semioter3.procesoProduccionCompleto && (
                         <Box w="full">
-                            <Heading size="sm" mb={2}>Procesos de producción</Heading>
+                            <Heading size="sm" mb={2}>Procesos de produccion</Heading>
                             <OrderedList>
-                                {(semioter3.procesoProduccionCompleto.procesosProduccion
-                                    .filter(p => p.type === "procesoNode") as ProcesoProduccionNode[])
-                                    .map(p => {
-                                        const data = p.data as { nombreProceso?: string; label?: string };
-                                        return <ListItem key={p.id}>{data.nombreProceso ?? data.label}</ListItem>;
-                                    })}
+                                {procesos.map((nombreProceso, index) => (
+                                    <ListItem key={`${nombreProceso}-${index}`}>{nombreProceso}</ListItem>
+                                ))}
                             </OrderedList>
-                            <Text mt={2}><b>Rendimiento teórico:</b> {semioter3.procesoProduccionCompleto.rendimientoTeorico}</Text>
+                            <Text mt={2}><b>Rendimiento teorico:</b> {semioter3.procesoProduccionCompleto.rendimientoTeorico}</Text>
                         </Box>
                     )}
                 </VStack>
             </Box>
             <Flex gap={10}>
-                <Button variant="solid" colorScheme="yellow" onClick={handleAtras} isDisabled={loading}>
+                <Button variant="solid" colorScheme="yellow" onClick={() => setActiveStep(2)} isDisabled={loading}>
                     Atras
                 </Button>
                 <Button variant="solid" colorScheme="teal" onClick={handleGuardar} isLoading={loading}>

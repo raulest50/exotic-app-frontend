@@ -6,6 +6,9 @@ export default class EndPointsURL{
     public search_semi:string;
     public save_producto:string;
     public update_producto:string;
+    public create_producto_manufacturing: string;
+    public get_producto_manufacturing: string;
+    public update_producto_manufacturing: string;
     public force_delete_semiter: string;
     public mod_mnfacturing_semiter: string;
     public insumos_with_stock:string;
@@ -233,6 +236,12 @@ export default class EndPointsURL{
     // planeacion de produccion endpoints
     public planeacion_asociar_terminados: string;
 
+    // seguimiento orden area endpoints
+    public seguimiento_mis_ordenes_pendientes: string;
+    public seguimiento_ordenes_por_area: string;
+    public seguimiento_progreso_orden: string;
+    public seguimiento_reportar_completado: string;
+
     // BI — informes diarios
     public informes_diarios_ping: string;
 
@@ -299,6 +308,9 @@ export default class EndPointsURL{
         this.search_semi = `${domain}/${productos_res}/search_semi`;
         this.save_producto = `${domain}/${productos_res}/save`;
         this.update_producto = `${domain}/${productos_res}/{productoId}`;
+        this.create_producto_manufacturing = `${domain}/${productos_res}/manufacturing`;
+        this.get_producto_manufacturing = `${domain}/${productos_res}/manufacturing/{productoId}`;
+        this.update_producto_manufacturing = `${domain}/${productos_res}/manufacturing/{productoId}`;
         this.force_delete_semiter = `${domain}/${semiter_res}/force_deletion/{productoId}`;
         this.mod_mnfacturing_semiter = `${domain}/${semiter_res}/mod_mnfacturing_semiter`;
         this.insumos_with_stock = `${domain}/${productos_res}/{id}/insumos_with_stock`;
@@ -519,6 +531,13 @@ export default class EndPointsURL{
 
         // Planeacion de produccion endpoints
         this.planeacion_asociar_terminados = `${domain}/${planeacion_produccion_res}/asociar_terminados`;
+
+        // Seguimiento orden area endpoints
+        const seguimiento_orden_area_res = 'api/seguimiento-orden-area';
+        this.seguimiento_mis_ordenes_pendientes = `${domain}/${seguimiento_orden_area_res}/mis-ordenes-pendientes`;
+        this.seguimiento_ordenes_por_area = `${domain}/${seguimiento_orden_area_res}/area/{areaId}/pendientes`;
+        this.seguimiento_progreso_orden = `${domain}/${seguimiento_orden_area_res}/orden/{ordenId}/progreso`;
+        this.seguimiento_reportar_completado = `${domain}/${seguimiento_orden_area_res}/reportar-completado`;
 
         // BI — informes diarios
         this.informes_diarios_ping = `${domain}/${informes_diarios_res}/ping`;

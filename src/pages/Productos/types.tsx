@@ -1,24 +1,15 @@
 // Path: src/pages/Productos/types.tsx
 // Used in: src/pages/Productos/Basic/*; src/pages/Productos/DefProcesses/*; src/pages/Productos/DefSemiTer/*; src/pages/TransaccionesAlmacen/AjustesInventario/*; src/pages/Produccion/types.tsx y componentes relacionados
-// Summary: Tipos y constantes para productos, insumos y procesos productivos reutilizados en codificación, consultas y planeación.
+// Summary: Tipos y constantes para productos, insumos y procesos productivos reutilizados en codificacion, consultas y planeacion.
 
-export const TIPOS_PRODUCTOS = {materiaPrima: "M", semiTerminado:"S", terminado:"T"};
-export const UNIDADES = {L:"L", KG:"KG", U:"U", G:"G"};
-export const TIPOS_MATERIALES = {materiaPrima: 1, materialDeEmpaque: 2};
-export const IVA_VALUES = {'iva_0':0, 'iva_5':5,'iva_19':19, };
+import type { ActivoFijo } from "../ActivosFijos/types";
 
-import type {ActivoFijo} from '../ActivosFijos/types';
+export const TIPOS_PRODUCTOS = { materiaPrima: "M", semiTerminado: "S", terminado: "T" };
+export const UNIDADES = { L: "L", KG: "KG", U: "U", G: "G" };
+export const TIPOS_MATERIALES = { materiaPrima: 1, materialDeEmpaque: 2 };
+export const IVA_VALUES = { iva_0: 0, iva_5: 5, iva_19: 19 };
 
-/**
- * interfaces para la codificacion de materias primas
- */
-
-
-
-/**
- * para uso principalmente en step 2 creacion de semiterminado o temrinado
- */
-export interface Producto{
+export interface Producto {
     productoId: string;
     tipo_producto: string;
     nombre: string;
@@ -29,39 +20,26 @@ export interface Producto{
     cantidadUnidad: string;
     fechaCreacion?: string;
     ivaPercentual?: number;
-    prefijoLote?: string; // solo producto terminado; prefijo de lote unico
+    prefijoLote?: string;
 }
 
-export interface Material extends Producto{
+export interface Material extends Producto {
     fichaTecnicaUrl?: string;
-    tipoMaterial?: number; // 1: materia prima, 2: material de empaque
-    /** -1: sin alertas de reorden; 0: sin umbral definido; > 0: alertar si stock <= valor */
+    tipoMaterial?: number;
     puntoReorden?: number;
 }
 
 export interface Insumo {
     cantidadRequerida: number;
     producto: Producto;
-    subtotal?: number; // this is not part of the model at backend, but useful for frontend
+    subtotal?: number;
 }
 
-
-/**
- * para usar exclusivamente en la bandeja de seleccion de insumos.
- */
-export interface Semiterminado extends Producto{
-    insumos: Insumo[]
+export interface Semiterminado extends Producto {
+    insumos: Insumo[];
 }
 
-
-
-
-/**
- * Interfaces usadas principalmente aunque no necesariamente de manera exclusiva
- * en el feuture de ProcesDesigner
- */
-
-export interface Node{
+export interface Node {
     Id: number;
     type: string;
     localId: string;
@@ -78,87 +56,173 @@ export interface ProcesoNode extends Node {
     descripcionSalida: string;
 }
 
-export interface ProcesoProduccion{
+export interface ProcesoProduccion {
     procesoId: number;
     procesoNodes: ProcesoNode[];
     materiaPrimaNodes: Node[];
     targetNode: Node;
 }
 
-export interface ProcesoProduccionNode {
-    id: string;
-    data: unknown;
-    type?: string;
-    targetIds: string[];
+export interface AreaOperativaRef {
+    areaId: number;
+    nombre: string;
+    descripcion?: string;
+    responsableArea?: any;
+}
+
+export type ProcesoFabricacionNodeType = "INSUMO" | "PROCESO" | "TARGET";
+
+export interface ProcesoFabricacionNodoBase {
+    id?: number;
+    nodeType: ProcesoFabricacionNodeType;
+    frontendId: string;
+    posicionX: number;
+    posicionY: number;
+    label?: string;
+}
+
+export interface NodoInsumoDTO extends ProcesoFabricacionNodoBase {
+    nodeType: "INSUMO";
+    insumoId?: number;
+    inputProductoId: string;
+}
+
+export interface NodoProcesoDTO extends ProcesoFabricacionNodoBase {
+    nodeType: "PROCESO";
+    procesoId: number;
+    procesoNombre?: string;
+    areaOperativaId: number;
+    areaOperativaNombre?: string;
+    setUpTime?: number;
+    model?: TimeModelType | string;
+    constantSeconds?: number;
+    throughputUnitsPerSec?: number;
+    secondsPerUnit?: number;
+    secondsPerBatch?: number;
+    batchSize?: number;
+}
+
+export interface NodoTargetDTO extends ProcesoFabricacionNodoBase {
+    nodeType: "TARGET";
+}
+
+export type ProcesoFabricacionNodoDTO = NodoInsumoDTO | NodoProcesoDTO | NodoTargetDTO;
+
+export interface ProcesoFabricacionEdgeDTO {
+    id?: number;
+    frontendId: string;
+    sourceFrontendId: string;
+    targetFrontendId: string;
 }
 
 export interface ProcesoDiseñado {
-    procesosProduccion: ProcesoProduccionNode[];
+    nodes: ProcesoFabricacionNodoDTO[];
+    edges: ProcesoFabricacionEdgeDTO[];
 }
 
 export interface ProcesoProduccionCompleto extends ProcesoDiseñado {
+    id?: number;
     rendimientoTeorico: number;
 }
 
-/**
- * se usa en el tab de codificacion de producto terminado o semiterminado
- */
 export interface ProductoSemiter {
     productoId: string;
     nombre: string;
     observaciones?: string;
-    costo?: string; // se determina a al momento de seleccinoar los insumos - step 2
-    insumos?: Insumo[]; // se determina tambien en - step 2
+    costo?: string;
+    insumos?: Insumo[];
     tipoUnidades: string;
     cantidadUnidad: string;
     tipo_producto: string;
-    procesoProduccionCompleto?: ProcesoProduccionCompleto; // se determina a la hora de definir el proceso - step 3
-    categoria?: Categoria; // solo se usa para terminado, por ello es opcional
-    inventareable?: boolean; // true para terminados, false para semiterminados
+    procesoProduccionCompleto?: ProcesoProduccionCompleto;
+    categoria?: Categoria;
+    inventareable?: boolean;
     casePack?: CasePack;
-    prefijoLote?: string; // prefijo de lote para producto terminado (unico)
+    prefijoLote?: string;
+    ivaPercentual?: number;
+}
+
+export interface CasePackInsumo {
+    id?: number;
+    material: Pick<Material, "productoId" | "nombre" | "tipoUnidades" | "tipoMaterial">;
+    cantidad: number;
+    uom?: string;
 }
 
 export interface CasePack {
     id?: number;
-
-    /** Número de unidades EACH por caja (CASE). Ej: 24 */
     unitsPerCase: number;
-
-    /** ITF-14 / EAN-14 del CASE */
     ean14?: string;
-
-    /** Dimensiones del CASE (útiles para WMS / envíos) */
     largoCm?: number;
     anchoCm?: number;
     altoCm?: number;
-
-    /** Peso bruto del CASE */
     grossWeightKg?: number;
-
-    /**
-     * Indica si el despacho por defecto es por caja
-     * (no fuerza lógica de negocio)
-     */
     defaultForShipping?: boolean;
-
-    /** Insumos de empaque asociados al CASE */
-    insumosEmpaque?: Insumo[];
+    insumosEmpaque?: CasePackInsumo[];
 }
 
+export interface Categoria {
+    categoriaId: number;
+    categoriaNombre: string;
+    categoriaDescripcion: string;
+    loteSize?: number;
+}
 
-export interface Categoria{
-     categoriaId: number;
-     categoriaNombre: string;
-     categoriaDescripcion: string;
-     loteSize?: number;
+export interface ProductoManufacturingInsumoDTO {
+    insumoId?: number;
+    productoId: string;
+    productoNombre?: string;
+    costoUnitario?: number;
+    tipoUnidades?: string;
+    cantidadRequerida: number;
+    subtotal?: number;
+}
+
+export interface ProductoManufacturingInsumoEmpaqueDTO {
+    id?: number;
+    materialId: string;
+    materialNombre?: string;
+    cantidad: number;
+    uom?: string;
+}
+
+export interface ProductoManufacturingCasePackDTO {
+    id?: number;
+    unitsPerCase: number;
+    ean14?: string;
+    largoCm?: number;
+    anchoCm?: number;
+    altoCm?: number;
+    grossWeightKg?: number;
+    defaultForShipping?: boolean;
+    insumosEmpaque?: ProductoManufacturingInsumoEmpaqueDTO[];
+}
+
+export interface ProductoManufacturingDTO {
+    productoId: string;
+    tipoProducto: string;
+    nombre: string;
+    observaciones?: string;
+    costo?: number;
+    ivaPercentual?: number;
+    tipoUnidades: string;
+    cantidadUnidad: number;
+    inventareable?: boolean;
+    categoriaId?: number;
+    categoriaNombre?: string;
+    status?: number;
+    fotoUrl?: string;
+    prefijoLote?: string;
+    insumos: ProductoManufacturingInsumoDTO[];
+    casePack?: ProductoManufacturingCasePackDTO;
+    procesoProduccionCompleto?: ProcesoProduccionCompleto;
 }
 
 export interface RecursoProduccion {
     id?: number;
     nombre: string;
     descripcion: string;
-    cantidad?: number; // Nuevo campo para la cantidad requerida
+    cantidad?: number;
     capacidadTotal?: number;
     cantidadDisponible?: number;
     capacidadPorHora?: number;
@@ -179,15 +243,11 @@ export interface ProcesoProduccionEntity {
     nombre: string;
     recursosRequeridos: RecursoProduccion[];
     setUpTime: number;
-    nivelAcceso?: number; // Define qué usuarios pueden ver este proceso según su nivel de acceso
-
-    // Nuevo modelo de tiempo
+    nivelAcceso?: number;
     model: TimeModelType;
-
-    // Campos específicos para cada modelo
-    constantSeconds?: number;        // Para CONSTANT
-    throughputUnitsPerSec?: number;  // Para THROUGHPUT_RATE
-    secondsPerUnit?: number;         // Para PER_UNIT
-    secondsPerBatch?: number;        // Para PER_BATCH
-    batchSize?: number;              // Para PER_BATCH
+    constantSeconds?: number;
+    throughputUnitsPerSec?: number;
+    secondsPerUnit?: number;
+    secondsPerBatch?: number;
+    batchSize?: number;
 }

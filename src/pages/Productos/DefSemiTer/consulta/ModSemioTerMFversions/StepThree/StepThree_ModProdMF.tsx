@@ -1,49 +1,14 @@
-import {ProductoSemiter, ProcesoDiseñado, ProcesoProduccionCompleto, TIPOS_PRODUCTOS} from "../../../../types.tsx";
+import { useMemo, useState } from "react";
+import { Box, Button, Flex, FormControl, FormLabel, HStack } from "@chakra-ui/react";
 import ProcessDesigner from "../../../../DefProcesses/CreadorProcesos/ProcessDesigner.tsx";
-import { 
-    Button, 
-    Flex, 
-    FormControl, 
-    FormLabel, 
-    NumberInput, 
-    NumberInputField,
-    InputGroup,
-    Input,
-    InputRightElement,
-    IconButton,
-    HStack,
-    Box
-} from "@chakra-ui/react";
-import { SearchIcon } from '@chakra-ui/icons';
-import { useEffect, useState } from "react";
-import AreaPickerGeneric from "../../../../../../components/Pickers/AreaPickerGeneric/AreaPickerGeneric.tsx";
 import PackagingTerminadoDefiner from "./PackagingTerminadoDefiner.tsx";
-
-// Interface for AreaProduccion based on the backend model
-interface AreaProduccion {
-    areaId: number;
-    nombre: string;
-    descripcion: string;
-    responsableArea?: any;
-}
-
-// Interface for CasePack
-interface CasePack {
-    id?: number;
-    unitsPerCase: number;
-    ean14?: string;
-    largoCm?: number;
-    anchoCm?: number;
-    altoCm?: number;
-    grossWeightKg?: number;
-    insumosEmpaque: InsumoEmpaque[];
-}
-
-interface InsumoEmpaque {
-    id?: number;
-    material: any;
-    cantidad: number;
-}
+import CustomDecimalInput from "../../../../../../components/CustomDecimalInput/CustomDecimalInput.tsx";
+import {
+    CasePack,
+    ProductoSemiter,
+    ProcesoProduccionCompleto,
+    TIPOS_PRODUCTOS,
+} from "../../../../types.tsx";
 
 interface Props {
     setActiveStep: (step: number) => void;
@@ -52,128 +17,54 @@ interface Props {
 }
 
 export default function StepThree_ModProdMF({ setActiveStep, semioter2, setSemioter3 }: Props) {
-    // Local state to store whether the process definition is valid.
+    const procesoInicial = useMemo<ProcesoProduccionCompleto>(
+        () =>
+            semioter2.procesoProduccionCompleto ?? {
+                rendimientoTeorico: 0,
+                nodes: [],
+                edges: [],
+            },
+        [semioter2.procesoProduccionCompleto]
+    );
+
     const [isProcessValid, setIsProcessValid] = useState(false);
-    const [rendimientoTeorico, setRendimientoTeorico] = useState<number>(0);
-    const [proceso, setProceso] = useState<ProcesoDiseñado>({ procesosProduccion: [] });
-
-    // State for area picker
-    const [isAreaPickerOpen, setIsAreaPickerOpen] = useState(false);
-    const [selectedArea, setSelectedArea] = useState<AreaProduccion | null>(null);
-
-    // State for packaging definer
+    const [rendimientoTeorico, setRendimientoTeorico] = useState<number>(procesoInicial.rendimientoTeorico ?? 0);
+    const [proceso, setProceso] = useState<ProcesoProduccionCompleto>(procesoInicial);
     const [isPackagingDefinerOpen, setIsPackagingDefinerOpen] = useState(false);
-    const [casePack, setCasePack] = useState<CasePack | null>(null);
+    const [casePack, setCasePack] = useState<CasePack | undefined>(semioter2.casePack);
 
-    // Check if we're creating a Terminado
     const isTerminado = semioter2.tipo_producto === TIPOS_PRODUCTOS.terminado;
 
-    useEffect(() => {
-        const procesoCompleto = semioter2.procesoProduccionCompleto as ProcesoProduccionCompleto & { areaProduccion?: AreaProduccion };
-        if (procesoCompleto) {
-            const procesos = procesoCompleto.procesosProduccion ?? [];
-            setProceso({ procesosProduccion: procesos });
-            setRendimientoTeorico(procesoCompleto.rendimientoTeorico ?? 0);
-            setSelectedArea(procesoCompleto.areaProduccion ?? null);
-            setIsProcessValid(procesos.length > 0);
-        }
-
-        const productoConCasePack = semioter2 as ProductoSemiter & { casePack?: CasePack };
-        if (productoConCasePack.casePack) {
-            setCasePack(productoConCasePack.casePack);
-        } else {
-            setCasePack(null);
-        }
-    }, [semioter2]);
-
-    const handleOpenAreaPicker = () => {
-        setIsAreaPickerOpen(true);
-    };
-
-    const handleCloseAreaPicker = () => {
-        setIsAreaPickerOpen(false);
-    };
-
-    const handleSelectArea = (area: AreaProduccion) => {
-        setSelectedArea(area);
-    };
-
-    const handleOpenPackagingDefiner = () => {
-        setIsPackagingDefinerOpen(true);
-    };
-
-    const handleClosePackagingDefiner = () => {
-        setIsPackagingDefinerOpen(false);
-    };
-
-    const handleSavePackaging = (newCasePack: CasePack) => {
-        setCasePack(newCasePack);
-    };
-
     const onClickSiguiente = () => {
-        const procesoCompleto: ProcesoProduccionCompleto = {
-            ...proceso,
-            rendimientoTeorico,
-            areaProduccion: selectedArea || undefined,
-        };
-
-        // Add casePack to the semioter3 object if it's a Terminado
-        setSemioter3({ 
-            ...semioter2, 
-            procesoProduccionCompleto: procesoCompleto,
-            casePack: isTerminado ? casePack : undefined
+        setSemioter3({
+            ...semioter2,
+            procesoProduccionCompleto: {
+                ...proceso,
+                rendimientoTeorico,
+            },
+            casePack: isTerminado ? casePack : undefined,
         });
-
         setActiveStep(3);
-    };
-
-    const onClickAtras = () => {
-        setActiveStep(1);
     };
 
     return (
         <Flex direction="column" gap={4}>
             <HStack spacing={4} alignItems="flex-start">
                 <FormControl w="sm">
-                    <FormLabel>Rendimiento Teórico</FormLabel>
-                    <NumberInput
-                        min={0}
+                    <FormLabel>Rendimiento Teorico</FormLabel>
+                    <CustomDecimalInput
                         value={rendimientoTeorico}
-                        onChange={(_, value) => setRendimientoTeorico(value)}
-                    >
-                        <NumberInputField />
-                    </NumberInput>
+                        onChange={setRendimientoTeorico}
+                        min={0}
+                        placeholder="0.0000"
+                    />
                 </FormControl>
 
-                <FormControl w="sm">
-                    <FormLabel>Área de Producción</FormLabel>
-                    <InputGroup>
-                        <Input
-                            value={selectedArea ? `${selectedArea.nombre}` : ''}
-                            placeholder="Seleccione un área"
-                            isReadOnly
-                            bg="gray.50"
-                        />
-                        <InputRightElement>
-                            <IconButton
-                                aria-label="Buscar área"
-                                icon={<SearchIcon />}
-                                size="sm"
-                                onClick={handleOpenAreaPicker}
-                            />
-                        </InputRightElement>
-                    </InputGroup>
-                </FormControl>
-
-                {/* Packaging Definer Button - Only visible for Terminado */}
                 {isTerminado && (
                     <Box>
                         <FormLabel>Packaging</FormLabel>
-                        <Button
-                            colorScheme={casePack ? "green" : "blue"}
-                            onClick={handleOpenPackagingDefiner}
-                        >
-                            {casePack ? "Packaging Definido" : "Definir Packaging"}
+                        <Button colorScheme={casePack ? "green" : "blue"} onClick={() => setIsPackagingDefinerOpen(true)}>
+                            {casePack ? "Packaging definido" : "Definir packaging"}
                         </Button>
                     </Box>
                 )}
@@ -181,19 +72,17 @@ export default function StepThree_ModProdMF({ setActiveStep, semioter2, setSemio
 
             <ProcessDesigner
                 semioter2={semioter2}
-                onProcessChange={setProceso}
+                onProcessChange={(nuevoProceso) =>
+                    setProceso((prev) => ({
+                        ...prev,
+                        ...nuevoProceso,
+                    }))
+                }
                 onValidityChange={setIsProcessValid}
             />
 
-            <Flex
-                direction="row"
-                w="full"
-                gap={20}
-                justifyContent="center"
-                pr="2em"
-                pl="2em"
-            >
-                <Button colorScheme="yellow" variant="solid" onClick={onClickAtras} flex={2}>
+            <Flex direction="row" w="full" gap={20} justifyContent="center" pr="2em" pl="2em">
+                <Button colorScheme="yellow" variant="solid" onClick={() => setActiveStep(1)} flex={2}>
                     Volver a insumos
                 </Button>
 
@@ -202,27 +91,16 @@ export default function StepThree_ModProdMF({ setActiveStep, semioter2, setSemio
                     variant="solid"
                     onClick={onClickSiguiente}
                     flex={2}
-                    isDisabled={
-                        !isProcessValid ||
-                        rendimientoTeorico <= 0 ||
-                        !selectedArea ||
-                        (isTerminado && !casePack) // Require casePack for Terminado
-                    }
+                    isDisabled={!isProcessValid || rendimientoTeorico <= 0 || (isTerminado && !casePack)}
                 >
-                    Continuar con confirmación
+                    Continuar con confirmacion
                 </Button>
             </Flex>
 
-            <AreaPickerGeneric
-                isOpen={isAreaPickerOpen}
-                onClose={handleCloseAreaPicker}
-                onSelectArea={handleSelectArea}
-            />
-
             <PackagingTerminadoDefiner
                 isOpen={isPackagingDefinerOpen}
-                onClose={handleClosePackagingDefiner}
-                onSave={handleSavePackaging}
+                onClose={() => setIsPackagingDefinerOpen(false)}
+                onSave={(nuevoCasePack) => setCasePack(nuevoCasePack)}
                 initialCasePack={casePack}
             />
         </Flex>

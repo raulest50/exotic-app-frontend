@@ -1,8 +1,11 @@
 import { ArrowBackIcon } from "@chakra-ui/icons";
-import { Box, Button, Flex, Heading } from "@chakra-ui/react";
-import { useMemo } from "react";
+import { Box, Button, Flex, Heading, Spinner, Text, useToast } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import ModificarSemiTerMFWizard from "./ModSemioTerMFversions/ModificarSemiTerMFWizard.tsx";
-import { Producto, ProductoSemiter } from "../../types.tsx";
+import { Producto, ProductoSemiter, ProductoManufacturingDTO } from "../../types.tsx";
+import EndPointsURL from "../../../../api/EndPointsURL.tsx";
+import { fromProductoManufacturingResponse } from "../../manufacturingMapper.ts";
 
 type Props = {
     producto: Producto;
@@ -11,17 +14,44 @@ type Props = {
 };
 
 export default function ModSemiTerMFWizard({ producto, onClose, refreshSearch }: Props) {
-    const productoSemiter = useMemo<ProductoSemiter>(() => ({
-        ...producto,
-        costo: producto.costo?.toString(),
-        insumos: (producto as ProductoSemiter).insumos,
-    }), [producto]);
+    const endPoints = new EndPointsURL();
+    const toast = useToast();
+    const [productoSemiter, setProductoSemiter] = useState<ProductoSemiter | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchProductoManufacturing = async () => {
+            try {
+                setLoading(true);
+                const url = endPoints.get_producto_manufacturing.replace("{productoId}", encodeURIComponent(producto.productoId));
+                const response = await axios.get<ProductoManufacturingDTO>(url);
+                setProductoSemiter(fromProductoManufacturingResponse(response.data));
+            } catch (error) {
+                console.error("Error cargando manufacturing del producto:", error);
+                toast({
+                    title: "Error",
+                    description: "No se pudo cargar el metodo de fabricacion del producto.",
+                    status: "error",
+                    duration: 4000,
+                    isClosable: true,
+                });
+                setProductoSemiter({
+                    ...producto,
+                    costo: String(producto.costo ?? 0),
+                    cantidadUnidad: producto.cantidadUnidad,
+                    tipo_producto: producto.tipo_producto,
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProductoManufacturing();
+    }, [endPoints.get_producto_manufacturing, producto, toast]);
 
     const handleBack = () => {
         onClose();
-        if (typeof refreshSearch === "function") {
-            refreshSearch();
-        }
+        refreshSearch?.();
     };
 
     return (
@@ -33,7 +63,17 @@ export default function ModSemiTerMFWizard({ producto, onClose, refreshSearch }:
                 <Heading size="lg">Modificar Semi/Terminado</Heading>
                 <Box />
             </Flex>
-            <ModificarSemiTerMFWizard producto={productoSemiter} onClose={onClose} refreshSearch={refreshSearch} />
+
+            {loading && (
+                <Flex direction="column" align="center" gap={3} py={10}>
+                    <Spinner size="lg" color="teal.500" />
+                    <Text>Cargando metodo de fabricacion...</Text>
+                </Flex>
+            )}
+
+            {!loading && productoSemiter && (
+                <ModificarSemiTerMFWizard producto={productoSemiter} onClose={onClose} refreshSearch={refreshSearch} />
+            )}
         </Box>
     );
 }

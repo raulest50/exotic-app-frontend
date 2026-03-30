@@ -53,12 +53,8 @@ interface AreaProduccion {
 
 type Data4PDFResponse = {
     terminado?: {
-        insumos?: Data4PDFInsumoResponse[]; // (se deja, pero NO lo usamos para la tabla 1)
-        procesoProduccionCompleto?: {
-            areaProduccion?: AreaProduccion;
-        };
+        insumos?: Data4PDFInsumoResponse[];
     };
-    // NUEVO: el backend ya separa
     materials?: Data4PDFInsumoResponse[];
     semiterminados?: Data4PDFInsumoResponse[];
     areasProduccion?: AreaProduccion[];
@@ -348,17 +344,9 @@ export default class ODP_PDF_Generator {
             const data = this.buildTreeFromPayload(response.data);
 
             // Áreas de producción (igual que antes)
-            const areasProduccion: AreaProduccion[] = [];
-            const terminadoArea = response.data?.terminado?.procesoProduccionCompleto?.areaProduccion;
-            if (terminadoArea && typeof terminadoArea === "object" && "areaId" in terminadoArea) {
-                areasProduccion.push(terminadoArea as AreaProduccion);
-            }
-            const areasFromRoot = Array.isArray(response.data?.areasProduccion) ? response.data!.areasProduccion! : [];
-            for (const a of areasFromRoot) {
-                if (!areasProduccion.some((x) => x.areaId === a.areaId)) {
-                    areasProduccion.push(a);
-                }
-            }
+            const areasProduccion = Array.isArray(response.data?.areasProduccion)
+                ? response.data.areasProduccion
+                : [];
 
             return { data, areasProduccion };
         } catch (error) {
