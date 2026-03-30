@@ -11,22 +11,15 @@ import {
     InputGroup,
     InputRightElement,
     IconButton,
-    Text,
     FormErrorMessage,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import { SearchIcon } from '@chakra-ui/icons';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
+import { fetchUserAssignmentStatus } from '../../../api/userAssignmentStatus.ts';
 import { input_style } from '../../../styles/styles_general.tsx';
 import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
 import { User } from '../../Usuarios/GestionUsuarios/types';
-
-interface AreaProduccion {
-    areaId?: number;
-    nombre: string;
-    descripcion: string;
-    responsableArea?: User;
-}
 
 interface AreaProduccionDTO {
     nombre: string;
@@ -41,6 +34,7 @@ function CrearAreaProduccionTab() {
     const [isUserPickerOpen, setIsUserPickerOpen] = useState(false);
     const [errors, setErrors] = useState<{ nombre?: string, responsable?: string }>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isValidatingResponsable, setIsValidatingResponsable] = useState(false);
 
     const toast = useToast();
     const endPoints = new EndPointsURL();
@@ -64,6 +58,7 @@ function CrearAreaProduccionTab() {
         setNombre('');
         setDescripcion('');
         setResponsable(null);
+        setIsValidatingResponsable(false);
         setErrors({});
     };
 
@@ -88,7 +83,7 @@ function CrearAreaProduccionTab() {
         };
 
         try {
-            const response = await axios.post(endPoints.crear_area_produccion, areaProduccionDTO);
+            await axios.post(endPoints.crear_area_produccion, areaProduccionDTO);
             
             toast({
                 title: 'Área de producción creada',
@@ -124,10 +119,40 @@ function CrearAreaProduccionTab() {
         setIsUserPickerOpen(false);
     };
 
-    const handleSelectUser = (user: User) => {
-        setResponsable(user);
-        if (errors.responsable) {
-            setErrors(prev => ({ ...prev, responsable: undefined }));
+    const handleSelectUser = async (user: User) => {
+        setIsValidatingResponsable(true);
+        try {
+            const status = await fetchUserAssignmentStatus(user.id);
+            if (!status.canBeAreaResponsable) {
+                const description = status.hasModuloAccesos
+                    ? 'El usuario ya tiene accesos a modulos y no puede ser responsable de un area operativa.'
+                    : `El usuario ya es responsable del area ${status.areaResponsableNombre ?? ''}.`;
+                setErrors(prev => ({ ...prev, responsable: description }));
+                setResponsable(null);
+                toast({
+                    title: 'Usuario no compatible',
+                    description,
+                    status: 'warning',
+                    duration: 4000,
+                    isClosable: true,
+                });
+                return;
+            }
+
+            setResponsable(user);
+            if (errors.responsable) {
+                setErrors(prev => ({ ...prev, responsable: undefined }));
+            }
+        } catch {
+            toast({
+                title: 'Error',
+                description: 'No se pudo validar la compatibilidad del usuario seleccionado.',
+                status: 'error',
+                duration: 4000,
+                isClosable: true,
+            });
+        } finally {
+            setIsValidatingResponsable(false);
         }
     };
 
@@ -178,6 +203,7 @@ function CrearAreaProduccionTab() {
                                 icon={<SearchIcon />}
                                 size="sm"
                                 onClick={handleOpenUserPicker}
+                                isDisabled={isSubmitting || isValidatingResponsable}
                             />
                         </InputRightElement>
                     </InputGroup>
@@ -187,8 +213,8 @@ function CrearAreaProduccionTab() {
                 <Button 
                     colorScheme="teal" 
                     onClick={handleSubmit} 
-                    isLoading={isSubmitting}
-                    isDisabled={!isFormValid || isSubmitting}
+                    isLoading={isSubmitting || isValidatingResponsable}
+                    isDisabled={!isFormValid || isSubmitting || isValidatingResponsable}
                 >
                     Guardar
                 </Button>
@@ -196,7 +222,7 @@ function CrearAreaProduccionTab() {
                 <Button 
                     colorScheme="orange" 
                     onClick={clearFields}
-                    isDisabled={isSubmitting}
+                    isDisabled={isSubmitting || isValidatingResponsable}
                 >
                     Limpiar
                 </Button>

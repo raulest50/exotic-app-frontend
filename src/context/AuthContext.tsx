@@ -8,6 +8,7 @@ import {
     type MeResponseRaw,
     type User,
 } from "../api/UserApi";
+import type { AreaResponsableSummary } from "../api/userAssignmentStatus.ts";
 import { buildAccesosPorModulo } from "../auth/accessHelpers.ts";
 import type { ModuloAccesoFE } from "../pages/Usuarios/GestionUsuarios/types.tsx";
 import { Modulo } from "../pages/Usuarios/GestionUsuarios/types.tsx";
@@ -23,6 +24,8 @@ type AuthContextType = {
     accesosPorModulo: Partial<Record<Modulo, ModuloAccesoFE>>;
     meProfile: User | null;
     isMasterLike: boolean;
+    isAreaResponsable: boolean;
+    areaResponsable: AreaResponsableSummary | null;
     accesosReady: boolean;
     login: (username: string, password: string) => Promise<LoginResponse>;
     logout: () => void;
@@ -35,6 +38,8 @@ const AuthContext = createContext<AuthContextType>({
     accesosPorModulo: {},
     meProfile: null,
     isMasterLike: false,
+    isAreaResponsable: false,
+    areaResponsable: null,
     accesosReady: true,
     login: async () => {
         throw new Error('login function not implemented');
@@ -50,6 +55,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [moduloAccesos, setModuloAccesos] = useState<ModuloAccesoFE[]>([]);
     const [meProfile, setMeProfile] = useState<User | null>(null);
     const [isMasterLike, setIsMasterLike] = useState(false);
+    const [isAreaResponsable, setIsAreaResponsable] = useState(false);
+    const [areaResponsable, setAreaResponsable] = useState<AreaResponsableSummary | null>(null);
     const [accesosReady, setAccesosReady] = useState(() => !localStorage.getItem('authToken'));
 
     const accesosPorModulo = useMemo(
@@ -67,11 +74,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setModuloAccesos(normalizeModuloAccesosFromMe(data.accesos));
             setMeProfile(data.user ?? null);
             setIsMasterLike(Boolean(data.isMasterLike));
+            setIsAreaResponsable(Boolean(data.isAreaResponsable));
+            setAreaResponsable(data.areaResponsable ?? null);
         } catch {
             setUser(null);
             setModuloAccesos([]);
             setMeProfile(null);
             setIsMasterLike(false);
+            setIsAreaResponsable(false);
+            setAreaResponsable(null);
         } finally {
             setAccesosReady(true);
         }
@@ -95,6 +106,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setModuloAccesos([]);
                 setMeProfile(null);
                 setIsMasterLike(false);
+                setIsAreaResponsable(false);
+                setAreaResponsable(null);
                 setAccesosReady(true);
             }
         })();
@@ -136,6 +149,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setModuloAccesos([]);
         setMeProfile(null);
         setIsMasterLike(false);
+        setIsAreaResponsable(false);
+        setAreaResponsable(null);
         setAccesosReady(true);
         clearUserCache();
         delete axios.defaults.headers.common['Authorization'];
@@ -150,6 +165,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 accesosPorModulo,
                 meProfile,
                 isMasterLike,
+                isAreaResponsable,
+                areaResponsable,
                 accesosReady,
                 login,
                 logout,

@@ -157,6 +157,7 @@ export default class EndPointsURL{
     public activate_user: string;
     public update_user_info: string;
     public update_user_accesos: string;
+    public user_assignment_status: string;
 
     public search_user_by_dto: string;
 
@@ -445,6 +446,7 @@ export default class EndPointsURL{
         this.activate_user = `${domain}/${user_management_res}/{userId}/activate`;
         this.update_user_info = `${domain}/${user_management_res}/{userId}/info`;
         this.update_user_accesos = `${domain}/${user_management_res}/{userId}/accesos`;
+        this.user_assignment_status = `${domain}/${user_management_res}/{userId}/assignment-status`;
 
         this.search_user_by_dto = `${domain}/${user_management_res}/search_by_dto`;
 

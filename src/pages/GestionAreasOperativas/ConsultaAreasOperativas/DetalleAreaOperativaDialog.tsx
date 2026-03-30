@@ -4,6 +4,7 @@ import {
     Button,
     FormControl,
     FormLabel,
+    FormErrorMessage,
     IconButton,
     Input,
     InputGroup,
@@ -24,6 +25,7 @@ import { FiEdit, FiSave } from 'react-icons/fi';
 import { SearchIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
+import { fetchUserAssignmentStatus } from '../../../api/userAssignmentStatus.ts';
 import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
 import { User } from '../../Usuarios/GestionUsuarios/types';
 import { AreaOperativa, UpdateAreaOperativaDTO } from './types';
@@ -46,6 +48,8 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
     const [editResponsable, setEditResponsable] = useState<User | null>(null);
     const [isUserPickerOpen, setIsUserPickerOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isValidatingResponsable, setIsValidatingResponsable] = useState(false);
+    const [responsableError, setResponsableError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!isOpen) {
@@ -63,10 +67,12 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
                 ? { id: area.responsableArea.id, cedula: area.responsableArea.cedula, username: area.responsableArea.username, nombreCompleto: area.responsableArea.nombreCompleto } as User
                 : null,
         );
+        setResponsableError(null);
         setIsEditing(true);
     };
 
     const cancelEdit = () => {
+        setResponsableError(null);
         setIsEditing(false);
     };
 
@@ -76,7 +82,41 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
         editResponsable?.id !== area.responsableArea?.id;
 
     const isFormValid = editNombre.trim() !== '' && editResponsable !== null;
-    const canSave = isFormValid && hasChanges && !isSaving;
+    const canSave = isFormValid && hasChanges && !isSaving && !isValidatingResponsable && !responsableError;
+
+    const handleSelectUser = async (user: User) => {
+        setIsValidatingResponsable(true);
+        try {
+            const status = await fetchUserAssignmentStatus(user.id, area.areaId);
+            if (!status.canBeAreaResponsable) {
+                const message = status.hasModuloAccesos
+                    ? 'El usuario ya tiene accesos a modulos y no puede ser responsable de un area operativa.'
+                    : `El usuario ya es responsable del area ${status.areaResponsableNombre ?? ''}.`;
+                setResponsableError(message);
+                toast({
+                    title: 'Usuario no compatible',
+                    description: message,
+                    status: 'warning',
+                    duration: 4000,
+                    isClosable: true,
+                });
+                return;
+            }
+
+            setEditResponsable(user);
+            setResponsableError(null);
+        } catch {
+            toast({
+                title: 'Error',
+                description: 'No se pudo validar la compatibilidad del usuario seleccionado.',
+                status: 'error',
+                duration: 4000,
+                isClosable: true,
+            });
+        } finally {
+            setIsValidatingResponsable(false);
+        }
+    };
 
     const handleSave = async () => {
         if (!canSave || !editResponsable) return;
@@ -173,7 +213,7 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
                             <Text fontWeight="bold" mb={2} fontSize="md">Responsable</Text>
 
                             {isEditing ? (
-                                <FormControl isRequired>
+                                <FormControl isRequired isInvalid={Boolean(responsableError)}>
                                     <FormLabel>Responsable del Área</FormLabel>
                                     <InputGroup>
                                         <Input
@@ -188,9 +228,11 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
                                                 icon={<SearchIcon />}
                                                 size="sm"
                                                 onClick={() => setIsUserPickerOpen(true)}
+                                                isDisabled={isSaving || isValidatingResponsable}
                                             />
                                         </InputRightElement>
                                     </InputGroup>
+                                    {responsableError && <FormErrorMessage>{responsableError}</FormErrorMessage>}
                                 </FormControl>
                             ) : area.responsableArea ? (
                                 <SimpleGrid columns={2} spacing={2}>
@@ -221,7 +263,7 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
                                 colorScheme="teal"
                                 leftIcon={<FiSave />}
                                 onClick={handleSave}
-                                isLoading={isSaving}
+                                isLoading={isSaving || isValidatingResponsable}
                                 loadingText="Guardando"
                                 isDisabled={!canSave}
                             >
@@ -248,7 +290,7 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
             <UserGenericPicker
                 isOpen={isUserPickerOpen}
                 onClose={() => setIsUserPickerOpen(false)}
-                onSelectUser={(user: User) => setEditResponsable(user)}
+                onSelectUser={handleSelectUser}
             />
         </Modal>
     );

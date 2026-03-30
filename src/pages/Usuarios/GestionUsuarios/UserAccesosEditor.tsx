@@ -1,5 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+    Alert,
+    AlertIcon,
     AlertDialog,
     AlertDialogBody,
     AlertDialogContent,
@@ -31,6 +33,7 @@ import {
 import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
+import { fetchUserAssignmentStatus, type UserAssignmentStatus } from "../../../api/userAssignmentStatus.ts";
 import { tabsForModule } from "../../../auth/moduleTabDefinitions.ts";
 import { useAuth } from "../../../context/AuthContext.tsx";
 import { Modulo, type User } from "./types.tsx";
@@ -70,6 +73,7 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
     );
     const [baselineSignature, setBaselineSignature] = useState(draftSignature(initialDraft));
     const [loadingUser, setLoadingUser] = useState(true);
+    const [assignmentStatus, setAssignmentStatus] = useState<UserAssignmentStatus | null>(null);
     const [saving, setSaving] = useState(false);
 
     const modules = useMemo(() => Object.values(Modulo), []);
@@ -89,18 +93,21 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
             const refreshed = data.find((candidate) => candidate.id === user.id);
             if (refreshed) {
                 applyFreshUser(refreshed);
+                setAssignmentStatus(await fetchUserAssignmentStatus(refreshed.id));
             } else {
                 applyFreshUser(user);
+                setAssignmentStatus(await fetchUserAssignmentStatus(user.id));
             }
         } catch {
             toast({
                 title: "Error",
-                description: "No se pudo actualizar la informacion del usuario.",
+                description: "No se pudo actualizar la informacion del usuario o su estado operativo.",
                 status: "error",
                 duration: 4000,
                 isClosable: true,
             });
             applyFreshUser(user);
+            setAssignmentStatus(null);
         } finally {
             setLoadingUser(false);
         }
@@ -112,6 +119,7 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
 
     const payload = useMemo(() => serializeDraft(draft), [draft]);
     const isDirty = useMemo(() => draftSignature(draft) !== baselineSignature, [baselineSignature, draft]);
+    const permisosBloqueadosPorArea = assignmentStatus?.canReceiveModuloAccesos === false;
 
     const toggleExpanded = (modulo: Modulo) => {
         setExpandedModules((prev) => ({ ...prev, [modulo]: !prev[modulo] }));
@@ -185,6 +193,9 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
     };
 
     const handleSave = async () => {
+        if (permisosBloqueadosPorArea) {
+            return;
+        }
         setSaving(true);
         try {
             const { data } = await axios.put<User>(
@@ -223,6 +234,13 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
 
     return (
         <Box p={4}>
+            {permisosBloqueadosPorArea && (
+                <Alert status="warning" mb={4} borderRadius="md">
+                    <AlertIcon />
+                    Este usuario ya es responsable del area {assignmentStatus?.areaResponsableNombre ?? "operativa"} y por esa razon no puede recibir permisos de modulos.
+                </Alert>
+            )}
+
             <Flex justify="space-between" align="center" gap={4} wrap="wrap" mb={6}>
                 <Box>
                     <Text fontSize="2xl" fontWeight="bold">
@@ -241,7 +259,7 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                         colorScheme="blue"
                         onClick={handleSave}
                         isLoading={saving}
-                        isDisabled={!isDirty || loadingUser || saving}
+                        isDisabled={!isDirty || loadingUser || saving || permisosBloqueadosPorArea}
                     >
                         Guardar
                     </Button>
@@ -315,6 +333,7 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                         <Td onClick={(event) => event.stopPropagation()}>
                                                             <Switch
                                                                 isChecked={moduleRow.enabled}
+                                                                isDisabled={permisosBloqueadosPorArea}
                                                                 onChange={(event) =>
                                                                     setModuleEnabled(modulo, event.target.checked)
                                                                 }
@@ -342,7 +361,7 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                                     <Td>
                                                                         <Switch
                                                                             isChecked={tabRow.enabled}
-                                                                            isDisabled={!moduleRow.enabled}
+                                                                            isDisabled={!moduleRow.enabled || permisosBloqueadosPorArea}
                                                                             onChange={(event) =>
                                                                                 setTabEnabled(
                                                                                     modulo,
@@ -356,7 +375,7 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                                         <Select
                                                                             size="sm"
                                                                             value={tabRow.nivel}
-                                                                            isDisabled={!moduleRow.enabled || !tabRow.enabled}
+                                                                            isDisabled={!moduleRow.enabled || !tabRow.enabled || permisosBloqueadosPorArea}
                                                                             onChange={(event) =>
                                                                                 setTabNivel(
                                                                                     modulo,

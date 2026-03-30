@@ -9,15 +9,15 @@ import { Modulo } from "../pages/Usuarios/GestionUsuarios/types.tsx";
 import type { AccessSnapshot } from "./accessModel.ts";
 
 export function useAccesosReady() {
-    const { accesosReady, moduloAccesos, isMasterLike } = useAuth();
-    return { accesosReady, moduloAccesos, isMasterLike };
+    const { accesosReady, moduloAccesos, isMasterLike, isAreaResponsable, areaResponsable } = useAuth();
+    return { accesosReady, moduloAccesos, isMasterLike, isAreaResponsable, areaResponsable };
 }
 
 export function useAccessSnapshot(): AccessSnapshot {
-    const { moduloAccesos, isMasterLike } = useAuth();
+    const { moduloAccesos, isMasterLike, isAreaResponsable, areaResponsable } = useAuth();
     return useMemo(
-        () => ({ moduloAccesos, isMasterLike }),
-        [moduloAccesos, isMasterLike]
+        () => ({ moduloAccesos, isMasterLike, isAreaResponsable, areaResponsable }),
+        [moduloAccesos, isMasterLike, isAreaResponsable, areaResponsable]
     );
 }
 

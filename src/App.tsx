@@ -7,7 +7,6 @@ import EndPointsURL from './api/EndPointsURL'
 window.REACT_ROUTER_SILENT_DEPRECATIONS = true;
 
 import RootLayout from "./pages/RootLayout.tsx";
-import Home from "./pages/Home.tsx"
 import { NotificationsProvider } from "./context/NotificationsContext.tsx";
 import { MasterDirectivesProvider } from "./context/MasterDirectivesContext.tsx";
 import ProductosPage from './pages/Productos/ProductosPage.tsx'
@@ -20,6 +19,8 @@ import GestionAreasOperativasPage from "./pages/GestionAreasOperativas/GestionAr
 import ProveedoresPage from "./pages/Proveedores/ProveedoresPage.tsx";
 import ComprasPage from "./pages/Compras/ComprasPage.tsx";
 import AccessRoute from "./components/AccessRoute.tsx";
+import AppLanding from "./components/AppLanding.tsx";
+import AreaResponsableRoute from "./components/AreaResponsableRoute.tsx";
 import LoginPanel from "./pages/LoginPage/LoginPanel.tsx";
 import ResetPasswordPage from "./pages/LoginPage/ResetPasswordPage.tsx";
 import UsuariosPage from "./pages/Usuarios/UsuariosPage.tsx";
@@ -36,6 +37,7 @@ import MasterDirectivesPage from "./pages/MasterDirectives/MasterDirectivesPage.
 import CronogramaPage from "./pages/Cronograma/CronogramaPage.tsx";
 import OrganigramaPage from "./pages/Organigrama/OrganigramaPage.tsx";
 import TransaccionesAlmacenPage from "./pages/TransaccionesAlmacen/TransaccionesAlmacenPage.tsx";
+import AreaOperativaPanel from "./pages/AreaOperativaPanel/AreaOperativaPanel.tsx";
 import { EnvironmentBadge } from "./components/EnvironmentBadge.tsx";
 import { canAccessModule, moduleAccessRule } from "./auth/accessHelpers.ts";
 
@@ -53,9 +55,16 @@ const router = createBrowserRouter(
                 <Route
                     index
                     element={
-                        <AccessRoute>
-                            <Home />
-                        </AccessRoute>
+                        <AppLanding />
+                    }
+                />
+
+                <Route
+                    path="area-operativa"
+                    element={
+                        <AreaResponsableRoute>
+                            <AreaOperativaPanel />
+                        </AreaResponsableRoute>
                     }
                 />
 

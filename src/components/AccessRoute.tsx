@@ -10,7 +10,7 @@ type AccessRouteProps = {
 };
 
 const AccessRoute: React.FC<AccessRouteProps> = ({ children, accessRule }) => {
-    const { user, moduloAccesos, isMasterLike, accesosReady } = useAuth();
+    const { user, moduloAccesos, isMasterLike, isAreaResponsable, areaResponsable, accesosReady } = useAuth();
 
     if (!accesosReady) {
         return (
@@ -25,8 +25,12 @@ const AccessRoute: React.FC<AccessRouteProps> = ({ children, accessRule }) => {
         return <Navigate to="/login" replace />;
     }
 
-    if (accessRule && !accessRule({ isMasterLike, moduloAccesos })) {
-        return <div>403 Forbidden: No tienes acceso a este módulo.</div>;
+    if (isAreaResponsable) {
+        return <Navigate to="/area-operativa" replace />;
+    }
+
+    if (accessRule && !accessRule({ isMasterLike, isAreaResponsable, areaResponsable, moduloAccesos })) {
+        return <div>403 Forbidden: No tienes acceso a este modulo.</div>;
     }
 
     return children;

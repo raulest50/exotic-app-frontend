@@ -6,6 +6,7 @@
 
 import axios from 'axios';
 import EndPointsURL from './EndPointsURL';
+import type { AreaResponsableSummary } from './userAssignmentStatus.ts';
 import type { ModuloAccesoFE, TabAccesoFE } from '../pages/Usuarios/GestionUsuarios/types.tsx';
 
 export interface User {
@@ -24,6 +25,8 @@ export interface User {
 export interface MeResponseRaw {
     user: User;
     isMasterLike: boolean;
+    isAreaResponsable: boolean;
+    areaResponsable: AreaResponsableSummary | null;
     accesos: unknown;
 }
 
