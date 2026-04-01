@@ -1,34 +1,34 @@
-// src/components/SectionCard.tsx
 import {
+    Box,
+    Button,
     Card,
-    CardHeader,
     CardBody,
+    CardHeader,
+    Center,
     Heading,
     Icon,
     IconButton,
-    Popover,
-    PopoverTrigger,
-    PopoverContent,
-    PopoverBody,
-    PopoverArrow,
     Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
     ModalBody,
+    ModalContent,
     ModalFooter,
-    Button,
-    Text,
-    VStack,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    TableContainer,
+    ModalHeader,
+    ModalOverlay,
+    Popover,
+    PopoverArrow,
+    PopoverBody,
+    PopoverContent,
+    PopoverTrigger,
     Spinner,
-    Center,
+    Table,
+    TableContainer,
+    Tbody,
+    Td,
+    Text,
+    Th,
+    Thead,
+    Tr,
+    VStack,
     useColorModeValue,
 } from "@chakra-ui/react";
 import { IconType } from "react-icons";
@@ -36,41 +36,120 @@ import { Link as RouterLink, NavLink } from "react-router-dom";
 import { MdNotificationsActive } from "react-icons/md";
 import axios from "axios";
 import {
+    MaterialEnPuntoReordenConOcmDTO,
     MaterialEnPuntoReordenDTO,
     ModuleNotificationDTA,
-    PageMaterialEnPuntoReorden,
+    PuntoReordenEvaluacionResult,
 } from "../api/ModulesNotifications";
 import EndPointsURL from "../api/EndPointsURL";
 import { Modulo } from "../pages/Usuarios/GestionUsuarios/types.tsx";
-import { useState, useEffect } from "react";
-import BetterPagination from "./BetterPagination/BetterPagination";
+import { MouseEvent, useEffect, useState } from "react";
 
 interface SectionCardProps {
     name: string;
     icon: IconType;
     to: string;
-    /** Background color of the card */
     bgColor?: string;
-    /** Notification for this module */
     notification?: ModuleNotificationDTA;
 }
 
-function formatQty(v: number): string {
-    if (!Number.isFinite(v)) return "0";
-    if (v === Math.trunc(v)) return String(Math.trunc(v));
-    return String(v);
+function formatQty(value: number): string {
+    if (!Number.isFinite(value)) return "0";
+    if (value === Math.trunc(value)) return String(Math.trunc(value));
+    return String(value);
+}
+
+function formatFecha(fecha?: string | null): string {
+    if (!fecha) return "";
+    const parsed = new Date(fecha);
+    if (Number.isNaN(parsed.getTime())) return fecha;
+    return new Intl.DateTimeFormat("es-CO", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    }).format(parsed);
+}
+
+function renderMaterialBaseTable(rows: MaterialEnPuntoReordenDTO[]) {
+    return (
+        <TableContainer maxH="18rem" overflowY="auto">
+            <Table size="sm" variant="simple">
+                <Thead>
+                    <Tr>
+                        <Th>Codigo</Th>
+                        <Th>Nombre</Th>
+                        <Th>Tipo</Th>
+                        <Th isNumeric>Stock actual</Th>
+                        <Th isNumeric>Punto reorden</Th>
+                        <Th>Unidad</Th>
+                    </Tr>
+                </Thead>
+                <Tbody>
+                    {rows.map((row) => (
+                        <Tr key={row.productoId}>
+                            <Td>{row.productoId}</Td>
+                            <Td>{row.nombre}</Td>
+                            <Td>{row.tipoMaterialLabel}</Td>
+                            <Td isNumeric>{formatQty(row.stockActual)}</Td>
+                            <Td isNumeric>{formatQty(row.puntoReorden)}</Td>
+                            <Td>{row.tipoUnidades}</Td>
+                        </Tr>
+                    ))}
+                </Tbody>
+            </Table>
+        </TableContainer>
+    );
+}
+
+function renderMaterialConOcmTable(rows: MaterialEnPuntoReordenConOcmDTO[]) {
+    return (
+        <TableContainer maxH="18rem" overflowY="auto">
+            <Table size="sm" variant="simple">
+                <Thead>
+                    <Tr>
+                        <Th>Codigo</Th>
+                        <Th>Nombre</Th>
+                        <Th>Tipo</Th>
+                        <Th isNumeric>Stock actual</Th>
+                        <Th isNumeric>Punto reorden</Th>
+                        <Th>Unidad</Th>
+                        <Th>OCM(s)</Th>
+                    </Tr>
+                </Thead>
+                <Tbody>
+                    {rows.map((row) => (
+                        <Tr key={row.productoId}>
+                            <Td>{row.productoId}</Td>
+                            <Td>{row.nombre}</Td>
+                            <Td>{row.tipoMaterialLabel}</Td>
+                            <Td isNumeric>{formatQty(row.stockActual)}</Td>
+                            <Td isNumeric>{formatQty(row.puntoReorden)}</Td>
+                            <Td>{row.tipoUnidades}</Td>
+                            <Td>
+                                <VStack align="start" spacing={1}>
+                                    {row.ocmsPendientesIngreso.map((ocm) => (
+                                        <Text key={`${row.productoId}-${ocm.ordenCompraId}`} fontSize="sm">
+                                            {`OCM #${ocm.ordenCompraId} (${formatFecha(ocm.fechaEmision)})`}
+                                        </Text>
+                                    ))}
+                                </VStack>
+                            </Td>
+                        </Tr>
+                    ))}
+                </Tbody>
+            </Table>
+        </TableContainer>
+    );
 }
 
 function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: SectionCardProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const [stockPage, setStockPage] = useState(0);
-    const [stockSize, setStockSize] = useState(10);
-    const [stockRows, setStockRows] = useState<MaterialEnPuntoReordenDTO[]>([]);
-    const [stockTotalPages, setStockTotalPages] = useState(0);
+    const [stockDetail, setStockDetail] = useState<PuntoReordenEvaluacionResult | null>(null);
     const [stockLoading, setStockLoading] = useState(false);
     const [stockError, setStockError] = useState<string | null>(null);
 
-    // Colores adaptativos para modo claro/oscuro
     const isRedCard = bgColor === "red.100";
     const cardBg = useColorModeValue(
         bgColor,
@@ -98,7 +177,7 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
         position: "relative",
     };
 
-    const handleNotificationClick = (e: React.MouseEvent) => {
+    const handleNotificationClick = (e: MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         e.stopPropagation();
         setIsOpen(!isOpen);
@@ -118,17 +197,14 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
             setStockError(null);
             try {
                 const ep = new EndPointsURL();
-                const url = `${ep.stock_materiales_punto_reorden}?page=${stockPage}&size=${stockSize}`;
-                const { data } = await axios.get<PageMaterialEnPuntoReorden>(url);
+                const { data } = await axios.get<PuntoReordenEvaluacionResult>(ep.stock_materiales_punto_reorden);
                 if (!cancelled) {
-                    setStockRows(data.content ?? []);
-                    setStockTotalPages(data.totalPages ?? 0);
+                    setStockDetail(data);
                 }
             } catch {
                 if (!cancelled) {
                     setStockError("No se pudo cargar la lista de materiales");
-                    setStockRows([]);
-                    setStockTotalPages(0);
+                    setStockDetail(null);
                 }
             } finally {
                 if (!cancelled) setStockLoading(false);
@@ -137,17 +213,16 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
         return () => {
             cancelled = true;
         };
-    }, [isOpen, isStockNotification, stockPage, stockSize]);
+    }, [isOpen, isStockNotification]);
 
     const handleCloseModal = () => {
         setIsOpen(false);
-        setStockPage(0);
     };
 
     const notificationBell = notification && notification.requireAtention && (
         usesNotificationModal ? (
             <IconButton
-                aria-label="Notificación"
+                aria-label="Notificacion"
                 icon={<MdNotificationsActive />}
                 position="absolute"
                 top="0.5rem"
@@ -167,7 +242,7 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
             >
                 <PopoverTrigger>
                     <IconButton
-                        aria-label="Notificación"
+                        aria-label="Notificacion"
                         icon={<MdNotificationsActive />}
                         position="absolute"
                         top="0.5rem"
@@ -212,7 +287,7 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
                 <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} isCentered>
                     <ModalOverlay />
                     <ModalContent>
-                        <ModalHeader>Órdenes de compra pendientes</ModalHeader>
+                        <ModalHeader>Ordenes de compra pendientes</ModalHeader>
                         <ModalBody>
                             <VStack align="stretch" spacing={3}>
                                 <Text>{notification.message}</Text>
@@ -242,64 +317,55 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
             )}
 
             {isStockNotification && notification && (
-                <Modal isOpen={isOpen} onClose={handleCloseModal} isCentered size="4xl">
+                <Modal isOpen={isOpen} onClose={handleCloseModal} isCentered size="6xl">
                     <ModalOverlay />
-                    <ModalContent maxW="56rem">
+                    <ModalContent maxW="72rem">
                         <ModalHeader>Materiales en punto de reorden</ModalHeader>
                         <ModalBody>
-                            <VStack align="stretch" spacing={3}>
+                            <VStack align="stretch" spacing={5}>
                                 <Text>{notification.message}</Text>
                                 <Text fontSize="sm" color="gray.600">
                                     <strong>Total en alerta:</strong> {materialesCount}
                                 </Text>
+
                                 {stockLoading && (
                                     <Center py={6}>
                                         <Spinner size="lg" />
                                     </Center>
                                 )}
+
                                 {stockError && !stockLoading && (
                                     <Text color="red.500">{stockError}</Text>
                                 )}
-                                {!stockLoading && !stockError && (
+
+                                {!stockLoading && !stockError && stockDetail && (
                                     <>
-                                        <TableContainer maxH="50vh" overflowY="auto">
-                                            <Table size="sm" variant="simple">
-                                                <Thead>
-                                                    <Tr>
-                                                        <Th>Código</Th>
-                                                        <Th>Nombre</Th>
-                                                        <Th>Tipo</Th>
-                                                        <Th isNumeric>Stock actual</Th>
-                                                        <Th isNumeric>Punto reorden</Th>
-                                                        <Th>Unidad</Th>
-                                                    </Tr>
-                                                </Thead>
-                                                <Tbody>
-                                                    {stockRows.map((row) => (
-                                                        <Tr key={row.productoId}>
-                                                            <Td>{row.productoId}</Td>
-                                                            <Td>{row.nombre}</Td>
-                                                            <Td>{row.tipoMaterialLabel}</Td>
-                                                            <Td isNumeric>
-                                                                {formatQty(row.stockActual)}
-                                                            </Td>
-                                                            <Td isNumeric>
-                                                                {formatQty(row.puntoReorden)}
-                                                            </Td>
-                                                            <Td>{row.tipoUnidades}</Td>
-                                                        </Tr>
-                                                    ))}
-                                                </Tbody>
-                                            </Table>
-                                        </TableContainer>
-                                        <BetterPagination
-                                            page={stockPage}
-                                            size={stockSize}
-                                            totalPages={stockTotalPages}
-                                            loading={stockLoading}
-                                            onPageChange={setStockPage}
-                                            onSizeChange={setStockSize}
-                                        />
+                                        {stockDetail.pendientesOrdenar.length > 0 && (
+                                            <Box>
+                                                <Heading size="sm" mb={2}>
+                                                    Pendientes por pedir ({stockDetail.totalPendientesOrdenar})
+                                                </Heading>
+                                                {renderMaterialBaseTable(stockDetail.pendientesOrdenar)}
+                                            </Box>
+                                        )}
+
+                                        {stockDetail.pendientesIngresoAlmacen.length > 0 && (
+                                            <Box>
+                                                <Heading size="sm" mb={2}>
+                                                    Ya pedidos, pendiente ingreso ({stockDetail.totalPendientesIngresoAlmacen})
+                                                </Heading>
+                                                {renderMaterialConOcmTable(stockDetail.pendientesIngresoAlmacen)}
+                                            </Box>
+                                        )}
+
+                                        {stockDetail.sinPuntoReorden.length > 0 && (
+                                            <Box>
+                                                <Heading size="sm" mb={2}>
+                                                    Sin punto de reorden ({stockDetail.totalSinPuntoReorden})
+                                                </Heading>
+                                                {renderMaterialBaseTable(stockDetail.sinPuntoReorden)}
+                                            </Box>
+                                        )}
                                     </>
                                 )}
                             </VStack>
