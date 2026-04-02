@@ -168,6 +168,18 @@ export interface Categoria {
     loteSize?: number;
 }
 
+export interface ProductoBasicUpdatePayload {
+    productoId: string;
+    nombre: string;
+    cantidadUnidad: number;
+    observaciones?: string;
+    ivaPercentual: number;
+    tipoMaterial?: number;
+    puntoReorden?: number;
+    prefijoLote?: string;
+    categoriaId?: number;
+}
+
 export interface ProductoManufacturingInsumoDTO {
     insumoId?: number;
     productoId: string;

@@ -19,7 +19,7 @@ import {
     Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
-import { CasePack, Insumo, Material, Producto } from "../../types.tsx";
+import { CasePack, Categoria, Insumo, Material, Producto, ProductoBasicUpdatePayload } from "../../types.tsx";
 import { ArrowBackIcon, EditIcon, CheckIcon, QuestionIcon, WarningIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
@@ -31,7 +31,13 @@ import { useModuleAccessLevel } from '../../../../auth/usePermissions';
 import InsumoListCard from './InsumoListCard.tsx';
 import CardPackagingInfo from './CardPackagingInfo.tsx';
 
-type ProductoDetalle = (Producto | Material) & { insumos?: Insumo[]; casePack?: CasePack };
+type ProductoDetalle = (Producto | Material) & { insumos?: Insumo[]; casePack?: CasePack; categoria?: Categoria };
+
+type CategoriaEditability = {
+    editable: boolean;
+    blockingOrdersCount: number;
+    reason: string | null;
+};
 
 type Props = {
     producto: Producto;
@@ -42,11 +48,17 @@ type Props = {
 export default function DetalleProductoSemiTer({producto, setEstado, setProductoSeleccionado, refreshSearch}: Props) {
     const [editMode, setEditMode] = useState(false);
     const [productoData, setProductoData] = useState<ProductoDetalle>({...producto});
+    const [productoOriginalData, setProductoOriginalData] = useState<ProductoDetalle>({...producto});
     const [isFormValid, setIsFormValid] = useState<boolean>(true);
     const [hasChanges, setHasChanges] = useState<boolean>(false);
     const [isLoadingDetalle, setIsLoadingDetalle] = useState<boolean>(false);
     const [prefijoVerificado, setPrefijoVerificado] = useState<boolean>(false);
     const [verificandoPrefijo, setVerificandoPrefijo] = useState<boolean>(false);
+    const [categoriasDisponibles, setCategoriasDisponibles] = useState<Categoria[]>([]);
+    const [loadingCategorias, setLoadingCategorias] = useState<boolean>(false);
+    const [categoriaEditability, setCategoriaEditability] = useState<CategoriaEditability | null>(null);
+    const [loadingCategoriaEditability, setLoadingCategoriaEditability] = useState<boolean>(false);
+    const [categoriaStatusError, setCategoriaStatusError] = useState<string | null>(null);
     const toast = useToast();
     const endPoints = new EndPointsURL();
     const { nivel: productosAccessLevel } = useModuleAccessLevel(Modulo.PRODUCTOS);
@@ -159,6 +171,18 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
         }
     };
 
+    useEffect(() => {
+        setEditMode(false);
+        setProductoData({...producto});
+        setProductoOriginalData({...producto});
+        setPrefijoVerificado(false);
+        setCategoriasDisponibles([]);
+        setCategoriaEditability(null);
+        setCategoriaStatusError(null);
+        setLoadingCategorias(false);
+        setLoadingCategoriaEditability(false);
+    }, [producto]);
+
     // Manejar cambios en los campos editables
     const handleInputChange = (
         field: keyof ProductoDetalle,
@@ -172,6 +196,89 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
             setPrefijoVerificado(false);
         }
     };
+
+    const handleCategoriaChange = (categoriaId: number) => {
+        const categoriaSeleccionada = categoriasDisponibles.find(
+            (categoria) => categoria.categoriaId === categoriaId
+        ) ?? (
+            productoData.categoria?.categoriaId === categoriaId
+                ? productoData.categoria
+                : undefined
+        );
+
+        setProductoData((prev) => ({
+            ...prev,
+            categoria: categoriaSeleccionada,
+        }));
+    };
+
+    useEffect(() => {
+        if (!editMode || producto.tipo_producto !== 'T') {
+            return;
+        }
+
+        let isMounted = true;
+
+        const fetchCategoriaSupportData = async () => {
+            setLoadingCategorias(true);
+            setLoadingCategoriaEditability(true);
+            setCategoriaStatusError(null);
+
+            const categoriaUrl = endPoints.get_producto_categoria_editability.replace(
+                '{productoId}',
+                producto.productoId
+            );
+
+            const [categoriasResult, editabilityResult] = await Promise.allSettled([
+                axios.get<Categoria[]>(endPoints.get_categorias),
+                axios.get<CategoriaEditability>(categoriaUrl),
+            ]);
+
+            if (!isMounted) {
+                return;
+            }
+
+            if (categoriasResult.status === 'fulfilled') {
+                setCategoriasDisponibles(categoriasResult.value.data);
+            } else {
+                setCategoriasDisponibles([]);
+            }
+
+            if (editabilityResult.status === 'fulfilled') {
+                setCategoriaEditability(editabilityResult.value.data);
+            } else {
+                setCategoriaEditability({
+                    editable: false,
+                    blockingOrdersCount: 0,
+                    reason: null,
+                });
+            }
+
+            const categoriasError = categoriasResult.status === 'rejected';
+            const editabilityError = editabilityResult.status === 'rejected';
+
+            if (categoriasError || editabilityError) {
+                setCategoriaStatusError(
+                    'No se pudo validar la edición de categoría en este momento. El resto del formulario sigue disponible.'
+                );
+            }
+
+            setLoadingCategorias(false);
+            setLoadingCategoriaEditability(false);
+        };
+
+        fetchCategoriaSupportData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [
+        editMode,
+        endPoints.get_categorias,
+        endPoints.get_producto_categoria_editability,
+        producto.productoId,
+        producto.tipo_producto,
+    ]);
 
     // Cargar detalles cuando faltan los insumos en productos semiterminados o terminados
     useEffect(() => {
@@ -190,6 +297,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                 const response = await axios.get(url);
                 if (isMounted) {
                     setProductoData(response.data);
+                    setProductoOriginalData(response.data);
                 }
             } catch (error) {
                 if (!isMounted) return;
@@ -292,25 +400,33 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     // Función para verificar si hay cambios en los datos
     const checkForChanges = () => {
         // Verificar cambios en campos simples
-        if (productoData.nombre !== producto.nombre ||
-            productoData.cantidadUnidad !== producto.cantidadUnidad ||
-            productoData.observaciones !== producto.observaciones ||
-            productoData.ivaPercentual !== producto.ivaPercentual) {
+        if (productoData.nombre !== productoOriginalData.nombre ||
+            productoData.cantidadUnidad !== productoOriginalData.cantidadUnidad ||
+            productoData.observaciones !== productoOriginalData.observaciones ||
+            productoData.ivaPercentual !== productoOriginalData.ivaPercentual) {
             return true;
         }
 
         // Si es un material, verificar cambios en tipoMaterial
-        if (producto.tipo_producto === 'M' && 
+        if (productoOriginalData.tipo_producto === 'M' &&
             'tipoMaterial' in productoData && 
-            'tipoMaterial' in producto && 
-            (productoData as Material).tipoMaterial !== (producto as Material).tipoMaterial) {
+            'tipoMaterial' in productoOriginalData &&
+            (productoData as Material).tipoMaterial !== (productoOriginalData as Material).tipoMaterial) {
             return true;
         }
 
         // Si es terminado, verificar cambios en prefijoLote
-        if (producto.tipo_producto === 'T' && 
-            (productoData as Producto).prefijoLote !== (producto as Producto).prefijoLote) {
+        if (productoOriginalData.tipo_producto === 'T' &&
+            (productoData as Producto).prefijoLote !== (productoOriginalData as Producto).prefijoLote) {
             return true;
+        }
+
+        if (productoOriginalData.tipo_producto === 'T') {
+            const categoriaActualId = productoData.categoria?.categoriaId ?? null;
+            const categoriaOriginalId = productoOriginalData.categoria?.categoriaId ?? null;
+            if (categoriaActualId !== categoriaOriginalId) {
+                return true;
+            }
         }
 
         return false;
@@ -378,7 +494,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
             const hasDataChanges = checkForChanges();
             setHasChanges(hasDataChanges);
         }
-    }, [productoData, editMode]);
+    }, [productoData, productoOriginalData, editMode]);
 
     // Guardar cambios
     const handleSaveChanges = async () => {
@@ -387,9 +503,27 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
         }
 
         try {
-            // Llamada al endpoint de actualización
-            const url = endPoints.update_producto.replace('{productoId}', productoData.productoId);
-            const response = await axios.put(url, productoData);
+            const url = endPoints.update_producto_basic.replace('{productoId}', productoData.productoId);
+            const payload: ProductoBasicUpdatePayload = {
+                productoId: productoData.productoId,
+                nombre: productoData.nombre,
+                cantidadUnidad: Number(productoData.cantidadUnidad),
+                observaciones: productoData.observaciones || '',
+                ivaPercentual: Number(productoData.ivaPercentual ?? 0),
+            };
+
+            if (isMaterial) {
+                payload.tipoMaterial = (productoData as Material).tipoMaterial;
+            }
+
+            if (isTerminado) {
+                payload.prefijoLote = ((productoData as Producto).prefijoLote ?? '').trim();
+                if (productoData.categoria?.categoriaId != null) {
+                    payload.categoriaId = productoData.categoria.categoriaId;
+                }
+            }
+
+            const response = await axios.put(url, payload);
 
             // Mostrar mensaje de éxito
             toast({
@@ -405,6 +539,8 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
 
             // Actualizar el producto en la vista local con los datos completos del servidor
             setProductoData(response.data);
+            setProductoOriginalData(response.data);
+            setPrefijoVerificado(false);
 
             // Actualizar también el producto seleccionado para mantener la consistencia
             // cuando se regrese a la vista de lista
@@ -413,9 +549,14 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
             }
         } catch (error) {
             console.error('Error al actualizar el producto:', error);
+            const description = axios.isAxiosError(error)
+                ? error.response?.data?.error ||
+                    error.response?.data?.reason ||
+                    'No se pudo actualizar la información del producto.'
+                : 'No se pudo actualizar la información del producto.';
             toast({
                 title: 'Error al actualizar',
-                description: 'No se pudo actualizar la información del producto.',
+                description,
                 status: 'error',
                 duration: 5000,
                 isClosable: true,
@@ -432,8 +573,26 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     const isTerminado = producto.tipo_producto === 'T';
     const canUseWizard = canEdit && isSemiOTerminado && !editMode;
 
-    const prefijoUnchanged = ((productoData as Producto).prefijoLote ?? '').trim() === ((producto as Producto).prefijoLote ?? '').trim();
+    const prefijoUnchanged = ((productoData as Producto).prefijoLote ?? '').trim() === ((productoOriginalData as Producto).prefijoLote ?? '').trim();
     const canSavePrefijo = prefijoUnchanged || prefijoVerificado;
+    const categoriaActualId = productoData.categoria?.categoriaId ?? '';
+    const categoriaEditable = isTerminado &&
+        !categoriaStatusError &&
+        categoriaEditability?.editable === true &&
+        !loadingCategorias &&
+        !loadingCategoriaEditability &&
+        categoriasDisponibles.length > 0;
+    const categoriasParaSeleccion = productoData.categoria &&
+        !categoriasDisponibles.some((categoria) => categoria.categoriaId === productoData.categoria?.categoriaId)
+        ? [productoData.categoria, ...categoriasDisponibles]
+        : categoriasDisponibles;
+    const categoriaFieldMessage = categoriaStatusError ||
+        (loadingCategorias || loadingCategoriaEditability
+            ? 'Validando disponibilidad para editar la categoría...'
+            : categoriaEditability?.reason ||
+                (!categoriaEditable && categoriasDisponibles.length === 0
+                    ? 'No hay categorías disponibles para seleccionar.'
+                    : null));
 
     const isGuardarDisabled = !isFormValid || !hasChanges || (isTerminado && !canSavePrefijo);
     const guardarDisabledReason: string | null = isGuardarDisabled
@@ -485,7 +644,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                             variant="outline"
                             onClick={() => {
                                 setEditMode(false);
-                                setProductoData({...producto});
+                                setProductoData({...productoOriginalData});
                                 setPrefijoVerificado(false);
                             }}
                         >
@@ -546,8 +705,8 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
 
             <Card mb={5} variant="outline" boxShadow="md">
                 <CardHeader bg="blue.50">
-                    <Heading size="md">{producto.nombre}</Heading>
-                    <Text color="gray.600">ID: {producto.productoId}</Text>
+                    <Heading size="md">{productoData.nombre}</Heading>
+                    <Text color="gray.600">ID: {productoData.productoId}</Text>
                 </CardHeader>
                 <CardBody>
                     <Grid templateColumns="repeat(2, 1fr)" gap={6}>
@@ -563,12 +722,12 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                             />
                                         </FormControl>
                                     ) : (
-                                        <Text>{producto.nombre}</Text>
+                                        <Text>{productoData.nombre}</Text>
                                     )}
                                 </Box>
                                 <Box>
                                     <Text fontWeight="bold">Tipo de Producto:</Text>
-                                    <Text>{getTipoProductoText(producto.tipo_producto)}</Text>
+                                    <Text>{getTipoProductoText(productoData.tipo_producto)}</Text>
                                 </Box>
                                 {isMaterial && (
                                     <Box>
@@ -584,7 +743,39 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                                 </Select>
                                             </FormControl>
                                         ) : (
-                                            <Text>{getTipoMaterialText((producto as Material).tipoMaterial)}</Text>
+                                            <Text>{getTipoMaterialText((productoData as Material).tipoMaterial)}</Text>
+                                        )}
+                                    </Box>
+                                )}
+                                {isTerminado && (
+                                    <Box width="100%">
+                                        <Text fontWeight="bold">Categoría:</Text>
+                                        {editMode ? (
+                                            <FormControl mt={2}>
+                                                <Select
+                                                    value={categoriaActualId}
+                                                    onChange={(e) => handleCategoriaChange(Number(e.target.value))}
+                                                    isDisabled={!categoriaEditable}
+                                                >
+                                                    <option value="" disabled>
+                                                        {loadingCategorias || loadingCategoriaEditability
+                                                            ? 'Cargando categorías...'
+                                                            : 'Seleccione una categoría'}
+                                                    </option>
+                                                    {categoriasParaSeleccion.map((categoria) => (
+                                                        <option key={categoria.categoriaId} value={categoria.categoriaId}>
+                                                            {categoria.categoriaNombre}
+                                                        </option>
+                                                    ))}
+                                                </Select>
+                                                {categoriaFieldMessage && (
+                                                    <Text fontSize="sm" color="orange.600" mt={1}>
+                                                        {categoriaFieldMessage}
+                                                    </Text>
+                                                )}
+                                            </FormControl>
+                                        ) : (
+                                            <Text>{productoData.categoria?.categoriaNombre ?? 'Sin categoría'}</Text>
                                         )}
                                     </Box>
                                 )}
@@ -630,7 +821,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                 )}
                                 <Box>
                                     <Text fontWeight="bold">Costo:</Text>
-                                    <Text>{producto.costo}</Text>
+                                    <Text>{productoData.costo}</Text>
                                 </Box>
                             </VStack>
                         </GridItem>
@@ -638,7 +829,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                             <VStack align="start" spacing={3}>
                                 <Box>
                                     <Text fontWeight="bold">Unidad de Medida:</Text>
-                                    <Text>{producto.tipoUnidades}</Text>
+                                    <Text>{productoData.tipoUnidades}</Text>
                                 </Box>
                                 <Box>
                                     <Text fontWeight="bold">Cantidad por Unidad:</Text>
@@ -650,7 +841,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                             />
                                         </FormControl>
                                     ) : (
-                                        <Text>{producto.cantidadUnidad}</Text>
+                                        <Text>{productoData.cantidadUnidad}</Text>
                                     )}
                                 </Box>
                                 <Box>
@@ -669,13 +860,13 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                             </Select>
                                         </FormControl>
                                     ) : (
-                                        <Text>{producto.ivaPercentual || 0}%</Text>
+                                        <Text>{productoData.ivaPercentual || 0}%</Text>
                                     )}
                                 </Box>
-                                {producto.fechaCreacion && (
+                                {productoData.fechaCreacion && (
                                     <Box>
                                         <Text fontWeight="bold">Fecha de Creación:</Text>
-                                        <Text>{producto.fechaCreacion}</Text>
+                                        <Text>{productoData.fechaCreacion}</Text>
                                     </Box>
                                 )}
                             </VStack>
@@ -729,7 +920,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                             />
                         </FormControl>
                     ) : (
-                        <Text>{producto.observaciones || 'Sin observaciones'}</Text>
+                        <Text>{productoData.observaciones || 'Sin observaciones'}</Text>
                     )}
                 </CardBody>
             </Card>

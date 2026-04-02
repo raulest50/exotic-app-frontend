@@ -6,6 +6,7 @@ export default class EndPointsURL{
     public search_semi:string;
     public save_producto:string;
     public update_producto:string;
+    public update_producto_basic:string;
     public create_producto_manufacturing: string;
     public get_producto_manufacturing: string;
     public update_producto_manufacturing: string;
@@ -26,6 +27,7 @@ export default class EndPointsURL{
     public consulta_productos:string; // para buscar por categorias
 
     public validador_prefijo_lote: string;
+    public get_producto_categoria_editability: string;
 
     // notifications endpoint
     public module_notifications: string;
@@ -312,6 +314,7 @@ export default class EndPointsURL{
         this.search_semi = `${domain}/${productos_res}/search_semi`;
         this.save_producto = `${domain}/${productos_res}/save`;
         this.update_producto = `${domain}/${productos_res}/{productoId}`;
+        this.update_producto_basic = `${domain}/${productos_res}/{productoId}/basic`;
         this.create_producto_manufacturing = `${domain}/${productos_res}/manufacturing`;
         this.get_producto_manufacturing = `${domain}/${productos_res}/manufacturing/{productoId}`;
         this.update_producto_manufacturing = `${domain}/${productos_res}/manufacturing/{productoId}`;
@@ -330,6 +333,7 @@ export default class EndPointsURL{
 
         this.consulta_productos = `${domain}/${productos_res}/consulta1`;
         this.validador_prefijo_lote = `${domain}/${productos_res}/prefijo-lote/valido`;
+        this.get_producto_categoria_editability = `${domain}/${productos_res}/{productoId}/categoria-editability`;
 
         // Categorias endpoints
         this.get_categorias = `${domain}/categorias`;

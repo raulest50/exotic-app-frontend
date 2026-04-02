@@ -18,7 +18,7 @@ import {
     useToast, useDisclosure,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
-import {Material, Producto} from "../../types.tsx";
+import {Material, Producto, ProductoBasicUpdatePayload} from "../../types.tsx";
 import { ArrowBackIcon, EditIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
@@ -236,12 +236,21 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
         }
 
         try {
-            const url = endPoints.update_producto.replace('{productoId}', productoData.productoId);
+            const url = endPoints.update_producto_basic.replace('{productoId}', productoData.productoId);
             const puntoReorden = Number(materialPuntoReordenInput.trim());
-            const payload =
-                productoData.tipo_producto === 'M'
-                    ? { ...productoData, tipo_producto: 'M', puntoReorden }
-                    : productoData;
+            const payload: ProductoBasicUpdatePayload = {
+                productoId: productoData.productoId,
+                nombre: productoData.nombre,
+                cantidadUnidad: Number(productoData.cantidadUnidad),
+                observaciones: productoData.observaciones || '',
+                ivaPercentual: Number(productoData.ivaPercentual ?? 0),
+            };
+
+            if (productoData.tipo_producto === 'M') {
+                payload.tipoMaterial = (productoData as Material).tipoMaterial;
+                payload.puntoReorden = puntoReorden;
+            }
+
             const response = await axios.put(url, payload);
 
             // Mostrar mensaje de éxito
