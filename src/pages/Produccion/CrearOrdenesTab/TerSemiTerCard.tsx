@@ -51,7 +51,19 @@ const TerSemiTerCard = ({ productoSeleccionado, canProduce, onSearchClick, canti
     const [expandedSemiterminados, setExpandedSemiterminados] = useState<Record<number, boolean>>({});
 
     // Función para formatear cantidades numéricas
-    const formatCantidad = (valor: number) => valor.toFixed(3);
+    const formatCantidad = (valor: number): string => {
+        // Si es entero, no mostrar decimales
+        if (Number.isInteger(valor)) {
+            return valor.toLocaleString('es-CO');
+        }
+        // Si tiene decimales, mostrar hasta 2 significativos (sin ceros finales)
+        const formatted = valor.toFixed(2);
+        const trimmed = parseFloat(formatted).toString();
+        return parseFloat(trimmed).toLocaleString('es-CO', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        });
+    };
 
     // Función para obtener la unidad de medida (UMB)
     const obtenerUMB = (insumo: InsumoWithStock): string => {
