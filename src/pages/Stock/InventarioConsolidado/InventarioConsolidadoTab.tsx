@@ -1,6 +1,6 @@
 // src/pages/Stock/StockPage.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {Box, useToast} from '@chakra-ui/react';
 
 import {
@@ -32,8 +32,10 @@ function InventarioConsolidadoTab() {
     const [pageProductos, setPageProductos] = useState(0);
     const [totalPagesProductos, setTotalPagesProductos] = useState(0);
     const [loadingProductos, setLoadingProductos] = useState(false);
+    const [pageSize, setPageSize] = useState(10);
+    const pageSizeRef = useRef(10);
 
-    const handleSearch = async (page = pageProductos) => {
+    const handleSearch = async (page: number) => {
         setLoadingProductos(true);
         try {
             const response = await axios.get(endPoints.search_products_with_stock, {
@@ -41,7 +43,7 @@ function InventarioConsolidadoTab() {
                     searchTerm,
                     tipoBusqueda,
                     page,
-                    size: 10,
+                    size: pageSizeRef.current,
                 },
             });
             setProductos(response.data.content);
@@ -60,11 +62,10 @@ function InventarioConsolidadoTab() {
         }
     };
 
-    useEffect(() => {
-        if (searchTerm !== '') {
-            handleSearch(pageProductos);
-        }
-    }, [pageProductos]);
+    const handlePageSizeChange = (size: number) => {
+        pageSizeRef.current = size;
+        setPageSize(size);
+    };
 
     const onKeyPress_InputBuscar = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
@@ -130,6 +131,8 @@ function InventarioConsolidadoTab() {
                                     pageProductos={pageProductos}
                                     totalPagesProductos={totalPagesProductos}
                                     handlePageChangeProductos={handlePageChangeProductos}
+                                    pageSize={pageSize}
+                                    onPageSizeChange={handlePageSizeChange}
                                 />
                             </Box>
                     </VStack>

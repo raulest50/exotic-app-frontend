@@ -8,7 +8,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import { ProductStockDTO } from '../types.tsx';
-import MyPagination from '../../../components/MyPagination.tsx';
+import BetterPagination from '../../../components/BetterPagination/BetterPagination.tsx';
 import MovimientosExcelModal from './MovimientosExcelModal.tsx';
 
 const endPoints = new EndPointsURL();
@@ -19,6 +19,8 @@ interface ListaProductosProps {
     pageProductos: number;
     totalPagesProductos: number;
     handlePageChangeProductos: (page: number) => void;
+    pageSize: number;
+    onPageSizeChange: (size: number) => void;
 }
 
 /**
@@ -32,7 +34,9 @@ function ListaProductos({
     loadingProductos,
     pageProductos,
     totalPagesProductos,
-    handlePageChangeProductos
+    handlePageChangeProductos,
+    pageSize,
+    onPageSizeChange,
 }: ListaProductosProps) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
@@ -84,59 +88,61 @@ function ListaProductos({
                 {loadingProductos ? (
                     <Spinner />
                 ) : (
-                    <>
-                        <Box w={"full"}>
-                            <Table variant="striped" colorScheme="gray" size="sm" width="100%">
-                                <Thead position="sticky" top={0} bg="white" zIndex={1}>
+                    <Box w={"full"}>
+                        <Table variant="striped" colorScheme="gray" size="sm" width="100%">
+                            <Thead position="sticky" top={0} bg="white" zIndex={1}>
+                                <Tr>
+                                    <Th>ID</Th>
+                                    <Th>Nombre</Th>
+                                    <Th>Stock</Th>
+                                    <Th>Unidades</Th>
+                                    <Th>Menu</Th>
+                                </Tr>
+                            </Thead>
+                            <Tbody>
+                                {productos.length === 0 ? (
                                     <Tr>
-                                        <Th>ID</Th>
-                                        <Th>Nombre</Th>
-                                        <Th>Stock</Th>
-                                        <Th>Unidades</Th>
-                                        <Th>Menu</Th>
+                                        <Td colSpan={5} textAlign="center">
+                                            <Text py={2}>No se encontraron productos.</Text>
+                                        </Td>
                                     </Tr>
-                                </Thead>
-                                <Tbody>
-                                    {productos.length === 0 ? (
-                                        <Tr>
-                                            <Td colSpan={5} textAlign="center">
-                                                <Text py={2}>No se encontraron productos.</Text>
+                                ) : (
+                                    productos.map((item) => (
+                                        <Tr key={item.producto.productoId}>
+                                            <Td>{item.producto.productoId}</Td>
+                                            <Td>{item.producto.nombre}</Td>
+                                            <Td>{item.stock}</Td>
+                                            <Td>{item.producto.tipoUnidades}</Td>
+                                            <Td>
+                                                <Menu>
+                                                    <MenuButton as={Button} size="sm" colorScheme="teal">Menu</MenuButton>
+                                                    <MenuList>
+                                                        <MenuItem onClick={() => {
+                                                            setSelectedProductId(item.producto.productoId);
+                                                            onOpen();
+                                                        }}>
+                                                            Descargar Excel de movimientos
+                                                        </MenuItem>
+                                                    </MenuList>
+                                                </Menu>
                                             </Td>
                                         </Tr>
-                                    ) : (
-                                        productos.map((item) => (
-                                            <Tr key={item.producto.productoId}>
-                                                <Td>{item.producto.productoId}</Td>
-                                                <Td>{item.producto.nombre}</Td>
-                                                <Td>{item.stock}</Td>
-                                                <Td>{item.producto.tipoUnidades}</Td>
-                                                <Td>
-                                                    <Menu>
-                                                        <MenuButton as={Button} size="sm" colorScheme="teal">Menu</MenuButton>
-                                                        <MenuList>
-                                                            <MenuItem onClick={() => {
-                                                                setSelectedProductId(item.producto.productoId);
-                                                                onOpen();
-                                                            }}>
-                                                                Descargar Excel de movimientos
-                                                            </MenuItem>
-                                                        </MenuList>
-                                                    </Menu>
-                                                </Td>
-                                            </Tr>
-                                        ))
-                                    )}
-                                </Tbody>
-                            </Table>
-                        </Box>
-                        <MyPagination
-                            page={pageProductos}
-                            totalPages={totalPagesProductos}
-                            loading={loadingProductos}
-                            handlePageChange={handlePageChangeProductos}
-                        />
-                    </>
+                                    ))
+                                )}
+                            </Tbody>
+                        </Table>
+                    </Box>
                 )}
+                <Box w="full" mt={6}>
+                    <BetterPagination
+                        page={pageProductos}
+                        size={pageSize}
+                        totalPages={totalPagesProductos}
+                        loading={loadingProductos}
+                        onPageChange={handlePageChangeProductos}
+                        onSizeChange={onPageSizeChange}
+                    />
+                </Box>
             </Flex>
             <MovimientosExcelModal
                 isOpen={isOpen}
