@@ -8,6 +8,6 @@ export const loginFloatingLinesPreset: FloatingLinesProps = {
   lineCount: [9, 13, 10],
   lineDistance: [11, 9, 10],
   animationSpeed: 0.9,
-  interactive: false,
+  interactive: true,
   parallax: false,
 };

@@ -102,7 +102,7 @@ export const LoginBackground = () => (
       <Flex align="flex-start" justify="center" minH="100%" pt={{ base: 8, md: 12 }} pb={8} w="full">
         <Box w="100%" minH={['70vh', '75vh', '78vh']} display="flex" flexDirection="column">
           <BorderGlow
-            backgroundColor="#ffffff"
+            backgroundColor="rgb(255 255 255 / 75%)"
             borderRadius={40}
             borderWidth={3}
             glowColor="40 92 72"
@@ -115,7 +115,7 @@ export const LoginBackground = () => (
             style={{ flex: 1, width: '100%', minWidth: 0 }}
           >
             <Flex direction="column" gap={7} p={{ base: 8, md: '4em' }} alignItems="center" justifyContent="flex-start" flex={1}>
-              <Box boxSize="3xs">
+              <Box boxSize="16.8rem">
                 <Image src="/logo_exotic.svg" alt="Exotic logo" />
               </Box>
               <Heading size="lg">Login Panel</Heading>

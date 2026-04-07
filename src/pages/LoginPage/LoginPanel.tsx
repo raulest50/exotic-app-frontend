@@ -268,7 +268,7 @@ export default function LoginPanel() {
                         flexDirection="column"
                     >
                         <BorderGlow
-                            backgroundColor="#ffffff"
+                            backgroundColor="rgb(255 255 255 / 75%)"
                             borderRadius={40}
                             borderWidth={3}
                             glowColor="40 92 72"
@@ -281,7 +281,7 @@ export default function LoginPanel() {
                             style={{ flex: 1, width: '100%', minWidth: 0 }}
                         >
                             <Flex direction={"column"} gap={7} p={"4em"} alignItems={"center"} justifyContent="flex-start" flex={1}>
-                                <Box boxSize={'3xs'}>
+                                <Box boxSize="16.8rem">
                                     <Image src={'/logo_exotic.svg'} />
                                 </Box>
                                 {viewMode === 'login' ? (
