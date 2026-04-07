@@ -274,6 +274,17 @@ export default class EndPointsURL{
         return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/excel?fecha=${encodeURIComponent(fecha)}`;
     }
 
+    /** GET Excel ajustes de almacén (BI). @param fechas ISO date YYYY-MM-DD, sentido ENTRADAS|SALIDAS|MIXTA */
+    public informesDiariosAlmacenAjustesExcel(fechaDesde: string, fechaHasta: string, sentido: string): string {
+        const base = `${this.domain}/bi/informes-diarios/almacen/ajustes/excel`;
+        const q = new URLSearchParams({
+            fechaDesde,
+            fechaHasta,
+            sentido,
+        });
+        return `${base}?${q.toString()}`;
+    }
+
     // super master ops endpoints
     public get_super_master_config: string;
     public update_super_master_config: string;

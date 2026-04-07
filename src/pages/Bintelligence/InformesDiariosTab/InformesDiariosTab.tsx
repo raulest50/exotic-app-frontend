@@ -16,14 +16,16 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import { FaShoppingCart } from "react-icons/fa";
 import { GiBuyCard } from "react-icons/gi";
-import { MdWarehouse } from "react-icons/md";
+import { MdTune, MdWarehouse } from "react-icons/md";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import InformeDiarioAlmacenPanel from "./InformeDiarioAlmacenPanel.tsx";
+import InformeDiarioAjustesAlmacenPanel from "./InformeDiarioAjustesAlmacenPanel.tsx";
 
-type InformeDiarioKey = "almacen" | "compras" | "ventas";
+type InformeDiarioKey = "almacen" | "ajustes" | "compras" | "ventas";
 
 const REPORT_OPTIONS: { key: InformeDiarioKey; label: string; icon: ReactElement }[] = [
     { key: "almacen", label: "Informe diario de almacén", icon: <MdWarehouse size={20} /> },
+    { key: "ajustes", label: "Ajustes almacén", icon: <MdTune size={20} /> },
     { key: "compras", label: "Informe diario de compras", icon: <GiBuyCard size={20} /> },
     { key: "ventas", label: "Informe diario de ventas", icon: <FaShoppingCart size={18} /> },
 ];
@@ -145,6 +147,8 @@ export default function InformesDiariosTab() {
                 )}
                 {selectedReport === "almacen" ? (
                     <InformeDiarioAlmacenPanel />
+                ) : selectedReport === "ajustes" ? (
+                    <InformeDiarioAjustesAlmacenPanel />
                 ) : (
                     <InformePlaceholder title={mainTitle} />
                 )}

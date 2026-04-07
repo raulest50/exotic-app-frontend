@@ -83,7 +83,7 @@ function InventarioConsolidadoTab() {
         try {
             const response = await axios.post(
                 endPoints.exportar_inventario_excel,
-                { categories: [], searchTerm },
+                { searchTerm, tipoBusqueda },
                 { responseType: 'blob' }
             );
             const url = window.URL.createObjectURL(new Blob([response.data]));

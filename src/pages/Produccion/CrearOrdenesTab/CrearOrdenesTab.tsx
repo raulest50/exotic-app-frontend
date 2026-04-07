@@ -44,6 +44,7 @@ import type { User } from "../../../api/UserApi.tsx";
 import { useAuth } from '../../../context/AuthContext';
 import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
 import { useModuleAccessLevel } from '../../../auth/usePermissions';
+import { selectNumericInputContentsOnFocus } from '../../../utils/selectNumericInputContentsOnFocus';
 
 type LoteValidationStatus = 'idle' | 'valid' | 'invalid' | 'checking';
 
@@ -527,7 +528,7 @@ export default function CrearOrdenesTab() {
                         onChange={handleCantidadLotesChange}
                         isDisabled={!selectedProducto || noLoteSize}
                     >
-                        <NumberInputField />
+                        <NumberInputField onFocus={selectNumericInputContentsOnFocus} />
                         <NumberInputStepper>
                             <NumberIncrementStepper />
                             <NumberDecrementStepper />

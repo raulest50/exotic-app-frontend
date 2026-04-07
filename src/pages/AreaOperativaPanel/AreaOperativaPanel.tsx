@@ -28,7 +28,7 @@ import {
     useToast,
     Divider,
 } from '@chakra-ui/react';
-import { FiCheckCircle, FiClock, FiPackage, FiUser, FiLogOut } from 'react-icons/fi';
+import { FiCheckCircle, FiClock, FiFileText, FiPackage, FiUser, FiLogOut } from 'react-icons/fi';
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL.tsx';
 import BetterPagination from '../../components/BetterPagination/BetterPagination.tsx';
@@ -57,6 +57,8 @@ interface SeguimientoOrdenArea {
     usuarioReportaId: number | null;
     usuarioReportaNombre: string | null;
     observaciones: string | null;
+    ordenObservaciones: string | null;
+    fechaFinalPlanificada: string | null;
 }
 
 interface PaginatedResponse<T> {
@@ -71,6 +73,11 @@ export default function AreaOperativaPanel() {
     const { meProfile, logout } = useAuth();
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const {
+        isOpen: isObsOrdenOpen,
+        onOpen: onObsOrdenOpen,
+        onClose: onObsOrdenClose,
+    } = useDisclosure();
 
     const [ordenes, setOrdenes] = useState<SeguimientoOrdenArea[]>([]);
     const [loading, setLoading] = useState(false);
@@ -81,6 +88,9 @@ export default function AreaOperativaPanel() {
     const [totalElements, setTotalElements] = useState(0);
 
     const [selectedOrden, setSelectedOrden] = useState<SeguimientoOrdenArea | null>(null);
+    const [ordenObservacionesVer, setOrdenObservacionesVer] = useState<SeguimientoOrdenArea | null>(
+        null
+    );
     const [observaciones, setObservaciones] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
@@ -129,6 +139,18 @@ export default function AreaOperativaPanel() {
         setSelectedOrden(orden);
         setObservaciones('');
         onOpen();
+    };
+
+    const MSG_SIN_OBS_ORDEN = 'No se registran observaciones para esta orden de produccion';
+
+    const handleOpenObservacionesOrden = (orden: SeguimientoOrdenArea) => {
+        setOrdenObservacionesVer(orden);
+        onObsOrdenOpen();
+    };
+
+    const handleCloseObservacionesOrden = () => {
+        onObsOrdenClose();
+        setOrdenObservacionesVer(null);
     };
 
     const handleReportarCompletado = async () => {
@@ -274,24 +296,40 @@ export default function AreaOperativaPanel() {
                                             <Text fontWeight="medium">{orden.productoNombre}</Text>
                                         </HStack>
 
-                                        <HStack spacing={4} fontSize="sm" color="gray.600">
+                                        <HStack spacing={4} fontSize="sm" color="gray.600" flexWrap="wrap">
                                             <Text>Cantidad: {orden.cantidadProducir}</Text>
                                             <Divider orientation="vertical" h={4} />
                                             <HStack spacing={1}>
                                                 <FiClock />
                                                 <Text>Visible desde: {formatDate(orden.fechaVisible)}</Text>
                                             </HStack>
+                                            <Divider orientation="vertical" h={4} />
+                                            <Text>
+                                                Fin planificada:{' '}
+                                                {orden.fechaFinalPlanificada
+                                                    ? formatDate(orden.fechaFinalPlanificada)
+                                                    : 'Sin fecha planificada'}
+                                            </Text>
                                         </HStack>
                                     </VStack>
 
-                                    <Button
-                                        colorScheme="green"
-                                        leftIcon={<FiCheckCircle />}
-                                        onClick={() => handleOpenModal(orden)}
-                                        isDisabled={orden.areaId === -1}
-                                    >
-                                        {orden.areaId === -1 ? 'Se reporta al dispensar' : 'Reportar Completado'}
-                                    </Button>
+                                    <VStack align="end" spacing={2}>
+                                        <Button
+                                            variant="outline"
+                                            leftIcon={<FiFileText />}
+                                            onClick={() => handleOpenObservacionesOrden(orden)}
+                                        >
+                                            Ver observaciones
+                                        </Button>
+                                        <Button
+                                            colorScheme="green"
+                                            leftIcon={<FiCheckCircle />}
+                                            onClick={() => handleOpenModal(orden)}
+                                            isDisabled={orden.areaId === -1}
+                                        >
+                                            {orden.areaId === -1 ? 'Se reporta al dispensar' : 'Reportar Completado'}
+                                        </Button>
+                                    </VStack>
                                 </HStack>
                             </CardBody>
                         </Card>
@@ -310,6 +348,57 @@ export default function AreaOperativaPanel() {
                     onSizeChange={handleSizeChange}
                 />
             )}
+
+            <Modal isOpen={isObsOrdenOpen} onClose={handleCloseObservacionesOrden} size="md" scrollBehavior="inside">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Observaciones de la orden</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        {ordenObservacionesVer && (
+                            <VStack align="stretch" spacing={4}>
+                                <Box>
+                                    <Text fontWeight="bold" mb={1}>
+                                        Orden
+                                    </Text>
+                                    <Text>
+                                        {ordenObservacionesVer.loteAsignado || `OP-${ordenObservacionesVer.ordenId}`}
+                                    </Text>
+                                </Box>
+                                <Box>
+                                    <Text fontWeight="bold" mb={1}>
+                                        Producto
+                                    </Text>
+                                    <Text>{ordenObservacionesVer.productoNombre}</Text>
+                                </Box>
+                                <Box>
+                                    <Text fontWeight="bold" mb={2}>
+                                        Observaciones
+                                    </Text>
+                                    <Box
+                                        maxH="50vh"
+                                        overflowY="auto"
+                                        p={3}
+                                        bg="gray.50"
+                                        borderRadius="md"
+                                        borderWidth="1px"
+                                        borderColor="gray.200"
+                                    >
+                                        <Text whiteSpace="pre-wrap">
+                                            {ordenObservacionesVer.ordenObservaciones?.trim()
+                                                ? ordenObservacionesVer.ordenObservaciones
+                                                : MSG_SIN_OBS_ORDEN}
+                                        </Text>
+                                    </Box>
+                                </Box>
+                            </VStack>
+                        )}
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button onClick={handleCloseObservacionesOrden}>Cerrar</Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
 
             {/* Modal de confirmacion */}
             <Modal isOpen={isOpen} onClose={onClose} size="md">
