@@ -20,6 +20,8 @@ import {
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL.tsx';
 import BorderGlow from '../../components/BorderGlow/BorderGlow.tsx';
+import FloatingLines from '../../components/FloatingLines/FloatingLines.tsx';
+import { loginFloatingLinesPreset } from '../../components/FloatingLines/presets.ts';
 
 // TypeScript interfaces for component props
 interface FormularioLoginProps {
@@ -233,53 +235,78 @@ export default function LoginPanel() {
     };
 
     return (
-        <Container minW={['auto', 'container.md', 'container.md']} w={"full"} h={"100vh"} bg={"transparent"}>
-            <Flex align="flex-start" justify="center" minH="100%" pt={{ base: 8, md: 12 }} pb={8} w="full">
-                <Box
-                    w="100%"
-                    minH={['70vh', '75vh', '78vh']}
-                    display="flex"
-                    flexDirection="column"
-                >
-                    <BorderGlow
-                        backgroundColor="#ffffff"
-                        borderRadius={40}
-                        borderWidth={3}
-                        glowColor="40 92 72"
-                        colors={['#c084fc', '#f472b6', '#38bdf8']}
-                        glowIntensity={2}
-                        fillOpacity={0.78}
-                        glowRadius={88}
-                        edgeSensitivity={7}
-                        coneSpread={25}
-                        style={{ flex: 1, width: '100%', minWidth: 0 }}
+        <Box
+            position="relative"
+            w="100vw"
+            mx="calc(50% - 50vw)"
+            minH="100vh"
+            overflow="hidden"
+            isolation="isolate"
+            bg="#f7faff"
+            backgroundImage="
+                radial-gradient(circle at top left, rgba(109, 77, 255, 0.10), transparent 32%),
+                radial-gradient(circle at top right, rgba(25, 118, 234, 0.10), transparent 28%),
+                linear-gradient(180deg, #fbfdff 0%, #f4f7fb 45%, #edf3fb 100%)
+            "
+        >
+            <Box position="absolute" inset={0} zIndex={0} pointerEvents="none" opacity={0.92}>
+                <FloatingLines {...loginFloatingLinesPreset} />
+            </Box>
+            <Container
+                position="relative"
+                zIndex={1}
+                minW={['auto', 'container.md', 'container.md']}
+                w={"full"}
+                minH={"100vh"}
+                bg={"transparent"}
+            >
+                <Flex align="flex-start" justify="center" minH="100%" pt={{ base: 8, md: 12 }} pb={8} w="full">
+                    <Box
+                        w="100%"
+                        minH={['70vh', '75vh', '78vh']}
+                        display="flex"
+                        flexDirection="column"
                     >
-                        <Flex direction={"column"} gap={7} p={"4em"} alignItems={"center"} justifyContent="flex-start" flex={1}>
-                            <Box boxSize={'3xs'}>
-                                <Image src={'/logo_exotic.svg'} />
-                            </Box>
-                            {viewMode === 'login' ? (
-                                <FormularioLogin
-                                    username={username}
-                                    setUsername={setUsername}
-                                    password={password}
-                                    setPassword={setPassword}
-                                    handleLogin={handleLogin}
-                                    setViewMode={setViewMode}
-                                    isLoading={isLoading}
-                                />
-                            ) : (
-                                <FormularioForgot
-                                    onHandleEnviarForgot={onHandleEnviarForgot}
-                                    isRequestDisabled={isRequestDisabled}
-                                    isLoading={isForgotLoading}
-                                    setViewMode={setViewMode}
-                                />
-                            )}
-                        </Flex>
-                    </BorderGlow>
-                </Box>
-            </Flex>
-        </Container>
+                        <BorderGlow
+                            backgroundColor="#ffffff"
+                            borderRadius={40}
+                            borderWidth={3}
+                            glowColor="40 92 72"
+                            colors={['#c084fc', '#f472b6', '#38bdf8']}
+                            glowIntensity={2}
+                            fillOpacity={0.78}
+                            glowRadius={88}
+                            edgeSensitivity={7}
+                            coneSpread={25}
+                            style={{ flex: 1, width: '100%', minWidth: 0 }}
+                        >
+                            <Flex direction={"column"} gap={7} p={"4em"} alignItems={"center"} justifyContent="flex-start" flex={1}>
+                                <Box boxSize={'3xs'}>
+                                    <Image src={'/logo_exotic.svg'} />
+                                </Box>
+                                {viewMode === 'login' ? (
+                                    <FormularioLogin
+                                        username={username}
+                                        setUsername={setUsername}
+                                        password={password}
+                                        setPassword={setPassword}
+                                        handleLogin={handleLogin}
+                                        setViewMode={setViewMode}
+                                        isLoading={isLoading}
+                                    />
+                                ) : (
+                                    <FormularioForgot
+                                        onHandleEnviarForgot={onHandleEnviarForgot}
+                                        isRequestDisabled={isRequestDisabled}
+                                        isLoading={isForgotLoading}
+                                        setViewMode={setViewMode}
+                                    />
+                                )}
+                            </Flex>
+                        </BorderGlow>
+                    </Box>
+                </Flex>
+            </Container>
+        </Box>
     );
 }
