@@ -19,6 +19,7 @@ import {
 } from "@chakra-ui/react";
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL.tsx';
+import BorderGlow from '../../components/BorderGlow/BorderGlow.tsx';
 
 // TypeScript interfaces for component props
 interface FormularioLoginProps {
@@ -232,30 +233,52 @@ export default function LoginPanel() {
     };
 
     return (
-        <Container minW={['auto', 'container.md', 'container.md']} w={"full"} h={"100vh"} bg={"transparent"} >
-            <Flex direction={"column"} gap={7} border={"0.5px solid gray"} borderRadius={"2em"} p={"4em"}
-                  alignItems={"center"} flex={1}>
-                <Box boxSize={'3xs'}>
-                    <Image src={'/logo_exotic.svg'} />
+        <Container minW={['auto', 'container.md', 'container.md']} w={"full"} h={"100vh"} bg={"transparent"}>
+            <Flex align="flex-start" justify="center" minH="100%" pt={{ base: 8, md: 12 }} pb={8} w="full">
+                <Box
+                    w="100%"
+                    minH={['70vh', '75vh', '78vh']}
+                    display="flex"
+                    flexDirection="column"
+                >
+                    <BorderGlow
+                        backgroundColor="#ffffff"
+                        borderRadius={40}
+                        borderWidth={3}
+                        glowColor="40 92 72"
+                        colors={['#c084fc', '#f472b6', '#38bdf8']}
+                        glowIntensity={2}
+                        fillOpacity={0.78}
+                        glowRadius={88}
+                        edgeSensitivity={7}
+                        coneSpread={25}
+                        style={{ flex: 1, width: '100%', minWidth: 0 }}
+                    >
+                        <Flex direction={"column"} gap={7} p={"4em"} alignItems={"center"} justifyContent="flex-start" flex={1}>
+                            <Box boxSize={'3xs'}>
+                                <Image src={'/logo_exotic.svg'} />
+                            </Box>
+                            {viewMode === 'login' ? (
+                                <FormularioLogin
+                                    username={username}
+                                    setUsername={setUsername}
+                                    password={password}
+                                    setPassword={setPassword}
+                                    handleLogin={handleLogin}
+                                    setViewMode={setViewMode}
+                                    isLoading={isLoading}
+                                />
+                            ) : (
+                                <FormularioForgot
+                                    onHandleEnviarForgot={onHandleEnviarForgot}
+                                    isRequestDisabled={isRequestDisabled}
+                                    isLoading={isForgotLoading}
+                                    setViewMode={setViewMode}
+                                />
+                            )}
+                        </Flex>
+                    </BorderGlow>
                 </Box>
-                {viewMode === 'login' ? (
-                    <FormularioLogin
-                        username={username}
-                        setUsername={setUsername}
-                        password={password}
-                        setPassword={setPassword}
-                        handleLogin={handleLogin}
-                        setViewMode={setViewMode}
-                        isLoading={isLoading}
-                    />
-                ) : (
-                    <FormularioForgot
-                        onHandleEnviarForgot={onHandleEnviarForgot}
-                        isRequestDisabled={isRequestDisabled}
-                        isLoading={isForgotLoading}
-                        setViewMode={setViewMode}
-                    />
-                )}
             </Flex>
         </Container>
     );

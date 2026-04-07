@@ -4,6 +4,11 @@ import EndPointsURL from './EndPointsURL';
 import { useAuth } from '../context/AuthContext';
 import { Modulo } from '../pages/Usuarios/GestionUsuarios/types.tsx';
 
+export interface OrdenCompraAlertaCampanaDTO {
+    ordenCompraId: number;
+    fechaEmision: string | null;
+}
+
 export interface ModuleNotificationDTA {
     modulo: Modulo;
     requireAtention: boolean;
@@ -11,6 +16,8 @@ export interface ModuleNotificationDTA {
     ordenesPendientesLiberar?: number | null;
     ordenesPendientesEnviar?: number | null;
     materialesEnPuntoReorden?: number | null;
+    detalleOrdenesPendientesLiberar?: OrdenCompraAlertaCampanaDTO[];
+    detalleOrdenesPendientesEnviar?: OrdenCompraAlertaCampanaDTO[];
 }
 
 export interface MaterialEnPuntoReordenDTO {
