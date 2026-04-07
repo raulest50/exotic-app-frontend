@@ -10,4 +10,6 @@ export const loginFloatingLinesPreset: FloatingLinesProps = {
   animationSpeed: 0.9,
   interactive: true,
   parallax: false,
+  enabledWaves: ['top', 'middle', 'bottom'],
+  bottomWavePosition: { x: 2.0, y: -0.7, rotate: -1 },
 };
