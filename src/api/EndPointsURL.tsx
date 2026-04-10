@@ -189,6 +189,8 @@ export default class EndPointsURL{
     public ejecutar_eliminacion_orden_compra: string;
     public estudiar_eliminacion_orden_produccion: string;
     public ejecutar_eliminacion_orden_produccion: string;
+    public estudiar_eliminacion_material: string;
+    public ejecutar_eliminacion_material: string;
     public ejecutar_purga_completa_terminados: string;
 
     // exportacion de datos (operaciones criticas BD)
@@ -493,6 +495,8 @@ export default class EndPointsURL{
         this.ejecutar_eliminacion_orden_compra = `${domain}/api/eliminaciones-forzadas/orden-compra`;
         this.estudiar_eliminacion_orden_produccion = `${domain}/api/eliminaciones-forzadas/estudiar/orden-produccion`;
         this.ejecutar_eliminacion_orden_produccion = `${domain}/api/eliminaciones-forzadas/orden-produccion`;
+        this.estudiar_eliminacion_material = `${domain}/api/eliminaciones-forzadas/estudiar/material`;
+        this.ejecutar_eliminacion_material = `${domain}/api/eliminaciones-forzadas/material`;
         this.ejecutar_purga_completa_terminados = `${domain}/api/eliminaciones-forzadas/terminados`;
 
         // exportacion de datos (operaciones criticas BD)

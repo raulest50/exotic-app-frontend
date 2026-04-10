@@ -1,58 +1,65 @@
-import { Container, Tabs, TabList, Tab, TabPanels, TabPanel } from "@chakra-ui/react";
+import { Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 
-import MyHeader from '../../components/MyHeader.tsx';
-
+import MyHeader from "../../components/MyHeader.tsx";
+import { tabAccessRule } from "../../auth/accessHelpers.ts";
+import type { AccessRule } from "../../auth/accessModel.ts";
+import { useAccessSnapshot } from "../../auth/usePermissions";
 import { my_style_tab } from "../../styles/styles_general.tsx";
-
+import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
+import ConfParamsCategoria from "./ConfParamsCategoria/ConfParamsCategoria.tsx";
 import CrearOrdenesTab from "./CrearOrdenesTab/CrearOrdenesTab.tsx";
 import HistorialOrdenesTab from "./HistorialOrdenesTab/HistorialOrdenesTab.tsx";
-import ConfParamsCategoria from "./ConfParamsCategoria/ConfParamsCategoria.tsx";
 import { PlaneacionProduccionTab } from "./PlaneacionProduccionTab/PlaneacionProduccionTab.tsx";
-import { Modulo } from '../Usuarios/GestionUsuarios/types.tsx';
-import { moduleAccessRule } from '../../auth/accessHelpers.ts';
-import { useAccessSnapshot } from '../../auth/usePermissions';
-import type { AccessRule } from '../../auth/accessModel.ts';
+import SeguimientoAreasOperativasTab from "./SeguimientoAreasOperativasTab.tsx";
 
 export default function ProduccionPage() {
     const access = useAccessSnapshot();
 
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
         {
-            key: 'crear-odp',
-            label: 'Crear ODP Manualmente',
+            key: "crear-odp",
+            label: "Crear ODP Manualmente",
             render: () => <CrearOrdenesTab />,
-            accesoValido: moduleAccessRule(Modulo.PRODUCCION, 1),
+            accesoValido: tabAccessRule(Modulo.PRODUCCION, "CREAR_ODP_MANUALMENTE", 1),
         },
         {
-            key: 'historial',
-            label: 'Historial',
+            key: "historial",
+            label: "Historial",
             render: () => <HistorialOrdenesTab />,
-            accesoValido: moduleAccessRule(Modulo.PRODUCCION, 1),
+            accesoValido: tabAccessRule(Modulo.PRODUCCION, "HISTORIAL", 1),
         },
         {
-            key: 'parametros-categoria',
-            label: 'Parametros por Categoría',
+            key: "parametros-categoria",
+            label: "Parametros por Categoria",
             render: () => <ConfParamsCategoria />,
-            accesoValido: moduleAccessRule(Modulo.PRODUCCION, 3),
+            accesoValido: tabAccessRule(Modulo.PRODUCCION, "PARAMETROS_POR_CATEGORIA", 3),
         },
         {
-            key: 'planeacion',
-            label: 'Planeacion Produccion',
+            key: "planeacion",
+            label: "Planeacion Produccion",
             render: () => <PlaneacionProduccionTab />,
-            accesoValido: moduleAccessRule(Modulo.PRODUCCION, 1),
+            accesoValido: tabAccessRule(Modulo.PRODUCCION, "PLANEACION_PRODUCCION", 1),
+        },
+        {
+            key: "seguimiento-areas-operativas",
+            label: "Seguimiento Areas Operativas",
+            render: () => <SeguimientoAreasOperativasTab />,
+            accesoValido: tabAccessRule(Modulo.PRODUCCION, "SEGUIMIENTO_AREAS_OPERATIVAS", 1),
         },
     ];
 
     const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));
 
     return (
-        <Container minW={['auto', 'container.lg', 'container.xl']} w={'full'} h={'full'}>
-            <MyHeader title={'Produccion'} />
+        <Container minW={["auto", "container.lg", "container.xl"]} w={"full"} h={"full"}>
+            <MyHeader title={"Produccion"} />
 
             <Tabs>
                 <TabList>
                     {visibleTabs.map((tab) => (
-                        <Tab key={tab.key} sx={my_style_tab}>{tab.label}</Tab>
+                        <Tab key={tab.key} sx={my_style_tab}>
+                            {tab.label}
+                        </Tab>
                     ))}
                 </TabList>
 

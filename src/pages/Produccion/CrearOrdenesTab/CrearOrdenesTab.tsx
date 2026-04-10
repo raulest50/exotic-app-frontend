@@ -43,7 +43,7 @@ import VendedorPicker from "../../../components/Pickers/VendedorPicker/VendedorP
 import type { User } from "../../../api/UserApi.tsx";
 import { useAuth } from '../../../context/AuthContext';
 import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
-import { useModuleAccessLevel } from '../../../auth/usePermissions';
+import { useTabPermission } from '../../../auth/usePermissions';
 import { selectNumericInputContentsOnFocus } from '../../../utils/selectNumericInputContentsOnFocus';
 
 type LoteValidationStatus = 'idle' | 'valid' | 'invalid' | 'checking';
@@ -65,7 +65,7 @@ function generateConsecutiveLotes(firstLote: string, n: number): string[] {
 export default function CrearOrdenesTab() {
     const toast = useToast();
     const { meProfile } = useAuth();
-    const { nivel: produccionAccessLevel } = useModuleAccessLevel(Modulo.PRODUCCION);
+    const { nivel: crearOdpAccessLevel } = useTabPermission(Modulo.PRODUCCION, "CREAR_ODP_MANUALMENTE");
 
     const [selectedProducto, setSelectedProducto] = useState<ProductoWithInsumos | null>(null);
     const [canProduce, setCanProduce] = useState(false);
@@ -96,7 +96,7 @@ export default function CrearOrdenesTab() {
 
     const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
 
-    const canEditLote = produccionAccessLevel >= 3;
+    const canEditLote = crearOdpAccessLevel >= 3;
     const currentUser: User | null = meProfile;
 
     // ── helpers ──────────────────────────────────────────────────────────────
@@ -722,7 +722,7 @@ export default function CrearOrdenesTab() {
                     <ModalBody>
                         <VStack align="stretch" spacing={4}>
                             <Text>
-                                <strong>Acceso Restringido:</strong> Esta funcionalidad está disponible exclusivamente para usuarios con nivel de acceso 3 o superior al módulo de Producción.
+                                <strong>Acceso Restringido:</strong> Esta funcionalidad está disponible exclusivamente para usuarios con nivel de acceso 3 o superior al tab Crear ODP Manualmente.
                             </Text>
                             <Text>
                                 <strong>Patrón de Generación Automática:</strong> El sistema genera automáticamente los números de lote siguiendo el formato <strong>PREFIJO-NNNNNNN-YY</strong>, donde:

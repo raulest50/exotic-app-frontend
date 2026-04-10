@@ -25,6 +25,7 @@ interface EliminacionOCMStep0SelectEntityTypeProps {
 const ENTITY_OPTIONS: { id: TipoEntidadEliminacion; label: string; description: string }[] = [
     { id: "ORDEN_COMPRA", label: "Orden de compra", description: "Eliminación forzada de Orden de Compra de Materiales (OCM)" },
     { id: "ORDEN_PRODUCCION", label: "Orden de producción", description: "Eliminación forzada de Orden de Producción (solo si no tiene transacciones de almacén)" },
+    { id: "MATERIAL", label: "Material", description: "Eliminación forzada de un material, quitando referencias hijas y preservando padres mixtos" },
     { id: "PURGA_COMPLETA_TERMINADOS", label: "Purga Completa Terminados", description: "Elimina todos los terminados y sus datos relacionados. Solo disponible en local y staging." },
 ];
 

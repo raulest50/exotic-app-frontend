@@ -136,6 +136,8 @@ export interface Lote{
 export enum TipoMovimiento{
     COMPRA = "COMPRA",
     BAJA = "BAJA",
+    AJUSTE_POSITIVO = "AJUSTE_POSITIVO",
+    AJUSTE_NEGATIVO = "AJUSTE_NEGATIVO",
     CONSUMO = "CONSUMO",
     BACKFLUSH = "BACKFLUSH",
     VENTA = "VENTA",

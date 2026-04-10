@@ -48,6 +48,7 @@ interface OrdenDispensacionResumen {
     fechaCreacion?: string;
     estado?: string | number;
     estadoOrden?: string | number;
+    ultimaAreaDispensada?: string;
     loteAsignado?: string;
     items?: DispensacionDTO['items'];
 }
@@ -116,14 +117,6 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
         if(!fecha) return 'N/A';
         const parsed = new Date(fecha);
         return isNaN(parsed.getTime()) ? fecha : parsed.toLocaleString();
-    };
-
-    const formatEstado = (estado?: string | number) => {
-        if(typeof estado === 'number'){
-            if(estado === 0) return 'Abierta';
-            if(estado === 1) return 'En progreso';
-        }
-        return estado ?? 'Desconocido';
     };
 
     const handleDispensacion = async (orden: OrdenDispensacionResumen) => {
@@ -215,7 +208,7 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
                             <Th>Lote</Th>
                             <Th>Producto</Th>
                             <Th>Fecha</Th>
-                            <Th>Estado</Th>
+                            <Th>Ultima area dispensada</Th>
                             <Th textAlign='center'>Acciones</Th>
                         </Tr>
                     </Thead>
@@ -227,7 +220,7 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
                                     <Td>{orden.loteAsignado ?? 'N/A'}</Td>
                                     <Td>{orden.productoNombre ?? orden.producto?.nombre ?? 'Sin nombre'}</Td>
                                     <Td>{formatFecha(orden.fechaInicio ?? orden.fechaCreacion)}</Td>
-                                    <Td>{formatEstado(orden.estado ?? orden.estadoOrden)}</Td>
+                                    <Td>{orden.ultimaAreaDispensada ?? 'Sin dispensacion'}</Td>
                                     <Td>
                                         <Flex justify='center'>
                                             <Button colorScheme='teal' size='sm' onClick={() => handleDispensacion(orden)} isLoading={loadingOrden === ordenId}>

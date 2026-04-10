@@ -57,6 +57,51 @@ export interface EstudiarEliminacionOPResponseDTO {
     asientosContables: AsientoContableResumenDTO[];
 }
 
+export interface MaterialEliminacionResumenDTO {
+    productoId: string;
+    nombre: string;
+    tipoMaterial: number | null;
+    tipoUnidades: string | null;
+}
+
+export interface ItemOrdenCompraMaterialResumenDTO {
+    itemOrdenId: number;
+    ordenCompraId: number;
+    proveedorNombre: string | null;
+    estadoOrdenCompra: number | null;
+    cantidad: number;
+    precioUnitario: number;
+    subTotal: number;
+}
+
+export interface InsumoRecetaResumenDTO {
+    insumoId: number;
+    productoDestinoId: string;
+    productoDestinoNombre: string;
+    tipoProductoDestino: string;
+    cantidadRequerida: number;
+}
+
+export interface InsumoEmpaqueResumenDTO {
+    insumoEmpaqueId: number;
+    terminadoId: string;
+    terminadoNombre: string;
+    unitsPerCase: number | null;
+    cantidad: number;
+    uom: string | null;
+}
+
+export interface EstudiarEliminacionMaterialResponseDTO {
+    material: MaterialEliminacionResumenDTO;
+    eliminable: boolean;
+    itemsOrdenCompra: ItemOrdenCompraMaterialResumenDTO[];
+    lotes: LoteResumenDTO[];
+    transaccionesAlmacen: TransaccionAlmacenResumenDTO[];
+    asientosContables: AsientoContableResumenDTO[];
+    insumosReceta: InsumoRecetaResumenDTO[];
+    insumosEmpaque: InsumoEmpaqueResumenDTO[];
+}
+
 export interface EliminacionBatchFailureDTO {
     productoId: string;
     reason: string;

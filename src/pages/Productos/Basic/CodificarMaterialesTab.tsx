@@ -20,6 +20,7 @@ import axios, { AxiosError } from 'axios';
 
 import { input_style } from "../../../styles/styles_general.tsx";
 import {Material, UNIDADES, TIPOS_PRODUCTOS, TIPOS_MATERIALES} from "../types.tsx";
+import { normalizeProductId, validateProductId } from "../productIdUtils.ts";
 
 import { FaFileUpload } from "react-icons/fa";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
@@ -69,31 +70,30 @@ function CodificarMaterialesTab() {
             });
             return false;
         }
-        if (!codigo.trim()) {
+
+        const productIdError = validateProductId(codigo);
+        if (productIdError) {
+            const descriptionByError: Record<typeof productIdError, string> = {
+                required: "El 'Codigo' no puede estar vacio.",
+                alphanumeric: "El 'Codigo' solo puede contener letras y numeros, sin espacios ni caracteres especiales.",
+                uppercase: "El 'Codigo' debe usar letras mayusculas.",
+            };
+
             toast({
                 title: "Validation Error",
-                description: "El 'Código' no puede estar vacío.",
+                description: descriptionByError[productIdError],
                 status: "warning",
                 duration: 3000,
                 isClosable: true,
             });
             return false;
         }
-        if (!/^[a-zA-Z0-9]+$/.test(codigo)) {
-            toast({
-                title: "Validation Error",
-                description: "El 'Código' solo puede contener letras y números, sin espacios ni caracteres especiales.",
-                status: "warning",
-                duration: 3000,
-                isClosable: true,
-            });
-            return false;
-        }
+
         const cantidad = Number(cantidad_unidad);
         if (!cantidad_unidad.trim() || isNaN(cantidad) || cantidad <= 0) {
             toast({
                 title: "Validation Error",
-                description: "La 'Cantidad por Unidad' debe ser un número positivo.",
+                description: "La 'Cantidad por Unidad' debe ser un numero positivo.",
                 status: "warning",
                 duration: 3000,
                 isClosable: true,
@@ -112,7 +112,7 @@ function CodificarMaterialesTab() {
             return false;
         }
         */
-        // Ficha técnica is now optional, so we only validate the file type if a file is selected
+        // Ficha tecnica is now optional, so we only validate the file type if a file is selected
         // Check file type if a file is selected
         if (selectedFile && selectedFile.type !== 'application/pdf' && !selectedFile.name.toLowerCase().endsWith('.pdf')) {
             toast({
@@ -128,7 +128,7 @@ function CodificarMaterialesTab() {
         if (puntoReordenStr.trim() === '' || !Number.isFinite(pr) || (pr !== -1 && pr < 0)) {
             toast({
                 title: "Validation Error",
-                description: "Punto de reorden: -1 (sin alertas), 0 (sin umbral definido) o un número mayor o igual a 0.",
+                description: "Punto de reorden: -1 (sin alertas), 0 (sin umbral definido) o un numero mayor o igual a 0.",
                 status: "warning",
                 duration: 4000,
                 isClosable: true,
@@ -166,7 +166,7 @@ function CodificarMaterialesTab() {
                 setUrl_ftecnica(file.name);
                 toast({
                     title: "Archivo cargado",
-                    description: "El archivo PDF se cargó correctamente.",
+                    description: "El archivo PDF se cargo correctamente.",
                     status: "success",
                     duration: 3000,
                     isClosable: true,
@@ -180,8 +180,9 @@ function CodificarMaterialesTab() {
         if (!validateData()) return;
 
         const puntoReorden = Number(puntoReordenStr);
+        const normalizedCodigo = normalizeProductId(codigo);
         const materiaPrima: Material = {
-            productoId: codigo,
+            productoId: normalizedCodigo,
             nombre,
             observaciones,
             costo: 0,
@@ -203,7 +204,7 @@ function CodificarMaterialesTab() {
             "materiaPrima",
             new Blob([JSON.stringify(materiaPrima)], { type: "application/json" })
         );
-        // Only append the file if one is selected (ficha técnica is optional)
+        // Only append the file if one is selected (ficha tecnica is optional)
         if (selectedFile) {
             formData.append("file", selectedFile);
         }
@@ -213,7 +214,7 @@ function CodificarMaterialesTab() {
             const url = endPoints.save_mprima_v2; // Full URL for the endpoint
             await axios.post(url, formData);
             toast({
-                title: "Éxito",
+                title: "Exito",
                 description: "La Materia Prima se ha guardado correctamente.",
                 status: "success",
                 duration: 3000,
@@ -257,7 +258,7 @@ function CodificarMaterialesTab() {
                             <FormLabel>Codigo</FormLabel>
                             <Input
                                 value={codigo}
-                                onChange={(e) => setCodigo(e.target.value)}
+                                onChange={(e) => setCodigo(normalizeProductId(e.target.value))}
                                 sx={input_style}
                             />
                         </FormControl>

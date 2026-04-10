@@ -19,6 +19,7 @@ export const TABS_BY_MODULO: Record<Modulo, TabDefinition[]> = {
         tab("HISTORIAL", "Historial"),
         tab("PARAMETROS_POR_CATEGORIA", "Parametros por Categoria"),
         tab("PLANEACION_PRODUCCION", "Planeacion Produccion"),
+        tab("SEGUIMIENTO_AREAS_OPERATIVAS", "Seguimiento Areas Operativas"),
     ],
     [Modulo.STOCK]: [
         tab("CONSOLIDADO", "Consolidado"),

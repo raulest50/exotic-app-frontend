@@ -9,8 +9,9 @@ import { useState, useEffect } from "react";
 import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL.tsx';
 import { ProductoSemiter, UNIDADES, TIPOS_PRODUCTOS, Categoria } from "../../../types.tsx";
+import { normalizeProductId, validateProductId } from "../../../productIdUtils.ts";
 
-/** Calcula el prefijo de lote a partir del nombre: primera letra de cada palabra en mayúscula. */
+/** Calcula el prefijo de lote a partir del nombre: primera letra de cada palabra en mayuscula. */
 function calcularPrefijoDesdeNombre(nombre: string): string {
     if (!nombre || !nombre.trim()) return "";
     return nombre
@@ -43,7 +44,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
     const [prefijoVerificado, setPrefijoVerificado] = useState<boolean>(false);
     const [verificandoPrefijo, setVerificandoPrefijo] = useState<boolean>(false);
 
-    // Estados para manejar categorías
+    // Estados para manejar categorias
     const [categoriasDisponibles, setCategoriasDisponibles] = useState<Categoria[]>([]);
     const [selectedCategoriaId, setSelectedCategoriaId] = useState<number | null>(null);
     const [loadingCategorias, setLoadingCategorias] = useState<boolean>(false);
@@ -53,7 +54,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
     const toast = useToast();
     const { isOpen: isHelpOpen, onOpen: onHelpOpen, onClose: onHelpClose } = useDisclosure();
 
-    // Función para cargar las categorías
+    // Funcion para cargar las categorias
     const fetchCategorias = async () => {
         if (tipo_producto === TIPOS_PRODUCTOS.terminado) {
             try {
@@ -62,11 +63,11 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                 const response = await axios.get(endPoints.get_categorias);
                 setCategoriasDisponibles(response.data);
 
-                // Si no hay categorías, mostrar un mensaje
+                // Si no hay categorias, mostrar un mensaje
                 if (response.data.length === 0) {
                     toast({
                         title: "Advertencia",
-                        description: "No hay categorías disponibles. Por favor, cree una categoría primero.",
+                        description: "No hay categorias disponibles. Por favor, cree una categoria primero.",
                         status: "warning",
                         duration: 5000,
                         isClosable: true,
@@ -76,9 +77,9 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                 console.error('Error fetching categorias:', error);
 
                 // Manejo mejorado de excepciones
-                let errorMessage = 'Error al cargar las categorías';
+                let errorMessage = 'Error al cargar las categorias';
 
-                // Extraer el mensaje de error específico del backend
+                // Extraer el mensaje de error especifico del backend
                 if (axios.isAxiosError(error) && error.response) {
                     if (error.response.data && error.response.data.message) {
                         errorMessage = error.response.data.message;
@@ -101,13 +102,13 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
         }
     };
 
-    // Cargar categorías cuando el componente se monta, cuando cambia el tipo de producto,
+    // Cargar categorias cuando el componente se monta, cuando cambia el tipo de producto,
     // o cuando se actualiza refreshCategorias
     useEffect(() => {
         fetchCategorias();
     }, [tipo_producto, refreshCategorias]);
 
-    // Limpiar la selección de categoría cuando se cambia a producto semiterminado
+    // Limpiar la seleccion de categoria cuando se cambia a producto semiterminado
     useEffect(() => {
         if (tipo_producto !== TIPOS_PRODUCTOS.terminado) {
             setSelectedCategoriaId(null);
@@ -121,7 +122,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
         }
     }, [tipo_producto]);
 
-    // Actualizar prefijo en tiempo real cuando el nombre cambia (modo automático, solo terminados)
+    // Actualizar prefijo en tiempo real cuando el nombre cambia (modo automatico, solo terminados)
     useEffect(() => {
         if (tipo_producto === TIPOS_PRODUCTOS.terminado && modoPrefijoLote === "automatico") {
             setPrefijoLote(calcularPrefijoDesdeNombre(nombre));
@@ -154,7 +155,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
         const valor = (prefijoLote ?? "").trim();
         if (!valor) {
             toast({
-                title: "Validación",
+                title: "Validacion",
                 description: "Ingrese un prefijo de lote antes de verificar.",
                 status: "warning",
                 duration: 3000,
@@ -171,8 +172,8 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
             setPrefijoVerificado(valido);
             if (valido) {
                 toast({
-                    title: "Prefijo válido",
-                    description: "El prefijo de lote está disponible.",
+                    title: "Prefijo valido",
+                    description: "El prefijo de lote esta disponible.",
                     status: "success",
                     duration: 3000,
                     isClosable: true,
@@ -180,7 +181,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
             } else {
                 toast({
                     title: "Prefijo no disponible",
-                    description: response.data?.mensaje ?? "El prefijo ya está asignado a otro producto terminado.",
+                    description: response.data?.mensaje ?? "El prefijo ya esta asignado a otro producto terminado.",
                     status: "warning",
                     duration: 4000,
                     isClosable: true,
@@ -203,22 +204,16 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
     };
 
     const ValidarDatos = (): boolean => {
-        // Check if productoId is empty
-        if (!productoId || productoId.trim() === "") {
+        const productIdError = validateProductId(productoId);
+        if (productIdError) {
+            const descriptionByError: Record<typeof productIdError, string> = {
+                required: "El campo 'Codigo Id' es requerido.",
+                alphanumeric: "El 'Codigo Id' solo puede contener letras y numeros, sin espacios ni caracteres especiales.",
+                uppercase: "El 'Codigo Id' debe usar letras mayusculas.",
+            };
             toast({
-                title: "Validación",
-                description: "El campo 'Código Id' es requerido.",
-                status: "warning",
-                duration: 3000,
-                isClosable: true,
-            });
-            return false;
-        }
-        // Check if productoId contains only alphanumeric characters (letters and numbers)
-        if (!/^[a-zA-Z0-9]+$/.test(productoId)) {
-            toast({
-                title: "Validación",
-                description: "El 'Código Id' solo puede contener letras y números, sin espacios ni caracteres especiales.",
+                title: "Validacion",
+                description: descriptionByError[productIdError],
                 status: "warning",
                 duration: 3000,
                 isClosable: true,
@@ -228,7 +223,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
         // Check if nombre is empty
         if (!nombre || nombre.trim() === "") {
             toast({
-                title: "Validación",
+                title: "Validacion",
                 description: "El campo 'Nombre' es requerido.",
                 status: "warning",
                 duration: 3000,
@@ -239,7 +234,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
         // Check if cantidadUnidad is empty
         if (!cantidadUnidad || cantidadUnidad.trim() === "") {
             toast({
-                title: "Validación",
+                title: "Validacion",
                 description: "El campo 'Contenido por envase' es requerido.",
                 status: "warning",
                 duration: 3000,
@@ -250,8 +245,8 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
         // Check if cantidadUnidad is a valid number
         if (isNaN(Number(cantidadUnidad))) {
             toast({
-                title: "Validación",
-                description: "El 'Contenido por envase' debe ser un número válido.",
+                title: "Validacion",
+                description: "El 'Contenido por envase' debe ser un numero valido.",
                 status: "warning",
                 duration: 3000,
                 isClosable: true,
@@ -262,7 +257,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
         // Check if observaciones is empty
         if (!observaciones || observaciones.trim() === "") {
             toast({
-                title: "Validación",
+                title: "Validacion",
                 description: "El campo 'Observaciones' es requerido.",
                 status: "warning",
                 duration: 3000,
@@ -272,11 +267,11 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
         }
         */
 
-        // Validar que se haya seleccionado una categoría para productos terminados
+        // Validar que se haya seleccionado una categoria para productos terminados
         if (tipo_producto === TIPOS_PRODUCTOS.terminado && !selectedCategoriaId) {
             toast({
-                title: "Validación",
-                description: "Debe seleccionar una categoría para productos terminados.",
+                title: "Validacion",
+                description: "Debe seleccionar una categoria para productos terminados.",
                 status: "warning",
                 duration: 3000,
                 isClosable: true,
@@ -288,7 +283,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
         if (tipo_producto === TIPOS_PRODUCTOS.terminado) {
             if (!prefijoLote || !prefijoLote.trim()) {
                 toast({
-                    title: "Validación",
+                    title: "Validacion",
                     description: "El prefijo de lote es requerido para productos terminados.",
                     status: "warning",
                     duration: 3000,
@@ -298,8 +293,8 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
             }
             if (!prefijoVerificado) {
                 toast({
-                    title: "Validación",
-                    description: "Debe verificar que el prefijo de lote sea único antes de continuar.",
+                    title: "Validacion",
+                    description: "Debe verificar que el prefijo de lote sea unico antes de continuar.",
                     status: "warning",
                     duration: 3000,
                     isClosable: true,
@@ -313,11 +308,12 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
 
     const onClickSiguiente = () => {
         if(ValidarDatos()){
-            // Encontrar la categoría seleccionada
+            // Encontrar la categoria seleccionada
             const selectedCategoria = categoriasDisponibles.find(f => f.categoriaId === selectedCategoriaId);
+            const normalizedProductoId = normalizeProductId(productoId);
 
             const semioter: ProductoSemiter = {
-                productoId: productoId!,
+                productoId: normalizedProductoId,
                 nombre: nombre!,
                 observaciones: observaciones || "",
                 tipoUnidades: tipoUnidades,
@@ -341,7 +337,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                         <FormLabel>Codigo Id</FormLabel>
                         <Input
                             value={productoId}
-                            onChange={(e) => setProductoId(e.target.value)}
+                            onChange={(e) => setProductoId(normalizeProductId(e.target.value))}
                             variant="filled"
                         />
                     </FormControl>
@@ -399,12 +395,12 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
 
                 <GridItem colSpan={1} display={tipo_producto === TIPOS_PRODUCTOS.terminado ? "flex" : "none"}>
                     <FormControl isRequired={tipo_producto === TIPOS_PRODUCTOS.terminado}>
-                        <FormLabel>Categoría</FormLabel>
+                        <FormLabel>Categoria</FormLabel>
                         <Select
                             value={selectedCategoriaId || ""}
                             onChange={(e) => setSelectedCategoriaId(Number(e.target.value))}
                             isDisabled={loadingCategorias || categoriasDisponibles.length === 0}
-                            placeholder="Seleccione una categoría"
+                            placeholder="Seleccione una categoria"
                         >
                             {categoriasDisponibles.map((categoria) => (
                                 <option key={categoria.categoriaId} value={categoria.categoriaId}>
@@ -420,7 +416,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                         )}
                         {!loadingCategorias && !errorCategorias && categoriasDisponibles.length === 0 && (
                             <Text color="orange.500" fontSize="sm" mt={1}>
-                                No hay categorías disponibles. Por favor, cree una categoría primero.
+                                No hay categorias disponibles. Por favor, cree una categoria primero.
                             </Text>
                         )}
                     </FormControl>
@@ -448,10 +444,10 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                                 colorScheme="teal"
                                 onClick={handleToggleModoPrefijo}
                             >
-                                {modoPrefijoLote === "automatico" ? "Automático" : "Editar"}
+                                {modoPrefijoLote === "automatico" ? "Automatico" : "Editar"}
                             </Button>
                             <IconButton
-                                aria-label="Verificar prefijo único"
+                                aria-label="Verificar prefijo unico"
                                 icon={<CheckIcon />}
                                 size="sm"
                                 colorScheme={prefijoVerificado ? "green" : "gray"}
@@ -517,21 +513,21 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                     <ModalCloseButton />
                     <ModalBody pb={4}>
                         <Text mb={2}>
-                            El prefijo de lote identifica de forma única a cada producto terminado y se usa para generar
-                            los números de lote al crear órdenes de producción (por ejemplo: TRK-0000001-26).
+                            El prefijo de lote identifica de forma unica a cada producto terminado y se usa para generar
+                            los numeros de lote al crear ordenes de produccion (por ejemplo: TRK-0000001-26).
                         </Text>
                         <Text mb={2}>
-                            <strong>Modo automático:</strong> El prefijo se calcula a partir del nombre del producto,
-                            tomando la primera letra de cada palabra en mayúscula. Ejemplo: &quot;Tratamiento Rizo Kids&quot; → TRK,
-                            &quot;Shampoo Liso Adulto&quot; → SLA.
+                            <strong>Modo automatico:</strong> El prefijo se calcula a partir del nombre del producto,
+                            tomando la primera letra de cada palabra en mayuscula. Ejemplo: &quot;Tratamiento Rizo Kids&quot; -&gt; TRK,
+                            &quot;Shampoo Liso Adulto&quot; -&gt; SLA.
                         </Text>
                         <Text mb={2}>
                             <strong>Modo editar:</strong> Puede definir un prefijo propio si lo desea. El prefijo debe ser
-                            único entre todos los productos terminados.
+                            unico entre todos los productos terminados.
                         </Text>
                         <Text mb={2}>
-                            Use el botón con el símbolo de verificación (✓) para comprobar que el prefijo no esté ya
-                            asignado a otro producto. El botón &quot;Siguiente&quot; solo se habilita después de verificar el prefijo.
+                            Use el boton con el simbolo de verificacion para comprobar que el prefijo no este ya
+                            asignado a otro producto. El boton &quot;Siguiente&quot; solo se habilita despues de verificar el prefijo.
                         </Text>
                     </ModalBody>
                 </ModalContent>

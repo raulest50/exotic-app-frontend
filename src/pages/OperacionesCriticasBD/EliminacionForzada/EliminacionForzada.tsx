@@ -11,16 +11,19 @@ import {
 import { Step, StepIcon, StepIndicator, Stepper, StepTitle } from "@chakra-ui/icons";
 import { useState } from "react";
 import EliminacionStep0SelectEntityType from "./EliminacionStep0SelectEntityType.tsx";
+import EliminacionMaterialStep1SelectAndStudy from "./Material/EliminacionMaterialStep1SelectAndStudy";
+import EliminacionMaterialStep2StudyResult from "./Material/EliminacionMaterialStep2StudyResult";
 import EliminacionOCMStep1SelectAndStudy from "./OrdenCompra/EliminacionOCMStep1SelectAndStudy";
 import EliminacionOCMStep2StudyResult from "./OrdenCompra/EliminacionOCMStep2StudyResult";
 import EliminacionOPStep1SelectAndStudy from "./OrdenProduccion/EliminacionOPStep1SelectAndStudy";
 import EliminacionOPStep2StudyResult from "./OrdenProduccion/EliminacionOPStep2StudyResult";
+import type { OrdenProduccionPickItem } from "./OrdenProduccion/OrdenProduccionPicker";
 import EliminacionPurgaTerminadosStep1Informacion from "./PurgaTerminados/EliminacionPurgaTerminadosStep1Informacion";
 import EliminacionPurgaTerminadosStep2Ejecutar from "./PurgaTerminados/EliminacionPurgaTerminadosStep2Ejecutar";
-import type { OrdenProduccionPickItem } from "./OrdenProduccion/OrdenProduccionPicker";
-import type { OrdenCompraMateriales } from "../../Compras/types";
+import type { Material, OrdenCompraMateriales } from "../../Compras/types";
 import type {
     EliminacionTerminadosBatchResultDTO,
+    EstudiarEliminacionMaterialResponseDTO,
     EstudiarEliminacionOCMResponseDTO,
     EstudiarEliminacionOPResponseDTO,
 } from "./types";
@@ -34,6 +37,7 @@ const steps = [
 export type TipoEntidadEliminacion =
     | "ORDEN_COMPRA"
     | "ORDEN_PRODUCCION"
+    | "MATERIAL"
     | "PURGA_COMPLETA_TERMINADOS";
 
 export default function EliminacionForzada() {
@@ -49,6 +53,9 @@ export default function EliminacionForzada() {
         useState<OrdenProduccionPickItem | null>(null);
     const [studyResultOP, setStudyResultOP] =
         useState<EstudiarEliminacionOPResponseDTO | null>(null);
+    const [materialSeleccionado, setMaterialSeleccionado] = useState<Material | null>(null);
+    const [studyResultMaterial, setStudyResultMaterial] =
+        useState<EstudiarEliminacionMaterialResponseDTO | null>(null);
     const [resultPurgaTerminados, setResultPurgaTerminados] =
         useState<EliminacionTerminadosBatchResultDTO | null>(null);
 
@@ -58,6 +65,8 @@ export default function EliminacionForzada() {
         setStudyResult(null);
         setOrdenProduccionSeleccionada(null);
         setStudyResultOP(null);
+        setMaterialSeleccionado(null);
+        setStudyResultMaterial(null);
         setResultPurgaTerminados(null);
         setActiveStep(0);
     };
@@ -71,6 +80,7 @@ export default function EliminacionForzada() {
                 />
             );
         }
+
         if (activeStep === 1) {
             if (tipoEntidad === "PURGA_COMPLETA_TERMINADOS") {
                 return <EliminacionPurgaTerminadosStep1Informacion setActiveStep={setActiveStep} />;
@@ -85,6 +95,16 @@ export default function EliminacionForzada() {
                     />
                 );
             }
+            if (tipoEntidad === "MATERIAL") {
+                return (
+                    <EliminacionMaterialStep1SelectAndStudy
+                        setActiveStep={setActiveStep}
+                        materialSeleccionado={materialSeleccionado}
+                        setMaterialSeleccionado={setMaterialSeleccionado}
+                        setStudyResultMaterial={setStudyResultMaterial}
+                    />
+                );
+            }
             return (
                 <EliminacionOCMStep1SelectAndStudy
                     setActiveStep={setActiveStep}
@@ -94,6 +114,7 @@ export default function EliminacionForzada() {
                 />
             );
         }
+
         if (activeStep === 2) {
             if (tipoEntidad === "PURGA_COMPLETA_TERMINADOS") {
                 return (
@@ -114,6 +135,15 @@ export default function EliminacionForzada() {
                     />
                 );
             }
+            if (tipoEntidad === "MATERIAL") {
+                return (
+                    <EliminacionMaterialStep2StudyResult
+                        setActiveStep={setActiveStep}
+                        studyResultMaterial={studyResultMaterial}
+                        onReset={handleReset}
+                    />
+                );
+            }
             return (
                 <EliminacionOCMStep2StudyResult
                     setActiveStep={setActiveStep}
@@ -122,6 +152,7 @@ export default function EliminacionForzada() {
                 />
             );
         }
+
         return null;
     }
 
