@@ -5,7 +5,6 @@ import {
     AlertTitle,
     Box,
     Button,
-    Flex,
     HStack,
     Icon,
     Input,
@@ -26,6 +25,7 @@ import Ajv, { ErrorObject } from "ajv";
 import addFormats from "ajv-formats";
 import axios from "axios";
 import EndPointsURL from "../../../../../api/EndPointsURL";
+import { validateBulkProductoId } from "../../productoIdValidation";
 import { soloInsumosSchema } from "../soloInsumosSchema";
 import {
     ErrorRecordDTO,
@@ -59,30 +59,32 @@ export default function SoloInsumosStep2SubirValidar({
         return ajv.compile(soloInsumosSchema);
     }, []);
 
-    const isValidJsonExtension = (file: File): boolean => file.name.toLowerCase().endsWith(".json");
-
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            if (!isValidJsonExtension(file)) {
-                toast({
-                    title: "Tipo de archivo no permitido",
-                    description: "Solo se permiten archivos JSON (.json)",
-                    status: "error",
-                    duration: 5000,
-                    isClosable: true,
-                });
-                e.target.value = "";
-                return;
-            }
-            setLocalJsonFile(file);
-            setJsonFile(file);
-            setJsonIsValid(false);
-            setValidationErrors([]);
-            setTableErrors([]);
-            setHttpErrorType(null);
-            setLocalJsonData(null);
+        if (!file) {
+            e.target.value = "";
+            return;
         }
+
+        if (!file.name.toLowerCase().endsWith(".json")) {
+            toast({
+                title: "Tipo de archivo no permitido",
+                description: "Solo se permiten archivos JSON (.json)",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+            e.target.value = "";
+            return;
+        }
+
+        setLocalJsonFile(file);
+        setJsonFile(file);
+        setJsonIsValid(false);
+        setValidationErrors([]);
+        setTableErrors([]);
+        setHttpErrorType(null);
+        setLocalJsonData(null);
         e.target.value = "";
     };
 
@@ -90,7 +92,6 @@ export default function SoloInsumosStep2SubirValidar({
         if (!errors?.length) {
             return [];
         }
-
         return errors.map((error) => {
             const match = error.instancePath.match(/^\/terminados\/(\d+)/);
             const index = match ? Number(match[1]) : -1;
@@ -111,6 +112,32 @@ export default function SoloInsumosStep2SubirValidar({
         });
     };
 
+    const validateProductoIds = (data: ExportacionTerminadosConInsumos): ErrorRecordDTO[] => {
+        const errors: ErrorRecordDTO[] = [];
+        data.terminados.forEach((terminado, index) => {
+            const rowNumber = index + 1;
+            const productoId = terminado.productoId ?? "";
+            const productoIdError = validateBulkProductoId(productoId, "productoId");
+            if (productoIdError) {
+                errors.push({ rowNumber, productoId, columnName: "productoId", message: productoIdError });
+            }
+
+            terminado.insumos.forEach((insumo) => {
+                const insumoProductoId = insumo.producto?.productoId ?? "";
+                const insumoProductoIdError = validateBulkProductoId(insumoProductoId, "insumos.producto.productoId");
+                if (insumoProductoIdError) {
+                    errors.push({
+                        rowNumber,
+                        productoId,
+                        columnName: "insumos.producto.productoId",
+                        message: insumoProductoIdError,
+                    });
+                }
+            });
+        });
+        return errors;
+    };
+
     const validateJsonFile = async (file: File) => {
         setIsValidating(true);
         setValidationErrors([]);
@@ -119,14 +146,16 @@ export default function SoloInsumosStep2SubirValidar({
         setJsonIsValid(false);
 
         try {
-            const text = await file.text();
-            const parsed = JSON.parse(text) as ExportacionTerminadosConInsumos;
-
+            const parsed = JSON.parse(await file.text()) as ExportacionTerminadosConInsumos;
             const schemaValid = validateSchema(parsed);
             if (!schemaValid) {
-                const schemaErrors = mapSchemaErrors(validateSchema.errors, parsed);
-                setTableErrors(schemaErrors);
-                setIsValidating(false);
+                setTableErrors(mapSchemaErrors(validateSchema.errors, parsed));
+                return;
+            }
+
+            const semanticErrors = validateProductoIds(parsed);
+            if (semanticErrors.length > 0) {
+                setTableErrors(semanticErrors);
                 return;
             }
 
@@ -141,60 +170,45 @@ export default function SoloInsumosStep2SubirValidar({
                 }
             );
 
-            const result = response.data;
-            if (!result.valid && result.errors && result.errors.length > 0) {
-                setTableErrors(result.errors);
-                setJsonIsValid(false);
+            if (!response.data.valid && response.data.errors?.length) {
+                setTableErrors(response.data.errors);
                 toast({
-                    title: "Errores de validación en el servidor",
-                    description: `${result.errors.length} error(es) encontrado(s). Revise la tabla para corregir el archivo.`,
+                    title: "Errores de validacion en el servidor",
+                    description: `${response.data.errors.length} error(es) encontrado(s). Revise la tabla para corregir el archivo.`,
                     status: "error",
                     duration: 5000,
                     isClosable: true,
                 });
-            } else {
-                setTableErrors([]);
-                setJsonIsValid(true);
-                setLocalJsonData(parsed);
-                toast({
-                    title: "Validación exitosa",
-                    description: `Se validaron ${parsed.terminados.length} terminado(s) correctamente`,
-                    status: "success",
-                    duration: 5000,
-                    isClosable: true,
-                });
+                return;
             }
+
+            setTableErrors([]);
+            setJsonIsValid(true);
+            setLocalJsonData(parsed);
+            toast({
+                title: "Validacion exitosa",
+                description: `Se validaron ${parsed.terminados.length} terminado(s) correctamente`,
+                status: "success",
+                duration: 5000,
+                isClosable: true,
+            });
         } catch (error) {
             setJsonIsValid(false);
             if (error instanceof SyntaxError) {
                 setHttpErrorType(null);
                 setTableErrors([]);
-                setValidationErrors(["El archivo no contiene un JSON válido"]);
+                setValidationErrors(["El archivo no contiene un JSON valido"]);
             } else if (axios.isAxiosError(error)) {
                 const status = error.response?.status;
                 const data = error.response?.data as { errors?: ErrorRecordDTO[] } | undefined;
-                if (status === 403 || status === 401) {
+                if (status === 401 || status === 403) {
                     setHttpErrorType("session");
                     setTableErrors([]);
                     setValidationErrors([]);
-                    toast({
-                        title: "Sesión expirada",
-                        description: "Su sesión ha expirado o no tiene permisos. Por favor inicie sesión nuevamente.",
-                        status: "error",
-                        duration: 7000,
-                        isClosable: true,
-                    });
                 } else if (status === 500) {
                     setHttpErrorType("server");
                     setTableErrors([]);
                     setValidationErrors([]);
-                    toast({
-                        title: "Error interno del servidor",
-                        description: "Intente más tarde o contacte al administrador.",
-                        status: "error",
-                        duration: 7000,
-                        isClosable: true,
-                    });
                 } else if (data?.errors?.length) {
                     setHttpErrorType(null);
                     setTableErrors(data.errors);
@@ -216,45 +230,23 @@ export default function SoloInsumosStep2SubirValidar({
     return (
         <Box p={4}>
             <VStack align="stretch" spacing={6}>
-                <Text fontSize="lg" fontWeight="semibold">
-                    Subir y validar archivo JSON
-                </Text>
+                <Text fontSize="lg" fontWeight="semibold">Subir y validar archivo JSON</Text>
 
                 <Text>
                     Cargue el mismo JSON exportado por el sistema. El archivo debe conservar
-                    `schemaVersion`, `exportedAt`, la lista `terminados` y la receta `insumos`
-                    de cada terminado.
+                    <code> schemaVersion </code>, <code> exportedAt </code>, la lista <code>terminados</code> y la receta <code>insumos</code>.
                 </Text>
-
                 <Text fontSize="sm" color="gray.600">
-                    El producto de cada insumo debe existir previamente en la base de datos. Este
-                    flujo crea terminados con insumos, dejando `procesoProduccionCompleto` y
-                    `casePack` en null.
+                    Los IDs de producto deben venir solo con letras y numeros en mayusculas, sin espacios ni caracteres especiales.
                 </Text>
 
                 <Box p={5} borderWidth="1px" borderRadius="lg">
                     <VStack spacing={4} align="stretch">
                         <HStack spacing={4} alignItems="center">
-                            <Button onClick={() => inputRef.current?.click()}>
-                                Subir JSON
-                            </Button>
-                            <Input
-                                type="file"
-                                ref={inputRef}
-                                style={{ display: "none" }}
-                                accept=".json,application/json"
-                                onChange={handleFileChange}
-                            />
-                            <Icon
-                                as={jsonFile ? FaFileCircleCheck : FaFileCircleQuestion}
-                                boxSize="2em"
-                                color={jsonFile ? "green" : "orange.500"}
-                            />
-                            {jsonFile && (
-                                <Text fontSize="sm" noOfLines={1} flex={1}>
-                                    {jsonFile.name}
-                                </Text>
-                            )}
+                            <Button onClick={() => inputRef.current?.click()}>Subir JSON</Button>
+                            <Input type="file" ref={inputRef} style={{ display: "none" }} accept=".json,application/json" onChange={handleFileChange} />
+                            <Icon as={jsonFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize="2em" color={jsonFile ? "green" : "orange.500"} />
+                            {jsonFile && <Text fontSize="sm" noOfLines={1} flex={1}>{jsonFile.name}</Text>}
                         </HStack>
 
                         <Button
@@ -273,10 +265,8 @@ export default function SoloInsumosStep2SubirValidar({
                     <Alert status="error">
                         <AlertIcon />
                         <Box>
-                            <AlertTitle>Sesión expirada</AlertTitle>
-                            <AlertDescription>
-                                Su sesión ha expirado o no tiene permisos. Por favor inicie sesión nuevamente.
-                            </AlertDescription>
+                            <AlertTitle>Sesion expirada</AlertTitle>
+                            <AlertDescription>Su sesion ha expirado o no tiene permisos. Por favor inicie sesion nuevamente.</AlertDescription>
                         </Box>
                     </Alert>
                 )}
@@ -286,9 +276,7 @@ export default function SoloInsumosStep2SubirValidar({
                         <AlertIcon />
                         <Box>
                             <AlertTitle>Error interno del servidor</AlertTitle>
-                            <AlertDescription>
-                                Intente más tarde o contacte al administrador.
-                            </AlertDescription>
+                            <AlertDescription>Intente mas tarde o contacte al administrador.</AlertDescription>
                         </Box>
                     </Alert>
                 )}
@@ -297,7 +285,7 @@ export default function SoloInsumosStep2SubirValidar({
                     <Alert status="error">
                         <AlertIcon />
                         <Box width="100%">
-                            <AlertTitle>Errores de validación encontrados:</AlertTitle>
+                            <AlertTitle>Errores de validacion encontrados:</AlertTitle>
                             <AlertDescription as="div" mt={3}>
                                 <TableContainer maxH="300px" overflowY="auto">
                                     <Table size="sm" variant="simple">
@@ -306,26 +294,22 @@ export default function SoloInsumosStep2SubirValidar({
                                                 <Th>Fila</Th>
                                                 <Th>Campo</Th>
                                                 <Th>Producto ID</Th>
-                                                <Th>Descripción del error</Th>
+                                                <Th>Descripcion del error</Th>
                                             </Tr>
                                         </Thead>
                                         <Tbody>
-                                            {tableErrors.slice(0, 20).map((e, idx) => (
+                                            {tableErrors.slice(0, 20).map((error, idx) => (
                                                 <Tr key={idx}>
-                                                    <Td>{e.rowNumber}</Td>
-                                                    <Td>{e.columnName || "-"}</Td>
-                                                    <Td>{e.productoId || "-"}</Td>
-                                                    <Td>{e.message}</Td>
+                                                    <Td>{error.rowNumber}</Td>
+                                                    <Td>{error.columnName || "-"}</Td>
+                                                    <Td>{error.productoId || "-"}</Td>
+                                                    <Td>{error.message}</Td>
                                                 </Tr>
                                             ))}
                                         </Tbody>
                                     </Table>
                                 </TableContainer>
-                                {tableErrors.length > 20 && (
-                                    <Text fontSize="sm" fontStyle="italic" mt={2}>
-                                        ... y {tableErrors.length - 20} errores más
-                                    </Text>
-                                )}
+                                {tableErrors.length > 20 && <Text fontSize="sm" fontStyle="italic" mt={2}>... y {tableErrors.length - 20} errores mas</Text>}
                             </AlertDescription>
                         </Box>
                     </Alert>
@@ -335,14 +319,10 @@ export default function SoloInsumosStep2SubirValidar({
                     <Alert status="error">
                         <AlertIcon />
                         <Box>
-                            <AlertTitle>Error de validación</AlertTitle>
+                            <AlertTitle>Error de validacion</AlertTitle>
                             <AlertDescription>
                                 <VStack align="stretch" spacing={1} mt={2}>
-                                    {validationErrors.map((error, index) => (
-                                        <Text key={index} fontSize="sm">
-                                            {error}
-                                        </Text>
-                                    ))}
+                                    {validationErrors.map((error, index) => <Text key={index} fontSize="sm">{error}</Text>)}
                                 </VStack>
                             </AlertDescription>
                         </Box>
@@ -352,21 +332,14 @@ export default function SoloInsumosStep2SubirValidar({
                 {jsonIsValid && jsonData && (
                     <Alert status="success">
                         <AlertIcon />
-                        <AlertDescription>
-                            Archivo validado correctamente. Se encontraron {jsonData.terminados.length} terminado(s) para registrar.
-                        </AlertDescription>
+                        <AlertDescription>Archivo validado correctamente. Se encontraron {jsonData.terminados.length} terminado(s) para registrar.</AlertDescription>
                     </Alert>
                 )}
 
-                <Flex gap={4} justify="flex-end">
-                    <Button
-                        colorScheme="blue"
-                        onClick={() => setActiveStep(1)}
-                        isDisabled={!jsonIsValid}
-                    >
-                        Siguiente
-                    </Button>
-                </Flex>
+                <HStack justify="flex-end">
+                    <Button variant="outline" onClick={() => setActiveStep(0)}>Atras</Button>
+                    <Button colorScheme="blue" onClick={() => setActiveStep(2)} isDisabled={!jsonIsValid}>Siguiente</Button>
+                </HStack>
             </VStack>
         </Box>
     );

@@ -57,8 +57,11 @@ export default function SinInsumosStep1Informacion({ setActiveStep }: SinInsumos
             let filename = "plantilla_carga_masiva_terminados_sin_insumos.xlsx";
             if (contentDisposition) {
                 const match = contentDisposition.match(/filename="?(.+)"?/);
-                if (match && match[1]) filename = match[1].trim();
+                if (match && match[1]) {
+                    filename = match[1].trim();
+                }
             }
+
             a.download = filename;
             document.body.appendChild(a);
             a.click();
@@ -67,7 +70,7 @@ export default function SinInsumosStep1Informacion({ setActiveStep }: SinInsumos
 
             toast({
                 title: "Plantilla descargada",
-                description: "Complete la hoja 'Datos' y suba el archivo en el siguiente paso. Use la hoja 'Valores permitidos' para ver categorías válidas.",
+                description: "Complete la hoja 'Datos' y suba el archivo .xlsx en el siguiente paso. Use la hoja 'Valores permitidos' para ver categorias validas.",
                 status: "success",
                 duration: 5000,
                 isClosable: true,
@@ -92,17 +95,20 @@ export default function SinInsumosStep1Informacion({ setActiveStep }: SinInsumos
         <Box p={4}>
             <VStack align="stretch" spacing={6}>
                 <Text>
-                    Se descargará una plantilla Excel con dos hojas: <strong>Valores permitidos</strong> (categorías existentes) y <strong>Datos</strong> (una fila por terminado).
+                    Se descargara una plantilla Excel con dos hojas: <strong>Valores permitidos</strong> y <strong>Datos</strong>.
                 </Text>
                 <Text>
-                    <strong>Obligatorios:</strong> producto_id, nombre, costo, iva_percentual (0, 5 o 19), tipo_unidades (L, KG o U), cantidad_unidad, status (0 = activo, 1 = obsoleto).
+                    <strong>Obligatorios:</strong> producto_id, nombre, costo, iva_percentual (0, 5 o 19), tipo_unidades (L, KG o U), cantidad_unidad y status (0 = activo, 1 = obsoleto).
                 </Text>
                 <Text>
-                    <strong>Opcionales:</strong> observaciones, stock_minimo, categoria_id (consulte la hoja Valores permitidos), foto_url, prefijo_lote (único entre terminados).
+                    <strong>Formato de producto_id:</strong> escribalo como texto en Excel, solo con letras y numeros en mayusculas. No se aceptan celdas numericas, espacios, puntos, guiones ni guion bajo.
+                </Text>
+                <Text>
+                    <strong>Opcionales:</strong> observaciones, stock_minimo, categoria_id, foto_url y prefijo_lote (unico entre terminados).
                 </Text>
 
                 <Text fontWeight="semibold" mt={2}>
-                    Ejemplos de filas válidas (solo referencia)
+                    Ejemplos de filas validas
                 </Text>
                 <TableContainer borderWidth="1px" borderRadius="md" overflowX="auto">
                     <Table size="sm" variant="simple">
@@ -140,9 +146,9 @@ export default function SinInsumosStep1Informacion({ setActiveStep }: SinInsumos
                         colorScheme="teal"
                         onClick={handleDownloadTemplate}
                         isLoading={isDownloading}
-                        loadingText="Descargando…"
+                        loadingText="Descargando..."
                     >
-                        Descargar plantilla Excel
+                        Descargar plantilla Excel (.xlsx)
                     </Button>
                     <Button colorScheme="blue" onClick={() => setActiveStep(1)}>
                         Siguiente

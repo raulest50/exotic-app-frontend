@@ -124,6 +124,8 @@ export default class EndPointsURL{
     public exportar_movimientos_excel: string;
     public exportar_inventario_excel: string;
     public save_ajuste_inventario: string;
+    public ajustes_lotes_disponibles: string;
+    public ajustes_lotes_existentes: string;
     public kardex_movimientos: string;
     public kardex_exportar_excel: string;
 
@@ -431,6 +433,8 @@ export default class EndPointsURL{
         this.exportar_movimientos_excel = `${domain}/${movimientos_res}/exportar-movimientos-excel`;
         this.exportar_inventario_excel = `${domain}/inventario/exportar-excel`;
         this.save_ajuste_inventario = `${domain}/${movimientos_res}/ajustes`;
+        this.ajustes_lotes_disponibles = `${domain}/${movimientos_res}/ajustes/lotes-disponibles`;
+        this.ajustes_lotes_existentes = `${domain}/${movimientos_res}/ajustes/lotes-existentes`;
         this.kardex_movimientos = `${domain}/inventario/kardex/movimientos`;
         this.kardex_exportar_excel = `${domain}/inventario/kardex/exportar-excel`;
 

@@ -1,4 +1,7 @@
 import {
+    Alert,
+    AlertDescription,
+    AlertIcon,
     Box,
     Button,
     Container,
@@ -14,23 +17,33 @@ import {
     Stepper,
     Text,
 } from "@chakra-ui/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
-import { Producto } from "../../Productos/types.tsx";
+import type { Producto } from "../../Productos/types.tsx";
 import AjustesInventarioStep0SelectProducts from "./Step1_SelProd_AdjInv.tsx";
 import AjustesInventarioStep1SpecifyQuantities from "./Step2_FillData.tsx";
 import AjustesInventarioStep2ReviewSubmit from "./Step3_SendAjuste.tsx";
 import { useAuth } from "../../../context/AuthContext.tsx";
+import AjusteSalidaLotePicker from "./AjusteSalidaLotePicker.tsx";
+import AjusteEntradaLotePicker from "./AjusteEntradaLotePicker.tsx";
+import type {
+    AjusteInventarioItemNormalizado,
+    AjusteLoteAsignado,
+    AjusteLoteOption,
+    AjusteLotePageResponse,
+} from "./types";
 
 const steps = [
-    {title: "AjusteInvStep_Zero", label: "Seleccionar", description: "Selección de productos"},
-    {title: "AjusteInvStep_One", label: "Cantidades", description: "Especificar cantidades"},
-    {title: "AjusteInvStep_Two", label: "Revisar", description: "Revisar y enviar"},
-    {title: "AjusteInvStep_Confirmation", label: "Confirmar", description: "Confirmación"}
+    { title: "AjusteInvStep_Zero", label: "Seleccionar", description: "Selección de productos" },
+    { title: "AjusteInvStep_One", label: "Cantidades", description: "Especificar cantidades y lotes" },
+    { title: "AjusteInvStep_Two", label: "Revisar", description: "Revisar y enviar" },
+    { title: "AjusteInvStep_Confirmation", label: "Confirmar", description: "Confirmación" },
 ];
 
-export default function AjustesInventarioTab(){
+const DECIMAL_TOLERANCE = 0.0001;
+
+export default function AjustesInventarioTab() {
     const [chkbox, setChkbox] = useState<string[]>(["material empaque"]);
     const [searchText, setSearchText] = useState("");
     const [productos, setProductos] = useState<Producto[]>([]);
@@ -39,12 +52,15 @@ export default function AjustesInventarioTab(){
     const [totalPages, setTotalPages] = useState(1);
     const [selectedProducts, setSelectedProducts] = useState<Producto[]>([]);
     const [quantities, setQuantities] = useState<Record<string, number | "">>({});
-    const [lotIds, setLotIds] = useState<Record<string, number | "">>({});
+    const [stockByProduct, setStockByProduct] = useState<Record<string, number | null>>({});
+    const [lotAssignments, setLotAssignments] = useState<Record<string, AjusteLoteAsignado[]>>({});
     const [activeStep, setActiveStep] = useState(0);
     const [observaciones, setObservaciones] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionError, setSubmissionError] = useState<string | null>(null);
     const [submissionSuccess, setSubmissionSuccess] = useState(false);
+    const [positivePickerProduct, setPositivePickerProduct] = useState<Producto | null>(null);
+    const [negativePickerProduct, setNegativePickerProduct] = useState<Producto | null>(null);
     const pageSize = 10;
 
     const endpoints = useMemo(() => new EndPointsURL(), []);
@@ -69,12 +85,72 @@ export default function AjustesInventarioTab(){
         }
     };
 
+    useEffect(() => {
+        if (activeStep !== 1 || selectedProducts.length === 0) {
+            return;
+        }
+
+        let cancelled = false;
+
+        const hydrateStocks = async () => {
+            const updates = await Promise.all(
+                selectedProducts.map(async (producto) => {
+                    const stock = await fetchTotalStockForProduct(producto.productoId);
+                    return [producto.productoId, stock] as const;
+                })
+            );
+
+            if (!cancelled) {
+                setStockByProduct((prev) => {
+                    const next = { ...prev };
+                    updates.forEach(([productoId, stock]) => {
+                        next[productoId] = stock;
+                    });
+                    return next;
+                });
+            }
+        };
+
+        void hydrateStocks();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [activeStep, selectedProducts, endpoints]);
+
+    const fetchAllLotesExistentes = async (productoId: string): Promise<AjusteLoteOption[]> => {
+        const collected: AjusteLoteOption[] = [];
+        let currentPage = 0;
+        let totalPagesResp = 1;
+
+        while (currentPage < totalPagesResp) {
+            const response = await axios.get<AjusteLotePageResponse>(endpoints.ajustes_lotes_existentes, {
+                params: { productoId, page: currentPage, size: 100 },
+            });
+            collected.push(...response.data.lotesDisponibles);
+            totalPagesResp = response.data.totalPages;
+            currentPage += 1;
+        }
+
+        return collected;
+    };
+
+    const fetchTotalStockForProduct = async (productoId: string): Promise<number> => {
+        try {
+            const lotes = await fetchAllLotesExistentes(productoId);
+            return lotes.reduce((acc, lote) => acc + lote.cantidadDisponible, 0);
+        } catch (error) {
+            console.error("Error fetching stock for product:", productoId, error);
+            return 0;
+        }
+    };
+
     const handleSearch = () => {
-        fetchProductos(0);
+        void fetchProductos(0);
     };
 
     const handlePageChange = (newPage: number) => {
-        fetchProductos(newPage);
+        void fetchProductos(newPage);
     };
 
     const handleAddProduct = (producto: Producto) => {
@@ -85,37 +161,117 @@ export default function AjustesInventarioTab(){
 
             return [...prevSelected, producto];
         });
+        setStockByProduct((prev) => ({
+            ...prev,
+            [producto.productoId]: prev[producto.productoId] ?? null,
+        }));
     };
 
     const handleRemoveProduct = (productoId: string) => {
-        setSelectedProducts((prevSelected) =>
-            prevSelected.filter((item) => item.productoId !== productoId)
-        );
+        setSelectedProducts((prevSelected) => prevSelected.filter((item) => item.productoId !== productoId));
         setQuantities((prev) => {
-            const {[productoId]: _, ...rest} = prev;
+            const { [productoId]: _removed, ...rest } = prev;
             return rest;
         });
-        setLotIds((prev) => {
-            const {[productoId]: _, ...rest} = prev;
+        setLotAssignments((prev) => {
+            const { [productoId]: _removed, ...rest } = prev;
+            return rest;
+        });
+        setStockByProduct((prev) => {
+            const { [productoId]: _removed, ...rest } = prev;
             return rest;
         });
     };
 
-    const handleChangeQuantity = (productoId: string, value: string) => {
-        const parsedValue = value === "" ? "" : Number(value);
+    const handleChangeQuantity = (productoId: string, value: number | "") => {
+        const currentValue = quantities[productoId];
+        const newValue = value === "" || Number.isNaN(value) ? "" : value;
+
         setQuantities((prev) => ({
             ...prev,
-            [productoId]: parsedValue,
+            [productoId]: newValue,
         }));
+
+        setLotAssignments((prev) => {
+            if (newValue === "" || newValue === 0) {
+                const { [productoId]: _removed, ...rest } = prev;
+                return rest;
+            }
+
+            const previousAssignments = prev[productoId] ?? [];
+            const previousSign =
+                typeof currentValue === "number" && currentValue !== 0 ? Math.sign(currentValue) : null;
+            const nextSign = Math.sign(newValue);
+
+            if (previousAssignments.length === 0) {
+                return prev;
+            }
+
+            if (previousSign !== nextSign) {
+                const { [productoId]: _removed, ...rest } = prev;
+                return rest;
+            }
+
+            if (newValue > 0 && previousAssignments.length === 1) {
+                return {
+                    ...prev,
+                    [productoId]: [{ ...previousAssignments[0], cantidadAsignada: newValue }],
+                };
+            }
+
+            return prev;
+        });
     };
 
-    const handleChangeLotId = (productoId: string, value: string) => {
-        const parsedValue = value === "" ? "" : Number(value);
+    const getAssignmentsTotal = (productoId: string) =>
+        (lotAssignments[productoId] ?? []).reduce((acc, lote) => acc + lote.cantidadAsignada, 0);
 
-        setLotIds((prev) => ({
-            ...prev,
-            [productoId]: Number.isNaN(parsedValue) ? "" : parsedValue,
+    const isAssignmentValid = (productoId: string) => {
+        const quantity = quantities[productoId];
+        if (quantity === "" || typeof quantity !== "number" || Number.isNaN(quantity) || quantity === 0) {
+            return false;
+        }
+
+        const assignments = lotAssignments[productoId] ?? [];
+        if (assignments.length === 0) {
+            return false;
+        }
+
+        if (quantity > 0) {
+            return (
+                assignments.length === 1 &&
+                Math.abs(assignments[0].cantidadAsignada - quantity) <= DECIMAL_TOLERANCE
+            );
+        }
+
+        return Math.abs(getAssignmentsTotal(productoId) - Math.abs(quantity)) <= DECIMAL_TOLERANCE;
+    };
+
+    const normalizedItems: AjusteInventarioItemNormalizado[] = selectedProducts.flatMap((producto) => {
+        const quantity = quantities[producto.productoId];
+        if (quantity === "" || typeof quantity !== "number" || Number.isNaN(quantity) || quantity === 0) {
+            return [];
+        }
+
+        const assignments = lotAssignments[producto.productoId] ?? [];
+        return assignments.map((assignment) => ({
+            productoId: producto.productoId,
+            productoNombre: producto.nombre,
+            tipoProducto: producto.tipo_producto,
+            loteId: assignment.loteId,
+            batchNumber: assignment.batchNumber,
+            cantidad: quantity > 0 ? assignment.cantidadAsignada : -assignment.cantidadAsignada,
         }));
+    });
+
+    const parseApiError = (error: unknown, fallback: string) => {
+        if (axios.isAxiosError(error)) {
+            const apiError = error.response?.data as { error?: string } | undefined;
+            if (apiError?.error) {
+                return apiError.error;
+            }
+        }
+        return fallback;
     };
 
     const handleSendAdjustment = async () => {
@@ -123,33 +279,15 @@ export default function AjustesInventarioTab(){
         setIsSubmitting(true);
 
         try {
-            const items = selectedProducts.map((producto) => {
-                const cantidad = quantities[producto.productoId];
-                const loteId = lotIds[producto.productoId];
-
-                const item: {
-                    productoId: number;
-                    cantidad: number | "";
-                    almacen: string;
-                    loteId?: number;
-                } = {
-                    productoId: producto.productoId,
-                    cantidad: cantidad,
-                    almacen: "GENERAL",
-                };
-
-                if (typeof loteId === "number" && !Number.isNaN(loteId)) {
-                    item.loteId = loteId;
-                }
-
-                return item;
-            });
-
             const payload = {
-                items,
-                username: user ?? "", // Usando username en lugar de usuarioId para reflejar que se envía el nombre de usuario, no un ID
-                ...(observaciones.trim() ? {observaciones: observaciones.trim()} : {}),
-                urlDocSoporte: undefined,
+                items: normalizedItems.map((item) => ({
+                    productoId: item.productoId,
+                    cantidad: item.cantidad,
+                    almacen: "GENERAL",
+                    loteId: item.loteId,
+                })),
+                username: user ?? "",
+                ...(observaciones.trim() ? { observaciones: observaciones.trim() } : {}),
             };
 
             await axios.post(endpoints.save_ajuste_inventario, payload);
@@ -157,7 +295,7 @@ export default function AjustesInventarioTab(){
             setActiveStep(steps.length - 1);
         } catch (error) {
             console.error("Error enviando el ajuste de inventario:", error);
-            setSubmissionError("No se pudo enviar el ajuste. Intenta nuevamente.");
+            setSubmissionError(parseApiError(error, "No se pudo enviar el ajuste. Intenta nuevamente."));
         } finally {
             setIsSubmitting(false);
         }
@@ -188,22 +326,27 @@ export default function AjustesInventarioTab(){
     const resetFlow = () => {
         setSelectedProducts([]);
         setQuantities({});
-        setLotIds({});
+        setLotAssignments({});
+        setStockByProduct({});
         setObservaciones("");
         setSubmissionError(null);
         setSubmissionSuccess(false);
+        setPositivePickerProduct(null);
+        setNegativePickerProduct(null);
         setActiveStep(0);
     };
 
     const areQuantitiesValid =
         selectedProducts.length > 0 &&
-        selectedProducts.every(({productoId}) => {
+        selectedProducts.every(({ productoId }) => {
             const quantity = quantities[productoId];
-            // Ya no verificamos lotId
-            const isValidQuantity =
-                quantity !== "" && typeof quantity === "number" && !Number.isNaN(quantity);
-
-            return isValidQuantity;
+            return (
+                quantity !== "" &&
+                typeof quantity === "number" &&
+                !Number.isNaN(quantity) &&
+                quantity !== 0 &&
+                isAssignmentValid(productoId)
+            );
         });
 
     const renderStepContent = () => {
@@ -232,9 +375,11 @@ export default function AjustesInventarioTab(){
                 <AjustesInventarioStep1SpecifyQuantities
                     selectedProducts={selectedProducts}
                     quantities={quantities}
+                    stockByProduct={stockByProduct}
+                    lotAssignments={lotAssignments}
                     onChangeQuantity={handleChangeQuantity}
-                    lotIds={lotIds}
-                    onChangeLotId={handleChangeLotId}
+                    onOpenPositivePicker={setPositivePickerProduct}
+                    onOpenNegativePicker={setNegativePickerProduct}
                     observaciones={observaciones}
                     onChangeObservaciones={setObservaciones}
                 />
@@ -243,9 +388,7 @@ export default function AjustesInventarioTab(){
 
         return (
             <AjustesInventarioStep2ReviewSubmit
-                selectedProducts={selectedProducts}
-                quantities={quantities}
-                lotIds={lotIds}
+                normalizedItems={normalizedItems}
                 observaciones={observaciones}
                 currentUserName={user ?? ""}
                 onBack={goToPrevious}
@@ -265,16 +408,25 @@ export default function AjustesInventarioTab(){
 
     const isPreviousDisabled = activeStep === 0 || submissionSuccess;
 
+    const positivePickerQuantity =
+        positivePickerProduct && typeof quantities[positivePickerProduct.productoId] === "number"
+            ? (quantities[positivePickerProduct.productoId] as number)
+            : 0;
+    const negativePickerQuantity =
+        negativePickerProduct && typeof quantities[negativePickerProduct.productoId] === "number"
+            ? Math.abs(quantities[negativePickerProduct.productoId] as number)
+            : 0;
+
     return (
-        <Container minW={['auto', 'container.lg', 'container.xl']} w={'full'} h={'full'}>
-            <Flex direction={'column'} gap={4}>
-                <Stepper index={activeStep} p={'1em'} backgroundColor={'teal.50'} w={'full'}>
+        <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
+            <Flex direction="column" gap={4}>
+                <Stepper index={activeStep} p="1em" backgroundColor="teal.50" w="full">
                     {steps.map((step, index) => (
                         <Step key={step.title}>
                             <StepIndicator>
-                                <StepStatus complete={<StepIcon />} incomplete={<StepNumber />} active={<StepNumber />}/>
+                                <StepStatus complete={<StepIcon />} incomplete={<StepNumber />} active={<StepNumber />} />
                             </StepIndicator>
-                            <Box flexShrink={'0'}>
+                            <Box flexShrink="0">
                                 <StepTitle>{step.label}</StepTitle>
                                 <StepDescription>{step.description}</StepDescription>
                             </Box>
@@ -283,7 +435,19 @@ export default function AjustesInventarioTab(){
                     ))}
                 </Stepper>
 
-                <Box backgroundColor={'white'} p={4} borderRadius={'md'} boxShadow={'sm'}>
+                {activeStep === 1 && selectedProducts.some((producto) => {
+                    const quantity = quantities[producto.productoId];
+                    return quantity !== "" && typeof quantity === "number" && quantity < 0 && !isAssignmentValid(producto.productoId);
+                }) && (
+                    <Alert status="warning" borderRadius="md">
+                        <AlertIcon />
+                        <AlertDescription>
+                            Cada ajuste negativo debe quedar asignado completamente a lotes con saldo disponible en GENERAL.
+                        </AlertDescription>
+                    </Alert>
+                )}
+
+                <Box backgroundColor="white" p={4} borderRadius="md" boxShadow="sm">
                     <Box mb={4}>
                         <Text>{steps[activeStep]?.description}</Text>
                     </Box>
@@ -291,21 +455,60 @@ export default function AjustesInventarioTab(){
                     {renderStepContent()}
                 </Box>
 
-                <Flex alignItems={'center'} justifyContent={'space-between'} gap={2}>
-                    <Button onClick={goToStart} isDisabled={activeStep === 0} variant={'ghost'}>
+                <Flex alignItems="center" justifyContent="space-between" gap={2}>
+                    <Button onClick={goToStart} isDisabled={activeStep === 0} variant="ghost">
                         Volver al paso inicial
                     </Button>
 
-                    <Flex gap={2} justifyContent={'flex-end'}>
-                        <Button onClick={goToPrevious} isDisabled={isPreviousDisabled} variant={'outline'}>
+                    <Flex gap={2} justifyContent="flex-end">
+                        <Button onClick={goToPrevious} isDisabled={isPreviousDisabled} variant="outline">
                             Anterior
                         </Button>
-                        <Button onClick={goToNext} isDisabled={isNextDisabled} colorScheme={'teal'}>
+                        <Button onClick={goToNext} isDisabled={isNextDisabled} colorScheme="teal">
                             Siguiente
                         </Button>
                     </Flex>
                 </Flex>
             </Flex>
+
+            {negativePickerProduct && (
+                <AjusteSalidaLotePicker
+                    isOpen
+                    onClose={() => setNegativePickerProduct(null)}
+                    onAccept={(assignments) => {
+                        setLotAssignments((prev) => ({
+                            ...prev,
+                            [negativePickerProduct.productoId]: assignments,
+                        }));
+                    }}
+                    productoId={negativePickerProduct.productoId}
+                    productoNombre={negativePickerProduct.nombre}
+                    cantidadRequerida={negativePickerQuantity}
+                    initialSelection={lotAssignments[negativePickerProduct.productoId] ?? []}
+                />
+            )}
+
+            {positivePickerProduct && (
+                <AjusteEntradaLotePicker
+                    isOpen
+                    onClose={() => setPositivePickerProduct(null)}
+                    onAccept={(lote) => {
+                        setLotAssignments((prev) => ({
+                            ...prev,
+                            [positivePickerProduct.productoId]: [
+                                {
+                                    ...lote,
+                                    cantidadAsignada: positivePickerQuantity,
+                                },
+                            ],
+                        }));
+                    }}
+                    productoId={positivePickerProduct.productoId}
+                    productoNombre={positivePickerProduct.nombre}
+                    cantidadAjuste={positivePickerQuantity}
+                    initialLoteId={lotAssignments[positivePickerProduct.productoId]?.[0]?.loteId ?? null}
+                />
+            )}
         </Container>
     );
 }

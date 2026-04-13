@@ -1,16 +1,16 @@
 /**
  * Componente: InformeProductosTab
- * 
- * Ubicación en la navegación:
- * 1. Productos > Basic > Consulta (pestaña)
- * 2. Productos > Definir Terminado/Semiterminado > Consulta (pestaña)
- * 
- * Descripción:
- * Componente de búsqueda de productos que permite filtrar por categorías y texto.
- * Este componente se reutiliza en dos secciones diferentes de la aplicación.
- * 
+ *
+ * Ubicacion en la navegacion:
+ * 1. Productos > Basic > Consulta (pestana)
+ * 2. Productos > Definir Terminado/Semiterminado > Consulta (pestana)
+ *
+ * Descripcion:
+ * Componente de busqueda de productos que permite filtrar por categorias y texto.
+ * Este componente se reutiliza en dos secciones diferentes de la aplicacion.
+ *
  * Cuando se hace clic en "Ver Detalle" en la tabla de resultados, se abre el
- * componente DetalleProducto.tsx con la información detallada del producto.
+ * componente DetalleProducto.tsx con la informacion detallada del producto.
  */
 
 import {
@@ -22,6 +22,7 @@ import {
     FormLabel,
     Input,
     Button,
+    Select,
     Table,
     Thead,
     Tbody,
@@ -30,73 +31,97 @@ import {
     Td,
     TableContainer,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import axios from "axios";
-import MyPagination from "../../../components/MyPagination.tsx";
+import BetterPagination from "../../../components/BetterPagination/BetterPagination.tsx";
 import { Producto } from "../types.tsx";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import DetalleProducto from "./componentes/DetalleProducto.tsx";
+import { normalizeProductId } from "../productIdUtils.ts";
 
 const endpoints = new EndPointsURL();
 
+type SearchType = "NOMBRE" | "ID";
+
 export default function InformeProductosTab() {
     const [chkbox, setChkbox] = useState<string[]>(["material empaque"]);
+    const [searchType, setSearchType] = useState<SearchType>("NOMBRE");
     const [searchText, setSearchText] = useState("");
     const [productos, setProductos] = useState<Producto[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(1);
-    const pageSize = 10; // adjust as needed
+    const [size, setSize] = useState(10);
+    const [totalPages, setTotalPages] = useState(0);
+    const pageRef = useRef(0);
+    const sizeRef = useRef(10);
 
-    // Estados para manejar la visualización del detalle
+    // Estados para manejar la visualizacion del detalle
     const [estado, setEstado] = useState(0);
     const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
 
-    // Fetch products given a page number
-    const fetchProductos = async (pageNumber: number) => {
+    const fetchProductos = async (pageNumber: number, pageSize: number = sizeRef.current) => {
         setLoading(true);
         try {
+            const normalizedSearch =
+                searchType === "ID"
+                    ? normalizeProductId(searchText.trim())
+                    : searchText;
+
             const response = await axios.post(endpoints.consulta_productos, {
-                search: searchText,
+                search: normalizedSearch,
+                searchType,
                 categories: chkbox,
                 page: pageNumber,
                 size: pageSize,
             });
-            // Expecting a Page<Producto> response
-            setProductos(response.data.content);
-            setTotalPages(response.data.totalPages);
-            setPage(response.data.number);
+
+            const nextPage = response.data.number ?? pageNumber;
+            const nextSize = response.data.size ?? pageSize;
+
+            setProductos(response.data.content ?? []);
+            setTotalPages(response.data.totalPages ?? 0);
+            setPage(nextPage);
+            setSize(nextSize);
+            pageRef.current = nextPage;
+            sizeRef.current = nextSize;
         } catch (error) {
             console.error("Error searching productos:", error);
+            setProductos([]);
+            setTotalPages(0);
         } finally {
             setLoading(false);
         }
     };
 
-    // Initiate a new search, resetting to page 0
     const handleSearch = () => {
-        fetchProductos(0);
+        fetchProductos(0, sizeRef.current);
     };
 
-    // Handle page changes from the pagination component
     const handlePageChange = (newPage: number) => {
-        fetchProductos(newPage);
+        fetchProductos(newPage, sizeRef.current);
     };
 
-    // Función para ver el detalle de un producto
+    const handleSizeChange = (newSize: number) => {
+        setSize(newSize);
+        sizeRef.current = newSize;
+    };
+
     const verDetalleProducto = (producto: Producto) => {
         setProductoSeleccionado(producto);
         setEstado(1);
     };
 
-    // Renderizado condicional basado en el estado
+    const refreshCurrentSearch = () => {
+        fetchProductos(pageRef.current, sizeRef.current);
+    };
+
     if (estado === 1 && productoSeleccionado) {
         return (
-            <DetalleProducto 
-                producto={productoSeleccionado} 
+            <DetalleProducto
+                producto={productoSeleccionado}
                 setEstado={setEstado}
                 setProductoSeleccionado={setProductoSeleccionado}
-                refreshSearch={handleSearch}
+                refreshSearch={refreshCurrentSearch}
             />
         );
     }
@@ -105,11 +130,15 @@ export default function InformeProductosTab() {
         <Flex direction="column" p={4}>
             <Flex direction="row" align="center" gap={10} w="full" mb={4}>
                 <FormControl>
-                    <FormLabel>Buscar:</FormLabel>
+                    <FormLabel>{searchType === "ID" ? "Buscar por ID:" : "Buscar por nombre:"}</FormLabel>
                     <Input
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
-                        placeholder="Ingrese nombre del producto"
+                        placeholder={
+                            searchType === "ID"
+                                ? "Ingrese codigo o identificador unico"
+                                : "Ingrese nombre del producto"
+                        }
                         isDisabled={chkbox.length === 0}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
@@ -119,8 +148,19 @@ export default function InformeProductosTab() {
                     />
                 </FormControl>
 
+                <FormControl maxW="220px">
+                    <FormLabel>Tipo de busqueda:</FormLabel>
+                    <Select
+                        value={searchType}
+                        onChange={(e) => setSearchType(e.target.value as SearchType)}
+                    >
+                        <option value="NOMBRE">Nombre</option>
+                        <option value="ID">ID</option>
+                    </Select>
+                </FormControl>
+
                 <FormControl>
-                    <FormLabel>Categorías:</FormLabel>
+                    <FormLabel>Categorias:</FormLabel>
                     <CheckboxGroup
                         colorScheme="green"
                         value={chkbox}
@@ -157,7 +197,7 @@ export default function InformeProductosTab() {
                             <Th>Nombre</Th>
                             <Th>Costo</Th>
                             <Th>Tipo</Th>
-                            <Th>Fecha Creación</Th>
+                            <Th>Fecha Creacion</Th>
                             <Th>Acciones</Th>
                         </Tr>
                     </Thead>
@@ -184,12 +224,16 @@ export default function InformeProductosTab() {
                 </Table>
             </TableContainer>
 
-            <MyPagination
-                page={page}
-                totalPages={totalPages}
-                loading={loading}
-                handlePageChange={handlePageChange}
-            />
+            {totalPages > 0 && (
+                <BetterPagination
+                    page={page}
+                    size={size}
+                    totalPages={totalPages}
+                    loading={loading}
+                    onPageChange={handlePageChange}
+                    onSizeChange={handleSizeChange}
+                />
+            )}
         </Flex>
     );
 }
