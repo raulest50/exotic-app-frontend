@@ -33,11 +33,11 @@ export const Component: Story<FloatingLinesProps> = args => (
     minH="100vh"
     overflow="hidden"
     borderRadius="32px"
-    bg="#f7faff"
+    bg="#f3f7fa"
     backgroundImage="
-      radial-gradient(circle at top left, rgba(109, 77, 255, 0.10), transparent 32%),
-      radial-gradient(circle at top right, rgba(25, 118, 234, 0.10), transparent 28%),
-      linear-gradient(180deg, #fbfdff 0%, #f4f7fb 45%, #edf3fb 100%)
+      radial-gradient(circle at top left, rgba(36, 74, 115, 0.09), transparent 32%),
+      radial-gradient(circle at top right, rgba(79, 140, 149, 0.08), transparent 28%),
+      linear-gradient(180deg, #fbfcfd 0%, #f1f6f8 45%, #e7eff3 100%)
     "
   >
     <Box position="absolute" inset={0} opacity={0.92}>
@@ -88,11 +88,11 @@ export const LoginBackground = () => (
     position="relative"
     minH="100vh"
     overflow="hidden"
-    bg="#f7faff"
+    bg="#f3f7fa"
     backgroundImage="
-      radial-gradient(circle at top left, rgba(109, 77, 255, 0.10), transparent 32%),
-      radial-gradient(circle at top right, rgba(25, 118, 234, 0.10), transparent 28%),
-      linear-gradient(180deg, #fbfdff 0%, #f4f7fb 45%, #edf3fb 100%)
+      radial-gradient(circle at top left, rgba(36, 74, 115, 0.09), transparent 32%),
+      radial-gradient(circle at top right, rgba(79, 140, 149, 0.08), transparent 28%),
+      linear-gradient(180deg, #fbfcfd 0%, #f1f6f8 45%, #e7eff3 100%)
     "
   >
     <Box position="absolute" inset={0} pointerEvents="none" opacity={0.92}>

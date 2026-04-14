@@ -1,8 +1,8 @@
 import type { FloatingLinesProps } from './FloatingLines.tsx';
 
 export const loginFloatingLinesPreset: FloatingLinesProps = {
-  linesGradient: ['#6d4dff', '#cf4f9c', '#1976ea', '#7a52f4'],
-  baseColor: '#f4f7fb',
+  linesGradient: ['#244A73', '#3B6E94', '#4F8C95', '#8FC3C8'],
+  baseColor: '#f1f6f8',
   lineBoost: 1.2,
   lineOpacity: 0.68,
   lineCount: [9, 13, 10],

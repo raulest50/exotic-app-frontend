@@ -5,6 +5,7 @@ export interface CategoriaBE {
     categoriaNombre: string;
     categoriaDescripcion?: string;
     loteSize?: number;
+    tiempoDiasFabricacion?: number;
 }
 
 export interface TerminadoBE {

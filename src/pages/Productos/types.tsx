@@ -166,6 +166,7 @@ export interface Categoria {
     categoriaNombre: string;
     categoriaDescripcion: string;
     loteSize?: number;
+    tiempoDiasFabricacion?: number;
 }
 
 export interface ProductoBasicUpdatePayload {

@@ -62,6 +62,29 @@ function generateConsecutiveLotes(firstLote: string, n: number): string[] {
     );
 }
 
+function formatLocalDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function getTodayLocalDate(): string {
+    return formatLocalDate(new Date());
+}
+
+function addDaysToDateString(baseDate: string, daysToAdd: number): string {
+    if (!baseDate) return '';
+
+    const date = new Date(`${baseDate}T00:00:00`);
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    date.setDate(date.getDate() + Math.max(0, daysToAdd || 0));
+    return formatLocalDate(date);
+}
+
 export default function CrearOrdenesTab() {
     const toast = useToast();
     const { meProfile } = useAuth();
@@ -80,6 +103,7 @@ export default function CrearOrdenesTab() {
 
     const [fechaLanzamiento, setFechaLanzamiento] = useState('');
     const [fechaFinalPlanificada, setFechaFinalPlanificada] = useState('');
+    const [isFechaFinalPlanificadaManual, setIsFechaFinalPlanificadaManual] = useState(false);
 
     // cantidadProducir is always read-only (driven by loteSize of the product's category)
     const [cantidadProducir, setCantidadProducir] = useState(1);
@@ -109,9 +133,35 @@ export default function CrearOrdenesTab() {
         setIsCheckingLotes(Array(n).fill(false));
     };
 
+    const getTiempoDiasFabricacion = (producto: ProductoWithInsumos | null) => (
+        producto?.producto.tipo_producto === 'T'
+            ? (producto.producto.categoria?.tiempoDiasFabricacion ?? 0)
+            : 0
+    );
+
+    const calcularFechaFinalPlanificada = (fechaBase: string, producto: ProductoWithInsumos | null) => (
+        addDaysToDateString(fechaBase, getTiempoDiasFabricacion(producto))
+    );
+
+    const resetDateFields = () => {
+        const today = getTodayLocalDate();
+        setFechaLanzamiento(today);
+        setFechaFinalPlanificada(calcularFechaFinalPlanificada(today, null));
+        setIsFechaFinalPlanificadaManual(false);
+    };
+
     // ── handlers ─────────────────────────────────────────────────────────────
 
     const handleSeleccionarProducto = () => setIsPickerOpen(true);
+
+    const handleFechaLanzamientoChange = (value: string) => {
+        setFechaLanzamiento(value);
+    };
+
+    const handleFechaFinalPlanificadaChange = (value: string) => {
+        setFechaFinalPlanificada(value);
+        setIsFechaFinalPlanificadaManual(true);
+    };
 
     const handleCantidadLotesChange = (valueString: string) => {
         const newCantidad = Math.max(1, parseInt(valueString, 10) || 1);
@@ -230,8 +280,7 @@ export default function CrearOrdenesTab() {
             setSelectedProducto(null);
             setCanProduce(false);
             setObservaciones('');
-            setFechaLanzamiento('');
-            setFechaFinalPlanificada('');
+            resetDateFields();
             setCantidadProducir(1);
             setCantidadLotes(1);
             setNumeroPedidoComercial('');
@@ -253,7 +302,12 @@ export default function CrearOrdenesTab() {
     };
 
     const handlePickerConfirm = async (producto: ProductoWithInsumos, _canProduceFlag: boolean) => {
+        const fechaBase = fechaLanzamiento || getTodayLocalDate();
+
         setSelectedProducto(producto);
+        setFechaLanzamiento(fechaBase);
+        setFechaFinalPlanificada(calcularFechaFinalPlanificada(fechaBase, producto));
+        setIsFechaFinalPlanificadaManual(false);
         const loteSize = producto.producto.tipo_producto === 'T'
             ? (producto.producto.categoria?.loteSize ?? 0)
             : 0;
@@ -428,6 +482,10 @@ export default function CrearOrdenesTab() {
     // ── effects ───────────────────────────────────────────────────────────────
 
     useEffect(() => {
+        resetDateFields();
+    }, []);
+
+    useEffect(() => {
         if (selectedProducto) {
             const canProduceWithQuantity = selectedProducto.insumos.every(
                 insumo => insumo.stockActual >= (insumo.cantidadRequerida * cantidadProducir)
@@ -435,6 +493,12 @@ export default function CrearOrdenesTab() {
             setCanProduce(canProduceWithQuantity);
         }
     }, [cantidadProducir, selectedProducto]);
+
+    useEffect(() => {
+        if (!isFechaFinalPlanificadaManual) {
+            setFechaFinalPlanificada(calcularFechaFinalPlanificada(fechaLanzamiento, selectedProducto));
+        }
+    }, [fechaLanzamiento, selectedProducto, isFechaFinalPlanificadaManual]);
 
     // ── derived values ────────────────────────────────────────────────────────
 
@@ -498,7 +562,7 @@ export default function CrearOrdenesTab() {
                     <Input
                         type="date"
                         value={fechaLanzamiento}
-                        onChange={(e) => setFechaLanzamiento(e.target.value)}
+                        onChange={(e) => handleFechaLanzamientoChange(e.target.value)}
                     />
                 </FormControl>
 
@@ -507,7 +571,7 @@ export default function CrearOrdenesTab() {
                     <Input
                         type="date"
                         value={fechaFinalPlanificada}
-                        onChange={(e) => setFechaFinalPlanificada(e.target.value)}
+                        onChange={(e) => handleFechaFinalPlanificadaChange(e.target.value)}
                     />
                 </FormControl>
             </HStack>

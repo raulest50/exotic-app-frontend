@@ -7,8 +7,10 @@ import { useAccessSnapshot } from "../../auth/usePermissions";
 import { my_style_tab } from "../../styles/styles_general.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
 import ConfParamsCategoria from "./ConfParamsCategoria/ConfParamsCategoria.tsx";
+import AprobacionMPSWeekTab from "./AprobacionMPSWeekTab.tsx";
 import CrearOrdenesTab from "./CrearOrdenesTab/CrearOrdenesTab.tsx";
 import HistorialOrdenesTab from "./HistorialOrdenesTab/HistorialOrdenesTab.tsx";
+import MonitorearAreasOperativasTab from "./MonitorearAreasOperativasTab.tsx";
 import { PlaneacionProduccionTab } from "./PlaneacionProduccionTab/PlaneacionProduccionTab.tsx";
 import SeguimientoAreasOperativasTab from "./SeguimientoAreasOperativasTab.tsx";
 
@@ -45,6 +47,18 @@ export default function ProduccionPage() {
             label: "Seguimiento Areas Operativas",
             render: () => <SeguimientoAreasOperativasTab />,
             accesoValido: tabAccessRule(Modulo.PRODUCCION, "SEGUIMIENTO_AREAS_OPERATIVAS", 1),
+        },
+        {
+            key: "monitorear-areas-operativas",
+            label: "Monitorear Areas Operativas",
+            render: () => <MonitorearAreasOperativasTab />,
+            accesoValido: tabAccessRule(Modulo.PRODUCCION, "MONITOREAR_AREAS_OPERATIVAS", 1),
+        },
+        {
+            key: "aprobacion-mps-week",
+            label: "Aprobacion MPS Week",
+            render: () => <AprobacionMPSWeekTab />,
+            accesoValido: tabAccessRule(Modulo.PRODUCCION, "APROBACION_MPS_WEEK", 1),
         },
     ];
 

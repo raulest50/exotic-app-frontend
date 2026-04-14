@@ -43,6 +43,7 @@ export default class EndPointsURL{
     public save_categoria: string;
     public search_categorias_pag: string;
     public update_categoria_lote_size: string;
+    public update_categoria_tiempo_dias_fabricacion: string;
 
     // ruta proceso cat endpoints
     public get_ruta_proceso_cat: string;
@@ -355,6 +356,7 @@ export default class EndPointsURL{
         this.save_categoria = `${domain}/categorias`;
         this.search_categorias_pag = `${domain}/categorias/search`;
         this.update_categoria_lote_size = `${domain}/categorias/{categoriaId}/lote-size`;
+        this.update_categoria_tiempo_dias_fabricacion = `${domain}/categorias/{categoriaId}/tiempo-dias-fabricacion`;
 
         // Ruta proceso cat endpoints
         const ruta_proceso_cat_res = 'api/ruta-proceso-cat';

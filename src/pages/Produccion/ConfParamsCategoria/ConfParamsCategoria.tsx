@@ -33,6 +33,8 @@ import { RutaProcesoCatDesigner } from '../RutaProcesoCatDesigner';
 
 const PAGE_SIZE = 10;
 
+type EditableCategoriaField = 'loteSize' | 'tiempoDiasFabricacion';
+
 export default function ConfParamsCategoria() {
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [searchNombre, setSearchNombre] = useState('');
@@ -41,14 +43,17 @@ export default function ConfParamsCategoria() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editingLoteSize, setEditingLoteSize] = useState<Record<number, number>>({});
-    const [unlockedCategoriaIds, setUnlockedCategoriaIds] = useState<Record<number, boolean>>({});
-    const [savingCategoriaId, setSavingCategoriaId] = useState<number | null>(null);
+    const [editingTiempoDiasFabricacion, setEditingTiempoDiasFabricacion] = useState<Record<number, number>>({});
+    const [unlockedFields, setUnlockedFields] = useState<Record<string, boolean>>({});
+    const [savingFieldKey, setSavingFieldKey] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'list' | 'designer'>('list');
     const [selectedCategoria, setSelectedCategoria] = useState<Categoria | null>(null);
     const [rutasExistentes, setRutasExistentes] = useState<Record<number, boolean>>({});
     const [loadingRutas, setLoadingRutas] = useState(false);
     const endPoints = new EndPointsURL();
     const toast = useToast();
+
+    const buildFieldKey = (categoriaId: number, field: EditableCategoriaField) => `${categoriaId}-${field}`;
 
     const openRutaDesigner = (categoria: Categoria) => {
         setSelectedCategoria(categoria);
@@ -58,7 +63,6 @@ export default function ConfParamsCategoria() {
     const backToList = () => {
         setViewMode('list');
         setSelectedCategoria(null);
-        // Refresh route existence when returning from designer
         if (categorias.length > 0) {
             const categoriaIds = categorias.map(c => c.categoriaId);
             fetchRutasExistentes(categoriaIds);
@@ -97,6 +101,7 @@ export default function ConfParamsCategoria() {
                 setCategorias(loadedCategorias);
                 setTotalPages(response.data.totalPages);
                 setPage(pageNumber);
+
                 setEditingLoteSize((prev) => {
                     const next: Record<number, number> = {};
                     loadedCategorias.forEach((c: Categoria) => {
@@ -104,14 +109,22 @@ export default function ConfParamsCategoria() {
                     });
                     return { ...prev, ...next };
                 });
-                // Fetch route existence for loaded categories
+
+                setEditingTiempoDiasFabricacion((prev) => {
+                    const next: Record<number, number> = {};
+                    loadedCategorias.forEach((c: Categoria) => {
+                        next[c.categoriaId] = c.tiempoDiasFabricacion ?? 0;
+                    });
+                    return { ...prev, ...next };
+                });
+
                 if (loadedCategorias.length > 0) {
                     const categoriaIds = loadedCategorias.map(c => c.categoriaId);
                     fetchRutasExistentes(categoriaIds);
                 }
             } catch (err) {
                 console.error('Error fetching categorias:', err);
-                setError('Error al cargar las categorías. Por favor, intente nuevamente.');
+                setError('Error al cargar las categorias. Por favor, intente nuevamente.');
                 setCategorias([]);
                 setTotalPages(1);
             } finally {
@@ -135,10 +148,11 @@ export default function ConfParamsCategoria() {
         }
     };
 
-    const toggleLock = (categoriaId: number) => {
-        setUnlockedCategoriaIds((prev) => ({
+    const toggleLock = (categoriaId: number, field: EditableCategoriaField) => {
+        const fieldKey = buildFieldKey(categoriaId, field);
+        setUnlockedFields((prev) => ({
             ...prev,
-            [categoriaId]: !prev[categoriaId],
+            [fieldKey]: !prev[fieldKey],
         }));
     };
 
@@ -149,11 +163,20 @@ export default function ConfParamsCategoria() {
         }));
     };
 
+    const handleTiempoDiasFabricacionChange = (categoriaId: number, value: number) => {
+        setEditingTiempoDiasFabricacion((prev) => ({
+            ...prev,
+            [categoriaId]: value,
+        }));
+    };
+
     const handleSaveLoteSize = async (categoria: Categoria) => {
         const categoriaId = categoria.categoriaId;
         const value = editingLoteSize[categoriaId] ?? categoria.loteSize ?? 0;
+        const fieldKey = buildFieldKey(categoriaId, 'loteSize');
         if (value < 0) return;
-        setSavingCategoriaId(categoriaId);
+
+        setSavingFieldKey(fieldKey);
         try {
             const url = endPoints.update_categoria_lote_size.replace('{categoriaId}', String(categoriaId));
             await axios.patch(url, { loteSize: value });
@@ -161,17 +184,17 @@ export default function ConfParamsCategoria() {
                 prev.map((c) => (c.categoriaId === categoriaId ? { ...c, loteSize: value } : c))
             );
             setEditingLoteSize((prev) => ({ ...prev, [categoriaId]: value }));
-            setUnlockedCategoriaIds((prev) => ({ ...prev, [categoriaId]: false }));
+            setUnlockedFields((prev) => ({ ...prev, [fieldKey]: false }));
             toast({
-                title: 'Tamaño de lote actualizado',
-                description: `Categoría "${categoria.categoriaNombre}" actualizada correctamente`,
+                title: 'Tamano de lote actualizado',
+                description: `Categoria "${categoria.categoriaNombre}" actualizada correctamente`,
                 status: 'success',
                 duration: 3000,
                 isClosable: true,
             });
         } catch (err) {
             console.error('Error updating lote size:', err);
-            let errorMessage = 'No se pudo actualizar el tamaño de lote.';
+            let errorMessage = 'No se pudo actualizar el tamano de lote.';
             if (axios.isAxiosError(err) && err.response?.data?.message) {
                 errorMessage = err.response.data.message;
             }
@@ -183,7 +206,49 @@ export default function ConfParamsCategoria() {
                 isClosable: true,
             });
         } finally {
-            setSavingCategoriaId(null);
+            setSavingFieldKey(null);
+        }
+    };
+
+    const handleSaveTiempoDiasFabricacion = async (categoria: Categoria) => {
+        const categoriaId = categoria.categoriaId;
+        const value = editingTiempoDiasFabricacion[categoriaId] ?? categoria.tiempoDiasFabricacion ?? 0;
+        const fieldKey = buildFieldKey(categoriaId, 'tiempoDiasFabricacion');
+        if (value < 0) return;
+
+        setSavingFieldKey(fieldKey);
+        try {
+            const url = endPoints.update_categoria_tiempo_dias_fabricacion.replace('{categoriaId}', String(categoriaId));
+            await axios.patch(url, { tiempoDiasFabricacion: value });
+            setCategorias((prev) =>
+                prev.map((c) => (
+                    c.categoriaId === categoriaId ? { ...c, tiempoDiasFabricacion: value } : c
+                ))
+            );
+            setEditingTiempoDiasFabricacion((prev) => ({ ...prev, [categoriaId]: value }));
+            setUnlockedFields((prev) => ({ ...prev, [fieldKey]: false }));
+            toast({
+                title: 'Tiempo de fabricacion actualizado',
+                description: `Categoria "${categoria.categoriaNombre}" actualizada correctamente`,
+                status: 'success',
+                duration: 3000,
+                isClosable: true,
+            });
+        } catch (err) {
+            console.error('Error updating tiempo dias fabricacion:', err);
+            let errorMessage = 'No se pudo actualizar el tiempo de fabricacion.';
+            if (axios.isAxiosError(err) && err.response?.data?.message) {
+                errorMessage = err.response.data.message;
+            }
+            toast({
+                title: 'Error',
+                description: errorMessage,
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setSavingFieldKey(null);
         }
     };
 
@@ -206,7 +271,7 @@ export default function ConfParamsCategoria() {
                             value={searchNombre}
                             onChange={(e) => setSearchNombre(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder="Coincidencia parcial (vacío = todas)"
+                            placeholder="Coincidencia parcial (vacio = todas)"
                         />
                         <InputRightElement width="auto" px={2}>
                             <Button
@@ -237,10 +302,10 @@ export default function ConfParamsCategoria() {
                 <Alert status="info" mb={4}>
                     <AlertIcon />
                     <Text>
-                        No se encontraron categorías.
+                        No se encontraron categorias.
                         {searchNombre.trim()
-                            ? ' Pruebe con otro criterio de búsqueda.'
-                            : ' No hay categorías registradas.'}
+                            ? ' Pruebe con otro criterio de busqueda.'
+                            : ' No hay categorias registradas.'}
                     </Text>
                 </Alert>
             ) : (
@@ -251,7 +316,8 @@ export default function ConfParamsCategoria() {
                                 <Tr>
                                     <Th>ID</Th>
                                     <Th>Nombre</Th>
-                                    <Th>Tamaño de lote</Th>
+                                    <Th>Tamano de lote</Th>
+                                    <Th>Tiempo fabricacion (dias)</Th>
                                     <Th>Ruta de Proceso</Th>
                                 </Tr>
                             </Thead>
@@ -263,19 +329,20 @@ export default function ConfParamsCategoria() {
                                         <Td>
                                             {(() => {
                                                 const catId = categoria.categoriaId;
-                                                const unlocked = !!unlockedCategoriaIds[catId];
+                                                const fieldKey = buildFieldKey(catId, 'loteSize');
+                                                const unlocked = !!unlockedFields[fieldKey];
                                                 const currentValue = editingLoteSize[catId] ?? categoria.loteSize ?? 0;
                                                 const originalValue = categoria.loteSize ?? 0;
                                                 const hasChanges = currentValue !== originalValue;
                                                 return (
                                                     <Flex align="center" gap={2}>
                                                         <IconButton
-                                                            aria-label={unlocked ? 'Bloquear edición' : 'Habilitar edición'}
+                                                            aria-label={unlocked ? 'Bloquear edicion' : 'Habilitar edicion'}
                                                             icon={unlocked ? <UnlockIcon boxSize={5} /> : <LockIcon boxSize={5} />}
                                                             variant="ghost"
                                                             size="sm"
                                                             boxSize={10}
-                                                            onClick={() => toggleLock(catId)}
+                                                            onClick={() => toggleLock(catId, 'loteSize')}
                                                         />
                                                         <CustomIntegerInput
                                                             value={currentValue}
@@ -293,7 +360,49 @@ export default function ConfParamsCategoria() {
                                                                 size="sm"
                                                                 boxSize={10}
                                                                 onClick={() => handleSaveLoteSize(categoria)}
-                                                                isLoading={savingCategoriaId === catId}
+                                                                isLoading={savingFieldKey === fieldKey}
+                                                            />
+                                                        )}
+                                                    </Flex>
+                                                );
+                                            })()}
+                                        </Td>
+                                        <Td>
+                                            {(() => {
+                                                const catId = categoria.categoriaId;
+                                                const fieldKey = buildFieldKey(catId, 'tiempoDiasFabricacion');
+                                                const unlocked = !!unlockedFields[fieldKey];
+                                                const currentValue =
+                                                    editingTiempoDiasFabricacion[catId] ?? categoria.tiempoDiasFabricacion ?? 0;
+                                                const originalValue = categoria.tiempoDiasFabricacion ?? 0;
+                                                const hasChanges = currentValue !== originalValue;
+                                                return (
+                                                    <Flex align="center" gap={2}>
+                                                        <IconButton
+                                                            aria-label={unlocked ? 'Bloquear edicion' : 'Habilitar edicion'}
+                                                            icon={unlocked ? <UnlockIcon boxSize={5} /> : <LockIcon boxSize={5} />}
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            boxSize={10}
+                                                            onClick={() => toggleLock(catId, 'tiempoDiasFabricacion')}
+                                                        />
+                                                        <CustomIntegerInput
+                                                            value={currentValue}
+                                                            onChange={(v) => handleTiempoDiasFabricacionChange(catId, v)}
+                                                            isDisabled={!unlocked}
+                                                            min={0}
+                                                            placeholder="0"
+                                                            width="120px"
+                                                        />
+                                                        {unlocked && hasChanges && (
+                                                            <IconButton
+                                                                aria-label="Guardar"
+                                                                icon={<Icon as={RiSave3Fill} boxSize={5} />}
+                                                                colorScheme="green"
+                                                                size="sm"
+                                                                boxSize={10}
+                                                                onClick={() => handleSaveTiempoDiasFabricacion(categoria)}
+                                                                isLoading={savingFieldKey === fieldKey}
                                                             />
                                                         )}
                                                     </Flex>
