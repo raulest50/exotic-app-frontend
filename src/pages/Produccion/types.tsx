@@ -91,6 +91,7 @@ export interface OrdenProduccionDTO {
     productoCategoriaId?: number | null;
     productoCategoriaNombre?: string | null;
     productoUnidad?: string | null;
+    fechaCreacion?: string | null;
     fechaInicio: string | null; // ISO date string or null when unavailable
     fechaLanzamiento: string | null;
     fechaFinalPlanificada: string | null;

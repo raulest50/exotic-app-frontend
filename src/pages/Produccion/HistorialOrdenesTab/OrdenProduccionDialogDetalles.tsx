@@ -42,6 +42,32 @@ const formatValue = (value: string | number | null | undefined): string => {
     return String(value);
 };
 
+const formatDateTimeValue = (value: string | null | undefined): string => {
+    if (value === null || value === undefined) {
+        return "-";
+    }
+
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+        return "-";
+    }
+
+    const parsed = new Date(trimmed);
+    if (Number.isNaN(parsed.getTime())) {
+        return "-";
+    }
+
+    const day = String(parsed.getDate()).padStart(2, "0");
+    const month = String(parsed.getMonth() + 1).padStart(2, "0");
+    const year = parsed.getFullYear();
+    const minutes = String(parsed.getMinutes()).padStart(2, "0");
+    const hours24 = parsed.getHours();
+    const period = hours24 >= 12 ? "PM" : "AM";
+    const hours12 = String(hours24 % 12 || 12).padStart(2, "0");
+
+    return `${day}/${month}/${year}, ${hours12}:${minutes} ${period}`;
+};
+
 export default function OrdenProduccionDialogDetalles({
     isOpen,
     onClose,
@@ -93,7 +119,7 @@ export default function OrdenProduccionDialogDetalles({
         if (inputToken !== randomToken) {
             toast({
                 title: "Token incorrecto",
-                description: "El token ingresado no coincide con el token de confirmación",
+                description: "El token ingresado no coincide con el token de confirmaci\u00F3n",
                 status: "error",
                 duration: 3000,
                 isClosable: true,
@@ -108,7 +134,7 @@ export default function OrdenProduccionDialogDetalles({
 
             toast({
                 title: "Orden cancelada",
-                description: "La orden de producción ha sido cancelada correctamente",
+                description: "La orden de producci\u00F3n ha sido cancelada correctamente",
                 status: "success",
                 duration: 5000,
                 isClosable: true,
@@ -119,7 +145,7 @@ export default function OrdenProduccionDialogDetalles({
         } catch (error) {
             toast({
                 title: "Error",
-                description: "No se pudo cancelar la orden de producción",
+                description: "No se pudo cancelar la orden de producci\u00F3n",
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -145,26 +171,32 @@ export default function OrdenProduccionDialogDetalles({
                             <Text fontWeight="bold">Producto</Text>
                             <Text>{orden.productoNombre}</Text>
                             <Text color="gray.600" fontSize="sm">
-                                ID: {formatValue(orden.productoId)} • Tipo: {formatValue(orden.productoTipo)} • Unidad: {formatValue(orden.productoUnidad)}
+                                ID: {formatValue(orden.productoId)}
+                                {" \u2022 "}
+                                Tipo: {formatValue(orden.productoTipo)}
+                                {" \u2022 "}
+                                Unidad: {formatValue(orden.productoUnidad)}
                             </Text>
                             <Text color="gray.600" fontSize="sm">
-                                Categoría: {formatValue(orden.productoCategoriaNombre ?? orden.productoCategoriaId)}
+                                {"Categor\u00EDa: "}
+                                {formatValue(orden.productoCategoriaNombre ?? orden.productoCategoriaId)}
                             </Text>
                         </Box>
 
                         <Box>
                             <Text fontWeight="bold">Fechas</Text>
+                            <Text fontSize="sm">{"Fecha de creaci\u00F3n: "}{formatDateTimeValue(orden.fechaCreacion)}</Text>
                             <Text fontSize="sm">Inicio: {formatValue(orden.fechaInicio)}</Text>
                             <Text fontSize="sm">Lanzamiento: {formatValue(orden.fechaLanzamiento)}</Text>
                             <Text fontSize="sm">Fin planificada: {formatValue(orden.fechaFinalPlanificada)}</Text>
                         </Box>
 
                         <Box>
-                            <Text fontWeight="bold">Información de Producción</Text>
+                            <Text fontWeight="bold">{"Informaci\u00F3n de Producci\u00F3n"}</Text>
                             <Text fontSize="sm">Cantidad a producir: {formatValue(orden.cantidadProducir)}</Text>
                             <Text fontSize="sm">Estado: {formatValue(orden.estadoOrden)}</Text>
                             <Text fontSize="sm">Pedido comercial: {formatValue(orden.numeroPedidoComercial)}</Text>
-                            <Text fontSize="sm">Área operativa: {formatValue(orden.areaOperativa)}</Text>
+                            <Text fontSize="sm">{"\u00C1rea operativa: "}{formatValue(orden.areaOperativa)}</Text>
                             <Text fontSize="sm">Departamento operativo: {formatValue(orden.departamentoOperativo)}</Text>
                         </Box>
 
@@ -176,23 +208,23 @@ export default function OrdenProduccionDialogDetalles({
                         {isDeletable && (
                             <Box>
                                 <Text fontWeight="bold" mb={3} color="red.500">
-                                    Cancelar orden de producción
+                                    {"Cancelar orden de producci\u00F3n"}
                                 </Text>
                                 <Divider mb={4} />
                                 <Stack spacing={4}>
                                     <Alert status="warning">
                                         <AlertIcon />
-                                        Esta acción no se puede deshacer. La orden será cancelada definitivamente.
+                                        {"Esta acci\u00F3n no se puede deshacer. La orden ser\u00E1 cancelada definitivamente."}
                                     </Alert>
 
-                                    <Text fontWeight="bold">Token de confirmación: {randomToken}</Text>
+                                    <Text fontWeight="bold">{"Token de confirmaci\u00F3n: "}{randomToken}</Text>
 
                                     <FormControl>
-                                        <FormLabel>Ingrese el token de confirmación:</FormLabel>
+                                        <FormLabel>{"Ingrese el token de confirmaci\u00F3n:"}</FormLabel>
                                         <Input
                                             value={inputToken}
                                             onChange={(e) => setInputToken(e.target.value)}
-                                            placeholder="Ingrese el token de 4 dígitos"
+                                            placeholder="Ingrese el token de 4 d\u00EDgitos"
                                         />
                                     </FormControl>
 
@@ -203,7 +235,7 @@ export default function OrdenProduccionDialogDetalles({
                                         loadingText="Cancelando..."
                                         isDisabled={inputToken !== randomToken}
                                     >
-                                        Cancelar orden de producción
+                                        {"Cancelar orden de producci\u00F3n"}
                                     </Button>
                                 </Stack>
                             </Box>

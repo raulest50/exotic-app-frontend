@@ -79,6 +79,7 @@ const normalizeOrdenProduccion = (orden: any): OrdenProduccionDTO => {
         productoCategoriaId: toNullableNumber(categoriaIdRaw),
         productoCategoriaNombre: toNullableString(categoriaNombreRaw),
         productoUnidad: toNullableString(productoUnidadRaw),
+        fechaCreacion: toNullableString(orden?.fechaCreacion),
         fechaInicio: toNullableString(orden?.fechaInicio),
         fechaLanzamiento: toNullableString(orden?.fechaLanzamiento),
         fechaFinalPlanificada: toNullableString(orden?.fechaFinalPlanificada),
