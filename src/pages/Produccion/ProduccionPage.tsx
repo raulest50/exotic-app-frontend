@@ -12,7 +12,6 @@ import CrearOrdenesTab from "./CrearOrdenesTab/CrearOrdenesTab.tsx";
 import HistorialOrdenesTab from "./HistorialOrdenesTab/HistorialOrdenesTab.tsx";
 import MonitorearAreasOperativasTab from "./MonitorearAreasOperativasTab.tsx";
 import { PlaneacionProduccionTab } from "./PlaneacionProduccionTab/PlaneacionProduccionTab.tsx";
-import SeguimientoAreasOperativasTab from "./SeguimientoAreasOperativasTab.tsx";
 
 export default function ProduccionPage() {
     const access = useAccessSnapshot();
@@ -41,12 +40,6 @@ export default function ProduccionPage() {
             label: "Planeacion Produccion",
             render: () => <PlaneacionProduccionTab />,
             accesoValido: tabAccessRule(Modulo.PRODUCCION, "PLANEACION_PRODUCCION", 1),
-        },
-        {
-            key: "seguimiento-areas-operativas",
-            label: "Seguimiento Areas Operativas",
-            render: () => <SeguimientoAreasOperativasTab />,
-            accesoValido: tabAccessRule(Modulo.PRODUCCION, "SEGUIMIENTO_AREAS_OPERATIVAS", 1),
         },
         {
             key: "monitorear-areas-operativas",

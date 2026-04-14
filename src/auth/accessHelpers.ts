@@ -2,6 +2,13 @@ import type { AccessRule, AccessSnapshot } from "./accessModel.ts";
 import type { ModuloAccesoFE } from "../pages/Usuarios/GestionUsuarios/types.tsx";
 import { Modulo } from "../pages/Usuarios/GestionUsuarios/types.tsx";
 
+function resolveLegacyTabIds(modulo: Modulo, tabId: string): string[] {
+    if (modulo === Modulo.PRODUCCION && tabId === "MONITOREAR_AREAS_OPERATIVAS") {
+        return ["MONITOREAR_AREAS_OPERATIVAS", "SEGUIMIENTO_AREAS_OPERATIVAS"];
+    }
+    return [tabId];
+}
+
 export function buildAccesosPorModulo(list: ModuloAccesoFE[]): Partial<Record<Modulo, ModuloAccesoFE>> {
     const out: Partial<Record<Modulo, ModuloAccesoFE>> = {};
     for (const ma of list) {
@@ -20,7 +27,8 @@ export function canAccessTab(
     if (!moduloAccesos?.length) return false;
     const ma = moduloAccesos.find((m) => m.modulo === modulo);
     if (!ma?.tabs?.length) return false;
-    return ma.tabs.some((t) => t.tabId === tabId || t.tabId === "MAIN");
+    const acceptedTabIds = resolveLegacyTabIds(modulo, tabId);
+    return ma.tabs.some((t) => acceptedTabIds.includes(t.tabId) || t.tabId === "MAIN");
 }
 
 export function getTabNivel(
@@ -29,7 +37,8 @@ export function getTabNivel(
     tabId: string
 ): number | null {
     const ma = moduloAccesos?.find((m) => m.modulo === modulo);
-    const tab = ma?.tabs?.find((t) => t.tabId === tabId) ?? ma?.tabs?.find((t) => t.tabId === "MAIN");
+    const acceptedTabIds = resolveLegacyTabIds(modulo, tabId);
+    const tab = ma?.tabs?.find((t) => acceptedTabIds.includes(t.tabId)) ?? ma?.tabs?.find((t) => t.tabId === "MAIN");
     return tab != null ? tab.nivel : null;
 }
 
