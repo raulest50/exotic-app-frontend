@@ -43,6 +43,7 @@ export interface Categoria {
     categoriaDescripcion: string;
     loteSize?: number;
     tiempoDiasFabricacion?: number;
+    capacidadProductivaDiaria?: number;
 }
 
 export interface Terminado extends Producto {

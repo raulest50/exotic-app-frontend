@@ -33,7 +33,7 @@ import { RutaProcesoCatDesigner } from '../RutaProcesoCatDesigner';
 
 const PAGE_SIZE = 10;
 
-type EditableCategoriaField = 'loteSize' | 'tiempoDiasFabricacion';
+type EditableCategoriaField = 'loteSize' | 'tiempoDiasFabricacion' | 'capacidadProductivaDiaria';
 
 export default function ConfParamsCategoria() {
     const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -44,6 +44,7 @@ export default function ConfParamsCategoria() {
     const [error, setError] = useState<string | null>(null);
     const [editingLoteSize, setEditingLoteSize] = useState<Record<number, number>>({});
     const [editingTiempoDiasFabricacion, setEditingTiempoDiasFabricacion] = useState<Record<number, number>>({});
+    const [editingCapacidadProductivaDiaria, setEditingCapacidadProductivaDiaria] = useState<Record<number, number>>({});
     const [unlockedFields, setUnlockedFields] = useState<Record<string, boolean>>({});
     const [savingFieldKey, setSavingFieldKey] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'list' | 'designer'>('list');
@@ -118,6 +119,14 @@ export default function ConfParamsCategoria() {
                     return { ...prev, ...next };
                 });
 
+                setEditingCapacidadProductivaDiaria((prev) => {
+                    const next: Record<number, number> = {};
+                    loadedCategorias.forEach((c: Categoria) => {
+                        next[c.categoriaId] = c.capacidadProductivaDiaria ?? 0;
+                    });
+                    return { ...prev, ...next };
+                });
+
                 if (loadedCategorias.length > 0) {
                     const categoriaIds = loadedCategorias.map(c => c.categoriaId);
                     fetchRutasExistentes(categoriaIds);
@@ -165,6 +174,13 @@ export default function ConfParamsCategoria() {
 
     const handleTiempoDiasFabricacionChange = (categoriaId: number, value: number) => {
         setEditingTiempoDiasFabricacion((prev) => ({
+            ...prev,
+            [categoriaId]: value,
+        }));
+    };
+
+    const handleCapacidadProductivaDiariaChange = (categoriaId: number, value: number) => {
+        setEditingCapacidadProductivaDiaria((prev) => ({
             ...prev,
             [categoriaId]: value,
         }));
@@ -252,6 +268,48 @@ export default function ConfParamsCategoria() {
         }
     };
 
+    const handleSaveCapacidadProductivaDiaria = async (categoria: Categoria) => {
+        const categoriaId = categoria.categoriaId;
+        const value = editingCapacidadProductivaDiaria[categoriaId] ?? categoria.capacidadProductivaDiaria ?? 0;
+        const fieldKey = buildFieldKey(categoriaId, 'capacidadProductivaDiaria');
+        if (value < 0) return;
+
+        setSavingFieldKey(fieldKey);
+        try {
+            const url = endPoints.update_categoria_capacidad_productiva_diaria.replace('{categoriaId}', String(categoriaId));
+            await axios.patch(url, { capacidadProductivaDiaria: value });
+            setCategorias((prev) =>
+                prev.map((c) => (
+                    c.categoriaId === categoriaId ? { ...c, capacidadProductivaDiaria: value } : c
+                ))
+            );
+            setEditingCapacidadProductivaDiaria((prev) => ({ ...prev, [categoriaId]: value }));
+            setUnlockedFields((prev) => ({ ...prev, [fieldKey]: false }));
+            toast({
+                title: 'Capacidad productiva actualizada',
+                description: `Categoria "${categoria.categoriaNombre}" actualizada correctamente`,
+                status: 'success',
+                duration: 3000,
+                isClosable: true,
+            });
+        } catch (err) {
+            console.error('Error updating capacidad productiva diaria:', err);
+            let errorMessage = 'No se pudo actualizar la capacidad productiva diaria.';
+            if (axios.isAxiosError(err) && err.response?.data?.message) {
+                errorMessage = err.response.data.message;
+            }
+            toast({
+                title: 'Error',
+                description: errorMessage,
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setSavingFieldKey(null);
+        }
+    };
+
     if (viewMode === 'designer' && selectedCategoria) {
         return (
             <RutaProcesoCatDesigner
@@ -318,6 +376,7 @@ export default function ConfParamsCategoria() {
                                     <Th>Nombre</Th>
                                     <Th>Tamano de lote</Th>
                                     <Th>Tiempo fabricacion (dias)</Th>
+                                    <Th>Capacidad productiva (und/dia)</Th>
                                     <Th>Ruta de Proceso</Th>
                                 </Tr>
                             </Thead>
@@ -402,6 +461,48 @@ export default function ConfParamsCategoria() {
                                                                 size="sm"
                                                                 boxSize={10}
                                                                 onClick={() => handleSaveTiempoDiasFabricacion(categoria)}
+                                                                isLoading={savingFieldKey === fieldKey}
+                                                            />
+                                                        )}
+                                                    </Flex>
+                                                );
+                                            })()}
+                                        </Td>
+                                        <Td>
+                                            {(() => {
+                                                const catId = categoria.categoriaId;
+                                                const fieldKey = buildFieldKey(catId, 'capacidadProductivaDiaria');
+                                                const unlocked = !!unlockedFields[fieldKey];
+                                                const currentValue =
+                                                    editingCapacidadProductivaDiaria[catId] ?? categoria.capacidadProductivaDiaria ?? 0;
+                                                const originalValue = categoria.capacidadProductivaDiaria ?? 0;
+                                                const hasChanges = currentValue !== originalValue;
+                                                return (
+                                                    <Flex align="center" gap={2}>
+                                                        <IconButton
+                                                            aria-label={unlocked ? 'Bloquear edicion' : 'Habilitar edicion'}
+                                                            icon={unlocked ? <UnlockIcon boxSize={5} /> : <LockIcon boxSize={5} />}
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            boxSize={10}
+                                                            onClick={() => toggleLock(catId, 'capacidadProductivaDiaria')}
+                                                        />
+                                                        <CustomIntegerInput
+                                                            value={currentValue}
+                                                            onChange={(v) => handleCapacidadProductivaDiariaChange(catId, v)}
+                                                            isDisabled={!unlocked}
+                                                            min={0}
+                                                            placeholder="0"
+                                                            width="140px"
+                                                        />
+                                                        {unlocked && hasChanges && (
+                                                            <IconButton
+                                                                aria-label="Guardar"
+                                                                icon={<Icon as={RiSave3Fill} boxSize={5} />}
+                                                                colorScheme="green"
+                                                                size="sm"
+                                                                boxSize={10}
+                                                                onClick={() => handleSaveCapacidadProductivaDiaria(categoria)}
                                                                 isLoading={savingFieldKey === fieldKey}
                                                             />
                                                         )}

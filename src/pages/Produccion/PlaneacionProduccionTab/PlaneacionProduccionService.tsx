@@ -41,6 +41,7 @@ export interface TerminadoConVentas {
     cantidad_vendida: number;
     valor_total: number;
     porcentaje_participacion: number;
+    stockActualConsolidado: number;
 }
 
 export type ModoDistribucion = "valor" | "cantidad";
@@ -79,6 +80,56 @@ export interface ProcesamientoInformeDetallado {
     terminados: TerminadoConVentas[];
     totalFilasLeidas: number;
     totalFilasUnificadas: number;
+}
+
+export interface PropuestaMpsSemanalItemRequestDTO {
+    productoId: string;
+    necesidadManual: number;
+    porcentajeParticipacion: number;
+    cantidadVendida: number;
+    valorTotal: number;
+}
+
+export interface PropuestaMpsSemanalRequestDTO {
+    weekStartDate: string;
+    items: PropuestaMpsSemanalItemRequestDTO[];
+}
+
+export interface PropuestaMpsSemanalSummaryDTO {
+    totalTerminadosEvaluados: number;
+    totalPlanificables: number;
+    totalNoPlanificablesPorFaltaLoteSize: number;
+    totalLotesPropuestos: number;
+    totalUnidadesPropuestas: number;
+}
+
+export interface PropuestaMpsSemanalItemDTO {
+    productoId: string;
+    productoNombre: string;
+    categoriaNombre: string | null;
+    loteSize: number;
+    tiempoDiasFabricacion: number;
+    stockActual: number;
+    necesidadManual: number;
+    necesidadNeta: number;
+    lotesPropuestos: number;
+    cantidadPropuesta: number;
+    deltaVsNecesidad: number;
+    porcentajeParticipacion: number;
+    cantidadVendida: number;
+    valorTotal: number;
+    fechaLanzamientoSugerida: string | null;
+    fechaFinalPlanificadaSugerida: string | null;
+    desbordaSemana: boolean;
+    planificable: boolean;
+    warning: string | null;
+}
+
+export interface PropuestaMpsSemanalDTO {
+    weekStartDate: string;
+    weekEndDate: string;
+    summary: PropuestaMpsSemanalSummaryDTO;
+    items: PropuestaMpsSemanalItemDTO[];
 }
 
 interface ProcesamientoInformeCache {
@@ -335,6 +386,7 @@ interface TerminadoConVentasDTO {
     terminado: Terminado;
     cantidadVendida: number;
     valorTotal: number;
+    stockActualConsolidado: number;
 }
 
 export const AsociarTerminados = async (
@@ -357,6 +409,7 @@ export const AsociarTerminados = async (
         cantidad_vendida: item.cantidadVendida,
         valor_total: item.valorTotal,
         porcentaje_participacion: 0,
+        stockActualConsolidado: item.stockActualConsolidado,
     }));
 };
 
@@ -420,6 +473,17 @@ export const ProcesarInformeVentas = async (
     const result = await ProcesarInformeVentasDetallado(file);
     return result.terminados;
 };
+
+export async function GenerarPropuestaMpsSemanal(
+    payload: PropuestaMpsSemanalRequestDTO,
+): Promise<PropuestaMpsSemanalDTO> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.post<PropuestaMpsSemanalDTO>(
+        endPoints.planeacion_propuesta_mps_semanal,
+        payload,
+    );
+    return response.data;
+}
 
 export const CalcularDistribucionVentas = (
     items: TerminadoConVentas[],

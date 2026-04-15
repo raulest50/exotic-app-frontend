@@ -1,4 +1,4 @@
-import { Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
+import { Box, Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 
 import MyHeader from "../../components/MyHeader.tsx";
 import { tabAccessRule } from "../../auth/accessHelpers.ts";
@@ -72,7 +72,18 @@ export default function ProduccionPage() {
 
                 <TabPanels>
                     {visibleTabs.map((tab) => (
-                        <TabPanel key={tab.key}>{tab.render()}</TabPanel>
+                        <TabPanel
+                            key={tab.key}
+                            p={tab.key === "planeacion" ? 0 : 4}
+                        >
+                            {tab.key === "planeacion" ? (
+                                <Box w="full" minW={0}>
+                                    {tab.render()}
+                                </Box>
+                            ) : (
+                                tab.render()
+                            )}
+                        </TabPanel>
                     ))}
                 </TabPanels>
             </Tabs>

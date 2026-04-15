@@ -44,6 +44,7 @@ export default class EndPointsURL{
     public search_categorias_pag: string;
     public update_categoria_lote_size: string;
     public update_categoria_tiempo_dias_fabricacion: string;
+    public update_categoria_capacidad_productiva_diaria: string;
 
     // ruta proceso cat endpoints
     public get_ruta_proceso_cat: string;
@@ -249,6 +250,7 @@ export default class EndPointsURL{
     public planeacion_asociar_terminados: string;
     public planeacion_debug_excel_structure: string;
     public planeacion_debug_asociacion_terminados: string;
+    public planeacion_propuesta_mps_semanal: string;
 
     // seguimiento orden area endpoints
     public seguimiento_mis_ordenes_pendientes: string;
@@ -360,6 +362,7 @@ export default class EndPointsURL{
         this.search_categorias_pag = `${domain}/categorias/search`;
         this.update_categoria_lote_size = `${domain}/categorias/{categoriaId}/lote-size`;
         this.update_categoria_tiempo_dias_fabricacion = `${domain}/categorias/{categoriaId}/tiempo-dias-fabricacion`;
+        this.update_categoria_capacidad_productiva_diaria = `${domain}/categorias/{categoriaId}/capacidad-productiva-diaria`;
 
         // Ruta proceso cat endpoints
         const ruta_proceso_cat_res = 'api/ruta-proceso-cat';
@@ -570,6 +573,7 @@ export default class EndPointsURL{
         this.planeacion_asociar_terminados = `${domain}/${planeacion_produccion_res}/asociar_terminados`;
         this.planeacion_debug_excel_structure = `${domain}/${planeacion_produccion_res}/debug/excel-structure`;
         this.planeacion_debug_asociacion_terminados = `${domain}/${planeacion_produccion_res}/debug/asociacion-terminados`;
+        this.planeacion_propuesta_mps_semanal = `${domain}/${planeacion_produccion_res}/propuesta-mps-semanal`;
 
         // Seguimiento orden area endpoints
         const seguimiento_orden_area_res = 'api/seguimiento-orden-area';

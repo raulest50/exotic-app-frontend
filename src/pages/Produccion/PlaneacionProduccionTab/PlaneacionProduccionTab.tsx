@@ -1,7 +1,6 @@
 import {useState} from "react";
 import {
     Box,
-    Container,
     Flex,
     StepDescription,
     StepNumber,
@@ -73,8 +72,8 @@ export const PlaneacionProduccionTab = (props: Props) => {
     };
 
     return (
-        <Container minW={['auto', 'container.lg', 'container.xl']} w={'full'} h={'full'}>
-            <Flex direction={"column"} gap={4}>
+        <Box w={'full'} h={'full'} minW={0}>
+            <Flex direction={"column"} gap={4} w="full" minW={0}>
                 <Stepper index={activeStep} p={'1em'} backgroundColor={"teal.50"} w={'full'} >
                     {steps.map((step, index) => (
                         <Step key={index}>
@@ -97,6 +96,6 @@ export const PlaneacionProduccionTab = (props: Props) => {
                 </Stepper>
                 <ConditionalRenderStep/>
             </Flex>
-        </Container>
+        </Box>
     );
 };
