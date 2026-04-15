@@ -17,14 +17,16 @@ import {
     Td,
     TableContainer,
 } from "@chakra-ui/react";
+import EndPointsURL from "../../../../api/EndPointsURL";
 import BetterPagination from "../../../../components/BetterPagination/BetterPagination";
+import { useAccessSnapshot } from "../../../../auth/usePermissions";
 import {
-    CargarDatosFilas,
-    UnificarDatosFilas,
-    AsociarTerminados,
     CalcularDistribucionVentas,
-    type TerminadoConVentas,
+    enviarDiagnosticoAsociacionTerminados,
+    ProcesarInformeVentasDetallado,
+    type DiagnosticoAsociacionContext,
     type ModoDistribucion,
+    type TerminadoConVentas,
 } from "../PlaneacionProduccionService";
 
 interface Step1CalcularDistribucionProps {
@@ -44,8 +46,12 @@ export default function Step1CalcularDistribucion({
     necesidades,
     setNecesidades,
 }: Step1CalcularDistribucionProps) {
+    const access = useAccessSnapshot();
+    const enableBackendDebug = access.isMasterLike && EndPointsURL.getEnvironment() === "local";
+
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [emptyDebugId, setEmptyDebugId] = useState<string | null>(null);
 
     const [modo, setModo] = useState<ModoDistribucion>("valor");
     const [page, setPage] = useState(0);
@@ -53,8 +59,8 @@ export default function Step1CalcularDistribucion({
 
     useEffect(() => {
         if (!excelFile) {
-            console.error("[Step1CalcularDistribucion] No se recibió archivo Excel.");
             setIsLoading(false);
+            setEmptyDebugId(null);
             return;
         }
 
@@ -63,30 +69,51 @@ export default function Step1CalcularDistribucion({
         const procesarExcel = async () => {
             setIsLoading(true);
             setError(null);
+            setEmptyDebugId(null);
+
             try {
-                const filasRaw = await CargarDatosFilas(excelFile);
+                const result = await ProcesarInformeVentasDetallado(excelFile);
                 if (cancelled) return;
 
-                const filasUnificadas = UnificarDatosFilas(filasRaw);
-                if (cancelled) return;
+                setRawData(result.terminados);
 
-                const resultado = await AsociarTerminados(filasUnificadas);
-                if (cancelled) return;
+                if (result.terminados.length === 0 && enableBackendDebug) {
+                    const clientContext: DiagnosticoAsociacionContext = {
+                        totalFilasLeidas: result.totalFilasLeidas,
+                        totalFilasUnificadas: result.totalFilasUnificadas,
+                        totalAsociadoFinal: result.terminados.length,
+                        triggerReason: "no_terminados_asociados",
+                        uiMessage: "No se encontraron productos terminados asociados a los datos del informe.",
+                    };
 
-                setRawData(resultado);
-                console.log("[Step1CalcularDistribucion] Total terminados asociados:", resultado.length);
+                    void enviarDiagnosticoAsociacionTerminados(excelFile, clientContext)
+                        .then((debugResult) => {
+                            if (!cancelled && debugResult?.debugId) {
+                                setEmptyDebugId(debugResult.debugId);
+                            }
+                        })
+                        .catch((debugError) => {
+                            console.error("[Step1CalcularDistribucion] No se pudo generar diagnostico de asociacion:", debugError);
+                        });
+                }
             } catch (err) {
                 console.error("[Step1CalcularDistribucion] Error al procesar:", err);
-                if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+                if (!cancelled) {
+                    setError(err instanceof Error ? err.message : String(err));
+                }
             } finally {
-                if (!cancelled) setIsLoading(false);
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
             }
         };
 
         procesarExcel();
 
-        return () => { cancelled = true; };
-    }, [excelFile]);
+        return () => {
+            cancelled = true;
+        };
+    }, [enableBackendDebug, excelFile, setRawData]);
 
     const distribucion = useMemo(
         () => CalcularDistribucionVentas(rawData, modo),
@@ -132,11 +159,16 @@ export default function Step1CalcularDistribucion({
         return (
             <Box p={4}>
                 <Text color="red.500">No se encontraron productos terminados asociados a los datos del informe.</Text>
+                {emptyDebugId && (
+                    <Text mt={2} color="gray.600">
+                        Diagnostico tecnico generado en backend. debugId={emptyDebugId}. Revise planeacion_excel_debug.log.
+                    </Text>
+                )}
             </Box>
         );
     }
 
-    const paretoIdx = acumulados.findIndex(a => a >= 80);
+    const paretoIdx = acumulados.findIndex((a) => a >= 80);
 
     return (
         <VStack spacing={4} align="stretch" p={4}>
@@ -144,7 +176,7 @@ export default function Step1CalcularDistribucion({
                 <Text fontSize="md" color="gray.700">
                     <strong>{distribucion.length}</strong> productos terminados
                     {paretoIdx >= 0 && (
-                        <> — el 80% de {modo === "valor" ? "las ventas ($)" : "la cantidad"} se concentra en los primeros <strong>{paretoIdx + 1}</strong> productos</>
+                        <> - el 80% de {modo === "valor" ? "las ventas ($)" : "la cantidad"} se concentra en los primeros <strong>{paretoIdx + 1}</strong> productos</>
                     )}
                 </Text>
                 <ButtonGroup size="sm" isAttached variant="outline">
@@ -170,12 +202,12 @@ export default function Step1CalcularDistribucion({
                     <Thead>
                         <Tr>
                             <Th>#</Th>
-                            <Th>Código</Th>
-                            <Th>Descripción</Th>
-                            <Th>Categoría</Th>
+                            <Th>Codigo</Th>
+                            <Th>Descripcion</Th>
+                            <Th>Categoria</Th>
                             <Th isNumeric>Cantidad Vendida</Th>
                             <Th isNumeric>Valor Total</Th>
-                            <Th isNumeric>% Participación</Th>
+                            <Th isNumeric>% Participacion</Th>
                             <Th isNumeric>% Acumulado</Th>
                             <Th isNumeric>Necesidad</Th>
                         </Tr>
@@ -198,7 +230,7 @@ export default function Step1CalcularDistribucion({
                                     <Td fontWeight={isParetoRow ? "bold" : "normal"}>{globalIdx + 1}</Td>
                                     <Td>{fila.terminado.productoId}</Td>
                                     <Td>{fila.terminado.nombre}</Td>
-                                    <Td>{fila.terminado.categoria?.categoriaNombre ?? "—"}</Td>
+                                    <Td>{fila.terminado.categoria?.categoriaNombre ?? "-"}</Td>
                                     <Td isNumeric>{fila.cantidad_vendida.toLocaleString()}</Td>
                                     <Td isNumeric>${fila.valor_total.toLocaleString()}</Td>
                                     <Td isNumeric>{fila.porcentaje_participacion.toFixed(2)}%</Td>
@@ -215,7 +247,7 @@ export default function Step1CalcularDistribucion({
                                             min={0}
                                             value={necesidades[fila.terminado.productoId] ?? ""}
                                             onChange={(_, valueAsNumber) =>
-                                                setNecesidades(prev => ({
+                                                setNecesidades((prev) => ({
                                                     ...prev,
                                                     [fila.terminado.productoId]: isNaN(valueAsNumber) ? 0 : valueAsNumber,
                                                 }))

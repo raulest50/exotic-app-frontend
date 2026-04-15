@@ -247,6 +247,8 @@ export default class EndPointsURL{
 
     // planeacion de produccion endpoints
     public planeacion_asociar_terminados: string;
+    public planeacion_debug_excel_structure: string;
+    public planeacion_debug_asociacion_terminados: string;
 
     // seguimiento orden area endpoints
     public seguimiento_mis_ordenes_pendientes: string;
@@ -566,6 +568,8 @@ export default class EndPointsURL{
 
         // Planeacion de produccion endpoints
         this.planeacion_asociar_terminados = `${domain}/${planeacion_produccion_res}/asociar_terminados`;
+        this.planeacion_debug_excel_structure = `${domain}/${planeacion_produccion_res}/debug/excel-structure`;
+        this.planeacion_debug_asociacion_terminados = `${domain}/${planeacion_produccion_res}/debug/asociacion-terminados`;
 
         // Seguimiento orden area endpoints
         const seguimiento_orden_area_res = 'api/seguimiento-orden-area';

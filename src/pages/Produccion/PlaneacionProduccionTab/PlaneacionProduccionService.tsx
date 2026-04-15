@@ -1,6 +1,6 @@
 /**
  * PlaneacionProduccionService.tsx
- * Contiene la lógica de negocio para planeación de producción,
+ * Contiene la logica de negocio para planeacion de produccion,
  * separada de los componentes de UI.
  */
 
@@ -10,7 +10,6 @@ import EndPointsURL from "../../../api/EndPointsURL";
 import type { ValidationResult } from "../../../components/FileChooserWithValidation/FileChooserWithValidation";
 
 export interface Terminado {
-    // --- campos heredados de Producto ---
     productoId: string;
     nombre: string;
     observaciones?: string;
@@ -22,8 +21,6 @@ export interface Terminado {
     tipo_producto: string;
     stockMinimo?: number;
     inventareable: boolean;
-
-    // --- campos propios de Terminado ---
     status: number;
     insumos?: any[];
     procesoProduccionCompleto?: any;
@@ -33,31 +30,74 @@ export interface Terminado {
     prefijoLote?: string;
 }
 
-/**
- * representa cada fila del excel de informe detallado de ventas.
- * solo se modelan por ahora las celdas relevantes
- */
 export interface fila_inf_ventas {
-    codigo: string; // representa el codigo de un producto terminado
+    codigo: string;
     cantidad_vendida: number;
     valor_total: number;
 }
 
-/**
- * Asocia un producto terminado con sus datos de ventas unificados.
- */
 export interface TerminadoConVentas {
     terminado: Terminado;
     cantidad_vendida: number;
     valor_total: number;
-    porcentaje_participacion: number; // porcentaje sobre el total (cantidad o valor según el modo)
+    porcentaje_participacion: number;
 }
 
 export type ModoDistribucion = "valor" | "cantidad";
 
-const COL_CODIGO = 11;           // Columna K
-const COL_CANTIDAD_VENDIDA = 13; // Columna M
-const COL_VALOR_TOTAL = 16;      // Columna P
+interface PlaneacionExcelDebugResponseDTO {
+    debugId: string;
+    message: string;
+    sheetCount: number;
+    detectedPrimarySheet: string | null;
+    headerMismatchCount: number;
+}
+
+interface PlaneacionTerminadosDebugResponseDTO {
+    debugId: string;
+    message: string;
+    sheetCount: number;
+    detectedPrimarySheet: string | null;
+    inputCodeCount: number;
+    matchedCodeCount: number;
+    unmatchedCodeCount: number;
+}
+
+interface VerificarEstructuraOptions {
+    enableBackendDebug?: boolean;
+}
+
+export interface DiagnosticoAsociacionContext {
+    totalFilasLeidas: number;
+    totalFilasUnificadas: number;
+    totalAsociadoFinal: number;
+    triggerReason: string;
+    uiMessage: string;
+}
+
+export interface ProcesamientoInformeDetallado {
+    terminados: TerminadoConVentas[];
+    totalFilasLeidas: number;
+    totalFilasUnificadas: number;
+}
+
+interface ProcesamientoInformeCache {
+    fileKey: string | null;
+    promise: Promise<ProcesamientoInformeDetallado> | null;
+    result: ProcesamientoInformeDetallado | null;
+}
+
+interface DiagnosticoAsociacionCache {
+    debugKey: string | null;
+    promise: Promise<PlaneacionTerminadosDebugResponseDTO | null> | null;
+    result: PlaneacionTerminadosDebugResponseDTO | null;
+}
+
+const EXPECTED_HEADERS_VERSION = "planeacion-produccion-step0-v1";
+
+const COL_CODIGO = 11;
+const COL_CANTIDAD_VENDIDA = 13;
+const COL_VALOR_TOTAL = 16;
 
 const EXPECTED_HEADERS: string[] = [
     "FECHA", "PREFIJO", "FACTURA", "RETE FUENTE", "RETE IVA", "RETE ICA",
@@ -74,65 +114,168 @@ const EXPECTED_HEADERS: string[] = [
 
 const MIN_DATA_ROWS = 2;
 
-/**
- * Verifica que la estructura del archivo Excel de informe de ventas
- * sea válida: columnas esperadas en la fila 1 y al menos 2 filas de datos.
- * @param file Archivo Excel seleccionado por el usuario
- * @returns ValidationResult con valid=true si pasa, o valid=false con errores descriptivos
- */
-export const VerificarEstructuraInformeVentas = async (file: File): Promise<ValidationResult> => {
-    console.log("[VerificarEstructura] Inicio - archivo:", file.name, "tamaño:", file.size, "bytes");
+const procesamientoInformeCache: ProcesamientoInformeCache = {
+    fileKey: null,
+    promise: null,
+    result: null,
+};
+
+const diagnosticoAsociacionCache: DiagnosticoAsociacionCache = {
+    debugKey: null,
+    promise: null,
+    result: null,
+};
+
+function construirClaveArchivo(file: File): string {
+    return `${file.name}::${file.size}::${file.lastModified}`;
+}
+
+function construirClaveDebugAsociacion(file: File, clientContext: DiagnosticoAsociacionContext): string {
+    return `${construirClaveArchivo(file)}::${clientContext.totalFilasLeidas}::${clientContext.totalFilasUnificadas}::${clientContext.totalAsociadoFinal}::${clientContext.triggerReason}`;
+}
+
+export const VerificarEstructuraInformeVentas = async (
+    file: File,
+    options?: VerificarEstructuraOptions,
+): Promise<ValidationResult> => {
     const errors: string[] = [];
 
-    console.log("[VerificarEstructura] Leyendo arrayBuffer...");
-    const data = await file.arrayBuffer();
-    console.log("[VerificarEstructura] arrayBuffer leído, byteLength:", data.byteLength);
+    try {
+        const data = await file.arrayBuffer();
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(data);
 
-    const workbook = new ExcelJS.Workbook();
-    console.log("[VerificarEstructura] Cargando workbook con ExcelJS...");
-    await workbook.xlsx.load(data);
-    console.log("[VerificarEstructura] Workbook cargado, hojas:", workbook.worksheets.length, workbook.worksheets.map(ws => ws.name));
+        const worksheet = workbook.worksheets[0];
+        if (!worksheet) {
+            errors.push("No se encontro ninguna hoja en el archivo.");
+        } else {
+            const dataRows = worksheet.rowCount - 1;
+            if (worksheet.rowCount < 1 + MIN_DATA_ROWS) {
+                errors.push(
+                    `El archivo debe contener al menos ${MIN_DATA_ROWS} filas de datos. Se encontraron ${dataRows < 0 ? 0 : dataRows}.`,
+                );
+            }
 
-    const worksheet = workbook.worksheets[0];
-    if (!worksheet) {
-        console.error("[VerificarEstructura] No se encontró ninguna hoja en el archivo.");
-        errors.push("No se encontró ninguna hoja en el archivo.");
-        return { valid: false, errors };
-    }
-
-    console.log("[VerificarEstructura] Hoja seleccionada:", worksheet.name, "| rowCount:", worksheet.rowCount, "| columnCount:", worksheet.columnCount);
-
-    const dataRows = worksheet.rowCount - 1;
-    if (worksheet.rowCount < 1 + MIN_DATA_ROWS) {
-        console.warn("[VerificarEstructura] Filas insuficientes. rowCount:", worksheet.rowCount, "mínimo requerido:", 1 + MIN_DATA_ROWS);
-        errors.push(
-            `El archivo debe contener al menos ${MIN_DATA_ROWS} filas de datos. Se encontraron ${dataRows < 0 ? 0 : dataRows}.`
-        );
-        return { valid: false, errors };
-    }
-
-    const headerRow = worksheet.getRow(1);
-    console.log("[VerificarEstructura] Verificando headers (esperados:", EXPECTED_HEADERS.length, "columnas)...");
-    for (let col = 1; col <= EXPECTED_HEADERS.length; col++) {
-        const cellValue = headerRow.getCell(col).value?.toString()?.trim().toUpperCase() ?? "";
-        const expected = EXPECTED_HEADERS[col - 1];
-        if (cellValue !== expected) {
-            console.warn(`[VerificarEstructura] Header mismatch col ${col}: esperado="${expected}" encontrado="${cellValue || "(vacía)"}"`);
-            errors.push(
-                `Columna ${col}: se esperaba "${expected}", se encontró "${cellValue || "(vacía)"}"`,
-            );
+            const headerRow = worksheet.getRow(1);
+            for (let col = 1; col <= EXPECTED_HEADERS.length; col++) {
+                const cellValue = headerRow.getCell(col).value?.toString()?.trim().toUpperCase() ?? "";
+                const expected = EXPECTED_HEADERS[col - 1];
+                if (cellValue !== expected) {
+                    errors.push(
+                        `Columna ${col}: se esperaba "${expected}", se encontro "${cellValue || "(vacia)"}"`,
+                    );
+                }
+            }
         }
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error("[VerificarEstructura] Error inesperado procesando el archivo:", error);
+        errors.push(`Ocurrio un error al leer el archivo Excel: ${errorMessage}`);
     }
 
     const result: ValidationResult = { valid: errors.length === 0, errors };
-    console.log("[VerificarEstructura] Resultado:", result.valid ? "VÁLIDO" : "INVÁLIDO", "| errores:", errors.length);
+
+    if (!result.valid && options?.enableBackendDebug === true) {
+        try {
+            const debugResult = await enviarDiagnosticoExcelPlaneacion(file, errors);
+            if (debugResult?.debugId) {
+                errors.unshift(
+                    `Diagnostico tecnico generado en backend. debugId=${debugResult.debugId}. Revise planeacion_excel_debug.log.`,
+                );
+            }
+        } catch (error) {
+            console.error("[VerificarEstructura] No se pudo generar diagnostico backend:", error);
+        }
+    }
+
     return result;
 };
 
-/**
- * Extrae el valor numérico de una celda de ExcelJS.
- * Maneja celdas con resultado de fórmula y valores directos.
- */
+async function enviarDiagnosticoExcelPlaneacion(
+    file: File,
+    clientErrors: string[],
+): Promise<PlaneacionExcelDebugResponseDTO | null> {
+    if (EndPointsURL.getEnvironment() !== "local") {
+        return null;
+    }
+
+    const endPoints = new EndPointsURL();
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("clientExpectedHeadersVersion", EXPECTED_HEADERS_VERSION);
+    clientErrors.forEach((error) => formData.append("clientErrors", error));
+
+    const response = await axios.post<PlaneacionExcelDebugResponseDTO>(
+        endPoints.planeacion_debug_excel_structure,
+        formData,
+        {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        },
+    );
+
+    return response.data;
+}
+
+export async function enviarDiagnosticoAsociacionTerminados(
+    file: File,
+    clientContext: DiagnosticoAsociacionContext,
+): Promise<PlaneacionTerminadosDebugResponseDTO | null> {
+    if (EndPointsURL.getEnvironment() !== "local") {
+        return null;
+    }
+
+    const debugKey = construirClaveDebugAsociacion(file, clientContext);
+
+    if (diagnosticoAsociacionCache.debugKey === debugKey) {
+        if (diagnosticoAsociacionCache.result) {
+            return diagnosticoAsociacionCache.result;
+        }
+
+        if (diagnosticoAsociacionCache.promise) {
+            return diagnosticoAsociacionCache.promise;
+        }
+    } else {
+        diagnosticoAsociacionCache.debugKey = debugKey;
+        diagnosticoAsociacionCache.promise = null;
+        diagnosticoAsociacionCache.result = null;
+    }
+
+    const endPoints = new EndPointsURL();
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("clientExpectedHeadersVersion", EXPECTED_HEADERS_VERSION);
+    formData.append("clientContext", JSON.stringify(clientContext));
+
+    const promise = axios.post<PlaneacionTerminadosDebugResponseDTO>(
+        endPoints.planeacion_debug_asociacion_terminados,
+        formData,
+        {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        },
+    ).then((response) => response.data);
+
+    diagnosticoAsociacionCache.promise = promise;
+
+    try {
+        const result = await promise;
+        if (diagnosticoAsociacionCache.debugKey === debugKey) {
+            diagnosticoAsociacionCache.result = result;
+        }
+        return result;
+    } finally {
+        if (
+            diagnosticoAsociacionCache.debugKey === debugKey &&
+            diagnosticoAsociacionCache.promise === promise
+        ) {
+            diagnosticoAsociacionCache.promise = null;
+        }
+    }
+}
+
 function extraerNumero(cellValue: ExcelJS.CellValue): number {
     if (cellValue === null || cellValue === undefined) return 0;
     if (typeof cellValue === "number") return cellValue;
@@ -143,22 +286,13 @@ function extraerNumero(cellValue: ExcelJS.CellValue): number {
     return isNaN(parsed) ? 0 : parsed;
 }
 
-/**
- * Carga los datos de las filas del Excel de informe de ventas
- * y los transforma al formato fila_inf_ventas[].
- * @param file Archivo .xlsx previamente validado
- * @returns Array de filas procesadas del informe de ventas
- */
 export const CargarDatosFilas = async (file: File): Promise<fila_inf_ventas[]> => {
-    console.log("[CargarDatosFilas] Inicio - archivo:", file.name);
-
     const data = await file.arrayBuffer();
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(data);
 
     const worksheet = workbook.worksheets[0];
     if (!worksheet) {
-        console.error("[CargarDatosFilas] No se encontró ninguna hoja.");
         return [];
     }
 
@@ -178,17 +312,9 @@ export const CargarDatosFilas = async (file: File): Promise<fila_inf_ventas[]> =
         filas.push({ codigo, cantidad_vendida, valor_total });
     }
 
-    console.log("[CargarDatosFilas] Filas extraídas:", filas.length);
     return filas;
 };
 
-
-/**
- * despues de ejecutar funcion CargarDatosFilas, van haber codigos repetidos, pues cada fila es una
- * venta a un cliente diferente, cada codigo representa un producto terminado y es posible que se
- * haya vendido el mismo producto a clientes diferentes. este metodo unifica para que se sumen
- * todos los cantidad_vendida y valor_total con un mismo codigo y se unifique
- */
 export const UnificarDatosFilas = (filas: fila_inf_ventas[]): fila_inf_ventas[] => {
     const mapa = new Map<string, fila_inf_ventas>();
 
@@ -202,58 +328,99 @@ export const UnificarDatosFilas = (filas: fila_inf_ventas[]): fila_inf_ventas[] 
         }
     }
 
-    const unificadas = Array.from(mapa.values());
-    console.log("[UnificarDatosFilas] Filas originales:", filas.length, "| Filas unificadas:", unificadas.length);
-    return unificadas;
+    return Array.from(mapa.values());
 };
 
-
-/** Forma del DTO que devuelve el backend (camelCase por Jackson) */
 interface TerminadoConVentasDTO {
     terminado: Terminado;
     cantidadVendida: number;
     valorTotal: number;
 }
 
-/**
- * Envía la lista unificada de ventas al backend para asociar cada código
- * con su producto terminado correspondiente.
- * @param filasUnificadas filas ya agrupadas por código
- * @returns lista de TerminadoConVentas con la info del producto + ventas
- */
 export const AsociarTerminados = async (
-    filasUnificadas: fila_inf_ventas[]
+    filasUnificadas: fila_inf_ventas[],
 ): Promise<TerminadoConVentas[]> => {
     const endPoints = new EndPointsURL();
-    const payload = filasUnificadas.map(f => ({
-        codigo: f.codigo,
-        cantidadVendida: f.cantidad_vendida,
-        valorTotal: f.valor_total,
+    const payload = filasUnificadas.map((fila) => ({
+        codigo: fila.codigo,
+        cantidadVendida: fila.cantidad_vendida,
+        valorTotal: fila.valor_total,
     }));
 
-    console.log("[AsociarTerminados] Enviando", payload.length, "filas unificadas al backend...");
     const response = await axios.post<TerminadoConVentasDTO[]>(
-        endPoints.planeacion_asociar_terminados, payload
+        endPoints.planeacion_asociar_terminados,
+        payload,
     );
 
-    const resultado: TerminadoConVentas[] = response.data.map(item => ({
+    return response.data.map((item) => ({
         terminado: item.terminado,
         cantidad_vendida: item.cantidadVendida,
         valor_total: item.valorTotal,
         porcentaje_participacion: 0,
     }));
-
-    console.log("[AsociarTerminados] Recibidos", resultado.length, "terminados asociados");
-    return resultado;
 };
 
-/**
- * Calcula la distribución de ventas: ordena de mayor a menor según el modo
- * seleccionado y asigna el porcentaje de participación de cada terminado.
- * @param items lista de TerminadoConVentas (sin porcentaje calculado)
- * @param modo "valor" ordena por valor_total, "cantidad" ordena por cantidad_vendida
- * @returns copia ordenada con porcentaje_participacion calculado
- */
+export const ProcesarInformeVentasDetallado = async (
+    file: File,
+): Promise<ProcesamientoInformeDetallado> => {
+    const fileKey = construirClaveArchivo(file);
+
+    if (procesamientoInformeCache.fileKey === fileKey) {
+        if (procesamientoInformeCache.result) {
+            return procesamientoInformeCache.result;
+        }
+
+        if (procesamientoInformeCache.promise) {
+            return procesamientoInformeCache.promise;
+        }
+    } else {
+        procesamientoInformeCache.fileKey = fileKey;
+        procesamientoInformeCache.promise = null;
+        procesamientoInformeCache.result = null;
+    }
+
+    const promise = (async () => {
+        const filasRaw = await CargarDatosFilas(file);
+        const filasUnificadas = UnificarDatosFilas(filasRaw);
+        const terminados = await AsociarTerminados(filasUnificadas);
+
+        return {
+            terminados,
+            totalFilasLeidas: filasRaw.length,
+            totalFilasUnificadas: filasUnificadas.length,
+        };
+    })();
+
+    procesamientoInformeCache.promise = promise;
+
+    try {
+        const result = await promise;
+        if (procesamientoInformeCache.fileKey === fileKey) {
+            procesamientoInformeCache.result = result;
+        }
+        return result;
+    } catch (error) {
+        if (procesamientoInformeCache.fileKey === fileKey) {
+            procesamientoInformeCache.result = null;
+        }
+        throw error;
+    } finally {
+        if (
+            procesamientoInformeCache.fileKey === fileKey &&
+            procesamientoInformeCache.promise === promise
+        ) {
+            procesamientoInformeCache.promise = null;
+        }
+    }
+};
+
+export const ProcesarInformeVentas = async (
+    file: File,
+): Promise<TerminadoConVentas[]> => {
+    const result = await ProcesarInformeVentasDetallado(file);
+    return result.terminados;
+};
+
 export const CalcularDistribucionVentas = (
     items: TerminadoConVentas[],
     modo: ModoDistribucion,
@@ -262,10 +429,9 @@ export const CalcularDistribucionVentas = (
         modo === "valor" ? item.valor_total : item.cantidad_vendida;
 
     const total = items.reduce((sum, item) => sum + metrica(item), 0);
-
     const ordenados = [...items].sort((a, b) => metrica(b) - metrica(a));
 
-    return ordenados.map(item => ({
+    return ordenados.map((item) => ({
         ...item,
         porcentaje_participacion: total > 0 ? (metrica(item) / total) * 100 : 0,
     }));
