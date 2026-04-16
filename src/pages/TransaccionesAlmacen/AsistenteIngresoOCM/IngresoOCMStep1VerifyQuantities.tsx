@@ -256,6 +256,10 @@ export default function IngresoOCMStep1VerifyQuantities({
     }
 
     const formatDate = (d?: string) => (d ? new Date(d).toLocaleDateString() : "");
+    const proveedorNombre = orden.proveedor?.nombre?.trim();
+    const proveedorId = orden.proveedor?.id?.trim();
+    const proveedorInconsistente = !orden.proveedor || !proveedorNombre;
+    const proveedorLabel = proveedorNombre || "Proveedor no disponible";
 
     return (
         <Box p="1em" bg="blue.50">
@@ -264,10 +268,24 @@ export default function IngresoOCMStep1VerifyQuantities({
                     Verificar Cantidades y Lotes
                 </Heading>
 
+                {proveedorInconsistente && (
+                    <Alert status="warning" borderRadius="md" w="full" maxW="4xl">
+                        <AlertIcon />
+                        <Box>
+                            <AlertTitle>Proveedor no disponible en la respuesta</AlertTitle>
+                            <AlertDescription>
+                                La OCM deberia tener proveedor asociado. El ingreso puede seguir visible,
+                                pero conviene revisar la relacion proveedor de esta orden en backend.
+                            </AlertDescription>
+                        </Box>
+                    </Alert>
+                )}
+
                 {/* Proveedor & fechas */}
                 <Flex direction="column" align="center" gap={2}>
                     <Text fontFamily="Comfortaa Variable">
-                        <strong>Proveedor:</strong> {orden.proveedor.nombre}
+                        <strong>Proveedor:</strong> {proveedorLabel}
+                        {proveedorId ? ` (NIT: ${proveedorId})` : ""}
                     </Text>
                     <Text fontFamily="Comfortaa Variable">
                         <strong>Fecha Emisión:</strong> {formatDate(orden.fechaEmision)}

@@ -103,6 +103,52 @@ export interface PropuestaMpsSemanalSummaryDTO {
     totalUnidadesPropuestas: number;
 }
 
+export interface PropuestaMpsCalendarDayDTO {
+    date: string;
+    dayIndex: number;
+}
+
+export interface PropuestaMpsCalendarBlockDTO {
+    blockId: string;
+    productoId: string;
+    productoNombre: string;
+    categoriaId: number | null;
+    categoriaNombre: string | null;
+    loteSize: number;
+    lotesAsignados: number;
+    cantidadAsignada: number;
+    warning: string | null;
+}
+
+export interface PropuestaMpsCalendarCellDTO {
+    date: string;
+    dayIndex: number;
+    totalAsignado: number;
+    capacidadDiaria: number;
+    estado: "disponible" | "al_limite" | "excedida" | "sin_configurar";
+    blocks: PropuestaMpsCalendarBlockDTO[];
+}
+
+export interface PropuestaMpsCalendarRowDTO {
+    categoriaId: number | null;
+    categoriaNombre: string;
+    capacidadDiaria: number;
+    days: PropuestaMpsCalendarCellDTO[];
+    totalAsignadoSemana: number;
+    capacidadTeoricaSemana: number;
+    estadoSemana: "disponible" | "al_limite" | "excedida" | "sin_configurar";
+}
+
+export interface PropuestaMpsUnscheduledBlockDTO extends PropuestaMpsCalendarBlockDTO {
+    reason: string;
+}
+
+export interface PropuestaMpsSemanalCalendarDTO {
+    days: PropuestaMpsCalendarDayDTO[];
+    rows: PropuestaMpsCalendarRowDTO[];
+    unscheduled: PropuestaMpsUnscheduledBlockDTO[];
+}
+
 export interface PropuestaMpsSemanalItemDTO {
     productoId: string;
     productoNombre: string;
@@ -130,6 +176,7 @@ export interface PropuestaMpsSemanalDTO {
     weekEndDate: string;
     summary: PropuestaMpsSemanalSummaryDTO;
     items: PropuestaMpsSemanalItemDTO[];
+    calendar: PropuestaMpsSemanalCalendarDTO;
 }
 
 interface ProcesamientoInformeCache {

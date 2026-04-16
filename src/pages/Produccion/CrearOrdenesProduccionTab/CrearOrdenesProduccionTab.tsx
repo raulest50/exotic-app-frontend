@@ -1,4 +1,4 @@
-// src/pages/ProduccionPage/CrearOrdenesTab.tsx
+// src/pages/ProduccionPage/CrearOrdenesProduccionTab.tsx
 
 import { useState, useEffect } from 'react';
 import {
@@ -85,7 +85,7 @@ function addDaysToDateString(baseDate: string, daysToAdd: number): string {
     return formatLocalDate(date);
 }
 
-export default function CrearOrdenesTab() {
+export default function CrearOrdenesProduccionTab() {
     const toast = useToast();
     const { meProfile } = useAuth();
     const { nivel: crearOdpAccessLevel } = useTabPermission(Modulo.PRODUCCION, "CREAR_ODP_MANUALMENTE");

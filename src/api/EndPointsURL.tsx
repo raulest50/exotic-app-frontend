@@ -245,6 +245,7 @@ export default class EndPointsURL{
     public search_areas_operativas: string;
     public update_area_operativa: string;
     public monitoreo_areas_operativas: string;
+    public monitoreo_area_tablero: string;
 
     // planeacion de produccion endpoints
     public planeacion_asociar_terminados: string;
@@ -254,8 +255,12 @@ export default class EndPointsURL{
 
     // seguimiento orden area endpoints
     public seguimiento_mis_ordenes_pendientes: string;
+    public seguimiento_mis_ordenes_tablero: string;
     public seguimiento_ordenes_por_area: string;
     public seguimiento_progreso_orden: string;
+    public seguimiento_detalle_orden: string;
+    public seguimiento_reportar_en_proceso: string;
+    public seguimiento_pausar_proceso: string;
     public seguimiento_reportar_completado: string;
 
     // BI — informes diarios
@@ -285,6 +290,11 @@ export default class EndPointsURL{
     }
 
     /** GET Excel ajustes de almacén (BI). @param fechas ISO date YYYY-MM-DD, sentido ENTRADAS|SALIDAS|MIXTA */
+    /** GET Excel informe diario de compras OCM (BI). @param fecha ISO date YYYY-MM-DD */
+    public informesDiariosComprasExcel(fecha: string): string {
+        return `${this.domain}/bi/informes-diarios/compras/excel?fecha=${encodeURIComponent(fecha)}`;
+    }
+
     public informesDiariosAlmacenAjustesExcel(fechaDesde: string, fechaHasta: string, sentido: string): string {
         const base = `${this.domain}/bi/informes-diarios/almacen/ajustes/excel`;
         const q = new URLSearchParams({
@@ -568,6 +578,7 @@ export default class EndPointsURL{
         this.search_areas_operativas = `${domain}/${area_produccion_res}/search`;
         this.update_area_operativa = `${domain}/${area_produccion_res}/{areaId}`;
         this.monitoreo_areas_operativas = `${domain}/api/produccion/monitoreo-areas-operativas/areas`;
+        this.monitoreo_area_tablero = `${domain}/api/produccion/monitoreo-areas-operativas/areas/{areaId}/tablero`;
 
         // Planeacion de produccion endpoints
         this.planeacion_asociar_terminados = `${domain}/${planeacion_produccion_res}/asociar_terminados`;
@@ -578,8 +589,12 @@ export default class EndPointsURL{
         // Seguimiento orden area endpoints
         const seguimiento_orden_area_res = 'api/seguimiento-orden-area';
         this.seguimiento_mis_ordenes_pendientes = `${domain}/${seguimiento_orden_area_res}/mis-ordenes-pendientes`;
+        this.seguimiento_mis_ordenes_tablero = `${domain}/${seguimiento_orden_area_res}/mis-ordenes-tablero`;
         this.seguimiento_ordenes_por_area = `${domain}/${seguimiento_orden_area_res}/area/{areaId}/pendientes`;
         this.seguimiento_progreso_orden = `${domain}/${seguimiento_orden_area_res}/orden/{ordenId}/progreso`;
+        this.seguimiento_detalle_orden = `${domain}/${seguimiento_orden_area_res}/orden/{ordenId}/detalle`;
+        this.seguimiento_reportar_en_proceso = `${domain}/${seguimiento_orden_area_res}/reportar-en-proceso`;
+        this.seguimiento_pausar_proceso = `${domain}/${seguimiento_orden_area_res}/pausar-proceso`;
         this.seguimiento_reportar_completado = `${domain}/${seguimiento_orden_area_res}/reportar-completado`;
 
         // BI — informes diarios

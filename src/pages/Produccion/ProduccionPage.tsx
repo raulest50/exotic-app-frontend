@@ -8,7 +8,7 @@ import { my_style_tab } from "../../styles/styles_general.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
 import ConfParamsCategoria from "./ConfParamsCategoria/ConfParamsCategoria.tsx";
 import AprobacionMPSWeekTab from "./AprobacionMPSWeekTab.tsx";
-import CrearOrdenesTab from "./CrearOrdenesTab/CrearOrdenesTab.tsx";
+import CrearOrdenesProduccionTab from "./CrearOrdenesProduccionTab/CrearOrdenesProduccionTab.tsx";
 import HistorialOrdenesTab from "./HistorialOrdenesTab/HistorialOrdenesTab.tsx";
 import MonitorearAreasOperativasTab from "./MonitorearAreasOperativasTab.tsx";
 import { PlaneacionProduccionTab } from "./PlaneacionProduccionTab/PlaneacionProduccionTab.tsx";
@@ -20,7 +20,7 @@ export default function ProduccionPage() {
         {
             key: "crear-odp",
             label: "Crear ODP Manualmente",
-            render: () => <CrearOrdenesTab />,
+            render: () => <CrearOrdenesProduccionTab />,
             accesoValido: tabAccessRule(Modulo.PRODUCCION, "CREAR_ODP_MANUALMENTE", 1),
         },
         {

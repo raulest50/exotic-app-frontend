@@ -20,6 +20,7 @@ import { MdTune, MdWarehouse } from "react-icons/md";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import InformeDiarioAlmacenPanel from "./InformeDiarioAlmacenPanel.tsx";
 import InformeDiarioAjustesAlmacenPanel from "./InformeDiarioAjustesAlmacenPanel.tsx";
+import InformeDiarioComprasPanel from "./InformeDiarioComprasPanel.tsx";
 
 type InformeDiarioKey = "almacen" | "ajustes" | "compras" | "ventas";
 
@@ -149,6 +150,8 @@ export default function InformesDiariosTab() {
                     <InformeDiarioAlmacenPanel />
                 ) : selectedReport === "ajustes" ? (
                     <InformeDiarioAjustesAlmacenPanel />
+                ) : selectedReport === "compras" ? (
+                    <InformeDiarioComprasPanel />
                 ) : (
                     <InformePlaceholder title={mainTitle} />
                 )}

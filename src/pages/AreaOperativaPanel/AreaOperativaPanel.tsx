@@ -1,189 +1,232 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    VStack,
-    HStack,
-    Box,
-    Text,
-    Heading,
-    Card,
-    CardBody,
-    Badge,
-    Button,
-    Spinner,
     Alert,
     AlertIcon,
+    Box,
+    Button,
+    Flex,
+    HStack,
+    Heading,
+    Input,
+    InputGroup,
+    InputLeftElement,
     Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
     ModalBody,
-    ModalFooter,
     ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
+    SimpleGrid,
+    Spinner,
+    Text,
     Textarea,
-    Stat,
-    StatLabel,
-    StatNumber,
-    StatHelpText,
+    VStack,
     useDisclosure,
     useToast,
-    Divider,
-} from '@chakra-ui/react';
-import { FiCheckCircle, FiClock, FiFileText, FiPackage, FiUser, FiLogOut } from 'react-icons/fi';
-import axios from 'axios';
-import EndPointsURL from '../../api/EndPointsURL.tsx';
-import BetterPagination from '../../components/BetterPagination/BetterPagination.tsx';
-import { useAuth } from '../../context/AuthContext.tsx';
+} from "@chakra-ui/react";
+import { FiLogOut, FiRefreshCw, FiSearch, FiUser } from "react-icons/fi";
+import axios from "axios";
+import EndPointsURL from "../../api/EndPointsURL.tsx";
+import { useAuth } from "../../context/AuthContext.tsx";
+import {
+    BOARD_COLUMN_META,
+    SeguimientoBoardColumn,
+    SeguimientoOrdenDetailDrawer,
+    SeguimientoResumenCards,
+} from "../Produccion/components/SeguimientoBoardUI.tsx";
+import type {
+    EstadoTableroKey,
+    OrdenProduccionSeguimientoDetalleDTO,
+    SeguimientoOrdenAreaCardDTO,
+    TableroOperativoDTO,
+} from "../Produccion/components/seguimientoBoard.types.ts";
+import type { SeguimientoActionType } from "../Produccion/components/SeguimientoBoardUI.tsx";
 
 const endpoints = new EndPointsURL();
 
-interface SeguimientoOrdenArea {
-    id: number;
-    ordenId: number;
-    loteAsignado: string | null;
-    productoId: string;
-    productoNombre: string;
-    cantidadProducir: number;
-    estadoOrden: number;
-    nodeId: number;
-    nodeLabel: string;
-    areaId: number;
-    areaNombre: string;
-    estado: number;
-    estadoDescripcion: string;
-    posicionSecuencia: number;
-    fechaCreacion: string;
-    fechaVisible: string;
-    fechaCompletado: string | null;
-    usuarioReportaId: number | null;
-    usuarioReportaNombre: string | null;
-    observaciones: string | null;
-    ordenObservaciones: string | null;
-    fechaFinalPlanificada: string | null;
+const EMPTY_BOARD: TableroOperativoDTO = {
+    resumen: {
+        total: 0,
+        cola: 0,
+        espera: 0,
+        enProceso: 0,
+        completado: 0,
+    },
+    cola: [],
+    espera: [],
+    enProceso: [],
+    completado: [],
+};
+
+function getActionMeta(action: SeguimientoActionType | null): {
+    title: string;
+    submitLabel: string;
+    endpoint: string;
+    colorScheme: string;
+} {
+    switch (action) {
+        case "iniciar":
+            return {
+                title: "Iniciar orden",
+                submitLabel: "Confirmar inicio",
+                endpoint: endpoints.seguimiento_reportar_en_proceso,
+                colorScheme: "blue",
+            };
+        case "pausar":
+            return {
+                title: "Pausar orden",
+                submitLabel: "Confirmar pausa",
+                endpoint: endpoints.seguimiento_pausar_proceso,
+                colorScheme: "orange",
+            };
+        case "completar":
+        default:
+            return {
+                title: "Completar orden",
+                submitLabel: "Confirmar completado",
+                endpoint: endpoints.seguimiento_reportar_completado,
+                colorScheme: "green",
+            };
+    }
 }
 
-interface PaginatedResponse<T> {
-    content: T[];
-    totalPages: number;
-    totalElements: number;
-    number: number;
-    size: number;
+function matchesFilter(card: SeguimientoOrdenAreaCardDTO, searchTerm: string): boolean {
+    if (!searchTerm.trim()) {
+        return true;
+    }
+
+    const normalized = searchTerm.trim().toLowerCase();
+    return [
+        card.loteAsignado || "",
+        `op-${card.ordenId}`,
+        card.productoNombre,
+        card.productoId,
+        card.areaNombre,
+        card.nodeLabel,
+    ].some((value) => value.toLowerCase().includes(normalized));
 }
 
 export default function AreaOperativaPanel() {
     const { meProfile, logout } = useAuth();
     const toast = useToast();
-    const { isOpen, onOpen, onClose } = useDisclosure();
+
     const {
-        isOpen: isObsOrdenOpen,
-        onOpen: onObsOrdenOpen,
-        onClose: onObsOrdenClose,
+        isOpen: isActionOpen,
+        onOpen: onActionOpen,
+        onClose: onActionClose,
+    } = useDisclosure();
+    const {
+        isOpen: isDetailOpen,
+        onOpen: onDetailOpen,
+        onClose: onDetailClose,
     } = useDisclosure();
 
-    const [ordenes, setOrdenes] = useState<SeguimientoOrdenArea[]>([]);
+    const [tablero, setTablero] = useState<TableroOperativoDTO>(EMPTY_BOARD);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [page, setPage] = useState(0);
-    const [size, setSize] = useState(10);
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
+    const [searchTerm, setSearchTerm] = useState("");
 
-    const [selectedOrden, setSelectedOrden] = useState<SeguimientoOrdenArea | null>(null);
-    const [ordenObservacionesVer, setOrdenObservacionesVer] = useState<SeguimientoOrdenArea | null>(
-        null
-    );
-    const [observaciones, setObservaciones] = useState('');
+    const [selectedOrden, setSelectedOrden] = useState<SeguimientoOrdenAreaCardDTO | null>(null);
+    const [selectedAction, setSelectedAction] = useState<SeguimientoActionType | null>(null);
+    const [observaciones, setObservaciones] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
-    const fetchOrdenesPendientes = useCallback(async (pagina: number, tamanoPagina: number) => {
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [detail, setDetail] = useState<OrdenProduccionSeguimientoDetalleDTO | null>(null);
+
+    const fetchTablero = useCallback(async () => {
         setLoading(true);
         setError(null);
 
         try {
-            const response = await axios.get<PaginatedResponse<SeguimientoOrdenArea>>(
-                endpoints.seguimiento_mis_ordenes_pendientes,
-                {
-                    params: { page: pagina, size: tamanoPagina },
-                    withCredentials: true,
-                }
+            const response = await axios.get<TableroOperativoDTO>(
+                endpoints.seguimiento_mis_ordenes_tablero,
+                { withCredentials: true },
             );
-
-            setOrdenes(response.data.content ?? []);
-            setTotalPages(response.data.totalPages ?? 0);
-            setTotalElements(response.data.totalElements ?? 0);
-            setPage(pagina);
+            setTablero(response.data ?? EMPTY_BOARD);
         } catch (err: any) {
-            const errorMessage = err.response?.data?.message || err.message || 'Error al cargar ordenes pendientes';
-            setError(errorMessage);
-            setOrdenes([]);
-            setTotalPages(0);
-            setTotalElements(0);
+            setError(
+                err.response?.data?.message ||
+                err.message ||
+                "No fue posible cargar el tablero operativo.",
+            );
+            setTablero(EMPTY_BOARD);
         } finally {
             setLoading(false);
         }
     }, []);
 
     useEffect(() => {
-        fetchOrdenesPendientes(0, size);
-    }, [fetchOrdenesPendientes, size]);
+        void fetchTablero();
+    }, [fetchTablero]);
 
-    const handlePageChange = (newPage: number) => {
-        fetchOrdenesPendientes(newPage, size);
-    };
-
-    const handleSizeChange = (newSize: number) => {
-        setSize(newSize);
-        fetchOrdenesPendientes(0, newSize);
-    };
-
-    const handleOpenModal = (orden: SeguimientoOrdenArea) => {
+    const openDetail = useCallback(async (orden: SeguimientoOrdenAreaCardDTO) => {
         setSelectedOrden(orden);
-        setObservaciones('');
-        onOpen();
+        setDetail(null);
+        setDetailLoading(true);
+        onDetailOpen();
+
+        try {
+            const response = await axios.get<OrdenProduccionSeguimientoDetalleDTO>(
+                endpoints.seguimiento_detalle_orden.replace("{ordenId}", String(orden.ordenId)),
+                { withCredentials: true },
+            );
+            setDetail(response.data);
+        } catch (err: any) {
+            toast({
+                title: "Error",
+                description: err.response?.data?.message || err.message || "No fue posible cargar el detalle.",
+                status: "error",
+                duration: 4000,
+                isClosable: true,
+            });
+        } finally {
+            setDetailLoading(false);
+        }
+    }, [onDetailOpen, toast]);
+
+    const openActionModal = (action: SeguimientoActionType, orden: SeguimientoOrdenAreaCardDTO) => {
+        setSelectedAction(action);
+        setSelectedOrden(orden);
+        setObservaciones("");
+        onActionOpen();
     };
 
-    const MSG_SIN_OBS_ORDEN = 'No se registran observaciones para esta orden de produccion';
+    const handleSubmitAction = async () => {
+        if (!selectedOrden || !selectedAction) {
+            return;
+        }
 
-    const handleOpenObservacionesOrden = (orden: SeguimientoOrdenArea) => {
-        setOrdenObservacionesVer(orden);
-        onObsOrdenOpen();
-    };
-
-    const handleCloseObservacionesOrden = () => {
-        onObsOrdenClose();
-        setOrdenObservacionesVer(null);
-    };
-
-    const handleReportarCompletado = async () => {
-        if (!selectedOrden) return;
-
+        const actionMeta = getActionMeta(selectedAction);
         setSubmitting(true);
+
         try {
             await axios.post(
-                endpoints.seguimiento_reportar_completado,
+                actionMeta.endpoint,
                 {
                     ordenId: selectedOrden.ordenId,
                     areaId: selectedOrden.areaId,
                     observaciones: observaciones.trim() || null,
                 },
-                { withCredentials: true }
+                { withCredentials: true },
             );
 
             toast({
-                title: 'Completado',
-                description: `Orden ${selectedOrden.loteAsignado || selectedOrden.ordenId} reportada como completada`,
-                status: 'success',
+                title: "Actualización registrada",
+                description: `${selectedOrden.loteAsignado || `OP-${selectedOrden.ordenId}`} actualizada correctamente.`,
+                status: "success",
                 duration: 3000,
                 isClosable: true,
             });
 
-            onClose();
-            fetchOrdenesPendientes(page, size);
+            onActionClose();
+            await fetchTablero();
         } catch (err: any) {
-            const errorMessage = err.response?.data?.message || err.message || 'Error al reportar completado';
             toast({
-                title: 'Error',
-                description: errorMessage,
-                status: 'error',
+                title: "Error",
+                description: err.response?.data?.message || err.message || "No fue posible registrar el cambio.",
+                status: "error",
                 duration: 5000,
                 isClosable: true,
             });
@@ -192,222 +235,131 @@ export default function AreaOperativaPanel() {
         }
     };
 
-    const formatDate = (dateString: string | null) => {
-        if (!dateString) return '-';
-        return new Date(dateString).toLocaleString('es-CO', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    };
+    const filteredBoard = useMemo<TableroOperativoDTO>(() => ({
+        resumen: tablero.resumen,
+        cola: tablero.cola.filter((card) => matchesFilter(card, searchTerm)),
+        espera: tablero.espera.filter((card) => matchesFilter(card, searchTerm)),
+        enProceso: tablero.enProceso.filter((card) => matchesFilter(card, searchTerm)),
+        completado: tablero.completado.filter((card) => matchesFilter(card, searchTerm)),
+    }), [searchTerm, tablero]);
+
+    const actionMeta = getActionMeta(selectedAction);
+    const totalFilteredCards =
+        filteredBoard.cola.length +
+        filteredBoard.espera.length +
+        filteredBoard.enProceso.length +
+        filteredBoard.completado.length;
 
     return (
         <VStack w="full" spacing={6} align="stretch" p={4}>
-            {/* Header */}
             <Box>
-                <HStack justify="space-between" align="start">
+                <HStack justify="space-between" align="start" flexWrap="wrap" gap={4}>
                     <Box>
-                        <Heading size="lg" mb={2}>Panel de Area Operativa</Heading>
-                        {meProfile && (
+                        <Heading size="lg" mb={2}>Centro Operativo del Área</Heading>
+                        {meProfile ? (
                             <HStack spacing={2} color="gray.600">
                                 <FiUser />
                                 <Text>{meProfile.nombreCompleto || meProfile.username}</Text>
                             </HStack>
-                        )}
+                        ) : null}
                     </Box>
-                    <Button
-                        colorScheme="red"
-                        variant="outline"
-                        leftIcon={<FiLogOut />}
-                        onClick={logout}
-                    >
-                        Cerrar Sesión
-                    </Button>
+
+                    <HStack spacing={3}>
+                        <Button
+                            variant="outline"
+                            leftIcon={<FiRefreshCw />}
+                            onClick={() => void fetchTablero()}
+                            isLoading={loading}
+                        >
+                            Refrescar
+                        </Button>
+                        <Button
+                            colorScheme="red"
+                            variant="outline"
+                            leftIcon={<FiLogOut />}
+                            onClick={logout}
+                        >
+                            Cerrar sesión
+                        </Button>
+                    </HStack>
                 </HStack>
             </Box>
 
-            {/* Estadisticas */}
-            <Card>
-                <CardBody>
-                    <HStack spacing={8}>
-                        <Stat>
-                            <StatLabel>Ordenes Pendientes</StatLabel>
-                            <StatNumber color="blue.500">{totalElements}</StatNumber>
-                            <StatHelpText>En tus areas asignadas</StatHelpText>
-                        </Stat>
-                    </HStack>
-                </CardBody>
-            </Card>
+            <SeguimientoResumenCards
+                total={tablero.resumen.total}
+                cola={tablero.resumen.cola}
+                espera={tablero.resumen.espera}
+                enProceso={tablero.resumen.enProceso}
+                completado={tablero.resumen.completado}
+            />
 
-            {/* Error */}
-            {error && (
-                <Alert status="error">
+            <Box borderWidth="1px" borderRadius="lg" bg="white" p={4}>
+                <VStack align="stretch" spacing={3}>
+                    <Text fontWeight="semibold">Filtros y vista rápida</Text>
+                    <HStack flexWrap="wrap" gap={3}>
+                        <Box flex="1" minW={{ base: "100%", md: "320px" }}>
+                            <InputGroup>
+                                <InputLeftElement pointerEvents="none">
+                                    <FiSearch />
+                                </InputLeftElement>
+                                <Input
+                                    value={searchTerm}
+                                    onChange={(event) => setSearchTerm(event.target.value)}
+                                    placeholder="Buscar por lote, OP, producto o nodo"
+                                />
+                            </InputGroup>
+                        </Box>
+                        <Text fontSize="sm" color="gray.600">
+                            Mostrando {totalFilteredCards} órdenes en el tablero filtrado.
+                        </Text>
+                    </HStack>
+                </VStack>
+            </Box>
+
+            {error ? (
+                <Alert status="error" borderRadius="md">
                     <AlertIcon />
                     {error}
                 </Alert>
-            )}
+            ) : null}
 
-            {/* Loading */}
-            {loading && (
-                <Box textAlign="center" py={8}>
-                    <Spinner size="xl" color="blue.500" />
-                    <Text mt={2}>Cargando ordenes...</Text>
-                </Box>
-            )}
+            {loading ? (
+                <Flex justify="center" align="center" py={12}>
+                    <Spinner size="xl" color="teal.500" />
+                </Flex>
+            ) : null}
 
-            {/* Lista de ordenes */}
-            {!loading && ordenes.length === 0 && (
-                <Box textAlign="center" py={12} bg="gray.50" borderRadius="md">
-                    <FiCheckCircle size={48} style={{ margin: '0 auto', color: '#48BB78' }} />
-                    <Text mt={4} fontSize="lg" color="gray.600">
-                        No tienes ordenes pendientes
-                    </Text>
+            {!loading && tablero.resumen.total === 0 ? (
+                <Box borderWidth="1px" borderRadius="xl" bg="gray.50" p={10} textAlign="center">
+                    <Heading size="md" color="gray.700" mb={2}>No hay órdenes en seguimiento</Heading>
                     <Text color="gray.500">
-                        Las ordenes apareceran aqui cuando lleguen a tus areas de trabajo
+                        Las órdenes aparecerán aquí cuando una ruta productiva involucre tus áreas asignadas.
                     </Text>
                 </Box>
-            )}
+            ) : null}
 
-            {!loading && ordenes.length > 0 && (
-                <VStack spacing={4} align="stretch">
-                    {ordenes.map((orden) => (
-                        <Card key={orden.id} variant="outline">
-                            <CardBody>
-                                <HStack justify="space-between" align="start">
-                                    <VStack align="start" spacing={2} flex={1}>
-                                        <HStack spacing={3}>
-                                            <Badge colorScheme="blue" fontSize="md" px={2} py={1}>
-                                                {orden.loteAsignado || `OP-${orden.ordenId}`}
-                                            </Badge>
-                                            <Badge colorScheme="purple">
-                                                {orden.areaNombre}
-                                            </Badge>
-                                            {orden.nodeLabel && (
-                                                <Badge colorScheme="gray">
-                                                    {orden.nodeLabel}
-                                                </Badge>
-                                            )}
-                                        </HStack>
-
-                                        <HStack spacing={2}>
-                                            <FiPackage />
-                                            <Text fontWeight="medium">{orden.productoNombre}</Text>
-                                        </HStack>
-
-                                        <HStack spacing={4} fontSize="sm" color="gray.600" flexWrap="wrap">
-                                            <Text>Cantidad: {orden.cantidadProducir}</Text>
-                                            <Divider orientation="vertical" h={4} />
-                                            <HStack spacing={1}>
-                                                <FiClock />
-                                                <Text>Visible desde: {formatDate(orden.fechaVisible)}</Text>
-                                            </HStack>
-                                            <Divider orientation="vertical" h={4} />
-                                            <Text>
-                                                Fin planificada:{' '}
-                                                {orden.fechaFinalPlanificada
-                                                    ? formatDate(orden.fechaFinalPlanificada)
-                                                    : 'Sin fecha planificada'}
-                                            </Text>
-                                        </HStack>
-                                    </VStack>
-
-                                    <VStack align="end" spacing={2}>
-                                        <Button
-                                            variant="outline"
-                                            leftIcon={<FiFileText />}
-                                            onClick={() => handleOpenObservacionesOrden(orden)}
-                                        >
-                                            Ver observaciones
-                                        </Button>
-                                        <Button
-                                            colorScheme="green"
-                                            leftIcon={<FiCheckCircle />}
-                                            onClick={() => handleOpenModal(orden)}
-                                            isDisabled={orden.areaId === -1}
-                                        >
-                                            {orden.areaId === -1 ? 'Se reporta al dispensar' : 'Reportar Completado'}
-                                        </Button>
-                                    </VStack>
-                                </HStack>
-                            </CardBody>
-                        </Card>
+            {!loading && tablero.resumen.total > 0 ? (
+                <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
+                    {(Object.keys(BOARD_COLUMN_META) as EstadoTableroKey[]).map((estadoKey) => (
+                        <SeguimientoBoardColumn
+                            key={estadoKey}
+                            estadoKey={estadoKey}
+                            items={filteredBoard[estadoKey]}
+                            mode="leader"
+                            onOpenDetail={openDetail}
+                            onAction={openActionModal}
+                        />
                     ))}
-                </VStack>
-            )}
+                </SimpleGrid>
+            ) : null}
 
-            {/* Paginacion */}
-            {totalPages > 0 && (
-                <BetterPagination
-                    page={page}
-                    size={size}
-                    totalPages={totalPages}
-                    loading={loading}
-                    onPageChange={handlePageChange}
-                    onSizeChange={handleSizeChange}
-                />
-            )}
-
-            <Modal isOpen={isObsOrdenOpen} onClose={handleCloseObservacionesOrden} size="md" scrollBehavior="inside">
+            <Modal isOpen={isActionOpen} onClose={onActionClose} size="md">
                 <ModalOverlay />
                 <ModalContent>
-                    <ModalHeader>Observaciones de la orden</ModalHeader>
+                    <ModalHeader>{actionMeta.title}</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        {ordenObservacionesVer && (
-                            <VStack align="stretch" spacing={4}>
-                                <Box>
-                                    <Text fontWeight="bold" mb={1}>
-                                        Orden
-                                    </Text>
-                                    <Text>
-                                        {ordenObservacionesVer.loteAsignado || `OP-${ordenObservacionesVer.ordenId}`}
-                                    </Text>
-                                </Box>
-                                <Box>
-                                    <Text fontWeight="bold" mb={1}>
-                                        Producto
-                                    </Text>
-                                    <Text>{ordenObservacionesVer.productoNombre}</Text>
-                                </Box>
-                                <Box>
-                                    <Text fontWeight="bold" mb={2}>
-                                        Observaciones
-                                    </Text>
-                                    <Box
-                                        maxH="50vh"
-                                        overflowY="auto"
-                                        p={3}
-                                        bg="gray.50"
-                                        borderRadius="md"
-                                        borderWidth="1px"
-                                        borderColor="gray.200"
-                                    >
-                                        <Text whiteSpace="pre-wrap">
-                                            {ordenObservacionesVer.ordenObservaciones?.trim()
-                                                ? ordenObservacionesVer.ordenObservaciones
-                                                : MSG_SIN_OBS_ORDEN}
-                                        </Text>
-                                    </Box>
-                                </Box>
-                            </VStack>
-                        )}
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button onClick={handleCloseObservacionesOrden}>Cerrar</Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-
-            {/* Modal de confirmacion */}
-            <Modal isOpen={isOpen} onClose={onClose} size="md">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Reportar Completado</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        {selectedOrden && (
+                        {selectedOrden ? (
                             <VStack align="stretch" spacing={4}>
                                 <Box>
                                     <Text fontWeight="bold" mb={1}>Orden</Text>
@@ -418,40 +370,46 @@ export default function AreaOperativaPanel() {
                                     <Text>{selectedOrden.productoNombre}</Text>
                                 </Box>
                                 <Box>
-                                    <Text fontWeight="bold" mb={1}>Area</Text>
-                                    <Text>{selectedOrden.areaNombre}</Text>
+                                    <Text fontWeight="bold" mb={1}>Estado actual</Text>
+                                    <Text>{selectedOrden.estadoDescripcion}</Text>
                                 </Box>
                                 <Box>
-                                    <Text fontWeight="bold" mb={1}>Observaciones (opcional)</Text>
+                                    <Text fontWeight="bold" mb={1}>Observaciones (opcionales)</Text>
                                     <Textarea
                                         value={observaciones}
-                                        onChange={(e) => setObservaciones(e.target.value)}
-                                        placeholder="Agregar observaciones..."
+                                        onChange={(event) => setObservaciones(event.target.value)}
+                                        placeholder="Agregar observaciones para esta transición"
                                         maxLength={500}
-                                        rows={3}
+                                        rows={4}
                                     />
                                     <Text fontSize="xs" color="gray.500" textAlign="right">
                                         {observaciones.length}/500
                                     </Text>
                                 </Box>
                             </VStack>
-                        )}
+                        ) : null}
                     </ModalBody>
                     <ModalFooter>
-                        <Button variant="ghost" mr={3} onClick={onClose} isDisabled={submitting}>
+                        <Button variant="ghost" mr={3} onClick={onActionClose} isDisabled={submitting}>
                             Cancelar
                         </Button>
                         <Button
-                            colorScheme="green"
-                            onClick={handleReportarCompletado}
+                            colorScheme={actionMeta.colorScheme}
+                            onClick={() => void handleSubmitAction()}
                             isLoading={submitting}
-                            loadingText="Reportando..."
                         >
-                            Confirmar Completado
+                            {actionMeta.submitLabel}
                         </Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
+
+            <SeguimientoOrdenDetailDrawer
+                isOpen={isDetailOpen}
+                onClose={onDetailClose}
+                detail={detail}
+                loading={detailLoading}
+            />
         </VStack>
     );
 }

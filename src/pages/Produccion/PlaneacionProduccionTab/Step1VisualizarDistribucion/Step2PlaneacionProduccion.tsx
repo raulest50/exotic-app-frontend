@@ -1,7 +1,15 @@
 import { useMemo, useState } from "react";
 import axios from "axios";
 import {
-    Badge,
+    closestCenter,
+    DndContext,
+    DragEndEvent,
+    DragOverlay,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import {
     Box,
     Button,
     FormControl,
@@ -9,23 +17,29 @@ import {
     Flex,
     Input,
     Spinner,
-    Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
 } from "@chakra-ui/react";
 import {
     CalcularDistribucionVentas,
     GenerarPropuestaMpsSemanal,
+    type PropuestaMpsCalendarBlockDTO,
+    type PropuestaMpsSemanalCalendarDTO,
     type PropuestaMpsSemanalDTO,
     type PropuestaMpsSemanalItemRequestDTO,
     type TerminadoConVentas,
 } from "../PlaneacionProduccionService.tsx";
+import MpsDetailTable from "./MpsDetailTable";
+import MpsSummaryCards from "./MpsSummaryCards";
+import MpsUnscheduledPanel from "./MpsUnscheduledPanel";
+import MpsWeeklyCalendar from "./MpsWeeklyCalendar";
+import {
+    computeCalendarInsights,
+    findBlockById,
+    formatNumber,
+    moveBlockOnCalendar,
+    parseDropTarget,
+} from "./mpsCalendar.utils";
 
 interface Step2PlaneacionProduccionProps {
     rawData: TerminadoConVentas[];
@@ -62,11 +76,19 @@ function isMonday(dateString: string): boolean {
     return new Date(`${dateString}T00:00:00`).getDay() === 1;
 }
 
-function formatNumber(value: number): string {
-    return value.toLocaleString(undefined, {
-        minimumFractionDigits: value % 1 === 0 ? 0 : 2,
-        maximumFractionDigits: 2,
-    });
+function DragPreview({ block }: { block: PropuestaMpsCalendarBlockDTO | null }) {
+    if (!block) {
+        return null;
+    }
+
+    return (
+        <Box borderWidth="1px" borderColor="teal.300" borderRadius="md" bg="teal.50" p={2} boxShadow="lg" minW="180px">
+            <Text fontWeight="semibold" fontSize="sm" noOfLines={2}>{block.productoNombre}</Text>
+            <Text fontSize="xs" color="gray.600">{block.productoId}</Text>
+            <Text fontSize="xs" mt={1}>{block.lotesAsignados} lotes</Text>
+            <Text fontSize="xs">{formatNumber(block.cantidadAsignada)} und</Text>
+        </Box>
+    );
 }
 
 export default function Step2PlaneacionProduccion({
@@ -78,8 +100,11 @@ export default function Step2PlaneacionProduccion({
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [propuesta, setPropuesta] = useState<PropuestaMpsSemanalDTO | null>(null);
+    const [editableCalendar, setEditableCalendar] = useState<PropuestaMpsSemanalCalendarDTO | null>(null);
+    const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
 
     const weekEndDate = useMemo(() => addDays(weekStartDate, 5), [weekStartDate]);
+    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
     const itemsConNecesidad = useMemo<PropuestaMpsSemanalItemRequestDTO[]>(() => {
         return CalcularDistribucionVentas(rawData, "valor")
@@ -93,16 +118,30 @@ export default function Step2PlaneacionProduccion({
             }));
     }, [necesidades, rawData]);
 
+    const insights = useMemo(
+        () => editableCalendar
+            ? computeCalendarInsights(editableCalendar)
+            : { categoriasProgramadas: 0, categoriasConSobrecarga: 0, noProgramados: 0 },
+        [editableCalendar],
+    );
+
+    const activeBlock = useMemo(
+        () => editableCalendar ? (findBlockById(editableCalendar, activeBlockId) as PropuestaMpsCalendarBlockDTO | null) : null,
+        [activeBlockId, editableCalendar],
+    );
+
     const handleGenerarPropuesta = async () => {
         if (!isMonday(weekStartDate)) {
             setError("La fecha de inicio de semana debe corresponder a un lunes.");
             setPropuesta(null);
+            setEditableCalendar(null);
             return;
         }
 
         if (itemsConNecesidad.length === 0) {
             setError("No hay productos con necesidad manual mayor a cero para calcular la propuesta.");
             setPropuesta(null);
+            setEditableCalendar(null);
             return;
         }
 
@@ -115,15 +154,27 @@ export default function Step2PlaneacionProduccion({
                 items: itemsConNecesidad,
             });
             setPropuesta(response);
+            setEditableCalendar(response.calendar);
         } catch (err) {
             const errorMessage = axios.isAxiosError(err)
                 ? (err.response?.data?.error ?? err.message)
                 : (err instanceof Error ? err.message : String(err));
             setError(errorMessage);
             setPropuesta(null);
+            setEditableCalendar(null);
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        setActiveBlockId(null);
+        const blockId = String(event.active.id);
+        const target = parseDropTarget(event.over?.id ? String(event.over.id) : null);
+        if (!editableCalendar || !target) {
+            return;
+        }
+        setEditableCalendar((prev) => (prev ? moveBlockOnCalendar(prev, blockId, target) : prev));
     };
 
     return (
@@ -132,7 +183,7 @@ export default function Step2PlaneacionProduccion({
                 <VStack align="stretch" spacing={3}>
                     <Text fontSize="lg" fontWeight="bold">Propuesta semanal de MPS</Text>
                     <Text color="gray.600">
-                        Esta pantalla genera una propuesta semanal de produccion. No crea ODPs reales todavia.
+                        Esta pantalla genera una propuesta semanal por dias. Puede reorganizar bloques dentro de la misma categoria.
                     </Text>
 
                     <Flex gap={4} align="end" wrap="wrap">
@@ -191,105 +242,24 @@ export default function Step2PlaneacionProduccion({
                 </Box>
             )}
 
-            {propuesta && !isLoading && (
-                <VStack align="stretch" spacing={4}>
-                    <Box bg="white" borderRadius="md" boxShadow="sm" p={4}>
-                        <Text fontWeight="bold" mb={3}>Resumen semanal</Text>
-                        <Flex gap={4} wrap="wrap">
-                            <Box minW="180px">
-                                <Text fontSize="sm" color="gray.500">Terminados evaluados</Text>
-                                <Text fontWeight="bold">{propuesta.summary.totalTerminadosEvaluados}</Text>
-                            </Box>
-                            <Box minW="180px">
-                                <Text fontSize="sm" color="gray.500">Planificables</Text>
-                                <Text fontWeight="bold">{propuesta.summary.totalPlanificables}</Text>
-                            </Box>
-                            <Box minW="220px">
-                                <Text fontSize="sm" color="gray.500">Sin lote size</Text>
-                                <Text fontWeight="bold">{propuesta.summary.totalNoPlanificablesPorFaltaLoteSize}</Text>
-                            </Box>
-                            <Box minW="180px">
-                                <Text fontSize="sm" color="gray.500">Lotes propuestos</Text>
-                                <Text fontWeight="bold">{propuesta.summary.totalLotesPropuestos}</Text>
-                            </Box>
-                            <Box minW="220px">
-                                <Text fontSize="sm" color="gray.500">Unidades propuestas</Text>
-                                <Text fontWeight="bold">{formatNumber(propuesta.summary.totalUnidadesPropuestas)}</Text>
-                            </Box>
-                        </Flex>
-                    </Box>
-
-                    <Box bg="white" borderRadius="md" boxShadow="sm" p={4}>
-                        <Text fontWeight="bold" mb={3}>Renglones de propuesta</Text>
-                        <TableContainer>
-                            <Table size="sm" variant="simple">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Codigo</Th>
-                                        <Th>Producto</Th>
-                                        <Th>Categoria</Th>
-                                        <Th isNumeric>% Participacion</Th>
-                                        <Th isNumeric>Necesidad</Th>
-                                        <Th isNumeric>Stock</Th>
-                                        <Th isNumeric>Necesidad neta</Th>
-                                        <Th isNumeric>Lote size</Th>
-                                        <Th isNumeric>Lotes</Th>
-                                        <Th isNumeric>Cantidad propuesta</Th>
-                                        <Th isNumeric>Delta</Th>
-                                        <Th>Fecha final</Th>
-                                        <Th>Estado</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
-                                    {propuesta.items.map((item) => {
-                                        const statusColor = !item.planificable
-                                            ? "red"
-                                            : item.desbordaSemana
-                                                ? "orange"
-                                                : item.lotesPropuestos === 0
-                                                    ? "gray"
-                                                    : "green";
-
-                                        const statusLabel = !item.planificable
-                                            ? "No planificable"
-                                            : item.desbordaSemana
-                                                ? "Desborda semana"
-                                                : item.lotesPropuestos === 0
-                                                    ? "Sin produccion"
-                                                    : "Propuesto";
-
-                                        return (
-                                            <Tr key={item.productoId}>
-                                                <Td>{item.productoId}</Td>
-                                                <Td>{item.productoNombre}</Td>
-                                                <Td>{item.categoriaNombre ?? "-"}</Td>
-                                                <Td isNumeric>{item.porcentajeParticipacion.toFixed(2)}%</Td>
-                                                <Td isNumeric>{formatNumber(item.necesidadManual)}</Td>
-                                                <Td isNumeric>{formatNumber(item.stockActual)}</Td>
-                                                <Td isNumeric>{formatNumber(item.necesidadNeta)}</Td>
-                                                <Td isNumeric>{item.loteSize}</Td>
-                                                <Td isNumeric>{item.lotesPropuestos}</Td>
-                                                <Td isNumeric>{formatNumber(item.cantidadPropuesta)}</Td>
-                                                <Td isNumeric>{formatNumber(item.deltaVsNecesidad)}</Td>
-                                                <Td>{item.fechaFinalPlanificadaSugerida ?? "-"}</Td>
-                                                <Td>
-                                                    <VStack align="start" spacing={1}>
-                                                        <Badge colorScheme={statusColor}>{statusLabel}</Badge>
-                                                        {item.warning && (
-                                                            <Text fontSize="xs" color="gray.600">
-                                                                {item.warning}
-                                                            </Text>
-                                                        )}
-                                                    </VStack>
-                                                </Td>
-                                            </Tr>
-                                        );
-                                    })}
-                                </Tbody>
-                            </Table>
-                        </TableContainer>
-                    </Box>
-                </VStack>
+            {propuesta && editableCalendar && !isLoading && (
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragStart={(event) => setActiveBlockId(String(event.active.id))}
+                    onDragEnd={handleDragEnd}
+                    onDragCancel={() => setActiveBlockId(null)}
+                >
+                    <VStack align="stretch" spacing={4}>
+                        <MpsSummaryCards summary={propuesta.summary} insights={insights} />
+                        <MpsWeeklyCalendar calendar={editableCalendar} />
+                        <MpsUnscheduledPanel items={editableCalendar.unscheduled} />
+                        <MpsDetailTable items={propuesta.items} />
+                    </VStack>
+                    <DragOverlay>
+                        <DragPreview block={activeBlock} />
+                    </DragOverlay>
+                </DndContext>
             )}
         </VStack>
     );
