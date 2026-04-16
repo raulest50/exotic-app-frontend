@@ -14,17 +14,13 @@ import Step1CalcularDistribucion from "./Step1CalcularDistribucion/Step1Calcular
 import Step2PlaneacionProduccion from "./Step1VisualizarDistribucion/Step2PlaneacionProduccion.tsx";
 import type { TerminadoConVentas } from "./PlaneacionProduccionService.tsx";
 
-type Props = {
-    isActive?: boolean;
-};
-
 const steps = [
     { title: 'Primero',  description: 'Cargar y Validar Excel' },
     { title: 'Segundo',  description: 'Visualizar Distribución' },
     { title: 'Tercero',  description: 'Planeación de Producción' },
 ];
 
-export const PlaneacionProduccionTab = (props: Props) => {
+export const PlaneacionProduccionTab = () => {
 
     const { activeStep, setActiveStep } = useSteps({
         index: 0,
@@ -34,42 +30,6 @@ export const PlaneacionProduccionTab = (props: Props) => {
     const [excelFile, setExcelFile] = useState<File | null>(null);
     const [rawData, setRawData] = useState<TerminadoConVentas[]>([]);
     const [necesidades, setNecesidades] = useState<Record<string, number>>({});
-
-    function ConditionalRenderStep() {
-        if (activeStep === 0) {
-            return(
-                <Step0CargarValidarExcel setActiveStep={setActiveStep} setExcelFile={setExcelFile} />
-            );
-        }
-        if (activeStep === 1) {
-            return(
-                <Step1CalcularDistribucion
-                    excelFile={excelFile}
-                    setActiveStep={setActiveStep}
-                    rawData={rawData}
-                    setRawData={setRawData}
-                    necesidades={necesidades}
-                    setNecesidades={setNecesidades}
-                />
-            );
-        }
-        if (activeStep === 2) {
-            return(
-                <Step2PlaneacionProduccion
-                    rawData={rawData}
-                    necesidades={necesidades}
-                    setActiveStep={setActiveStep}
-                />
-            );
-        }
-    }
-
-    const handleReset = () => {
-        setExcelFile(null);
-        setRawData([]);
-        setNecesidades({});
-        setActiveStep(0);
-    };
 
     return (
         <Box w={'full'} h={'full'} minW={0}>
@@ -94,7 +54,26 @@ export const PlaneacionProduccionTab = (props: Props) => {
                         </Step>
                     ))}
                 </Stepper>
-                <ConditionalRenderStep/>
+                {activeStep === 0 && (
+                    <Step0CargarValidarExcel setActiveStep={setActiveStep} setExcelFile={setExcelFile} />
+                )}
+                {activeStep === 1 && (
+                    <Step1CalcularDistribucion
+                        excelFile={excelFile}
+                        setActiveStep={setActiveStep}
+                        rawData={rawData}
+                        setRawData={setRawData}
+                        necesidades={necesidades}
+                        setNecesidades={setNecesidades}
+                    />
+                )}
+                {activeStep === 2 && (
+                    <Step2PlaneacionProduccion
+                        rawData={rawData}
+                        necesidades={necesidades}
+                        setActiveStep={setActiveStep}
+                    />
+                )}
             </Flex>
         </Box>
     );

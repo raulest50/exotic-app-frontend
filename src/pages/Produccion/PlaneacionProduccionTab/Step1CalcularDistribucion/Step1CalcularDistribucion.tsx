@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
 import {
     Box,
     Button,
@@ -8,18 +8,9 @@ import {
     Menu,
     MenuButton,
     MenuList,
-    NumberInput,
-    NumberInputField,
     Spinner,
     Text,
     VStack,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    TableContainer,
 } from "@chakra-ui/react";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import EndPointsURL from "../../../../api/EndPointsURL";
@@ -33,6 +24,16 @@ import {
     type ModoDistribucion,
     type TerminadoConVentas,
 } from "../PlaneacionProduccionService";
+import ResumenCapacidadProductiva from "./ResumenCapacidadProductiva";
+import TablaDistribucionTerminados from "./TablaDistribucionTerminados";
+import {
+    buildResumenCapacidadPorCategoria,
+    buildVisibilityFromPreset,
+    COLUMN_DEFINITIONS,
+    type ColumnKey,
+    type ColumnVisibility,
+    type PresetColumnas,
+} from "./step1Distribucion.utils";
 
 interface Step1CalcularDistribucionProps {
     excelFile: File | null;
@@ -41,83 +42,6 @@ interface Step1CalcularDistribucionProps {
     setRawData: (data: TerminadoConVentas[]) => void;
     necesidades: Record<string, number>;
     setNecesidades: React.Dispatch<React.SetStateAction<Record<string, number>>>;
-}
-
-type PresetColumnas = "decision" | "analisis";
-type ColumnKey =
-    | "index"
-    | "codigo"
-    | "descripcion"
-    | "categoria"
-    | "cantidadVendida"
-    | "valorTotal"
-    | "porcentajeParticipacion"
-    | "porcentajeAcumulado"
-    | "stockActual"
-    | "necesidad";
-
-type ColumnVisibility = Record<ColumnKey, boolean>;
-
-interface ColumnDefinition {
-    key: ColumnKey;
-    label: string;
-    isNumeric?: boolean;
-    isLocked?: boolean;
-}
-
-const COLUMN_DEFINITIONS: ColumnDefinition[] = [
-    { key: "index", label: "#" },
-    { key: "codigo", label: "Codigo", isLocked: true },
-    { key: "descripcion", label: "Descripcion", isLocked: true },
-    { key: "categoria", label: "Categoria" },
-    { key: "cantidadVendida", label: "Cantidad Vendida", isNumeric: true },
-    { key: "valorTotal", label: "Valor Total", isNumeric: true },
-    { key: "porcentajeParticipacion", label: "% Participacion", isNumeric: true },
-    { key: "porcentajeAcumulado", label: "% Acumulado", isNumeric: true },
-    { key: "stockActual", label: "Stock Actual", isNumeric: true },
-    { key: "necesidad", label: "Necesidad", isNumeric: true },
-];
-
-function buildVisibilityFromPreset(preset: PresetColumnas): ColumnVisibility {
-    const visibleKeys =
-        preset === "decision"
-            ? new Set<ColumnKey>([
-                "codigo",
-                "descripcion",
-                "categoria",
-                "stockActual",
-                "porcentajeParticipacion",
-                "porcentajeAcumulado",
-                "necesidad",
-            ])
-            : new Set<ColumnKey>([
-                "index",
-                "codigo",
-                "descripcion",
-                "categoria",
-                "cantidadVendida",
-                "valorTotal",
-                "porcentajeParticipacion",
-                "porcentajeAcumulado",
-                "stockActual",
-                "necesidad",
-            ]);
-
-    return COLUMN_DEFINITIONS.reduce((acc, column) => {
-        acc[column.key] = visibleKeys.has(column.key);
-        return acc;
-    }, {} as ColumnVisibility);
-}
-
-function formatCantidad(value: number): string {
-    return value.toLocaleString(undefined, {
-        minimumFractionDigits: value % 1 === 0 ? 0 : 2,
-        maximumFractionDigits: 2,
-    });
-}
-
-function formatMoneda(value: number): string {
-    return `$${formatCantidad(value)}`;
 }
 
 export default function Step1CalcularDistribucion({
@@ -140,6 +64,7 @@ export default function Step1CalcularDistribucion({
     const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>(() => buildVisibilityFromPreset("decision"));
     const [page, setPage] = useState(0);
     const [size, setSize] = useState(20);
+    const [draftNecesidades, setDraftNecesidades] = useState<Record<string, string>>({});
 
     useEffect(() => {
         if (!excelFile) {
@@ -221,11 +146,17 @@ export default function Step1CalcularDistribucion({
     useEffect(() => {
         setPresetColumnas("decision");
         setColumnVisibility(buildVisibilityFromPreset("decision"));
+        setDraftNecesidades({});
     }, [excelFile]);
 
     const totalPages = Math.ceil(distribucion.length / size);
     const pageData = distribucion.slice(page * size, (page + 1) * size);
     const pageStartIndex = page * size;
+    const deferredNecesidades = useDeferredValue(necesidades);
+    const resumenCapacidad = useMemo(
+        () => buildResumenCapacidadPorCategoria(distribucion, deferredNecesidades),
+        [deferredNecesidades, distribucion],
+    );
 
     const handlePresetChange = (preset: PresetColumnas) => {
         setPresetColumnas(preset);
@@ -345,94 +276,19 @@ export default function Step1CalcularDistribucion({
                 </Flex>
             </VStack>
 
-            <TableContainer w="full" minW={0} overflowX="auto">
-                <Table size="sm" variant="simple" colorScheme="teal">
-                    <Thead>
-                        <Tr>
-                            {columnVisibility.index && <Th>#</Th>}
-                            {columnVisibility.codigo && <Th>Codigo</Th>}
-                            {columnVisibility.descripcion && <Th>Descripcion</Th>}
-                            {columnVisibility.categoria && <Th>Categoria</Th>}
-                            {columnVisibility.cantidadVendida && <Th isNumeric>Cantidad Vendida</Th>}
-                            {columnVisibility.valorTotal && <Th isNumeric>Valor Total</Th>}
-                            {columnVisibility.porcentajeParticipacion && <Th isNumeric>% Participacion</Th>}
-                            {columnVisibility.porcentajeAcumulado && <Th isNumeric>% Acumulado</Th>}
-                            {columnVisibility.stockActual && <Th isNumeric>Stock Actual</Th>}
-                            {columnVisibility.necesidad && <Th isNumeric>Necesidad</Th>}
-                        </Tr>
-                    </Thead>
-                    <Tbody>
-                        {pageData.map((fila, localIdx) => {
-                            const globalIdx = pageStartIndex + localIdx;
-                            const acum = acumulados[globalIdx];
-                            const prevAcum = globalIdx > 0 ? acumulados[globalIdx - 1] : 0;
-                            const isParetoRow = prevAcum < 80 && acum >= 80;
-                            const isAbovePareto = acum <= 80;
+            <ResumenCapacidadProductiva rows={resumenCapacidad} />
 
-                            return (
-                                <Tr
-                                    key={fila.terminado.productoId}
-                                    bg={isAbovePareto ? "teal.50" : undefined}
-                                    borderBottom={isParetoRow ? "3px solid" : undefined}
-                                    borderBottomColor={isParetoRow ? "orange.400" : undefined}
-                                >
-                                    {columnVisibility.index && (
-                                        <Td fontWeight={isParetoRow ? "bold" : "normal"}>{globalIdx + 1}</Td>
-                                    )}
-                                    {columnVisibility.codigo && <Td>{fila.terminado.productoId}</Td>}
-                                    {columnVisibility.descripcion && <Td>{fila.terminado.nombre}</Td>}
-                                    {columnVisibility.categoria && <Td>{fila.terminado.categoria?.categoriaNombre ?? "-"}</Td>}
-                                    {columnVisibility.cantidadVendida && (
-                                        <Td isNumeric>{formatCantidad(fila.cantidad_vendida)}</Td>
-                                    )}
-                                    {columnVisibility.valorTotal && (
-                                        <Td isNumeric>{formatMoneda(fila.valor_total)}</Td>
-                                    )}
-                                    {columnVisibility.porcentajeParticipacion && (
-                                        <Td isNumeric>{fila.porcentaje_participacion.toFixed(2)}%</Td>
-                                    )}
-                                    {columnVisibility.porcentajeAcumulado && (
-                                        <Td
-                                            isNumeric
-                                            fontWeight={isParetoRow ? "bold" : "normal"}
-                                            color={isParetoRow ? "orange.600" : undefined}
-                                        >
-                                            {acum.toFixed(2)}%
-                                        </Td>
-                                    )}
-                                    {columnVisibility.stockActual && (
-                                        <Td
-                                            isNumeric
-                                            color={fila.stockActualConsolidado < 0 ? "red.500" : undefined}
-                                            fontWeight={fila.stockActualConsolidado < 0 ? "bold" : "normal"}
-                                        >
-                                            {formatCantidad(fila.stockActualConsolidado)}
-                                        </Td>
-                                    )}
-                                    {columnVisibility.necesidad && (
-                                        <Td isNumeric>
-                                            <NumberInput
-                                                size="sm"
-                                                min={0}
-                                                value={necesidades[fila.terminado.productoId] ?? ""}
-                                                onChange={(_, valueAsNumber) =>
-                                                    setNecesidades((prev) => ({
-                                                        ...prev,
-                                                        [fila.terminado.productoId]: isNaN(valueAsNumber) ? 0 : valueAsNumber,
-                                                    }))
-                                                }
-                                                w="110px"
-                                            >
-                                                <NumberInputField textAlign="right" placeholder="0" />
-                                            </NumberInput>
-                                        </Td>
-                                    )}
-                                </Tr>
-                            );
-                        })}
-                    </Tbody>
-                </Table>
-            </TableContainer>
+            <TablaDistribucionTerminados
+                pageData={pageData}
+                columnVisibility={columnVisibility}
+                necesidades={necesidades}
+                draftNecesidades={draftNecesidades}
+                setDraftNecesidades={setDraftNecesidades}
+                setNecesidades={setNecesidades}
+                startNecesidadesTransition={startTransition}
+                acumulados={acumulados}
+                pageStartIndex={pageStartIndex}
+            />
 
             <BetterPagination
                 page={page}
