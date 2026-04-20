@@ -1,5 +1,6 @@
 import { SimpleGrid, Container } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
+import { FaDatabase } from 'react-icons/fa';
 import { FaCube, FaCodeBranch, FaTruck } from 'react-icons/fa';
 import { FaCubes } from 'react-icons/fa6';
 import { IconType } from 'react-icons';
@@ -21,6 +22,30 @@ function ExportacionDatosTab(_props: ExportacionDatosTabProps) {
     const endpoints = useMemo(() => new EndPointsURL(), []);
 
     const exportOptions: ExportOption[] = [
+        {
+            titulo: "Backup total PostgreSQL",
+            descripcion: "Generar un archivo técnico único con esquema y datos completos de la base de datos",
+            icono: FaDatabase,
+            config: {
+                tituloModal: "Confirmar exportación total PostgreSQL",
+                alertDescripcion:
+                    "Se generará un archivo técnico de respaldo en formato .dump con el esquema y los datos " +
+                    "completos de la base usada por la aplicación. Este archivo no está pensado para editarse " +
+                    "manualmente ni para abrirse en Excel; su uso es restauración o migración técnica.",
+                endpointUrl: endpoints.exportacion_backup_total_create_job,
+                defaultFilename: "backup_total_postgresql.dump",
+                blobMimeType: "application/octet-stream",
+                successDescription:
+                    "El backup total PostgreSQL se ha descargado correctamente.",
+                asyncJob: {
+                    createJobUrl: endpoints.exportacion_backup_total_create_job,
+                    getJobUrl: (jobId) => endpoints.exportacionBackupTotalJob(jobId),
+                    downloadUrl: (jobId) => endpoints.exportacionBackupTotalDownload(jobId),
+                    deleteJobUrl: (jobId) => endpoints.exportacionBackupTotalJob(jobId),
+                    pollingIntervalMs: 2000,
+                },
+            },
+        },
         {
             titulo: "Materiales",
             descripcion: "Exportar datos de materiales registrados en el sistema",

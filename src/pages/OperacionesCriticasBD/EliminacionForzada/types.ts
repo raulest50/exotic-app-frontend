@@ -117,3 +117,14 @@ export interface EliminacionTerminadosBatchResultDTO {
     productoIdsProcesados: string[];
     failures: EliminacionBatchFailureDTO[];
 }
+
+export interface PurgaBaseDatosResultDTO {
+    permitted: boolean;
+    executed: boolean;
+    message: string;
+    environment: string;
+    truncatedTablesCount: number;
+    truncatedTables: string[];
+    preservedTables: string[];
+    preservedUsers: string[];
+}

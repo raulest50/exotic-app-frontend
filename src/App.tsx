@@ -161,7 +161,7 @@ const router = createBrowserRouter(
                 <Route
                     path="operaciones_criticas_bd"
                     element={
-                        <AccessRoute accessRule={(access) => access.isMasterLike && canAccessModule(access.moduloAccesos, Modulo.OPERACIONES_CRITICAS_BD)}>
+                        <AccessRoute accessRule={(access) => access.isMasterLike && moduleAccessRule(Modulo.OPERACIONES_CRITICAS_BD)(access)}>
                             <OperacionesCriticasBDPage/>
                         </AccessRoute>
                     }

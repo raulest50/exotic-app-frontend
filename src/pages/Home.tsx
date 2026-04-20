@@ -85,7 +85,7 @@ export default function Home() {
         { to: "/compras", name: "Compras", icon: GiBuyCard, notificationModulo: Modulo.COMPRAS, accesoValido: moduleAccessRule(Modulo.COMPRAS) },
         { to: "/gestion_areas_operativas", name: "Gestion Areas Operativas", icon: FaCogs, notificationModulo: Modulo.SEGUIMIENTO_PRODUCCION, accesoValido: moduleAccessRule(Modulo.SEGUIMIENTO_PRODUCCION) },
         { to: "/transacciones_almacen", name: "Transacciones de Almacen", icon: MdWarehouse, notificationModulo: Modulo.TRANSACCIONES_ALMACEN, accesoValido: moduleAccessRule(Modulo.TRANSACCIONES_ALMACEN) },
-        { to: "/operaciones_criticas_bd", name: "Operaciones Criticas en BD", icon: FaFileUpload, notificationModulo: Modulo.OPERACIONES_CRITICAS_BD, bgColor: "red.100", accesoValido: (snapshot) => snapshot.isMasterLike && canAccessModule(snapshot.moduloAccesos, Modulo.OPERACIONES_CRITICAS_BD) },
+        { to: "/operaciones_criticas_bd", name: "Operaciones Criticas en BD", icon: FaFileUpload, notificationModulo: Modulo.OPERACIONES_CRITICAS_BD, bgColor: "red.100", accesoValido: (access) => access.isMasterLike && moduleAccessRule(Modulo.OPERACIONES_CRITICAS_BD)(access) },
         { to: "/Activos", name: "Activos Fijos", icon: FaSteam, notificationModulo: Modulo.ACTIVOS, accesoValido: moduleAccessRule(Modulo.ACTIVOS) },
         { to: "/Contabilidad", name: "Contabilidad", icon: TbReportMoney, notificationModulo: Modulo.CONTABILIDAD, accesoValido: moduleAccessRule(Modulo.CONTABILIDAD) },
         { to: "/Personal", name: "Personal", icon: PiMicrosoftTeamsLogoFill, notificationModulo: Modulo.PERSONAL_PLANTA, accesoValido: moduleAccessRule(Modulo.PERSONAL_PLANTA) },

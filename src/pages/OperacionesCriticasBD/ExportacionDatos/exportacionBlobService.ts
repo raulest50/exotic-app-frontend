@@ -18,8 +18,10 @@ export async function descargarArchivoExportacion(
     const contentDisposition = response.headers["content-disposition"];
     let filename = defaultFilename;
     if (contentDisposition) {
-        const match = contentDisposition.match(/filename="?(.+)"?/);
-        if (match && match[1]) filename = match[1].trim();
+        const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+        const basicMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+        const rawFilename = utf8Match?.[1] ?? basicMatch?.[1];
+        if (rawFilename) filename = decodeURIComponent(rawFilename.trim());
     }
     a.download = filename;
     document.body.appendChild(a);

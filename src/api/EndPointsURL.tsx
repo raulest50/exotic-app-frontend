@@ -196,12 +196,14 @@ export default class EndPointsURL{
     public estudiar_eliminacion_material: string;
     public ejecutar_eliminacion_material: string;
     public ejecutar_purga_completa_terminados: string;
+    public ejecutar_purga_total_base_datos: string;
 
     // exportacion de datos (operaciones criticas BD)
     public exportacion_materiales_excel: string;
     public exportacion_terminados_excel: string;
     public exportacion_terminados_json_con_insumos: string;
     public exportacion_proveedores_json_con_contactos: string;
+    public exportacion_backup_total_create_job: string;
 
     // organigrama endpoints
     public get_all_cargos: string;
@@ -272,6 +274,14 @@ export default class EndPointsURL{
 
     public get_master_directive(nombre: string): string {
         return `${this.domain}/api/master-directives/${encodeURIComponent(nombre)}`;
+    }
+
+    public exportacionBackupTotalJob(jobId: string): string {
+        return `${this.domain}/api/exportacion-datos/backup-total/jobs/${encodeURIComponent(jobId)}`;
+    }
+
+    public exportacionBackupTotalDownload(jobId: string): string {
+        return `${this.exportacionBackupTotalJob(jobId)}/download`;
     }
 
     /** GET Excel ingreso de materiales (BI). @param fecha ISO date YYYY-MM-DD */
@@ -520,12 +530,14 @@ export default class EndPointsURL{
         this.estudiar_eliminacion_material = `${domain}/api/eliminaciones-forzadas/estudiar/material`;
         this.ejecutar_eliminacion_material = `${domain}/api/eliminaciones-forzadas/material`;
         this.ejecutar_purga_completa_terminados = `${domain}/api/eliminaciones-forzadas/terminados`;
+        this.ejecutar_purga_total_base_datos = `${domain}/api/eliminaciones-forzadas/base-datos`;
 
         // exportacion de datos (operaciones criticas BD)
         this.exportacion_materiales_excel = `${domain}/api/exportacion-datos/materiales/excel`;
         this.exportacion_terminados_excel = `${domain}/api/exportacion-datos/terminados/excel`;
         this.exportacion_terminados_json_con_insumos = `${domain}/api/exportacion-datos/terminados/json-con-insumos`;
         this.exportacion_proveedores_json_con_contactos = `${domain}/api/exportacion-datos/proveedores/json-con-contactos`;
+        this.exportacion_backup_total_create_job = `${domain}/api/exportacion-datos/backup-total/jobs`;
 
         // contabilidad endpoints
         this.get_cuentas = `${domain}/${contabilidad_res}/cuentas`;

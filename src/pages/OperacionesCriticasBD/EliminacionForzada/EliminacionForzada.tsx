@@ -18,6 +18,8 @@ import EliminacionOCMStep2StudyResult from "./OrdenCompra/EliminacionOCMStep2Stu
 import EliminacionOPStep1SelectAndStudy from "./OrdenProduccion/EliminacionOPStep1SelectAndStudy";
 import EliminacionOPStep2StudyResult from "./OrdenProduccion/EliminacionOPStep2StudyResult";
 import type { OrdenProduccionPickItem } from "./OrdenProduccion/OrdenProduccionPicker";
+import EliminacionPurgaBaseDatosStep1Informacion from "./PurgaBaseDatos/EliminacionPurgaBaseDatosStep1Informacion";
+import EliminacionPurgaBaseDatosStep2Ejecutar from "./PurgaBaseDatos/EliminacionPurgaBaseDatosStep2Ejecutar";
 import EliminacionPurgaTerminadosStep1Informacion from "./PurgaTerminados/EliminacionPurgaTerminadosStep1Informacion";
 import EliminacionPurgaTerminadosStep2Ejecutar from "./PurgaTerminados/EliminacionPurgaTerminadosStep2Ejecutar";
 import type { Material, OrdenCompraMateriales } from "../../Compras/types";
@@ -26,6 +28,7 @@ import type {
     EstudiarEliminacionMaterialResponseDTO,
     EstudiarEliminacionOCMResponseDTO,
     EstudiarEliminacionOPResponseDTO,
+    PurgaBaseDatosResultDTO,
 } from "./types";
 
 const steps = [
@@ -38,7 +41,8 @@ export type TipoEntidadEliminacion =
     | "ORDEN_COMPRA"
     | "ORDEN_PRODUCCION"
     | "MATERIAL"
-    | "PURGA_COMPLETA_TERMINADOS";
+    | "PURGA_COMPLETA_TERMINADOS"
+    | "PURGA_TOTAL_BASE_DATOS";
 
 export default function EliminacionForzada() {
     const { activeStep, setActiveStep } = useSteps({
@@ -58,6 +62,8 @@ export default function EliminacionForzada() {
         useState<EstudiarEliminacionMaterialResponseDTO | null>(null);
     const [resultPurgaTerminados, setResultPurgaTerminados] =
         useState<EliminacionTerminadosBatchResultDTO | null>(null);
+    const [resultPurgaBaseDatos, setResultPurgaBaseDatos] =
+        useState<PurgaBaseDatosResultDTO | null>(null);
 
     const handleReset = () => {
         setTipoEntidad(null);
@@ -68,6 +74,7 @@ export default function EliminacionForzada() {
         setMaterialSeleccionado(null);
         setStudyResultMaterial(null);
         setResultPurgaTerminados(null);
+        setResultPurgaBaseDatos(null);
         setActiveStep(0);
     };
 
@@ -82,6 +89,9 @@ export default function EliminacionForzada() {
         }
 
         if (activeStep === 1) {
+            if (tipoEntidad === "PURGA_TOTAL_BASE_DATOS") {
+                return <EliminacionPurgaBaseDatosStep1Informacion setActiveStep={setActiveStep} />;
+            }
             if (tipoEntidad === "PURGA_COMPLETA_TERMINADOS") {
                 return <EliminacionPurgaTerminadosStep1Informacion setActiveStep={setActiveStep} />;
             }
@@ -116,6 +126,16 @@ export default function EliminacionForzada() {
         }
 
         if (activeStep === 2) {
+            if (tipoEntidad === "PURGA_TOTAL_BASE_DATOS") {
+                return (
+                    <EliminacionPurgaBaseDatosStep2Ejecutar
+                        setActiveStep={setActiveStep}
+                        resultPurgaBaseDatos={resultPurgaBaseDatos}
+                        setResultPurgaBaseDatos={setResultPurgaBaseDatos}
+                        onReset={handleReset}
+                    />
+                );
+            }
             if (tipoEntidad === "PURGA_COMPLETA_TERMINADOS") {
                 return (
                     <EliminacionPurgaTerminadosStep2Ejecutar
