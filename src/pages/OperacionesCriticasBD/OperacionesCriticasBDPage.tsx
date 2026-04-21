@@ -4,9 +4,7 @@ import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
 import MyHeader from "../../components/MyHeader";
 import { my_style_tab } from "../../styles/styles_general";
-import CargaMasivaAlmacenTab from "./CargaMasiva/CargaMasivaAlmacenTab.tsx";
-import CargaMasivaMaterialesTab from "./CargaMasivaMateriales/CargaMasivaMaterialesTab";
-import CargaMasivaTerminadosTab from "./CargaMasivaTerminados/CargaMasivaTerminadosTab";
+import CargasMasivasTab from "./CargaMasiva/CargasMasivasTab";
 import EliminacionForzada from "./EliminacionForzada/EliminacionForzada";
 import ExportacionDatosTab from "./ExportacionDatos/ExportacionDatosTab.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
@@ -56,22 +54,10 @@ export default function OperacionesCriticasBDPage() {
 
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
         {
-            key: "carga-masiva-almacen",
-            label: "Carga Masiva Almacen",
-            render: () => <CargaMasivaAlmacenTab />,
-            accesoValido: (snapshot) => showCargaMasiva && tabAccessRule(Modulo.OPERACIONES_CRITICAS_BD, "CARGA_MASIVA_ALMACEN", 1)(snapshot),
-        },
-        {
-            key: "carga-masiva-materiales",
-            label: "Carga Masiva Materiales",
-            render: () => <CargaMasivaMaterialesTab />,
-            accesoValido: (snapshot) => showCargaMasiva && tabAccessRule(Modulo.OPERACIONES_CRITICAS_BD, "CARGA_MASIVA_MATERIALES", 1)(snapshot),
-        },
-        {
-            key: "carga-masiva-terminados",
-            label: "Carga Masiva Terminados",
-            render: () => <CargaMasivaTerminadosTab />,
-            accesoValido: (snapshot) => showCargaMasiva && tabAccessRule(Modulo.OPERACIONES_CRITICAS_BD, "CARGA_MASIVA_TERMINADOS", 1)(snapshot),
+            key: "cargas-masivas",
+            label: "Cargas Masivas",
+            render: () => <CargasMasivasTab />,
+            accesoValido: (snapshot) => showCargaMasiva && tabAccessRule(Modulo.OPERACIONES_CRITICAS_BD, "CARGAS_MASIVAS", 1)(snapshot),
         },
         {
             key: "eliminaciones-forzadas",

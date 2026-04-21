@@ -73,9 +73,7 @@ export const TABS_BY_MODULO: Record<Modulo, TabDefinition[]> = {
         tab("SERIES_TIEMPO_PROYECCIONES", "Series De Tiempo y Proyecciones"),
     ],
     [Modulo.OPERACIONES_CRITICAS_BD]: [
-        tab("CARGA_MASIVA_ALMACEN", "Carga Masiva Almacen"),
-        tab("CARGA_MASIVA_MATERIALES", "Carga Masiva Materiales"),
-        tab("CARGA_MASIVA_TERMINADOS", "Carga Masiva Terminados"),
+        tab("CARGAS_MASIVAS", "Cargas Masivas"),
         tab("ELIMINACIONES_FORZADAS", "Eliminaciones Forzadas"),
         tab("EXPORTACION_DATOS", "Exportacion Datos"),
     ],

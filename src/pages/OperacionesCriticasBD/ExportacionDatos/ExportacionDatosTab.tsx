@@ -6,7 +6,7 @@ import { FaCubes } from 'react-icons/fa6';
 import { IconType } from 'react-icons';
 import EndPointsURL from '../../../api/EndPointsURL';
 import ConfirmarExportacionModal, { ExportConfig } from './ConfirmarExportacionModal';
-import EntidadExportSelectCard from './EntidadExportSelectCard';
+import OperacionSelectCard from '../shared/OperacionSelectCard';
 
 interface ExportOption {
     titulo: string;
@@ -115,7 +115,7 @@ function ExportacionDatosTab(_props: ExportacionDatosTabProps) {
         <Container maxW="container.xl" py={6}>
             <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
                 {exportOptions.map((opt) => (
-                    <EntidadExportSelectCard
+                    <OperacionSelectCard
                         key={opt.titulo}
                         titulo={opt.titulo}
                         descripcion={opt.descripcion}
