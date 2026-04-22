@@ -17,6 +17,7 @@ interface SuperMasterConfig {
     habilitarEliminacionForzada: boolean;
     habilitarCargaMasiva: boolean;
     habilitarAjustesInventario: boolean;
+    allowTotalDatabaseImport?: boolean;
 }
 
 export default function OperacionesCriticasBDPage() {
@@ -56,7 +57,7 @@ export default function OperacionesCriticasBDPage() {
         {
             key: "cargas-masivas",
             label: "Cargas Masivas",
-            render: () => <CargasMasivasTab />,
+            render: () => <CargasMasivasTab allowTotalDatabaseImport={config?.allowTotalDatabaseImport ?? false} />,
             accesoValido: (snapshot) => showCargaMasiva && tabAccessRule(Modulo.OPERACIONES_CRITICAS_BD, "CARGAS_MASIVAS", 1)(snapshot),
         },
         {

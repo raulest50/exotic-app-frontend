@@ -204,6 +204,7 @@ export default class EndPointsURL{
     public exportacion_terminados_json_con_insumos: string;
     public exportacion_proveedores_json_con_contactos: string;
     public exportacion_backup_total_create_job: string;
+    public importacion_backup_total_create_job: string;
 
     // organigrama endpoints
     public get_all_cargos: string;
@@ -282,6 +283,10 @@ export default class EndPointsURL{
 
     public exportacionBackupTotalDownload(jobId: string): string {
         return `${this.exportacionBackupTotalJob(jobId)}/download`;
+    }
+
+    public importacionBackupTotalJob(jobId: string): string {
+        return `${this.domain}/api/importacion-datos/backup-total/jobs/${encodeURIComponent(jobId)}`;
     }
 
     /** GET Excel ingreso de materiales (BI). @param fecha ISO date YYYY-MM-DD */
@@ -538,6 +543,7 @@ export default class EndPointsURL{
         this.exportacion_terminados_json_con_insumos = `${domain}/api/exportacion-datos/terminados/json-con-insumos`;
         this.exportacion_proveedores_json_con_contactos = `${domain}/api/exportacion-datos/proveedores/json-con-contactos`;
         this.exportacion_backup_total_create_job = `${domain}/api/exportacion-datos/backup-total/jobs`;
+        this.importacion_backup_total_create_job = `${domain}/api/importacion-datos/backup-total/jobs`;
 
         // contabilidad endpoints
         this.get_cuentas = `${domain}/${contabilidad_res}/cuentas`;

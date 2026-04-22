@@ -1,14 +1,15 @@
 import { Button, Container, Flex, SimpleGrid } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import { IconType } from "react-icons";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaDatabase } from "react-icons/fa";
 import { FaBoxesStacked, FaCube, FaWarehouse } from "react-icons/fa6";
 import CargaMasivaAlmacenTab from "./CargaMasivaAlmacenTab";
 import CargaMasivaMaterialesTab from "../CargaMasivaMateriales/CargaMasivaMaterialesTab";
 import CargaMasivaTerminadosTab from "../CargaMasivaTerminados/CargaMasivaTerminadosTab";
+import CargaMasivaImportacionTotalBDTab from "../CargaMasivaImportacionTotalBD/CargaMasivaImportacionTotalBDTab";
 import OperacionSelectCard from "../shared/OperacionSelectCard";
 
-type MassiveLoadView = "selector" | "almacen" | "materiales" | "terminados";
+type MassiveLoadView = "selector" | "almacen" | "materiales" | "terminados" | "importacion-total-bd";
 
 interface MassiveLoadOption {
     key: Exclude<MassiveLoadView, "selector">;
@@ -17,11 +18,15 @@ interface MassiveLoadOption {
     icono: IconType;
 }
 
-const LOAD_OPTIONS: MassiveLoadOption[] = [
+interface CargasMasivasTabProps {
+    allowTotalDatabaseImport: boolean;
+}
+
+const BASE_LOAD_OPTIONS: MassiveLoadOption[] = [
     {
         key: "almacen",
         titulo: "Carga Masiva Almacen",
-        descripcion: "Actualizar inventario desde plantilla Excel usando el flujo existente de almacén.",
+        descripcion: "Actualizar inventario desde plantilla Excel usando el flujo existente de almacen.",
         icono: FaWarehouse,
     },
     {
@@ -38,8 +43,24 @@ const LOAD_OPTIONS: MassiveLoadOption[] = [
     },
 ];
 
-export default function CargasMasivasTab() {
+export default function CargasMasivasTab({ allowTotalDatabaseImport }: CargasMasivasTabProps) {
     const [activeView, setActiveView] = useState<MassiveLoadView>("selector");
+
+    const loadOptions = useMemo(() => {
+        if (!allowTotalDatabaseImport) {
+            return BASE_LOAD_OPTIONS;
+        }
+
+        return [
+            ...BASE_LOAD_OPTIONS,
+            {
+                key: "importacion-total-bd" as const,
+                titulo: "Importacion total BD",
+                descripcion: "Vaciar completamente la base e importar un backup .dump del sistema. Solo local y staging.",
+                icono: FaDatabase,
+            },
+        ];
+    }, [allowTotalDatabaseImport]);
 
     const activeContent = useMemo(() => {
         if (activeView === "almacen") {
@@ -51,6 +72,9 @@ export default function CargasMasivasTab() {
         if (activeView === "terminados") {
             return <CargaMasivaTerminadosTab />;
         }
+        if (activeView === "importacion-total-bd") {
+            return <CargaMasivaImportacionTotalBDTab onBackToSelector={() => setActiveView("selector")} />;
+        }
         return null;
     }, [activeView]);
 
@@ -58,7 +82,7 @@ export default function CargasMasivasTab() {
         return (
             <Container maxW="container.xl" py={6}>
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-                    {LOAD_OPTIONS.map((opt) => (
+                    {loadOptions.map((opt) => (
                         <OperacionSelectCard
                             key={opt.key}
                             titulo={opt.titulo}
@@ -68,6 +92,14 @@ export default function CargasMasivasTab() {
                         />
                     ))}
                 </SimpleGrid>
+            </Container>
+        );
+    }
+
+    if (activeView === "importacion-total-bd") {
+        return (
+            <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
+                {activeContent}
             </Container>
         );
     }
