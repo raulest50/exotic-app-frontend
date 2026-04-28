@@ -1,13 +1,19 @@
+export interface CategoriaHabilitada {
+    categoriaId: number;
+    categoriaNombre: string;
+}
+
 export interface AreaOperativa {
     areaId: number;
     nombre: string;
     descripcion: string;
     responsableArea: {
         id: number;
-        cedula: string;
+        cedula: number;
         username: string;
         nombreCompleto: string;
     } | null;
+    categoriasHabilitadas: CategoriaHabilitada[];
 }
 
 export const ALMACEN_GENERAL_AREA_ID = -1;
@@ -25,10 +31,11 @@ export interface SearchAreaOperativaDTO {
     areaId?: number;
 }
 
-export interface UpdateAreaOperativaDTO {
+export interface AreaOperativaMutationDTO {
     nombre: string;
     descripcion: string;
     responsableId: number;
+    categoriaIds?: number[];
 }
 
 export interface PaginatedResponse<T> {

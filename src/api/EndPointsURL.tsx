@@ -265,6 +265,7 @@ export default class EndPointsURL{
     public seguimiento_reportar_en_proceso: string;
     public seguimiento_pausar_proceso: string;
     public seguimiento_reportar_completado: string;
+    public area_operativa_panel_detalle_operativo_orden: string;
 
     // BI — informes diarios
     public informes_diarios_ping: string;
@@ -275,6 +276,56 @@ export default class EndPointsURL{
 
     public get_master_directive(nombre: string): string {
         return `${this.domain}/api/master-directives/${encodeURIComponent(nombre)}`;
+    }
+
+    public getProductoById(productoId: string): string {
+        return `${this.domain}/productos/${encodeURIComponent(productoId)}`;
+    }
+
+    public biProveedorLeadTime(
+        proveedorId: string,
+        materialId: string,
+        fechaCorte?: string,
+        ventanaDias?: number
+    ): string {
+        const base = `${this.domain}/bi/proveedores/lead-time`;
+        const q = new URLSearchParams({
+            proveedorId,
+            materialId,
+        });
+        if (fechaCorte) q.set("fechaCorte", fechaCorte);
+        if (ventanaDias != null) q.set("ventanaDias", String(ventanaDias));
+        return `${base}?${q.toString()}`;
+    }
+
+    public biMaterialLeadTimes(
+        materialId: string,
+        fechaCorte?: string,
+        ventanaDias?: number,
+        page?: number,
+        size?: number,
+        direction?: string
+    ): string {
+        const base = `${this.domain}/bi/proveedores/materiales/${encodeURIComponent(materialId)}/lead-times`;
+        const q = new URLSearchParams();
+        if (fechaCorte) q.set("fechaCorte", fechaCorte);
+        if (ventanaDias != null) q.set("ventanaDias", String(ventanaDias));
+        if (page != null) q.set("page", String(page));
+        if (size != null) q.set("size", String(size));
+        if (direction) q.set("direction", direction);
+        return `${base}?${q.toString()}`;
+    }
+
+    public biMaterialReorderPointEstimate(
+        materialId: string,
+        fechaCorte?: string,
+        ventanaDias?: number
+    ): string {
+        const base = `${this.domain}/bi/proveedores/materiales/${encodeURIComponent(materialId)}/reorder-point-estimate`;
+        const q = new URLSearchParams();
+        if (fechaCorte) q.set("fechaCorte", fechaCorte);
+        if (ventanaDias != null) q.set("ventanaDias", String(ventanaDias));
+        return q.toString() ? `${base}?${q.toString()}` : base;
     }
 
     public exportacionBackupTotalJob(jobId: string): string {
@@ -614,6 +665,9 @@ export default class EndPointsURL{
         this.seguimiento_reportar_en_proceso = `${domain}/${seguimiento_orden_area_res}/reportar-en-proceso`;
         this.seguimiento_pausar_proceso = `${domain}/${seguimiento_orden_area_res}/pausar-proceso`;
         this.seguimiento_reportar_completado = `${domain}/${seguimiento_orden_area_res}/reportar-completado`;
+
+        const area_operativa_panel_res = 'api/area-operativa-panel';
+        this.area_operativa_panel_detalle_operativo_orden = `${domain}/${area_operativa_panel_res}/ordenes/{ordenId}/detalle-operativo`;
 
         // BI — informes diarios
         this.informes_diarios_ping = `${domain}/${informes_diarios_res}/ping`;

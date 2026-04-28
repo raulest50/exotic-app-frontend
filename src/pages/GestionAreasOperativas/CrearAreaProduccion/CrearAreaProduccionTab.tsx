@@ -1,38 +1,41 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     Box,
     Button,
     FormControl,
+    FormErrorMessage,
     FormLabel,
     Heading,
+    IconButton,
     Input,
-    VStack,
-    useToast,
     InputGroup,
     InputRightElement,
-    IconButton,
-    FormErrorMessage,
+    Tag,
+    TagLabel,
+    Text,
+    VStack,
+    Wrap,
+    WrapItem,
+    useToast,
 } from '@chakra-ui/react';
-import axios from 'axios';
 import { SearchIcon } from '@chakra-ui/icons';
+import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
+import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
 import { fetchUserAssignmentStatus } from '../../../api/userAssignmentStatus.ts';
 import { input_style } from '../../../styles/styles_general.tsx';
-import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
 import { User } from '../../Usuarios/GestionUsuarios/types';
-
-interface AreaProduccionDTO {
-    nombre: string;
-    descripcion: string;
-    responsableId?: number;
-}
+import CategoriaHabilitadaPickerModal from '../components/CategoriaHabilitadaPickerModal.tsx';
+import { AreaOperativaMutationDTO, CategoriaHabilitada } from '../ConsultaAreasOperativas/types.ts';
 
 function CrearAreaProduccionTab() {
     const [nombre, setNombre] = useState('');
     const [descripcion, setDescripcion] = useState('');
     const [responsable, setResponsable] = useState<User | null>(null);
+    const [categoriasHabilitadas, setCategoriasHabilitadas] = useState<CategoriaHabilitada[]>([]);
     const [isUserPickerOpen, setIsUserPickerOpen] = useState(false);
-    const [errors, setErrors] = useState<{ nombre?: string, responsable?: string }>({});
+    const [isCategoriaPickerOpen, setIsCategoriaPickerOpen] = useState(false);
+    const [errors, setErrors] = useState<{ nombre?: string; responsable?: string }>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isValidatingResponsable, setIsValidatingResponsable] = useState(false);
 
@@ -40,16 +43,16 @@ function CrearAreaProduccionTab() {
     const endPoints = new EndPointsURL();
 
     const validateForm = () => {
-        const newErrors: { nombre?: string, responsable?: string } = {};
-        
+        const newErrors: { nombre?: string; responsable?: string } = {};
+
         if (!nombre.trim()) {
             newErrors.nombre = 'El nombre es obligatorio';
         }
-        
+
         if (!responsable) {
             newErrors.responsable = 'El responsable es obligatorio';
         }
-        
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -58,6 +61,7 @@ function CrearAreaProduccionTab() {
         setNombre('');
         setDescripcion('');
         setResponsable(null);
+        setCategoriasHabilitadas([]);
         setIsValidatingResponsable(false);
         setErrors({});
     };
@@ -76,15 +80,16 @@ function CrearAreaProduccionTab() {
 
         setIsSubmitting(true);
 
-        const areaProduccionDTO: AreaProduccionDTO = {
-            nombre,
-            descripcion,
-            responsableId: responsable?.id,
+        const areaProduccionDTO: AreaOperativaMutationDTO = {
+            nombre: nombre.trim(),
+            descripcion: descripcion.trim(),
+            responsableId: responsable!.id,
+            categoriaIds: categoriasHabilitadas.map((categoria) => categoria.categoriaId),
         };
 
         try {
             await axios.post(endPoints.crear_area_produccion, areaProduccionDTO);
-            
+
             toast({
                 title: 'Área de producción creada',
                 description: `El área "${nombre}" ha sido creada exitosamente`,
@@ -92,14 +97,14 @@ function CrearAreaProduccionTab() {
                 duration: 3000,
                 isClosable: true,
             });
-            
+
             clearFields();
         } catch (error) {
             console.error('Error al crear área de producción:', error);
-            
+
             toast({
                 title: 'Error al crear área de producción',
-                description: axios.isAxiosError(error) 
+                description: axios.isAxiosError(error)
                     ? error.response?.data?.message || 'Error en la solicitud'
                     : 'Error desconocido',
                 status: 'error',
@@ -111,14 +116,6 @@ function CrearAreaProduccionTab() {
         }
     };
 
-    const handleOpenUserPicker = () => {
-        setIsUserPickerOpen(true);
-    };
-
-    const handleCloseUserPicker = () => {
-        setIsUserPickerOpen(false);
-    };
-
     const handleSelectUser = async (user: User) => {
         setIsValidatingResponsable(true);
         try {
@@ -127,7 +124,7 @@ function CrearAreaProduccionTab() {
                 const description = status.hasModuloAccesos
                     ? 'El usuario ya tiene accesos a modulos y no puede ser responsable de un area operativa.'
                     : `El usuario ya es responsable del area ${status.areaResponsableNombre ?? ''}.`;
-                setErrors(prev => ({ ...prev, responsable: description }));
+                setErrors((prev) => ({ ...prev, responsable: description }));
                 setResponsable(null);
                 toast({
                     title: 'Usuario no compatible',
@@ -141,7 +138,7 @@ function CrearAreaProduccionTab() {
 
             setResponsable(user);
             if (errors.responsable) {
-                setErrors(prev => ({ ...prev, responsable: undefined }));
+                setErrors((prev) => ({ ...prev, responsable: undefined }));
             }
         } catch {
             toast({
@@ -164,30 +161,30 @@ function CrearAreaProduccionTab() {
             <VStack spacing={4} align="stretch">
                 <FormControl isRequired isInvalid={!!errors.nombre}>
                     <FormLabel>Nombre</FormLabel>
-                    <Input 
-                        value={nombre} 
-                        onChange={(e) => {
-                            setNombre(e.target.value);
+                    <Input
+                        value={nombre}
+                        onChange={(event) => {
+                            setNombre(event.target.value);
                             if (errors.nombre) {
-                                setErrors(prev => ({ ...prev, nombre: undefined }));
+                                setErrors((prev) => ({ ...prev, nombre: undefined }));
                             }
-                        }} 
-                        sx={input_style} 
+                        }}
+                        sx={input_style}
                         placeholder="Nombre del área de producción"
                     />
                     {errors.nombre && <FormErrorMessage>{errors.nombre}</FormErrorMessage>}
                 </FormControl>
-                
+
                 <FormControl>
                     <FormLabel>Descripción</FormLabel>
-                    <Input 
-                        value={descripcion} 
-                        onChange={(e) => setDescripcion(e.target.value)} 
-                        sx={input_style} 
+                    <Input
+                        value={descripcion}
+                        onChange={(event) => setDescripcion(event.target.value)}
+                        sx={input_style}
                         placeholder="Descripción del área de producción"
                     />
                 </FormControl>
-                
+
                 <FormControl isRequired isInvalid={!!errors.responsable}>
                     <FormLabel>Responsable del Área</FormLabel>
                     <InputGroup>
@@ -202,36 +199,70 @@ function CrearAreaProduccionTab() {
                                 aria-label="Buscar usuario"
                                 icon={<SearchIcon />}
                                 size="sm"
-                                onClick={handleOpenUserPicker}
+                                onClick={() => setIsUserPickerOpen(true)}
                                 isDisabled={isSubmitting || isValidatingResponsable}
                             />
                         </InputRightElement>
                     </InputGroup>
                     {errors.responsable && <FormErrorMessage>{errors.responsable}</FormErrorMessage>}
                 </FormControl>
-                
-                <Button 
-                    colorScheme="teal" 
-                    onClick={handleSubmit} 
+
+                <FormControl>
+                    <FormLabel>Categorías que puede procesar</FormLabel>
+                    <Button
+                        variant="outline"
+                        onClick={() => setIsCategoriaPickerOpen(true)}
+                        isDisabled={isSubmitting || isValidatingResponsable}
+                    >
+                        Seleccionar categorías
+                    </Button>
+
+                    {categoriasHabilitadas.length === 0 ? (
+                        <Text mt={2} color="gray.500" fontSize="sm">
+                            Sin categorías configuradas.
+                        </Text>
+                    ) : (
+                        <Wrap mt={3}>
+                            {categoriasHabilitadas.map((categoria) => (
+                                <WrapItem key={categoria.categoriaId}>
+                                    <Tag colorScheme="teal" borderRadius="full">
+                                        <TagLabel>{categoria.categoriaNombre}</TagLabel>
+                                    </Tag>
+                                </WrapItem>
+                            ))}
+                        </Wrap>
+                    )}
+                </FormControl>
+
+                <Button
+                    colorScheme="teal"
+                    onClick={handleSubmit}
                     isLoading={isSubmitting || isValidatingResponsable}
                     isDisabled={!isFormValid || isSubmitting || isValidatingResponsable}
                 >
                     Guardar
                 </Button>
-                
-                <Button 
-                    colorScheme="orange" 
+
+                <Button
+                    colorScheme="orange"
                     onClick={clearFields}
                     isDisabled={isSubmitting || isValidatingResponsable}
                 >
                     Limpiar
                 </Button>
             </VStack>
-            
+
             <UserGenericPicker
                 isOpen={isUserPickerOpen}
-                onClose={handleCloseUserPicker}
+                onClose={() => setIsUserPickerOpen(false)}
                 onSelectUser={handleSelectUser}
+            />
+
+            <CategoriaHabilitadaPickerModal
+                isOpen={isCategoriaPickerOpen}
+                onClose={() => setIsCategoriaPickerOpen(false)}
+                initialSelected={categoriasHabilitadas}
+                onConfirm={setCategoriasHabilitadas}
             />
         </Box>
     );

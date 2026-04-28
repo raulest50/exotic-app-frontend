@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
     Alert,
     AlertIcon,
     Box,
     Button,
     FormControl,
-    FormLabel,
     FormErrorMessage,
+    FormLabel,
     IconButton,
     Input,
     InputGroup,
@@ -19,18 +19,28 @@ import {
     ModalHeader,
     ModalOverlay,
     SimpleGrid,
+    Tag,
+    TagLabel,
     Text,
     VStack,
+    Wrap,
+    WrapItem,
     useToast,
 } from '@chakra-ui/react';
-import { FiEdit, FiSave } from 'react-icons/fi';
 import { SearchIcon } from '@chakra-ui/icons';
+import { FiEdit, FiSave } from 'react-icons/fi';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
-import { fetchUserAssignmentStatus } from '../../../api/userAssignmentStatus.ts';
 import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
+import { fetchUserAssignmentStatus } from '../../../api/userAssignmentStatus.ts';
 import { User } from '../../Usuarios/GestionUsuarios/types';
-import { AreaOperativa, isAlmacenGeneralArea, UpdateAreaOperativaDTO } from './types';
+import CategoriaHabilitadaPickerModal from '../components/CategoriaHabilitadaPickerModal.tsx';
+import {
+    AreaOperativa,
+    AreaOperativaMutationDTO,
+    CategoriaHabilitada,
+    isAlmacenGeneralArea,
+} from './types';
 
 const endpoints = new EndPointsURL();
 
@@ -41,14 +51,32 @@ interface DetalleAreaOperativaDialogProps {
     onAreaUpdated: (updatedArea: AreaOperativa) => void;
 }
 
-export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAreaUpdated }: DetalleAreaOperativaDialogProps) {
+function sameCategoriaSelection(current: CategoriaHabilitada[], original: CategoriaHabilitada[]): boolean {
+    const currentIds = [...current].map((categoria) => categoria.categoriaId).sort((a, b) => a - b);
+    const originalIds = [...original].map((categoria) => categoria.categoriaId).sort((a, b) => a - b);
+
+    if (currentIds.length !== originalIds.length) {
+        return false;
+    }
+
+    return currentIds.every((id, index) => id === originalIds[index]);
+}
+
+export default function DetalleAreaOperativaDialog({
+    isOpen,
+    onClose,
+    area,
+    onAreaUpdated,
+}: DetalleAreaOperativaDialogProps) {
     const toast = useToast();
 
     const [isEditing, setIsEditing] = useState(false);
     const [editNombre, setEditNombre] = useState('');
     const [editDescripcion, setEditDescripcion] = useState('');
     const [editResponsable, setEditResponsable] = useState<User | null>(null);
+    const [editCategoriasHabilitadas, setEditCategoriasHabilitadas] = useState<CategoriaHabilitada[]>([]);
     const [isUserPickerOpen, setIsUserPickerOpen] = useState(false);
+    const [isCategoriaPickerOpen, setIsCategoriaPickerOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isValidatingResponsable, setIsValidatingResponsable] = useState(false);
     const [responsableError, setResponsableError] = useState<string | null>(null);
@@ -66,13 +94,20 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
         if (isSpecialSystemArea) {
             return;
         }
+
         setEditNombre(area.nombre);
         setEditDescripcion(area.descripcion || '');
         setEditResponsable(
             area.responsableArea
-                ? { id: area.responsableArea.id, cedula: area.responsableArea.cedula, username: area.responsableArea.username, nombreCompleto: area.responsableArea.nombreCompleto } as User
+                ? {
+                    id: area.responsableArea.id,
+                    cedula: area.responsableArea.cedula,
+                    username: area.responsableArea.username,
+                    nombreCompleto: area.responsableArea.nombreCompleto,
+                } as User
                 : null,
         );
+        setEditCategoriasHabilitadas(area.categoriasHabilitadas ?? []);
         setResponsableError(null);
         setIsEditing(true);
     };
@@ -85,7 +120,8 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
     const hasChanges =
         editNombre !== area.nombre ||
         editDescripcion !== (area.descripcion || '') ||
-        editResponsable?.id !== area.responsableArea?.id;
+        editResponsable?.id !== area.responsableArea?.id ||
+        !sameCategoriaSelection(editCategoriasHabilitadas, area.categoriasHabilitadas ?? []);
 
     const isFormValid = editNombre.trim() !== '' && editResponsable !== null;
     const canSave = isFormValid && hasChanges && !isSaving && !isValidatingResponsable && !responsableError;
@@ -125,15 +161,17 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
     };
 
     const handleSave = async () => {
-        if (isSpecialSystemArea) return;
-        if (!canSave || !editResponsable) return;
+        if (isSpecialSystemArea || !canSave || !editResponsable) {
+            return;
+        }
 
         setIsSaving(true);
 
-        const dto: UpdateAreaOperativaDTO = {
+        const dto: AreaOperativaMutationDTO = {
             nombre: editNombre.trim(),
             descripcion: editDescripcion.trim(),
             responsableId: editResponsable.id,
+            categoriaIds: editCategoriasHabilitadas.map((categoria) => categoria.categoriaId),
         };
 
         try {
@@ -166,6 +204,9 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
         }
     };
 
+    const categoriasLectura = area.categoriasHabilitadas ?? [];
+    const categoriasEdicion = editCategoriasHabilitadas;
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered closeOnOverlayClick={!isEditing}>
             <ModalOverlay />
@@ -182,6 +223,7 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
                                 Almacen General es un area especial del sistema y solo puede consultarse desde este modulo.
                             </Alert>
                         )}
+
                         <Box>
                             <Text fontWeight="bold" mb={2} fontSize="md">Información del Área</Text>
 
@@ -196,7 +238,7 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
                                         <FormLabel>Nombre</FormLabel>
                                         <Input
                                             value={editNombre}
-                                            onChange={(e) => setEditNombre(e.target.value)}
+                                            onChange={(event) => setEditNombre(event.target.value)}
                                             placeholder="Nombre del área"
                                         />
                                     </FormControl>
@@ -205,7 +247,7 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
                                         <FormLabel>Descripción</FormLabel>
                                         <Input
                                             value={editDescripcion}
-                                            onChange={(e) => setEditDescripcion(e.target.value)}
+                                            onChange={(event) => setEditDescripcion(event.target.value)}
                                             placeholder="Descripción del área"
                                         />
                                     </FormControl>
@@ -260,16 +302,56 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
                                 <Text color="gray.500">Sin responsable asignado</Text>
                             )}
                         </Box>
+
+                        <Box>
+                            <Text fontWeight="bold" mb={2} fontSize="md">Categorías que puede procesar</Text>
+
+                            {isEditing ? (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setIsCategoriaPickerOpen(true)}
+                                        isDisabled={isSaving || isValidatingResponsable}
+                                    >
+                                        Seleccionar categorías
+                                    </Button>
+
+                                    {categoriasEdicion.length === 0 ? (
+                                        <Text mt={2} color="gray.500" fontSize="sm">
+                                            Sin categorías configuradas.
+                                        </Text>
+                                    ) : (
+                                        <Wrap mt={3}>
+                                            {categoriasEdicion.map((categoria) => (
+                                                <WrapItem key={categoria.categoriaId}>
+                                                    <Tag colorScheme="teal" borderRadius="full">
+                                                        <TagLabel>{categoria.categoriaNombre}</TagLabel>
+                                                    </Tag>
+                                                </WrapItem>
+                                            ))}
+                                        </Wrap>
+                                    )}
+                                </>
+                            ) : categoriasLectura.length === 0 ? (
+                                <Text color="gray.500">Sin categorías configuradas.</Text>
+                            ) : (
+                                <Wrap>
+                                    {categoriasLectura.map((categoria) => (
+                                        <WrapItem key={categoria.categoriaId}>
+                                            <Tag colorScheme="teal" borderRadius="full">
+                                                <TagLabel>{categoria.categoriaNombre}</TagLabel>
+                                            </Tag>
+                                        </WrapItem>
+                                    ))}
+                                </Wrap>
+                            )}
+                        </Box>
                     </VStack>
                 </ModalBody>
                 <ModalFooter gap={2}>
                     {isEditing ? (
                         <>
-                            <Button
-                                variant="ghost"
-                                onClick={cancelEdit}
-                                isDisabled={isSaving}
-                            >
+                            <Button variant="ghost" onClick={cancelEdit} isDisabled={isSaving}>
                                 Cancelar
                             </Button>
                             <Button
@@ -286,11 +368,7 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
                     ) : (
                         <>
                             {!isSpecialSystemArea && (
-                                <Button
-                                    colorScheme="yellow"
-                                    leftIcon={<FiEdit />}
-                                    onClick={enterEditMode}
-                                >
+                                <Button colorScheme="yellow" leftIcon={<FiEdit />} onClick={enterEditMode}>
                                     Editar
                                 </Button>
                             )}
@@ -303,11 +381,20 @@ export default function DetalleAreaOperativaDialog({ isOpen, onClose, area, onAr
             </ModalContent>
 
             {!isSpecialSystemArea && (
-                <UserGenericPicker
-                    isOpen={isUserPickerOpen}
-                    onClose={() => setIsUserPickerOpen(false)}
-                    onSelectUser={handleSelectUser}
-                />
+                <>
+                    <UserGenericPicker
+                        isOpen={isUserPickerOpen}
+                        onClose={() => setIsUserPickerOpen(false)}
+                        onSelectUser={handleSelectUser}
+                    />
+
+                    <CategoriaHabilitadaPickerModal
+                        isOpen={isCategoriaPickerOpen}
+                        onClose={() => setIsCategoriaPickerOpen(false)}
+                        initialSelected={editCategoriasHabilitadas}
+                        onConfirm={setEditCategoriasHabilitadas}
+                    />
+                </>
             )}
         </Modal>
     );

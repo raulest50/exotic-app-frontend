@@ -242,12 +242,20 @@ const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));`,
   },
   [Modulo.BINTELLIGENCE]: {
     title: "Modulo de Business Intelligence",
-    description: "Analisis de datos y reportes avanzados",
-    implementationDetails: false,
+    description: "Analisis de datos, reportes avanzados y herramientas para aprovisionamiento basado en datos",
+    implementationDetails: true,
+    implementationCode: `
+const tabs = [
+  { label: "Informes Diarios", accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "INFORMES_DIARIOS", 1) },
+  { label: "Series De Tiempo y Proyecciones", accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "SERIES_TIEMPO_PROYECCIONES", 1) },
+  { label: "Aprovisionamiento", accesoValido: moduleAccessRule(Modulo.BINTELLIGENCE, 1) },
+];
+
+const canSaveFromBi = biAccessLevel >= 3;`,
     levels: [
-      { level: 1, description: "Visualizacion de reportes predefinidos." },
-      { level: 2, description: "Creacion de reportes personalizados." },
-      { level: 3, description: "Acceso total a herramientas de analisis." },
+      { level: 1, description: "Visualizacion de reportes BI y analisis de aprovisionamiento." },
+      { level: 2, description: "Uso ampliado del modulo para exploracion y seguimiento analitico." },
+      { level: 3, description: "Acceso total a herramientas BI, incluyendo guardado de punto de reorden desde la interfaz de aprovisionamiento." },
     ],
   },
   [Modulo.OPERACIONES_CRITICAS_BD]: {

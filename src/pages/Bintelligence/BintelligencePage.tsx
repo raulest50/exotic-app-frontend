@@ -3,8 +3,9 @@ import MyHeader from "../../components/MyHeader.tsx";
 import InformesDiariosTab from "./InformesDiariosTab/InformesDiariosTab.tsx";
 import { my_style_tab } from "../../styles/styles_general.tsx";
 import TimeSeriesTab from "./TimeSeriesTab.tsx";
+import AprovisionamientoTab from "./AprovisionamientoTab/AprovisionamientoTab.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
-import { tabAccessRule } from "../../auth/accessHelpers.ts";
+import { moduleAccessRule, tabAccessRule } from "../../auth/accessHelpers.ts";
 import { useAccessSnapshot } from "../../auth/usePermissions";
 import type { AccessRule } from "../../auth/accessModel.ts";
 
@@ -14,6 +15,12 @@ export default function BintelligencePage() {
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
         { key: "informes-diarios", label: "Informes Diarios", render: () => <InformesDiariosTab />, accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "INFORMES_DIARIOS", 1) },
         { key: "series-tiempo", label: "Series De Tiempo y Proyecciones", render: () => <TimeSeriesTab />, accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "SERIES_TIEMPO_PROYECCIONES", 1) },
+        {
+            key: "aprovisionamiento",
+            label: "Aprovisionamiento",
+            render: () => <AprovisionamientoTab />,
+            accesoValido: moduleAccessRule(Modulo.BINTELLIGENCE, 1),
+        },
     ];
 
     const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));

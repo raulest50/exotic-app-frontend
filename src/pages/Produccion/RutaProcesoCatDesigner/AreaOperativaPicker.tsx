@@ -32,11 +32,17 @@ interface Props {
     isOpen: boolean;
     onClose: () => void;
     onSelect: (area: AreaOperativa) => void;
+    disabledAreaIds?: number[];
 }
 
 const PAGE_SIZE = 5;
 
-export default function AreaOperativaPicker({ isOpen, onClose, onSelect }: Props) {
+export default function AreaOperativaPicker({
+    isOpen,
+    onClose,
+    onSelect,
+    disabledAreaIds = [],
+}: Props) {
     const [areas, setAreas] = useState<AreaOperativa[]>([]);
     const [searchNombre, setSearchNombre] = useState('');
     const [page, setPage] = useState(0);
@@ -82,7 +88,7 @@ export default function AreaOperativaPicker({ isOpen, onClose, onSelect }: Props
             fetchAreas(0);
             setSelectedArea(null);
         }
-    }, [isOpen]);
+    }, [fetchAreas, isOpen]);
 
     const handleSearch = () => {
         fetchAreas(0);
@@ -95,7 +101,7 @@ export default function AreaOperativaPicker({ isOpen, onClose, onSelect }: Props
     };
 
     const handleConfirm = () => {
-        if (selectedArea) {
+        if (selectedArea && !disabledAreaIds.includes(selectedArea.areaId)) {
             onSelect(selectedArea);
             onClose();
         }
@@ -149,21 +155,29 @@ export default function AreaOperativaPicker({ isOpen, onClose, onSelect }: Props
                                         </Tr>
                                     </Thead>
                                     <Tbody>
-                                        {areas.map((area) => (
-                                            <Tr
-                                                key={area.areaId}
-                                                cursor="pointer"
-                                                bg={selectedArea?.areaId === area.areaId ? 'purple.100' : 'white'}
-                                                _hover={{ bg: 'purple.50' }}
-                                                onClick={() => setSelectedArea(area)}
-                                            >
-                                                <Td>{area.areaId}</Td>
-                                                <Td fontWeight={selectedArea?.areaId === area.areaId ? 'bold' : 'normal'}>
-                                                    {area.nombre}
-                                                </Td>
-                                                <Td>{area.descripcion || '-'}</Td>
-                                            </Tr>
-                                        ))}
+                                        {areas.map((area) => {
+                                            const isDisabled = disabledAreaIds.includes(area.areaId);
+                                            return (
+                                                <Tr
+                                                    key={area.areaId}
+                                                    cursor={isDisabled ? 'not-allowed' : 'pointer'}
+                                                    bg={selectedArea?.areaId === area.areaId ? 'purple.100' : 'white'}
+                                                    _hover={isDisabled ? undefined : { bg: 'purple.50' }}
+                                                    opacity={isDisabled ? 0.5 : 1}
+                                                    onClick={() => {
+                                                        if (!isDisabled) {
+                                                            setSelectedArea(area);
+                                                        }
+                                                    }}
+                                                >
+                                                    <Td>{area.areaId}</Td>
+                                                    <Td fontWeight={selectedArea?.areaId === area.areaId ? 'bold' : 'normal'}>
+                                                        {area.nombre}
+                                                    </Td>
+                                                    <Td>{isDisabled ? 'Ya está en la ruta' : area.descripcion || '-'}</Td>
+                                                </Tr>
+                                            );
+                                        })}
                                     </Tbody>
                                 </Table>
                             </Box>
@@ -187,7 +201,7 @@ export default function AreaOperativaPicker({ isOpen, onClose, onSelect }: Props
                     <Button
                         colorScheme="purple"
                         onClick={handleConfirm}
-                        isDisabled={!selectedArea}
+                        isDisabled={!selectedArea || disabledAreaIds.includes(selectedArea.areaId)}
                     >
                         Confirmar
                     </Button>

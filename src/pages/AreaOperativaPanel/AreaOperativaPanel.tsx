@@ -32,16 +32,16 @@ import { useAuth } from "../../context/AuthContext.tsx";
 import {
     BOARD_COLUMN_META,
     SeguimientoBoardColumn,
-    SeguimientoOrdenDetailDrawer,
     SeguimientoResumenCards,
 } from "../Produccion/components/SeguimientoBoardUI.tsx";
 import type {
     EstadoTableroKey,
-    OrdenProduccionSeguimientoDetalleDTO,
     SeguimientoOrdenAreaCardDTO,
     TableroOperativoDTO,
 } from "../Produccion/components/seguimientoBoard.types.ts";
 import type { SeguimientoActionType } from "../Produccion/components/SeguimientoBoardUI.tsx";
+import AreaOperativaOrderDetailDrawer from "./AreaOperativaOrderDetailDrawer.tsx";
+import type { AreaOperativaOrdenDetalleDTO } from "./areaOperativaPanel.types.ts";
 
 const endpoints = new EndPointsURL();
 
@@ -108,7 +108,7 @@ function matchesFilter(card: SeguimientoOrdenAreaCardDTO, searchTerm: string): b
 }
 
 export default function AreaOperativaPanel() {
-    const { meProfile, logout } = useAuth();
+    const { meProfile, logout, areaResponsable } = useAuth();
     const toast = useToast();
 
     const {
@@ -133,7 +133,7 @@ export default function AreaOperativaPanel() {
     const [submitting, setSubmitting] = useState(false);
 
     const [detailLoading, setDetailLoading] = useState(false);
-    const [detail, setDetail] = useState<OrdenProduccionSeguimientoDetalleDTO | null>(null);
+    const [detail, setDetail] = useState<AreaOperativaOrdenDetalleDTO | null>(null);
 
     const fetchTablero = useCallback(async () => {
         setLoading(true);
@@ -168,8 +168,8 @@ export default function AreaOperativaPanel() {
         onDetailOpen();
 
         try {
-            const response = await axios.get<OrdenProduccionSeguimientoDetalleDTO>(
-                endpoints.seguimiento_detalle_orden.replace("{ordenId}", String(orden.ordenId)),
+            const response = await axios.get<AreaOperativaOrdenDetalleDTO>(
+                endpoints.area_operativa_panel_detalle_operativo_orden.replace("{ordenId}", String(orden.ordenId)),
                 { withCredentials: true },
             );
             setDetail(response.data);
@@ -404,11 +404,12 @@ export default function AreaOperativaPanel() {
                 </ModalContent>
             </Modal>
 
-            <SeguimientoOrdenDetailDrawer
+            <AreaOperativaOrderDetailDrawer
                 isOpen={isDetailOpen}
                 onClose={onDetailClose}
                 detail={detail}
                 loading={detailLoading}
+                currentAreaId={areaResponsable?.areaId ?? null}
             />
         </VStack>
     );

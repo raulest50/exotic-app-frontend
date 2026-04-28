@@ -6,7 +6,8 @@ export interface AreaOperativa {
 
 export interface RutaProcesoNodeData {
     label: string;
-    areaOperativa: AreaOperativa | null;
+    areaOperativaId: number | null;
+    areaOperativaNombre: string | null;
     hasLeftHandle?: boolean;
     hasRightHandle?: boolean;
 }

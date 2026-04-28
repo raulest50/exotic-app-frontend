@@ -1,5 +1,21 @@
-import { useCallback, useEffect, useState, useRef, useMemo } from "react";
-import { Box, Flex, Button, Heading, Divider, useToast, Spinner, Text, IconButton } from "@chakra-ui/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+    Alert,
+    AlertDescription,
+    AlertIcon,
+    AlertTitle,
+    Box,
+    Button,
+    Divider,
+    Flex,
+    Heading,
+    IconButton,
+    ListItem,
+    Spinner,
+    Text,
+    UnorderedList,
+    useToast,
+} from "@chakra-ui/react";
 import { ArrowBackIcon, CloseIcon, AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import {
     ReactFlow,
@@ -22,8 +38,15 @@ import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import AreaOperativaNode from "./AreaOperativaNode.tsx";
 import AreaOperativaPicker from "./AreaOperativaPicker.tsx";
-import { AreaOperativa, RutaProcesoCatDTO, RutaProcesoNodeDTO, RutaProcesoEdgeDTO } from "./types.ts";
+import {
+    AreaOperativa,
+    RutaProcesoCatDTO,
+    RutaProcesoEdgeDTO,
+    RutaProcesoNodeDTO,
+    RutaProcesoNodeData,
+} from "./types.ts";
 import { Categoria } from "../types.tsx";
+import { getConnectionError, validateRuta } from "./rutaValidation.ts";
 
 const nodeTypes = {
     areaOperativaNode: AreaOperativaNode,
@@ -42,12 +65,17 @@ interface Props {
     onBack: () => void;
 }
 
+interface BackendErrorResponse {
+    title?: string;
+    message?: string;
+}
+
 function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
-    const [nodes, setNodes, onNodesChange] = useNodesState([]);
-    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    const [nodes, setNodes, onNodesChange] = useNodesState<Node<RutaProcesoNodeData>>([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [selectedElement, setSelectedElement] = useState<Node | Edge | null>(null);
+    const [selectedElement, setSelectedElement] = useState<Node<RutaProcesoNodeData> | Edge | null>(null);
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [nodeIdCounter, setNodeIdCounter] = useState(1);
 
@@ -55,42 +83,54 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     const [isFullScreen, setIsFullScreen] = useState(false);
     const { fitView } = useReactFlow();
 
-    // Validation: check if all enabled handles are connected
-    const isRutaValid = useMemo(() => {
-        if (nodes.length === 0) return true;
-
-        for (const node of nodes) {
-            const hasLeft = node.data.hasLeftHandle !== false;
-            const hasRight = node.data.hasRightHandle !== false;
-
-            if (hasLeft && !edges.some(e => e.target === node.id)) return false;
-            if (hasRight && !edges.some(e => e.source === node.id)) return false;
-        }
-        return true;
-    }, [nodes, edges]);
+    const validation = useMemo(() => validateRuta(nodes, edges), [nodes, edges]);
+    const disabledAreaIds = useMemo(
+        () =>
+            nodes
+                .map((node) => node.data.areaOperativaId)
+                .filter((areaId): areaId is number => areaId != null),
+        [nodes],
+    );
 
     const endPoints = new EndPointsURL();
     const toast = useToast();
 
     const onConnect = useCallback(
-        (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-        [setEdges]
+        (params: Connection) => {
+            const error = getConnectionError(
+                { source: params.source, target: params.target },
+                nodes,
+                edges,
+            );
+
+            if (error) {
+                toast({
+                    title: 'Conexión inválida',
+                    description: error,
+                    status: 'warning',
+                    duration: 3000,
+                    isClosable: true,
+                });
+                return;
+            }
+
+            setEdges((currentEdges) => addEdge(params, currentEdges));
+        },
+        [edges, nodes, setEdges, toast]
     );
 
     const isValidConnection = useCallback(
         (connection: Connection | Edge): boolean => {
-            const conn = connection as Connection;
-            const sourceNode = nodes.find((n) => n.id === conn.source);
-            const targetNode = nodes.find((n) => n.id === conn.target);
-            if (!sourceNode || !targetNode) return false;
-
-            // Only allow area to area connections
-            return sourceNode.type === "areaOperativaNode" && targetNode.type === "areaOperativaNode";
+            const error = getConnectionError(
+                { source: connection.source, target: connection.target },
+                nodes,
+                edges,
+            );
+            return error == null;
         },
-        [nodes, edges]
+        [edges, nodes]
     );
 
-    // Load existing ruta on mount
     useEffect(() => {
         const loadRuta = async () => {
             setLoading(true);
@@ -101,8 +141,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                 if (response.status === 200 && response.data) {
                     const ruta: RutaProcesoCatDTO = response.data;
 
-                    // Convert nodes
-                    const loadedNodes: Node[] = ruta.nodes.map((node: RutaProcesoNodeDTO) => ({
+                    const loadedNodes: Node<RutaProcesoNodeData>[] = ruta.nodes.map((node: RutaProcesoNodeDTO) => ({
                         id: node.id,
                         type: 'areaOperativaNode',
                         position: { x: node.posicionX, y: node.posicionY },
@@ -115,7 +154,6 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                         },
                     }));
 
-                    // Convert edges
                     const loadedEdges: Edge[] = ruta.edges.map((edge: RutaProcesoEdgeDTO) => ({
                         id: edge.id,
                         source: edge.sourceNodeId,
@@ -125,37 +163,47 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     setNodes(loadedNodes);
                     setEdges(loadedEdges);
 
-                    // Update counter to avoid ID collisions
-                    const maxId = Math.max(0, ...ruta.nodes.map(n => parseInt(n.id) || 0));
+                    const maxId = Math.max(0, ...ruta.nodes.map((node) => Number.parseInt(node.id, 10) || 0));
                     setNodeIdCounter(maxId + 1);
                 }
             } catch (err) {
                 if (axios.isAxiosError(err) && err.response?.status === 204) {
-                    // No existing ruta - that's fine
-                } else {
-                    console.error('Error loading ruta:', err);
-                    toast({
-                        title: 'Error',
-                        description: 'No se pudo cargar la ruta existente',
-                        status: 'error',
-                        duration: 3000,
-                        isClosable: true,
-                    });
+                    return;
                 }
+
+                console.error('Error loading ruta:', err);
+                toast({
+                    title: 'Error',
+                    description: 'No se pudo cargar la ruta existente',
+                    status: 'error',
+                    duration: 3000,
+                    isClosable: true,
+                });
             } finally {
                 setLoading(false);
             }
         };
 
         loadRuta();
-    }, [categoria.categoriaId]);
+    }, [categoria.categoriaId, endPoints.get_ruta_proceso_cat, setEdges, setNodes, toast]);
 
     const handleAddArea = () => {
         setIsPickerOpen(true);
     };
 
     const handleAreaSelected = (area: AreaOperativa) => {
-        const newNode: Node = {
+        if (disabledAreaIds.includes(area.areaId)) {
+            toast({
+                title: 'Área repetida',
+                description: 'Esa área operativa ya está presente en la ruta.',
+                status: 'warning',
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        const newNode: Node<RutaProcesoNodeData> = {
             id: String(nodeIdCounter),
             type: 'areaOperativaNode',
             position: { x: 200, y: nodes.length * 150 },
@@ -167,11 +215,22 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                 hasRightHandle: true,
             },
         };
-        setNodes([...nodes, newNode]);
-        setNodeIdCounter(nodeIdCounter + 1);
+        setNodes((currentNodes) => [...currentNodes, newNode]);
+        setNodeIdCounter((currentCounter) => currentCounter + 1);
     };
 
     const handleSave = async () => {
+        if (!validation.isValid) {
+            toast({
+                title: 'Ruta inválida',
+                description: 'Corrige las reglas marcadas antes de guardar.',
+                status: 'warning',
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+
         setSaving(true);
         try {
             const rutaDTO: RutaProcesoCatDTO = {
@@ -204,13 +263,32 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
             });
         } catch (err) {
             console.error('Error saving ruta:', err);
-            toast({
-                title: 'Error',
-                description: 'No se pudo guardar la ruta de proceso',
-                status: 'error',
-                duration: 3000,
-                isClosable: true,
-            });
+
+            if (axios.isAxiosError(err)) {
+                const status = err.response?.status;
+                const payload = err.response?.data as BackendErrorResponse | undefined;
+                const message = payload?.message || payload?.title;
+
+                toast({
+                    title: status === 409 ? 'Ruta bloqueada' : 'Error',
+                    description:
+                        message ||
+                        (status === 409
+                            ? 'No se puede editar la ruta porque la categoría tiene órdenes activas.'
+                            : 'No se pudo guardar la ruta de proceso'),
+                    status: status === 409 ? 'warning' : 'error',
+                    duration: 4000,
+                    isClosable: true,
+                });
+            } else {
+                toast({
+                    title: 'Error',
+                    description: 'No se pudo guardar la ruta de proceso',
+                    status: 'error',
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
         } finally {
             setSaving(false);
         }
@@ -224,19 +302,19 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     };
 
     const handleDeleteSelected = () => {
-        if (selectedElement) {
-            if ('data' in selectedElement) {
-                // It's a node
-                setNodes((prevNodes) => prevNodes.filter((node) => node.id !== selectedElement.id));
-                setEdges((prevEdges) =>
-                    prevEdges.filter((edge) => edge.source !== selectedElement.id && edge.target !== selectedElement.id)
-                );
-            } else {
-                // It's an edge
-                setEdges((prevEdges) => prevEdges.filter((edge) => edge.id !== selectedElement.id));
-            }
-            setSelectedElement(null);
+        if (!selectedElement) {
+            return;
         }
+
+        if ('position' in selectedElement) {
+            setNodes((prevNodes) => prevNodes.filter((node) => node.id !== selectedElement.id));
+            setEdges((prevEdges) =>
+                prevEdges.filter((edge) => edge.source !== selectedElement.id && edge.target !== selectedElement.id)
+            );
+        } else {
+            setEdges((prevEdges) => prevEdges.filter((edge) => edge.id !== selectedElement.id));
+        }
+        setSelectedElement(null);
     };
 
     const toggleFullScreen = () => {
@@ -252,7 +330,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
 
     useEffect(() => {
         fitView();
-    }, [isFullScreen, fitView]);
+    }, [fitView, isFullScreen, nodes.length, edges.length]);
 
     if (loading) {
         return (
@@ -278,6 +356,33 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
             </Flex>
 
             <Divider />
+
+            <Alert status="info" borderRadius="md">
+                <AlertIcon />
+                <Box>
+                    <AlertTitle>Convención operativa</AlertTitle>
+                    <AlertDescription>
+                        La ruta debe iniciar en Almacen General y terminar en el último nodo productivo.
+                        El ingreso del producto terminado a almacén se sigue manejando por su flujo propio.
+                    </AlertDescription>
+                </Box>
+            </Alert>
+
+            {!validation.isValid && (
+                <Alert status="warning" borderRadius="md" alignItems="flex-start">
+                    <AlertIcon mt={1} />
+                    <Box>
+                        <AlertTitle>La ruta aún no cumple las reglas</AlertTitle>
+                        <AlertDescription>
+                            <UnorderedList mt={2} spacing={1}>
+                                {validation.errors.map((error) => (
+                                    <ListItem key={error}>{error}</ListItem>
+                                ))}
+                            </UnorderedList>
+                        </AlertDescription>
+                    </Box>
+                </Alert>
+            )}
 
             <Box
                 w="full"
@@ -309,7 +414,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     connectionMode={ConnectionMode.Loose}
                     connectOnClick
                     onSelectionChange={({ nodes: selectedNodes, edges: selectedEdges }) => {
-                        if (selectedNodes.length > 0) setSelectedElement(selectedNodes[0]);
+                        if (selectedNodes.length > 0) setSelectedElement(selectedNodes[0] as Node<RutaProcesoNodeData>);
                         else if (selectedEdges.length > 0) setSelectedElement(selectedEdges[0]);
                         else setSelectedElement(null);
                     }}
@@ -377,8 +482,8 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     colorScheme="green"
                     onClick={handleSave}
                     isLoading={saving}
-                    isDisabled={!isRutaValid}
-                    title={!isRutaValid ? "Hay handles sin conectar" : ""}
+                    isDisabled={!validation.isValid}
+                    title={!validation.isValid ? "La ruta tiene reglas pendientes por corregir" : ""}
                 >
                     Guardar
                 </Button>
@@ -416,6 +521,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                 isOpen={isPickerOpen}
                 onClose={() => setIsPickerOpen(false)}
                 onSelect={handleAreaSelected}
+                disabledAreaIds={disabledAreaIds}
             />
         </Flex>
     );
