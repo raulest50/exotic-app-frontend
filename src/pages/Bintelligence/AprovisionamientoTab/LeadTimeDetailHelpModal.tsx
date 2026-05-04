@@ -1,5 +1,7 @@
 import {
     Box,
+    Code,
+    Divider,
     Heading,
     ListItem,
     Modal,
@@ -155,6 +157,94 @@ export default function LeadTimeDetailHelpModal({ isOpen, onClose }: Props) {
                                     ))}
                                 </Tbody>
                             </Table>
+                        </Box>
+
+                        <Divider />
+
+                        <Box>
+                            <Heading size="sm" mb={3}>Como se calculan los principales indicadores BI</Heading>
+                            <Stack spacing={4}>
+                                <Box p={4} borderWidth="1px" borderRadius="md">
+                                    <Text fontWeight="semibold" mb={2}>Lead time representativo</Text>
+                                    <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
+                                        si n &gt;= 3 usar mediana
+                                        si n &lt; 3 usar promedio
+                                    </Code>
+                                    <Text mt={3}>
+                                        Cuando ya hay al menos tres observaciones validas, se usa la mediana porque suele resistir mejor
+                                        los casos atipicos. Cuando hay pocas observaciones, se usa el promedio como una referencia simple.
+                                    </Text>
+                                    <Text mt={2} fontSize="sm" color="gray.600">
+                                        Heuristica interna BI v1: es una regla operativa para resumir el historico de forma util.
+                                    </Text>
+                                </Box>
+
+                                <Box p={4} borderWidth="1px" borderRadius="md">
+                                    <Text fontWeight="semibold" mb={2}>Confianza</Text>
+                                    <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
+                                        confianza = 100 * (0.40 * cobertura + 0.35 * muestra + 0.25 * estabilidad)
+                                    </Code>
+                                    <Text mt={3}>
+                                        La confianza no mide rapidez. Mide que tan confiable es el indicador segun cuantas ordenes
+                                        utiles hubo, cuantos casos validos soportan el calculo y que tan variable fue el comportamiento.
+                                    </Text>
+                                    <Text mt={2} fontSize="sm" color="gray.600">
+                                        Heuristica interna BI v1: es un score de calidad del historico, no una formula clasica unica.
+                                    </Text>
+                                </Box>
+
+                                <Box p={4} borderWidth="1px" borderRadius="md">
+                                    <Text fontWeight="semibold" mb={2}>ROP o punto de reorden</Text>
+                                    <Text mb={3}>
+                                        Aunque ROP no se muestra en este detalle puntual de proveedor-material, si forma parte del mismo
+                                        modelado BI del modulo y usa el lead time historico como uno de sus insumos principales.
+                                    </Text>
+                                    <Stack spacing={3}>
+                                        <Box>
+                                            <Text fontWeight="medium" mb={2}>FULL_STATISTICAL</Text>
+                                            <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
+                                                ROP = d * L + z * sqrt(L * sigma_d^2 + d^2 * sigma_L^2)
+                                            </Code>
+                                            <Text mt={2}>
+                                                Se usa cuando hay suficiente historia y tambien variabilidad util del lead time.
+                                                Combina demanda esperada durante el lead time con un componente de seguridad.
+                                            </Text>
+                                        </Box>
+
+                                        <Box>
+                                            <Text fontWeight="medium" mb={2}>DEMAND_ONLY_STATISTICAL</Text>
+                                            <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
+                                                ROP = d * L + z * sigma_d * sqrt(L)
+                                            </Code>
+                                            <Text mt={2}>
+                                                Se usa cuando la demanda tiene historia suficiente, pero no hay base robusta para modelar
+                                                la variabilidad del lead time.
+                                            </Text>
+                                        </Box>
+
+                                        <Box>
+                                            <Text fontWeight="medium" mb={2}>DETERMINISTIC</Text>
+                                            <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
+                                                ROP = d * L
+                                            </Code>
+                                            <Text mt={2}>
+                                                Es el caso mas simple. Solo estima cuanta demanda deberia cubrirse durante el lead time,
+                                                sin agregar componente estadistico de seguridad.
+                                            </Text>
+                                        </Box>
+                                    </Stack>
+
+                                    <Text mt={3}>
+                                        Donde <b>d</b> es demanda diaria promedio, <b>L</b> es lead time representativo,
+                                        <b> sigma_d</b> es la variabilidad de la demanda, <b>sigma_L</b> es la variabilidad del lead time
+                                        y <b>z</b> es un factor de servicio.
+                                    </Text>
+                                    <Text mt={2} fontSize="sm" color="gray.600">
+                                        Formula clasica / modelado de inventarios: estas expresiones vienen de enfoques tradicionales
+                                        de reorder point y safety stock bajo distintos niveles de incertidumbre.
+                                    </Text>
+                                </Box>
+                            </Stack>
                         </Box>
                     </Stack>
                 </ModalBody>

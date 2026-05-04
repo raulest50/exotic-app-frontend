@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { QuestionIcon } from "@chakra-ui/icons";
 import {
     Alert,
     AlertIcon,
@@ -8,10 +9,13 @@ import {
     Flex,
     Heading,
     HStack,
+    IconButton,
     Input,
+    Select,
     SimpleGrid,
     Spinner,
     Stat,
+    StatHelpText,
     StatLabel,
     StatNumber,
     Table,
@@ -21,6 +25,7 @@ import {
     Text,
     Th,
     Thead,
+    Tooltip,
     Tr,
     VStack,
     useDisclosure,
@@ -38,12 +43,15 @@ import {
     SeguimientoResumenCards,
 } from "./components/SeguimientoBoardUI.tsx";
 import type {
+    AreaOperativaMetricasDTO,
     AreaOperativaMonitoreoDTO,
     AreaOperativaTableroDTO,
     EstadoTableroKey,
+    MetricMode,
     OrdenProduccionSeguimientoDetalleDTO,
     SeguimientoOrdenAreaCardDTO,
 } from "./components/seguimientoBoard.types.ts";
+import MetricModeInfoModal from "./MetricModeInfoModal.tsx";
 
 const endPoints = new EndPointsURL();
 
@@ -54,12 +62,29 @@ function getTodayIsoDate(): string {
     return localDate.toISOString().slice(0, 10);
 }
 
+function resolveMetricModeLabel(mode: MetricMode): string {
+    switch (mode) {
+        case "historico":
+            return "Histórico";
+        case "rango":
+            return "Rango de fechas";
+        case "actual":
+        default:
+            return "Actual";
+    }
+}
+
 export default function MonitorearAreasOperativasTab() {
     const toast = useToast();
     const {
         isOpen: isDetailOpen,
         onOpen: onDetailOpen,
         onClose: onDetailClose,
+    } = useDisclosure();
+    const {
+        isOpen: isMetricInfoOpen,
+        onOpen: onMetricInfoOpen,
+        onClose: onMetricInfoClose,
     } = useDisclosure();
 
     const [areas, setAreas] = useState<AreaOperativaMonitoreoDTO[]>([]);
@@ -71,6 +96,13 @@ export default function MonitorearAreasOperativasTab() {
     const [tablero, setTablero] = useState<AreaOperativaTableroDTO | null>(null);
     const [tableroLoading, setTableroLoading] = useState(false);
     const [tableroError, setTableroError] = useState<string | null>(null);
+
+    const [metricMode, setMetricMode] = useState<MetricMode>("actual");
+    const [rangoDesde, setRangoDesde] = useState(getTodayIsoDate());
+    const [rangoHasta, setRangoHasta] = useState(getTodayIsoDate());
+    const [metricas, setMetricas] = useState<AreaOperativaMetricasDTO | null>(null);
+    const [metricasLoading, setMetricasLoading] = useState(false);
+    const [metricasError, setMetricasError] = useState<string | null>(null);
 
     const [detailLoading, setDetailLoading] = useState(false);
     const [detail, setDetail] = useState<OrdenProduccionSeguimientoDetalleDTO | null>(null);
@@ -122,6 +154,45 @@ export default function MonitorearAreasOperativasTab() {
         }
     }, []);
 
+    const fetchMetricasArea = useCallback(async (
+        area: AreaOperativaMonitoreoDTO,
+        mode: MetricMode,
+        fechaActual: string,
+        desde: string,
+        hasta: string,
+    ) => {
+        setMetricasLoading(true);
+        setMetricasError(null);
+
+        try {
+            const params: Record<string, string> = { modo: mode };
+            if (mode === "actual") {
+                params.fecha = fechaActual;
+            } else if (mode === "rango") {
+                params.fechaDesde = desde;
+                params.fechaHasta = hasta;
+            }
+
+            const response = await axios.get<AreaOperativaMetricasDTO>(
+                endPoints.monitoreo_area_metricas.replace("{areaId}", String(area.areaId)),
+                {
+                    params,
+                    withCredentials: true,
+                },
+            );
+            setMetricas(response.data);
+        } catch (err: any) {
+            setMetricasError(
+                err.response?.data?.message ||
+                err.message ||
+                "No fue posible cargar las métricas del área.",
+            );
+            setMetricas(null);
+        } finally {
+            setMetricasLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         void fetchAreas();
     }, [fetchAreas]);
@@ -134,10 +205,42 @@ export default function MonitorearAreasOperativasTab() {
         void fetchTableroArea(selectedArea, fechaConsulta);
     }, [fechaConsulta, fetchTableroArea, selectedArea]);
 
+    useEffect(() => {
+        if (!selectedArea) {
+            return;
+        }
+        if (metricMode === "rango" && (!rangoDesde || !rangoHasta)) {
+            return;
+        }
+
+        void fetchMetricasArea(selectedArea, metricMode, fechaConsulta, rangoDesde, rangoHasta);
+    }, [
+        fechaConsulta,
+        fetchMetricasArea,
+        metricMode,
+        rangoDesde,
+        rangoHasta,
+        selectedArea,
+    ]);
+
     const openMonitoringView = (area: AreaOperativaMonitoreoDTO) => {
+        const today = getTodayIsoDate();
         setSelectedArea(area);
-        setFechaConsulta(getTodayIsoDate());
+        setFechaConsulta(today);
+        setMetricMode("actual");
+        setRangoDesde(today);
+        setRangoHasta(today);
         setTablero(null);
+        setMetricas(null);
+        setMetricasError(null);
+    };
+
+    const handleMetricModeChange = (mode: MetricMode) => {
+        setMetricMode(mode);
+        if (mode === "rango") {
+            setRangoDesde(fechaConsulta);
+            setRangoHasta(fechaConsulta);
+        }
     };
 
     const handleOpenDetail = useCallback(async (orden: SeguimientoOrdenAreaCardDTO) => {
@@ -169,27 +272,47 @@ export default function MonitorearAreasOperativasTab() {
             return [];
         }
 
+        const formatMetricValue = (value: number | null, sampleCount: number | null | undefined) => {
+            if (sampleCount === 0) {
+                return "Sin muestras";
+            }
+            return formatMinutesDuration(value === null ? null : Math.round(value));
+        };
+
+        const metricsSubtitle = metricasLoading
+            ? "Consultando métricas"
+            : metricas
+                ? `${resolveMetricModeLabel(metricas.modo)}`
+                : `Modo ${resolveMetricModeLabel(metricMode)}`;
+
         return [
             {
                 label: "Promedio espera",
-                value: formatMinutesDuration(
-                    tablero.promedioMinutosEspera === null ? null : Math.round(tablero.promedioMinutosEspera),
-                ),
+                value: metricasLoading
+                    ? "Cargando..."
+                    : formatMetricValue(metricas?.promedioMinutosEspera ?? null, metricas?.muestrasEspera),
+                helpText: metricasLoading
+                    ? metricsSubtitle
+                    : `${metricas?.muestrasEspera ?? 0} muestras · ${metricsSubtitle}`,
             },
             {
                 label: "Promedio proceso",
-                value: formatMinutesDuration(
-                    tablero.promedioMinutosEnProceso === null ? null : Math.round(tablero.promedioMinutosEnProceso),
-                ),
+                value: metricasLoading
+                    ? "Cargando..."
+                    : formatMetricValue(metricas?.promedioMinutosEnProceso ?? null, metricas?.muestrasEnProceso),
+                helpText: metricasLoading
+                    ? metricsSubtitle
+                    : `${metricas?.muestrasEnProceso ?? 0} muestras · ${metricsSubtitle}`,
             },
             {
                 label: "Orden más atrasada",
                 value: tablero.ordenMasAtrasada
                     ? `${tablero.ordenMasAtrasada.loteAsignado || `OP-${tablero.ordenMasAtrasada.ordenId}`} · ${formatMinutesDuration(tablero.ordenMasAtrasada.minutosEnEstadoActual)}`
                     : "Sin dato",
+                helpText: "Basada en la foto actual del tablero",
             },
         ];
-    }, [tablero]);
+    }, [metricMode, metricas, metricasLoading, tablero]);
 
     if (!selectedArea) {
         return (
@@ -289,6 +412,8 @@ export default function MonitorearAreasOperativasTab() {
                                     setSelectedArea(null);
                                     setTablero(null);
                                     setTableroError(null);
+                                    setMetricas(null);
+                                    setMetricasError(null);
                                 }}
                             >
                                 Volver
@@ -296,8 +421,11 @@ export default function MonitorearAreasOperativasTab() {
                             <Button
                                 variant="outline"
                                 leftIcon={<FiRefreshCw />}
-                                onClick={() => void fetchTableroArea(selectedArea, fechaConsulta)}
-                                isLoading={tableroLoading}
+                                onClick={() => {
+                                    void fetchTableroArea(selectedArea, fechaConsulta);
+                                    void fetchMetricasArea(selectedArea, metricMode, fechaConsulta, rangoDesde, rangoHasta);
+                                }}
+                                isLoading={tableroLoading || metricasLoading}
                             >
                                 Refrescar
                             </Button>
@@ -321,6 +449,71 @@ export default function MonitorearAreasOperativasTab() {
                             Foto reconstruida al corte de {tablero ? formatDateTime(tablero.instanteFoto) : fechaConsulta}
                         </Text>
                     </HStack>
+
+                    <VStack align="stretch" spacing={3}>
+                        <HStack justify="space-between" flexWrap="wrap" gap={3}>
+                            <HStack spacing={2}>
+                                <Text fontWeight="medium">Modo de promedio</Text>
+                                <Tooltip label="Cómo se calcula cada modo" hasArrow>
+                                    <IconButton
+                                        aria-label="Ayuda sobre modos de promedio"
+                                        icon={<QuestionIcon />}
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={onMetricInfoOpen}
+                                    />
+                                </Tooltip>
+                            </HStack>
+                            <Select
+                                value={metricMode}
+                                onChange={(event) => handleMetricModeChange(event.target.value as MetricMode)}
+                                w={{ base: "full", md: "260px" }}
+                                bg="white"
+                            >
+                                <option value="actual">Actual</option>
+                                <option value="historico">Histórico</option>
+                                <option value="rango">Rango de fechas</option>
+                            </Select>
+                        </HStack>
+
+                        {metricMode === "rango" ? (
+                            <HStack flexWrap="wrap" gap={3}>
+                                <Box>
+                                    <Text fontSize="sm" fontWeight="medium" mb={1}>
+                                        Desde
+                                    </Text>
+                                    <Input
+                                        type="date"
+                                        value={rangoDesde}
+                                        max={getTodayIsoDate()}
+                                        onChange={(event) => setRangoDesde(event.target.value)}
+                                        w={{ base: "full", md: "220px" }}
+                                        bg="white"
+                                    />
+                                </Box>
+                                <Box>
+                                    <Text fontSize="sm" fontWeight="medium" mb={1}>
+                                        Hasta
+                                    </Text>
+                                    <Input
+                                        type="date"
+                                        value={rangoHasta}
+                                        max={getTodayIsoDate()}
+                                        onChange={(event) => setRangoHasta(event.target.value)}
+                                        w={{ base: "full", md: "220px" }}
+                                        bg="white"
+                                    />
+                                </Box>
+                            </HStack>
+                        ) : null}
+
+                        {metricasError ? (
+                            <Alert status="warning" borderRadius="md">
+                                <AlertIcon />
+                                {metricasError}
+                            </Alert>
+                        ) : null}
+                    </VStack>
                 </VStack>
             </Box>
 
@@ -353,6 +546,7 @@ export default function MonitorearAreasOperativasTab() {
                                 <Stat>
                                     <StatLabel>{metric.label}</StatLabel>
                                     <StatNumber fontSize="lg">{metric.value}</StatNumber>
+                                    <StatHelpText mb={0}>{metric.helpText}</StatHelpText>
                                 </Stat>
                             </Box>
                         ))}
@@ -377,6 +571,10 @@ export default function MonitorearAreasOperativasTab() {
                 onClose={onDetailClose}
                 detail={detail}
                 loading={detailLoading}
+            />
+            <MetricModeInfoModal
+                isOpen={isMetricInfoOpen}
+                onClose={onMetricInfoClose}
             />
         </VStack>
     );

@@ -111,4 +111,18 @@ export interface AreaOperativaTableroDTO {
     completado: SeguimientoOrdenAreaCardDTO[];
 }
 
+export type MetricMode = "actual" | "historico" | "rango";
+
+export interface AreaOperativaMetricasDTO {
+    areaId: number;
+    modo: MetricMode;
+    fecha: string | null;
+    fechaDesde: string | null;
+    fechaHasta: string | null;
+    promedioMinutosEspera: number | null;
+    promedioMinutosEnProceso: number | null;
+    muestrasEspera: number;
+    muestrasEnProceso: number;
+}
+
 export type EstadoTableroKey = "cola" | "espera" | "enProceso" | "completado";

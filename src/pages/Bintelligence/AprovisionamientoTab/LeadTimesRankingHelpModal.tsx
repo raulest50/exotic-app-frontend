@@ -1,11 +1,15 @@
 import {
     Box,
+    Code,
+    Divider,
+    Heading,
     Modal,
     ModalBody,
     ModalCloseButton,
     ModalContent,
     ModalHeader,
     ModalOverlay,
+    Stack,
     Table,
     Tbody,
     Td,
@@ -81,31 +85,75 @@ export default function LeadTimesRankingHelpModal({ isOpen, onClose }: Props) {
                 <ModalHeader>Ayuda del ranking de lead times</ModalHeader>
                 <ModalCloseButton />
                 <ModalBody pb={6}>
-                    <Text color="gray.600" mb={4}>
-                        Este ranking compara el desempeno historico de los proveedores para un material especifico.
-                        Cada columna aporta contexto para evaluar rapidez, consistencia y calidad del historico disponible.
-                    </Text>
+                    <Stack spacing={5}>
+                        <Text color="gray.600">
+                            Este ranking compara el desempeno historico de los proveedores para un material especifico.
+                            Cada columna aporta contexto para evaluar rapidez, consistencia y calidad del historico disponible.
+                        </Text>
 
-                    <Box overflowX="auto">
-                        <Table size="sm" variant="simple">
-                            <Thead>
-                                <Tr>
-                                    <Th>Campo</Th>
-                                    <Th>Que significa</Th>
-                                    <Th>Por que importa</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
-                                {rankingHelpItems.map((item) => (
-                                    <Tr key={item.field}>
-                                        <Td fontWeight="semibold">{item.field}</Td>
-                                        <Td>{item.meaning}</Td>
-                                        <Td>{item.importance}</Td>
+                        <Box overflowX="auto">
+                            <Table size="sm" variant="simple">
+                                <Thead>
+                                    <Tr>
+                                        <Th>Campo</Th>
+                                        <Th>Que significa</Th>
+                                        <Th>Por que importa</Th>
                                     </Tr>
-                                ))}
-                            </Tbody>
-                        </Table>
-                    </Box>
+                                </Thead>
+                                <Tbody>
+                                    {rankingHelpItems.map((item) => (
+                                        <Tr key={item.field}>
+                                            <Td fontWeight="semibold">{item.field}</Td>
+                                            <Td>{item.meaning}</Td>
+                                            <Td>{item.importance}</Td>
+                                        </Tr>
+                                    ))}
+                                </Tbody>
+                            </Table>
+                        </Box>
+
+                        <Divider />
+
+                        <Box>
+                            <Heading size="sm" mb={3}>Como se calculan los indicadores de ranking</Heading>
+                            <Stack spacing={4}>
+                                <Box p={4} borderWidth="1px" borderRadius="md">
+                                    <Text fontWeight="semibold" mb={2}>Lead time ajustado</Text>
+                                    <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
+                                        leadTimeAjustado = leadTimeRepresentativoPrimeraRecepcion * (1 + (1 - confianza/100) * 0.50)
+                                    </Code>
+                                    <Text mt={3}>
+                                        Este valor toma el lead time principal de primera recepcion y lo penaliza cuando la confianza
+                                        del historico es baja. Asi se evita premiar automaticamente a un proveedor muy rapido pero
+                                        sostenido por pocos datos o por un comportamiento inestable.
+                                    </Text>
+                                    <Text mt={2} fontSize="sm" color="gray.600">
+                                        Heuristica interna BI v1: esta formula ayuda a ordenar el ranking, pero no es una formula
+                                        estandar de ERP o academia.
+                                    </Text>
+                                </Box>
+
+                                <Box p={4} borderWidth="1px" borderRadius="md">
+                                    <Text fontWeight="semibold" mb={2}>Confianza</Text>
+                                    <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
+                                        confianza = 100 * (0.40 * cobertura + 0.35 * muestra + 0.25 * estabilidad)
+                                    </Code>
+                                    <Text mt={3}>
+                                        La confianza resume tres ideas: que porcentaje de ordenes realmente aporta al calculo,
+                                        cuantas observaciones validas existen y que tan estable es el comportamiento observado.
+                                    </Text>
+                                    <Text mt={2}>
+                                        Cobertura mira cuantas ordenes utiles hubo; muestra mira el tamano del historico valido;
+                                        estabilidad mira si los lead times cambian poco o mucho entre un caso y otro.
+                                    </Text>
+                                    <Text mt={2} fontSize="sm" color="gray.600">
+                                        Heuristica interna BI v1: es un score practico de calidad del historico, no una metrica
+                                        academica unica.
+                                    </Text>
+                                </Box>
+                            </Stack>
+                        </Box>
+                    </Stack>
                 </ModalBody>
             </ModalContent>
         </Modal>
