@@ -20,7 +20,7 @@ interface MpsWeeklyCalendarProps {
 function MpsProductBlock({ block }: { block: PropuestaMpsCalendarBlockDTO }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: block.blockId,
-        data: { blockId: block.blockId, categoriaId: block.categoriaId },
+        data: { blockId: block.blockId },
     });
 
     return (
@@ -40,6 +40,9 @@ function MpsProductBlock({ block }: { block: PropuestaMpsCalendarBlockDTO }) {
             >
                 <Text fontWeight="semibold" fontSize="sm" noOfLines={2}>{block.productoNombre}</Text>
                 <Text fontSize="xs" color="gray.600">{block.productoId}</Text>
+                <Text fontSize="xs" color="gray.600">
+                    {block.poolCapacidadNombre ?? block.categoriaNombre ?? "Sin unidad de capacidad"}
+                </Text>
                 <Text fontSize="xs" mt={1}>{block.lotesAsignados} lotes</Text>
                 <Text fontSize="xs">{formatNumber(block.cantidadAsignada)} und</Text>
             </Box>
@@ -48,15 +51,15 @@ function MpsProductBlock({ block }: { block: PropuestaMpsCalendarBlockDTO }) {
 }
 
 function MpsDayCell({
-    categoriaId,
+    rowKey,
     dayIndex,
     date,
     totalAsignado,
     capacidadDiaria,
     estado,
     blocks,
-}: PropuestaMpsSemanalCalendarDTO["rows"][number]["days"][number] & { categoriaId: number | null }) {
-    const { setNodeRef, isOver } = useDroppable({ id: getDayDroppableId(categoriaId, dayIndex) });
+}: PropuestaMpsSemanalCalendarDTO["rows"][number]["days"][number] & { rowKey: string }) {
+    const { setNodeRef, isOver } = useDroppable({ id: getDayDroppableId(rowKey, dayIndex) });
 
     return (
         <GridItem
@@ -109,11 +112,14 @@ export default function MpsWeeklyCalendar({ calendar }: MpsWeeklyCalendarProps) 
                     ))}
 
                     {calendar.rows.map((row) => (
-                        <GridItem key={`row-${row.categoriaId ?? "null"}`} colSpan={7}>
+                        <GridItem key={`row-${row.rowKey}`} colSpan={7}>
                             <Grid templateColumns="240px repeat(6, minmax(170px, 1fr))" gap={3}>
                                 <GridItem>
                                     <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" p={3} bg="gray.50" h="full">
-                                        <Text fontWeight="bold">{row.categoriaNombre}</Text>
+                                        <Text fontWeight="bold">{row.poolCapacidadNombre ?? row.categoriaNombre ?? "Sin unidad de capacidad"}</Text>
+                                        {row.poolCapacidadId !== null && row.poolCapacidadId !== undefined && (
+                                            <Badge mt={2} colorScheme="blue">Pool compartido</Badge>
+                                        )}
                                         <Text fontSize="sm" color="gray.600">
                                             Capacidad diaria: {formatNumber(row.capacidadDiaria)}
                                         </Text>
@@ -127,8 +133,8 @@ export default function MpsWeeklyCalendar({ calendar }: MpsWeeklyCalendarProps) 
                                 </GridItem>
                                 {row.days.map((cell) => (
                                     <MpsDayCell
-                                        key={`row-${row.categoriaId ?? "null"}-day-${cell.dayIndex}`}
-                                        categoriaId={row.categoriaId}
+                                        key={`row-${row.rowKey}-day-${cell.dayIndex}`}
+                                        rowKey={row.rowKey}
                                         {...cell}
                                     />
                                 ))}

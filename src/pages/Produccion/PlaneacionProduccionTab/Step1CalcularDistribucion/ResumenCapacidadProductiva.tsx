@@ -30,13 +30,13 @@ function ResumenCapacidadProductivaComponent({ rows }: ResumenCapacidadProductiv
     return (
         <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" p={3} bg="gray.50">
             <Text fontSize="sm" fontWeight="semibold" color="gray.700" mb={3}>
-                Capacidad productiva por categoria
+                Capacidad productiva por pool/categoria
             </Text>
             <TableContainer w="full" overflowX="auto">
                 <Table size="sm" variant="simple">
                     <Thead>
                         <Tr>
-                            <Th>Categoria</Th>
+                            <Th>Unidad capacidad</Th>
                             <Th isNumeric>Total asignado</Th>
                             <Th isNumeric>Capacidad diaria</Th>
                             <Th isNumeric>Uso total</Th>
@@ -48,8 +48,13 @@ function ResumenCapacidadProductivaComponent({ rows }: ResumenCapacidadProductiv
                         {rows.map((row) => {
                             const badge = getEstadoBadgeProps(row.estado);
                             return (
-                                <Tr key={row.categoriaId ?? "sin-categoria"}>
-                                    <Td>{row.categoriaNombre}</Td>
+                                <Tr key={row.rowKey}>
+                                    <Td>
+                                        <Text>{row.poolCapacidadNombre ?? row.categoriaNombre ?? "Sin categoria"}</Text>
+                                        {row.poolCapacidadId !== null && row.poolCapacidadId !== undefined && (
+                                            <Text fontSize="xs" color="gray.500">Pool compartido</Text>
+                                        )}
+                                    </Td>
                                     <Td isNumeric>{formatCantidad(row.totalAsignado)}</Td>
                                     <Td isNumeric>{formatCantidad(row.capacidadDiaria)}</Td>
                                     <Td isNumeric>{formatCantidad(row.totalAsignado)}/{formatCantidad(row.capacidadDiaria)}</Td>

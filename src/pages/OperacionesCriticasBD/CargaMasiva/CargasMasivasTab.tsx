@@ -1,15 +1,16 @@
 import { Button, Container, Flex, SimpleGrid } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import { IconType } from "react-icons";
-import { FaArrowLeft, FaDatabase } from "react-icons/fa";
+import { FaArrowLeft, FaDatabase, FaKey } from "react-icons/fa";
 import { FaBoxesStacked, FaCube, FaWarehouse } from "react-icons/fa6";
 import CargaMasivaAlmacenTab from "./CargaMasivaAlmacenTab";
 import CargaMasivaMaterialesTab from "../CargaMasivaMateriales/CargaMasivaMaterialesTab";
 import CargaMasivaTerminadosTab from "../CargaMasivaTerminados/CargaMasivaTerminadosTab";
 import CargaMasivaImportacionTotalBDTab from "../CargaMasivaImportacionTotalBD/CargaMasivaImportacionTotalBDTab";
 import OperacionSelectCard from "../shared/OperacionSelectCard";
+import ResetPasswordsNoProductivoTab from "./ResetPasswordsNoProductivoTab";
 
-type MassiveLoadView = "selector" | "almacen" | "materiales" | "terminados" | "importacion-total-bd";
+type MassiveLoadView = "selector" | "almacen" | "materiales" | "terminados" | "importacion-total-bd" | "reset-passwords-staging";
 
 interface MassiveLoadOption {
     key: Exclude<MassiveLoadView, "selector">;
@@ -20,6 +21,7 @@ interface MassiveLoadOption {
 
 interface CargasMasivasTabProps {
     allowTotalDatabaseImport: boolean;
+    allowNonProductionPasswordReset: boolean;
 }
 
 const BASE_LOAD_OPTIONS: MassiveLoadOption[] = [
@@ -43,24 +45,35 @@ const BASE_LOAD_OPTIONS: MassiveLoadOption[] = [
     },
 ];
 
-export default function CargasMasivasTab({ allowTotalDatabaseImport }: CargasMasivasTabProps) {
+export default function CargasMasivasTab({
+    allowTotalDatabaseImport,
+    allowNonProductionPasswordReset,
+}: CargasMasivasTabProps) {
     const [activeView, setActiveView] = useState<MassiveLoadView>("selector");
 
     const loadOptions = useMemo(() => {
-        if (!allowTotalDatabaseImport) {
-            return BASE_LOAD_OPTIONS;
-        }
+        const options: MassiveLoadOption[] = [...BASE_LOAD_OPTIONS];
 
-        return [
-            ...BASE_LOAD_OPTIONS,
-            {
+        if (allowTotalDatabaseImport) {
+            options.push({
                 key: "importacion-total-bd" as const,
                 titulo: "Importacion total BD",
                 descripcion: "Vaciar completamente la base e importar un backup .dump del sistema. Solo local y staging.",
                 icono: FaDatabase,
-            },
-        ];
-    }, [allowTotalDatabaseImport]);
+            });
+        }
+
+        if (allowNonProductionPasswordReset) {
+            options.push({
+                key: "reset-passwords-staging" as const,
+                titulo: "Reset contrasenas staging",
+                descripcion: "Asignar staging1234 a todos los usuarios no privilegiados. Solo local y staging.",
+                icono: FaKey,
+            });
+        }
+
+        return options;
+    }, [allowTotalDatabaseImport, allowNonProductionPasswordReset]);
 
     const activeContent = useMemo(() => {
         if (activeView === "almacen") {
@@ -74,6 +87,9 @@ export default function CargasMasivasTab({ allowTotalDatabaseImport }: CargasMas
         }
         if (activeView === "importacion-total-bd") {
             return <CargaMasivaImportacionTotalBDTab onBackToSelector={() => setActiveView("selector")} />;
+        }
+        if (activeView === "reset-passwords-staging") {
+            return <ResetPasswordsNoProductivoTab />;
         }
         return null;
     }, [activeView]);

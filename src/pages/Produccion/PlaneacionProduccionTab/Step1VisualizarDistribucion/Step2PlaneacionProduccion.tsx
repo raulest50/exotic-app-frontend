@@ -183,7 +183,7 @@ export default function Step2PlaneacionProduccion({
                 <VStack align="stretch" spacing={3}>
                     <Text fontSize="lg" fontWeight="bold">Propuesta semanal de MPS</Text>
                     <Text color="gray.600">
-                        Esta pantalla genera una propuesta semanal por dias. Puede reorganizar bloques dentro de la misma categoria.
+                        Esta pantalla genera una propuesta semanal por dias. Puede reorganizar bloques dentro de la misma unidad de capacidad.
                     </Text>
 
                     <Flex gap={4} align="end" wrap="wrap">

@@ -11,7 +11,7 @@ interface MpsUnscheduledPanelProps {
 function UnscheduledCard({ block }: { block: PropuestaMpsUnscheduledBlockDTO }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: block.blockId,
-        data: { blockId: block.blockId, categoriaId: block.categoriaId },
+        data: { blockId: block.blockId },
     });
 
     return (
@@ -31,6 +31,12 @@ function UnscheduledCard({ block }: { block: PropuestaMpsUnscheduledBlockDTO }) 
             >
                 <Text fontWeight="semibold" fontSize="sm" noOfLines={2}>{block.productoNombre}</Text>
                 <Text fontSize="xs" color="gray.600">{block.productoId}</Text>
+                <Text fontSize="xs" color="gray.600">
+                    Categoria: {block.categoriaNombre ?? "Sin categoria"}
+                </Text>
+                <Text fontSize="xs" color="gray.600">
+                    Unidad capacidad: {block.poolCapacidadNombre ?? block.categoriaNombre ?? "Sin unidad"}
+                </Text>
                 <Text fontSize="xs" mt={1}>{block.lotesAsignados} lotes - {formatNumber(block.cantidadAsignada)} und</Text>
                 <Badge mt={2} colorScheme="orange">{block.reason}</Badge>
             </Box>

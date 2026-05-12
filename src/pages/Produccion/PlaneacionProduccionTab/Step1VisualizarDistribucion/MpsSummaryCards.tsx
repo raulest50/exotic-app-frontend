@@ -11,8 +11,8 @@ interface MpsSummaryCardsProps {
 export default function MpsSummaryCards({ summary, insights }: MpsSummaryCardsProps) {
     const cards = [
         { label: "Terminados evaluados", value: String(summary.totalTerminadosEvaluados) },
-        { label: "Categorias programadas", value: String(insights.categoriasProgramadas) },
-        { label: "Categorias con sobrecarga", value: String(insights.categoriasConSobrecarga) },
+        { label: "Unidades programadas", value: String(insights.categoriasProgramadas) },
+        { label: "Unidades con sobrecarga", value: String(insights.categoriasConSobrecarga) },
         { label: "Lotes propuestos", value: String(summary.totalLotesPropuestos) },
         { label: "Unidades propuestas", value: formatNumber(summary.totalUnidadesPropuestas) },
         { label: "No programados", value: String(insights.noProgramados) },

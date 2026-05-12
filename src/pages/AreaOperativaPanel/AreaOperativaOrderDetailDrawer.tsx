@@ -88,6 +88,21 @@ function getEstadoBadgeScheme(estado: number | null | undefined): string {
     }
 }
 
+function formatCantidad(value: number | null | undefined): string {
+    if (typeof value !== "number" || Number.isNaN(value)) {
+        return "-";
+    }
+
+    if (Number.isInteger(value)) {
+        return value.toLocaleString("es-CO");
+    }
+
+    return value.toLocaleString("es-CO", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+    });
+}
+
 function RouteNode({ data }: NodeProps<RouteNodeData>) {
     const isCurrentAreaNode = data.currentAreaId != null && data.currentLeaderArea;
     const accentColor = getEstadoColor(data.estadoActual);
@@ -193,7 +208,7 @@ function BomTreeNode({ node, depth = 0 }: { node: BomRecetaNodeDTO; depth?: numb
                         {node.inventareable ? "Inventariable" : "No inventariable"}
                     </Badge>
                     <Text fontWeight="semibold">
-                        {node.cantidadTotalRequerida} {node.tipoUnidades || ""}
+                        {formatCantidad(node.cantidadTotalRequerida)} {node.tipoUnidades || ""}
                     </Text>
                 </VStack>
             </HStack>
@@ -270,7 +285,7 @@ export default function AreaOperativaOrderDetailDrawer({
                                                 {detail.orden.productoNombre} · {detail.orden.productoId}
                                             </Text>
                                             <Text color="gray.600">
-                                                Categoría: {detail.orden.categoriaNombre || "Sin categoría"} · Cantidad: {detail.orden.cantidadProducir}
+                                                Categoría: {detail.orden.categoriaNombre || "Sin categoría"} · Cantidad: {formatCantidad(detail.orden.cantidadProducir)}
                                             </Text>
                                         </Box>
 
@@ -414,7 +429,7 @@ export default function AreaOperativaOrderDetailDrawer({
                                                                 <Tr key={item.productoId}>
                                                                     <Td>{item.productoNombre}</Td>
                                                                     <Td>{item.productoId}</Td>
-                                                                    <Td isNumeric>{item.cantidadTotalRequerida}</Td>
+                                                                    <Td isNumeric>{formatCantidad(item.cantidadTotalRequerida)}</Td>
                                                                     <Td>{item.tipoUnidades || "-"}</Td>
                                                                     <Td>
                                                                         <Badge colorScheme={item.inventareable ? "blue" : "gray"}>

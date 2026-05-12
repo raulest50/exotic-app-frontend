@@ -114,6 +114,8 @@ export interface PropuestaMpsCalendarBlockDTO {
     productoNombre: string;
     categoriaId: number | null;
     categoriaNombre: string | null;
+    poolCapacidadId: number | null;
+    poolCapacidadNombre: string | null;
     loteSize: number;
     lotesAsignados: number;
     cantidadAsignada: number;
@@ -130,8 +132,11 @@ export interface PropuestaMpsCalendarCellDTO {
 }
 
 export interface PropuestaMpsCalendarRowDTO {
+    rowKey: string;
     categoriaId: number | null;
-    categoriaNombre: string;
+    categoriaNombre: string | null;
+    poolCapacidadId: number | null;
+    poolCapacidadNombre: string | null;
     capacidadDiaria: number;
     days: PropuestaMpsCalendarCellDTO[];
     totalAsignadoSemana: number;
@@ -153,6 +158,8 @@ export interface PropuestaMpsSemanalItemDTO {
     productoId: string;
     productoNombre: string;
     categoriaNombre: string | null;
+    poolCapacidadId: number | null;
+    poolCapacidadNombre: string | null;
     loteSize: number;
     tiempoDiasFabricacion: number;
     stockActual: number;

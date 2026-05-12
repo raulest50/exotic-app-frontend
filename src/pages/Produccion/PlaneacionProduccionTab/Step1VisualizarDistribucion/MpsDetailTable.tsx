@@ -43,6 +43,7 @@ export default function MpsDetailTable({ items }: MpsDetailTableProps) {
                                     <Th>Codigo</Th>
                                     <Th>Producto</Th>
                                     <Th>Categoria</Th>
+                                    <Th>Pool capacidad</Th>
                                     <Th isNumeric>% Participacion</Th>
                                     <Th isNumeric>Necesidad</Th>
                                     <Th isNumeric>Stock</Th>
@@ -77,6 +78,7 @@ export default function MpsDetailTable({ items }: MpsDetailTableProps) {
                                             <Td>{item.productoId}</Td>
                                             <Td>{item.productoNombre}</Td>
                                             <Td>{item.categoriaNombre ?? "-"}</Td>
+                                            <Td>{item.poolCapacidadNombre ?? "-"}</Td>
                                             <Td isNumeric>{item.porcentajeParticipacion.toFixed(2)}%</Td>
                                             <Td isNumeric>{formatNumber(item.necesidadManual)}</Td>
                                             <Td isNumeric>{formatNumber(item.stockActual)}</Td>

@@ -45,6 +45,11 @@ export default class EndPointsURL{
     public update_categoria_lote_size: string;
     public update_categoria_tiempo_dias_fabricacion: string;
     public update_categoria_capacidad_productiva_diaria: string;
+    public update_categoria_pool_capacidad: string;
+    public get_pooles_capacidad: string;
+    public create_pool_capacidad: string;
+    public update_pool_capacidad: string;
+    public delete_pool_capacidad: string;
 
     // ruta proceso cat endpoints
     public get_ruta_proceso_cat: string;
@@ -205,6 +210,7 @@ export default class EndPointsURL{
     public exportacion_proveedores_json_con_contactos: string;
     public exportacion_backup_total_create_job: string;
     public importacion_backup_total_create_job: string;
+    public reset_non_production_passwords: string;
 
     // organigrama endpoints
     public get_all_cargos: string;
@@ -440,6 +446,11 @@ export default class EndPointsURL{
         this.update_categoria_lote_size = `${domain}/categorias/{categoriaId}/lote-size`;
         this.update_categoria_tiempo_dias_fabricacion = `${domain}/categorias/{categoriaId}/tiempo-dias-fabricacion`;
         this.update_categoria_capacidad_productiva_diaria = `${domain}/categorias/{categoriaId}/capacidad-productiva-diaria`;
+        this.update_categoria_pool_capacidad = `${domain}/categorias/{categoriaId}/pool-capacidad`;
+        this.get_pooles_capacidad = `${domain}/api/pool-capacidad`;
+        this.create_pool_capacidad = `${domain}/api/pool-capacidad`;
+        this.update_pool_capacidad = `${domain}/api/pool-capacidad/{id}`;
+        this.delete_pool_capacidad = `${domain}/api/pool-capacidad/{id}`;
 
         // Ruta proceso cat endpoints
         const ruta_proceso_cat_res = 'api/ruta-proceso-cat';
@@ -596,6 +607,7 @@ export default class EndPointsURL{
         this.exportacion_proveedores_json_con_contactos = `${domain}/api/exportacion-datos/proveedores/json-con-contactos`;
         this.exportacion_backup_total_create_job = `${domain}/api/exportacion-datos/backup-total/jobs`;
         this.importacion_backup_total_create_job = `${domain}/api/importacion-datos/backup-total/jobs`;
+        this.reset_non_production_passwords = `${domain}/api/importacion-datos/password-sanitization/reset`;
 
         // contabilidad endpoints
         this.get_cuentas = `${domain}/${contabilidad_res}/cuentas`;

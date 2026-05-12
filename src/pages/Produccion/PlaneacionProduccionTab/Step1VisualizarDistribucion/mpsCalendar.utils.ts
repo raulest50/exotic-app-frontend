@@ -12,7 +12,7 @@ export interface CalendarInsights {
 }
 
 export type MpsDropTarget =
-    | { type: "day"; categoriaId: number | null; dayIndex: number }
+    | { type: "day"; rowKey: string; dayIndex: number }
     | { type: "unscheduled" };
 
 export function formatNumber(value: number): string {
@@ -52,8 +52,8 @@ export function getEstadoLabel(estado: string): string {
     }
 }
 
-export function getDayDroppableId(categoriaId: number | null, dayIndex: number): string {
-    return `day::${categoriaId ?? "null"}::${dayIndex}`;
+export function getDayDroppableId(rowKey: string, dayIndex: number): string {
+    return `day::${encodeURIComponent(rowKey)}::${dayIndex}`;
 }
 
 export function getUnscheduledDroppableId(): string {
@@ -68,14 +68,14 @@ export function parseDropTarget(id: string | null | undefined): MpsDropTarget | 
         return { type: "unscheduled" };
     }
 
-    const [type, categoriaIdToken, dayIndexToken] = id.split("::");
+    const [type, rowKeyToken, dayIndexToken] = id.split("::");
     if (type !== "day") {
         return null;
     }
 
     return {
         type: "day",
-        categoriaId: categoriaIdToken === "null" ? null : Number(categoriaIdToken),
+        rowKey: decodeURIComponent(rowKeyToken),
         dayIndex: Number(dayIndexToken),
     };
 }
@@ -128,16 +128,17 @@ export function moveBlockOnCalendar(
     }
 
     const { block, source } = extraction;
+    const blockRowKey = getBlockRowKey(block);
 
     if (target.type === "day") {
-        if (block.categoriaId !== target.categoriaId) {
+        if (blockRowKey !== target.rowKey) {
             return calendar;
         }
-        if (source.type === "day" && source.dayIndex === target.dayIndex && source.categoriaId === target.categoriaId) {
+        if (source.type === "day" && source.dayIndex === target.dayIndex && source.rowKey === target.rowKey) {
             return calendar;
         }
 
-        const row = nextCalendar.rows.find((item) => item.categoriaId === target.categoriaId);
+        const row = nextCalendar.rows.find((item) => item.rowKey === target.rowKey);
         const cell = row?.days.find((item) => item.dayIndex === target.dayIndex);
         if (!row || !cell) {
             return calendar;
@@ -160,7 +161,7 @@ export function moveBlockOnCalendar(
 
 function extractBlock(calendar: PropuestaMpsSemanalCalendarDTO, blockId: string): {
     block: PropuestaMpsCalendarBlockDTO | PropuestaMpsUnscheduledBlockDTO;
-    source: { type: "day"; categoriaId: number | null; dayIndex: number } | { type: "unscheduled" };
+    source: { type: "day"; rowKey: string; dayIndex: number } | { type: "unscheduled" };
 } | null {
     for (const row of calendar.rows) {
         for (const cell of row.days) {
@@ -169,7 +170,7 @@ function extractBlock(calendar: PropuestaMpsSemanalCalendarDTO, blockId: string)
                 const [block] = cell.blocks.splice(blockIndex, 1);
                 return {
                     block,
-                    source: { type: "day", categoriaId: row.categoriaId, dayIndex: cell.dayIndex },
+                    source: { type: "day", rowKey: row.rowKey, dayIndex: cell.dayIndex },
                 };
             }
         }
@@ -196,11 +197,23 @@ function stripReason(
         productoNombre: block.productoNombre,
         categoriaId: block.categoriaId,
         categoriaNombre: block.categoriaNombre,
+        poolCapacidadId: block.poolCapacidadId,
+        poolCapacidadNombre: block.poolCapacidadNombre,
         loteSize: block.loteSize,
         lotesAsignados: block.lotesAsignados,
         cantidadAsignada: block.cantidadAsignada,
         warning: block.warning,
     };
+}
+
+function getBlockRowKey(block: PropuestaMpsCalendarBlockDTO | PropuestaMpsUnscheduledBlockDTO): string {
+    if (block.poolCapacidadId !== null && block.poolCapacidadId !== undefined) {
+        return `pool::${block.poolCapacidadId}`;
+    }
+    if (block.categoriaId !== null && block.categoriaId !== undefined) {
+        return `categoria::${block.categoriaId}`;
+    }
+    return "sin-categoria";
 }
 
 function withReason(
