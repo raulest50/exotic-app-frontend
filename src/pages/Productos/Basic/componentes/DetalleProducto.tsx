@@ -15,7 +15,7 @@ import {
     Flex, Box, Heading, Text, Button, VStack, HStack, 
     Grid, GridItem, Card, CardHeader, CardBody, 
     FormControl, FormHelperText, Select, Input, Textarea,
-    useToast, useDisclosure,
+    useToast, useDisclosure, Badge,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import {Material, Producto, ProductoBasicUpdatePayload} from "../../types.tsx";
@@ -399,6 +399,12 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                 <Box>
                                     <Text fontWeight="bold">Tipo de Producto:</Text>
                                     <Text>{getTipoProductoText(producto.tipo_producto)}</Text>
+                                </Box>
+                                <Box>
+                                    <Text fontWeight="bold">Inventariable:</Text>
+                                    <Badge colorScheme={productoData.inventareable === false ? "gray" : "blue"}>
+                                        {productoData.inventareable === false ? "No" : "Sí"}
+                                    </Badge>
                                 </Box>
                                 {isMaterial && (
                                     <Box>
