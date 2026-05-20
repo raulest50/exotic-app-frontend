@@ -1,11 +1,15 @@
-import React, { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import axios from "axios";
 import EndPointsURL from "../api/EndPointsURL";
 
-interface MasterDirective {
+export interface MasterDirective {
+    id: number;
     nombre: string;
+    resumen: string;
     valor: string;
     tipoDato: "TEXTO" | "NUMERO" | "DECIMAL" | "BOOLEANO" | "FECHA" | "JSON";
+    grupo?: string;
+    ayuda?: string;
 }
 
 interface DTOAllMasterDirectives {
@@ -14,51 +18,104 @@ interface DTOAllMasterDirectives {
 
 type MasterDirectivesMap = Record<string, unknown>;
 
-const MasterDirectivesContext = createContext<MasterDirectivesMap>({});
+interface MasterDirectivesContextValue extends MasterDirectivesMap {
+    directives: MasterDirectivesMap;
+    rawDirectives: MasterDirective[];
+    loading: boolean;
+    refreshDirectives: () => Promise<void>;
+    getNumberDirective: (nombre: string, fallback: number) => number;
+}
+
+const defaultContext: MasterDirectivesContextValue = {
+    directives: {},
+    rawDirectives: [],
+    loading: true,
+    refreshDirectives: async () => {},
+    getNumberDirective: (_nombre: string, fallback: number) => fallback,
+};
+
+const MasterDirectivesContext = createContext<MasterDirectivesContextValue>(defaultContext);
+
+function parseDirectiveValue(md: MasterDirective): unknown {
+    switch (md.tipoDato) {
+        case "BOOLEANO":
+            return md.valor === "true";
+        case "NUMERO": {
+            const parsed = Number(md.valor);
+            return Number.isInteger(parsed) ? parsed : md.valor;
+        }
+        case "DECIMAL": {
+            const parsed = Number(md.valor);
+            return Number.isFinite(parsed) ? parsed : md.valor;
+        }
+        case "JSON":
+            try {
+                return JSON.parse(md.valor);
+            } catch {
+                return md.valor;
+            }
+        default:
+            return md.valor;
+    }
+}
 
 export function MasterDirectivesProvider({ children }: { children: ReactNode }) {
     const [directives, setDirectives] = useState<MasterDirectivesMap>({});
+    const [rawDirectives, setRawDirectives] = useState<MasterDirective[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
     const endPoints = useMemo(() => new EndPointsURL(), []);
 
-    useEffect(() => {
-        const fetchDirectives = async () => {
-            try {
-                const res = await axios.get<DTOAllMasterDirectives>(endPoints.get_master_directives);
-                const map: MasterDirectivesMap = {};
-                res.data.masterDirectives.forEach(md => {
-                    let value: unknown = md.valor;
-                    switch (md.tipoDato) {
-                        case "BOOLEANO":
-                            value = md.valor === "true";
-                            break;
-                        case "NUMERO":
-                            value = parseInt(md.valor, 10);
-                            break;
-                        case "DECIMAL":
-                            value = parseFloat(md.valor);
-                            break;
-                        case "JSON":
-                            try {
-                                value = JSON.parse(md.valor);
-                            } catch {
-                                value = md.valor;
-                            }
-                            break;
-                        default:
-                            value = md.valor;
-                    }
-                    map[md.nombre] = value;
-                });
-                setDirectives(map);
-            } catch (error) {
-                console.error("Error fetching master directives", error);
-            }
-        };
-        fetchDirectives();
+    const refreshDirectives = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await axios.get<DTOAllMasterDirectives>(endPoints.get_master_directives);
+            const list = res.data.masterDirectives ?? [];
+            const map: MasterDirectivesMap = {};
+            list.forEach(md => {
+                map[md.nombre] = parseDirectiveValue(md);
+            });
+            setRawDirectives(list);
+            setDirectives(map);
+        } catch (error) {
+            console.error("Error fetching master directives", error);
+            setRawDirectives([]);
+            setDirectives({});
+        } finally {
+            setLoading(false);
+        }
     }, [endPoints]);
 
+    useEffect(() => {
+        refreshDirectives();
+    }, [refreshDirectives]);
+
+    const getNumberDirective = useCallback((nombre: string, fallback: number) => {
+        const value = directives[nombre];
+        if (typeof value === "number" && Number.isInteger(value) && value >= 1) {
+            return value;
+        }
+
+        if (typeof value === "string") {
+            const parsed = Number(value);
+            if (Number.isInteger(parsed) && parsed >= 1) {
+                return parsed;
+            }
+        }
+
+        return fallback;
+    }, [directives]);
+
+    const contextValue = useMemo<MasterDirectivesContextValue>(() => ({
+        ...directives,
+        directives,
+        rawDirectives,
+        loading,
+        refreshDirectives,
+        getNumberDirective,
+    }), [directives, rawDirectives, loading, refreshDirectives, getNumberDirective]);
+
     return (
-        <MasterDirectivesContext.Provider value={directives}>
+        <MasterDirectivesContext.Provider value={contextValue}>
             {children}
         </MasterDirectivesContext.Provider>
     );
@@ -67,4 +124,3 @@ export function MasterDirectivesProvider({ children }: { children: ReactNode }) 
 export function useMasterDirectives() {
     return useContext(MasterDirectivesContext);
 }
-

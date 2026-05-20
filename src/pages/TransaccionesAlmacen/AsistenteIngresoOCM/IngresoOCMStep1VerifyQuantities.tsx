@@ -21,7 +21,7 @@ import {
     HStack,
 } from "@chakra-ui/react";
 import { useEffect, useState, useMemo } from "react";
-import { OrdenCompra, ItemOrdenCompra, IngresoOCM_DTA, TipoEntidadCausante, Movimiento, TransaccionAlmacen, ConsolidadoOCMResponse } from "../types";
+import { OrdenCompra, IngresoOCM_DTA, TipoEntidadCausante, Movimiento, TransaccionAlmacen, ConsolidadoOCMResponse } from "../types";
 import { CardIngresoMaterial } from "./componentes/CardIngresoMaterial";
 import { ListaTransaccionesAlmacen } from "./StepTwoComponent_IngOCM/ListaTransaccionesAlmacen";
 import { ListaMaterialesIngresoDesgloce } from "./StepTwoComponent_IngOCM/ListaMaterialesIngresoDesgloce";
@@ -29,6 +29,10 @@ import { CerrarOrdenDialog } from "./StepTwoComponent_IngOCM/CerrarOrdenDialog";
 import { useDisclosure } from "@chakra-ui/react";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
+import { useMasterDirectives } from "../../../context/MasterDirectivesContext";
+
+const LIMITE_RECEPCIONES_PARCIALES_OCM = "LIMITE_RECEPCIONES_PARCIALES_OCM";
+const DEFAULT_LIMITE_RECEPCIONES_PARCIALES_OCM = 2;
 
 interface StepOneComponentProps {
     setActiveStep: (step: number) => void;
@@ -43,6 +47,7 @@ export default function IngresoOCMStep1VerifyQuantities({
 }: StepOneComponentProps) {
     const toast = useToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
+    const { getNumberDirective } = useMasterDirectives();
     const { isOpen: isDialogOpen, onOpen: onDialogOpen, onClose: onDialogClose } = useDisclosure();
 
     // Token management
@@ -62,8 +67,11 @@ export default function IngresoOCMStep1VerifyQuantities({
     // Cantidades ya recibidas por productoId (de recepciones previas)
     const [recibidoPorProducto, setRecibidoPorProducto] = useState<Map<string, number>>(new Map());
 
-    const MAX_RECEPCIONES = 2;
-    const limiteRecepcionesAlcanzado = transacciones.length >= MAX_RECEPCIONES;
+    const limiteRecepcionesParciales = getNumberDirective(
+        LIMITE_RECEPCIONES_PARCIALES_OCM,
+        DEFAULT_LIMITE_RECEPCIONES_PARCIALES_OCM
+    );
+    const limiteRecepcionesAlcanzado = transacciones.length >= limiteRecepcionesParciales;
 
     // Consultar transacciones y consolidado cuando cambia la orden
     useEffect(() => {
@@ -138,7 +146,7 @@ export default function IngresoOCMStep1VerifyQuantities({
         if (orden?.itemsOrdenCompra) {
             const initialMovimientos: {[key: number]: Movimiento[]} = {};
             const initialExcluidos: {[key: number]: boolean} = {};
-            orden.itemsOrdenCompra.forEach((item, index) => {
+            orden.itemsOrdenCompra.forEach((_, index) => {
                 initialMovimientos[index] = [];
                 initialExcluidos[index] = false;
             });
@@ -188,7 +196,7 @@ export default function IngresoOCMStep1VerifyQuantities({
             }
 
             const item = orden.itemsOrdenCompra[index];
-            const yaRecibido = recibidoPorProducto.get(item.material.productoId) ?? 0;
+            const yaRecibido = recibidoPorProducto.get(String(item.material.productoId)) ?? 0;
             const maxPermitido = item.cantidad - yaRecibido;
             const totalCantidad = movimientos.reduce((sum, mov) => sum + mov.cantidad, 0);
             if (totalCantidad <= 0 || totalCantidad > maxPermitido + 0.01) {
@@ -315,7 +323,7 @@ export default function IngresoOCMStep1VerifyQuantities({
                         </AlertTitle>
                         <AlertDescription fontSize="md">
                             Esta orden de compra ya tiene {transacciones.length} recepciones registradas.
-                            No se permiten mas de {MAX_RECEPCIONES} recepciones parciales por orden de compra.
+                            No se permiten mas de {limiteRecepcionesParciales} recepciones parciales por orden de compra.
                             Puede cerrar la orden si ya se recibieron todos los materiales necesarios.
                         </AlertDescription>
                     </Alert>
@@ -369,7 +377,7 @@ export default function IngresoOCMStep1VerifyQuantities({
                                     onMovimientosChange={(movimientos) => handleMovimientosChange(idx, movimientos)}
                                     onExcludedChange={(excluded) => handleExcludedChange(idx, excluded)}
                                     isExcluded={materialesExcluidos[idx] || false}
-                                    cantidadYaRecibida={recibidoPorProducto.get(item.material.productoId) ?? 0}
+                                    cantidadYaRecibida={recibidoPorProducto.get(String(item.material.productoId)) ?? 0}
                                 />
                             ))}
                         </Tbody>
