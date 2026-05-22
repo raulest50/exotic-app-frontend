@@ -463,12 +463,13 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                         <Badge colorScheme={isInventareable ? "blue" : "gray"}>
                                             {isInventareable ? "Sí" : "No"}
                                         </Badge>
-                                        {canEdit && isMaterial && !editMode && (
+                                        {canEdit && isMaterial && editMode && (
                                             <Button
                                                 size="xs"
                                                 variant="outline"
                                                 colorScheme={isInventareable ? "gray" : "blue"}
                                                 onClick={onInventareableOpen}
+                                                isDisabled={hasChanges || isUpdatingInventareable}
                                                 isLoading={isUpdatingInventareable}
                                             >
                                                 Cambiar estado
