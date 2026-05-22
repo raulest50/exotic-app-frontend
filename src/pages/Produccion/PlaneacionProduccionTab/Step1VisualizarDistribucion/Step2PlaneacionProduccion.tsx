@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
     closestCenter,
@@ -18,11 +18,14 @@ import {
     Input,
     Spinner,
     Text,
+    useToast,
     VStack,
 } from "@chakra-ui/react";
 import {
     CalcularDistribucionVentas,
+    GuardarBorradorMpsSemanal,
     GenerarPropuestaMpsSemanal,
+    type MpsSemanalDraftDTO,
     type PropuestaMpsCalendarBlockDTO,
     type PropuestaMpsSemanalCalendarDTO,
     type PropuestaMpsSemanalDTO,
@@ -45,6 +48,9 @@ interface Step2PlaneacionProduccionProps {
     rawData: TerminadoConVentas[];
     necesidades: Record<string, number>;
     setActiveStep: (step: number) => void;
+    currentDraft: MpsSemanalDraftDTO | null;
+    openedPersistedDraft: boolean;
+    onDraftSaved: (draft: MpsSemanalDraftDTO) => void;
 }
 
 function formatLocalDate(date: Date): string {
@@ -95,13 +101,18 @@ export default function Step2PlaneacionProduccion({
     rawData,
     necesidades,
     setActiveStep,
+    currentDraft,
+    openedPersistedDraft,
+    onDraftSaved,
 }: Step2PlaneacionProduccionProps) {
     const [weekStartDate, setWeekStartDate] = useState<string>(getCurrentWeekMonday());
     const [isLoading, setIsLoading] = useState(false);
+    const [isSavingDraft, setIsSavingDraft] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [propuesta, setPropuesta] = useState<PropuestaMpsSemanalDTO | null>(null);
     const [editableCalendar, setEditableCalendar] = useState<PropuestaMpsSemanalCalendarDTO | null>(null);
     const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
+    const toast = useToast();
 
     const weekEndDate = useMemo(() => addDays(weekStartDate, 5), [weekStartDate]);
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -129,6 +140,24 @@ export default function Step2PlaneacionProduccion({
         () => editableCalendar ? (findBlockById(editableCalendar, activeBlockId) as PropuestaMpsCalendarBlockDTO | null) : null,
         [activeBlockId, editableCalendar],
     );
+
+    useEffect(() => {
+        if (!currentDraft) {
+            return;
+        }
+
+        setWeekStartDate(currentDraft.weekStartDate);
+        setPropuesta({
+            weekStartDate: currentDraft.weekStartDate,
+            weekEndDate: currentDraft.weekEndDate,
+            summary: currentDraft.summary,
+            items: currentDraft.items,
+            calendar: currentDraft.calendar,
+        });
+        setEditableCalendar(currentDraft.calendar);
+        setError(null);
+        setActiveBlockId(null);
+    }, [currentDraft]);
 
     const handleGenerarPropuesta = async () => {
         if (!isMonday(weekStartDate)) {
@@ -167,6 +196,43 @@ export default function Step2PlaneacionProduccion({
         }
     };
 
+    const handleGuardarBorrador = async () => {
+        if (!propuesta || !editableCalendar) {
+            return;
+        }
+
+        setIsSavingDraft(true);
+        try {
+            const savedDraft = await GuardarBorradorMpsSemanal({
+                weekStartDate,
+                summary: propuesta.summary,
+                items: propuesta.items,
+                calendar: editableCalendar,
+            });
+            onDraftSaved(savedDraft);
+            toast({
+                title: "Borrador guardado",
+                description: `MPS #${savedDraft.mpsId} guardado para la semana ${savedDraft.weekStartDate}.`,
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+        } catch (err) {
+            const errorMessage = axios.isAxiosError(err)
+                ? (err.response?.data?.error ?? err.message)
+                : (err instanceof Error ? err.message : String(err));
+            toast({
+                title: "No se pudo guardar el borrador",
+                description: errorMessage,
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setIsSavingDraft(false);
+        }
+    };
+
     const handleDragEnd = (event: DragEndEvent) => {
         setActiveBlockId(null);
         const blockId = String(event.active.id);
@@ -186,6 +252,13 @@ export default function Step2PlaneacionProduccion({
                         Esta pantalla genera una propuesta semanal por dias. Puede reorganizar bloques dentro de la misma unidad de capacidad.
                     </Text>
 
+                    {currentDraft && (
+                        <Text fontSize="sm" color="gray.600">
+                            Borrador activo: MPS #{currentDraft.mpsId} - Estado {currentDraft.estado}
+                            {currentDraft.fechaActualizacion && ` - Actualizado ${currentDraft.fechaActualizacion}`}
+                        </Text>
+                    )}
+
                     <Flex gap={4} align="end" wrap="wrap">
                         <FormControl maxW="220px">
                             <FormLabel>Semana inicio (lunes)</FormLabel>
@@ -193,6 +266,7 @@ export default function Step2PlaneacionProduccion({
                                 type="date"
                                 value={weekStartDate}
                                 onChange={(e) => setWeekStartDate(e.target.value)}
+                                isDisabled={currentDraft !== null}
                             />
                         </FormControl>
 
@@ -201,27 +275,41 @@ export default function Step2PlaneacionProduccion({
                             <Input value={weekEndDate} isReadOnly bg="gray.50" />
                         </FormControl>
 
+                        {!openedPersistedDraft && (
+                            <Button
+                                colorScheme="teal"
+                                onClick={handleGenerarPropuesta}
+                                isLoading={isLoading}
+                                isDisabled={itemsConNecesidad.length === 0}
+                            >
+                                Generar propuesta semanal
+                            </Button>
+                        )}
+
                         <Button
-                            colorScheme="teal"
-                            onClick={handleGenerarPropuesta}
-                            isLoading={isLoading}
-                            isDisabled={itemsConNecesidad.length === 0}
+                            colorScheme="blue"
+                            variant="outline"
+                            onClick={handleGuardarBorrador}
+                            isLoading={isSavingDraft}
+                            isDisabled={!propuesta || !editableCalendar}
                         >
-                            Generar propuesta semanal
+                            Guardar borrador
                         </Button>
 
-                        <Button variant="outline" onClick={() => setActiveStep(1)}>
-                            Volver a necesidades
-                        </Button>
+                        {!openedPersistedDraft && (
+                            <Button variant="outline" onClick={() => setActiveStep(1)}>
+                                Volver a necesidades
+                            </Button>
+                        )}
                     </Flex>
 
-                    {!isMonday(weekStartDate) && (
+                    {!currentDraft && !isMonday(weekStartDate) && (
                         <Text color="orange.500">
                             Seleccione un lunes como inicio de la semana de planeacion.
                         </Text>
                     )}
 
-                    {itemsConNecesidad.length === 0 && (
+                    {!openedPersistedDraft && itemsConNecesidad.length === 0 && (
                         <Text color="orange.500">
                             No hay productos con necesidad manual mayor a cero. Regrese al paso anterior y ajuste necesidades.
                         </Text>

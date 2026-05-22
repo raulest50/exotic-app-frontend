@@ -181,6 +181,10 @@ export interface ProductoBasicUpdatePayload {
     categoriaId?: number;
 }
 
+export interface ProductoInventareableUpdatePayload {
+    inventareable: boolean;
+}
+
 export interface ProductoManufacturingInsumoDTO {
     insumoId?: number;
     productoId: string;

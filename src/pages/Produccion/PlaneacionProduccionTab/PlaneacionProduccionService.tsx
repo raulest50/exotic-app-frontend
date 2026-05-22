@@ -186,6 +186,20 @@ export interface PropuestaMpsSemanalDTO {
     calendar: PropuestaMpsSemanalCalendarDTO;
 }
 
+export interface GuardarMpsSemanalDraftRequestDTO {
+    weekStartDate: string;
+    summary: PropuestaMpsSemanalSummaryDTO;
+    items: PropuestaMpsSemanalItemDTO[];
+    calendar: PropuestaMpsSemanalCalendarDTO;
+}
+
+export interface MpsSemanalDraftDTO extends PropuestaMpsSemanalDTO {
+    mpsId: number;
+    estado: "BORRADOR" | "APROBADO" | "CERRADO";
+    fechaCreacion: string;
+    fechaActualizacion: string | null;
+}
+
 interface ProcesamientoInformeCache {
     fileKey: string | null;
     promise: Promise<ProcesamientoInformeDetallado> | null;
@@ -535,6 +549,30 @@ export async function GenerarPropuestaMpsSemanal(
     const response = await axios.post<PropuestaMpsSemanalDTO>(
         endPoints.planeacion_propuesta_mps_semanal,
         payload,
+    );
+    return response.data;
+}
+
+export async function GuardarBorradorMpsSemanal(
+    payload: GuardarMpsSemanalDraftRequestDTO,
+): Promise<MpsSemanalDraftDTO> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.post<MpsSemanalDraftDTO>(
+        endPoints.planeacion_mps_semanal_borrador,
+        payload,
+    );
+    return response.data;
+}
+
+export async function ObtenerBorradorMpsSemanal(
+    weekStartDate: string,
+): Promise<MpsSemanalDraftDTO> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.get<MpsSemanalDraftDTO>(
+        endPoints.planeacion_mps_semanal_borrador,
+        {
+            params: { weekStartDate },
+        },
     );
     return response.data;
 }

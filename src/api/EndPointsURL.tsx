@@ -7,6 +7,7 @@ export default class EndPointsURL{
     public save_producto:string;
     public update_producto:string;
     public update_producto_basic:string;
+    public update_producto_inventareable:string;
     public create_producto_manufacturing: string;
     public get_producto_manufacturing: string;
     public update_producto_manufacturing: string;
@@ -262,6 +263,7 @@ export default class EndPointsURL{
     public planeacion_debug_excel_structure: string;
     public planeacion_debug_asociacion_terminados: string;
     public planeacion_propuesta_mps_semanal: string;
+    public planeacion_mps_semanal_borrador: string;
 
     // seguimiento orden area endpoints
     public seguimiento_mis_ordenes_pendientes: string;
@@ -419,6 +421,7 @@ export default class EndPointsURL{
         this.save_producto = `${domain}/${productos_res}/save`;
         this.update_producto = `${domain}/${productos_res}/{productoId}`;
         this.update_producto_basic = `${domain}/${productos_res}/{productoId}/basic`;
+        this.update_producto_inventareable = `${domain}/${productos_res}/{productoId}/inventareable`;
         this.create_producto_manufacturing = `${domain}/${productos_res}/manufacturing`;
         this.get_producto_manufacturing = `${domain}/${productos_res}/manufacturing/{productoId}`;
         this.update_producto_manufacturing = `${domain}/${productos_res}/manufacturing/{productoId}`;
@@ -668,6 +671,7 @@ export default class EndPointsURL{
         this.planeacion_debug_excel_structure = `${domain}/${planeacion_produccion_res}/debug/excel-structure`;
         this.planeacion_debug_asociacion_terminados = `${domain}/${planeacion_produccion_res}/debug/asociacion-terminados`;
         this.planeacion_propuesta_mps_semanal = `${domain}/${planeacion_produccion_res}/propuesta-mps-semanal`;
+        this.planeacion_mps_semanal_borrador = `${domain}/${planeacion_produccion_res}/mps-semanal/borrador`;
 
         // Seguimiento orden area endpoints
         const seguimiento_orden_area_res = 'api/seguimiento-orden-area';
