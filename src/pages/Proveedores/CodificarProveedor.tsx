@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     Container,
     FormControl,
@@ -9,17 +9,28 @@ import {
     useToast,
     Select,
     Box,
+    Card,
+    CardBody,
+    CardHeader,
     Grid,
     GridItem,
+    Heading,
     Icon,
     VStack,
     Checkbox,
     CheckboxGroup,
+    FormHelperText,
 } from "@chakra-ui/react";
 import axios, { AxiosError } from 'axios';
 import EndPointsURL from "../../api/EndPointsURL.tsx";
 import { Proveedor, Contacto } from './types';
 import { departamentosColombia } from "../../data/colombiaData.tsx";
+import { useMasterDirectives } from "../../context/MasterDirectivesContext";
+import {
+    LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT,
+    MASTER_DIRECTIVE_KEYS,
+    TOPE_GLOBAL_RECEPCIONES_OCM_DEFAULT,
+} from "../../context/masterDirectiveConstants";
 
 import { FaFileCircleQuestion, FaFileCircleCheck } from "react-icons/fa6";
 
@@ -43,6 +54,9 @@ function CodificarProveedor() {
     const [observacion, setObservacion] = useState('');
     // New state for condición de pago (e.g., "credito" or "contado")
     const [condicionPago, setCondicionPago] = useState('0');
+    const [limiteRecepcionesParcialesOcm, setLimiteRecepcionesParcialesOcm] = useState(
+        String(LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT)
+    );
 
     // Categories state (as integer array); default no category selected.
     const [categorias, setCategorias] = useState<number[]>([]);
@@ -61,6 +75,42 @@ function CodificarProveedor() {
     const camaraInputRef = useRef<HTMLInputElement>(null);
 
     const toast = useToast();
+    const { getNumberDirective } = useMasterDirectives();
+    const limiteRecepcionesParcialesOcmMax = getNumberDirective(
+        MASTER_DIRECTIVE_KEYS.LIMITE_RECEPCIONES_PARCIALES_OCM,
+        TOPE_GLOBAL_RECEPCIONES_OCM_DEFAULT
+    );
+
+    const parseLimiteRecepcionesParcialesOcm = (): number | undefined => {
+        const trimmed = limiteRecepcionesParcialesOcm.trim();
+        return trimmed ? Number(trimmed) : undefined;
+    };
+
+    const handleLimiteRecepcionesParcialesOcmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.trim();
+
+        if (!value) {
+            setLimiteRecepcionesParcialesOcm('');
+            return;
+        }
+
+        if (!/^\d+$/.test(value)) {
+            return;
+        }
+
+        const parsed = Number(value);
+        if (parsed < 1 || parsed > limiteRecepcionesParcialesOcmMax) {
+            return;
+        }
+
+        setLimiteRecepcionesParcialesOcm(value);
+    };
+
+    const blockInvalidLimiteRecepcionesKeys = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (['-', '+', '.', ',', 'e', 'E'].includes(e.key)) {
+            e.preventDefault();
+        }
+    };
 
     // Validation function: returns true only if all data is valid.
     const datosProveedorValidos = (): boolean => {
@@ -111,6 +161,47 @@ function CodificarProveedor() {
             toast({
                 title: 'Condición de pago requerida',
                 description: 'Seleccione una condición de pago.',
+                status: 'warning',
+                duration: 5000,
+                isClosable: true,
+            });
+            return false;
+        }
+        const limiteProveedor = parseLimiteRecepcionesParcialesOcm();
+        if (!limiteRecepcionesParcialesOcm.trim()) {
+            toast({
+                title: 'Limite de recepciones requerido',
+                description: 'El limite de recepciones parciales OCM del proveedor es obligatorio.',
+                status: 'warning',
+                duration: 5000,
+                isClosable: true,
+            });
+            return false;
+        }
+        if (limiteRecepcionesParcialesOcm.trim() && !/^\d+$/.test(limiteRecepcionesParcialesOcm.trim())) {
+            toast({
+                title: 'Limite de recepciones invalido',
+                description: 'El limite de recepciones parciales OCM debe ser un numero entero positivo.',
+                status: 'warning',
+                duration: 5000,
+                isClosable: true,
+            });
+            return false;
+        }
+        if (limiteProveedor != null && limiteProveedor < 1) {
+            toast({
+                title: 'Limite de recepciones invalido',
+                description: 'El limite de recepciones parciales OCM debe ser mayor o igual a 1.',
+                status: 'warning',
+                duration: 5000,
+                isClosable: true,
+            });
+            return false;
+        }
+        if (limiteProveedor != null && limiteProveedor > limiteRecepcionesParcialesOcmMax) {
+            toast({
+                title: 'Limite de recepciones invalido',
+                description: `El limite del proveedor no puede superar el tope global ${limiteRecepcionesParcialesOcmMax}.`,
                 status: 'warning',
                 duration: 5000,
                 isClosable: true,
@@ -295,6 +386,7 @@ function CodificarProveedor() {
             observacion,
             categorias,
             condicionPago,
+            limiteRecepcionesParcialesOcm: parseLimiteRecepcionesParcialesOcm() ?? LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT,
             // Files will be sent via FormData
         };
 
@@ -339,16 +431,25 @@ function CodificarProveedor() {
             setObservacion('');
             setCategorias([]);
             setCondicionPago('');
+            setLimiteRecepcionesParcialesOcm(String(LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT));
             setContactos([{ fullName: '', cargo: '', cel: '', email: '' }]);
             setRutFile(null);
             setCamaraFile(null);
         } catch (error) {
-            const err = error as AxiosError;
+            const err = error as AxiosError<{ error?: string }>;
             console.error('Error al registrar el proveedor:', error);
             if (err.response && err.response.status === 409) {
                 toast({
                     title: 'Error al registrar',
                     description: 'Ya existe un proveedor con el NIT proporcionado.',
+                    status: 'error',
+                    duration: 5000,
+                    isClosable: true,
+                });
+            } else if (err.response && err.response.status === 400) {
+                toast({
+                    title: 'Error de validacion',
+                    description: err.response.data?.error ?? 'Revise los datos del proveedor.',
                     status: 'error',
                     duration: 5000,
                     isClosable: true,
@@ -604,6 +705,31 @@ function CodificarProveedor() {
                         </FormControl>
                     </GridItem>
                 </Grid>
+
+                <Card mt={6} variant="outline" boxShadow="base">
+                    <CardHeader>
+                        <Heading size="sm">Recepciones parciales OCM</Heading>
+                    </CardHeader>
+                    <CardBody>
+                        <FormControl isRequired>
+                            <FormLabel>Limite recepciones parciales permitidas</FormLabel>
+                            <Input
+                                type="number"
+                                inputMode="numeric"
+                                min={1}
+                                max={limiteRecepcionesParcialesOcmMax}
+                                step={1}
+                                value={limiteRecepcionesParcialesOcm}
+                                onChange={handleLimiteRecepcionesParcialesOcmChange}
+                                onKeyDown={blockInvalidLimiteRecepcionesKeys}
+                                placeholder={`Maximo configurable: ${limiteRecepcionesParcialesOcmMax}`}
+                            />
+                            <FormHelperText>
+                                Maximo permitido al configurar proveedor: {limiteRecepcionesParcialesOcmMax}.
+                            </FormHelperText>
+                        </FormControl>
+                    </CardBody>
+                </Card>
 
                 {/* New Grid for File Uploads */}
                 <Grid templateColumns={['1fr', 'repeat(2, 1fr)']} gap={4} mt={6} p="1em" boxShadow="base">

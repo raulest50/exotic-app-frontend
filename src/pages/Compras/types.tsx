@@ -17,6 +17,7 @@ export interface Proveedor {
     observacion?: string;
     categorias:number[];
     condicionPago: string;
+    limiteRecepcionesParcialesOcm?: number;
     rutFile?: File;         // Optional file for RUT
     camaraFile?: File;      // Optional file for Cámara y Comercio
 }

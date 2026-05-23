@@ -29,10 +29,7 @@ import { CerrarOrdenDialog } from "./StepTwoComponent_IngOCM/CerrarOrdenDialog";
 import { useDisclosure } from "@chakra-ui/react";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
-import { useMasterDirectives } from "../../../context/MasterDirectivesContext";
-
-const LIMITE_RECEPCIONES_PARCIALES_OCM = "LIMITE_RECEPCIONES_PARCIALES_OCM";
-const DEFAULT_LIMITE_RECEPCIONES_PARCIALES_OCM = 2;
+import { LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT } from "../../../context/masterDirectiveConstants";
 
 interface StepOneComponentProps {
     setActiveStep: (step: number) => void;
@@ -47,7 +44,6 @@ export default function IngresoOCMStep1VerifyQuantities({
 }: StepOneComponentProps) {
     const toast = useToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
-    const { getNumberDirective } = useMasterDirectives();
     const { isOpen: isDialogOpen, onOpen: onDialogOpen, onClose: onDialogClose } = useDisclosure();
 
     // Token management
@@ -67,10 +63,22 @@ export default function IngresoOCMStep1VerifyQuantities({
     // Cantidades ya recibidas por productoId (de recepciones previas)
     const [recibidoPorProducto, setRecibidoPorProducto] = useState<Map<string, number>>(new Map());
 
-    const limiteRecepcionesParciales = getNumberDirective(
-        LIMITE_RECEPCIONES_PARCIALES_OCM,
-        DEFAULT_LIMITE_RECEPCIONES_PARCIALES_OCM
-    );
+    const limiteRecepcionesParciales = useMemo(() => {
+        const limiteBackend = orden?.limiteRecepcionesParcialesEfectivo;
+        if (typeof limiteBackend === "number" && Number.isInteger(limiteBackend) && limiteBackend >= 1) {
+            return limiteBackend;
+        }
+
+        const limiteProveedor = orden?.proveedor?.limiteRecepcionesParcialesOcm;
+        if (typeof limiteProveedor === "number" && Number.isInteger(limiteProveedor) && limiteProveedor >= 1) {
+            return limiteProveedor;
+        }
+
+        return LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT;
+    }, [
+        orden?.limiteRecepcionesParcialesEfectivo,
+        orden?.proveedor?.limiteRecepcionesParcialesOcm,
+    ]);
     const limiteRecepcionesAlcanzado = transacciones.length >= limiteRecepcionesParciales;
 
     // Consultar transacciones y consolidado cuando cambia la orden
@@ -323,7 +331,7 @@ export default function IngresoOCMStep1VerifyQuantities({
                         </AlertTitle>
                         <AlertDescription fontSize="md">
                             Esta orden de compra ya tiene {transacciones.length} recepciones registradas.
-                            No se permiten mas de {limiteRecepcionesParciales} recepciones parciales por orden de compra.
+                            El limite efectivo para esta OCM es de {limiteRecepcionesParciales} recepciones parciales.
                             Puede cerrar la orden si ya se recibieron todos los materiales necesarios.
                         </AlertDescription>
                     </Alert>

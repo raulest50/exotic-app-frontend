@@ -264,6 +264,11 @@ export default class EndPointsURL{
     public planeacion_debug_asociacion_terminados: string;
     public planeacion_propuesta_mps_semanal: string;
     public planeacion_mps_semanal_borrador: string;
+    public planeacion_mps_semanal: string;
+    public planeacion_mps_semanal_list: string;
+    public planeacion_mps_semanal_aprobar: string;
+    public planeacion_mps_semanal_generar_odps: string;
+    public planeacion_mps_semanal_odps: string;
 
     // seguimiento orden area endpoints
     public seguimiento_mis_ordenes_pendientes: string;
@@ -672,6 +677,11 @@ export default class EndPointsURL{
         this.planeacion_debug_asociacion_terminados = `${domain}/${planeacion_produccion_res}/debug/asociacion-terminados`;
         this.planeacion_propuesta_mps_semanal = `${domain}/${planeacion_produccion_res}/propuesta-mps-semanal`;
         this.planeacion_mps_semanal_borrador = `${domain}/${planeacion_produccion_res}/mps-semanal/borrador`;
+        this.planeacion_mps_semanal = `${domain}/${planeacion_produccion_res}/mps-semanal`;
+        this.planeacion_mps_semanal_list = `${domain}/${planeacion_produccion_res}/mps-semanal/list`;
+        this.planeacion_mps_semanal_aprobar = `${domain}/${planeacion_produccion_res}/mps-semanal/aprobar`;
+        this.planeacion_mps_semanal_generar_odps = `${domain}/${planeacion_produccion_res}/mps-semanal/generar-odps`;
+        this.planeacion_mps_semanal_odps = `${domain}/${planeacion_produccion_res}/mps-semanal/odps`;
 
         // Seguimiento orden area endpoints
         const seguimiento_orden_area_res = 'api/seguimiento-orden-area';

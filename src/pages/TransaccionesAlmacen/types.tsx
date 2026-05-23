@@ -17,6 +17,7 @@ export interface Proveedor {
     observacion?: string;
     categorias:number[];
     condicionPago: string;
+    limiteRecepcionesParcialesOcm?: number;
     rutFile?: File;         // Optional file for RUT
     camaraFile?: File;      // Optional file for Cámara y Comercio
 }
@@ -123,6 +124,11 @@ export interface OrdenCompra {
      * @see StepZeroComponent_v2.tsx - Componente que usa este campo
      */
     porcentajeRecibido?: number;
+    /**
+     * Limite efectivo de recepciones parciales para esta OCM.
+     * Lo calcula backend desde el limite operativo propio del proveedor.
+     */
+    limiteRecepcionesParcialesEfectivo?: number | null;
 }
 
 

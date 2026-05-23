@@ -13,7 +13,8 @@ import {
     Textarea,
     FormControl, 
     FormLabel,
-    Badge
+    Badge,
+    useToast
 } from "@chakra-ui/react";
 import { FaCheckCircle } from "react-icons/fa";
 import {useState} from "react";
@@ -35,6 +36,7 @@ export default function IngresoOCMStep3ReviewSubmit({
 
     const [observaciones, setObservaciones] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const toast = useToast();
 
     const onClickEnviar = async () => {
         if (!docIngresoDTA || !docIngresoDTA.file) {
@@ -66,7 +68,7 @@ export default function IngresoOCMStep3ReviewSubmit({
         formData.append("file", file);
 
         try {
-            const response = await axios.post(endpoints.save_doc_ingreso_oc, formData, {
+            await axios.post(endpoints.save_doc_ingreso_oc, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
@@ -74,8 +76,24 @@ export default function IngresoOCMStep3ReviewSubmit({
 //             console.log("DocIngreso created successfully:", response.data);
             // Optionally, proceed to the next step or update UI accordingly.
             setActiveStep(4);
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Error creating DocIngreso:", error);
+            const isConflict = axios.isAxiosError(error) && error.response?.status === 409;
+            const responseData = axios.isAxiosError(error) ? error.response?.data : undefined;
+            const backendMessage = typeof responseData === "string"
+                ? responseData
+                : typeof responseData === "object" && responseData !== null
+                    ? (responseData as { message?: string; error?: string }).message
+                        ?? (responseData as { message?: string; error?: string }).error
+                    : undefined;
+
+            toast({
+                title: isConflict ? "Limite de recepciones alcanzado" : "Error al registrar ingreso",
+                description: backendMessage || "No se pudo registrar el ingreso de materiales.",
+                status: "error",
+                duration: 6000,
+                isClosable: true,
+            });
         } finally {
             // Desactivar el estado de carga independientemente del resultado
             setIsLoading(false);

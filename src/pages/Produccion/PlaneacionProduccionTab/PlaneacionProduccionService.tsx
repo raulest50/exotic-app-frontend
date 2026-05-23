@@ -198,6 +198,60 @@ export interface MpsSemanalDraftDTO extends PropuestaMpsSemanalDTO {
     estado: "BORRADOR" | "APROBADO" | "CERRADO";
     fechaCreacion: string;
     fechaActualizacion: string | null;
+    fechaAprobacion: string | null;
+    aprobadoPorUsername: string | null;
+    fechaGeneracionOdps: string | null;
+    generadoPorUsername: string | null;
+}
+
+export interface MpsSemanalListItemDTO {
+    mpsId: number;
+    estado: "BORRADOR" | "APROBADO" | "CERRADO";
+    fechaCreacion: string;
+    fechaActualizacion: string | null;
+    fechaAprobacion: string | null;
+    aprobadoPorUsername: string | null;
+    fechaGeneracionOdps: string | null;
+    generadoPorUsername: string | null;
+    weekStartDate: string;
+    weekEndDate: string;
+    summary: PropuestaMpsSemanalSummaryDTO;
+    totalOrdenesEsperadas: number;
+    totalOrdenesGeneradas: number;
+    odpsGeneradasCompletas: boolean;
+    totalBloquesNoProgramados: number;
+    totalLotesNoProgramados: number;
+    totalUnidadesNoProgramadas: number;
+}
+
+export interface AprobarMpsSemanalRequestDTO {
+    weekStartDate: string;
+}
+
+export interface GenerarOdpDesdeMpsRequestDTO {
+    weekStartDate: string;
+}
+
+export interface GenerarOdpDesdeMpsResponseDTO {
+    mpsId: number;
+    weekStartDate: string;
+    totalBloquesProgramados: number;
+    totalLotesProgramados: number;
+    totalOrdenesCreadas: number;
+    ordenesIds: number[];
+}
+
+export interface MpsSemanalOrdenProduccionListItemDTO {
+    ordenId: number;
+    productoId: string | null;
+    productoNombre: string | null;
+    loteAsignado: string | null;
+    cantidadProducir: number;
+    fechaLanzamiento: string | null;
+    fechaFinalPlanificada: string | null;
+    estadoOrden: number;
+    mpsBlockId: string | null;
+    mpsLoteOrdinal: number | null;
 }
 
 interface ProcesamientoInformeCache {
@@ -570,6 +624,67 @@ export async function ObtenerBorradorMpsSemanal(
     const endPoints = new EndPointsURL();
     const response = await axios.get<MpsSemanalDraftDTO>(
         endPoints.planeacion_mps_semanal_borrador,
+        {
+            params: { weekStartDate },
+        },
+    );
+    return response.data;
+}
+
+export async function ObtenerMpsSemanal(
+    weekStartDate: string,
+): Promise<MpsSemanalDraftDTO> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.get<MpsSemanalDraftDTO>(
+        endPoints.planeacion_mps_semanal,
+        {
+            params: { weekStartDate },
+        },
+    );
+    return response.data;
+}
+
+export async function ListarMpsSemanales(
+    estado?: MpsSemanalDraftDTO["estado"],
+): Promise<MpsSemanalListItemDTO[]> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.get<MpsSemanalListItemDTO[]>(
+        endPoints.planeacion_mps_semanal_list,
+        {
+            params: estado ? { estado } : undefined,
+        },
+    );
+    return response.data;
+}
+
+export async function AprobarMpsSemanal(
+    payload: AprobarMpsSemanalRequestDTO,
+): Promise<MpsSemanalDraftDTO> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.post<MpsSemanalDraftDTO>(
+        endPoints.planeacion_mps_semanal_aprobar,
+        payload,
+    );
+    return response.data;
+}
+
+export async function GenerarOdpDesdeMps(
+    payload: GenerarOdpDesdeMpsRequestDTO,
+): Promise<GenerarOdpDesdeMpsResponseDTO> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.post<GenerarOdpDesdeMpsResponseDTO>(
+        endPoints.planeacion_mps_semanal_generar_odps,
+        payload,
+    );
+    return response.data;
+}
+
+export async function ObtenerOdpsDesdeMpsSemanal(
+    weekStartDate: string,
+): Promise<MpsSemanalOrdenProduccionListItemDTO[]> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.get<MpsSemanalOrdenProduccionListItemDTO[]>(
+        endPoints.planeacion_mps_semanal_odps,
         {
             params: { weekStartDate },
         },

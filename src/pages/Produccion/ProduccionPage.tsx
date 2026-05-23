@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { Box, Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 
 import MyHeader from "../../components/MyHeader.tsx";
@@ -13,8 +14,15 @@ import HistorialOrdenesTab from "./HistorialOrdenesTab/HistorialOrdenesTab.tsx";
 import MonitorearAreasOperativasTab from "./MonitorearAreasOperativasTab.tsx";
 import { PlaneacionProduccionTab } from "./PlaneacionProduccionTab/PlaneacionProduccionTab.tsx";
 
+export interface OpenMpsWeekRequest {
+    weekStartDate: string;
+    token: number;
+}
+
 export default function ProduccionPage() {
     const access = useAccessSnapshot();
+    const [tabIndex, setTabIndex] = useState(0);
+    const [openMpsWeekRequest, setOpenMpsWeekRequest] = useState<OpenMpsWeekRequest | null>(null);
 
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
         {
@@ -38,7 +46,7 @@ export default function ProduccionPage() {
         {
             key: "planeacion",
             label: "Planeacion Produccion",
-            render: () => <PlaneacionProduccionTab />,
+            render: () => <PlaneacionProduccionTab externalOpenRequest={openMpsWeekRequest} />,
             accesoValido: tabAccessRule(Modulo.PRODUCCION, "PLANEACION_PRODUCCION", 1),
         },
         {
@@ -50,18 +58,34 @@ export default function ProduccionPage() {
         {
             key: "aprobacion-mps-week",
             label: "Aprobacion MPS Week",
-            render: () => <AprobacionMPSWeekTab />,
+            render: () => (
+                <AprobacionMPSWeekTab
+                    onOpenMpsWeek={(weekStartDate) => {
+                        const planeacionTabIndex = visibleTabs.findIndex((tab) => tab.key === "planeacion");
+                        setOpenMpsWeekRequest((previous) => ({
+                            weekStartDate,
+                            token: (previous?.token ?? 0) + 1,
+                        }));
+                        if (planeacionTabIndex >= 0) {
+                            setTabIndex(planeacionTabIndex);
+                        }
+                    }}
+                />
+            ),
             accesoValido: tabAccessRule(Modulo.PRODUCCION, "APROBACION_MPS_WEEK", 1),
         },
     ];
 
     const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));
+    const safeTabIndex = useMemo(() => (
+        tabIndex >= 0 && tabIndex < visibleTabs.length ? tabIndex : 0
+    ), [tabIndex, visibleTabs.length]);
 
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w={"full"} h={"full"}>
             <MyHeader title={"Produccion"} />
 
-            <Tabs>
+            <Tabs index={safeTabIndex} onChange={setTabIndex}>
                 <TabList>
                     {visibleTabs.map((tab) => (
                         <Tab key={tab.key} sx={my_style_tab}>

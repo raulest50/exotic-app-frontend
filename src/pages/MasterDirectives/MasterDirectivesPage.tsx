@@ -24,6 +24,7 @@ import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
 import MyHeader from "../../components/MyHeader";
 import { MasterDirective, useMasterDirectives } from "../../context/MasterDirectivesContext";
+import { MASTER_DIRECTIVE_KEYS } from "../../context/masterDirectiveConstants";
 
 interface SuperMasterConfig {
     id: number;
@@ -273,6 +274,11 @@ export default function MasterDirectivesPage() {
                                             <Text fontSize="sm" color="gray.500">
                                                 {directive.resumen}
                                             </Text>
+                                            {directive.nombre === MASTER_DIRECTIVE_KEYS.LIMITE_RECEPCIONES_PARCIALES_OCM && (
+                                                <Text fontSize="xs" color="orange.600" mt={1}>
+                                                    Este tope solo valida cambios futuros en proveedores. No modifica limites ya configurados ni valida ingresos OCM directamente.
+                                                </Text>
+                                            )}
                                         </Td>
                                         <Td>
                                             <HStack align="flex-start">

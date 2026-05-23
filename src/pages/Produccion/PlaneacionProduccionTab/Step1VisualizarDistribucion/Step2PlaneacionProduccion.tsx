@@ -113,6 +113,7 @@ export default function Step2PlaneacionProduccion({
     const [editableCalendar, setEditableCalendar] = useState<PropuestaMpsSemanalCalendarDTO | null>(null);
     const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
     const toast = useToast();
+    const isReadOnly = currentDraft !== null && currentDraft.estado !== "BORRADOR";
 
     const weekEndDate = useMemo(() => addDays(weekStartDate, 5), [weekStartDate]);
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -197,7 +198,7 @@ export default function Step2PlaneacionProduccion({
     };
 
     const handleGuardarBorrador = async () => {
-        if (!propuesta || !editableCalendar) {
+        if (!propuesta || !editableCalendar || isReadOnly) {
             return;
         }
 
@@ -235,6 +236,9 @@ export default function Step2PlaneacionProduccion({
 
     const handleDragEnd = (event: DragEndEvent) => {
         setActiveBlockId(null);
+        if (isReadOnly) {
+            return;
+        }
         const blockId = String(event.active.id);
         const target = parseDropTarget(event.over?.id ? String(event.over.id) : null);
         if (!editableCalendar || !target) {
@@ -249,13 +253,21 @@ export default function Step2PlaneacionProduccion({
                 <VStack align="stretch" spacing={3}>
                     <Text fontSize="lg" fontWeight="bold">Propuesta semanal de MPS</Text>
                     <Text color="gray.600">
-                        Esta pantalla genera una propuesta semanal por dias. Puede reorganizar bloques dentro de la misma unidad de capacidad.
+                        Esta pantalla genera una propuesta semanal por dias. Puede reorganizar bloques dentro de la misma unidad de capacidad mientras la semana permanezca en BORRADOR.
                     </Text>
 
                     {currentDraft && (
                         <Text fontSize="sm" color="gray.600">
-                            Borrador activo: MPS #{currentDraft.mpsId} - Estado {currentDraft.estado}
+                            Semana activa: MPS #{currentDraft.mpsId} - Estado {currentDraft.estado}
                             {currentDraft.fechaActualizacion && ` - Actualizado ${currentDraft.fechaActualizacion}`}
+                            {currentDraft.fechaAprobacion && ` - Aprobado ${currentDraft.fechaAprobacion}`}
+                            {currentDraft.aprobadoPorUsername && ` por ${currentDraft.aprobadoPorUsername}`}
+                        </Text>
+                    )}
+
+                    {isReadOnly && (
+                        <Text color="blue.600" fontSize="sm">
+                            Esta semana ya fue aprobada. El calendario se muestra en modo solo lectura.
                         </Text>
                     )}
 
@@ -291,7 +303,7 @@ export default function Step2PlaneacionProduccion({
                             variant="outline"
                             onClick={handleGuardarBorrador}
                             isLoading={isSavingDraft}
-                            isDisabled={!propuesta || !editableCalendar}
+                            isDisabled={!propuesta || !editableCalendar || isReadOnly}
                         >
                             Guardar borrador
                         </Button>
@@ -334,14 +346,18 @@ export default function Step2PlaneacionProduccion({
                 <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
-                    onDragStart={(event) => setActiveBlockId(String(event.active.id))}
+                    onDragStart={(event) => {
+                        if (!isReadOnly) {
+                            setActiveBlockId(String(event.active.id));
+                        }
+                    }}
                     onDragEnd={handleDragEnd}
                     onDragCancel={() => setActiveBlockId(null)}
                 >
                     <VStack align="stretch" spacing={4}>
                         <MpsSummaryCards summary={propuesta.summary} insights={insights} />
-                        <MpsWeeklyCalendar calendar={editableCalendar} />
-                        <MpsUnscheduledPanel items={editableCalendar.unscheduled} />
+                        <MpsWeeklyCalendar calendar={editableCalendar} isReadOnly={isReadOnly} />
+                        <MpsUnscheduledPanel items={editableCalendar.unscheduled} isReadOnly={isReadOnly} />
                         <MpsDetailTable items={propuesta.items} />
                     </VStack>
                     <DragOverlay>

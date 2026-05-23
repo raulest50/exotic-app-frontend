@@ -2,7 +2,7 @@ import {
     Flex, Box, Heading, Text, Button, VStack, HStack, 
     Grid, GridItem, Card, CardHeader, CardBody, 
     FormControl, FormLabel, Select, Input, Icon,
-    useToast
+    useToast, FormHelperText
 } from '@chakra-ui/react';
 import { useState, useEffect, useRef } from 'react';
 import { Proveedor, Contacto } from "../types.tsx";
@@ -12,6 +12,12 @@ import axios from 'axios';
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
 import { useModuleAccessLevel } from '../../../auth/usePermissions';
+import { useMasterDirectives } from '../../../context/MasterDirectivesContext';
+import {
+    LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT,
+    MASTER_DIRECTIVE_KEYS,
+    TOPE_GLOBAL_RECEPCIONES_OCM_DEFAULT,
+} from '../../../context/masterDirectiveConstants';
 
 type Props = {
     proveedor: Proveedor;
@@ -27,6 +33,9 @@ type Props = {
 export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado, refreshSearch}: Props) {
     const [editMode, setEditMode] = useState(false);
     const [proveedorData, setProveedorData] = useState<Proveedor>({...proveedor});
+    const [limiteRecepcionesParcialesOcmInput, setLimiteRecepcionesParcialesOcmInput] = useState(
+        proveedor.limiteRecepcionesParcialesOcm?.toString() ?? String(LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT)
+    );
     const [rutFile, setRutFile] = useState<File | null>(null);
     const [camaraFile, setCamaraFile] = useState<File | null>(null);
     const [isFormValid, setIsFormValid] = useState<boolean>(true);
@@ -36,10 +45,24 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
     const toast = useToast();
     const endPoints = new EndPointsURL();
     const { nivel: proveedoresAccessLevel } = useModuleAccessLevel(Modulo.PROVEEDORES);
+    const { getNumberDirective } = useMasterDirectives();
+    const limiteRecepcionesParcialesOcmMax = getNumberDirective(
+        MASTER_DIRECTIVE_KEYS.LIMITE_RECEPCIONES_PARCIALES_OCM,
+        TOPE_GLOBAL_RECEPCIONES_OCM_DEFAULT
+    );
+
+    const parseLimiteRecepcionesParcialesOcm = (): number | undefined => {
+        const trimmed = limiteRecepcionesParcialesOcmInput.trim();
+        return trimmed ? Number(trimmed) : undefined;
+    };
 
     // Inicializar un contacto vacío si el proveedor no tiene contactos
     useEffect(() => {
         // Si el proveedor no tiene contactos o contactos es undefined, inicializar con un contacto vacío
+        setLimiteRecepcionesParcialesOcmInput(
+            proveedor.limiteRecepcionesParcialesOcm?.toString() ?? String(LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT)
+        );
+
         if (!proveedor.contactos || proveedor.contactos.length === 0) {
             setProveedorData({
                 ...proveedor,
@@ -188,6 +211,59 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
             return false;
         }
 
+        const limiteProveedor = parseLimiteRecepcionesParcialesOcm();
+        const limiteProveedorOriginal =
+            proveedor.limiteRecepcionesParcialesOcm ?? LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT;
+        const limiteProveedorCambio = limiteProveedor !== limiteProveedorOriginal;
+        if (!limiteRecepcionesParcialesOcmInput.trim()) {
+            if (showToast) {
+                toast({
+                    title: "Validacion fallida",
+                    description: "El limite de recepciones parciales OCM del proveedor es obligatorio.",
+                    status: "warning",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+            return false;
+        }
+        if (limiteRecepcionesParcialesOcmInput.trim() && !/^\d+$/.test(limiteRecepcionesParcialesOcmInput.trim())) {
+            if (showToast) {
+                toast({
+                    title: "Validacion fallida",
+                    description: "El limite de recepciones parciales OCM debe ser un numero entero positivo.",
+                    status: "warning",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+            return false;
+        }
+        if (limiteProveedor != null && limiteProveedor < 1) {
+            if (showToast) {
+                toast({
+                    title: "Validacion fallida",
+                    description: "El limite de recepciones parciales OCM debe ser mayor o igual a 1.",
+                    status: "warning",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+            return false;
+        }
+        if (limiteProveedor != null && limiteProveedorCambio && limiteProveedor > limiteRecepcionesParcialesOcmMax) {
+            if (showToast) {
+                toast({
+                    title: "Validacion fallida",
+                    description: `Al cambiarlo, el limite de recepciones parciales OCM no puede superar el tope global ${limiteRecepcionesParcialesOcmMax}.`,
+                    status: "warning",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+            return false;
+        }
+
         // Validar contactos
         const phoneRegex = /^\+?\d{7,}$/;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -249,6 +325,11 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
             return true;
         }
 
+        if ((parseLimiteRecepcionesParcialesOcm() ?? null) !==
+            (proveedor.limiteRecepcionesParcialesOcm ?? null)) {
+            return true;
+        }
+
         // Verificar cambios en contactos
         if (proveedorData.contactos.length !== (proveedor.contactos?.length || 0)) {
             return true;
@@ -283,7 +364,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
             const hasDataChanges = checkForChanges();
             setHasChanges(hasDataChanges);
         }
-    }, [proveedorData, editMode, rutFile, camaraFile]);
+    }, [proveedorData, limiteRecepcionesParcialesOcmInput, editMode, rutFile, camaraFile]);
 
     // Guardar cambios
     const handleSaveChanges = async () => {
@@ -293,10 +374,14 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
 
         try {
             // Crear FormData para enviar archivos
+            const proveedorPayload: Proveedor = {
+                ...proveedorData,
+            limiteRecepcionesParcialesOcm: parseLimiteRecepcionesParcialesOcm() ?? LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT,
+            };
             const formData = new FormData();
             formData.append(
                 "proveedor",
-                new Blob([JSON.stringify(proveedorData)], { type: "application/json" })
+                new Blob([JSON.stringify(proveedorPayload)], { type: "application/json" })
             );
 
             if (rutFile) {
@@ -327,6 +412,9 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
 
             // Actualizar el proveedor en la vista local con los datos completos del servidor
             setProveedorData(response.data);
+            setLimiteRecepcionesParcialesOcmInput(
+                response.data.limiteRecepcionesParcialesOcm?.toString() ?? String(LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT)
+            );
 
             // Actualizar también el proveedor seleccionado para mantener la consistencia
             // cuando se regrese a la vista de lista
@@ -335,9 +423,12 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
             }
         } catch (error) {
             console.error('Error al actualizar el proveedor:', error);
+            const serverMessage = axios.isAxiosError(error)
+                ? (error.response?.data as { error?: string } | undefined)?.error
+                : undefined;
             toast({
                 title: 'Error al actualizar',
-                description: 'No se pudo actualizar la información del proveedor.',
+                description: serverMessage ?? 'No se pudo actualizar la informacion del proveedor.',
                 status: 'error',
                 duration: 5000,
                 isClosable: true,
@@ -401,6 +492,9 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                             onClick={() => {
                                 setEditMode(false);
                                 setProveedorData({...proveedor});
+                                setLimiteRecepcionesParcialesOcmInput(
+                                    proveedor.limiteRecepcionesParcialesOcm?.toString() ?? String(LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT)
+                                );
                                 setRutFile(null);
                                 setCamaraFile(null);
                             }}
@@ -467,6 +561,29 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                         </FormControl>
                                     ) : (
                                         <Text>{proveedor.condicionPago}</Text>
+                                    )}
+                                </Box>
+                                <Box>
+                                    <Text fontWeight="bold">Limite recepciones parciales OCM:</Text>
+                                    {editMode ? (
+                                        <FormControl mt={2} isRequired>
+                                            <Input
+                                                type="number"
+                                                min={1}
+                                                max={limiteRecepcionesParcialesOcmMax}
+                                                step={1}
+                                                value={limiteRecepcionesParcialesOcmInput}
+                                                onChange={(e) => setLimiteRecepcionesParcialesOcmInput(e.target.value)}
+                                                placeholder={`Maximo configurable: ${limiteRecepcionesParcialesOcmMax}`}
+                                            />
+                                            <FormHelperText>
+                                                Maximo permitido al cambiar este limite: {limiteRecepcionesParcialesOcmMax}.
+                                            </FormHelperText>
+                                        </FormControl>
+                                    ) : (
+                                        <Text>
+                                            Limite propio: {proveedor.limiteRecepcionesParcialesOcm ?? LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT}
+                                        </Text>
                                     )}
                                 </Box>
                             </VStack>

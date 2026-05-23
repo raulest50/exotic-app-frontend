@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {
     Box,
     Button,
@@ -19,11 +19,12 @@ import Step0CargarValidarExcel from "./Step0CargarValidarExcel/Step0CargarValida
 import Step1CalcularDistribucion from "./Step1CalcularDistribucion/Step1CalcularDistribucion.tsx";
 import Step2PlaneacionProduccion from "./Step1VisualizarDistribucion/Step2PlaneacionProduccion.tsx";
 import {
-    ObtenerBorradorMpsSemanal,
+    ObtenerMpsSemanal,
     type MpsSemanalDraftDTO,
     type TerminadoConVentas,
 } from "./PlaneacionProduccionService.tsx";
 import axios from "axios";
+import type { OpenMpsWeekRequest } from "../ProduccionPage.tsx";
 
 function formatLocalDate(date: Date): string {
     const year = date.getFullYear();
@@ -54,7 +55,11 @@ const steps = [
     { title: 'Tercero',  description: 'Planeación de Producción' },
 ];
 
-export const PlaneacionProduccionTab = () => {
+interface PlaneacionProduccionTabProps {
+    externalOpenRequest?: OpenMpsWeekRequest | null;
+}
+
+export const PlaneacionProduccionTab = ({ externalOpenRequest }: PlaneacionProduccionTabProps) => {
 
     const { activeStep, setActiveStep } = useSteps({
         index: 0,
@@ -68,26 +73,27 @@ export const PlaneacionProduccionTab = () => {
     const [currentDraft, setCurrentDraft] = useState<MpsSemanalDraftDTO | null>(null);
     const [openedPersistedDraft, setOpenedPersistedDraft] = useState(false);
     const [loadingDraft, setLoadingDraft] = useState(false);
+    const [lastExternalTokenHandled, setLastExternalTokenHandled] = useState<number | null>(null);
     const toast = useToast();
 
-    const handleOpenDraft = async () => {
+    const openPersistedWeek = async (weekStartDate: string, successTitle = "Semana cargada") => {
         setLoadingDraft(true);
         try {
-            const draft = await ObtenerBorradorMpsSemanal(draftWeekStartDate);
+            const draft = await ObtenerMpsSemanal(weekStartDate);
             setCurrentDraft(draft);
             setOpenedPersistedDraft(true);
             setActiveStep(2);
             toast({
-                title: "Borrador cargado",
-                description: `Se cargo el borrador MPS de la semana ${draft.weekStartDate}.`,
+                title: successTitle,
+                description: `Se cargo la semana MPS ${draft.weekStartDate} en estado ${draft.estado}.`,
                 status: "success",
                 duration: 3000,
                 isClosable: true,
             });
         } catch (error) {
             toast({
-                title: "No se pudo abrir el borrador",
-                description: getAxiosErrorMessage(error, "No fue posible cargar el borrador MPS."),
+                title: "No se pudo abrir la semana",
+                description: getAxiosErrorMessage(error, "No fue posible cargar la semana MPS seleccionada."),
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -95,6 +101,10 @@ export const PlaneacionProduccionTab = () => {
         } finally {
             setLoadingDraft(false);
         }
+    };
+
+    const handleOpenDraft = async () => {
+        await openPersistedWeek(draftWeekStartDate);
     };
 
     const handleNuevaPropuesta = () => {
@@ -106,13 +116,23 @@ export const PlaneacionProduccionTab = () => {
         setActiveStep(0);
     };
 
+    useEffect(() => {
+        if (!externalOpenRequest || externalOpenRequest.token === lastExternalTokenHandled) {
+            return;
+        }
+
+        setDraftWeekStartDate(externalOpenRequest.weekStartDate);
+        setLastExternalTokenHandled(externalOpenRequest.token);
+        void openPersistedWeek(externalOpenRequest.weekStartDate, "Semana abierta desde aprobacion");
+    }, [externalOpenRequest, lastExternalTokenHandled]);
+
     return (
         <Box w={'full'} h={'full'} minW={0}>
             <Flex direction={"column"} gap={4} w="full" minW={0}>
                 <Box p={4} borderWidth="1px" borderRadius="lg" bg="white">
                     <Flex align="end" gap={4} wrap="wrap">
                         <FormControl maxW="220px">
-                            <FormLabel>Abrir borrador semanal</FormLabel>
+                            <FormLabel>Abrir semana guardada</FormLabel>
                             <Input
                                 type="date"
                                 value={draftWeekStartDate}
@@ -124,7 +144,7 @@ export const PlaneacionProduccionTab = () => {
                             onClick={handleOpenDraft}
                             isLoading={loadingDraft}
                         >
-                            Abrir borrador
+                            Abrir semana
                         </Button>
                         {currentDraft && (
                             <Button variant="outline" onClick={handleNuevaPropuesta}>
@@ -134,7 +154,7 @@ export const PlaneacionProduccionTab = () => {
                     </Flex>
                     {currentDraft && (
                         <Text mt={3} fontSize="sm" color="gray.600">
-                            Borrador activo: MPS #{currentDraft.mpsId} - semana {currentDraft.weekStartDate}
+                            Semana activa: MPS #{currentDraft.mpsId} - semana {currentDraft.weekStartDate} - estado {currentDraft.estado}
                         </Text>
                     )}
                 </Box>
