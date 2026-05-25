@@ -82,6 +82,25 @@ function isMonday(dateString: string): boolean {
     return new Date(`${dateString}T00:00:00`).getDay() === 1;
 }
 
+function formatDateTimeLabel(value: string | null): string {
+    if (!value) {
+        return "-";
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+        return value;
+    }
+
+    return parsed.toLocaleString("es-CO", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+}
+
 function DragPreview({ block }: { block: PropuestaMpsCalendarBlockDTO | null }) {
     if (!block) {
         return null;
@@ -134,6 +153,16 @@ export default function Step2PlaneacionProduccion({
         () => editableCalendar
             ? computeCalendarInsights(editableCalendar)
             : { categoriasProgramadas: 0, categoriasConSobrecarga: 0, noProgramados: 0 },
+        [editableCalendar],
+    );
+
+    const totalOrdenesEsperadas = useMemo(
+        () => editableCalendar
+            ? editableCalendar.rows
+                .flatMap((row) => row.days)
+                .flatMap((day) => day.blocks)
+                .reduce((sum, block) => sum + Math.max(block.lotesAsignados, 0), 0)
+            : 0,
         [editableCalendar],
     );
 
@@ -259,15 +288,28 @@ export default function Step2PlaneacionProduccion({
                     {currentDraft && (
                         <Text fontSize="sm" color="gray.600">
                             Semana activa: MPS #{currentDraft.mpsId} - Estado {currentDraft.estado}
-                            {currentDraft.fechaActualizacion && ` - Actualizado ${currentDraft.fechaActualizacion}`}
-                            {currentDraft.fechaAprobacion && ` - Aprobado ${currentDraft.fechaAprobacion}`}
+                            {currentDraft.fechaActualizacion && ` - Actualizado ${formatDateTimeLabel(currentDraft.fechaActualizacion)}`}
+                            {currentDraft.fechaAprobacion && ` - Aprobado ${formatDateTimeLabel(currentDraft.fechaAprobacion)}`}
                             {currentDraft.aprobadoPorUsername && ` por ${currentDraft.aprobadoPorUsername}`}
+                        </Text>
+                    )}
+
+                    {currentDraft?.fechaGeneracionOdps && (
+                        <Text fontSize="sm" color="gray.600">
+                            ODPs generadas el {formatDateTimeLabel(currentDraft.fechaGeneracionOdps)}
+                            {currentDraft.generadoPorUsername ? ` por ${currentDraft.generadoPorUsername}` : ""}
                         </Text>
                     )}
 
                     {isReadOnly && (
                         <Text color="blue.600" fontSize="sm">
                             Esta semana ya fue aprobada. El calendario se muestra en modo solo lectura.
+                        </Text>
+                    )}
+
+                    {editableCalendar && totalOrdenesEsperadas === 0 && (
+                        <Text color="orange.600" fontSize="sm">
+                            Esta semana no tiene ODPs esperadas. Puede guardarse como borrador, pero no podrá aprobarse mientras permanezca vacía.
                         </Text>
                     )}
 

@@ -2,6 +2,7 @@ import {
     Box,
     Alert,
     AlertIcon,
+    Badge,
     Divider,
     FormControl,
     FormLabel,
@@ -66,6 +67,21 @@ const formatDateTimeValue = (value: string | null | undefined): string => {
     const hours12 = String(hours24 % 12 || 12).padStart(2, "0");
 
     return `${day}/${month}/${year}, ${hours12}:${minutes} ${period}`;
+};
+
+const getEstadoOrdenLabel = (estadoOrden: number): string => {
+    switch (estadoOrden) {
+        case -1:
+            return "Cancelada";
+        case 0:
+            return "Abierta";
+        case 2:
+            return "Terminada";
+        case 3:
+            return "Fabricacion completada";
+        default:
+            return `Estado ${estadoOrden}`;
+    }
 };
 
 export default function OrdenProduccionDialogDetalles({
@@ -186,19 +202,32 @@ export default function OrdenProduccionDialogDetalles({
                         <Box>
                             <Text fontWeight="bold">Fechas</Text>
                             <Text fontSize="sm">{"Fecha de creaci\u00F3n: "}{formatDateTimeValue(orden.fechaCreacion)}</Text>
-                            <Text fontSize="sm">Inicio: {formatValue(orden.fechaInicio)}</Text>
-                            <Text fontSize="sm">Lanzamiento: {formatValue(orden.fechaLanzamiento)}</Text>
-                            <Text fontSize="sm">Fin planificada: {formatValue(orden.fechaFinalPlanificada)}</Text>
+                            <Text fontSize="sm">Inicio: {formatDateTimeValue(orden.fechaInicio)}</Text>
+                            <Text fontSize="sm">Lanzamiento: {formatDateTimeValue(orden.fechaLanzamiento)}</Text>
+                            <Text fontSize="sm">Fin planificada: {formatDateTimeValue(orden.fechaFinalPlanificada)}</Text>
                         </Box>
 
                         <Box>
                             <Text fontWeight="bold">{"Informaci\u00F3n de Producci\u00F3n"}</Text>
                             <Text fontSize="sm">Cantidad a producir: {formatValue(orden.cantidadProducir)}</Text>
-                            <Text fontSize="sm">Estado: {formatValue(orden.estadoOrden)}</Text>
+                            <Text fontSize="sm">
+                                Estado: <Badge ml={1} colorScheme={orden.estadoOrden === 2 ? "green" : orden.estadoOrden === -1 ? "red" : orden.estadoOrden === 3 ? "blue" : "yellow"}>{getEstadoOrdenLabel(orden.estadoOrden)}</Badge>
+                            </Text>
                             <Text fontSize="sm">Pedido comercial: {formatValue(orden.numeroPedidoComercial)}</Text>
                             <Text fontSize="sm">{"\u00C1rea operativa: "}{formatValue(orden.areaOperativa)}</Text>
                             <Text fontSize="sm">Departamento operativo: {formatValue(orden.departamentoOperativo)}</Text>
                         </Box>
+
+                        {orden.origenOrden === "MPS" && (
+                            <Box>
+                                <Text fontWeight="bold">Origen del plan</Text>
+                                <Text fontSize="sm">Origen: MPS</Text>
+                                <Text fontSize="sm">MPS ID: {formatValue(orden.mpsId)}</Text>
+                                <Text fontSize="sm">Semana MPS: {formatValue(orden.mpsWeekStartDate)}</Text>
+                                <Text fontSize="sm">Block ID: {formatValue(orden.mpsBlockId)}</Text>
+                                <Text fontSize="sm">Lote ordinal: {formatValue(orden.mpsLoteOrdinal)}</Text>
+                            </Box>
+                        )}
 
                         <Box>
                             <Text fontWeight="bold">Observaciones</Text>

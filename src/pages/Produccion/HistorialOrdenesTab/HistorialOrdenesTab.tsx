@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import {
+    Badge,
     Button,
     Flex,
     Select,
@@ -92,7 +93,46 @@ const normalizeOrdenProduccion = (orden: any): OrdenProduccionDTO => {
         departamentoOperativo: toNullableString(orden?.departamentoOperativo),
         loteAsignado: toNullableString(orden?.loteAsignado),
         observaciones: toNullableString(orden?.observaciones),
+        origenOrden: (toNullableString(orden?.origenOrden) as "MANUAL" | "MPS" | null) ?? "MANUAL",
+        mpsId: toNullableNumber(orden?.mpsId),
+        mpsWeekStartDate: toNullableString(orden?.mpsWeekStartDate),
+        mpsBlockId: toNullableString(orden?.mpsBlockId),
+        mpsLoteOrdinal: toNullableNumber(orden?.mpsLoteOrdinal),
     };
+};
+
+const getEstadoOrdenLabel = (estadoOrden: number): string => {
+    switch (estadoOrden) {
+        case -1:
+            return "Cancelada";
+        case 0:
+            return "Abierta";
+        case 2:
+            return "Terminada";
+        case 3:
+            return "Fabricacion completada";
+        default:
+            return `Estado ${estadoOrden}`;
+    }
+};
+
+const getEstadoOrdenColorScheme = (estadoOrden: number): string => {
+    switch (estadoOrden) {
+        case -1:
+            return "red";
+        case 0:
+            return "yellow";
+        case 2:
+            return "green";
+        case 3:
+            return "blue";
+        default:
+            return "gray";
+    }
+};
+
+const getOrigenOrdenColorScheme = (origenOrden: OrdenProduccionDTO["origenOrden"]): string => {
+    return origenOrden === "MPS" ? "purple" : "gray";
 };
 
 interface ContextMenuState {
@@ -276,6 +316,7 @@ export default function HistorialOrdenesTab() {
                         <Tr>
                             <Th>Lote</Th>
                             <Th>Producto</Th>
+                            <Th>Origen</Th>
                             <Th>Fechas</Th>
                             <Th>Estado</Th>
                             <Th>Cantidad</Th>
@@ -301,11 +342,20 @@ export default function HistorialOrdenesTab() {
                                     )}
                                 </Td>
                                 <Td>
+                                    <Badge colorScheme={getOrigenOrdenColorScheme(orden.origenOrden)}>
+                                        {orden.origenOrden === "MPS" ? "MPS" : "Manual"}
+                                    </Badge>
+                                </Td>
+                                <Td>
                                     <Text fontSize="sm">Inicio: {orden.fechaInicio ?? "-"}</Text>
                                     <Text fontSize="sm">Lanzamiento: {orden.fechaLanzamiento ?? "-"}</Text>
                                     <Text fontSize="sm">Fin planificada: {orden.fechaFinalPlanificada ?? "-"}</Text>
                                 </Td>
-                                <Td>{orden.estadoOrden}</Td>
+                                <Td>
+                                    <Badge colorScheme={getEstadoOrdenColorScheme(orden.estadoOrden)}>
+                                        {getEstadoOrdenLabel(orden.estadoOrden)}
+                                    </Badge>
+                                </Td>
                                 <Td>{orden.cantidadProducir ?? "-"}</Td>
                                 <Td>{orden.numeroPedidoComercial ?? "-"}</Td>
 

@@ -61,11 +61,47 @@ function getEstadoColorScheme(estado: MpsSemanalListItemDTO["estado"]): string {
 }
 
 function SummaryLine({ label, value }: { label: string; value: number }) {
+    const formattedValue = Number.isInteger(value)
+        ? value.toLocaleString("es-CO")
+        : value.toLocaleString("es-CO", { maximumFractionDigits: 2 });
+
     return (
         <Text fontSize="sm" color="gray.600">
-            {label}: <Text as="span" fontWeight="semibold" color="gray.700">{value}</Text>
+            {label}: <Text as="span" fontWeight="semibold" color="gray.700">{formattedValue}</Text>
         </Text>
     );
+}
+
+function getEstadoLabel(estado: MpsSemanalListItemDTO["estado"]): string {
+    switch (estado) {
+        case "BORRADOR":
+            return "Borrador";
+        case "APROBADO":
+            return "Aprobada";
+        case "CERRADO":
+            return "Cerrada";
+        default:
+            return estado;
+    }
+}
+
+function formatDateTimeLabel(value: string | null): string {
+    if (!value) {
+        return "-";
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+        return value;
+    }
+
+    return parsed.toLocaleString("es-CO", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
 }
 
 function renderEstadoOrdenLabel(estadoOrden: number): string {
@@ -104,6 +140,7 @@ function WeekCard({
 }) {
     const canGenerateOdps = item.estado === "APROBADO" && !item.odpsGeneradasCompletas && item.totalOrdenesEsperadas > 0;
     const canViewOdps = item.totalOrdenesGeneradas > 0;
+    const canApprove = item.estado === "BORRADOR" && item.totalOrdenesEsperadas > 0;
 
     return (
         <Box borderWidth="1px" borderRadius="lg" bg="white" p={4} boxShadow="sm">
@@ -115,22 +152,22 @@ function WeekCard({
                             Hasta {item.weekEndDate}
                         </Text>
                     </Box>
-                    <Badge colorScheme={getEstadoColorScheme(item.estado)}>{item.estado}</Badge>
+                    <Badge colorScheme={getEstadoColorScheme(item.estado)}>{getEstadoLabel(item.estado)}</Badge>
                 </Flex>
 
                 <Box>
-                    <Text fontSize="sm" color="gray.600">Creado: {item.fechaCreacion}</Text>
+                    <Text fontSize="sm" color="gray.600">Creado: {formatDateTimeLabel(item.fechaCreacion)}</Text>
                     {item.fechaActualizacion && (
-                        <Text fontSize="sm" color="gray.600">Actualizado: {item.fechaActualizacion}</Text>
+                        <Text fontSize="sm" color="gray.600">Actualizado: {formatDateTimeLabel(item.fechaActualizacion)}</Text>
                     )}
                     {item.fechaAprobacion && (
-                        <Text fontSize="sm" color="gray.600">Aprobado: {item.fechaAprobacion}</Text>
+                        <Text fontSize="sm" color="gray.600">Aprobado: {formatDateTimeLabel(item.fechaAprobacion)}</Text>
                     )}
                     {item.aprobadoPorUsername && (
                         <Text fontSize="sm" color="gray.600">Aprobado por: {item.aprobadoPorUsername}</Text>
                     )}
                     {item.fechaGeneracionOdps && (
-                        <Text fontSize="sm" color="gray.600">ODPs generadas: {item.fechaGeneracionOdps}</Text>
+                        <Text fontSize="sm" color="gray.600">ODPs generadas: {formatDateTimeLabel(item.fechaGeneracionOdps)}</Text>
                     )}
                     {item.generadoPorUsername && (
                         <Text fontSize="sm" color="gray.600">Generadas por: {item.generadoPorUsername}</Text>
@@ -151,11 +188,21 @@ function WeekCard({
                     <SummaryLine label="ODPs esperadas" value={item.totalOrdenesEsperadas} />
                     <SummaryLine label="ODPs generadas" value={item.totalOrdenesGeneradas} />
                     {item.totalOrdenesEsperadas === 0 ? (
-                        <Badge colorScheme="gray">Sin ODPs requeridas</Badge>
+                        <Badge colorScheme="gray">Sin ODPs esperadas</Badge>
                     ) : item.odpsGeneradasCompletas ? (
                         <Badge colorScheme="green">ODPs generadas</Badge>
                     ) : (
                         <Badge colorScheme="orange">ODPs pendientes</Badge>
+                    )}
+                    {item.estado === "BORRADOR" && item.totalOrdenesEsperadas === 0 && (
+                        <Text mt={2} fontSize="sm" color="orange.600">
+                            No se puede aprobar una semana sin ODPs esperadas.
+                        </Text>
+                    )}
+                    {item.estado === "APROBADO" && item.totalOrdenesEsperadas === 0 && (
+                        <Text mt={2} fontSize="sm" color="orange.600">
+                            Semana aprobada sin ODPs esperadas. No admite generación de órdenes.
+                        </Text>
                     )}
                 </Box>
 
@@ -186,6 +233,7 @@ function WeekCard({
                             colorScheme="green"
                             onClick={onApprove}
                             isLoading={isApproving}
+                            isDisabled={!canApprove}
                         >
                             Aprobar
                         </Button>
@@ -422,7 +470,7 @@ export default function AprobacionMPSWeekTab({ onOpenMpsWeek }: AprobacionMPSWee
                                     )}
                                     {selectedWeekForOdps.fechaGeneracionOdps && (
                                         <Text fontSize="sm" color="gray.600">
-                                            Fecha de generacion: {selectedWeekForOdps.fechaGeneracionOdps}
+                                            Fecha de generacion: {formatDateTimeLabel(selectedWeekForOdps.fechaGeneracionOdps)}
                                         </Text>
                                     )}
                                 </Box>
@@ -466,8 +514,8 @@ export default function AprobacionMPSWeekTab({ onOpenMpsWeek }: AprobacionMPSWee
                                                         </Td>
                                                         <Td>{orden.loteAsignado ?? "-"}</Td>
                                                         <Td isNumeric>{orden.cantidadProducir}</Td>
-                                                        <Td>{orden.fechaLanzamiento ?? "-"}</Td>
-                                                        <Td>{orden.fechaFinalPlanificada ?? "-"}</Td>
+                                                        <Td>{formatDateTimeLabel(orden.fechaLanzamiento)}</Td>
+                                                        <Td>{formatDateTimeLabel(orden.fechaFinalPlanificada)}</Td>
                                                         <Td>{renderEstadoOrdenLabel(orden.estadoOrden)}</Td>
                                                         <Td>{orden.mpsBlockId ?? "-"}</Td>
                                                         <Td>{orden.mpsLoteOrdinal ?? "-"}</Td>
