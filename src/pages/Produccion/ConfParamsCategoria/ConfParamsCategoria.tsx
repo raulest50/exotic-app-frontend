@@ -18,6 +18,7 @@ import {
     Select,
     Spinner,
     Table,
+    TableContainer,
     Tbody,
     Td,
     Text,
@@ -379,33 +380,34 @@ export default function ConfParamsCategoria() {
             ) : (
                 <>
                     <Box borderWidth="1px" borderRadius="lg" overflow="hidden" mb={4}>
-                        <Table variant="simple">
-                            <Thead>
-                                <Tr>
-                                    <Th>ID</Th>
-                                    <Th>Nombre</Th>
-                                    <Th>Tamano de lote</Th>
-                                    <Th>Tiempo fabricacion (dias)</Th>
-                                    <Th>Pool capacidad</Th>
-                                    <Th>Capacidad efectiva</Th>
-                                    <Th>Ruta de Proceso</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
-                                {categorias.map((categoria) => {
-                                    const catId = categoria.categoriaId;
-                                    const loteFieldKey = buildFieldKey(catId, "loteSize");
-                                    const tiempoFieldKey = buildFieldKey(catId, "tiempoDiasFabricacion");
-                                    const poolFieldKey = buildFieldKey(catId, "poolCapacidadId");
+                        <TableContainer w="full" overflowX="auto">
+                            <Table variant="simple" size="sm" minW="1200px">
+                                <Thead>
+                                    <Tr>
+                                        <Th>ID</Th>
+                                        <Th>Nombre</Th>
+                                        <Th>Tamano de lote</Th>
+                                        <Th>Tiempo fabricacion (dias)</Th>
+                                        <Th>Pool capacidad</Th>
+                                        <Th>Capacidad efectiva</Th>
+                                        <Th>Ruta de Proceso</Th>
+                                    </Tr>
+                                </Thead>
+                                <Tbody>
+                                    {categorias.map((categoria) => {
+                                        const catId = categoria.categoriaId;
+                                        const loteFieldKey = buildFieldKey(catId, "loteSize");
+                                        const tiempoFieldKey = buildFieldKey(catId, "tiempoDiasFabricacion");
+                                        const poolFieldKey = buildFieldKey(catId, "poolCapacidadId");
 
-                                    const currentLote = editingLoteSize[catId] ?? categoria.loteSize ?? 0;
-                                    const currentTiempo = editingTiempoDiasFabricacion[catId] ?? categoria.tiempoDiasFabricacion ?? 0;
-                                    const currentPoolId = editingPoolCapacidadId[catId] ?? categoria.poolCapacidadId ?? null;
-                                    const originalPoolId = categoria.poolCapacidadId ?? null;
-                                    const selectedPool = pools.find((pool) => pool.id === currentPoolId) ?? null;
+                                        const currentLote = editingLoteSize[catId] ?? categoria.loteSize ?? 0;
+                                        const currentTiempo = editingTiempoDiasFabricacion[catId] ?? categoria.tiempoDiasFabricacion ?? 0;
+                                        const currentPoolId = editingPoolCapacidadId[catId] ?? categoria.poolCapacidadId ?? null;
+                                        const originalPoolId = categoria.poolCapacidadId ?? null;
+                                        const selectedPool = pools.find((pool) => pool.id === currentPoolId) ?? null;
 
-                                    return (
-                                        <Tr key={catId}>
+                                        return (
+                                            <Tr key={catId}>
                                             <Td>{catId}</Td>
                                             <Td>{categoria.categoriaNombre}</Td>
                                             <Td>
@@ -518,11 +520,12 @@ export default function ConfParamsCategoria() {
                                                     {rutasExistentes[catId] ? "Editar Ruta Proc" : "Crear Ruta Proc"}
                                                 </Button>
                                             </Td>
-                                        </Tr>
-                                    );
-                                })}
-                            </Tbody>
-                        </Table>
+                                            </Tr>
+                                        );
+                                    })}
+                                </Tbody>
+                            </Table>
+                        </TableContainer>
                     </Box>
                     {totalPages > 1 && (
                         <MyPagination
