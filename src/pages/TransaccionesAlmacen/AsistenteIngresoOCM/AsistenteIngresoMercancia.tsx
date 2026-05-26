@@ -3,13 +3,17 @@ import {
     Box,
     Container,
     Flex,
+    Step,
     StepDescription,
+    StepIcon,
+    StepIndicator,
     StepNumber,
     StepSeparator,
     StepStatus,
+    Stepper,
+    StepTitle,
     useSteps,
 } from "@chakra-ui/react";
-import {Step, StepIcon, StepIndicator, Stepper, StepTitle} from "@chakra-ui/icons";
 import {useState} from "react";
 import {IngresoOCM_DTA, OrdenCompra} from "../types";
 import IngresoOCMStep1VerifyQuantities from "./IngresoOCMStep1VerifyQuantities.tsx";
@@ -23,8 +27,9 @@ import IngresoOCMStep4Confirmation from "./IngresoOCMStep4Confirmation.tsx";
 const steps = [
     { title: 'Primero', description: 'Identificar Orden Compra' },
     { title: 'Segundo', description: 'Verificar Cantidades' },
-    { title: 'Tercero', description: 'Subir soporte y Enviar' },
-    { title: 'Cuarto', description: 'Finalizacion' },
+    { title: 'Tercero', description: 'Subir Soporte' },
+    { title: 'Cuarto', description: 'Revisar y Enviar' },
+    { title: 'Quinto', description: 'Finalizacion' },
 ]
 
 
@@ -39,31 +44,30 @@ export default function AsistenteIngresoMercancia() {
 
     const [ingresoOCM_DTA, setIngresoOCM_DTA] = useState<IngresoOCM_DTA | null>(null);
 
-    function ConditionalRenderStep() {
-        if (activeStep === 0) { // identificar la orden de compra
-            return(
-                <IngresoOCMStep0SelectPurchaseOrder setActiveStep={setActiveStep} setSelectedOrder={setSelectedOrder} />
-            );
-        }
-        if (activeStep === 1) { // verificar cantidades en el pedido
-            return(
-                <IngresoOCMStep1VerifyQuantities setActiveStep={setActiveStep} orden={selectedOrder} setIngresoOCM_DTA={setIngresoOCM_DTA} />
-            );
-        }
-        if (activeStep === 2) { // subir documento soporte
-            return(
-                <IngresoOCMStep2UploadDocument setActiveStep={setActiveStep} orden={selectedOrder} setIngresoOCM_DTA={setIngresoOCM_DTA}/>
-            );
-        }
-        if (activeStep === 3) { // verificar los datos y enviar a backend
-            return(
-                <IngresoOCMStep3ReviewSubmit setActiveStep={setActiveStep} docIngresoDTA={ingresoOCM_DTA} />
-            );
-        }
-        if (activeStep === 4){ // ventana de finalizacion, no se hace nada, solo notifica al usuario
-            return(
-                <IngresoOCMStep4Confirmation setActiveStep={setActiveStep}/>
-            );
+    function renderActiveStep() {
+        switch (activeStep) {
+            case 0:
+                return (
+                    <IngresoOCMStep0SelectPurchaseOrder setActiveStep={setActiveStep} setSelectedOrder={setSelectedOrder} />
+                );
+            case 1:
+                return (
+                    <IngresoOCMStep1VerifyQuantities setActiveStep={setActiveStep} orden={selectedOrder} setIngresoOCM_DTA={setIngresoOCM_DTA} />
+                );
+            case 2:
+                return (
+                    <IngresoOCMStep2UploadDocument setActiveStep={setActiveStep} orden={selectedOrder} setIngresoOCM_DTA={setIngresoOCM_DTA}/>
+                );
+            case 3:
+                return (
+                    <IngresoOCMStep3ReviewSubmit setActiveStep={setActiveStep} docIngresoDTA={ingresoOCM_DTA} />
+                );
+            case 4:
+                return (
+                    <IngresoOCMStep4Confirmation setActiveStep={setActiveStep}/>
+                );
+            default:
+                return null;
         }
     }
 
@@ -90,7 +94,7 @@ export default function AsistenteIngresoMercancia() {
                         </Step>
                     ))}
                 </Stepper>
-                <ConditionalRenderStep/>
+                {renderActiveStep()}
             </Flex>
 
         </Container>

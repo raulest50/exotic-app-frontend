@@ -190,6 +190,19 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                 }
                 return false;
             }
+            const prefijoValue = ((productoData as Material).prefijoLote ?? '').trim();
+            if (prefijoValue && !/^[A-Za-z0-9]+$/.test(prefijoValue)) {
+                if (showToast) {
+                    toast({
+                        title: "Validacion fallida",
+                        description: "El prefijo de lote solo puede contener letras y numeros.",
+                        status: "warning",
+                        duration: 3000,
+                        isClosable: true,
+                    });
+                }
+                return false;
+            }
         }
 
         return true;
@@ -220,6 +233,10 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
             const pr = Number(t);
             if (!isValidPuntoReorden(pr)) return true;
             if (pr !== orig) return true;
+
+            const prefijoActual = ((productoData as Material).prefijoLote ?? '').trim();
+            const prefijoOriginal = ((producto as Material).prefijoLote ?? '').trim();
+            if (prefijoActual !== prefijoOriginal) return true;
         }
 
         return false;
@@ -256,6 +273,8 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
             if (productoData.tipo_producto === 'M') {
                 payload.tipoMaterial = (productoData as Material).tipoMaterial;
                 payload.puntoReorden = puntoReorden;
+                const prefijoLote = ((productoData as Material).prefijoLote ?? '').trim();
+                payload.prefijoLote = prefijoLote ? prefijoLote.toUpperCase() : '';
             }
 
             const response = await axios.put(url, payload);
@@ -492,6 +511,24 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                             </FormControl>
                                         ) : (
                                             <Text>{getTipoMaterialText((producto as Material).tipoMaterial)}</Text>
+                                        )}
+                                    </Box>
+                                )}
+                                {isMaterial && (
+                                    <Box>
+                                        <Text fontWeight="bold">Prefijo de lote:</Text>
+                                        {editMode ? (
+                                            <FormControl mt={2}>
+                                                <Input
+                                                    value={(productoData as Material).prefijoLote ?? ''}
+                                                    onChange={(e) => handleInputChange('prefijoLote', e.target.value.toUpperCase())}
+                                                />
+                                                <FormHelperText fontSize="xs">
+                                                    Opcional para lotes internos de ingreso.
+                                                </FormHelperText>
+                                            </FormControl>
+                                        ) : (
+                                            <Text>{(producto as Material).prefijoLote || '-'}</Text>
                                         )}
                                     </Box>
                                 )}

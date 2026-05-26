@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import {
     Box,
     Flex,
@@ -14,42 +14,51 @@ import {
     useToast,
     Badge,
 } from '@chakra-ui/react';
-import axios from 'axios';
-import { ConsolidadoOCMResponse } from '../../types';
-import EndPointsURL from '../../../../api/EndPointsURL';
 
-interface ListaMaterialesIngresoDesgloceProps {
+import { ConsolidadoOCMResponse } from '../../types';
+import { ListaConsolidadoDataProps } from '../ingresoOcmTypes';
+import { fetchConsolidadoOcm } from '../ocmIngresoApi';
+
+interface ListaMaterialesIngresoDesgloceProps extends ListaConsolidadoDataProps {
     ordenCompraId: number | undefined;
 }
 
-export function ListaMaterialesIngresoDesgloce({ ordenCompraId }: ListaMaterialesIngresoDesgloceProps) {
-    const [consolidado, setConsolidado] = useState<ConsolidadoOCMResponse | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+export function ListaMaterialesIngresoDesgloce({
+    ordenCompraId,
+    consolidado: consolidadoProp,
+    loading: loadingProp,
+    error: errorProp,
+}: ListaMaterialesIngresoDesgloceProps) {
+    const [localConsolidado, setLocalConsolidado] = useState<ConsolidadoOCMResponse | null>(null);
+    const [localLoading, setLocalLoading] = useState(false);
+    const [localError, setLocalError] = useState<string | null>(null);
     const toast = useToast();
-    const endpoints = useMemo(() => new EndPointsURL(), []);
+    const usingExternalData = consolidadoProp !== undefined;
+    const consolidado = usingExternalData ? consolidadoProp : localConsolidado;
+    const loading = usingExternalData ? Boolean(loadingProp) : localLoading;
+    const error = usingExternalData ? errorProp ?? null : localError;
 
     useEffect(() => {
+        if (usingExternalData) {
+            return;
+        }
+
         if (!ordenCompraId) {
-            setConsolidado(null);
+            setLocalConsolidado(null);
             return;
         }
 
         const fetchConsolidado = async () => {
-            setLoading(true);
-            setError(null);
+            setLocalLoading(true);
+            setLocalError(null);
             try {
-                const url = endpoints.consolidado_materiales_ocm.replace('{ordenCompraId}', String(ordenCompraId));
-                const response = await axios.get<ConsolidadoOCMResponse>(url, {
-                    withCredentials: true
-                });
-                setConsolidado(response.data);
+                setLocalConsolidado(await fetchConsolidadoOcm(ordenCompraId));
             } catch (error: any) {
                 console.error('Error fetching consolidado:', error);
-                const errorMessage = error.response?.data?.message || 
-                    error.message || 
+                const errorMessage = error.response?.data?.message ||
+                    error.message ||
                     'No se pudo cargar el consolidado de materiales';
-                setError(errorMessage);
+                setLocalError(errorMessage);
                 toast({
                     title: 'Error al cargar consolidado',
                     description: errorMessage,
@@ -58,12 +67,12 @@ export function ListaMaterialesIngresoDesgloce({ ordenCompraId }: ListaMateriale
                     isClosable: true
                 });
             } finally {
-                setLoading(false);
+                setLocalLoading(false);
             }
         };
 
         fetchConsolidado();
-    }, [ordenCompraId, endpoints, toast]);
+    }, [ordenCompraId, toast, usingExternalData]);
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return '-';
@@ -127,7 +136,7 @@ export function ListaMaterialesIngresoDesgloce({ ordenCompraId }: ListaMateriale
             <Text fontSize="sm" color="gray.600">
                 Total de transacciones: <strong>{consolidado.totalTransacciones}</strong>
             </Text>
-            
+
             <Box w="full" bg="white" borderRadius="md" boxShadow="sm" overflowX="auto">
                 <Table size="sm" variant="simple">
                     <Thead bg="gray.50">

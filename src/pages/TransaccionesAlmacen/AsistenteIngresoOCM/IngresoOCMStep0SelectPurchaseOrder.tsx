@@ -20,14 +20,12 @@ import {
     Tooltip,
 } from "@chakra-ui/react";
 import { RepeatIcon } from "@chakra-ui/icons";
-import axios from "axios";
 import {useMemo, useRef, useState} from "react";
 import ProveedorFilterOCM from "../../Compras/components/ProveedorFilterOCM";
 import ProveedorPicker from "../../Compras/components/ProveedorPicker";
-import EndPointsURL from "../../../api/EndPointsURL";
 import {OrdenCompra, Proveedor} from "../types";
-import {PaginatedResponse} from "../HistorialDispensaciones/types";
 import BetterPagination from "../../../components/BetterPagination/BetterPagination";
+import { fetchOrdenesPendientesOcm } from "./ocmIngresoApi";
 
 interface StepOneComponentProps {
     setActiveStep: (step: number) => void;
@@ -41,7 +39,6 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
     setSelectedOrder,
 }: StepOneComponentProps) {
     const toast = useToast();
-    const endpoints = useMemo(() => new EndPointsURL(), []);
     const [isLoading, setIsLoading] = useState(false);
     const [proveedor, setProveedor] = useState<Proveedor | null>(null);
     const [fechaInicio, setFechaInicio] = useState<string>(() => {
@@ -69,20 +66,13 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
     const fetchOrdenesPendientes = async (pageNum: number, pageSize: number) => {
         setIsLoading(true);
         try {
-            const response = await axios.get<PaginatedResponse<OrdenCompra>>(
-                endpoints.consulta_ocm_pendientes,
-                {
-                    withCredentials: true,
-                    params: {
-                        page: pageNum,
-                        size: pageSize,
-                        fechaInicio: serializeDate(fechaInicio),
-                        fechaFin: serializeDate(fechaFin, true),
-                        proveedorId: proveedor?.id ?? undefined,
-                    },
-                }
-            );
-            const data = response.data;
+            const data = await fetchOrdenesPendientesOcm({
+                page: pageNum,
+                size: pageSize,
+                fechaInicio: serializeDate(fechaInicio),
+                fechaFin: serializeDate(fechaFin, true),
+                proveedorId: proveedor?.id ?? undefined,
+            });
             const content = data.content ?? [];
 
             if (content.length === 0) {

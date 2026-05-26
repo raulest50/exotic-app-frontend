@@ -32,6 +32,7 @@ function CodificarMaterialesTab() {
     const [tipo_unidad, setTipo_unidad] = useState(UNIDADES.KG);
     const [cantidad_unidad, setCantidad_unidad] = useState('');
     const [codigo, setCodigo] = useState('');
+    const [prefijoLote, setPrefijoLote] = useState('');
     const [url_ftecnica, setUrl_ftecnica] = useState('');
     const [tipoMaterial, setTipoMaterial] = useState(TIPOS_MATERIALES.materiaPrima);
     const [inventareable, setInventareable] = useState(true);
@@ -49,6 +50,7 @@ function CodificarMaterialesTab() {
         setObservaciones('');
         setCantidad_unidad('');
         setCodigo('');
+        setPrefijoLote('');
         setUrl_ftecnica('');
         setSelectedFile(null);
         setIvaPercentage(0);
@@ -94,6 +96,16 @@ function CodificarMaterialesTab() {
             toast({
                 title: "Validation Error",
                 description: "La 'Cantidad por Unidad' debe ser un numero positivo.",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+            });
+            return false;
+        }
+        if (prefijoLote.trim() && !/^[A-Za-z0-9]+$/.test(prefijoLote.trim())) {
+            toast({
+                title: "Validation Error",
+                description: "El prefijo de lote solo puede contener letras y numeros.",
                 status: "warning",
                 duration: 3000,
                 isClosable: true,
@@ -193,6 +205,7 @@ function CodificarMaterialesTab() {
             inventareable,
             ivaPercentual: ivaPercentage,
             puntoReorden,
+            prefijoLote: prefijoLote.trim() ? prefijoLote.trim().toUpperCase() : undefined,
         };
 
         // Log the payload being sent to the backend
@@ -264,7 +277,21 @@ function CodificarMaterialesTab() {
                         </FormControl>
                     </GridItem>
 
-                    <GridItem colSpan={2}>
+                    <GridItem colSpan={1}>
+                        <FormControl>
+                            <FormLabel>Prefijo de lote</FormLabel>
+                            <Input
+                                value={prefijoLote}
+                                onChange={(e) => setPrefijoLote(e.target.value.toUpperCase())}
+                                sx={input_style}
+                            />
+                            <FormHelperText fontSize="xs">
+                                Opcional para lotes internos de ingreso.
+                            </FormHelperText>
+                        </FormControl>
+                    </GridItem>
+
+                    <GridItem colSpan={1}>
                         <FormControl isRequired>
                             <FormLabel>Nombre</FormLabel>
                             <Input

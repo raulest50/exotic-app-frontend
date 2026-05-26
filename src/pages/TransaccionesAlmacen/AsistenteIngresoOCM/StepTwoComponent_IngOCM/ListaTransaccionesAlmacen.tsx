@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import {
     Box,
     Flex,
@@ -17,59 +17,59 @@ import {
     Badge,
 } from '@chakra-ui/react';
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
-import axios from 'axios';
 
-import { TransaccionAlmacen, MovimientoDetalle } from '../../types';
-import EndPointsURL from "../../../../api/EndPointsURL.tsx";
+import { MovimientoDetalle, TransaccionAlmacen } from '../../types';
+import { ListaTransaccionesDataProps } from '../ingresoOcmTypes';
+import { fetchMovimientosTransaccion, fetchTransaccionesOcm } from '../ocmIngresoApi';
 
-interface ListaTransaccionesAlmacenProps {
+interface ListaTransaccionesAlmacenProps extends ListaTransaccionesDataProps {
     ordenCompraId: number | undefined;
 }
 
-export function ListaTransaccionesAlmacen({ ordenCompraId }: ListaTransaccionesAlmacenProps) {
-    const [transacciones, setTransacciones] = useState<TransaccionAlmacen[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+export function ListaTransaccionesAlmacen({
+    ordenCompraId,
+    transacciones: transaccionesProp,
+    loading: loadingProp,
+    error: errorProp,
+}: ListaTransaccionesAlmacenProps) {
+    const [localTransacciones, setLocalTransacciones] = useState<TransaccionAlmacen[]>([]);
+    const [localLoading, setLocalLoading] = useState(false);
+    const [localError, setLocalError] = useState<string | null>(null);
     const [expandedTransacciones, setExpandedTransacciones] = useState<Set<number>>(new Set());
     const [movimientosPorTransaccion, setMovimientosPorTransaccion] = useState<Map<number, MovimientoDetalle[]>>(new Map());
     const [loadingMovimientos, setLoadingMovimientos] = useState<Set<number>>(new Set());
     const toast = useToast();
-    const endpoints = useMemo(() => new EndPointsURL(), []);
+    const usingExternalData = transaccionesProp !== undefined;
+    const transacciones = usingExternalData ? transaccionesProp : localTransacciones;
+    const loading = usingExternalData ? Boolean(loadingProp) : localLoading;
+    const error = usingExternalData ? errorProp ?? null : localError;
 
     useEffect(() => {
+        if (usingExternalData) {
+            return;
+        }
+
         if (!ordenCompraId) {
-            setTransacciones([]);
+            setLocalTransacciones([]);
             return;
         }
 
         const fetchTransacciones = async () => {
-            setLoading(true);
-            setError(null);
+            setLocalLoading(true);
+            setLocalError(null);
             try {
-                const response = await axios.get<TransaccionAlmacen[]>(
-                    endpoints.consulta_transacciones_ocm,
-                    {
-                        withCredentials: true,
-                        params: {
-                            page: 0,
-                            size: 100,
-                            ordenCompraId: ordenCompraId,
-                        },
-                    }
-                );
-                setTransacciones(response.data || []);
+                setLocalTransacciones(await fetchTransaccionesOcm(ordenCompraId));
             } catch (error: any) {
                 console.error('Error fetching transacciones:', error);
-                const errorMessage = error.response?.data?.message || 
-                    error.message || 
+                const errorMessage = error.response?.data?.message ||
+                    error.message ||
                     'No se pudieron cargar las transacciones';
-                setError(errorMessage);
-                
-                // Si el endpoint no está implementado (405), mostrar mensaje informativo
+                setLocalError(errorMessage);
+
                 if (error.response?.status === 405) {
                     toast({
                         title: 'Funcionalidad no disponible',
-                        description: 'El endpoint para consultar transacciones aún no está implementado en el backend.',
+                        description: 'El endpoint para consultar transacciones aun no esta implementado en el backend.',
                         status: 'info',
                         duration: 5000,
                         isClosable: true,
@@ -84,12 +84,12 @@ export function ListaTransaccionesAlmacen({ ordenCompraId }: ListaTransaccionesA
                     });
                 }
             } finally {
-                setLoading(false);
+                setLocalLoading(false);
             }
         };
 
         fetchTransacciones();
-    }, [ordenCompraId, endpoints, toast]);
+    }, [ordenCompraId, toast, usingExternalData]);
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return '-';
@@ -115,44 +115,20 @@ export function ListaTransaccionesAlmacen({ ordenCompraId }: ListaTransaccionesA
         }
     };
 
-    const toggleTransaccion = async (transaccionId: number) => {
-        const isExpanded = expandedTransacciones.has(transaccionId);
-        
-        if (isExpanded) {
-            // Colapsar
-            setExpandedTransacciones(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(transaccionId);
-                return newSet;
-            });
-        } else {
-            // Expandir - cargar movimientos si no están cargados
-            setExpandedTransacciones(prev => new Set(prev).add(transaccionId));
-            
-            if (!movimientosPorTransaccion.has(transaccionId)) {
-                await fetchMovimientosPorTransaccion(transaccionId);
-            }
-        }
-    };
-
     const fetchMovimientosPorTransaccion = async (transaccionId: number) => {
         setLoadingMovimientos(prev => new Set(prev).add(transaccionId));
         try {
-            const url = endpoints.movimientos_transaccion.replace('{transaccionId}', String(transaccionId));
-            const response = await axios.get<MovimientoDetalle[]>(url, {
-                withCredentials: true
-            });
-            
+            const movimientos = await fetchMovimientosTransaccion(transaccionId);
             setMovimientosPorTransaccion(prev => {
                 const newMap = new Map(prev);
-                newMap.set(transaccionId, response.data || []);
+                newMap.set(transaccionId, movimientos);
                 return newMap;
             });
         } catch (error: any) {
             console.error('Error fetching movimientos:', error);
             toast({
                 title: 'Error al cargar movimientos',
-                description: 'No se pudieron cargar los movimientos de la transacción',
+                description: 'No se pudieron cargar los movimientos de la transaccion',
                 status: 'error',
                 duration: 3000,
                 isClosable: true
@@ -166,6 +142,24 @@ export function ListaTransaccionesAlmacen({ ordenCompraId }: ListaTransaccionesA
         }
     };
 
+    const toggleTransaccion = async (transaccionId: number) => {
+        const isExpanded = expandedTransacciones.has(transaccionId);
+
+        if (isExpanded) {
+            setExpandedTransacciones(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(transaccionId);
+                return newSet;
+            });
+            return;
+        }
+
+        setExpandedTransacciones(prev => new Set(prev).add(transaccionId));
+        if (!movimientosPorTransaccion.has(transaccionId)) {
+            await fetchMovimientosPorTransaccion(transaccionId);
+        }
+    };
+
     if (!ordenCompraId) {
         return null;
     }
@@ -173,7 +167,7 @@ export function ListaTransaccionesAlmacen({ ordenCompraId }: ListaTransaccionesA
     return (
         <Flex direction="column" gap={4} mt={6} w="full">
             <Heading size="md" fontFamily="Comfortaa Variable">
-                Transacciones de Almacén Registradas
+                Transacciones de Almacen Registradas
             </Heading>
 
             {loading ? (
@@ -187,7 +181,7 @@ export function ListaTransaccionesAlmacen({ ordenCompraId }: ListaTransaccionesA
             ) : transacciones.length === 0 ? (
                 <Box p={4} bg="gray.50" borderRadius="md">
                     <Text color="gray.600" textAlign="center">
-                        No se han registrado transacciones de almacén para esta orden de compra.
+                        No se han registrado transacciones de almacen para esta orden de compra.
                     </Text>
                 </Box>
             ) : (
@@ -195,12 +189,12 @@ export function ListaTransaccionesAlmacen({ ordenCompraId }: ListaTransaccionesA
                     <Table size="sm" variant="simple">
                         <Thead bg="gray.50">
                             <Tr>
-                                <Th>ID Transacción</Th>
+                                <Th>ID Transaccion</Th>
                                 <Th>Fecha</Th>
                                 <Th># Movimientos</Th>
                                 <Th>Estado Contable</Th>
                                 <Th>Observaciones</Th>
-                                <Th textAlign="center">Acción</Th>
+                                <Th textAlign="center">Accion</Th>
                             </Tr>
                         </Thead>
                         <Tbody>
@@ -209,10 +203,10 @@ export function ListaTransaccionesAlmacen({ ordenCompraId }: ListaTransaccionesA
                                 const isExpanded = expandedTransacciones.has(transaccionId);
                                 const movimientos = movimientosPorTransaccion.get(transaccionId) || [];
                                 const isLoadingMov = loadingMovimientos.has(transaccionId);
-                                
+
                                 return (
-                                    <>
-                                        <Tr key={transaccionId}>
+                                    <Fragment key={transaccionId}>
+                                        <Tr>
                                             <Td fontWeight="semibold">
                                                 {transaccionId}
                                             </Td>
@@ -229,15 +223,15 @@ export function ListaTransaccionesAlmacen({ ordenCompraId }: ListaTransaccionesA
                                                         transaccion.estadoContable === 'CONTABILIZADA'
                                                             ? 'green.100'
                                                             : transaccion.estadoContable === 'PENDIENTE'
-                                                            ? 'yellow.100'
-                                                            : 'gray.100'
+                                                                ? 'yellow.100'
+                                                                : 'gray.100'
                                                     }
                                                     color={
                                                         transaccion.estadoContable === 'CONTABILIZADA'
                                                             ? 'green.800'
                                                             : transaccion.estadoContable === 'PENDIENTE'
-                                                            ? 'yellow.800'
-                                                            : 'gray.800'
+                                                                ? 'yellow.800'
+                                                                : 'gray.800'
                                                     }
                                                 >
                                                     {transaccion.estadoContable || 'N/A'}
@@ -274,12 +268,12 @@ export function ListaTransaccionesAlmacen({ ordenCompraId }: ListaTransaccionesA
                                                                 </Flex>
                                                             ) : movimientos.length === 0 ? (
                                                                 <Text fontSize="sm" color="gray.600" textAlign="center" py={4}>
-                                                                    No hay movimientos registrados para esta transacción
+                                                                    No hay movimientos registrados para esta transaccion
                                                                 </Text>
                                                             ) : (
                                                                 <>
                                                                     <Text fontWeight="bold" mb={3} fontSize="sm">
-                                                                        Materiales Recibidos en esta Transacción
+                                                                        Materiales Recibidos en esta Transaccion
                                                                     </Text>
                                                                     <Table size="sm" variant="simple" bg="white">
                                                                         <Thead>
@@ -311,7 +305,7 @@ export function ListaTransaccionesAlmacen({ ordenCompraId }: ListaTransaccionesA
                                                                                         {movimiento.cantidad} {movimiento.tipoUnidades || ''}
                                                                                     </Td>
                                                                                     <Td>
-                                                                                        {movimiento.expirationDate 
+                                                                                        {movimiento.expirationDate
                                                                                             ? formatDateShort(movimiento.expirationDate)
                                                                                             : '-'}
                                                                                     </Td>
@@ -326,7 +320,7 @@ export function ListaTransaccionesAlmacen({ ordenCompraId }: ListaTransaccionesA
                                                 </Td>
                                             </Tr>
                                         )}
-                                    </>
+                                    </Fragment>
                                 );
                             })}
                         </Tbody>

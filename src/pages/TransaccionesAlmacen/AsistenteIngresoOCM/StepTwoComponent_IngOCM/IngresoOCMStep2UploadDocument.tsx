@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import {IngresoOCM_DTA, OrdenCompra} from "../../types.tsx";
+import React, { type Dispatch, type SetStateAction, useState, useRef } from "react";
+import {IngresoOCM_DTA, OrdenCompra, TipoEntidadCausante} from "../../types.tsx";
 import {
     Button,
     Divider,
@@ -20,7 +20,7 @@ import { useAuth } from '../../../../context/AuthContext';
 interface StepTwoComponentProps {
     setActiveStep: (step: number) => void;
     orden: OrdenCompra | null;
-    setIngresoOCM_DTA: (ingresoOCM_DTA: IngresoOCM_DTA) => void;
+    setIngresoOCM_DTA: Dispatch<SetStateAction<IngresoOCM_DTA | null>>;
 }
 
 export default function IngresoOCMStep2UploadDocument({
@@ -119,7 +119,7 @@ export default function IngresoOCMStep2UploadDocument({
                     transaccionAlmacen: {
                         movimientosTransaccion: [],
                         urlDocSoporte: "",
-                        tipoEntidadCausante: "OCM",
+                        tipoEntidadCausante: TipoEntidadCausante.OCM,
                         idEntidadCausante: orden?.ordenCompraId?.toString() || "",
                         observaciones: ""
                     },

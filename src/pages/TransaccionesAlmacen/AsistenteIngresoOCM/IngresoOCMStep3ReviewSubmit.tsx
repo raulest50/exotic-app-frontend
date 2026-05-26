@@ -1,91 +1,90 @@
-
-
-import {IngresoOCM_DTA} from "../types";
+import { useEffect, useState } from "react";
 import {
+    Badge,
     Box,
     Button,
     Divider,
     Flex,
-    Heading,
-    Icon,
-    Text,
-    Image,
-    Textarea,
-    FormControl, 
+    FormControl,
     FormLabel,
-    Badge,
+    Heading,
+    Image,
+    Text,
+    Textarea,
     useToast
 } from "@chakra-ui/react";
-import { FaCheckCircle } from "react-icons/fa";
-import {useState} from "react";
-import axios from "axios";
-import EndPointsURL from "../../../api/EndPointsURL";
 
+import { IngresoOCM_DTA } from "../types";
+import { submitIngresoOcm } from "./ocmIngresoApi";
 
 interface StepThreeComponentProps {
     setActiveStep: (step: number) => void;
     docIngresoDTA: IngresoOCM_DTA | null;
 }
 
-const endpoints = new EndPointsURL();
+function getBackendMessage(error: unknown) {
+    const response = typeof error === "object" && error !== null
+        ? (error as { response?: { status?: number; data?: unknown } }).response
+        : undefined;
+    const data = response?.data;
+
+    if (typeof data === "string") {
+        return data;
+    }
+
+    if (typeof data === "object" && data !== null) {
+        const payload = data as { message?: string; error?: string };
+        return payload.message ?? payload.error;
+    }
+
+    return undefined;
+}
 
 export default function IngresoOCMStep3ReviewSubmit({
-                                             setActiveStep,
-                                             docIngresoDTA,
-                                         }: StepThreeComponentProps) {
-
+    setActiveStep,
+    docIngresoDTA,
+}: StepThreeComponentProps) {
     const [observaciones, setObservaciones] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [supportPreviewUrl, setSupportPreviewUrl] = useState("");
     const toast = useToast();
+    const supportFile = docIngresoDTA?.file;
+    const isImageSupport = supportFile?.type.startsWith("image/");
 
-    const onClickEnviar = async () => {
-        if (!docIngresoDTA || !docIngresoDTA.file) {
-            console.error("No document data or file provided");
+    useEffect(() => {
+        if (!supportFile) {
+            setSupportPreviewUrl("");
             return;
         }
 
-        // Activar el estado de carga
-        setIsLoading(true);
+        const objectUrl = URL.createObjectURL(supportFile);
+        setSupportPreviewUrl(objectUrl);
+        return () => URL.revokeObjectURL(objectUrl);
+    }, [supportFile]);
 
-        // Create a copy of the docIngresoDTA excluding the file property.
-        const { file, ...docData } = docIngresoDTA;
-
-        // Eliminar la propiedad precioUnitarioFinal de cada ítem
-        if (docData.ordenCompraMateriales && docData.ordenCompraMateriales.itemsOrdenCompra) {
-            docData.ordenCompraMateriales.itemsOrdenCompra.forEach(item => {
-                if ('precioUnitarioFinal' in item) {
-                    delete item.precioUnitarioFinal;
-                }
+    const onClickEnviar = async () => {
+        if (!docIngresoDTA || !docIngresoDTA.file) {
+            toast({
+                title: "Datos incompletos",
+                description: "No se encontro el documento de ingreso o el soporte adjunto.",
+                status: "error",
+                duration: 4000,
+                isClosable: true,
             });
+            return;
         }
 
-        // Build FormData.
-        const formData = new FormData();
-        formData.append(
-            "docIngresoDTA",
-            new Blob([JSON.stringify(docData)], { type: "application/json" })
-        );
-        formData.append("file", file);
-
+        setIsLoading(true);
         try {
-            await axios.post(endpoints.save_doc_ingreso_oc, formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
-//             console.log("DocIngreso created successfully:", response.data);
-            // Optionally, proceed to the next step or update UI accordingly.
+            await submitIngresoOcm(docIngresoDTA, observaciones);
             setActiveStep(4);
         } catch (error: unknown) {
             console.error("Error creating DocIngreso:", error);
-            const isConflict = axios.isAxiosError(error) && error.response?.status === 409;
-            const responseData = axios.isAxiosError(error) ? error.response?.data : undefined;
-            const backendMessage = typeof responseData === "string"
-                ? responseData
-                : typeof responseData === "object" && responseData !== null
-                    ? (responseData as { message?: string; error?: string }).message
-                        ?? (responseData as { message?: string; error?: string }).error
-                    : undefined;
+            const response = typeof error === "object" && error !== null
+                ? (error as { response?: { status?: number } }).response
+                : undefined;
+            const isConflict = response?.status === 409;
+            const backendMessage = getBackendMessage(error);
 
             toast({
                 title: isConflict ? "Limite de recepciones alcanzado" : "Error al registrar ingreso",
@@ -95,11 +94,9 @@ export default function IngresoOCMStep3ReviewSubmit({
                 isClosable: true,
             });
         } finally {
-            // Desactivar el estado de carga independientemente del resultado
             setIsLoading(false);
         }
     };
-
 
     return (
         <Flex
@@ -116,12 +113,11 @@ export default function IngresoOCMStep3ReviewSubmit({
                 Verifique el formato de ingreso a almacen. En caso de algun error regrese al paso 1.
             </Text>
             <Text fontFamily="Comfortaa Variable">
-                Si el formato esta bien, continue con el envio del mismo para finalizar el procedimiento y dar ingreso de los items a el almacen
+                Si el formato esta bien, continue con el envio del mismo para finalizar el procedimiento y dar ingreso de los items a el almacen.
             </Text>
 
             <Divider/>
 
-            {/* Materiales y Lotes */}
             <Box w="full" overflowX="auto">
                 <Heading size="md" mb={4}>Materiales y Lotes</Heading>
                 {docIngresoDTA?.transaccionAlmacen.movimientosTransaccion.map((movimiento, index) => (
@@ -134,61 +130,62 @@ export default function IngresoOCMStep3ReviewSubmit({
                             <Badge colorScheme="green">{movimiento.cantidad} {movimiento.producto.tipoUnidades}</Badge>
                         </Flex>
                         <Divider my={2} />
-                        <Text fontWeight="bold">Información del Lote:</Text>
-                        {movimiento.lote.batchNumber && (
-                            <Text>Batch Number: {movimiento.lote.batchNumber}</Text>
-                        )}
+                        <Text fontWeight="bold">Informacion del Lote:</Text>
+                        <Text>
+                            Lote interno: {movimiento.lote.batchNumber || "se confirma al registrar"}
+                        </Text>
+                        <Text fontSize="xs" color="gray.600">
+                            El lote definitivo se confirma al registrar el ingreso.
+                        </Text>
                         {movimiento.lote.productionDate && (
-                            <Text>Fecha de Fabricación: {new Date(movimiento.lote.productionDate).toLocaleDateString()}</Text>
+                            <Text>Fecha de Fabricacion: {new Date(movimiento.lote.productionDate).toLocaleDateString()}</Text>
                         )}
                         <Text>Fecha de Vencimiento: {new Date(movimiento.lote.expirationDate).toLocaleDateString()}</Text>
                     </Box>
                 ))}
             </Box>
 
-
             <Text fontFamily="Comfortaa Variable">
                 Documento Soporte:
             </Text>
-            <Box w={"full"}>
-                <Image
-                    src={docIngresoDTA ? URL.createObjectURL(docIngresoDTA.file) : ""}
-                    alt="Documento Soporte"
-                    objectFit="contain"
-                    borderRadius="md"
-                    boxSize="100%"
-                />
+            <Box w="full">
+                {supportPreviewUrl && isImageSupport ? (
+                    <Image
+                        src={supportPreviewUrl}
+                        alt="Documento Soporte"
+                        objectFit="contain"
+                        borderRadius="md"
+                        boxSize="100%"
+                    />
+                ) : (
+                    <Box p={4} bg="white" borderRadius="md" borderWidth="1px">
+                        <Text fontFamily="Comfortaa Variable">
+                            {supportFile?.name || "No hay soporte adjunto."}
+                        </Text>
+                    </Box>
+                )}
             </Box>
 
             <FormControl>
-                <FormLabel>Observaciones (Opcional) </FormLabel>
+                <FormLabel>Observaciones (Opcional)</FormLabel>
                 <Textarea
-                    placeholder='Escriba aqui sus observaciones si lo considera pertinente'
+                    placeholder="Escriba aqui sus observaciones si lo considera pertinente"
                     value={observaciones}
-                    onChange={(e) => {
-                        docIngresoDTA ? docIngresoDTA.observaciones = e.target.value : {};
-                        setObservaciones(e.target.value);
-                        }
-                    }
-                >
-
-                </Textarea>
+                    onChange={(e) => setObservaciones(e.target.value)}
+                />
             </FormControl>
-
 
             <Divider/>
 
             <Button
                 variant="solid"
-                colorScheme={"teal"}
+                colorScheme="teal"
                 onClick={onClickEnviar}
                 isLoading={isLoading}
                 loadingText="Enviando..."
             >
                 Enviar Formato De Ingreso
             </Button>
-
         </Flex>
     );
-
 }

@@ -14,9 +14,8 @@ import {
     Text,
     useToast,
 } from '@chakra-ui/react';
-import axios from 'axios';
 import { OrdenCompra } from '../../types';
-import EndPointsURL from '../../../../api/EndPointsURL';
+import { closeOrdenCompraOcm } from '../ocmIngresoApi';
 
 interface CerrarOrdenDialogProps {
     isOpen: boolean;
@@ -27,7 +26,6 @@ interface CerrarOrdenDialogProps {
 
 export function CerrarOrdenDialog({ isOpen, onClose, orden, setActiveStep }: CerrarOrdenDialogProps) {
     const toast = useToast();
-    const endpoints = new EndPointsURL();
     const [token, setToken] = useState<string>('');
     const [inputToken, setInputToken] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
@@ -73,10 +71,7 @@ export function CerrarOrdenDialog({ isOpen, onClose, orden, setActiveStep }: Cer
 
         setIsLoading(true);
         try {
-            const url = endpoints.close_orden_compra.replace('{ordenCompraId}', orden.ordenCompraId.toString());
-            await axios.put(url, {}, {
-                withCredentials: true,
-            });
+            await closeOrdenCompraOcm(orden.ordenCompraId);
 
             toast({
                 title: 'Orden cerrada exitosamente',

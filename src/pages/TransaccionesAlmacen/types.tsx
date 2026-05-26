@@ -167,6 +167,23 @@ export interface Movimiento{
     fechaMovimiento: string;
 }
 
+export interface OcmLotePreviewCandidate {
+    lineKey: string;
+    productoId: string;
+    cantidad: number;
+}
+
+export interface OcmLotePreviewResponseItem {
+    lineKey: string;
+    productoId: string;
+    batchNumber: string;
+}
+
+export interface OcmLotePreviewResponse {
+    fechaIngreso: string;
+    items: OcmLotePreviewResponseItem[];
+}
+
 export enum TipoEntidadCausante{
     OCM = "OCM", // orden de compra de materiales
     OP = "OP", // orden de produccion

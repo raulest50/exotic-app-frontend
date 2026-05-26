@@ -138,6 +138,7 @@ export default class EndPointsURL{
     public kardex_exportar_excel: string;
 
     public save_doc_ingreso_oc: string;
+    public preview_lotes_ingreso_ocm: string;
     public backflush_no_planificado: string;
     public historial_transacciones_filter: string;
 
@@ -543,6 +544,7 @@ export default class EndPointsURL{
         this.kardex_exportar_excel = `${domain}/inventario/kardex/exportar-excel`;
 
         this.save_doc_ingreso_oc = `${domain}/${movimientos_res}/save_doc_ingreso_oc`;
+        this.preview_lotes_ingreso_ocm = `${domain}/${movimientos_res}/ocm/{ordenCompraId}/lotes-preview`;
         this.backflush_no_planificado = `${domain}/${movimientos_res}/backflush_no_planificado`;
         this.historial_transacciones_filter = `${domain}/${movimientos_res}/historial_transacciones_filter`;
 
