@@ -8,21 +8,15 @@ import { useAccessSnapshot } from "../../auth/usePermissions";
 import { my_style_tab } from "../../styles/styles_general.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
 import ConfParamsCategoria from "./ConfParamsCategoria/ConfParamsCategoria.tsx";
-import AprobacionMPSWeekTab from "./AprobacionMPSWeekTab.tsx";
 import CrearOrdenesProduccionTab from "./CrearOrdenesProduccionTab/CrearOrdenesProduccionTab.tsx";
 import HistorialOrdenesTab from "./HistorialOrdenesTab/HistorialOrdenesTab.tsx";
 import MonitorearAreasOperativasTab from "./MonitorearAreasOperativasTab.tsx";
 import { PlaneacionProduccionTab } from "./PlaneacionProduccionTab/PlaneacionProduccionTab.tsx";
-
-export interface OpenMpsWeekRequest {
-    weekStartDate: string;
-    token: number;
-}
+import ProgramacionProduccionSemanalTab from "./ProgramacionProduccionSemanalTab/ProgramacionProduccionSemanalTab.tsx";
 
 export default function ProduccionPage() {
     const access = useAccessSnapshot();
     const [tabIndex, setTabIndex] = useState(0);
-    const [openMpsWeekRequest, setOpenMpsWeekRequest] = useState<OpenMpsWeekRequest | null>(null);
 
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
         {
@@ -45,34 +39,24 @@ export default function ProduccionPage() {
         },
         {
             key: "planeacion",
-            label: "Planeacion Produccion",
-            render: () => <PlaneacionProduccionTab externalOpenRequest={openMpsWeekRequest} />,
+            label: "Planeacion Produccion (Mensual)",
+            render: () => <PlaneacionProduccionTab />,
             accesoValido: tabAccessRule(Modulo.PRODUCCION, "PLANEACION_PRODUCCION", 1),
+        },
+        {
+            key: "programacion",
+            label: "Programacion Produccion (Semanal)",
+            render: () => <ProgramacionProduccionSemanalTab />,
+            accesoValido: (snapshot) => (
+                tabAccessRule(Modulo.PRODUCCION, "PROGRAMACION_PRODUCCION", 1)(snapshot)
+                || tabAccessRule(Modulo.PRODUCCION, "APROBACION_MPS_WEEK", 1)(snapshot)
+            ),
         },
         {
             key: "monitorear-areas-operativas",
             label: "Monitorear Areas Operativas",
             render: () => <MonitorearAreasOperativasTab />,
             accesoValido: tabAccessRule(Modulo.PRODUCCION, "MONITOREAR_AREAS_OPERATIVAS", 1),
-        },
-        {
-            key: "aprobacion-mps-week",
-            label: "Aprobacion MPS Week",
-            render: () => (
-                <AprobacionMPSWeekTab
-                    onOpenMpsWeek={(weekStartDate) => {
-                        const planeacionTabIndex = visibleTabs.findIndex((tab) => tab.key === "planeacion");
-                        setOpenMpsWeekRequest((previous) => ({
-                            weekStartDate,
-                            token: (previous?.token ?? 0) + 1,
-                        }));
-                        if (planeacionTabIndex >= 0) {
-                            setTabIndex(planeacionTabIndex);
-                        }
-                    }}
-                />
-            ),
-            accesoValido: tabAccessRule(Modulo.PRODUCCION, "APROBACION_MPS_WEEK", 1),
         },
     ];
 
@@ -98,9 +82,9 @@ export default function ProduccionPage() {
                     {visibleTabs.map((tab) => (
                         <TabPanel
                             key={tab.key}
-                            p={tab.key === "planeacion" ? 0 : 4}
+                            p={tab.key === "planeacion" || tab.key === "programacion" ? 0 : 4}
                         >
-                            {tab.key === "planeacion" ? (
+                            {tab.key === "planeacion" || tab.key === "programacion" ? (
                                 <Box w="full" minW={0}>
                                     {tab.render()}
                                 </Box>

@@ -42,6 +42,7 @@ interface Step1CalcularDistribucionProps {
     setRawData: (data: TerminadoConVentas[]) => void;
     necesidades: Record<string, number>;
     setNecesidades: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+    showNextButton?: boolean;
 }
 
 export default function Step1CalcularDistribucion({
@@ -51,6 +52,7 @@ export default function Step1CalcularDistribucion({
     setRawData,
     necesidades,
     setNecesidades,
+    showNextButton = true,
 }: Step1CalcularDistribucionProps) {
     const access = useAccessSnapshot();
     const enableBackendDebug = access.isMasterLike && EndPointsURL.getEnvironment() === "local";
@@ -298,15 +300,17 @@ export default function Step1CalcularDistribucion({
                 onSizeChange={setSize}
             />
 
-            <Flex justify="flex-end" pt={2}>
-                <Button
-                    colorScheme="teal"
-                    onClick={() => setActiveStep(2)}
-                    isDisabled={distribucion.length === 0}
-                >
-                    Siguiente
-                </Button>
-            </Flex>
+            {showNextButton && (
+                <Flex justify="flex-end" pt={2}>
+                    <Button
+                        colorScheme="teal"
+                        onClick={() => setActiveStep(2)}
+                        isDisabled={distribucion.length === 0}
+                    >
+                        Siguiente
+                    </Button>
+                </Flex>
+            )}
         </VStack>
     );
 }

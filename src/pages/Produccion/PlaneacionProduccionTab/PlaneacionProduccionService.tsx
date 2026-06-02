@@ -232,6 +232,17 @@ export interface GenerarOdpDesdeMpsRequestDTO {
     weekStartDate: string;
 }
 
+export interface ProgramacionProduccionSemanalItemRequestDTO {
+    date: string;
+    productoId: string;
+    unidades: number;
+}
+
+export interface GuardarProgramacionProduccionSemanalRequestDTO {
+    weekStartDate: string;
+    entradas: ProgramacionProduccionSemanalItemRequestDTO[];
+}
+
 export interface GenerarOdpDesdeMpsResponseDTO {
     mpsId: number;
     weekStartDate: string;
@@ -612,7 +623,18 @@ export async function GuardarBorradorMpsSemanal(
 ): Promise<MpsSemanalDraftDTO> {
     const endPoints = new EndPointsURL();
     const response = await axios.post<MpsSemanalDraftDTO>(
-        endPoints.planeacion_mps_semanal_borrador,
+        endPoints.programacion_mps_semanal_borrador,
+        payload,
+    );
+    return response.data;
+}
+
+export async function GuardarBorradorProgramacionSemanal(
+    payload: GuardarProgramacionProduccionSemanalRequestDTO,
+): Promise<MpsSemanalDraftDTO> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.post<MpsSemanalDraftDTO>(
+        endPoints.programacion_mps_semanal_borrador_directo,
         payload,
     );
     return response.data;
@@ -623,7 +645,7 @@ export async function ObtenerBorradorMpsSemanal(
 ): Promise<MpsSemanalDraftDTO> {
     const endPoints = new EndPointsURL();
     const response = await axios.get<MpsSemanalDraftDTO>(
-        endPoints.planeacion_mps_semanal_borrador,
+        endPoints.programacion_mps_semanal_borrador,
         {
             params: { weekStartDate },
         },
@@ -636,7 +658,7 @@ export async function ObtenerMpsSemanal(
 ): Promise<MpsSemanalDraftDTO> {
     const endPoints = new EndPointsURL();
     const response = await axios.get<MpsSemanalDraftDTO>(
-        endPoints.planeacion_mps_semanal,
+        endPoints.programacion_mps_semanal,
         {
             params: { weekStartDate },
         },
@@ -649,7 +671,7 @@ export async function ListarMpsSemanales(
 ): Promise<MpsSemanalListItemDTO[]> {
     const endPoints = new EndPointsURL();
     const response = await axios.get<MpsSemanalListItemDTO[]>(
-        endPoints.planeacion_mps_semanal_list,
+        endPoints.programacion_mps_semanal_list,
         {
             params: estado ? { estado } : undefined,
         },
@@ -662,7 +684,7 @@ export async function AprobarMpsSemanal(
 ): Promise<MpsSemanalDraftDTO> {
     const endPoints = new EndPointsURL();
     const response = await axios.post<MpsSemanalDraftDTO>(
-        endPoints.planeacion_mps_semanal_aprobar,
+        endPoints.programacion_mps_semanal_aprobar,
         payload,
     );
     return response.data;
@@ -673,7 +695,7 @@ export async function GenerarOdpDesdeMps(
 ): Promise<GenerarOdpDesdeMpsResponseDTO> {
     const endPoints = new EndPointsURL();
     const response = await axios.post<GenerarOdpDesdeMpsResponseDTO>(
-        endPoints.planeacion_mps_semanal_generar_odps,
+        endPoints.programacion_mps_semanal_generar_odps,
         payload,
     );
     return response.data;
@@ -684,7 +706,7 @@ export async function ObtenerOdpsDesdeMpsSemanal(
 ): Promise<MpsSemanalOrdenProduccionListItemDTO[]> {
     const endPoints = new EndPointsURL();
     const response = await axios.get<MpsSemanalOrdenProduccionListItemDTO[]>(
-        endPoints.planeacion_mps_semanal_odps,
+        endPoints.programacion_mps_semanal_odps,
         {
             params: { weekStartDate },
         },

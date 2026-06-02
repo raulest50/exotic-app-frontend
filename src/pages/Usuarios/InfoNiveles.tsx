@@ -81,7 +81,7 @@ const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));`,
   },
   [Modulo.PRODUCCION]: {
     title: "Modulo de Produccion",
-    description: "Gestion de ordenes de produccion, procesos productivos, monitoreo de areas operativas y aprobacion semanal MPS",
+    description: "Gestion de ordenes de produccion, planeacion mensual, programacion semanal, procesos productivos y monitoreo de areas operativas",
     implementationDetails: false,
     levels: [
       { level: 1, description: "Visualizacion de informacion de produccion." },

@@ -3,6 +3,7 @@ import MyHeader from "../../components/MyHeader.tsx";
 import { my_style_tab } from "../../styles/styles_general.tsx";
 import { IncorporarPersonal } from "./IncorporarPersonal.tsx";
 import { ConsultaDePersonal } from "./ConsultaDePersonal.tsx";
+import { HorasExtraPersonal } from "./HorasExtraPersonal.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
 import { tabAccessRule } from "../../auth/accessHelpers.ts";
 import { useAccessSnapshot } from "../../auth/usePermissions";
@@ -14,6 +15,7 @@ export default function PersonalPage() {
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
         { key: "incorporacion", label: "Incorporacion", render: () => <IncorporarPersonal />, accesoValido: tabAccessRule(Modulo.PERSONAL_PLANTA, "INCORPORACION", 1) },
         { key: "consulta", label: "Consulta", render: () => <ConsultaDePersonal />, accesoValido: tabAccessRule(Modulo.PERSONAL_PLANTA, "CONSULTA", 1) },
+        { key: "horas-extra", label: "Horas Extra", render: () => <HorasExtraPersonal />, accesoValido: tabAccessRule(Modulo.PERSONAL_PLANTA, "CONSULTA", 1) },
     ];
 
     const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));

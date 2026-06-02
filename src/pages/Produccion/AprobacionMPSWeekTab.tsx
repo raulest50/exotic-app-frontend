@@ -31,10 +31,12 @@ import {
     AprobarMpsSemanal,
     GenerarOdpDesdeMps,
     ListarMpsSemanales,
+    ObtenerMpsSemanal,
     ObtenerOdpsDesdeMpsSemanal,
     type MpsSemanalOrdenProduccionListItemDTO,
     type MpsSemanalListItemDTO,
 } from "./PlaneacionProduccionTab/PlaneacionProduccionService.tsx";
+import { downloadMpsSemanalPdf } from "./ProgramacionProduccionSemanalTab/pdf/MpsSemanalPdfGenerator";
 
 interface AprobacionMPSWeekTabProps {
     onOpenMpsWeek: (weekStartDate: string) => void;
@@ -123,18 +125,22 @@ function WeekCard({
     item,
     onOpen,
     onApprove,
+    onDownloadPdf,
     onGenerateOdps,
     onViewOdps,
     isApproving,
+    isDownloadingPdf,
     isGeneratingOdps,
     isViewingOdps,
 }: {
     item: MpsSemanalListItemDTO;
     onOpen: () => void;
     onApprove: () => void;
+    onDownloadPdf: () => void;
     onGenerateOdps: () => void;
     onViewOdps: () => void;
     isApproving: boolean;
+    isDownloadingPdf: boolean;
     isGeneratingOdps: boolean;
     isViewingOdps: boolean;
 }) {
@@ -214,9 +220,17 @@ function WeekCard({
                     <SummaryLine label="Unidades no programadas" value={item.totalUnidadesNoProgramadas} />
                 </Box>
 
-                <HStack justify="end" spacing={3}>
+                <HStack justify="end" spacing={3} flexWrap="wrap">
                     <Button variant="outline" onClick={onOpen}>
                         Abrir
+                    </Button>
+                    <Button
+                        variant="outline"
+                        colorScheme="purple"
+                        onClick={onDownloadPdf}
+                        isLoading={isDownloadingPdf}
+                    >
+                        PDF MPS
                     </Button>
                     {canViewOdps && (
                         <Button
@@ -259,6 +273,7 @@ export default function AprobacionMPSWeekTab({ onOpenMpsWeek }: AprobacionMPSWee
     const [approvingWeekStartDate, setApprovingWeekStartDate] = useState<string | null>(null);
     const [generatingWeekStartDate, setGeneratingWeekStartDate] = useState<string | null>(null);
     const [viewingWeekStartDate, setViewingWeekStartDate] = useState<string | null>(null);
+    const [downloadingPdfWeekStartDate, setDownloadingPdfWeekStartDate] = useState<string | null>(null);
     const [selectedWeekForOdps, setSelectedWeekForOdps] = useState<MpsSemanalListItemDTO | null>(null);
     const [selectedWeekOdps, setSelectedWeekOdps] = useState<MpsSemanalOrdenProduccionListItemDTO[]>([]);
     const [isOdpsModalOpen, setIsOdpsModalOpen] = useState(false);
@@ -372,6 +387,24 @@ export default function AprobacionMPSWeekTab({ onOpenMpsWeek }: AprobacionMPSWee
         }
     };
 
+    const handleDownloadPdf = async (item: MpsSemanalListItemDTO) => {
+        setDownloadingPdfWeekStartDate(item.weekStartDate);
+        try {
+            const mps = await ObtenerMpsSemanal(item.weekStartDate);
+            await downloadMpsSemanalPdf(mps);
+        } catch (error) {
+            toast({
+                title: "No se pudo generar el PDF",
+                description: getAxiosErrorMessage(error, "La descarga del PDF MPS fallo."),
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setDownloadingPdfWeekStartDate(null);
+        }
+    };
+
     const handleCloseOdpsModal = () => {
         setIsOdpsModalOpen(false);
         setSelectedWeekForOdps(null);
@@ -382,9 +415,9 @@ export default function AprobacionMPSWeekTab({ onOpenMpsWeek }: AprobacionMPSWee
         <VStack align="stretch" spacing={6}>
             <Box p={6} bg="white" borderRadius="md" boxShadow="sm">
                 <VStack align="start" spacing={2}>
-                    <Heading size="md">Aprobacion MPS Week</Heading>
+                    <Heading size="md">Bandeja MPS semanal</Heading>
                     <Text color="gray.600">
-                        Revise las semanas guardadas, abra la planeacion correspondiente y formalice la aprobacion cuando el borrador ya sea el plan oficial.
+                        Revise las semanas guardadas, abra la programacion correspondiente y formalice la aprobacion cuando el borrador ya sea el plan oficial.
                     </Text>
                 </VStack>
             </Box>
@@ -410,9 +443,11 @@ export default function AprobacionMPSWeekTab({ onOpenMpsWeek }: AprobacionMPSWee
                                         item={item}
                                         onOpen={() => onOpenMpsWeek(item.weekStartDate)}
                                         onApprove={() => void handleApprove(item.weekStartDate)}
+                                        onDownloadPdf={() => void handleDownloadPdf(item)}
                                         onGenerateOdps={() => undefined}
                                         onViewOdps={() => undefined}
                                         isApproving={approvingWeekStartDate === item.weekStartDate}
+                                        isDownloadingPdf={downloadingPdfWeekStartDate === item.weekStartDate}
                                         isGeneratingOdps={false}
                                         isViewingOdps={false}
                                     />
@@ -435,9 +470,11 @@ export default function AprobacionMPSWeekTab({ onOpenMpsWeek }: AprobacionMPSWee
                                         item={item}
                                         onOpen={() => onOpenMpsWeek(item.weekStartDate)}
                                         onApprove={() => undefined}
+                                        onDownloadPdf={() => void handleDownloadPdf(item)}
                                         onGenerateOdps={() => void handleGenerateOdps(item.weekStartDate)}
                                         onViewOdps={() => void handleViewOdps(item)}
                                         isApproving={false}
+                                        isDownloadingPdf={downloadingPdfWeekStartDate === item.weekStartDate}
                                         isGeneratingOdps={generatingWeekStartDate === item.weekStartDate}
                                         isViewingOdps={viewingWeekStartDate === item.weekStartDate}
                                     />

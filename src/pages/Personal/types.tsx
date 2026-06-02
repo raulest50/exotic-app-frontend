@@ -4,7 +4,7 @@
 
 export interface DocTranDePersonal {
     id?: number;  // opcional porque es auto-generado
-    idIntegrante: number;
+    idIntegrante?: number;
     tipoDocTran: TipoDocTran;
     fechaHora: string;  // para LocalDateTime usamos string en formato ISO
     descripcion?: string;
@@ -21,6 +21,10 @@ export enum TipoDocTran {
     MODIFICACION_DATOS_PERSONALES = 'MODIFICACION_DATOS_PERSONALES',
     CAMBIO_ESTADO = 'CAMBIO_ESTADO',
     SALIDA = 'SALIDA',
+    HORAS_EXTRA_REGISTRO = 'HORAS_EXTRA_REGISTRO',
+    HORAS_EXTRA_APROBACION = 'HORAS_EXTRA_APROBACION',
+    HORAS_EXTRA_RECHAZO = 'HORAS_EXTRA_RECHAZO',
+    HORAS_EXTRA_ANULACION = 'HORAS_EXTRA_ANULACION',
     OTRO = 'OTRO'
 }
 
@@ -62,5 +66,61 @@ export enum EstadoIntegrante {
 export function getEstadoIntegranteText(estado?: EstadoIntegrante) {
     if (estado === EstadoIntegrante.ACTIVO) return 'Activo';
     if (estado === EstadoIntegrante.INACTIVO) return 'Inactivo';
+    return '';
+}
+
+export enum EstadoRegistroHoraExtra {
+    REGISTRADA = 'REGISTRADA',
+    APROBADA = 'APROBADA',
+    RECHAZADA = 'RECHAZADA',
+    ANULADA = 'ANULADA'
+}
+
+export interface RegistroHoraExtra {
+    id: number;
+    integranteId: number;
+    integranteNombre: string;
+    fecha: string;
+    horaInicio: string;
+    horaFin: string;
+    minutos: number;
+    motivo: string;
+    observaciones?: string;
+    estado: EstadoRegistroHoraExtra;
+    registradoPorId: number;
+    registradoPorUsername: string;
+    registradoPorNombre?: string;
+    aprobadoPorId?: number;
+    aprobadoPorUsername?: string;
+    aprobadoPorNombre?: string;
+    fechaRegistro: string;
+    fechaDecision?: string;
+    motivoRechazoOAnulacion?: string;
+}
+
+export interface RegistroHoraExtraRequest {
+    fecha: string;
+    horaInicio: string;
+    horaFin: string;
+    motivo: string;
+    observaciones?: string;
+}
+
+export interface RegistroHoraExtraDecision {
+    motivo: string;
+}
+
+export interface PageResponse<T> {
+    content: T[];
+    number: number;
+    totalPages: number;
+    totalElements: number;
+}
+
+export function getEstadoRegistroHoraExtraText(estado?: EstadoRegistroHoraExtra) {
+    if (estado === EstadoRegistroHoraExtra.REGISTRADA) return 'Registrada';
+    if (estado === EstadoRegistroHoraExtra.APROBADA) return 'Aprobada';
+    if (estado === EstadoRegistroHoraExtra.RECHAZADA) return 'Rechazada';
+    if (estado === EstadoRegistroHoraExtra.ANULADA) return 'Anulada';
     return '';
 }

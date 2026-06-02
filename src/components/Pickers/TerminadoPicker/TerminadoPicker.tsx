@@ -19,6 +19,7 @@ import {
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
+import type { Categoria } from '../../../pages/Produccion/types.tsx';
 
 const endpoints = new EndPointsURL();
 
@@ -26,6 +27,8 @@ export interface TerminadoPickerResult {
     productoId: string;
     nombre: string;
     tipo_producto: string;
+    categoria?: Categoria;
+    prefijoLote?: string;
 }
 
 interface TerminadoPickerProps {
@@ -79,6 +82,8 @@ export default function TerminadoPicker({isOpen, onClose, onSelectTerminado}: Te
                 productoId: t.productoId,
                 nombre: t.nombre,
                 tipo_producto: t.tipo_producto,
+                categoria: t.categoria,
+                prefijoLote: t.prefijoLote,
             }));
 
             setResults(mapped);

@@ -181,6 +181,11 @@ export default class EndPointsURL{
     // integrantes de personal
     public save_integrante_personal: string;
     public search_integrantes_personal: string;
+    public personal_horas_extra_search: string;
+    public personal_horas_extra_registrar: string;
+    public personal_hora_extra_aprobar: string;
+    public personal_hora_extra_rechazar: string;
+    public personal_hora_extra_anular: string;
 
     // carga masiva (operaciones criticas BD)
     public carga_masiva_template_inventario: string;
@@ -270,6 +275,15 @@ export default class EndPointsURL{
     public planeacion_mps_semanal_aprobar: string;
     public planeacion_mps_semanal_generar_odps: string;
     public planeacion_mps_semanal_odps: string;
+
+    // programacion de produccion endpoints
+    public programacion_mps_semanal_borrador_directo: string;
+    public programacion_mps_semanal_borrador: string;
+    public programacion_mps_semanal: string;
+    public programacion_mps_semanal_list: string;
+    public programacion_mps_semanal_aprobar: string;
+    public programacion_mps_semanal_generar_odps: string;
+    public programacion_mps_semanal_odps: string;
 
     // seguimiento orden area endpoints
     public seguimiento_mis_ordenes_pendientes: string;
@@ -417,6 +431,7 @@ export default class EndPointsURL{
         const user_management_res = 'usuarios';
         const area_produccion_res = 'api/areas-produccion';
         const planeacion_produccion_res = 'planeacion_produccion';
+        const programacion_produccion_res = 'programacion_produccion';
         const averias_res = 'api/averias';
         const ingresos_terminados_res = 'ingresos_terminados_almacen';
         const informes_diarios_res = 'bi/informes-diarios';
@@ -586,6 +601,11 @@ export default class EndPointsURL{
         // integrantes de personal endpoints
         this.save_integrante_personal = `${domain}/${personal_res}/save`;
         this.search_integrantes_personal = `${domain}/${personal_res}/search`;
+        this.personal_horas_extra_search = `${domain}/${personal_res}/horas-extra`;
+        this.personal_horas_extra_registrar = `${domain}/${personal_res}/{integranteId}/horas-extra`;
+        this.personal_hora_extra_aprobar = `${domain}/${personal_res}/horas-extra/{id}/aprobar`;
+        this.personal_hora_extra_rechazar = `${domain}/${personal_res}/horas-extra/{id}/rechazar`;
+        this.personal_hora_extra_anular = `${domain}/${personal_res}/horas-extra/{id}/anular`;
 
         // carga masiva (operaciones criticas BD)
         this.carga_masiva_template_inventario = `${domain}/api/carga-masiva/template-inventario`;
@@ -684,6 +704,15 @@ export default class EndPointsURL{
         this.planeacion_mps_semanal_aprobar = `${domain}/${planeacion_produccion_res}/mps-semanal/aprobar`;
         this.planeacion_mps_semanal_generar_odps = `${domain}/${planeacion_produccion_res}/mps-semanal/generar-odps`;
         this.planeacion_mps_semanal_odps = `${domain}/${planeacion_produccion_res}/mps-semanal/odps`;
+
+        // Programacion de produccion endpoints
+        this.programacion_mps_semanal_borrador_directo = `${domain}/${programacion_produccion_res}/mps-semanal/borrador-directo`;
+        this.programacion_mps_semanal_borrador = `${domain}/${programacion_produccion_res}/mps-semanal/borrador`;
+        this.programacion_mps_semanal = `${domain}/${programacion_produccion_res}/mps-semanal`;
+        this.programacion_mps_semanal_list = `${domain}/${programacion_produccion_res}/mps-semanal/list`;
+        this.programacion_mps_semanal_aprobar = `${domain}/${programacion_produccion_res}/mps-semanal/aprobar`;
+        this.programacion_mps_semanal_generar_odps = `${domain}/${programacion_produccion_res}/mps-semanal/generar-odps`;
+        this.programacion_mps_semanal_odps = `${domain}/${programacion_produccion_res}/mps-semanal/odps`;
 
         // Seguimiento orden area endpoints
         const seguimiento_orden_area_res = 'api/seguimiento-orden-area';
