@@ -248,6 +248,7 @@ const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));`,
 const tabs = [
   { label: "Informes Diarios", accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "INFORMES_DIARIOS", 1) },
   { label: "Series De Tiempo y Proyecciones", accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "SERIES_TIEMPO_PROYECCIONES", 1) },
+  { label: "Personal", accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "PERSONAL", 1) },
   { label: "Aprovisionamiento", accesoValido: moduleAccessRule(Modulo.BINTELLIGENCE, 1) },
 ];
 

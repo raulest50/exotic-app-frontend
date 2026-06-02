@@ -400,6 +400,60 @@ export default class EndPointsURL{
         return `${base}?${q.toString()}`;
     }
 
+    private biPersonalHorasExtraQuery(params: {
+        fechaDesde: string;
+        fechaHasta: string;
+        granularidad?: string;
+        integranteId?: number;
+        departamento?: string;
+        cargo?: string;
+    }, includeGranularidad: boolean): URLSearchParams {
+        const q = new URLSearchParams({
+            fechaDesde: params.fechaDesde,
+            fechaHasta: params.fechaHasta,
+        });
+        if (includeGranularidad && params.granularidad) q.set("granularidad", params.granularidad);
+        if (params.integranteId != null) q.set("integranteId", String(params.integranteId));
+        if (params.departamento) q.set("departamento", params.departamento);
+        if (params.cargo) q.set("cargo", params.cargo);
+        return q;
+    }
+
+    public biPersonalHorasExtraResumen(params: {
+        fechaDesde: string;
+        fechaHasta: string;
+        integranteId?: number;
+        departamento?: string;
+        cargo?: string;
+    }): string {
+        const base = `${this.domain}/bi/personal/horas-extra/resumen`;
+        return `${base}?${this.biPersonalHorasExtraQuery(params, false).toString()}`;
+    }
+
+    public biPersonalHorasExtraSerie(params: {
+        fechaDesde: string;
+        fechaHasta: string;
+        granularidad?: string;
+        integranteId?: number;
+        departamento?: string;
+        cargo?: string;
+    }): string {
+        const base = `${this.domain}/bi/personal/horas-extra/serie`;
+        return `${base}?${this.biPersonalHorasExtraQuery(params, true).toString()}`;
+    }
+
+    public biPersonalHorasExtraExcel(params: {
+        fechaDesde: string;
+        fechaHasta: string;
+        granularidad?: string;
+        integranteId?: number;
+        departamento?: string;
+        cargo?: string;
+    }): string {
+        const base = `${this.domain}/bi/personal/horas-extra/excel`;
+        return `${base}?${this.biPersonalHorasExtraQuery(params, true).toString()}`;
+    }
+
     // super master ops endpoints
     public get_super_master_config: string;
     public update_super_master_config: string;

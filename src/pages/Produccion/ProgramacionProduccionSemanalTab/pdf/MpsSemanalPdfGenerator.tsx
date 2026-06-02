@@ -8,7 +8,6 @@ import {
     formatMpsEstadoLabel,
     formatMpsPdfDate,
     formatMpsPdfDateTime,
-    formatMpsPdfNumber,
 } from "./mpsSemanalPdf.utils";
 
 interface AutoTableProperties {
@@ -58,25 +57,7 @@ class MpsSemanalPdfGenerator {
         doc.text(`Estado: ${formatMpsEstadoLabel(mps.estado)}`, pageWidth - margin, currentY + 12, { align: "right" });
         doc.text(`ODPs: ${mps.fechaGeneracionOdps ? "Generadas" : "No generadas"}`, pageWidth - margin, currentY + 17, { align: "right" });
 
-        currentY += 28;
-
-        autoTable(doc, {
-            startY: currentY,
-            head: [["Terminados", "Planificables", "No planificables", "Unidades", "Lotes"]],
-            body: [[
-                formatMpsPdfNumber(mps.summary?.totalTerminadosEvaluados),
-                formatMpsPdfNumber(mps.summary?.totalPlanificables),
-                formatMpsPdfNumber(mps.summary?.totalNoPlanificablesPorFaltaLoteSize),
-                formatMpsPdfNumber(mps.summary?.totalUnidadesPropuestas),
-                formatMpsPdfNumber(mps.summary?.totalLotesPropuestos),
-            ]],
-            theme: "grid",
-            styles: { fontSize: 8, halign: "center", valign: "middle" },
-            headStyles: { fillColor: [222, 247, 244], textColor: 30 },
-            margin: { left: margin, right: margin },
-        });
-
-        currentY = (doc.lastAutoTable?.finalY ?? currentY) + 8;
+        currentY += 26;
 
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);

@@ -72,6 +72,7 @@ export const TABS_BY_MODULO: Record<Modulo, TabDefinition[]> = {
     [Modulo.BINTELLIGENCE]: [
         tab("INFORMES_DIARIOS", "Informes Diarios"),
         tab("SERIES_TIEMPO_PROYECCIONES", "Series De Tiempo y Proyecciones"),
+        tab("PERSONAL", "Personal"),
         tab("APROVISIONAMIENTO", "Aprovisionamiento"),
     ],
     [Modulo.OPERACIONES_CRITICAS_BD]: [
