@@ -7,6 +7,7 @@ import {
     Divider,
     Flex,
     Heading,
+    Input,
     Modal,
     ModalBody,
     ModalCloseButton,
@@ -29,12 +30,17 @@ import {
 } from "@chakra-ui/react";
 import {
     AprobarMpsSemanal,
+    CerrarObservacionMpsSemanal,
+    CrearObservacionMpsSemanal,
     GenerarOdpDesdeMps,
     ListarMpsSemanales,
+    ListarObservacionesMpsSemanal,
     ListarSemanasMps,
     ObtenerMpsSemanal,
     ObtenerOdpsDesdeMpsSemanal,
     type MpsSemanalDraftDTO,
+    type MpsSemanalObservacionDTO,
+    type MpsSemanalObservacionTipo,
     type MpsSemanalOrdenProduccionListItemDTO,
     type MpsSemanalListItemDTO,
     type PropuestaMpsCalendarBlockDTO,
@@ -43,6 +49,7 @@ import {
 import { downloadMpsSemanalPdf } from "./pdf/MpsSemanalPdfGenerator";
 import SemanaMPSPickerModal from "./SemanaMPSPickerModal";
 import MpsReadonlyReviewPanel, { type MpsReadonlyBlockContext } from "./MpsReadonlyReviewPanel";
+import MpsObservacionesPanel from "./MpsObservacionesPanel";
 import {
     formatSemanaMpsDisplayDate,
     getCurrentIsoWeekMonday,
@@ -177,6 +184,12 @@ function getTotalOrdenesEsperadasFromMps(mps: MpsSemanalDraftDTO | null): number
         .reduce((total, block) => total + Math.max(block.lotesAsignados ?? 0, 0), 0);
 }
 
+function generateApprovalToken(): string {
+    return Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, "0");
+}
+
 function SummaryLine({ label, value }: { label: string; value: number }) {
     return (
         <Text fontSize="sm" color="gray.600">
@@ -294,6 +307,9 @@ export default function AprobacionMPSWeekTab() {
     const [selectedMpsDetail, setSelectedMpsDetail] = useState<MpsSemanalDraftDTO | null>(null);
     const [isLoadingMpsDetail, setIsLoadingMpsDetail] = useState(false);
     const [mpsDetailError, setMpsDetailError] = useState<string | null>(null);
+    const [observaciones, setObservaciones] = useState<MpsSemanalObservacionDTO[]>([]);
+    const [isLoadingObservaciones, setIsLoadingObservaciones] = useState(false);
+    const [observacionesError, setObservacionesError] = useState<string | null>(null);
     const [approvingWeekStartDate, setApprovingWeekStartDate] = useState<string | null>(null);
     const [generatingWeekStartDate, setGeneratingWeekStartDate] = useState<string | null>(null);
     const [downloadingPdfWeekStartDate, setDownloadingPdfWeekStartDate] = useState<string | null>(null);
@@ -301,6 +317,8 @@ export default function AprobacionMPSWeekTab() {
     const [isLoadingOdps, setIsLoadingOdps] = useState(false);
     const [odpsError, setOdpsError] = useState<string | null>(null);
     const [selectedMpsBlockOrders, setSelectedMpsBlockOrders] = useState<SelectedMpsBlockOrders | null>(null);
+    const [approvalToken, setApprovalToken] = useState<string | null>(null);
+    const [approvalTokenInput, setApprovalTokenInput] = useState("");
 
     const selectedMpsItem = useMemo(
         () => items.find((item) => item.weekStartDate === selectedWeekStartDate) ?? null,
@@ -337,6 +355,32 @@ export default function AprobacionMPSWeekTab() {
                 return aOrdinal - bOrdinal || a.ordenId - b.ordenId;
             });
     }, [selectedMpsBlockOrders, selectedWeekOdps]);
+
+    const pendingObservacionesCount = useMemo(() => (
+        observaciones.filter((observacion) => (
+            observacion.estado === "ABIERTA" || observacion.estado === "ATENDIDA"
+        )).length
+    ), [observaciones]);
+
+    const loadObservaciones = useCallback(async (targetWeekStartDate: string | null) => {
+        if (!targetWeekStartDate) {
+            setObservaciones([]);
+            setObservacionesError(null);
+            setIsLoadingObservaciones(false);
+            return;
+        }
+        setIsLoadingObservaciones(true);
+        setObservacionesError(null);
+        try {
+            const response = await ListarObservacionesMpsSemanal(targetWeekStartDate);
+            setObservaciones(response);
+        } catch (error) {
+            setObservaciones([]);
+            setObservacionesError(getAxiosErrorMessage(error, "No fue posible cargar las observaciones del MPS."));
+        } finally {
+            setIsLoadingObservaciones(false);
+        }
+    }, []);
 
     const loadInitialData = useCallback(async () => {
         setIsLoadingInitial(true);
@@ -480,6 +524,21 @@ export default function AprobacionMPSWeekTab() {
         selectedMpsItem?.weekStartDate,
     ]);
 
+    useEffect(() => {
+        if (selectedMpsItem?.weekStartDate) {
+            void loadObservaciones(selectedMpsItem.weekStartDate);
+        } else {
+            setObservaciones([]);
+            setObservacionesError(null);
+            setIsLoadingObservaciones(false);
+        }
+    }, [
+        loadObservaciones,
+        selectedMpsItem?.fechaActualizacion,
+        selectedMpsItem?.mpsId,
+        selectedMpsItem?.weekStartDate,
+    ]);
+
     const handleSemanaChange = (semana: SemanaMPSDTO) => {
         setSelectedSemana(semana);
         setSelectedWeekStartDate(semana.startDate);
@@ -487,14 +546,40 @@ export default function AprobacionMPSWeekTab() {
         setSelectedWeekOdps([]);
         setMpsDetailError(null);
         setOdpsError(null);
+        setObservaciones([]);
+        setObservacionesError(null);
         setSelectedMpsBlockOrders(null);
+        setApprovalToken(null);
+        setApprovalTokenInput("");
         void refreshCurrentSelection(semana.startDate);
     };
 
     const handleApprove = async (mps: MpsSemanalDraftDTO) => {
+        if (pendingObservacionesCount > 0) {
+            toast({
+                title: "Observaciones pendientes",
+                description: "Cierre o acepte las observaciones pendientes antes de aprobar el MPS.",
+                status: "warning",
+                duration: 4000,
+                isClosable: true,
+            });
+            return;
+        }
+        if (!approvalToken || approvalTokenInput !== approvalToken) {
+            toast({
+                title: "Token requerido",
+                description: "Digite el token de 4 digitos mostrado para habilitar la aprobacion.",
+                status: "warning",
+                duration: 4000,
+                isClosable: true,
+            });
+            return;
+        }
         setApprovingWeekStartDate(mps.weekStartDate);
         try {
             await AprobarMpsSemanal({ weekStartDate: mps.weekStartDate });
+            setApprovalToken(null);
+            setApprovalTokenInput("");
             toast({
                 title: "Semana aprobada",
                 description: `La semana ${getSemanaMpsLabel(mps)} fue aprobada correctamente.`,
@@ -513,6 +598,62 @@ export default function AprobacionMPSWeekTab() {
             });
         } finally {
             setApprovingWeekStartDate(null);
+        }
+    };
+
+    const handleCreateObservacion = async (tipo: MpsSemanalObservacionTipo, mensaje: string) => {
+        if (!selectedMpsDetail) {
+            return;
+        }
+        try {
+            await CrearObservacionMpsSemanal({
+                weekStartDate: selectedMpsDetail.weekStartDate,
+                tipo,
+                mensaje,
+            });
+            toast({
+                title: "Observacion registrada",
+                description: "La observacion quedo disponible para programacion.",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+            await loadObservaciones(selectedMpsDetail.weekStartDate);
+        } catch (error) {
+            toast({
+                title: "No se pudo registrar la observacion",
+                description: getAxiosErrorMessage(error, "La observacion no pudo guardarse."),
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+            throw error;
+        }
+    };
+
+    const handleCerrarObservacion = async (observacionId: number) => {
+        if (!selectedMpsDetail) {
+            return;
+        }
+        try {
+            await CerrarObservacionMpsSemanal(observacionId);
+            toast({
+                title: "Correccion aceptada",
+                description: "La observacion quedo cerrada.",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+            await loadObservaciones(selectedMpsDetail.weekStartDate);
+        } catch (error) {
+            toast({
+                title: "No se pudo cerrar la observacion",
+                description: getAxiosErrorMessage(error, "La observacion no pudo cerrarse."),
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+            throw error;
         }
     };
 
@@ -562,7 +703,27 @@ export default function AprobacionMPSWeekTab() {
     };
 
     const totalOrdenesEsperadasFromDetail = getTotalOrdenesEsperadasFromMps(selectedMpsDetail);
-    const canApprove = selectedMpsDetail?.estado === "BORRADOR" && totalOrdenesEsperadasFromDetail > 0;
+    const canApproveBase = selectedMpsDetail?.estado === "BORRADOR" && totalOrdenesEsperadasFromDetail > 0;
+    const canApproveWithoutToken = canApproveBase
+        && pendingObservacionesCount === 0
+        && !isLoadingObservaciones
+        && !observacionesError;
+    useEffect(() => {
+        setApprovalTokenInput("");
+        if (canApproveWithoutToken) {
+            setApprovalToken(generateApprovalToken());
+        } else {
+            setApprovalToken(null);
+        }
+    }, [
+        canApproveWithoutToken,
+        selectedMpsDetail?.mpsId,
+        selectedMpsDetail?.revisionNumero,
+        selectedMpsDetail?.weekStartDate,
+    ]);
+    const canApprove = canApproveWithoutToken
+        && approvalToken !== null
+        && approvalTokenInput === approvalToken;
     const canGenerateOdps = selectedMpsItem?.estado === "APROBADO"
         && !selectedMpsItem.odpsGeneradasCompletas
         && selectedMpsItem.totalOrdenesEsperadas > 0;
@@ -591,7 +752,8 @@ export default function AprobacionMPSWeekTab() {
                         selectedMpsId={selectedMpsItem?.mpsId ?? selectedSemana?.mpsId}
                         selectedEstado={selectedMpsItem?.estado ?? selectedSemana?.estado}
                         selectedFechaGeneracionOdps={selectedMpsItem?.fechaGeneracionOdps ?? selectedSemana?.fechaGeneracionOdps}
-                        buttonLabel="Semana MPS"
+                        buttonLabel="Selector de semana MPS"
+                        buttonHelperText="Click para cambiar o consultar semana"
                         modalTitle="Seleccionar semana para aprobacion"
                     />
                 </VStack>
@@ -669,6 +831,55 @@ export default function AprobacionMPSWeekTab() {
                                             </Text>
                                         </Box>
                                     )}
+                                    {canApproveBase && pendingObservacionesCount > 0 && (
+                                        <Box p={3} bg="orange.50" borderWidth="1px" borderColor="orange.200" borderRadius="md">
+                                            <Text fontSize="sm" color="orange.700">
+                                                Hay {pendingObservacionesCount} observaciones abiertas o atendidas. Deben cerrarse antes de aprobar.
+                                            </Text>
+                                        </Box>
+                                    )}
+                                    {canApproveBase && (isLoadingObservaciones || observacionesError) && (
+                                        <Box p={3} bg="orange.50" borderWidth="1px" borderColor="orange.200" borderRadius="md">
+                                            <Text fontSize="sm" color="orange.700">
+                                                Las observaciones deben estar cargadas correctamente antes de aprobar.
+                                            </Text>
+                                        </Box>
+                                    )}
+                                    {canApproveWithoutToken && approvalToken !== null && (
+                                        <Box p={3} bg="green.50" borderWidth="1px" borderColor="green.200" borderRadius="md">
+                                            <Flex justify="space-between" align="center" gap={3} wrap="wrap">
+                                                <Box>
+                                                    <Text fontSize="sm" color="green.800" fontWeight="semibold">
+                                                        Confirmacion de aprobacion
+                                                    </Text>
+                                                    <Text fontSize="sm" color="green.700">
+                                                        Digite{" "}
+                                                        <Text as="span" fontWeight="bold" letterSpacing="0.08em">
+                                                            {approvalToken}
+                                                        </Text>{" "}
+                                                        para habilitar la aprobacion.
+                                                    </Text>
+                                                </Box>
+                                                <Input
+                                                    aria-label="Token de aprobacion MPS"
+                                                    value={approvalTokenInput}
+                                                    onChange={(event) => setApprovalTokenInput(
+                                                        event.target.value.replace(/\D/g, "").slice(0, 4),
+                                                    )}
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    maxLength={4}
+                                                    autoComplete="off"
+                                                    placeholder="0000"
+                                                    bg="white"
+                                                    maxW="120px"
+                                                    textAlign="center"
+                                                    fontWeight="bold"
+                                                    letterSpacing="0.08em"
+                                                />
+                                            </Flex>
+                                        </Box>
+                                    )}
 
                                     <Flex justify="end" gap={3} wrap="wrap">
                                         <Button
@@ -679,11 +890,12 @@ export default function AprobacionMPSWeekTab() {
                                         >
                                             PDF MPS
                                         </Button>
-                                        {canApprove && selectedMpsDetail && (
+                                        {canApproveBase && selectedMpsDetail && (
                                             <Button
                                                 colorScheme="green"
                                                 onClick={() => void handleApprove(selectedMpsDetail)}
                                                 isLoading={approvingWeekStartDate === selectedMpsDetail.weekStartDate}
+                                                isDisabled={!canApprove}
                                             >
                                                 Aprobar MPS
                                             </Button>
@@ -731,6 +943,16 @@ export default function AprobacionMPSWeekTab() {
                                 areGeneratedOrdersAvailable={areGeneratedOrdersAvailable}
                                 getBlockOrderCount={(blockId) => blockOrderCountById.get(blockId) ?? 0}
                                 onBlockClick={(block, context) => setSelectedMpsBlockOrders({ block, context })}
+                            />
+                            <MpsObservacionesPanel
+                                mode="aprobacion"
+                                mps={selectedMpsDetail}
+                                observaciones={observaciones}
+                                isLoading={isLoadingObservaciones}
+                                error={observacionesError}
+                                onRetry={() => void loadObservaciones(selectedMpsDetail.weekStartDate)}
+                                onCreateObservacion={handleCreateObservacion}
+                                onCerrarObservacion={handleCerrarObservacion}
                             />
                         </VStack>
                     ) : (

@@ -286,6 +286,7 @@ export default class EndPointsURL{
     public programacion_mps_semanal_aprobar: string;
     public programacion_mps_semanal_generar_odps: string;
     public programacion_mps_semanal_odps: string;
+    public programacion_mps_semanal_observaciones: string;
 
     // seguimiento orden area endpoints
     public seguimiento_mis_ordenes_pendientes: string;
@@ -771,6 +772,7 @@ export default class EndPointsURL{
         this.programacion_mps_semanal_aprobar = `${domain}/${programacion_produccion_res}/mps-semanal/aprobar`;
         this.programacion_mps_semanal_generar_odps = `${domain}/${programacion_produccion_res}/mps-semanal/generar-odps`;
         this.programacion_mps_semanal_odps = `${domain}/${programacion_produccion_res}/mps-semanal/odps`;
+        this.programacion_mps_semanal_observaciones = `${domain}/${programacion_produccion_res}/mps-semanal/observaciones`;
 
         // Seguimiento orden area endpoints
         const seguimiento_orden_area_res = 'api/seguimiento-orden-area';

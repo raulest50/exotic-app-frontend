@@ -38,6 +38,7 @@ interface SemanaMPSPickerModalProps {
     selectedEstado?: SemanaMPSDTO["estado"] | null;
     selectedFechaGeneracionOdps?: string | null;
     buttonLabel?: string;
+    buttonHelperText?: string;
     modalTitle?: string;
 }
 
@@ -98,7 +99,8 @@ export default function SemanaMPSPickerModal({
     selectedMpsId,
     selectedEstado,
     selectedFechaGeneracionOdps,
-    buttonLabel = "Cambiar semana",
+    buttonLabel = "Selector de semana MPS",
+    buttonHelperText = "Click para cambiar o consultar semana",
     modalTitle = "Seleccionar semana MPS",
 }: SemanaMPSPickerModalProps) {
     const disclosure = useDisclosure();
@@ -144,10 +146,14 @@ export default function SemanaMPSPickerModal({
                 py={2}
                 px={3}
                 justifyContent="flex-start"
+                aria-label={`${buttonLabel}. ${buttonHelperText}. Semana ${displayCodigo}, ${estadoLabel}, ${formatSemanaMpsDisplayDate(displayStartDate)} a ${formatSemanaMpsDisplayDate(displayEndDate)}`}
             >
                 <VStack align="start" spacing={1}>
-                    <Text fontSize="xs" color="gray.500" lineHeight="1">
+                    <Text fontSize="xs" color="teal.700" fontWeight="semibold" lineHeight="1">
                         {buttonLabel}
+                    </Text>
+                    <Text fontSize="xs" color="gray.500" lineHeight="1">
+                        {buttonHelperText}
                     </Text>
                     <Flex gap={2} align="center" wrap="wrap">
                         <Text fontWeight="semibold" lineHeight="1.1">{displayCodigo}</Text>

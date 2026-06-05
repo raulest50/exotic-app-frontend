@@ -207,6 +207,7 @@ export interface MpsSemanalDraftDTO extends PropuestaMpsSemanalDTO {
     anioSemana: number | null;
     numeroSemana: number | null;
     standard: string | null;
+    revisionNumero: number | null;
 }
 
 export interface MpsSemanalListItemDTO {
@@ -286,6 +287,37 @@ export interface MpsSemanalOrdenProduccionListItemDTO {
     estadoOrden: number;
     mpsBlockId: string | null;
     mpsLoteOrdinal: number | null;
+}
+
+export type MpsSemanalObservacionEstado = "ABIERTA" | "ATENDIDA" | "CERRADA";
+export type MpsSemanalObservacionTipo = "BLOQUEANTE" | "ADVERTENCIA" | "INFORMATIVA" | "OTRO";
+
+export interface MpsSemanalObservacionDTO {
+    observacionId: number;
+    mpsId: number;
+    weekStartDate: string;
+    semanaMpsCodigo: string | null;
+    revisionMps: number;
+    autorUsername: string;
+    mensaje: string;
+    tipo: MpsSemanalObservacionTipo;
+    estado: MpsSemanalObservacionEstado;
+    respuestaCorreccion: string | null;
+    atendidaPorUsername: string | null;
+    fechaAtencion: string | null;
+    cerradaPorUsername: string | null;
+    fechaCierre: string | null;
+    fechaCreacion: string;
+}
+
+export interface CrearMpsSemanalObservacionRequestDTO {
+    weekStartDate: string;
+    tipo: MpsSemanalObservacionTipo;
+    mensaje: string;
+}
+
+export interface AtenderMpsSemanalObservacionRequestDTO {
+    respuestaCorreccion: string;
 }
 
 interface ProcesamientoInformeCache {
@@ -746,6 +778,52 @@ export async function ObtenerOdpsDesdeMpsSemanal(
         {
             params: { weekStartDate },
         },
+    );
+    return response.data;
+}
+
+export async function ListarObservacionesMpsSemanal(
+    weekStartDate: string,
+): Promise<MpsSemanalObservacionDTO[]> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.get<MpsSemanalObservacionDTO[]>(
+        endPoints.programacion_mps_semanal_observaciones,
+        {
+            params: { weekStartDate },
+        },
+    );
+    return response.data;
+}
+
+export async function CrearObservacionMpsSemanal(
+    payload: CrearMpsSemanalObservacionRequestDTO,
+): Promise<MpsSemanalObservacionDTO> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.post<MpsSemanalObservacionDTO>(
+        endPoints.programacion_mps_semanal_observaciones,
+        payload,
+    );
+    return response.data;
+}
+
+export async function AtenderObservacionMpsSemanal(
+    observacionId: number,
+    payload: AtenderMpsSemanalObservacionRequestDTO,
+): Promise<MpsSemanalObservacionDTO> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.post<MpsSemanalObservacionDTO>(
+        `${endPoints.programacion_mps_semanal_observaciones}/${observacionId}/atender`,
+        payload,
+    );
+    return response.data;
+}
+
+export async function CerrarObservacionMpsSemanal(
+    observacionId: number,
+): Promise<MpsSemanalObservacionDTO> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.post<MpsSemanalObservacionDTO>(
+        `${endPoints.programacion_mps_semanal_observaciones}/${observacionId}/cerrar`,
     );
     return response.data;
 }

@@ -34,15 +34,18 @@ import TerminadoPicker4MPS, {
     type TerminadoPickerResult,
 } from "./TerminadoPicker4MPS/TerminadoPicker4MPS";
 import {
+    AtenderObservacionMpsSemanal,
     GuardarBorradorProgramacionSemanal,
+    ListarObservacionesMpsSemanal,
     ObtenerMpsSemanal,
     type MpsSemanalDraftDTO,
+    type MpsSemanalObservacionDTO,
     type PropuestaMpsCalendarBlockDTO,
 } from "../ProgProdMensualTab/PlaneacionProduccionService";
 import { downloadMpsSemanalPdf } from "./pdf/MpsSemanalPdfGenerator";
 import type { SemanaMPSDTO } from "./SemanaMPSPicker";
 import SemanaMPSPickerModal from "./SemanaMPSPickerModal";
-import MpsCategoriaBreakdown from "./MpsCategoriaBreakdown";
+import MpsObservacionesPanel from "./MpsObservacionesPanel";
 
 interface ProgramacionEntry {
     id: string;
@@ -220,6 +223,9 @@ export default function ProgramacionProduccionSemanalTab() {
     const [selectedSemana, setSelectedSemana] = useState<SemanaMPSDTO | null>(null);
     const [entries, setEntries] = useState<ProgramacionEntry[]>([]);
     const [currentDraft, setCurrentDraft] = useState<MpsSemanalDraftDTO | null>(null);
+    const [observaciones, setObservaciones] = useState<MpsSemanalObservacionDTO[]>([]);
+    const [isLoadingObservaciones, setIsLoadingObservaciones] = useState(false);
+    const [observacionesError, setObservacionesError] = useState<string | null>(null);
     const [lastPersistedEntriesFingerprint, setLastPersistedEntriesFingerprint] = useState("");
     const [lastPersistedEntries, setLastPersistedEntries] = useState<ProgramacionEntry[]>([]);
     const [pendingSemanaChange, setPendingSemanaChange] = useState<SemanaMPSDTO | null>(null);
@@ -292,14 +298,29 @@ export default function ProgramacionProduccionSemanalTab() {
         );
     }, [entries]);
 
-    const breakdownEntries = useMemo(() => entries.map((entry) => ({
-        productoId: entry.productoId,
-        productoNombre: entry.productoNombre,
-        categoriaNombre: entry.categoriaNombre,
-        loteSize: entry.loteSize,
-        unidades: entry.unidades,
-        dayIndex: entry.dayIndex,
-    })), [entries]);
+    const loadObservaciones = useCallback(async (targetWeekStartDate: string | null) => {
+        if (!targetWeekStartDate) {
+            setObservaciones([]);
+            setObservacionesError(null);
+            setIsLoadingObservaciones(false);
+            return;
+        }
+        setIsLoadingObservaciones(true);
+        setObservacionesError(null);
+        try {
+            const response = await ListarObservacionesMpsSemanal(targetWeekStartDate);
+            setObservaciones(response);
+        } catch (error) {
+            if (isNotFoundError(error)) {
+                setObservaciones([]);
+                setObservacionesError(null);
+            } else {
+                setObservacionesError(getAxiosErrorMessage(error, "No fue posible cargar las observaciones del MPS."));
+            }
+        } finally {
+            setIsLoadingObservaciones(false);
+        }
+    }, []);
 
     const loadWeekForProgramming = useCallback(async (
         targetWeekStartDate: string,
@@ -356,6 +377,22 @@ export default function ProgramacionProduccionSemanalTab() {
     useEffect(() => {
         void loadWeekForProgramming(weekStartDate);
     }, [loadWeekForProgramming]);
+
+    useEffect(() => {
+        if (currentDraft?.weekStartDate) {
+            void loadObservaciones(currentDraft.weekStartDate);
+        } else {
+            setObservaciones([]);
+            setObservacionesError(null);
+            setIsLoadingObservaciones(false);
+        }
+    }, [
+        currentDraft?.fechaActualizacion,
+        currentDraft?.mpsId,
+        currentDraft?.revisionNumero,
+        currentDraft?.weekStartDate,
+        loadObservaciones,
+    ]);
 
     const applyWeekChange = async (semana: SemanaMPSDTO) => {
         const wasLoaded = await loadWeekForProgramming(semana.startDate, { showLoadedToast: true });
@@ -518,6 +555,42 @@ export default function ProgramacionProduccionSemanalTab() {
         }
     };
 
+    const handleAtenderObservacion = async (observacionId: number, respuestaCorreccion: string) => {
+        if (!currentDraft) {
+            return;
+        }
+        if (hasUnsavedChanges) {
+            toast({
+                title: "Guarde primero el borrador",
+                description: "Para atender una observacion, primero guarde el MPS corregido.",
+                status: "warning",
+                duration: 4000,
+                isClosable: true,
+            });
+            throw new Error("Hay cambios sin guardar.");
+        }
+        try {
+            await AtenderObservacionMpsSemanal(observacionId, { respuestaCorreccion });
+            toast({
+                title: "Observacion atendida",
+                description: "La observacion quedo marcada como atendida para revision de aprobacion.",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+            await loadObservaciones(currentDraft.weekStartDate);
+        } catch (error) {
+            toast({
+                title: "No se pudo atender la observacion",
+                description: getAxiosErrorMessage(error, "La observacion no pudo actualizarse."),
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+            throw error;
+        }
+    };
+
     const canSave = validationIssues.length === 0 && !isReadOnly && !isLoadingDraft && !isWeekFullyLocked;
 
     return (
@@ -535,7 +608,8 @@ export default function ProgramacionProduccionSemanalTab() {
                         selectedMpsId={currentDraft?.mpsId ?? selectedSemana?.mpsId}
                         selectedEstado={currentDraft?.estado ?? selectedSemana?.estado}
                         selectedFechaGeneracionOdps={currentDraft?.fechaGeneracionOdps ?? selectedSemana?.fechaGeneracionOdps}
-                        buttonLabel="Semana MPS"
+                        buttonLabel="Selector de semana MPS"
+                        buttonHelperText="Click para cambiar o consultar semana"
                         modalTitle="Seleccionar semana para programacion"
                     />
                     <Button
@@ -726,9 +800,15 @@ export default function ProgramacionProduccionSemanalTab() {
                 })}
             </SimpleGrid>
 
-            <MpsCategoriaBreakdown
-                entries={breakdownEntries}
-                dayLabels={DAY_LABELS}
+            <MpsObservacionesPanel
+                mode="programacion"
+                mps={currentDraft}
+                observaciones={observaciones}
+                isLoading={isLoadingObservaciones}
+                error={observacionesError}
+                hasUnsavedChanges={hasUnsavedChanges}
+                onRetry={() => void loadObservaciones(currentDraft?.weekStartDate ?? null)}
+                onAtenderObservacion={handleAtenderObservacion}
             />
 
             <TerminadoPicker4MPS
