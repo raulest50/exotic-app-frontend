@@ -24,7 +24,7 @@ export function ListaSearchClientes({clientes,onVerDetalle}:Props){
                         <Tr><Td colSpan={5} textAlign='center'><Text py={4}>No se encontraron clientes.</Text></Td></Tr>
                     ) : (
                         clientes.map(c=> (
-                            <Tr key={c.clienteId} _hover={{bg:'gray.100'}}>
+                            <Tr key={c.clienteId} _hover={{bg:'app.rowHoverStrong'}}>
                                 <Td>{c.clienteId}</Td>
                                 <Td>{c.nombre}</Td>
                                 <Td>{c.email}</Td>

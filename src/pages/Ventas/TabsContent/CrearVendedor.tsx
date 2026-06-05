@@ -425,7 +425,7 @@ const CrearVendedor: React.FC<CrearVendedorProps> = ({ onVendorCreated }) => {
                             value={formData.userId}
                             isReadOnly
                             placeholder="Seleccione un usuario"
-                            bg="gray.50"
+                            bg="app.inputReadonly"
                         />
                         <InputRightElement>
                             <IconButton

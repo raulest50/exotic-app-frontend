@@ -18,7 +18,7 @@ import {
     useToast, useDisclosure,
     Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
 } from '@chakra-ui/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CasePack, Categoria, Insumo, Material, Producto, ProductoBasicUpdatePayload } from "../../types.tsx";
 import { ArrowBackIcon, EditIcon, CheckIcon, QuestionIcon, WarningIcon } from '@chakra-ui/icons';
 import axios from 'axios';
@@ -52,6 +52,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     const [isFormValid, setIsFormValid] = useState<boolean>(true);
     const [hasChanges, setHasChanges] = useState<boolean>(false);
     const [isLoadingDetalle, setIsLoadingDetalle] = useState<boolean>(false);
+    const detalleFetchAttemptedRef = useRef<string | null>(null);
     const [prefijoVerificado, setPrefijoVerificado] = useState<boolean>(false);
     const [verificandoPrefijo, setVerificandoPrefijo] = useState<boolean>(false);
     const [categoriasDisponibles, setCategoriasDisponibles] = useState<Categoria[]>([]);
@@ -181,6 +182,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
         setCategoriaStatusError(null);
         setLoadingCategorias(false);
         setLoadingCategoriaEditability(false);
+        detalleFetchAttemptedRef.current = null;
     }, [producto]);
 
     // Manejar cambios en los campos editables
@@ -284,8 +286,9 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     useEffect(() => {
         const isSemiOTerminado = producto.tipo_producto === 'S' || producto.tipo_producto === 'T';
         const hasInsumos = Array.isArray(productoData.insumos) && productoData.insumos.length > 0;
+        const detalleYaSolicitado = detalleFetchAttemptedRef.current === producto.productoId;
 
-        if (!isSemiOTerminado || hasInsumos) {
+        if (!isSemiOTerminado || hasInsumos || detalleYaSolicitado) {
             return;
         }
 
@@ -315,6 +318,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                 });
             } finally {
                 if (isMounted) {
+                    detalleFetchAttemptedRef.current = producto.productoId;
                     setIsLoadingDetalle(false);
                 }
             }

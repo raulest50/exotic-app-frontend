@@ -37,10 +37,12 @@ import {
     type MpsSemanalDraftDTO,
     type MpsSemanalOrdenProduccionListItemDTO,
     type MpsSemanalListItemDTO,
+    type PropuestaMpsCalendarBlockDTO,
     type SemanaMPSDTO,
 } from "../ProgProdMensualTab/PlaneacionProduccionService.tsx";
 import { downloadMpsSemanalPdf } from "./pdf/MpsSemanalPdfGenerator";
 import SemanaMPSPickerModal from "./SemanaMPSPickerModal";
+import MpsReadonlyReviewPanel, { type MpsReadonlyBlockContext } from "./MpsReadonlyReviewPanel";
 import {
     formatSemanaMpsDisplayDate,
     getCurrentIsoWeekMonday,
@@ -54,6 +56,11 @@ type SemanaMpsDisplayInfo = {
     semanaMpsCodigo?: string | null;
     weekStartDate: string;
     weekEndDate: string;
+};
+
+type SelectedMpsBlockOrders = {
+    block: PropuestaMpsCalendarBlockDTO;
+    context: MpsReadonlyBlockContext;
 };
 
 function getAxiosErrorMessage(error: unknown, fallback: string): string {
@@ -105,6 +112,13 @@ function getSemanaMpsDisplayFromSemana(semana: SemanaMPSDTO): SemanaMpsDisplayIn
     };
 }
 
+function formatNumber(value: number): string {
+    return value.toLocaleString("es-CO", {
+        minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+        maximumFractionDigits: 2,
+    });
+}
+
 function formatDateTimeLabel(value: string | null): string {
     if (!value) {
         return "-";
@@ -122,18 +136,6 @@ function formatDateTimeLabel(value: string | null): string {
         hour: "2-digit",
         minute: "2-digit",
     });
-}
-
-function SummaryLine({ label, value }: { label: string; value: number }) {
-    const formattedValue = Number.isInteger(value)
-        ? value.toLocaleString("es-CO")
-        : value.toLocaleString("es-CO", { maximumFractionDigits: 2 });
-
-    return (
-        <Text fontSize="sm" color="gray.600">
-            {label}: <Text as="span" fontWeight="semibold" color="gray.700">{formattedValue}</Text>
-        </Text>
-    );
 }
 
 function renderEstadoOrdenLabel(estadoOrden: number): string {
@@ -164,10 +166,6 @@ function findDefaultSemana(semanas: SemanaMPSDTO[], currentWeekStartDate: string
         ?? null;
 }
 
-function getMpsDetailRowLabel(row: MpsSemanalDraftDTO["calendar"]["rows"][number]): string {
-    return row.poolCapacidadNombre ?? row.categoriaNombre ?? row.rowKey ?? "Sin categoria";
-}
-
 function getTotalOrdenesEsperadasFromMps(mps: MpsSemanalDraftDTO | null): number {
     if (!mps?.calendar?.rows) {
         return 0;
@@ -179,156 +177,108 @@ function getTotalOrdenesEsperadasFromMps(mps: MpsSemanalDraftDTO | null): number
         .reduce((total, block) => total + Math.max(block.lotesAsignados ?? 0, 0), 0);
 }
 
-function MpsDetailModal({
-    isOpen,
+function SummaryLine({ label, value }: { label: string; value: number }) {
+    return (
+        <Text fontSize="sm" color="gray.600">
+            {label}: <Text as="span" fontWeight="semibold" color="gray.700">{formatNumber(value)}</Text>
+        </Text>
+    );
+}
+
+function MpsBlockOrdersModal({
+    selectedBlock,
+    ordenes,
     isLoading,
-    mps,
+    error,
     onClose,
-    onApprove,
-    isApproving,
 }: {
-    isOpen: boolean;
+    selectedBlock: SelectedMpsBlockOrders | null;
+    ordenes: MpsSemanalOrdenProduccionListItemDTO[];
     isLoading: boolean;
-    mps: MpsSemanalDraftDTO | null;
+    error: string | null;
     onClose: () => void;
-    onApprove: (mps: MpsSemanalDraftDTO) => void;
-    isApproving: boolean;
 }) {
-    const rows = mps?.calendar?.rows ?? [];
-    const days = mps?.calendar?.days ?? [];
-    const totalOrdenesEsperadas = getTotalOrdenesEsperadasFromMps(mps);
-    const canApprove = mps?.estado === "BORRADOR" && totalOrdenesEsperadas > 0;
+    const isOpen = selectedBlock !== null;
+    const block = selectedBlock?.block ?? null;
+    const context = selectedBlock?.context ?? null;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="6xl">
+        <Modal isOpen={isOpen} onClose={onClose} size="5xl" isCentered>
             <ModalOverlay />
             <ModalContent>
-                <ModalHeader>
-                    Detalle MPS semanal
-                    {mps ? ` - Semana ${getSemanaMpsLabel(mps)}` : ""}
-                </ModalHeader>
+                <ModalHeader>OPs generadas del bloque MPS</ModalHeader>
                 <ModalCloseButton />
                 <ModalBody pb={6}>
-                    {isLoading ? (
-                        <Flex justify="center" align="center" py={10} gap={3}>
-                            <Spinner color="teal.500" />
-                            <Text color="gray.600">Cargando detalle MPS...</Text>
-                        </Flex>
-                    ) : !mps ? (
-                        <Box p={4} bg="gray.50" borderRadius="md">
-                            <Text color="gray.500" fontSize="sm">No hay detalle MPS cargado.</Text>
-                        </Box>
-                    ) : (
+                    {block && context && (
                         <VStack align="stretch" spacing={4}>
-                            <SimpleGrid columns={[1, 2, 4]} gap={3}>
-                                <Box p={3} bg="gray.50" borderRadius="md">
-                                    <Text fontSize="xs" color="gray.500">MPS</Text>
-                                    <Text fontWeight="semibold">#{mps.mpsId}</Text>
-                                </Box>
-                                <Box p={3} bg="gray.50" borderRadius="md">
-                                    <Text fontSize="xs" color="gray.500">Estado</Text>
-                                    <Badge colorScheme={getEstadoColorScheme(mps.estado)}>{getEstadoLabel(mps.estado)}</Badge>
-                                </Box>
-                                <Box p={3} bg="gray.50" borderRadius="md">
-                                    <Text fontSize="xs" color="gray.500">Semana</Text>
-                                    <Text fontWeight="semibold">{getSemanaMpsLabel(mps)}</Text>
-                                    <Text fontSize="xs" color="gray.500">{getSemanaMpsDateRange(mps)}</Text>
-                                </Box>
-                                <Box p={3} bg="gray.50" borderRadius="md">
-                                    <Text fontSize="xs" color="gray.500">ODPs</Text>
-                                    <Text fontWeight="semibold">{mps.fechaGeneracionOdps ? "Generadas" : "No generadas"}</Text>
-                                </Box>
-                            </SimpleGrid>
+                            <Box>
+                                <Heading size="sm">{block.productoNombre}</Heading>
+                                <Text fontSize="sm" color="gray.600">
+                                    {block.productoId} - {context.dayLabel} {formatSemanaMpsDisplayDate(context.date)}
+                                </Text>
+                                <Flex mt={2} gap={2} wrap="wrap">
+                                    <Badge colorScheme="teal">{formatNumber(block.lotesAsignados)} lotes</Badge>
+                                    <Badge colorScheme="purple">{formatNumber(block.cantidadAsignada)} und</Badge>
+                                    <Badge colorScheme="gray">Block ID: {block.blockId}</Badge>
+                                </Flex>
+                            </Box>
 
-                            <SimpleGrid columns={[1, 2, 4]} gap={3}>
-                                <SummaryLine label="Terminados evaluados" value={mps.summary.totalTerminadosEvaluados} />
-                                <SummaryLine label="Lotes propuestos" value={mps.summary.totalLotesPropuestos} />
-                                <SummaryLine label="Unidades propuestas" value={mps.summary.totalUnidadesPropuestas} />
-                                <SummaryLine label="ODPs esperadas" value={totalOrdenesEsperadas} />
-                            </SimpleGrid>
-
-                            {rows.length === 0 ? (
-                                <Box p={4} bg="gray.50" borderRadius="md">
-                                    <Text color="gray.500" fontSize="sm">Este MPS no tiene filas de calendario.</Text>
+                            {isLoading ? (
+                                <Flex justify="center" align="center" py={8} gap={3}>
+                                    <Spinner color="teal.500" />
+                                    <Text color="gray.600">Cargando OPs del bloque...</Text>
+                                </Flex>
+                            ) : error ? (
+                                <Box p={4} bg="red.50" borderWidth="1px" borderColor="red.200" borderRadius="md">
+                                    <Text color="red.700" fontSize="sm">{error}</Text>
+                                </Box>
+                            ) : ordenes.length === 0 ? (
+                                <Box p={4} bg="orange.50" borderWidth="1px" borderColor="orange.200" borderRadius="md">
+                                    <Text color="orange.700" fontSize="sm">
+                                        No se encontraron OPs asociadas a este bloque MPS.
+                                    </Text>
                                 </Box>
                             ) : (
                                 <TableContainer>
                                     <Table size="sm" variant="simple">
                                         <Thead>
                                             <Tr>
-                                                <Th>Categoria / Pool</Th>
-                                                {days.map((day) => (
-                                                    <Th key={day.dayIndex}>
-                                                        <VStack align="start" spacing={0}>
-                                                            <Text>{["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"][day.dayIndex] ?? `Dia ${day.dayIndex + 1}`}</Text>
-                                                            <Text fontSize="xs" color="gray.500">{day.date}</Text>
-                                                        </VStack>
-                                                    </Th>
-                                                ))}
+                                                <Th>Orden</Th>
+                                                <Th>Lote</Th>
+                                                <Th isNumeric>Cantidad</Th>
+                                                <Th>Lanzamiento</Th>
+                                                <Th>Fin planificado</Th>
+                                                <Th>Estado</Th>
+                                                <Th>Lote ordinal</Th>
                                             </Tr>
                                         </Thead>
                                         <Tbody>
-                                            {rows.map((row) => (
-                                                <Tr key={row.rowKey}>
-                                                    <Td fontWeight="semibold">{getMpsDetailRowLabel(row)}</Td>
-                                                    {days.map((day) => {
-                                                        const cell = row.days.find((candidate) => candidate.dayIndex === day.dayIndex);
-                                                        const blocks = cell?.blocks ?? [];
-                                                        return (
-                                                            <Td key={`${row.rowKey}-${day.dayIndex}`} verticalAlign="top">
-                                                                {blocks.length === 0 ? (
-                                                                    <Text fontSize="xs" color="gray.400">-</Text>
-                                                                ) : (
-                                                                    <VStack align="stretch" spacing={2}>
-                                                                        {blocks.map((block) => (
-                                                                            <Box key={block.blockId} p={2} bg="gray.50" borderRadius="md">
-                                                                                <Text fontSize="sm" fontWeight="medium">{block.productoNombre}</Text>
-                                                                                <Text fontSize="xs" color="gray.600">{block.productoId}</Text>
-                                                                                <Text fontSize="xs" color="gray.600">
-                                                                                    {block.cantidadAsignada.toLocaleString("es-CO")} und | {block.lotesAsignados.toLocaleString("es-CO")} lotes
-                                                                                </Text>
-                                                                            </Box>
-                                                                        ))}
-                                                                    </VStack>
-                                                                )}
-                                                            </Td>
-                                                        );
-                                                    })}
+                                            {ordenes.map((orden) => (
+                                                <Tr key={orden.ordenId}>
+                                                    <Td>{orden.ordenId}</Td>
+                                                    <Td>{orden.loteAsignado ?? "-"}</Td>
+                                                    <Td isNumeric>{formatNumber(orden.cantidadProducir)}</Td>
+                                                    <Td>{formatDateTimeLabel(orden.fechaLanzamiento)}</Td>
+                                                    <Td>{formatDateTimeLabel(orden.fechaFinalPlanificada)}</Td>
+                                                    <Td>{renderEstadoOrdenLabel(orden.estadoOrden)}</Td>
+                                                    <Td>{orden.mpsLoteOrdinal ?? "-"}</Td>
                                                 </Tr>
                                             ))}
                                         </Tbody>
                                     </Table>
                                 </TableContainer>
                             )}
+
+                            <Text fontSize="sm" color="gray.600">
+                                {ordenes.length} OPs asociadas a este bloque.
+                            </Text>
                         </VStack>
                     )}
                 </ModalBody>
-                <ModalFooter gap={3} justifyContent="space-between" flexWrap="wrap">
-                    {mps?.estado === "BORRADOR" && totalOrdenesEsperadas === 0 ? (
-                        <Text fontSize="sm" color="orange.600">
-                            No se puede aprobar una semana sin ODPs esperadas.
-                        </Text>
-                    ) : (
-                        <Box />
-                    )}
-                    <Flex gap={3}>
-                        <Button variant="ghost" onClick={onClose}>
-                            Cerrar
-                        </Button>
-                        {canApprove && (
-                            <Button
-                                colorScheme="green"
-                                onClick={() => {
-                                    if (mps) {
-                                        onApprove(mps);
-                                    }
-                                }}
-                                isLoading={isApproving}
-                            >
-                                Aprobar MPS
-                            </Button>
-                        )}
-                    </Flex>
+                <ModalFooter>
+                    <Button colorScheme="blue" onClick={onClose}>
+                        Cerrar
+                    </Button>
                 </ModalFooter>
             </ModalContent>
         </Modal>
@@ -341,17 +291,16 @@ export default function AprobacionMPSWeekTab() {
     const [selectedSemana, setSelectedSemana] = useState<SemanaMPSDTO | null>(null);
     const [selectedWeekStartDate, setSelectedWeekStartDate] = useState(getCurrentIsoWeekMonday());
     const [isLoadingInitial, setIsLoadingInitial] = useState(true);
-    const [detailWeekStartDate, setDetailWeekStartDate] = useState<string | null>(null);
     const [selectedMpsDetail, setSelectedMpsDetail] = useState<MpsSemanalDraftDTO | null>(null);
-    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isLoadingMpsDetail, setIsLoadingMpsDetail] = useState(false);
+    const [mpsDetailError, setMpsDetailError] = useState<string | null>(null);
     const [approvingWeekStartDate, setApprovingWeekStartDate] = useState<string | null>(null);
     const [generatingWeekStartDate, setGeneratingWeekStartDate] = useState<string | null>(null);
-    const [viewingWeekStartDate, setViewingWeekStartDate] = useState<string | null>(null);
     const [downloadingPdfWeekStartDate, setDownloadingPdfWeekStartDate] = useState<string | null>(null);
-    const [selectedWeekForOdps, setSelectedWeekForOdps] = useState<MpsSemanalListItemDTO | null>(null);
     const [selectedWeekOdps, setSelectedWeekOdps] = useState<MpsSemanalOrdenProduccionListItemDTO[]>([]);
-    const [isOdpsModalOpen, setIsOdpsModalOpen] = useState(false);
     const [isLoadingOdps, setIsLoadingOdps] = useState(false);
+    const [odpsError, setOdpsError] = useState<string | null>(null);
+    const [selectedMpsBlockOrders, setSelectedMpsBlockOrders] = useState<SelectedMpsBlockOrders | null>(null);
 
     const selectedMpsItem = useMemo(
         () => items.find((item) => item.weekStartDate === selectedWeekStartDate) ?? null,
@@ -364,6 +313,30 @@ export default function AprobacionMPSWeekTab() {
         }
         return selectedSemana ? getSemanaMpsDisplayFromSemana(selectedSemana) : null;
     }, [selectedMpsItem, selectedSemana]);
+
+    const blockOrderCountById = useMemo(() => {
+        const counts = new Map<string, number>();
+        selectedWeekOdps.forEach((orden) => {
+            if (orden.mpsBlockId) {
+                counts.set(orden.mpsBlockId, (counts.get(orden.mpsBlockId) ?? 0) + 1);
+            }
+        });
+        return counts;
+    }, [selectedWeekOdps]);
+
+    const selectedBlockOrders = useMemo(() => {
+        if (!selectedMpsBlockOrders) {
+            return [];
+        }
+
+        return selectedWeekOdps
+            .filter((orden) => orden.mpsBlockId === selectedMpsBlockOrders.block.blockId)
+            .sort((a, b) => {
+                const aOrdinal = a.mpsLoteOrdinal ?? Number.MAX_SAFE_INTEGER;
+                const bOrdinal = b.mpsLoteOrdinal ?? Number.MAX_SAFE_INTEGER;
+                return aOrdinal - bOrdinal || a.ordenId - b.ordenId;
+            });
+    }, [selectedMpsBlockOrders, selectedWeekOdps]);
 
     const loadInitialData = useCallback(async () => {
         setIsLoadingInitial(true);
@@ -419,44 +392,106 @@ export default function AprobacionMPSWeekTab() {
         void loadInitialData();
     }, [loadInitialData]);
 
+    useEffect(() => {
+        let isCancelled = false;
+
+        if (!selectedMpsItem) {
+            setSelectedMpsDetail(null);
+            setMpsDetailError(null);
+            setIsLoadingMpsDetail(false);
+            return () => {
+                isCancelled = true;
+            };
+        }
+
+        setSelectedMpsDetail(null);
+        setMpsDetailError(null);
+        setIsLoadingMpsDetail(true);
+
+        ObtenerMpsSemanal(selectedMpsItem.weekStartDate)
+            .then((mps) => {
+                if (!isCancelled) {
+                    setSelectedMpsDetail(mps);
+                }
+            })
+            .catch((error) => {
+                if (!isCancelled) {
+                    setMpsDetailError(getAxiosErrorMessage(error, "La consulta del MPS semanal fallo."));
+                }
+            })
+            .finally(() => {
+                if (!isCancelled) {
+                    setIsLoadingMpsDetail(false);
+                }
+            });
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [
+        selectedMpsItem?.estado,
+        selectedMpsItem?.fechaActualizacion,
+        selectedMpsItem?.fechaGeneracionOdps,
+        selectedMpsItem?.mpsId,
+        selectedMpsItem?.weekStartDate,
+    ]);
+
+    useEffect(() => {
+        let isCancelled = false;
+
+        if (!selectedMpsItem || selectedMpsItem.totalOrdenesGeneradas <= 0) {
+            setSelectedWeekOdps([]);
+            setOdpsError(null);
+            setIsLoadingOdps(false);
+            setSelectedMpsBlockOrders(null);
+            return () => {
+                isCancelled = true;
+            };
+        }
+
+        setSelectedWeekOdps([]);
+        setOdpsError(null);
+        setIsLoadingOdps(true);
+
+        ObtenerOdpsDesdeMpsSemanal(selectedMpsItem.weekStartDate)
+            .then((response) => {
+                if (!isCancelled) {
+                    setSelectedWeekOdps(response);
+                }
+            })
+            .catch((error) => {
+                if (!isCancelled) {
+                    setOdpsError(getAxiosErrorMessage(error, "La consulta de ODPs generadas para la semana fallo."));
+                }
+            })
+            .finally(() => {
+                if (!isCancelled) {
+                    setIsLoadingOdps(false);
+                }
+            });
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [
+        selectedMpsItem?.fechaGeneracionOdps,
+        selectedMpsItem?.mpsId,
+        selectedMpsItem?.totalOrdenesGeneradas,
+        selectedMpsItem?.weekStartDate,
+    ]);
+
     const handleSemanaChange = (semana: SemanaMPSDTO) => {
         setSelectedSemana(semana);
         setSelectedWeekStartDate(semana.startDate);
         setSelectedMpsDetail(null);
-        setIsDetailModalOpen(false);
-        setSelectedWeekForOdps(null);
         setSelectedWeekOdps([]);
-        setIsOdpsModalOpen(false);
+        setMpsDetailError(null);
+        setOdpsError(null);
+        setSelectedMpsBlockOrders(null);
         void refreshCurrentSelection(semana.startDate);
     };
 
-    const handleViewDetail = async (item: MpsSemanalListItemDTO) => {
-        setDetailWeekStartDate(item.weekStartDate);
-        setSelectedMpsDetail(null);
-        setIsDetailModalOpen(true);
-        try {
-            const mps = await ObtenerMpsSemanal(item.weekStartDate);
-            setSelectedMpsDetail(mps);
-        } catch (error) {
-            toast({
-                title: "No se pudo cargar el detalle MPS",
-                description: getAxiosErrorMessage(error, "La consulta del MPS semanal fallo."),
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-            });
-            setIsDetailModalOpen(false);
-        } finally {
-            setDetailWeekStartDate(null);
-        }
-    };
-
-    const handleCloseDetail = () => {
-        setIsDetailModalOpen(false);
-        setSelectedMpsDetail(null);
-    };
-
-    const handleApproveFromDetail = async (mps: MpsSemanalDraftDTO) => {
+    const handleApprove = async (mps: MpsSemanalDraftDTO) => {
         setApprovingWeekStartDate(mps.weekStartDate);
         try {
             await AprobarMpsSemanal({ weekStartDate: mps.weekStartDate });
@@ -467,7 +502,6 @@ export default function AprobacionMPSWeekTab() {
                 duration: 3000,
                 isClosable: true,
             });
-            handleCloseDetail();
             await refreshCurrentSelection(mps.weekStartDate);
         } catch (error) {
             toast({
@@ -507,35 +541,12 @@ export default function AprobacionMPSWeekTab() {
         }
     };
 
-    const handleViewOdps = async (item: MpsSemanalListItemDTO) => {
-        setViewingWeekStartDate(item.weekStartDate);
-        setIsLoadingOdps(true);
-        setSelectedWeekForOdps(item);
-        setIsOdpsModalOpen(true);
-        try {
-            const response = await ObtenerOdpsDesdeMpsSemanal(item.weekStartDate);
-            setSelectedWeekOdps(response);
-        } catch (error) {
-            toast({
-                title: "No se pudieron consultar las ODPs",
-                description: getAxiosErrorMessage(error, "La consulta de ODPs generadas para la semana fallo."),
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-            });
-            setIsOdpsModalOpen(false);
-            setSelectedWeekForOdps(null);
-            setSelectedWeekOdps([]);
-        } finally {
-            setViewingWeekStartDate(null);
-            setIsLoadingOdps(false);
-        }
-    };
-
     const handleDownloadPdf = async (item: MpsSemanalListItemDTO) => {
         setDownloadingPdfWeekStartDate(item.weekStartDate);
         try {
-            const mps = await ObtenerMpsSemanal(item.weekStartDate);
+            const mps = selectedMpsDetail?.weekStartDate === item.weekStartDate
+                ? selectedMpsDetail
+                : await ObtenerMpsSemanal(item.weekStartDate);
             await downloadMpsSemanalPdf(mps);
         } catch (error) {
             toast({
@@ -550,16 +561,14 @@ export default function AprobacionMPSWeekTab() {
         }
     };
 
-    const handleCloseOdpsModal = () => {
-        setIsOdpsModalOpen(false);
-        setSelectedWeekForOdps(null);
-        setSelectedWeekOdps([]);
-    };
-
+    const totalOrdenesEsperadasFromDetail = getTotalOrdenesEsperadasFromMps(selectedMpsDetail);
+    const canApprove = selectedMpsDetail?.estado === "BORRADOR" && totalOrdenesEsperadasFromDetail > 0;
     const canGenerateOdps = selectedMpsItem?.estado === "APROBADO"
         && !selectedMpsItem.odpsGeneradasCompletas
         && selectedMpsItem.totalOrdenesEsperadas > 0;
-    const canViewOdps = (selectedMpsItem?.totalOrdenesGeneradas ?? 0) > 0;
+    const areGeneratedOrdersAvailable = (selectedMpsItem?.totalOrdenesGeneradas ?? 0) > 0
+        && !isLoadingOdps
+        && !odpsError;
 
     return (
         <VStack align="stretch" spacing={5}>
@@ -568,7 +577,7 @@ export default function AprobacionMPSWeekTab() {
                     <Box>
                         <Heading size="md">Aprobacion MPS semanal</Heading>
                         <Text color="gray.600" mt={1}>
-                            Seleccione una semana, revise el detalle del MPS y apruebe solo desde la revision formal.
+                            Seleccione una semana, revise el MPS completo y ejecute la aprobacion desde esta vista.
                         </Text>
                     </Box>
                     <SemanaMPSPickerModal
@@ -637,12 +646,12 @@ export default function AprobacionMPSWeekTab() {
                                         </Box>
                                         <Box p={3} bg="gray.50" borderRadius="md">
                                             <Text fontSize="xs" color="gray.500">ODPs esperadas</Text>
-                                            <Text fontWeight="semibold">{selectedMpsItem.totalOrdenesEsperadas.toLocaleString("es-CO")}</Text>
+                                            <Text fontWeight="semibold">{formatNumber(selectedMpsItem.totalOrdenesEsperadas)}</Text>
                                         </Box>
                                         <Box p={3} bg="gray.50" borderRadius="md">
                                             <Text fontSize="xs" color="gray.500">ODPs generadas</Text>
                                             <Text fontWeight="semibold">
-                                                {selectedMpsItem.totalOrdenesGeneradas.toLocaleString("es-CO")} / {selectedMpsItem.totalOrdenesEsperadas.toLocaleString("es-CO")}
+                                                {formatNumber(selectedMpsItem.totalOrdenesGeneradas)} / {formatNumber(selectedMpsItem.totalOrdenesEsperadas)}
                                             </Text>
                                         </Box>
                                     </SimpleGrid>
@@ -653,22 +662,15 @@ export default function AprobacionMPSWeekTab() {
                                         <SummaryLine label="Unidades propuestas" value={selectedMpsItem.summary.totalUnidadesPropuestas} />
                                     </SimpleGrid>
 
-                                    {selectedMpsItem.estado === "BORRADOR" && (
-                                        <Box p={3} bg="yellow.50" borderWidth="1px" borderColor="yellow.200" borderRadius="md">
-                                            <Text fontSize="sm" color="yellow.800">
-                                                Para aprobar esta semana primero abra Revisar MPS. La aprobacion solo esta disponible dentro del detalle.
+                                    {selectedMpsItem.estado === "BORRADOR" && selectedMpsItem.totalOrdenesEsperadas === 0 && (
+                                        <Box p={3} bg="orange.50" borderWidth="1px" borderColor="orange.200" borderRadius="md">
+                                            <Text fontSize="sm" color="orange.700">
+                                                No se puede aprobar una semana sin ODPs esperadas.
                                             </Text>
                                         </Box>
                                     )}
 
                                     <Flex justify="end" gap={3} wrap="wrap">
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => void handleViewDetail(selectedMpsItem)}
-                                            isLoading={detailWeekStartDate === selectedMpsItem.weekStartDate}
-                                        >
-                                            Revisar MPS
-                                        </Button>
                                         <Button
                                             variant="outline"
                                             colorScheme="purple"
@@ -677,14 +679,13 @@ export default function AprobacionMPSWeekTab() {
                                         >
                                             PDF MPS
                                         </Button>
-                                        {canViewOdps && (
+                                        {canApprove && selectedMpsDetail && (
                                             <Button
-                                                variant="outline"
-                                                colorScheme="teal"
-                                                onClick={() => void handleViewOdps(selectedMpsItem)}
-                                                isLoading={viewingWeekStartDate === selectedMpsItem.weekStartDate}
+                                                colorScheme="green"
+                                                onClick={() => void handleApprove(selectedMpsDetail)}
+                                                isLoading={approvingWeekStartDate === selectedMpsDetail.weekStartDate}
                                             >
-                                                Ver ODPs
+                                                Aprobar MPS
                                             </Button>
                                         )}
                                         {canGenerateOdps && (
@@ -704,97 +705,49 @@ export default function AprobacionMPSWeekTab() {
                 </Box>
             )}
 
-            <MpsDetailModal
-                isOpen={isDetailModalOpen}
-                isLoading={detailWeekStartDate !== null}
-                mps={selectedMpsDetail}
-                onClose={handleCloseDetail}
-                onApprove={handleApproveFromDetail}
-                isApproving={approvingWeekStartDate === selectedMpsDetail?.weekStartDate}
-            />
-
-            <Modal isOpen={isOdpsModalOpen} onClose={handleCloseOdpsModal} size="6xl">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>
-                        ODPs generadas
-                        {selectedWeekForOdps ? ` - Semana ${getSemanaMpsLabel(selectedWeekForOdps)}` : ""}
-                    </ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody pb={6}>
-                        {selectedWeekForOdps && (
-                            <VStack align="stretch" spacing={4}>
-                                <Box>
-                                    <Text fontSize="sm" color="gray.600">
-                                        ODPs generadas: {selectedWeekForOdps.totalOrdenesGeneradas} / {selectedWeekForOdps.totalOrdenesEsperadas}
+            {selectedMpsItem && (
+                <Box p={5} bg="white" borderRadius="md" boxShadow="sm">
+                    {isLoadingMpsDetail ? (
+                        <Flex justify="center" align="center" py={12} gap={3}>
+                            <Spinner color="teal.500" />
+                            <Text color="gray.600">Cargando detalle MPS...</Text>
+                        </Flex>
+                    ) : mpsDetailError ? (
+                        <Box p={4} bg="red.50" borderWidth="1px" borderColor="red.200" borderRadius="md">
+                            <Text color="red.700" fontSize="sm">{mpsDetailError}</Text>
+                        </Box>
+                    ) : selectedMpsDetail ? (
+                        <VStack align="stretch" spacing={4}>
+                            {selectedMpsItem.totalOrdenesGeneradas > 0 && odpsError && (
+                                <Box p={3} bg="red.50" borderWidth="1px" borderColor="red.200" borderRadius="md">
+                                    <Text color="red.700" fontSize="sm">
+                                        {odpsError}
                                     </Text>
-                                    {selectedWeekForOdps.generadoPorUsername && (
-                                        <Text fontSize="sm" color="gray.600">
-                                            Generadas por: {selectedWeekForOdps.generadoPorUsername}
-                                        </Text>
-                                    )}
-                                    {selectedWeekForOdps.fechaGeneracionOdps && (
-                                        <Text fontSize="sm" color="gray.600">
-                                            Fecha de generacion: {formatDateTimeLabel(selectedWeekForOdps.fechaGeneracionOdps)}
-                                        </Text>
-                                    )}
                                 </Box>
+                            )}
+                            <MpsReadonlyReviewPanel
+                                mps={selectedMpsDetail}
+                                totalOrdenesGeneradas={selectedMpsItem.totalOrdenesGeneradas}
+                                areGeneratedOrdersAvailable={areGeneratedOrdersAvailable}
+                                getBlockOrderCount={(blockId) => blockOrderCountById.get(blockId) ?? 0}
+                                onBlockClick={(block, context) => setSelectedMpsBlockOrders({ block, context })}
+                            />
+                        </VStack>
+                    ) : (
+                        <Box p={4} bg="gray.50" borderRadius="md">
+                            <Text color="gray.500" fontSize="sm">No hay detalle MPS cargado.</Text>
+                        </Box>
+                    )}
+                </Box>
+            )}
 
-                                {isLoadingOdps ? (
-                                    <Flex justify="center" align="center" py={8} gap={3}>
-                                        <Spinner color="teal.500" />
-                                        <Text color="gray.600">Cargando ODPs generadas...</Text>
-                                    </Flex>
-                                ) : selectedWeekOdps.length === 0 ? (
-                                    <Box p={4} bg="gray.50" borderRadius="md">
-                                        <Text color="gray.500" fontSize="sm">
-                                            Esta semana no tiene ODPs generadas registradas.
-                                        </Text>
-                                    </Box>
-                                ) : (
-                                    <TableContainer>
-                                        <Table size="sm" variant="simple">
-                                            <Thead>
-                                                <Tr>
-                                                    <Th>Orden</Th>
-                                                    <Th>Producto</Th>
-                                                    <Th>Lote</Th>
-                                                    <Th isNumeric>Cantidad</Th>
-                                                    <Th>Lanzamiento</Th>
-                                                    <Th>Fin planificado</Th>
-                                                    <Th>Estado</Th>
-                                                    <Th>Block ID</Th>
-                                                    <Th>Lote ordinal</Th>
-                                                </Tr>
-                                            </Thead>
-                                            <Tbody>
-                                                {selectedWeekOdps.map((orden) => (
-                                                    <Tr key={orden.ordenId}>
-                                                        <Td>{orden.ordenId}</Td>
-                                                        <Td>
-                                                            <VStack align="start" spacing={0}>
-                                                                <Text fontSize="sm" fontWeight="medium">{orden.productoNombre ?? "-"}</Text>
-                                                                <Text fontSize="xs" color="gray.500">{orden.productoId ?? "-"}</Text>
-                                                            </VStack>
-                                                        </Td>
-                                                        <Td>{orden.loteAsignado ?? "-"}</Td>
-                                                        <Td isNumeric>{orden.cantidadProducir}</Td>
-                                                        <Td>{formatDateTimeLabel(orden.fechaLanzamiento)}</Td>
-                                                        <Td>{formatDateTimeLabel(orden.fechaFinalPlanificada)}</Td>
-                                                        <Td>{renderEstadoOrdenLabel(orden.estadoOrden)}</Td>
-                                                        <Td>{orden.mpsBlockId ?? "-"}</Td>
-                                                        <Td>{orden.mpsLoteOrdinal ?? "-"}</Td>
-                                                    </Tr>
-                                                ))}
-                                            </Tbody>
-                                        </Table>
-                                    </TableContainer>
-                                )}
-                            </VStack>
-                        )}
-                    </ModalBody>
-                </ModalContent>
-            </Modal>
+            <MpsBlockOrdersModal
+                selectedBlock={selectedMpsBlockOrders}
+                ordenes={selectedBlockOrders}
+                isLoading={isLoadingOdps}
+                error={odpsError}
+                onClose={() => setSelectedMpsBlockOrders(null)}
+            />
         </VStack>
     );
 }

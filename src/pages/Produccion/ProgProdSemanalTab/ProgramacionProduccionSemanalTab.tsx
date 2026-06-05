@@ -30,9 +30,9 @@ import {
     useDisclosure,
     useToast,
 } from "@chakra-ui/react";
-import TerminadoPicker, {
+import TerminadoPicker4MPS, {
     type TerminadoPickerResult,
-} from "../../../components/Pickers/TerminadoPicker/TerminadoPicker";
+} from "./TerminadoPicker4MPS/TerminadoPicker4MPS";
 import {
     GuardarBorradorProgramacionSemanal,
     ObtenerMpsSemanal,
@@ -59,12 +59,24 @@ interface ProgramacionEntry {
 
 const DAY_LABELS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
 const EPSILON = 0.000001;
+const LOCKED_DAYS_AHEAD = 2;
 
 function formatLocalDate(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+}
+
+function getBogotaTodayDateString(): string {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Bogota",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).formatToParts(new Date());
+    const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    return `${values.year}-${values.month}-${values.day}`;
 }
 
 function getCurrentWeekMonday(): string {
@@ -80,6 +92,14 @@ function addDays(dateString: string, days: number): string {
     const date = new Date(`${dateString}T00:00:00`);
     date.setDate(date.getDate() + days);
     return formatLocalDate(date);
+}
+
+function getMpsEditableFromDate(): string {
+    return addDays(getBogotaTodayDateString(), LOCKED_DAYS_AHEAD);
+}
+
+function isMpsDateEditable(dateString: string, editableFromDate: string): boolean {
+    return dateString >= editableFromDate;
 }
 
 function isMonday(dateString: string): boolean {
@@ -119,6 +139,18 @@ function getMpsSemanaLabel(mps: MpsSemanalDraftDTO): string {
 function buildEntriesFingerprint(entries: ProgramacionEntry[]): string {
     return entries
         .map((entry) => `${entry.dayIndex}:${entry.productoId}:${entry.unidades}`)
+        .sort()
+        .join("|");
+}
+
+function buildLockedEntriesFingerprint(
+    entries: ProgramacionEntry[],
+    weekStartDate: string,
+    editableFromDate: string,
+): string {
+    return entries
+        .filter((entry) => !isMpsDateEditable(addDays(weekStartDate, entry.dayIndex), editableFromDate))
+        .map((entry) => `${entry.dayIndex}:${entry.productoId}:${entry.loteSize}:${entry.unidades}`)
         .sort()
         .join("|");
 }
@@ -189,11 +221,13 @@ export default function ProgramacionProduccionSemanalTab() {
     const [entries, setEntries] = useState<ProgramacionEntry[]>([]);
     const [currentDraft, setCurrentDraft] = useState<MpsSemanalDraftDTO | null>(null);
     const [lastPersistedEntriesFingerprint, setLastPersistedEntriesFingerprint] = useState("");
+    const [lastPersistedEntries, setLastPersistedEntries] = useState<ProgramacionEntry[]>([]);
     const [pendingSemanaChange, setPendingSemanaChange] = useState<SemanaMPSDTO | null>(null);
     const [pickerDayIndex, setPickerDayIndex] = useState<number | null>(null);
     const [isLoadingDraft, setIsLoadingDraft] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+    const [editableFromDate, setEditableFromDate] = useState(getMpsEditableFromDate);
     const pickerDisclosure = useDisclosure();
     const weekChangeConfirmDisclosure = useDisclosure();
     const toast = useToast();
@@ -213,10 +247,27 @@ export default function ProgramacionProduccionSemanalTab() {
         return grouped;
     }, [entries]);
 
+    const lockedEntriesChanged = useMemo(() => (
+        buildLockedEntriesFingerprint(entries, weekStartDate, editableFromDate)
+        !== buildLockedEntriesFingerprint(lastPersistedEntries, weekStartDate, editableFromDate)
+    ), [editableFromDate, entries, lastPersistedEntries, weekStartDate]);
+
+    const isWeekFullyLocked = useMemo(() => (
+        DAY_LABELS.every((_, dayIndex) => (
+            !isMpsDateEditable(addDays(weekStartDate, dayIndex), editableFromDate)
+        ))
+    ), [editableFromDate, weekStartDate]);
+
     const validationIssues = useMemo(() => {
         const issues: string[] = [];
         if (!isMonday(weekStartDate)) {
             issues.push("La semana debe iniciar un lunes.");
+        }
+        if (isWeekFullyLocked) {
+            issues.push(`Esta semana no tiene dias editables. La primera fecha editable es ${editableFromDate}.`);
+        }
+        if (lockedEntriesChanged) {
+            issues.push(`No se pueden modificar dias bloqueados. La primera fecha editable es ${editableFromDate}.`);
         }
         if (entries.length === 0) {
             issues.push("Agregue al menos un terminado.");
@@ -227,7 +278,7 @@ export default function ProgramacionProduccionSemanalTab() {
             });
         });
         return issues;
-    }, [entries, weekStartDate]);
+    }, [editableFromDate, entries, isWeekFullyLocked, lockedEntriesChanged, weekStartDate]);
 
     const totals = useMemo(() => {
         return entries.reduce(
@@ -261,6 +312,7 @@ export default function ProgramacionProduccionSemanalTab() {
             setWeekStartDate(draft.weekStartDate);
             setCurrentDraft(draft);
             setEntries(draftEntries);
+            setLastPersistedEntries(draftEntries);
             setLastPersistedEntriesFingerprint(buildEntriesFingerprint(draftEntries));
             if (options.showLoadedToast) {
                 toast({
@@ -277,6 +329,7 @@ export default function ProgramacionProduccionSemanalTab() {
                 setWeekStartDate(targetWeekStartDate);
                 setCurrentDraft(null);
                 setEntries([]);
+                setLastPersistedEntries([]);
                 setLastPersistedEntriesFingerprint("");
                 return true;
             }
@@ -292,6 +345,13 @@ export default function ProgramacionProduccionSemanalTab() {
             setIsLoadingDraft(false);
         }
     }, [toast]);
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            setEditableFromDate(getMpsEditableFromDate());
+        }, 60_000);
+        return () => window.clearInterval(intervalId);
+    }, []);
 
     useEffect(() => {
         void loadWeekForProgramming(weekStartDate);
@@ -333,6 +393,17 @@ export default function ProgramacionProduccionSemanalTab() {
         if (pickerDayIndex == null) {
             return;
         }
+        const dayDate = addDays(weekStartDate, pickerDayIndex);
+        if (isReadOnly || !isMpsDateEditable(dayDate, editableFromDate)) {
+            toast({
+                title: "Dia bloqueado",
+                description: `No se puede programar antes de ${editableFromDate}.`,
+                status: "warning",
+                duration: 4000,
+                isClosable: true,
+            });
+            return;
+        }
         setEntries((prev) => {
             const existing = prev.find((entry) => (
                 entry.dayIndex === pickerDayIndex && entry.productoId === terminado.productoId
@@ -347,7 +418,7 @@ export default function ProgramacionProduccionSemanalTab() {
     const handleEntryUnitsChange = (entryId: string, valueAsString: string) => {
         const parsed = Number(valueAsString);
         setEntries((prev) => prev.map((entry) => (
-            entry.id === entryId
+            entry.id === entryId && !isReadOnly && isMpsDateEditable(addDays(weekStartDate, entry.dayIndex), editableFromDate)
                 ? { ...entry, unidades: Number.isFinite(parsed) ? parsed : 0 }
                 : entry
         )));
@@ -355,7 +426,12 @@ export default function ProgramacionProduccionSemanalTab() {
 
     const adjustEntryUnitsByLote = (entryId: string, direction: 1 | -1) => {
         setEntries((prev) => prev.map((entry) => {
-            if (entry.id !== entryId || entry.loteSize <= 0) {
+            if (
+                entry.id !== entryId
+                || isReadOnly
+                || entry.loteSize <= 0
+                || !isMpsDateEditable(addDays(weekStartDate, entry.dayIndex), editableFromDate)
+            ) {
                 return entry;
             }
             const nextUnits = entry.unidades + (direction * entry.loteSize);
@@ -367,7 +443,11 @@ export default function ProgramacionProduccionSemanalTab() {
     };
 
     const handleRemoveEntry = (entryId: string) => {
-        setEntries((prev) => prev.filter((entry) => entry.id !== entryId));
+        setEntries((prev) => prev.filter((entry) => (
+            entry.id !== entryId
+            || isReadOnly
+            || !isMpsDateEditable(addDays(weekStartDate, entry.dayIndex), editableFromDate)
+        )));
     };
 
     const handleSaveDraft = async () => {
@@ -388,6 +468,7 @@ export default function ProgramacionProduccionSemanalTab() {
             setWeekStartDate(saved.weekStartDate);
             const savedEntries = buildEntriesFromDraft(saved);
             setEntries(savedEntries);
+            setLastPersistedEntries(savedEntries);
             setLastPersistedEntriesFingerprint(buildEntriesFingerprint(savedEntries));
             setSelectedSemana((current) => current?.startDate === saved.weekStartDate ? {
                 ...current,
@@ -437,7 +518,7 @@ export default function ProgramacionProduccionSemanalTab() {
         }
     };
 
-    const canSave = validationIssues.length === 0 && !isReadOnly && !isLoadingDraft;
+    const canSave = validationIssues.length === 0 && !isReadOnly && !isLoadingDraft && !isWeekFullyLocked;
 
     return (
         <VStack align="stretch" spacing={4}>
@@ -485,6 +566,8 @@ export default function ProgramacionProduccionSemanalTab() {
                     {isLoadingDraft && <Badge colorScheme="gray">Cargando semana</Badge>}
                     {hasUnsavedChanges && <Badge colorScheme="orange">Cambios sin guardar</Badge>}
                     {currentDraft?.fechaGeneracionOdps && <Badge colorScheme="green">ODPs generadas</Badge>}
+                    <Badge colorScheme="gray">Editable desde {editableFromDate}</Badge>
+                    {isWeekFullyLocked && <Badge colorScheme="red">Semana bloqueada</Badge>}
                     <Badge colorScheme="purple">{formatNumber(totals.unidades)} unidades</Badge>
                     <Badge colorScheme={isIntegerLike(totals.lotes) ? "green" : "orange"}>
                         {formatNumber(totals.lotes)} lotes
@@ -511,20 +594,35 @@ export default function ProgramacionProduccionSemanalTab() {
                 {DAY_LABELS.map((label, dayIndex) => {
                     const dayEntries = entriesByDay.get(dayIndex) ?? [];
                     const dayDate = addDays(weekStartDate, dayIndex);
+                    const isDayEditable = isMpsDateEditable(dayDate, editableFromDate);
                     return (
-                        <Box key={label} bg="white" borderWidth="1px" borderRadius="md" p={3} minH="280px">
+                        <Box
+                            key={label}
+                            bg={isDayEditable ? "white" : "gray.50"}
+                            borderWidth="1px"
+                            borderColor={isDayEditable ? "gray.200" : "gray.300"}
+                            borderRadius="md"
+                            p={3}
+                            minH="280px"
+                        >
                             <Flex align="start" justify="space-between" gap={2}>
                                 <Box>
-                                    <Text fontWeight="bold">{label}</Text>
+                                    <Flex align="center" gap={2} wrap="wrap">
+                                        <Text fontWeight="bold">{label}</Text>
+                                        {!isDayEditable && <Badge colorScheme="gray">Bloqueado</Badge>}
+                                    </Flex>
                                     <Text fontSize="sm" color="gray.600">{dayDate}</Text>
                                 </Box>
-                                <Tooltip label="Agregar terminado">
+                                <Tooltip
+                                    label={isDayEditable ? "Agregar terminado" : `No editable antes de ${editableFromDate}`}
+                                    shouldWrapChildren
+                                >
                                     <IconButton
                                         aria-label={`Agregar terminado ${label}`}
                                         icon={<AddIcon />}
                                         size="sm"
                                         colorScheme="teal"
-                                        isDisabled={isReadOnly || !isMonday(weekStartDate)}
+                                        isDisabled={isReadOnly || !isMonday(weekStartDate) || !isDayEditable}
                                         onClick={() => {
                                             setPickerDayIndex(dayIndex);
                                             pickerDisclosure.onOpen();
@@ -542,8 +640,16 @@ export default function ProgramacionProduccionSemanalTab() {
                                     dayEntries.map((entry) => {
                                         const lotes = entry.loteSize > 0 ? entry.unidades / entry.loteSize : 0;
                                         const entryIssues = getEntryIssues(entry);
+                                        const isEntryEditable = !isReadOnly && isDayEditable;
                                         return (
-                                            <Box key={entry.id} borderWidth="1px" borderColor={entryIssues.length ? "orange.300" : "gray.200"} borderRadius="md" p={2}>
+                                            <Box
+                                                key={entry.id}
+                                                bg={isEntryEditable ? "white" : "gray.50"}
+                                                borderWidth="1px"
+                                                borderColor={entryIssues.length ? "orange.300" : "gray.200"}
+                                                borderRadius="md"
+                                                p={2}
+                                            >
                                                 <Flex justify="space-between" gap={2} align="start">
                                                     <Box minW={0}>
                                                         <Text fontWeight="semibold" fontSize="sm" noOfLines={2}>{entry.productoNombre}</Text>
@@ -556,7 +662,7 @@ export default function ProgramacionProduccionSemanalTab() {
                                                         size="xs"
                                                         variant="ghost"
                                                         colorScheme="red"
-                                                        isDisabled={isReadOnly}
+                                                        isDisabled={!isEntryEditable}
                                                         onClick={() => handleRemoveEntry(entry.id)}
                                                     />
                                                 </Flex>
@@ -569,7 +675,7 @@ export default function ProgramacionProduccionSemanalTab() {
                                                                 icon={<MinusIcon />}
                                                                 size="sm"
                                                                 variant="outline"
-                                                                isDisabled={isReadOnly || entry.loteSize <= 0 || entry.unidades <= entry.loteSize}
+                                                                isDisabled={!isEntryEditable || entry.loteSize <= 0 || entry.unidades <= entry.loteSize}
                                                                 onClick={() => adjustEntryUnitsByLote(entry.id, -1)}
                                                             />
                                                         </Tooltip>
@@ -578,7 +684,7 @@ export default function ProgramacionProduccionSemanalTab() {
                                                             min={0}
                                                             value={entry.unidades}
                                                             onChange={(valueAsString) => handleEntryUnitsChange(entry.id, valueAsString)}
-                                                            isDisabled={isReadOnly}
+                                                            isDisabled={!isEntryEditable}
                                                             flex="1"
                                                         >
                                                             <NumberInputField />
@@ -590,7 +696,7 @@ export default function ProgramacionProduccionSemanalTab() {
                                                                 size="sm"
                                                                 variant="outline"
                                                                 colorScheme="teal"
-                                                                isDisabled={isReadOnly || entry.loteSize <= 0}
+                                                                isDisabled={!isEntryEditable || entry.loteSize <= 0}
                                                                 onClick={() => adjustEntryUnitsByLote(entry.id, 1)}
                                                             />
                                                         </Tooltip>
@@ -603,6 +709,7 @@ export default function ProgramacionProduccionSemanalTab() {
                                                     <Badge colorScheme={isIntegerLike(lotes) ? "green" : "orange"}>
                                                         {formatNumber(lotes)} lotes
                                                     </Badge>
+                                                    {!isEntryEditable && <Badge colorScheme="gray">Solo lectura</Badge>}
                                                 </Flex>
                                                 {entryIssues.length > 0 && (
                                                     <Text mt={2} fontSize="xs" color="orange.700">
@@ -624,7 +731,7 @@ export default function ProgramacionProduccionSemanalTab() {
                 dayLabels={DAY_LABELS}
             />
 
-            <TerminadoPicker
+            <TerminadoPicker4MPS
                 isOpen={pickerDisclosure.isOpen}
                 onClose={pickerDisclosure.onClose}
                 onSelectTerminado={handleSelectTerminado}

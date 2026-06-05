@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/react";
+import { Box, useColorModeValue } from "@chakra-ui/react";
 import { Gantt } from "wx-react-gantt";
 import "wx-react-gantt/dist/gantt.css";
 
@@ -51,9 +51,11 @@ const scales = [
 ];
 
 export default function GanttDemo() {
+  const ganttThemeClass = useColorModeValue("wx-willow-theme", "wx-willow-dark-theme");
+
   return (
-    <Box w="full" h="500px">
-      <Gantt tasks={tasks} scales={scales} />
+    <Box w="full" h="500px" className={ganttThemeClass}>
+      <Gantt tasks={tasks} scales={scales} containerClassName={ganttThemeClass} />
     </Box>
   );
 }

@@ -18,6 +18,7 @@ export default class EndPointsURL{
 
     public search_terminado_byname:string;
     public search_terminados_picker:string;
+    public search_terminados_picker_mps:string;
     public search_semi_byname_4pd:string;
     public case_pack_terminado: string;
 
@@ -511,6 +512,7 @@ export default class EndPointsURL{
 
         this.search_terminado_byname = `${domain}/${productos_res}/search_terminados`;
         this.search_terminados_picker = `${domain}/${productos_res}/search_terminados_picker`;
+        this.search_terminados_picker_mps = `${domain}/${productos_res}/search_terminados_picker_mps`;
         this.search_semi_byname_4pd = `${domain}/${productos_res}/search_semi_4pd`;
         this.case_pack_terminado = `${domain}/${productos_res}/terminado/{id}/case-pack`;
 

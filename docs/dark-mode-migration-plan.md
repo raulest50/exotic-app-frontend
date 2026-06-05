@@ -93,13 +93,13 @@ The theme lives in `src/theme.ts` and is consumed by `src/main.tsx`. The origina
 | 13 | `Personal` | ✅ Migrado | Audited; no source changes required because route uses Chakra defaults and shared styles already migrated. Build and browser verification pending by user. |
 | 14 | `Organigrama` | ✅ Migrado | Sidebar, tab states, organization nodes, cargo dialog, and mission/vision secondary text migrated. Build and browser verification pending by user. |
 | 15 | `Contabilidad` | ✅ Migrado | Account catalog hover and account-detail summary panel migrated. Build and browser verification pending by user. |
-| 16 | `Cronograma` | Pendiente | Includes Gantt/demo views. |
-| 17 | `AdministracionAlertas` | Pendiente | Alert administration route. |
+| 16 | `Cronograma` | ✅ Migrado | Gantt theme class now follows Chakra color mode. Build and browser verification pending by user. |
+| 17 | `AdministracionAlertas` | ✅ Migrado | Audited; no source changes required because route has no problematic light literals. Build and browser verification pending by user. |
 | 18 | `MasterDirectives` | ✅ Migrado | Directive helper text and explanatory warning contrast migrated. Build and browser verification pending by user. |
 | 19 | `LoginPage` | ✅ Migrado | Login panel loading text and login background/panel dark-mode colors migrated. Build and browser verification pending by user. |
-| 20 | `Ventas` | Pendiente | Currently hidden in routing, but still migrated for completeness. |
-| 21 | `Clientes` | Pendiente | Currently hidden in routing, but still migrated for completeness. |
-| 22 | `PagosProveedores` | Pendiente | Currently hidden in routing, but still migrated for completeness. |
+| 20 | `Ventas` | ✅ Migrado | Seller creation readonly user input migrated. Build and browser verification pending by user. |
+| 21 | `Clientes` | ✅ Migrado | Customer detail surface and search-list hover migrated. Build and browser verification pending by user. |
+| 22 | `PagosProveedores` | ✅ Migrado | Audited; no source changes required because route has no problematic light literals. Build and browser verification pending by user. |
 
 ## Acceptance Template For Each Module
 
@@ -130,7 +130,7 @@ Use this template when closing a module migration:
 
 - The base migration has introduced the semantic token vocabulary but has not migrated route-specific page files.
 - Shared tabs using `my_style_tab` and shared inputs using `input_style` now resolve through tokens, preserving light-mode values.
-- `Usuarios`, `Stock`, `OperacionesCriticasBD`, `TransaccionesAlmacen`, `Productos`, `Compras`, `Proveedores`, `ActivosFijos`, `GestionAreasOperativas`, `AreaOperativaPanel`, `Bintelligence`, `Personal`, `Organigrama`, `Contabilidad`, `MasterDirectives`, and `LoginPage` have been migrated or audited at the source level. Build and browser verification remain pending because the user will run them personally.
+- `Usuarios`, `Stock`, `OperacionesCriticasBD`, `TransaccionesAlmacen`, `Productos`, `Compras`, `Proveedores`, `ActivosFijos`, `GestionAreasOperativas`, `AreaOperativaPanel`, `Bintelligence`, `Personal`, `Organigrama`, `Contabilidad`, `Cronograma`, `AdministracionAlertas`, `MasterDirectives`, `LoginPage`, `Ventas`, `Clientes`, and `PagosProveedores` have been migrated or audited at the source level. Build and browser verification remain pending because the user will run them personally.
 - Future prompts can continue with `Produccion` or choose a lower-conflict module if the current `Produccion` renames are still active.
 
 ## Module Migration Log
@@ -510,3 +510,114 @@ Use this template when closing a module migration:
 - Notes:
   - Changes are limited to Chakra color props and color-mode hooks.
   - Authentication, password-reset request rate limiting, navigation, toasts, reset password validation colors, and cooldown progress colors were not modified.
+
+### Module: `Cronograma`
+
+- Status: ✅ Migrado
+- Files changed:
+  - `src/pages/Cronograma/GanttDemo.tsx`
+- Light-mode compatibility:
+  - Preserved the existing Willow Gantt theme through `useColorModeValue("wx-willow-theme", "wx-willow-dark-theme")`.
+- Dark-mode checks:
+  - Panels/cards corrected: not applicable
+  - Tables and headers corrected: Gantt package theme variables selected for dark mode
+  - Read-only inputs corrected: not applicable
+  - Row hover/selected states corrected: covered by the package dark theme
+  - Muted text contrast reviewed: covered by the package dark theme
+- Verification:
+  - Targeted literal search: pass
+  - `git diff --check`: pass
+  - `npm run build`: pending by user
+  - Browser route check: pending by user
+- Notes:
+  - Changes are limited to selecting the visual Gantt theme class from Chakra color mode.
+  - Demo tasks, scales, dates, task types, component height, and Gantt behavior were not modified.
+
+### Module: `AdministracionAlertas`
+
+- Status: ✅ Migrado
+- Files changed:
+  - No source changes required.
+- Light-mode compatibility:
+  - Preserved previous light values; no route-specific literal replacements were needed.
+- Dark-mode checks:
+  - Panels/cards corrected: not applicable
+  - Tables and headers corrected: not applicable
+  - Read-only inputs corrected: not applicable
+  - Row hover/selected states corrected: not applicable
+  - Muted text contrast reviewed: not applicable
+- Verification:
+  - Targeted literal search: pass
+  - `git diff --check`: pass
+  - `npm run build`: pending by user
+  - Browser route check: pending by user
+- Notes:
+  - Route was audited and intentionally left without source changes.
+  - No placeholder content, navigation, routes, APIs, or future alert-administration behavior were modified.
+
+### Module: `Ventas`
+
+- Status: ✅ Migrado
+- Files changed:
+  - `src/pages/Ventas/TabsContent/CrearVendedor.tsx`
+- Light-mode compatibility:
+  - Preserved previous light value through `app.inputReadonly`.
+- Dark-mode checks:
+  - Panels/cards corrected: not applicable
+  - Tables and headers corrected: not applicable
+  - Read-only inputs corrected: yes
+  - Row hover/selected states corrected: not applicable
+  - Muted text contrast reviewed: not applicable
+- Verification:
+  - Targeted literal search: pass
+  - `git diff --check`: pass
+  - `npm run build`: pending by user
+  - Browser route check: pending by user
+- Notes:
+  - Changes are limited to a Chakra color prop.
+  - Vendor validation, form state, user picker, payload, submit flow, toasts, endpoint usage, and access rules were not modified.
+
+### Module: `Clientes`
+
+- Status: ✅ Migrado
+- Files changed:
+  - `src/pages/Clientes/consultar/DetalleCliente.tsx`
+  - `src/pages/Clientes/consultar/panel_busqueda_comp/ListaSearchClientes.tsx`
+- Light-mode compatibility:
+  - Preserved previous light values through semantic token defaults.
+- Dark-mode checks:
+  - Panels/cards corrected: yes
+  - Tables and headers corrected: not applicable in changed files
+  - Read-only inputs corrected: not applicable
+  - Row hover/selected states corrected: yes
+  - Muted text contrast reviewed: not applicable in changed files
+- Verification:
+  - Targeted literal search: pass
+  - `git diff --check`: pass
+  - `npm run build`: pending by user
+  - Browser route check: pending by user
+- Notes:
+  - Changes are limited to Chakra color props.
+  - Customer edit permissions, validation, file upload, search flow, selected-customer state, payloads, and API calls were not modified.
+
+### Module: `PagosProveedores`
+
+- Status: ✅ Migrado
+- Files changed:
+  - No source changes required.
+- Light-mode compatibility:
+  - Preserved previous light values; no route-specific literal replacements were needed.
+- Dark-mode checks:
+  - Panels/cards corrected: not applicable
+  - Tables and headers corrected: covered by Chakra defaults/shared styles
+  - Read-only inputs corrected: not applicable
+  - Row hover/selected states corrected: not applicable
+  - Muted text contrast reviewed: not applicable
+- Verification:
+  - Targeted literal search: pass
+  - `git diff --check`: pass
+  - `npm run build`: pending by user
+  - Browser route check: pending by user
+- Notes:
+  - Route was audited and intentionally left without source changes.
+  - Filters, estado contable, dates, table rendering, pagination, request payload, types, and API calls were not modified.
