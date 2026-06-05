@@ -66,7 +66,7 @@ export default function StepZeroComponent_v1({
         <Flex
             p="1em"
             direction="column"
-            backgroundColor="blue.50"
+            backgroundColor="app.stepperBlue"
             gap={4}
             alignItems="center"
         >

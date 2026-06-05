@@ -178,11 +178,11 @@ export default function OrdenProduccionPicker({
                                                     }
                                                     bg={
                                                         selectedOrdenId === orden.ordenId
-                                                            ? "teal.50"
+                                                            ? "app.rowSelectedTeal"
                                                             : "transparent"
                                                     }
                                                     _hover={{
-                                                        bg: "gray.50",
+                                                        bg: "app.rowHover",
                                                         cursor: "pointer",
                                                     }}
                                                 >
@@ -236,7 +236,7 @@ export default function OrdenProduccionPicker({
                             ) : (
                                 <Text
                                     textAlign="center"
-                                    color="gray.500"
+                                    color="app.textSubtle"
                                     py={4}
                                 >
                                     {isLoading

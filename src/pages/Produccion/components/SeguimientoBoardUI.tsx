@@ -18,6 +18,7 @@ import {
     StatLabel,
     StatNumber,
     Text,
+    useColorModeValue,
     VStack,
 } from "@chakra-ui/react";
 import { FiEye, FiPause, FiPlay, FiRefreshCw } from "react-icons/fi";
@@ -124,7 +125,7 @@ function SeguimientoOrdenCard({
         <Box
             borderWidth="1px"
             borderRadius="lg"
-            bg="white"
+            bg="app.surface"
             p={4}
             boxShadow="sm"
         >
@@ -134,7 +135,7 @@ function SeguimientoOrdenCard({
                         <Badge colorScheme="teal" px={2} py={1}>
                             {card.loteAsignado || `OP-${card.ordenId}`}
                         </Badge>
-                        <Text fontSize="sm" color="gray.500">
+                        <Text fontSize="sm" color="app.textSubtle">
                             {card.nodeLabel || "Sin nodo"}
                         </Text>
                     </VStack>
@@ -145,12 +146,12 @@ function SeguimientoOrdenCard({
 
                 <Box>
                     <Text fontWeight="bold">{card.productoNombre}</Text>
-                    <Text fontSize="sm" color="gray.600">
+                    <Text fontSize="sm" color="app.textMuted">
                         {card.productoId} · Cantidad: {card.cantidadProducir}
                     </Text>
                 </Box>
 
-                <Stack spacing={1} fontSize="sm" color="gray.600">
+                <Stack spacing={1} fontSize="sm" color="app.textMuted">
                     <Text>Área: {card.areaNombre}</Text>
                     <Text>Visible desde: {formatDateTime(card.fechaVisible)}</Text>
                     <Text>Estado actual desde: {formatDateTime(card.fechaEstadoActual)}</Text>
@@ -161,8 +162,8 @@ function SeguimientoOrdenCard({
                 </Stack>
 
                 {card.ordenObservaciones?.trim() ? (
-                    <Box p={2} bg="gray.50" borderRadius="md">
-                        <Text fontSize="xs" color="gray.500" mb={1}>
+                    <Box p={2} bg="app.surfaceSubtle" borderRadius="md">
+                        <Text fontSize="xs" color="app.textSubtle" mb={1}>
                             Observaciones de la orden
                         </Text>
                         <Text fontSize="sm" noOfLines={2}>
@@ -242,16 +243,17 @@ export function SeguimientoBoardColumn({
     onAction,
 }: SeguimientoBoardColumnProps) {
     const meta = BOARD_COLUMN_META[estadoKey];
+    const columnBg = useColorModeValue("whiteAlpha.900", "whiteAlpha.100");
 
     return (
         <Box
             borderWidth="1px"
             borderRadius="xl"
-            bg="whiteAlpha.900"
+            bg={columnBg}
             overflow="hidden"
             minH="280px"
         >
-            <Box borderTop="4px solid" borderTopColor={meta.accentColor} px={4} py={3} bg="gray.50">
+            <Box borderTop="4px solid" borderTopColor={meta.accentColor} px={4} py={3} bg="app.surfaceSubtle">
                 <HStack justify="space-between">
                     <Text fontWeight="bold">{meta.title}</Text>
                     <Badge colorScheme="gray">{items.length}</Badge>
@@ -260,7 +262,7 @@ export function SeguimientoBoardColumn({
 
             <VStack align="stretch" spacing={3} p={4} maxH="70vh" overflowY="auto">
                 {items.length === 0 ? (
-                    <Text fontSize="sm" color="gray.500">
+                    <Text fontSize="sm" color="app.textSubtle">
                         {meta.emptyLabel}
                     </Text>
                 ) : (
@@ -305,7 +307,7 @@ export function SeguimientoResumenCards({
     return (
         <SimpleGrid columns={{ base: 2, md: 3, xl: 5 }} spacing={4}>
             {stats.map((item) => (
-                <Box key={item.label} borderWidth="1px" borderRadius="lg" bg="white" p={4}>
+                <Box key={item.label} borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
                     <Stat>
                         <StatLabel>{item.label}</StatLabel>
                         <StatNumber color={item.color}>{item.value}</StatNumber>
@@ -347,34 +349,34 @@ export function SeguimientoOrdenDetailDrawer({
                         <VStack align="stretch" spacing={5}>
                             <Box>
                                 <Text fontWeight="bold">{detail.loteAsignado || `OP-${detail.ordenId}`}</Text>
-                                <Text color="gray.600">
+                                <Text color="app.textMuted">
                                     {detail.productoNombre} · {detail.productoId}
                                 </Text>
-                                <Text color="gray.600">Cantidad: {detail.cantidadProducir}</Text>
+                                <Text color="app.textMuted">Cantidad: {detail.cantidadProducir}</Text>
                             </Box>
 
                             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                                 <Box borderWidth="1px" borderRadius="md" p={3}>
-                                    <Text fontSize="sm" color="gray.500">Creación</Text>
+                                    <Text fontSize="sm" color="app.textSubtle">Creación</Text>
                                     <Text>{formatDateTime(detail.fechaCreacion)}</Text>
                                 </Box>
                                 <Box borderWidth="1px" borderRadius="md" p={3}>
-                                    <Text fontSize="sm" color="gray.500">Fin planificada</Text>
+                                    <Text fontSize="sm" color="app.textSubtle">Fin planificada</Text>
                                     <Text>{formatDateTime(detail.fechaFinalPlanificada)}</Text>
                                 </Box>
                                 <Box borderWidth="1px" borderRadius="md" p={3}>
-                                    <Text fontSize="sm" color="gray.500">Inicio real</Text>
+                                    <Text fontSize="sm" color="app.textSubtle">Inicio real</Text>
                                     <Text>{formatDateTime(detail.fechaInicio)}</Text>
                                 </Box>
                                 <Box borderWidth="1px" borderRadius="md" p={3}>
-                                    <Text fontSize="sm" color="gray.500">Fin real</Text>
+                                    <Text fontSize="sm" color="app.textSubtle">Fin real</Text>
                                     <Text>{formatDateTime(detail.fechaFinal)}</Text>
                                 </Box>
                             </SimpleGrid>
 
                             <Box>
                                 <Text fontWeight="semibold" mb={2}>Observaciones de la orden</Text>
-                                <Box borderWidth="1px" borderRadius="md" p={3} bg="gray.50">
+                                <Box borderWidth="1px" borderRadius="md" p={3} bg="app.surfaceSubtle">
                                     <Text whiteSpace="pre-wrap">
                                         {detail.ordenObservaciones?.trim() || "Sin observaciones registradas."}
                                     </Text>
@@ -391,7 +393,7 @@ export function SeguimientoOrdenDetailDrawer({
                                                     <Text fontWeight="bold">
                                                         {index + 1}. {ruta.nodeLabel}
                                                     </Text>
-                                                    <Text fontSize="sm" color="gray.600">
+                                                    <Text fontSize="sm" color="app.textMuted">
                                                         {ruta.areaNombre}
                                                     </Text>
                                                 </Box>
@@ -400,7 +402,7 @@ export function SeguimientoOrdenDetailDrawer({
                                                 </Badge>
                                             </HStack>
 
-                                            <Stack spacing={1} fontSize="sm" color="gray.600">
+                                            <Stack spacing={1} fontSize="sm" color="app.textMuted">
                                                 <Text>Visible desde: {formatDateTime(ruta.fechaVisible)}</Text>
                                                 <Text>Estado actual desde: {formatDateTime(ruta.fechaEstadoActual)}</Text>
                                                 <Text>Completado: {formatDateTime(ruta.fechaCompletado)}</Text>
@@ -425,7 +427,7 @@ export function SeguimientoOrdenDetailDrawer({
                     ) : null}
 
                     {!loading && !detail ? (
-                        <Text color="gray.500">No se encontró detalle para esta orden.</Text>
+                        <Text color="app.textSubtle">No se encontró detalle para esta orden.</Text>
                     ) : null}
                 </DrawerBody>
             </DrawerContent>

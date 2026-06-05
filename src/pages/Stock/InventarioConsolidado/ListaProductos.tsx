@@ -90,7 +90,7 @@ function ListaProductos({
                 ) : (
                     <Box w={"full"}>
                         <Table variant="striped" colorScheme="gray" size="sm" width="100%">
-                            <Thead position="sticky" top={0} bg="white" zIndex={1}>
+                            <Thead position="sticky" top={0} bg="app.tableHeaderSticky" zIndex={1}>
                                 <Tr>
                                     <Th>ID</Th>
                                     <Th>Nombre</Th>

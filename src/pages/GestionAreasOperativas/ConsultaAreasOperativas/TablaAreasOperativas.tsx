@@ -34,7 +34,7 @@ export default function TablaAreasOperativas({ areas, loading, onVerDetalle }: T
     }
 
     return (
-        <Box bg="white" borderRadius="md" boxShadow="sm" overflowX="auto">
+        <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
             <TableContainer>
                 <Table variant="simple" size="sm">
                     <Thead>

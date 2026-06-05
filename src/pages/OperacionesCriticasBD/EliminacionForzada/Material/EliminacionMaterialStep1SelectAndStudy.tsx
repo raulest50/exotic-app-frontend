@@ -66,7 +66,7 @@ export default function EliminacionMaterialStep1SelectAndStudy({
         <Box>
             <VStack align="stretch" spacing={4}>
                 <Heading size="md">Material a eliminar</Heading>
-                <Text color="gray.600">
+                <Text color="app.textMuted">
                     Seleccione el material sobre el cual desea estudiar la eliminación forzada.
                     El estudio mostrará compras, transacciones, lotes, recetas y case packs
                     impactados antes de ejecutar la operación.

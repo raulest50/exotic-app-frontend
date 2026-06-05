@@ -120,7 +120,7 @@ const SemiterminadosStep1DefineInputs: React.FC<Props> = ({ setActiveStep, semio
             <HStack gap={8} w="full" align="flex-start">
                 <BandejaBusqueda onAddInsumo={handleAddInsumo} />
                 <VStack w={"full"}>
-                    <Stat backgroundColor={"gray.50"} p={"1em"} boxShadow={"md"} w={"full"}>
+                    <Stat backgroundColor={"app.surfaceSubtle"} p={"1em"} boxShadow={"md"} w={"full"}>
                         <StatLabel>Total Costo: </StatLabel>
                         <StatNumber>{costo} ( $ COP)</StatNumber>
                         <StatHelpText>Costo total sumando todos los insumos</StatHelpText>

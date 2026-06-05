@@ -149,7 +149,7 @@ export default function LeadTimesView({ selectedMaterial, fechaCorte, ventanaDia
         return (
             <Card variant="outline">
                 <CardBody>
-                    <Text color="gray.600">Seleccione un material para estudiar lead times de aprovisionamiento.</Text>
+                    <Text color="app.textMuted">Seleccione un material para estudiar lead times de aprovisionamiento.</Text>
                 </CardBody>
             </Card>
         );
@@ -174,7 +174,7 @@ export default function LeadTimesView({ selectedMaterial, fechaCorte, ventanaDia
                                     />
                                 </Tooltip>
                             </HStack>
-                            <Text fontSize="sm" color="gray.600">
+                            <Text fontSize="sm" color="app.textMuted">
                                 Ordena por lead time ajustado, que combina rapidez observada y confiabilidad del historico.
                             </Text>
                         </Box>
@@ -201,10 +201,10 @@ export default function LeadTimesView({ selectedMaterial, fechaCorte, ventanaDia
                     {loading ? (
                         <Stack align="center" py={10}>
                             <Spinner />
-                            <Text color="gray.600">Cargando ranking de lead times...</Text>
+                            <Text color="app.textMuted">Cargando ranking de lead times...</Text>
                         </Stack>
                     ) : rows.length === 0 ? (
-                        <Text color="gray.600">
+                        <Text color="app.textMuted">
                             No hay historico suficiente para ranking de este material.
                         </Text>
                     ) : (

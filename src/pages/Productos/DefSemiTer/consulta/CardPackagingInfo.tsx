@@ -51,11 +51,11 @@ export default function CardPackagingInfo({ casePack }: Props) {
     if (!casePack) {
         return (
             <Card mb={5} variant="outline" boxShadow="md">
-                <CardHeader bg="blue.50">
+                <CardHeader bg="app.stepperBlue">
                     <Heading size="md">Packaging</Heading>
                 </CardHeader>
                 <CardBody>
-                    <Text color="gray.600">Sin packaging definido.</Text>
+                    <Text color="app.textMuted">Sin packaging definido.</Text>
                 </CardBody>
             </Card>
         );
@@ -65,7 +65,7 @@ export default function CardPackagingInfo({ casePack }: Props) {
 
     return (
         <Card mb={5} variant="outline" boxShadow="md">
-            <CardHeader bg="blue.50">
+            <CardHeader bg="app.stepperBlue">
                 <Heading size="md">Packaging</Heading>
             </CardHeader>
             <CardBody>
@@ -103,7 +103,7 @@ export default function CardPackagingInfo({ casePack }: Props) {
                         Insumos de empaque
                     </Text>
                     {insumosEmpaque.length === 0 ? (
-                        <Text color="gray.600">Sin insumos de empaque registrados.</Text>
+                        <Text color="app.textMuted">Sin insumos de empaque registrados.</Text>
                     ) : (
                         <Table size="sm">
                             <Thead>

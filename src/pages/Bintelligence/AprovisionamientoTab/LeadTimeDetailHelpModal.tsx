@@ -103,7 +103,7 @@ export default function LeadTimeDetailHelpModal({ isOpen, onClose }: Props) {
                 <ModalCloseButton />
                 <ModalBody pb={6}>
                     <Stack spacing={4}>
-                        <Text color="gray.600">
+                        <Text color="app.textMuted">
                             El detalle muestra dos perspectivas complementarias del mismo proveedor-material:
                             la rapidez con la que empieza a llegar material y el tiempo que toma completar la entrega.
                         </Text>
@@ -174,7 +174,7 @@ export default function LeadTimeDetailHelpModal({ isOpen, onClose }: Props) {
                                         Cuando ya hay al menos tres observaciones validas, se usa la mediana porque suele resistir mejor
                                         los casos atipicos. Cuando hay pocas observaciones, se usa el promedio como una referencia simple.
                                     </Text>
-                                    <Text mt={2} fontSize="sm" color="gray.600">
+                                    <Text mt={2} fontSize="sm" color="app.textMuted">
                                         Heuristica interna BI v1: es una regla operativa para resumir el historico de forma util.
                                     </Text>
                                 </Box>
@@ -188,7 +188,7 @@ export default function LeadTimeDetailHelpModal({ isOpen, onClose }: Props) {
                                         La confianza no mide rapidez. Mide que tan confiable es el indicador segun cuantas ordenes
                                         utiles hubo, cuantos casos validos soportan el calculo y que tan variable fue el comportamiento.
                                     </Text>
-                                    <Text mt={2} fontSize="sm" color="gray.600">
+                                    <Text mt={2} fontSize="sm" color="app.textMuted">
                                         Heuristica interna BI v1: es un score de calidad del historico, no una formula clasica unica.
                                     </Text>
                                 </Box>
@@ -239,7 +239,7 @@ export default function LeadTimeDetailHelpModal({ isOpen, onClose }: Props) {
                                         <b> sigma_d</b> es la variabilidad de la demanda, <b>sigma_L</b> es la variabilidad del lead time
                                         y <b>z</b> es un factor de servicio.
                                     </Text>
-                                    <Text mt={2} fontSize="sm" color="gray.600">
+                                    <Text mt={2} fontSize="sm" color="app.textMuted">
                                         Formula clasica / modelado de inventarios: estas expresiones vienen de enfoques tradicionales
                                         de reorder point y safety stock bajo distintos niveles de incertidumbre.
                                     </Text>

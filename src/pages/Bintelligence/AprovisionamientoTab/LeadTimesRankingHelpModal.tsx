@@ -86,7 +86,7 @@ export default function LeadTimesRankingHelpModal({ isOpen, onClose }: Props) {
                 <ModalCloseButton />
                 <ModalBody pb={6}>
                     <Stack spacing={5}>
-                        <Text color="gray.600">
+                        <Text color="app.textMuted">
                             Este ranking compara el desempeno historico de los proveedores para un material especifico.
                             Cada columna aporta contexto para evaluar rapidez, consistencia y calidad del historico disponible.
                         </Text>
@@ -127,7 +127,7 @@ export default function LeadTimesRankingHelpModal({ isOpen, onClose }: Props) {
                                         del historico es baja. Asi se evita premiar automaticamente a un proveedor muy rapido pero
                                         sostenido por pocos datos o por un comportamiento inestable.
                                     </Text>
-                                    <Text mt={2} fontSize="sm" color="gray.600">
+                                    <Text mt={2} fontSize="sm" color="app.textMuted">
                                         Heuristica interna BI v1: esta formula ayuda a ordenar el ranking, pero no es una formula
                                         estandar de ERP o academia.
                                     </Text>
@@ -146,7 +146,7 @@ export default function LeadTimesRankingHelpModal({ isOpen, onClose }: Props) {
                                         Cobertura mira cuantas ordenes utiles hubo; muestra mira el tamano del historico valido;
                                         estabilidad mira si los lead times cambian poco o mucho entre un caso y otro.
                                     </Text>
-                                    <Text mt={2} fontSize="sm" color="gray.600">
+                                    <Text mt={2} fontSize="sm" color="app.textMuted">
                                         Heuristica interna BI v1: es un score practico de calidad del historico, no una metrica
                                         academica unica.
                                     </Text>

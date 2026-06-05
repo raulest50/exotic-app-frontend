@@ -146,7 +146,7 @@ export default function IngresoOCMStep2UploadDocument({
         <Flex
             p="1em"
             direction="column"
-            backgroundColor="blue.50"
+            backgroundColor="app.stepperBlue"
             gap={8}
             alignItems="center"
         >

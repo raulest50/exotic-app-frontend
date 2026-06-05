@@ -2,7 +2,7 @@ import type {
     MpsSemanalDraftDTO,
     PropuestaMpsCalendarBlockDTO,
     PropuestaMpsCalendarRowDTO,
-} from "../../PlaneacionProduccionTab/PlaneacionProduccionService";
+} from "../../ProgProdMensualTab/PlaneacionProduccionService";
 
 export const MPS_WEEK_DAY_LABELS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
 
@@ -55,7 +55,12 @@ export function formatMpsEstadoLabel(estado: MpsSemanalDraftDTO["estado"]): stri
 }
 
 export function buildMpsSemanalPdfFileName(mps: MpsSemanalDraftDTO): string {
-    return `mps-semanal-${mps.weekStartDate}.pdf`;
+    const weekLabel = getMpsSemanaPdfLabel(mps).replace(/[^a-zA-Z0-9_-]/g, "-");
+    return `mps-semanal-${weekLabel}.pdf`;
+}
+
+export function getMpsSemanaPdfLabel(mps: MpsSemanalDraftDTO): string {
+    return mps.semanaMpsCodigo?.trim() || mps.weekStartDate;
 }
 
 export function getMpsCalendarRowLabel(row: PropuestaMpsCalendarRowDTO): string {

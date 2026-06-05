@@ -13,6 +13,7 @@ import {
     Card,
     CardHeader,
     CardBody,
+    useColorModeValue,
 } from '@chakra-ui/react';
 import axios from "axios";
 import EndPointsURL from "../../../../api/EndPointsURL";
@@ -37,6 +38,7 @@ export function ActivosFijosStep3ReviewSubmit({
 }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const toast = useToast();
+    const summaryHeaderBg = useColorModeValue("teal.100", "teal.800");
 
     // Elimina propiedades no soportadas por el backend
     const sanitizeItem = (
@@ -143,7 +145,7 @@ export function ActivosFijosStep3ReviewSubmit({
 
     return (
         <Flex direction="column" gap={6} w="full">
-            <VStack spacing={4} align="stretch" bg="blue.50" p={6} borderRadius="md">
+            <VStack spacing={4} align="stretch" bg="app.stepperBlue" p={6} borderRadius="md">
                 <Heading size="md" textAlign="center">
                     Validar y Finalizar Incorporación
                 </Heading>
@@ -155,7 +157,7 @@ export function ActivosFijosStep3ReviewSubmit({
                 <Divider />
 
                 <Card>
-                    <CardHeader bg="teal.100">
+                    <CardHeader bg={summaryHeaderBg}>
                         <Heading size="sm">Información General</Heading>
                     </CardHeader>
                     <CardBody>
@@ -186,7 +188,7 @@ export function ActivosFijosStep3ReviewSubmit({
 
                 {incorporacionActivoDto.tipoIncorporacion === TIPO_INCORPORACION.CON_OC && ordenCompraActivo && (
                     <Card>
-                        <CardHeader bg="teal.100">
+                        <CardHeader bg={summaryHeaderBg}>
                             <Heading size="sm">Información de Orden de Compra</Heading>
                         </CardHeader>
                         <CardBody>

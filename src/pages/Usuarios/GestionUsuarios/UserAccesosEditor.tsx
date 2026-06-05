@@ -246,7 +246,7 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                     <Text fontSize="2xl" fontWeight="bold">
                         Editor de permisos
                     </Text>
-                    <Text color="gray.600">
+                    <Text color="app.textMuted">
                         {localUser.username}
                         {localUser.nombreCompleto ? ` - ${localUser.nombreCompleto}` : ""}
                     </Text>
@@ -268,10 +268,10 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
 
             <Grid templateColumns={{ base: "1fr", xl: "minmax(0, 1.7fr) minmax(320px, 1fr)" }} gap={6}>
                 <GridItem>
-                    <Box borderWidth="1px" borderRadius="lg" overflow="hidden" bg="white">
-                        <Box px={4} py={3} borderBottomWidth="1px" bg="gray.50">
+                    <Box borderWidth="1px" borderRadius="lg" overflow="hidden" bg="app.surface">
+                        <Box px={4} py={3} borderBottomWidth="1px" bg="app.surfaceSubtle">
                             <Text fontWeight="semibold">Matriz de accesos</Text>
-                            <Text fontSize="sm" color="gray.600">
+                            <Text fontSize="sm" color="app.textMuted">
                                 Activa modulos, despliega sus tabs y asigna el nivel por tab.
                             </Text>
                         </Box>
@@ -284,7 +284,7 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                         ) : (
                             <Box overflowX="auto">
                                 <Table size="sm" variant="simple">
-                                    <Thead bg="gray.50">
+                                    <Thead bg="app.tableHeader">
                                         <Tr>
                                             <Th>Modulo / Tab</Th>
                                             <Th w="140px">Acceso</Th>
@@ -302,8 +302,8 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                 <Fragment key={modulo}>
                                                     <Tr
                                                         onClick={() => toggleExpanded(modulo)}
-                                                        _hover={{ bg: "gray.50", cursor: "pointer" }}
-                                                        bg={moduleRow.enabled ? "blue.50" : undefined}
+                                                        _hover={{ bg: "app.rowHover", cursor: "pointer" }}
+                                                        bg={moduleRow.enabled ? "app.rowActiveBlue" : undefined}
                                                     >
                                                         <Td>
                                                             <HStack spacing={3}>
@@ -323,7 +323,7 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                                         <Badge colorScheme={activeTabs > 0 ? "green" : "gray"}>
                                                                             {activeTabs} tabs activas
                                                                         </Badge>
-                                                                        <Text fontSize="xs" color="gray.500">
+                                                                        <Text fontSize="xs" color="app.textSubtle">
                                                                             {modulo}
                                                                         </Text>
                                                                     </HStack>
@@ -340,7 +340,7 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                             />
                                                         </Td>
                                                         <Td>
-                                                            <Text fontSize="xs" color="gray.500">
+                                                            <Text fontSize="xs" color="app.textSubtle">
                                                                 {moduleRow.enabled ? "Modulo habilitado" : "Modulo deshabilitado"}
                                                             </Text>
                                                         </Td>
@@ -349,11 +349,11 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                         defs.map((tab) => {
                                                             const tabRow = moduleRow.tabs[tab.tabId];
                                                             return (
-                                                                <Tr key={`${modulo}-${tab.tabId}`} bg="white">
+                                                                <Tr key={`${modulo}-${tab.tabId}`} bg="app.surface">
                                                                     <Td pl={14}>
                                                                         <Box>
                                                                             <Text fontSize="sm">{tab.label}</Text>
-                                                                            <Text fontSize="xs" color="gray.500">
+                                                                            <Text fontSize="xs" color="app.textSubtle">
                                                                                 {tab.tabId}
                                                                             </Text>
                                                                         </Box>
@@ -407,17 +407,17 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                 </GridItem>
 
                 <GridItem>
-                    <Box borderWidth="1px" borderRadius="lg" bg="white" h="100%">
-                        <Box px={4} py={3} borderBottomWidth="1px" bg="gray.50">
+                    <Box borderWidth="1px" borderRadius="lg" bg="app.surface" h="100%">
+                        <Box px={4} py={3} borderBottomWidth="1px" bg="app.surfaceSubtle">
                             <Text fontWeight="semibold">Resumen final</Text>
-                            <Text fontSize="sm" color="gray.600">
+                            <Text fontSize="sm" color="app.textMuted">
                                 Vista previa solo lectura de los permisos que se guardaran.
                             </Text>
                         </Box>
 
                         <Box p={4}>
                             {payload.accesos.length === 0 ? (
-                                <Text color="gray.500">Este usuario no quedara con permisos activos.</Text>
+                                <Text color="app.textSubtle">Este usuario no quedara con permisos activos.</Text>
                             ) : (
                                 <VStack align="stretch" spacing={4}>
                                     {payload.accesos.map((acceso) => (
@@ -433,12 +433,12 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                         justify="space-between"
                                                         align="center"
                                                         p={2}
-                                                        bg="gray.50"
+                                                        bg="app.surfaceSubtle"
                                                         borderRadius="md"
                                                     >
                                                         <Box>
                                                             <Text fontSize="sm">{tabLabel(acceso.modulo, tab.tabId)}</Text>
-                                                            <Text fontSize="xs" color="gray.500">
+                                                            <Text fontSize="xs" color="app.textSubtle">
                                                                 {tab.tabId}
                                                             </Text>
                                                         </Box>

@@ -202,6 +202,11 @@ export interface MpsSemanalDraftDTO extends PropuestaMpsSemanalDTO {
     aprobadoPorUsername: string | null;
     fechaGeneracionOdps: string | null;
     generadoPorUsername: string | null;
+    semanaMpsId: number | null;
+    semanaMpsCodigo: string | null;
+    anioSemana: number | null;
+    numeroSemana: number | null;
+    standard: string | null;
 }
 
 export interface MpsSemanalListItemDTO {
@@ -213,6 +218,11 @@ export interface MpsSemanalListItemDTO {
     aprobadoPorUsername: string | null;
     fechaGeneracionOdps: string | null;
     generadoPorUsername: string | null;
+    semanaMpsId: number | null;
+    semanaMpsCodigo: string | null;
+    anioSemana: number | null;
+    numeroSemana: number | null;
+    standard: string | null;
     weekStartDate: string;
     weekEndDate: string;
     summary: PropuestaMpsSemanalSummaryDTO;
@@ -222,6 +232,19 @@ export interface MpsSemanalListItemDTO {
     totalBloquesNoProgramados: number;
     totalLotesNoProgramados: number;
     totalUnidadesNoProgramadas: number;
+}
+
+export interface SemanaMPSDTO {
+    id: number | null;
+    codigo: string;
+    anioSemana: number;
+    numeroSemana: number;
+    startDate: string;
+    endDate: string;
+    standard: string;
+    mpsId: number | null;
+    estado: MpsSemanalDraftDTO["estado"] | null;
+    fechaGeneracionOdps: string | null;
 }
 
 export interface AprobarMpsSemanalRequestDTO {
@@ -636,6 +659,19 @@ export async function GuardarBorradorProgramacionSemanal(
     const response = await axios.post<MpsSemanalDraftDTO>(
         endPoints.programacion_mps_semanal_borrador_directo,
         payload,
+    );
+    return response.data;
+}
+
+export async function ListarSemanasMps(
+    anioSemana: number,
+): Promise<SemanaMPSDTO[]> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.get<SemanaMPSDTO[]>(
+        endPoints.programacion_mps_semanal_semanas,
+        {
+            params: { anioSemana },
+        },
     );
     return response.data;
 }

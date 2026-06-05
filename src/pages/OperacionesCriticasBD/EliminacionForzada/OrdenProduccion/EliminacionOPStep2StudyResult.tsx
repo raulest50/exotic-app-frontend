@@ -82,7 +82,7 @@ export default function EliminacionOPStep2StudyResult({
     if (!studyResultOP) {
         return (
             <Box>
-                <Text color="gray.600">No hay resultado de estudio disponible.</Text>
+                <Text color="app.textMuted">No hay resultado de estudio disponible.</Text>
                 <Flex gap={3} mt={4}>
                     <Button variant="outline" onClick={() => setActiveStep(1)}>
                         Atrás
@@ -129,7 +129,7 @@ export default function EliminacionOPStep2StudyResult({
                 </Alert>
             )}
 
-            <Text color="gray.600">
+            <Text color="app.textMuted">
                 Registros asociados a esta orden de producción:
             </Text>
 
@@ -168,7 +168,7 @@ export default function EliminacionOPStep2StudyResult({
                         </Tbody>
                     </Table>
                 ) : (
-                    <Text color="gray.500">Ningún lote.</Text>
+                    <Text color="app.textSubtle">Ningún lote.</Text>
                 )}
             </Box>
 
@@ -192,7 +192,7 @@ export default function EliminacionOPStep2StudyResult({
                                     {ta.estadoContable ?? "-"}
                                 </Text>
                                 {ta.observaciones && (
-                                    <Text fontSize="sm" color="gray.600">
+                                    <Text fontSize="sm" color="app.textMuted">
                                         {ta.observaciones}
                                     </Text>
                                 )}
@@ -228,7 +228,7 @@ export default function EliminacionOPStep2StudyResult({
                         ))}
                     </VStack>
                 ) : (
-                    <Text color="gray.500">Ninguna transacción.</Text>
+                    <Text color="app.textSubtle">Ninguna transacción.</Text>
                 )}
             </Box>
 
@@ -261,7 +261,7 @@ export default function EliminacionOPStep2StudyResult({
                         </Tbody>
                     </Table>
                 ) : (
-                    <Text color="gray.500">Ningún asiento contable.</Text>
+                    <Text color="app.textSubtle">Ningún asiento contable.</Text>
                 )}
             </Box>
 

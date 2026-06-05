@@ -12,6 +12,7 @@ import {
   InputRightElement,
   Heading,
   Text,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { ArrowBackIcon, SearchIcon } from '@chakra-ui/icons';
 
@@ -33,9 +34,16 @@ export function PanelBusquedaOCFA({
     onBack,
     onSearch
 }: Props) {
+    const headingColor = useColorModeValue("gray.800", "gray.100");
+    const labelColor = useColorModeValue("gray.700", "gray.300");
+    const headerTextColor = useColorModeValue("teal.700", "teal.200");
+    const softBorderColor = useColorModeValue("gray.100", "gray.600");
+    const inputHoverBorderColor = useColorModeValue("gray.300", "gray.500");
+    const backHoverColor = useColorModeValue("blue.600", "blue.300");
+
     return (
         <Flex direction="column" gap={8} alignItems="center" w="full" py={4}>
-            <Heading as="h2" size="lg" textAlign="center" mb={4} color="gray.800" fontWeight="bold">
+            <Heading as="h2" size="lg" textAlign="center" mb={4} color={headingColor} fontWeight="bold">
                 Buscar Orden de Compra
             </Heading>
             <Flex direction="row" gap={5} alignItems="start" w="full" maxW="800px" mx="auto">
@@ -44,13 +52,13 @@ export function PanelBusquedaOCFA({
                     icon={<ArrowBackIcon/>}
                     onClick={onBack}
                     size="lg"
-                    color="gray.600"
-                    bg="white"
+                    color="app.textMuted"
+                    bg="app.surface"
                     border="1px solid"
-                    borderColor="gray.200"
+                    borderColor="app.border"
                     borderRadius="md"
                     boxShadow="sm"
-                    _hover={{ bg: "gray.50", color: "blue.600" }}
+                    _hover={{ bg: "app.rowHover", color: backHoverColor }}
                 />
 
                 <Card 
@@ -60,30 +68,30 @@ export function PanelBusquedaOCFA({
                     overflow="hidden"
                     transition="all 0.2s ease"
                     _hover={{ boxShadow: "md" }}
-                    bg="white"
+                    bg="app.surface"
                     border="1px solid"
-                    borderColor="gray.100"
+                    borderColor={softBorderColor}
                 >
                     <CardHeader 
                         borderBottom="1px solid"
-                        borderColor="gray.100"
-                        color="teal.700"
+                        borderColor={softBorderColor}
+                        color={headerTextColor}
                         py={5} 
                         px={6}
                         fontWeight="semibold"
                         fontSize="lg"
-                        bg="gray.50"
+                        bg="app.surfaceSubtle"
                     >
                         Buscar OC-AF por ID
                     </CardHeader>
 
                     <CardBody p={8}>
-                        <Text mb={5} color="gray.600" fontSize="md" lineHeight="1.6">
+                        <Text mb={5} color="app.textMuted" fontSize="md" lineHeight="1.6">
                             Ingrese el número de la orden de compra para activos fijos que desea incorporar al sistema.
                         </Text>
 
                         <FormControl mb={8}>
-                            <FormLabel fontWeight="medium" color="gray.700" fontSize="md" mb={2}>Número de OC-AF</FormLabel>
+                            <FormLabel fontWeight="medium" color={labelColor} fontSize="md" mb={2}>Número de OC-AF</FormLabel>
                             <InputGroup size="lg">
                                 <Input 
                                     placeholder="Ej: 12345"
@@ -96,9 +104,9 @@ export function PanelBusquedaOCFA({
                                     }}
                                     borderRadius="md"
                                     border="1px solid"
-                                    borderColor="gray.200"
+                                    borderColor="app.border"
                                     focusBorderColor="blue.500"
-                                    _hover={{ borderColor: "gray.300" }}
+                                    _hover={{ borderColor: inputHoverBorderColor }}
                                     fontSize="md"
                                     py={6}
                                 />

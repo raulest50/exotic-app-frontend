@@ -464,7 +464,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
     const canEdit = proveedoresAccessLevel >= 3;
 
     return (
-        <Box p={5} bg="white" borderRadius="md" boxShadow="base">
+        <Box p={5} bg="app.surface" borderRadius="md" boxShadow="base">
             <Flex justifyContent="space-between" alignItems="center" mb={5}>
                 <Button 
                     leftIcon={<ArrowBackIcon />} 
@@ -513,9 +513,9 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
             </Flex>
 
             <Card mb={5} variant="outline" boxShadow="md">
-                <CardHeader bg="blue.50">
+                <CardHeader bg="app.stepperBlue">
                     <Heading size="md">{proveedor.nombre}</Heading>
-                    <Text color="gray.600">ID: {proveedor.id}</Text>
+                    <Text color="app.textMuted">ID: {proveedor.id}</Text>
                 </CardHeader>
                 <CardBody>
                     <Grid templateColumns="repeat(2, 1fr)" gap={6}>
@@ -611,7 +611,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
             {/* Sección de archivos (RUT y Cámara de Comercio) */}
             {editMode && (
                 <Card mb={5} variant="outline" boxShadow="md">
-                    <CardHeader bg="blue.50">
+                    <CardHeader bg="app.stepperBlue">
                         <Heading size="md">Documentos</Heading>
                     </CardHeader>
                     <CardBody>
@@ -661,13 +661,13 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
 
             {/* Sección de contactos */}
             <Card variant="outline" boxShadow="md">
-                <CardHeader bg="blue.50">
+                <CardHeader bg="app.stepperBlue">
                     <Heading size="md">Contactos</Heading>
                 </CardHeader>
                 <CardBody>
                     <VStack spacing={4} align="stretch">
                         {(editMode ? proveedorData.contactos : proveedor.contactos).map((contacto, index) => (
-                            <Box key={index} p={3} borderWidth="1px" borderRadius="md" bg="gray.50">
+                            <Box key={index} p={3} borderWidth="1px" borderRadius="md" bg="app.surfaceSubtle">
                                 {editMode ? (
                                     <>
                                         <Grid templateColumns="repeat(2, 1fr)" gap={4}>
@@ -719,7 +719,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                     <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                                         <GridItem>
                                             <Text fontWeight="bold">{contacto.fullName}</Text>
-                                            <Text color="gray.600">{contacto.cargo}</Text>
+                                            <Text color="app.textMuted">{contacto.cargo}</Text>
                                         </GridItem>
                                         <GridItem>
                                             <HStack>

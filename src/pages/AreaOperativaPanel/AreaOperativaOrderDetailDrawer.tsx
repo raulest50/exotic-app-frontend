@@ -31,6 +31,7 @@ import {
     Tr,
     VStack,
     Tabs,
+    useColorModeValue,
 } from "@chakra-ui/react";
 import { Background, BackgroundVariant, Edge, Handle, MiniMap, Node, NodeProps, Position, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -106,14 +107,16 @@ function formatCantidad(value: number | null | undefined): string {
 function RouteNode({ data }: NodeProps<RouteNodeData>) {
     const isCurrentAreaNode = data.currentAreaId != null && data.currentLeaderArea;
     const accentColor = getEstadoColor(data.estadoActual);
+    const nodeBorderColor = useColorModeValue("gray.200", "gray.600");
+    const nodeAreaColor = useColorModeValue("gray.700", "gray.200");
 
     return (
         <Box
             minW="220px"
-            bg="white"
+            bg="app.surface"
             borderRadius="lg"
             border="2px solid"
-            borderColor={isCurrentAreaNode ? "teal.500" : "gray.200"}
+            borderColor={isCurrentAreaNode ? "teal.500" : nodeBorderColor}
             boxShadow={isCurrentAreaNode ? "0 0 0 3px rgba(49,151,149,0.15)" : "sm"}
             overflow="hidden"
         >
@@ -123,7 +126,7 @@ function RouteNode({ data }: NodeProps<RouteNodeData>) {
                 </Text>
             </Box>
             <VStack align="stretch" spacing={2} px={3} py={3}>
-                <Text fontSize="sm" color="gray.700" fontWeight="semibold">
+                <Text fontSize="sm" color={nodeAreaColor} fontWeight="semibold">
                     {data.areaNombre}
                 </Text>
                 <Badge alignSelf="start" colorScheme={getEstadoBadgeScheme(data.estadoActual)}>
@@ -192,14 +195,14 @@ function BomTreeNode({ node, depth = 0 }: { node: BomRecetaNodeDTO; depth?: numb
         <Box
             borderWidth="1px"
             borderRadius="md"
-            bg="white"
+            bg="app.surface"
             p={3}
             ml={depth > 0 ? depth * 4 : 0}
         >
             <HStack justify="space-between" align="start" flexWrap="wrap" gap={2}>
                 <Box>
                     <Text fontWeight="bold">{node.productoNombre}</Text>
-                    <Text fontSize="sm" color="gray.600">
+                    <Text fontSize="sm" color="app.textMuted">
                         {node.productoId} · {node.tipoProducto}
                     </Text>
                 </Box>
@@ -281,36 +284,36 @@ export default function AreaOperativaOrderDetailDrawer({
                                     <VStack align="stretch" spacing={5}>
                                         <Box>
                                             <Text fontWeight="bold">{detail.orden.loteAsignado || `OP-${detail.orden.ordenId}`}</Text>
-                                            <Text color="gray.600">
+                                            <Text color="app.textMuted">
                                                 {detail.orden.productoNombre} · {detail.orden.productoId}
                                             </Text>
-                                            <Text color="gray.600">
+                                            <Text color="app.textMuted">
                                                 Categoría: {detail.orden.categoriaNombre || "Sin categoría"} · Cantidad: {formatCantidad(detail.orden.cantidadProducir)}
                                             </Text>
                                         </Box>
 
                                         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                                             <Box borderWidth="1px" borderRadius="md" p={3}>
-                                                <Text fontSize="sm" color="gray.500">Creación</Text>
+                                                <Text fontSize="sm" color="app.textSubtle">Creación</Text>
                                                 <Text>{formatDateTime(detail.orden.fechaCreacion)}</Text>
                                             </Box>
                                             <Box borderWidth="1px" borderRadius="md" p={3}>
-                                                <Text fontSize="sm" color="gray.500">Fin planificada</Text>
+                                                <Text fontSize="sm" color="app.textSubtle">Fin planificada</Text>
                                                 <Text>{formatDateTime(detail.orden.fechaFinalPlanificada)}</Text>
                                             </Box>
                                             <Box borderWidth="1px" borderRadius="md" p={3}>
-                                                <Text fontSize="sm" color="gray.500">Inicio real</Text>
+                                                <Text fontSize="sm" color="app.textSubtle">Inicio real</Text>
                                                 <Text>{formatDateTime(detail.orden.fechaInicio)}</Text>
                                             </Box>
                                             <Box borderWidth="1px" borderRadius="md" p={3}>
-                                                <Text fontSize="sm" color="gray.500">Fin real</Text>
+                                                <Text fontSize="sm" color="app.textSubtle">Fin real</Text>
                                                 <Text>{formatDateTime(detail.orden.fechaFinal)}</Text>
                                             </Box>
                                         </SimpleGrid>
 
                                         <Box>
                                             <Text fontWeight="semibold" mb={2}>Observaciones de la orden</Text>
-                                            <Box borderWidth="1px" borderRadius="md" p={3} bg="gray.50">
+                                            <Box borderWidth="1px" borderRadius="md" p={3} bg="app.surfaceSubtle">
                                                 <Text whiteSpace="pre-wrap">
                                                     {detail.orden.ordenObservaciones?.trim() || "Sin observaciones registradas."}
                                                 </Text>
@@ -327,7 +330,7 @@ export default function AreaOperativaOrderDetailDrawer({
                                                                 <Text fontWeight="bold">
                                                                     {index + 1}. {item.nodeLabel}
                                                                 </Text>
-                                                                <Text fontSize="sm" color="gray.600">
+                                                                <Text fontSize="sm" color="app.textMuted">
                                                                     {item.areaNombre}
                                                                 </Text>
                                                             </Box>
@@ -336,7 +339,7 @@ export default function AreaOperativaOrderDetailDrawer({
                                                             </Badge>
                                                         </HStack>
 
-                                                        <Stack spacing={1} fontSize="sm" color="gray.600">
+                                                        <Stack spacing={1} fontSize="sm" color="app.textMuted">
                                                             <Text>Visible desde: {formatDateTime(item.fechaVisible)}</Text>
                                                             <Text>Estado actual desde: {formatDateTime(item.fechaEstadoActual)}</Text>
                                                             <Text>Completado: {formatDateTime(item.fechaCompletado)}</Text>
@@ -387,7 +390,7 @@ export default function AreaOperativaOrderDetailDrawer({
                                                 </ReactFlow>
                                             </Box>
                                         ) : (
-                                            <Text color="gray.500">La orden no tiene una ruta de proceso visual disponible.</Text>
+                                            <Text color="app.textSubtle">La orden no tiene una ruta de proceso visual disponible.</Text>
                                         )}
                                     </VStack>
                                 </TabPanel>
@@ -406,7 +409,7 @@ export default function AreaOperativaOrderDetailDrawer({
                                                     ))}
                                                 </VStack>
                                             ) : (
-                                                <Text color="gray.500">No hay receta configurada para este terminado.</Text>
+                                                <Text color="app.textSubtle">No hay receta configurada para este terminado.</Text>
                                             )}
                                         </Box>
 
@@ -415,7 +418,7 @@ export default function AreaOperativaOrderDetailDrawer({
                                             {detail.bom.empaque.length > 0 ? (
                                                 <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
                                                     <Table size="sm">
-                                                        <Thead bg="gray.50">
+                                                        <Thead bg="app.tableHeader">
                                                             <Tr>
                                                                 <Th>Producto</Th>
                                                                 <Th>ID</Th>
@@ -442,7 +445,7 @@ export default function AreaOperativaOrderDetailDrawer({
                                                     </Table>
                                                 </Box>
                                             ) : (
-                                                <Text color="gray.500">No hay materiales de empaque asociados a la orden.</Text>
+                                                <Text color="app.textSubtle">No hay materiales de empaque asociados a la orden.</Text>
                                             )}
                                         </Box>
                                     </VStack>
@@ -452,7 +455,7 @@ export default function AreaOperativaOrderDetailDrawer({
                     ) : null}
 
                     {!loading && !detail ? (
-                        <Text color="gray.500">No se encontró detalle operativo para esta orden.</Text>
+                        <Text color="app.textSubtle">No se encontró detalle operativo para esta orden.</Text>
                     ) : null}
                 </DrawerBody>
             </DrawerContent>

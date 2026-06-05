@@ -15,6 +15,7 @@ import {
     Td,
     Text,
     VStack,
+    useColorModeValue,
     useToast,
 } from '@chakra-ui/react';
 import axios from 'axios';
@@ -57,6 +58,9 @@ export default function AveriaProduccionStep1SelectOrder({
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
     const toast = useToast();
+    const selectedRowBg = useColorModeValue('teal.100', 'teal.900');
+    const selectedRowHoverBg = useColorModeValue('teal.200', 'teal.800');
+    const selectedPanelBorder = useColorModeValue('teal.200', 'teal.600');
 
     const handleSearch = async () => {
         setIsLoading(true);
@@ -111,7 +115,7 @@ export default function AveriaProduccionStep1SelectOrder({
             </Text>
 
             {selectedArea && (
-                <Box p={2} mb={4} bg="blue.50" borderRadius="md" borderWidth="1px" borderColor="blue.200">
+                <Box p={2} mb={4} bg="app.stepperBlue" borderRadius="md" borderWidth="1px" borderColor="app.cardItemBorderBlue">
                     <Text fontSize="sm">
                         Área seleccionada: <strong>{selectedArea.nombre}</strong> (ID: {selectedArea.areaId})
                     </Text>
@@ -158,8 +162,8 @@ export default function AveriaProduccionStep1SelectOrder({
                                         <Tr
                                             key={orden.ordenId}
                                             onClick={() => handleRowClick(orden)}
-                                            bg={selectedOrdenId === orden.ordenId ? 'teal.100' : 'transparent'}
-                                            _hover={{ bg: selectedOrdenId === orden.ordenId ? 'teal.200' : 'gray.100', cursor: 'pointer' }}
+                                            bg={selectedOrdenId === orden.ordenId ? selectedRowBg : 'transparent'}
+                                            _hover={{ bg: selectedOrdenId === orden.ordenId ? selectedRowHoverBg : 'app.rowHoverStrong', cursor: 'pointer' }}
                                         >
                                             <Td>{orden.loteAsignado}</Td>
                                             <Td>{orden.productoNombre}</Td>
@@ -181,18 +185,18 @@ export default function AveriaProduccionStep1SelectOrder({
                             />
                         </>
                     ) : (
-                        <Text textAlign="center" color="gray.500">
+                        <Text textAlign="center" color="app.textSubtle">
                             No hay órdenes para mostrar. Realice una búsqueda.
                         </Text>
                     )}
                 </Box>
 
                 {selectedOrden && (
-                    <Box p={3} bg="teal.50" borderRadius="md" borderWidth="1px" borderColor="teal.200">
+                    <Box p={3} bg="app.rowSelectedTeal" borderRadius="md" borderWidth="1px" borderColor={selectedPanelBorder}>
                         <Text fontWeight="semibold">
                             Orden seleccionada: {selectedOrden.loteAsignado} — {selectedOrden.productoNombre}
                         </Text>
-                        <Text fontSize="sm" color="gray.600">
+                        <Text fontSize="sm" color="app.textMuted">
                             Estado: {getEstadoLabel(selectedOrden.estadoOrden)} | Cantidad: {selectedOrden.cantidadProducir}
                         </Text>
                     </Box>

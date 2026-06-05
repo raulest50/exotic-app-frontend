@@ -24,6 +24,7 @@ import {
   Box,
   Link,
   HStack,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useState, useEffect, useRef } from "react";
 import { Cargo, AccessLevel } from "../types";
@@ -67,6 +68,7 @@ export default function EditCargoDialog({
   const [manualUrl, setManualUrl] = useState<string>("");
   const manualInputRef = useRef<HTMLInputElement>(null);
   const endPoints = new EndPointsURL();
+  const assignedUserColor = useColorModeValue("blue.600", "blue.200");
 
   // Estado para controlar si el formulario es válido
   const [isFormValid, setIsFormValid] = useState<boolean>(false);
@@ -368,19 +370,19 @@ export default function EditCargoDialog({
                 {localCargo.tituloCargo}
               </Text>
 
-              <Text fontSize="lg" color="gray.600" mb={4}>
+              <Text fontSize="lg" color="app.textMuted" mb={4}>
                 Departamento: {localCargo.departamento}
               </Text>
 
               <Text mb={6}>{localCargo.descripcionCargo}</Text>
 
               {localCargo.usuario && (
-                <Text fontSize="sm" color="blue.600" mb={4}>
+                <Text fontSize="sm" color={assignedUserColor} mb={4}>
                   Usuario asignado: {localCargo.usuario}
                 </Text>
               )}
 
-              <Box mt={6} pt={4} borderTop="1px solid" borderColor="gray.200">
+              <Box mt={6} pt={4} borderTop="1px solid" borderColor="app.border">
                 <Text fontSize="xl" fontWeight="bold" mb={4}>
                   Manual de Funciones
                 </Text>
@@ -395,7 +397,7 @@ export default function EditCargoDialog({
                         placeholder="Ingrese la URL del documento PDF con el manual de funciones"
                       />
                     </FormControl>
-                    <Text fontSize="sm" color="gray.500">
+                    <Text fontSize="sm" color="app.textSubtle">
                       Ingrese la URL completa del documento PDF que contiene el manual de funciones aprobado para este cargo.
                     </Text>
                     <HStack>
@@ -420,7 +422,7 @@ export default function EditCargoDialog({
                         <Link href={localCargo.urlDocManualFunciones} isExternal color="blue.500">
                           Ver Manual de Funciones (PDF) <ExternalLinkIcon mx="2px" />
                         </Link>
-                        <Text fontSize="sm" color="gray.500" mt={2}>
+                        <Text fontSize="sm" color="app.textSubtle" mt={2}>
                           Haga clic en el enlace para ver o descargar el manual de funciones completo.
                         </Text>
                       </Box>

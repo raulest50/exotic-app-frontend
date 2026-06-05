@@ -17,6 +17,7 @@ import {
     Th,
     Thead,
     Tr,
+    useColorModeValue,
     useToast,
 } from "@chakra-ui/react";
 import { FaCircleExclamation } from "react-icons/fa6";
@@ -62,6 +63,7 @@ export default function MasterDirectivesPage() {
     const endPoints = useMemo(() => new EndPointsURL(), []);
     const toast = useToast();
     const { refreshDirectives } = useMasterDirectives();
+    const explanatoryWarningColor = useColorModeValue("orange.600", "orange.300");
 
     const fetchConfig = useCallback(async () => {
         setLoading(true);
@@ -229,7 +231,7 @@ export default function MasterDirectivesPage() {
                             <Tr key={key}>
                                 <Td>
                                     <Text fontWeight="bold">{label}</Text>
-                                    <Text fontSize="sm" color="gray.500">
+                                    <Text fontSize="sm" color="app.textSubtle">
                                         {resumen}
                                     </Text>
                                 </Td>
@@ -271,11 +273,11 @@ export default function MasterDirectivesPage() {
                                     <Tr key={directive.id}>
                                         <Td>
                                             <Text fontWeight="bold">{directive.nombre}</Text>
-                                            <Text fontSize="sm" color="gray.500">
+                                            <Text fontSize="sm" color="app.textSubtle">
                                                 {directive.resumen}
                                             </Text>
                                             {directive.nombre === MASTER_DIRECTIVE_KEYS.LIMITE_RECEPCIONES_PARCIALES_OCM && (
-                                                <Text fontSize="xs" color="orange.600" mt={1}>
+                                                <Text fontSize="xs" color={explanatoryWarningColor} mt={1}>
                                                     Este tope solo valida cambios futuros en proveedores. No modifica limites ya configurados ni valida ingresos OCM directamente.
                                                 </Text>
                                             )}

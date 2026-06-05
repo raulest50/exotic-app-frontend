@@ -196,7 +196,7 @@ function HistorialCompras() {
                                 bg={selectedProveedor?.id === proveedor.id ? 'teal.100' : 'white'}
                                 p={2}
                                 borderRadius="md"
-                                _hover={{ bg: 'teal.50' }}
+                                _hover={{ bg: 'app.rowSelectedTeal' }}
                             >
                                 <Text>
                                     <strong>{proveedor.nombre}</strong> (NIT: {proveedor.id})
@@ -236,8 +236,8 @@ function HistorialCompras() {
                                 key={compra.compraId}
                                 p={2}
                                 borderRadius="md"
-                                bg="gray.50"
-                                _hover={{ bg: 'gray.100' }}
+                                bg="app.surfaceSubtle"
+                                _hover={{ bg: 'app.rowHoverStrong' }}
                                 cursor="pointer"
                                 onDoubleClick={() => handleCompraDoubleClick(compra)}
                             >

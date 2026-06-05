@@ -377,7 +377,7 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
                         <Divider orientation="vertical" />
                     </Center>
 
-                    <Stat backgroundColor="gray.50" p="1em" boxShadow="md" minW="260px">
+                    <Stat backgroundColor="app.surfaceSubtle" p="1em" boxShadow="md" minW="260px">
                         <StatLabel>Total Costo Insumos</StatLabel>
                         <StatNumber>{semioter2.costo} ( $ COP)</StatNumber>
                     </Stat>
@@ -385,7 +385,7 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
 
                 <Box
                     flex={1}
-                    bg="gray.50"
+                    bg="app.surfaceSubtle"
                     borderWidth="1px"
                     borderRadius="md"
                     p={4}
@@ -407,7 +407,7 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
                         >
                             Asignar area al proceso
                         </Button>
-                        <Text fontSize="sm" color="gray.600">
+                        <Text fontSize="sm" color="app.textMuted">
                             Cada nodo de proceso debe quedar asociado a un AreaOperativa para que el diagrama sea valido.
                         </Text>
                     </VStack>

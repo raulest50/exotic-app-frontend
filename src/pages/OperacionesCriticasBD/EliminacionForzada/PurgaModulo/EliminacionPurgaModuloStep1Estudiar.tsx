@@ -88,7 +88,7 @@ export default function EliminacionPurgaModuloStep1Estudiar({
     if (isLoading) {
         return (
             <Box>
-                <Text color="gray.600">Cargando estudio de la purga...</Text>
+                <Text color="app.textMuted">Cargando estudio de la purga...</Text>
             </Box>
         );
     }
@@ -96,7 +96,7 @@ export default function EliminacionPurgaModuloStep1Estudiar({
     if (!studyResultPurga) {
         return (
             <Box>
-                <Text color="gray.600">No se pudo cargar el estudio. Reintente más tarde.</Text>
+                <Text color="app.textMuted">No se pudo cargar el estudio. Reintente más tarde.</Text>
                 <Button variant="outline" mt={4} onClick={() => setActiveStep(0)}>
                     Volver
                 </Button>
@@ -134,7 +134,7 @@ export default function EliminacionPurgaModuloStep1Estudiar({
                 </AlertDescription>
             </Alert>
 
-            <Text color="gray.600" fontSize="sm">
+            <Text color="app.textMuted" fontSize="sm">
                 Entorno actual: {mensajeEntorno}
             </Text>
 

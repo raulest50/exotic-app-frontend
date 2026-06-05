@@ -183,8 +183,8 @@ const MateriaPrimaPicker: React.FC<MateriaPrimaPickerProps> = ({
                                                 <Tr 
                                                     key={materiaPrima.productoId} 
                                                     onClick={() => setSelectedMateriaPrimaId(materiaPrima.productoId)}
-                                                    bg={selectedMateriaPrimaId === materiaPrima.productoId ? "blue.100" : "transparent"}
-                                                    _hover={{ bg: "gray.100", cursor: "pointer" }}
+                                                    bg={selectedMateriaPrimaId === materiaPrima.productoId ? "app.rowSelectedBlue" : "transparent"}
+                                                    _hover={{ bg: "app.rowHoverStrong", cursor: "pointer" }}
                                                 >
                                                     <Td>{materiaPrima.productoId}</Td>
                                                     <Td>{materiaPrima.nombre}</Td>

@@ -113,7 +113,7 @@ export default function FiltroAreasOperativas({ onBuscar, loading }: FiltroAreas
                                 value={responsable ? `${responsable.cedula} - ${responsable.nombreCompleto || responsable.username}` : ''}
                                 placeholder="Seleccione un responsable"
                                 isReadOnly
-                                bg="gray.50"
+                                bg="app.inputReadonly"
                             />
                             <InputRightElement>
                                 <IconButton

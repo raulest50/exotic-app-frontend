@@ -87,7 +87,7 @@ export default function WizardAveriaAlmacen({ onBack }: WizardAveriaAlmacenProps
                         ← Volver a selección de tipo
                     </Button>
                 </Flex>
-                <Stepper index={activeStep} p="1em" backgroundColor="teal.50" w="full">
+                <Stepper index={activeStep} p="1em" backgroundColor="app.stepperTeal" w="full">
                     {steps.map((step, index) => (
                         <Step key={index}>
                             <StepIndicator>

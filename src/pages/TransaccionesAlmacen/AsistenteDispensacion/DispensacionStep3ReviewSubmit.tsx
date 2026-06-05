@@ -681,7 +681,7 @@ export default function DispensacionStep3ReviewSubmit({
     const tieneReposicion = reposicionItems.length > 0;
 
     return (
-        <Box p='1em' bg='blue.50' minH='100vh'>
+        <Box p='1em' bg='app.stepperBlue' minH='100vh'>
             <Flex direction='column' gap={6} maxW='container.xl' mx='auto'>
                 <Heading fontFamily='Comfortaa Variable' textAlign='center'>
                     Revisar y Registrar Dispensación
@@ -691,7 +691,7 @@ export default function DispensacionStep3ReviewSubmit({
                 {/* TODO: Esta funcionalidad se moverá al backend en el futuro */}
                 {/* El código se mantiene intacto pero la UI está oculta para no romper la funcionalidad */}
                 <Box 
-                    bg='white' 
+                    bg='app.surface'
                     p={4} 
                     borderRadius='md' 
                     boxShadow='sm'
@@ -739,7 +739,7 @@ export default function DispensacionStep3ReviewSubmit({
                                 </Tbody>
                             </Table>
                         ) : (
-                            <Text color='gray.500' fontStyle='italic'>
+                            <Text color='app.textSubtle' fontStyle='italic'>
                                 No hay usuarios seleccionados. Debe agregar al menos uno.
                             </Text>
                         )}
@@ -747,7 +747,7 @@ export default function DispensacionStep3ReviewSubmit({
                 </Box>
 
                 {/* Usuario Aprobador (No editable) */}
-                <Box bg='white' p={4} borderRadius='md' boxShadow='sm'>
+                <Box bg='app.surface' p={4} borderRadius='md' boxShadow='sm'>
                     <Heading size='md' mb={2} fontFamily='Comfortaa Variable'>
                         Usuario Aprobador
                     </Heading>
@@ -759,12 +759,12 @@ export default function DispensacionStep3ReviewSubmit({
                     </Text>
                 </Box>
 
-                <Box bg='white' p={4} borderRadius='md' boxShadow='sm'>
+                <Box bg='app.surface' p={4} borderRadius='md' boxShadow='sm'>
                     <Heading size='md' mb={4} fontFamily='Comfortaa Variable'>
                         Área Operativa Destino
                     </Heading>
                     {loadingAreasDestino ? (
-                        <Text color='gray.600'>Cargando áreas operativas de la orden...</Text>
+                        <Text color='app.textMuted'>Cargando áreas operativas de la orden...</Text>
                     ) : areasDestinoDisponibles.length > 0 ? (
                         <FormControl isRequired>
                             <FormLabel>Área que recibe la dispensación</FormLabel>
@@ -785,7 +785,7 @@ export default function DispensacionStep3ReviewSubmit({
                                     </option>
                                 ))}
                             </Select>
-                            <Text mt={2} fontSize='sm' color='gray.600'>
+                            <Text mt={2} fontSize='sm' color='app.textMuted'>
                                 Esta selección se guardará en la trazabilidad de la dispensación y habilitará automáticamente el avance de Almacén General.
                             </Text>
                         </FormControl>
@@ -798,7 +798,7 @@ export default function DispensacionStep3ReviewSubmit({
                 </Box>
 
                 {/* Resumen de Items y Lotes */}
-                <Box bg='white' p={4} borderRadius='md' boxShadow='sm'>
+                <Box bg='app.surface' p={4} borderRadius='md' boxShadow='sm'>
                     <Heading size='md' mb={4} fontFamily='Comfortaa Variable'>
                         Resumen de Materiales a Dispensar
                     </Heading>
@@ -835,7 +835,7 @@ export default function DispensacionStep3ReviewSubmit({
                     </Tbody>
                 </Table>
                     ) : (
-                        <Text color='gray.500' fontStyle='italic'>
+                        <Text color='app.textSubtle' fontStyle='italic'>
                             No hay items para mostrar
                         </Text>
                     )}
@@ -843,7 +843,7 @@ export default function DispensacionStep3ReviewSubmit({
 
                 {/* Resumen de Reposición por Avería */}
                 {tieneReposicion && (
-                    <Box bg='white' p={4} borderRadius='md' boxShadow='sm' borderLeft='4px solid' borderLeftColor='orange.400'>
+                    <Box bg='app.surface' p={4} borderRadius='md' boxShadow='sm' borderLeft='4px solid' borderLeftColor='orange.400'>
                         <Heading size='md' mb={4} fontFamily='Comfortaa Variable' color='orange.700'>
                             Reposición de Material por Averías
                         </Heading>
@@ -880,7 +880,7 @@ export default function DispensacionStep3ReviewSubmit({
                 )}
 
                 {/* Token de Verificación */}
-                <Box bg='white' p={4} borderRadius='md' boxShadow='sm'>
+                <Box bg='app.surface' p={4} borderRadius='md' boxShadow='sm'>
                     <FormControl isRequired>
                         <FormLabel fontFamily='Comfortaa Variable'>Token de Verificación</FormLabel>
                         <Input
@@ -891,7 +891,7 @@ export default function DispensacionStep3ReviewSubmit({
                             type='text'
                             pattern='[0-9]*'
                         />
-                        <Text mt={2} fontSize='sm' color='gray.600'>
+                        <Text mt={2} fontSize='sm' color='app.textMuted'>
                             Token generado: <strong>{token}</strong>
                         </Text>
                 </FormControl>

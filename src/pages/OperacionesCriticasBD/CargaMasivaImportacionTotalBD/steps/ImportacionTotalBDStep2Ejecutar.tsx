@@ -198,7 +198,7 @@ export default function ImportacionTotalBDStep2Ejecutar({
 
             <Box>
                 <Text fontWeight="bold">Archivo listo para restaurar</Text>
-                <Text color="gray.600">{dumpFile?.name ?? "Sin archivo seleccionado"}</Text>
+                <Text color="app.textMuted">{dumpFile?.name ?? "Sin archivo seleccionado"}</Text>
             </Box>
 
             {(isExecuting || hasResult) && result && (

@@ -4,15 +4,15 @@ const my_style_tab={
     borderRadius:0,
 //    border:0,
     ':active':{
-        bg:'blue.200',
+        bg:'app.tabSelected',
     },
     ':selected':{
-        bg:'blue.200',
+        bg:'app.tabSelected',
     },
 }
 
 const input_style = {
-    bg:'gray.200',
+    bg:'app.inputFilled',
     variant:'filled',
     borderRadius:0,
 }
@@ -20,19 +20,19 @@ const input_style = {
 const cardItem_style_sel_tray = {
     borderRadius:'0',
     ':hover':{
-        bg:'teal.200',
+        bg:'app.cardItemHover',
     },
     borderLeft: "0.7em solid",
-    borderColor: "blue.200",
+    borderColor: "app.cardItemBorderBlue",
 }
 
 const cardItem_style_rcta = {
     borderRadius:'0',
     ':hover':{
-        bg:'teal.200',
+        bg:'app.cardItemHover',
     },
     borderLeft: "0.7em solid",
-    borderColor: "green.200",
+    borderColor: "app.cardItemBorderGreen",
 }
 
 

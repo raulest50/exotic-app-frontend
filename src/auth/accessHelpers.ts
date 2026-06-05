@@ -6,9 +6,6 @@ function resolveLegacyTabIds(modulo: Modulo, tabId: string): string[] {
     if (modulo === Modulo.PRODUCCION && tabId === "MONITOREAR_AREAS_OPERATIVAS") {
         return ["MONITOREAR_AREAS_OPERATIVAS", "SEGUIMIENTO_AREAS_OPERATIVAS"];
     }
-    if (modulo === Modulo.PRODUCCION && tabId === "PROGRAMACION_PRODUCCION") {
-        return ["PROGRAMACION_PRODUCCION", "APROBACION_MPS_WEEK"];
-    }
     return [tabId];
 }
 

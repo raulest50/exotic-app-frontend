@@ -327,7 +327,7 @@ export default function HorasExtraBiPanel() {
                     <CardBody>
                         <Stack align="center" py={8}>
                             <Spinner />
-                            <Text color="gray.600">Cargando BI de horas extra...</Text>
+                            <Text color="app.textMuted">Cargando BI de horas extra...</Text>
                         </Stack>
                     </CardBody>
                 </Card>
@@ -363,7 +363,7 @@ export default function HorasExtraBiPanel() {
                                 <ReactECharts option={chartOptions} style={{ height: "420px", width: "100%" }} />
                             ) : (
                                 <Box py={10}>
-                                    <Text color="gray.600" textAlign="center">
+                                    <Text color="app.textMuted" textAlign="center">
                                         No hay registros de horas extra para la ventana seleccionada.
                                     </Text>
                                 </Box>

@@ -200,7 +200,7 @@ export function LotePickerDispensacion({
                 <ModalCloseButton />
                 <ModalBody>
                     <Flex direction="column" gap={4}>
-                        <Text fontSize="sm" color="gray.600">
+                        <Text fontSize="sm" color="app.textMuted">
                             Cantidad requerida: <strong>{cantidadRequerida.toFixed(2)}</strong> ·
                             Seleccionada: <strong>{sumaCantidades.toFixed(2)}</strong>
                         </Text>
@@ -317,7 +317,7 @@ export function LotePickerDispensacion({
                             <Box flex="1" borderWidth="1px" borderRadius="md" p={4}>
                                 <Text fontWeight="bold" mb={3}>Lotes Seleccionados</Text>
                                 {lotesSeleccionados.length === 0 ? (
-                                    <Text fontSize="sm" color="gray.500" textAlign="center" py={8}>
+                                    <Text fontSize="sm" color="app.textSubtle" textAlign="center" py={8}>
                                         No hay lotes seleccionados
                                     </Text>
                                 ) : (

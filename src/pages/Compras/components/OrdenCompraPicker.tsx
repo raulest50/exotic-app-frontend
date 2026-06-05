@@ -163,8 +163,8 @@ export default function OrdenCompraPicker({
                                                 <Tr
                                                     key={orden.ordenCompraId}
                                                     onClick={() => setSelectedOrdenId(orden.ordenCompraId ?? null)}
-                                                    bg={selectedOrdenId === orden.ordenCompraId ? "teal.50" : "transparent"}
-                                                    _hover={{ bg: "gray.50", cursor: "pointer" }}
+                                                    bg={selectedOrdenId === orden.ordenCompraId ? "app.rowSelectedTeal" : "transparent"}
+                                                    _hover={{ bg: "app.rowHover", cursor: "pointer" }}
                                                 >
                                                     <Td>{orden.ordenCompraId}</Td>
                                                     <Td>{orden.fechaEmision ? format(new Date(orden.fechaEmision), "yyyy-MM-dd") : "-"}</Td>
@@ -198,7 +198,7 @@ export default function OrdenCompraPicker({
                                     )}
                                 </>
                             ) : (
-                                <Text textAlign="center" color="gray.500" py={4}>
+                                <Text textAlign="center" color="app.textSubtle" py={4}>
                                     {isLoading ? "Cargando..." : "Use los filtros y pulse Buscar para listar órdenes."}
                                 </Text>
                             )}

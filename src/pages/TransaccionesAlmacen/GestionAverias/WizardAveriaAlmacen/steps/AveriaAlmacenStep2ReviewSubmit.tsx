@@ -147,7 +147,7 @@ export default function AveriaAlmacenStep2ReviewSubmit({
                     />
                 </Box>
 
-                <Box bg="white" p={4} borderRadius="md" borderWidth="1px">
+                <Box bg="app.surface" p={4} borderRadius="md" borderWidth="1px">
                     <FormControl isRequired>
                         <FormLabel>Token de Verificación</FormLabel>
                         <Input
@@ -157,7 +157,7 @@ export default function AveriaAlmacenStep2ReviewSubmit({
                             maxLength={4}
                             type="text"
                         />
-                        <Text mt={2} fontSize="sm" color="gray.600">
+                        <Text mt={2} fontSize="sm" color="app.textMuted">
                             Token generado: <strong>{token}</strong>
                         </Text>
                     </FormControl>

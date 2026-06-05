@@ -7,6 +7,7 @@ import {
     StepNumber,
     StepSeparator,
     StepStatus,
+    useColorModeValue,
     useSteps,
 } from "@chakra-ui/react";
 import { Step, StepIcon, StepIndicator, Stepper, StepTitle } from "@chakra-ui/icons";
@@ -31,6 +32,7 @@ export default function CargaMasivaImportacionTotalBDTab({ onBackToSelector }: C
         index: 0,
         count: steps.length,
     });
+    const stepperBg = useColorModeValue("orange.50", "orange.900");
 
     const [dumpFile, setDumpFile] = useState<File | null>(null);
     const [navigationLocked, setNavigationLocked] = useState(false);
@@ -79,7 +81,7 @@ export default function CargaMasivaImportacionTotalBDTab({ onBackToSelector }: C
                 >
                     Volver
                 </Button>
-                <Stepper index={activeStep} p="1em" backgroundColor="orange.50" w="full">
+                <Stepper index={activeStep} p="1em" backgroundColor={stepperBg} w="full">
                     {steps.map((step, index) => (
                         <Step key={index}>
                             <StepIndicator>

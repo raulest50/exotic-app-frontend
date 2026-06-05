@@ -156,7 +156,7 @@ export default function ReorderPointView({
         return (
             <Card variant="outline">
                 <CardBody>
-                    <Text color="gray.600">Seleccione un material para estimar y actualizar su punto de reorden.</Text>
+                    <Text color="app.textMuted">Seleccione un material para estimar y actualizar su punto de reorden.</Text>
                 </CardBody>
             </Card>
         );
@@ -197,10 +197,10 @@ export default function ReorderPointView({
                         {loading ? (
                             <Stack align="center" py={8}>
                                 <Spinner />
-                                <Text color="gray.600">Calculando punto de reorden...</Text>
+                                <Text color="app.textMuted">Calculando punto de reorden...</Text>
                             </Stack>
                         ) : !estimate ? (
-                            <Text color="gray.600">No hay estimacion disponible.</Text>
+                            <Text color="app.textMuted">No hay estimacion disponible.</Text>
                         ) : (
                             <SimpleGrid columns={1} spacing={3}>
                                 <Stat>
@@ -246,7 +246,7 @@ export default function ReorderPointView({
                                 {estimate.reason ? (
                                     <Box>
                                         <Text fontWeight="medium">Motivo</Text>
-                                        <Text color="gray.600">{estimate.reason}</Text>
+                                        <Text color="app.textMuted">{estimate.reason}</Text>
                                     </Box>
                                 ) : null}
                             </SimpleGrid>
@@ -299,7 +299,7 @@ export default function ReorderPointView({
                                     Guardar nuevo punto de reorden
                                 </Button>
                                 {!canSave ? (
-                                    <Text fontSize="sm" color="gray.600">
+                                    <Text fontSize="sm" color="app.textMuted">
                                         Se requiere BI nivel 3 para guardar cambios desde esta interfaz.
                                     </Text>
                                 ) : null}

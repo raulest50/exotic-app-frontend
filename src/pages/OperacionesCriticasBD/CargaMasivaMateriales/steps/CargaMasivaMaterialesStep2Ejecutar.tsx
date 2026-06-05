@@ -11,6 +11,7 @@ import {
     AlertTitle,
     Spinner,
     Heading,
+    useColorModeValue,
 } from "@chakra-ui/react";
 import { useState, useMemo } from "react";
 import axios, { AxiosError } from "axios";
@@ -42,6 +43,8 @@ export default function CargaMasivaMaterialesStep2Ejecutar({
     const [executionSuccess, setExecutionSuccess] = useState(false);
     const [executionError, setExecutionError] = useState<string | null>(null);
     const [executionErrors, setExecutionErrors] = useState<{ rowNumber: number; productoId: string; message: string }[]>([]);
+    const successHeadingColor = useColorModeValue("green.800", "green.100");
+    const successTextColor = useColorModeValue("green.900", "green.100");
 
     const colorAnimation = keyframes`
         0% { color: #68D391; }
@@ -130,18 +133,18 @@ export default function CargaMasivaMaterialesStep2Ejecutar({
             <Flex
                 p="1em"
                 direction="column"
-                backgroundColor="green.50"
+                backgroundColor="app.rowSelectedGreen"
                 gap={8}
                 alignItems="center"
                 textAlign="center"
             >
                 <Flex alignItems="center" gap={3}>
-                    <Heading fontFamily="Comfortaa Variable" color="green.800">
+                    <Heading fontFamily="Comfortaa Variable" color={successHeadingColor}>
                         Carga masiva completada
                     </Heading>
                     <ImCheckboxChecked style={{ width: "3em", height: "3em", color: "#48BB78" }} />
                 </Flex>
-                <Text fontFamily="Comfortaa Variable" color="green.900">
+                <Text fontFamily="Comfortaa Variable" color={successTextColor}>
                     Los materiales se registraron correctamente en la base de datos.
                 </Text>
                 <RiSave3Fill

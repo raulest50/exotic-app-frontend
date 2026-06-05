@@ -72,7 +72,7 @@ export default function AprovisionamientoTab() {
                         <Flex justify="space-between" align={{ base: "stretch", md: "center" }} direction={{ base: "column", md: "row" }} gap={4}>
                             <Box>
                                 <Text fontSize="lg" fontWeight="semibold">Aprovisionamiento</Text>
-                                <Text color="gray.600" fontSize="sm">
+                                <Text color="app.textMuted" fontSize="sm">
                                     Analice lead times historicos y establezca puntos de reorden basados en datos BI.
                                 </Text>
                             </Box>
@@ -93,12 +93,12 @@ export default function AprovisionamientoTab() {
                                             <Text fontWeight="medium">
                                                 {selectedMaterial.nombre} ({selectedMaterial.productoId})
                                             </Text>
-                                            <Text fontSize="sm" color="gray.600">
+                                            <Text fontSize="sm" color="app.textMuted">
                                                 {formatTipoMaterial(selectedMaterial.tipoMaterial)} | UOM: {selectedMaterial.tipoUnidades} | Punto reorden actual: {formatNumber(selectedMaterial.puntoReorden, 2)}
                                             </Text>
                                         </Stack>
                                     ) : (
-                                        <Text color="gray.500">Aun no ha seleccionado un material.</Text>
+                                        <Text color="app.textSubtle">Aun no ha seleccionado un material.</Text>
                                     )}
                                 </Box>
                             </FormControl>

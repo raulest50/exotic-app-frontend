@@ -7,6 +7,7 @@ import {
     Icon,
     SimpleGrid,
     Text,
+    useColorModeValue,
 } from "@chakra-ui/react";
 import { FaPlus, FaListUl } from "react-icons/fa";
 import { AiFillProduct } from "react-icons/ai";
@@ -19,6 +20,13 @@ interface Step0SelectTipoCargaProps {
 }
 
 export default function Step0SelectTipoCarga({ onSelect }: Step0SelectTipoCargaProps) {
+    const sinInsumosBg = useColorModeValue("teal.100", "teal.900");
+    const sinInsumosHoverBg = useColorModeValue("teal.300", "teal.700");
+    const soloInsumosBg = useColorModeValue("blue.100", "blue.900");
+    const soloInsumosHoverBg = useColorModeValue("blue.300", "blue.700");
+    const procesoCompletoBg = useColorModeValue("purple.100", "purple.900");
+    const procesoCompletoHoverBg = useColorModeValue("purple.300", "purple.700");
+
     return (
         <Flex direction="column" gap={10} w="full">
             <Heading as="h2" size="lg" textAlign="center" mb={6} fontFamily="Arimo">
@@ -29,9 +37,9 @@ export default function Step0SelectTipoCarga({ onSelect }: Step0SelectTipoCargaP
                 <Card
                     h="250px"
                     cursor="pointer"
-                    bg="teal.100"
+                    bg={sinInsumosBg}
                     _hover={{
-                        bg: "teal.300",
+                        bg: sinInsumosHoverBg,
                         transform: "translateY(-5px)",
                         boxShadow: "xl",
                     }}
@@ -53,9 +61,9 @@ export default function Step0SelectTipoCarga({ onSelect }: Step0SelectTipoCargaP
                 <Card
                     h="250px"
                     cursor="pointer"
-                    bg="blue.100"
+                    bg={soloInsumosBg}
                     _hover={{
-                        bg: "blue.300",
+                        bg: soloInsumosHoverBg,
                         transform: "translateY(-5px)",
                         boxShadow: "xl",
                     }}
@@ -81,9 +89,9 @@ export default function Step0SelectTipoCarga({ onSelect }: Step0SelectTipoCargaP
                 <Card
                     h="250px"
                     cursor="pointer"
-                    bg="purple.100"
+                    bg={procesoCompletoBg}
                     _hover={{
-                        bg: "purple.300",
+                        bg: procesoCompletoHoverBg,
                         transform: "translateY(-5px)",
                         boxShadow: "xl",
                     }}

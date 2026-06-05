@@ -158,7 +158,7 @@ export default function EliminacionPurgaTerminadosStep2Ejecutar({
                     <Heading size="sm" mb={2}>
                         IDs procesados
                     </Heading>
-                    <Text color="gray.600" fontSize="sm">
+                    <Text color="app.textMuted" fontSize="sm">
                         {resultPurgaTerminados.productoIdsProcesados.join(", ")}
                     </Text>
                 </Box>
@@ -189,7 +189,7 @@ export default function EliminacionPurgaTerminadosStep2Ejecutar({
             )}
 
             {!hasResult && (
-                <Text color="gray.600">
+                <Text color="app.textMuted">
                     Revise la advertencia anterior y confirme solo si desea ejecutar
                     la purga completa de terminados en el entorno actual.
                 </Text>

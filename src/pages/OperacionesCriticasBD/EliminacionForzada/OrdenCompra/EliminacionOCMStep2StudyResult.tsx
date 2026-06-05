@@ -80,7 +80,7 @@ export default function EliminacionOCMStep2StudyResult({
     if (!studyResult) {
         return (
             <Box>
-                <Text color="gray.600">No hay resultado de estudio disponible.</Text>
+                <Text color="app.textMuted">No hay resultado de estudio disponible.</Text>
                 <Flex gap={3} mt={4}>
                     <Button variant="outline" onClick={() => setActiveStep(1)}>
                         Atrás
@@ -126,7 +126,7 @@ export default function EliminacionOCMStep2StudyResult({
                 </Alert>
             )}
 
-            <Text color="gray.600">
+            <Text color="app.textMuted">
                 Registros asociados a esta orden de compra:
             </Text>
 
@@ -159,7 +159,7 @@ export default function EliminacionOCMStep2StudyResult({
                         </Tbody>
                     </Table>
                 ) : (
-                    <Text color="gray.500">Ningún ítem.</Text>
+                    <Text color="app.textSubtle">Ningún ítem.</Text>
                 )}
             </Box>
 
@@ -190,7 +190,7 @@ export default function EliminacionOCMStep2StudyResult({
                         </Tbody>
                     </Table>
                 ) : (
-                    <Text color="gray.500">Ningún lote.</Text>
+                    <Text color="app.textSubtle">Ningún lote.</Text>
                 )}
             </Box>
 
@@ -208,7 +208,7 @@ export default function EliminacionOCMStep2StudyResult({
                                     {ta.estadoContable ?? "-"}
                                 </Text>
                                 {ta.observaciones && (
-                                    <Text fontSize="sm" color="gray.600">{ta.observaciones}</Text>
+                                    <Text fontSize="sm" color="app.textMuted">{ta.observaciones}</Text>
                                 )}
                                 {ta.movimientos && ta.movimientos.length > 0 && (
                                     <Table size="sm" mt={2} variant="simple">
@@ -240,7 +240,7 @@ export default function EliminacionOCMStep2StudyResult({
                         ))}
                     </VStack>
                 ) : (
-                    <Text color="gray.500">Ninguna transacción.</Text>
+                    <Text color="app.textSubtle">Ninguna transacción.</Text>
                 )}
             </Box>
 
@@ -273,7 +273,7 @@ export default function EliminacionOCMStep2StudyResult({
                         </Tbody>
                     </Table>
                 ) : (
-                    <Text color="gray.500">Ningún asiento contable.</Text>
+                    <Text color="app.textSubtle">Ningún asiento contable.</Text>
                 )}
             </Box>
 

@@ -142,7 +142,7 @@ const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClos
                                 key={orden.ordenCompraId}
                                 onContextMenu={(e) => handleContextMenu(e, orden)}
                                 bg={getBackgroundColorByEstado(orden.estado)}
-                                _hover={{ bg: 'blue.100', cursor: 'pointer' }}
+                                _hover={{ bg: 'app.rowSelectedBlue', cursor: 'pointer' }}
                             >
                                 <Td>{orden.ordenCompraId}</Td>
                                 <Td>
@@ -171,9 +171,9 @@ const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClos
                     position="fixed"
                     top={contextMenu.mouseY}
                     left={contextMenu.mouseX}
-                    bg="white"
+                    bg="app.surface"
                     border="1px solid"
-                    borderColor="gray.200"
+                    borderColor="app.border"
                     borderRadius="md"
                     boxShadow="md"
                     zIndex={1000}
@@ -183,7 +183,7 @@ const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClos
                     {contextMenu.orden.estado > 0 && (
                         <Box
                             p={1}
-                            _hover={{ bg: 'gray.100', cursor: 'pointer' }}
+                            _hover={{ bg: 'app.rowHoverStrong', cursor: 'pointer' }}
                             onClick={handleGenerarExcel}
                         >
                             Generar PDF
@@ -191,7 +191,7 @@ const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClos
                     )}
                     <Box
                         p={1}
-                        _hover={{ bg: 'gray.100', cursor: 'pointer' }}
+                        _hover={{ bg: 'app.rowHoverStrong', cursor: 'pointer' }}
                         onClick={handleVerMas}
                     >
                         Ver más
@@ -200,7 +200,7 @@ const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClos
                     {comprasAccessLevel >= 2 && (
                         <Box
                             p={1}
-                            _hover={{ bg: 'gray.100', cursor: 'pointer' }}
+                            _hover={{ bg: 'app.rowHoverStrong', cursor: 'pointer' }}
                             onClick={handleCancelarOrden}
                         >
                             Cancelar Orden
@@ -210,7 +210,7 @@ const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClos
                     {comprasAccessLevel >= 2 && (
                         <Box
                             p={1}
-                            _hover={{ bg: 'gray.100', cursor: 'pointer' }}
+                            _hover={{ bg: 'app.rowHoverStrong', cursor: 'pointer' }}
                             onClick={handleActualizarOrden}
                         >
                             Actualizar Estado de la Orden
@@ -226,7 +226,7 @@ const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClos
                      onEditarOrden && (
                         <Box
                             p={1}
-                            _hover={{ bg: 'gray.100', cursor: 'pointer' }}
+                            _hover={{ bg: 'app.rowHoverStrong', cursor: 'pointer' }}
                             onClick={handleEditarOrden}
                         >
                             Editar Orden Compra

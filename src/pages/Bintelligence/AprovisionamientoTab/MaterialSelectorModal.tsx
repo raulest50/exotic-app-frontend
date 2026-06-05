@@ -163,8 +163,8 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
                                                     <Tr
                                                         key={item.productoId}
                                                         onClick={() => setSelectedMaterialId(item.productoId)}
-                                                        bg={isSelected ? "blue.100" : undefined}
-                                                        _hover={{ bg: "gray.100", cursor: "pointer" }}
+                                                        bg={isSelected ? "app.rowSelectedBlue" : undefined}
+                                                        _hover={{ bg: "app.rowHoverStrong", cursor: "pointer" }}
                                                     >
                                                         <Td>{item.productoId}</Td>
                                                         <Td>{item.nombre}</Td>
@@ -196,7 +196,7 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
                                     </Box>
                                 </>
                             ) : (
-                                <Text textAlign="center" color="gray.600">
+                                <Text textAlign="center" color="app.textMuted">
                                     No hay materiales para mostrar.
                                 </Text>
                             )}

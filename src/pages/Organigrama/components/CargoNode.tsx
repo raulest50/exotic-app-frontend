@@ -8,9 +8,10 @@ import {
   Icon, 
   Menu, 
   MenuButton, 
-  MenuList, 
-  MenuItem, 
-  IconButton 
+  MenuList,
+  MenuItem,
+  IconButton,
+  useColorModeValue
 } from "@chakra-ui/react";
 import { FaUserTie } from "react-icons/fa";
 import { MdBusinessCenter, MdEdit, MdFileDownload } from "react-icons/md";
@@ -39,6 +40,8 @@ interface CargoNodeProps extends NodeProps<CargoNodeType> {
 
 export default function CargoNode(props: CargoNodeProps) {
   const cargo = props.data;
+  const actionHoverBg = useColorModeValue("blue.50", "blue.900");
+  const assignedUserColor = useColorModeValue("blue.600", "blue.200");
   // Get accessLevel and isMaster from props.data instead of props
   const accessLevel = cargo.accessLevel || props.accessLevel;
   const isMaster = cargo.isMaster || props.isMaster;
@@ -78,7 +81,7 @@ export default function CargoNode(props: CargoNodeProps) {
       transition="box-shadow 0.1s ease"
       _hover={props.selected ? { boxShadow: "0 0 10px gold" } : { boxShadow: "0 0 10px blue" }}
       w="220px"
-      bg="white"
+      bg="app.surface"
     >
       <Flex direction="column" align="center">
         <Box w="full" p="0.5em" bg="blue.500" color="white">
@@ -97,12 +100,12 @@ export default function CargoNode(props: CargoNodeProps) {
             </Text>
           </HStack>
 
-          <Text fontSize="xs" color="gray.600" noOfLines={2}>
+          <Text fontSize="xs" color="app.textMuted" noOfLines={2}>
             {cargo.descripcionCargo}
           </Text>
 
           {cargo.usuario && (
-            <Text fontSize="xs" color="blue.600">
+            <Text fontSize="xs" color={assignedUserColor}>
               Usuario: {cargo.usuario}
             </Text>
           )}
@@ -117,7 +120,7 @@ export default function CargoNode(props: CargoNodeProps) {
                 variant="ghost"
                 size="lg"
                 color="blue.500"
-                _hover={{ bg: "blue.50" }}
+                _hover={{ bg: actionHoverBg }}
                 onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
               />
               <MenuList>

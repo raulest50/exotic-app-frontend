@@ -35,7 +35,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import axios from "axios";
-import EndPointsURL from "../../../api/EndPointsURL.tsx";
+import EndPointsURL from "../../../../api/EndPointsURL.tsx";
 import AreaOperativaNode from "./AreaOperativaNode.tsx";
 import AreaOperativaPicker from "./AreaOperativaPicker.tsx";
 import {
@@ -45,7 +45,7 @@ import {
     RutaProcesoNodeDTO,
     RutaProcesoNodeData,
 } from "./types.ts";
-import { Categoria } from "../types.tsx";
+import { Categoria } from "../../types.tsx";
 import { getConnectionError, validateRuta } from "./rutaValidation.ts";
 
 const nodeTypes = {

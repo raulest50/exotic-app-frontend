@@ -70,7 +70,7 @@ export default function TablaDispensaciones({
     }
 
     return (
-        <Box bg='white' borderRadius='md' boxShadow='sm' overflowX='auto'>
+        <Box bg='app.surface' borderRadius='md' boxShadow='sm' overflowX='auto'>
             <TableContainer>
                 <Table variant="simple" size='sm'>
                     <Thead>
@@ -121,7 +121,7 @@ export default function TablaDispensaciones({
                                                 </Button>
                                             </>
                                         ) : (
-                                            <Text fontSize="sm" color="gray.500">-</Text>
+                                            <Text fontSize="sm" color="app.textSubtle">-</Text>
                                         )}
                                     </Flex>
                                 </Td>
@@ -142,4 +142,3 @@ export default function TablaDispensaciones({
         </Box>
     );
 }
-

@@ -24,7 +24,7 @@ export default function ImportacionTotalBDStep0Informacion({
                     Importacion Total de Base de Datos
                 </Heading>
 
-                <Text color="gray.600">
+                <Text color="app.textMuted">
                     Esta operacion vaciara completamente el esquema actual de la base de datos y luego restaurara
                     el contenido de un backup tecnico en formato <strong>.dump</strong>. Es una accion pensada solo
                     para entornos local y staging.

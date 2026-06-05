@@ -21,6 +21,7 @@ import {
     Th,
     Thead,
     Tr,
+    useColorModeValue,
     useDisclosure,
     useToast,
 } from '@chakra-ui/react';
@@ -48,6 +49,7 @@ export default function GestionNotificacionesTab() {
     const infoModal = useDisclosure();
     const pickerModal = useDisclosure();
     const toast = useToast();
+    const selectedNameColor = useColorModeValue('teal.600', 'teal.300');
 
     const fetchNotificaciones = useCallback(async () => {
         try {
@@ -118,12 +120,12 @@ export default function GestionNotificacionesTab() {
 
                 {/* Panel izquierdo: lista de notificaciones */}
                 <GridItem>
-                    <Heading size="sm" mb={3} color="gray.600">
+                    <Heading size="sm" mb={3} color="app.textMuted">
                         Tipos de Notificación
                     </Heading>
-                    <Box border="1px solid" borderColor="gray.200" borderRadius="md" overflow="hidden">
+                    <Box border="1px solid" borderColor="app.border" borderRadius="md" overflow="hidden">
                         <Table variant="simple" size="sm">
-                            <Thead bg="gray.50">
+                            <Thead bg="app.tableHeader">
                                 <Tr>
                                     <Th>Nombre</Th>
                                     <Th w="50px" textAlign="center">Info</Th>
@@ -143,10 +145,10 @@ export default function GestionNotificacionesTab() {
                                         <Tr
                                             key={notif.id}
                                             onClick={() => setSelected(notif)}
-                                            bg={selected?.id === notif.id ? 'teal.50' : 'transparent'}
+                                            bg={selected?.id === notif.id ? 'app.rowSelectedTeal' : 'transparent'}
                                             borderLeft={selected?.id === notif.id ? '3px solid' : '3px solid transparent'}
                                             borderColor={selected?.id === notif.id ? 'teal.400' : 'transparent'}
-                                            _hover={{ bg: 'gray.50', cursor: 'pointer' }}
+                                            _hover={{ bg: 'app.rowHover', cursor: 'pointer' }}
                                         >
                                             <Td fontWeight={selected?.id === notif.id ? 'semibold' : 'normal'}>
                                                 {notif.nombre}
@@ -174,9 +176,9 @@ export default function GestionNotificacionesTab() {
                     {selected ? (
                         <>
                             <Flex justify="space-between" align="center" mb={3}>
-                                <Heading size="sm" color="gray.600">
+                                <Heading size="sm" color="app.textMuted">
                                     Usuarios en:{' '}
-                                    <Text as="span" color="teal.600">{selected.nombre}</Text>
+                                    <Text as="span" color={selectedNameColor}>{selected.nombre}</Text>
                                 </Heading>
                                 <Button
                                     size="sm"
@@ -187,9 +189,9 @@ export default function GestionNotificacionesTab() {
                                     + Agregar Usuario
                                 </Button>
                             </Flex>
-                            <Box border="1px solid" borderColor="gray.200" borderRadius="md" overflow="hidden">
+                            <Box border="1px solid" borderColor="app.border" borderRadius="md" overflow="hidden">
                                 <Table variant="simple" size="sm">
-                                    <Thead bg="gray.50">
+                                    <Thead bg="app.tableHeader">
                                         <Tr>
                                             <Th>Nombre</Th>
                                             <Th>Correo</Th>
@@ -207,9 +209,9 @@ export default function GestionNotificacionesTab() {
                                             </Tr>
                                         ) : (
                                             selected.usersGroup.map(user => (
-                                                <Tr key={user.id} _hover={{ bg: 'gray.50' }}>
+                                                <Tr key={user.id} _hover={{ bg: 'app.rowHover' }}>
                                                     <Td>{user.nombreCompleto || user.username}</Td>
-                                                    <Td color="gray.500">{user.email ?? '—'}</Td>
+                                                    <Td color="app.textSubtle">{user.email ?? '—'}</Td>
                                                     <Td textAlign="center">
                                                         <IconButton
                                                             aria-label="Quitar usuario"

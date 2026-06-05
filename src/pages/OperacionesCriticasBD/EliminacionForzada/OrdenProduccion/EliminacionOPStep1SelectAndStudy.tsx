@@ -70,7 +70,7 @@ export default function EliminacionOPStep1SelectAndStudy({
         <Box>
             <VStack align="stretch" spacing={4}>
                 <Heading size="md">Orden de producción a eliminar</Heading>
-                <Text color="gray.600">
+                <Text color="app.textMuted">
                     Seleccione la orden de producción sobre la cual desea estudiar
                     la eliminación forzada. Solo se puede eliminar si no tiene
                     transacciones de almacén asociadas (dispensaciones, etc.).

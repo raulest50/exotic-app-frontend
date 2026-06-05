@@ -127,7 +127,7 @@ export default function AveriaAlmacenStep0SelectMaterial({
                             </Tbody>
                         </Table>
                     ) : (
-                        <Text textAlign="center" color="gray.500" py={8}>
+                        <Text textAlign="center" color="app.textSubtle" py={8}>
                             No hay materiales seleccionados. Use el botón "Agregar Material" para buscar por lote.
                         </Text>
                     )}

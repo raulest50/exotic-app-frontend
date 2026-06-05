@@ -113,25 +113,25 @@ export default function AveriaProduccionStep3ReviewSubmit({
 
             <VStack align="stretch" spacing={5} mb={6}>
                 {/* Area info */}
-                <Box bg="gray.50" p={4} borderRadius="md">
+                <Box bg="app.surfaceSubtle" p={4} borderRadius="md">
                     <Text fontWeight="bold" mb={1}>Área Operativa</Text>
                     <Text>{selectedArea?.nombre ?? '—'}</Text>
                 </Box>
 
                 {/* Orden info */}
-                <Box bg="gray.50" p={4} borderRadius="md">
+                <Box bg="app.surfaceSubtle" p={4} borderRadius="md">
                     <Text fontWeight="bold" mb={1}>Orden de Producción</Text>
                     <Flex gap={8} wrap="wrap">
                         <Box>
-                            <Text fontSize="sm" color="gray.500">Lote</Text>
+                            <Text fontSize="sm" color="app.textSubtle">Lote</Text>
                             <Text>{selectedOrden?.loteAsignado ?? '—'}</Text>
                         </Box>
                         <Box>
-                            <Text fontSize="sm" color="gray.500">Producto</Text>
+                            <Text fontSize="sm" color="app.textSubtle">Producto</Text>
                             <Text>{selectedOrden?.productoNombre ?? '—'}</Text>
                         </Box>
                         <Box>
-                            <Text fontSize="sm" color="gray.500">Cantidad a Producir</Text>
+                            <Text fontSize="sm" color="app.textSubtle">Cantidad a Producir</Text>
                             <Text>{selectedOrden?.cantidadProducir ?? '—'}</Text>
                         </Box>
                     </Flex>
@@ -179,7 +179,7 @@ export default function AveriaProduccionStep3ReviewSubmit({
                 </Box>
 
                 {/* Token de verificación */}
-                <Box bg="white" p={4} borderRadius="md" borderWidth="1px">
+                <Box bg="app.surface" p={4} borderRadius="md" borderWidth="1px">
                     <FormControl isRequired>
                         <FormLabel>Token de Verificación</FormLabel>
                         <Input
@@ -189,7 +189,7 @@ export default function AveriaProduccionStep3ReviewSubmit({
                             maxLength={4}
                             type="text"
                         />
-                        <Text mt={2} fontSize="sm" color="gray.600">
+                        <Text mt={2} fontSize="sm" color="app.textMuted">
                             Token generado: <strong>{token}</strong>
                         </Text>
                     </FormControl>

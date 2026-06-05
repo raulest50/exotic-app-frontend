@@ -64,22 +64,22 @@ export default function TablaDispensacionInsumosEmpaque({
                                 Definir Lotes
                             </Button>
                         ) : (
-                            <Text fontSize='xs' color='gray.500' fontStyle='italic'>
+                            <Text fontSize='xs' color='app.textSubtle' fontStyle='italic'>
                                 No requiere lote
                             </Text>
                         )}
                     </Td>
                 </Tr>
                 {esInvent && lotesSeleccionados.length > 0 && lotesSeleccionados.map((lote) => (
-                    <Tr key={`${insumo.productoId}-lote-${lote.loteId}`} bg='gray.50'>
+                    <Tr key={`${insumo.productoId}-lote-${lote.loteId}`} bg='app.surfaceSubtle'>
                         <Td></Td>
-                        <Td pl={8} fontSize='xs' color='gray.600'>
+                        <Td pl={8} fontSize='xs' color='app.textMuted'>
                             └─ Lote: {lote.batchNumber}
                         </Td>
-                        <Td fontSize='xs' color='gray.600'>
+                        <Td fontSize='xs' color='app.textMuted'>
                             {Math.abs(lote.cantidad).toFixed(2)}
                         </Td>
-                        <Td fontSize='xs' color='gray.600'>
+                        <Td fontSize='xs' color='app.textMuted'>
                             {formatDate(lote.expirationDate)}
                         </Td>
                         <Td>
@@ -98,15 +98,15 @@ export default function TablaDispensacionInsumosEmpaque({
                     </Tr>
                 ))}
                 {esInvent && historico.length > 0 && historico.map((lote) => (
-                    <Tr key={`${insumo.productoId}-hist-${lote.batchNumber}-${lote.loteId}`} bg='gray.100'>
+                    <Tr key={`${insumo.productoId}-hist-${lote.batchNumber}-${lote.loteId}`} bg='app.surfaceMuted'>
                         <Td></Td>
-                        <Td pl={8} fontSize='xs' color='gray.600'>
+                        <Td pl={8} fontSize='xs' color='app.textMuted'>
                             └─ Histórico: {lote.batchNumber}
                         </Td>
-                        <Td fontSize='xs' color='gray.600'>
+                        <Td fontSize='xs' color='app.textMuted'>
                             {lote.cantidad.toFixed(2)}
                         </Td>
-                        <Td fontSize='xs' color='gray.600'>
+                        <Td fontSize='xs' color='app.textMuted'>
                             {formatDate(lote.expirationDate)}
                         </Td>
                         <Td></Td>
@@ -117,7 +117,7 @@ export default function TablaDispensacionInsumosEmpaque({
     };
 
     return (
-        <Box bg='white' borderRadius='md' boxShadow='sm' overflowX='auto' w='full' maxW='1200px'>
+        <Box bg='app.surface' borderRadius='md' boxShadow='sm' overflowX='auto' w='full' maxW='1200px'>
             <Table size='sm'>
                 <Thead>
                     <Tr>

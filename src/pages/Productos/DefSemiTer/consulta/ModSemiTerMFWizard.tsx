@@ -55,7 +55,7 @@ export default function ModSemiTerMFWizard({ producto, onClose, refreshSearch }:
     };
 
     return (
-        <Box p={5} bg="white" borderRadius="md" boxShadow="base">
+        <Box p={5} bg="app.surface" borderRadius="md" boxShadow="base">
             <Flex justifyContent="space-between" alignItems="center" mb={5}>
                 <Button leftIcon={<ArrowBackIcon />} colorScheme="blue" variant="outline" onClick={handleBack}>
                     Regresar al listado

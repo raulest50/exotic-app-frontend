@@ -420,7 +420,7 @@ export default function AjustesInventarioTab() {
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <Flex direction="column" gap={4}>
-                <Stepper index={activeStep} p="1em" backgroundColor="teal.50" w="full">
+                <Stepper index={activeStep} p="1em" backgroundColor="app.stepperTeal" w="full">
                     {steps.map((step, index) => (
                         <Step key={step.title}>
                             <StepIndicator>
@@ -447,7 +447,7 @@ export default function AjustesInventarioTab() {
                     </Alert>
                 )}
 
-                <Box backgroundColor="white" p={4} borderRadius="md" boxShadow="sm">
+                <Box backgroundColor="app.surface" p={4} borderRadius="md" boxShadow="sm">
                     <Box mb={4}>
                         <Text>{steps[activeStep]?.description}</Text>
                     </Box>

@@ -126,33 +126,33 @@ export default function DetalleDispensacionDialog({
                             <Text fontWeight="bold" mb={2} fontSize="md">Información de la Transacción</Text>
                             <HStack spacing={4} flexWrap="wrap">
                                 <Box>
-                                    <Text fontSize="sm" color="gray.600">ID Transacción:</Text>
+                                    <Text fontSize="sm" color="app.textMuted">ID Transacción:</Text>
                                     <Text fontSize="md" fontWeight="semibold">{transaccion.transaccionId}</Text>
                                 </Box>
                                 {(transaccion.tipoEntidadCausante === 'OD' || transaccion.tipoEntidadCausante === 'OP') && transaccion.idEntidadCausante > 0 && (
                                     <Box>
-                                        <Text fontSize="sm" color="gray.600">ID Orden de Producción:</Text>
+                                        <Text fontSize="sm" color="app.textMuted">ID Orden de Producción:</Text>
                                         <Text fontSize="md" fontWeight="semibold">{transaccion.idEntidadCausante}</Text>
                                     </Box>
                                 )}
                                 <Box>
-                                    <Text fontSize="sm" color="gray.600">Fecha:</Text>
+                                    <Text fontSize="sm" color="app.textMuted">Fecha:</Text>
                                     <Text fontSize="md" fontWeight="semibold">{formatFecha(transaccion.fechaTransaccion)}</Text>
                                 </Box>
                                 <Box>
-                                    <Text fontSize="sm" color="gray.600">Estado Contable:</Text>
+                                    <Text fontSize="sm" color="app.textMuted">Estado Contable:</Text>
                                     <Text fontSize="md" fontWeight="semibold">{formatEstadoContable(transaccion.estadoContable)}</Text>
                                 </Box>
                             </HStack>
                             {transaccion.observaciones && (
                                 <Box mt={2}>
-                                    <Text fontSize="sm" color="gray.600">Observaciones:</Text>
+                                    <Text fontSize="sm" color="app.textMuted">Observaciones:</Text>
                                     <Text fontSize="sm">{transaccion.observaciones}</Text>
                                 </Box>
                             )}
                             {transaccion.usuarioAprobador && (
                                 <Box mt={2}>
-                                    <Text fontSize="sm" color="gray.600">Usuario Aprobador:</Text>
+                                    <Text fontSize="sm" color="app.textMuted">Usuario Aprobador:</Text>
                                     <Text fontSize="sm">{transaccion.usuarioAprobador.nombre || `ID: ${transaccion.usuarioAprobador.userId}`}</Text>
                                 </Box>
                             )}
@@ -170,11 +170,11 @@ export default function DetalleDispensacionDialog({
                                     <Text color="red.600">{error}</Text>
                                 </Box>
                             ) : movimientos.length === 0 ? (
-                                <Text fontSize="sm" color="gray.500" py={4}>
+                                <Text fontSize="sm" color="app.textSubtle" py={4}>
                                     No hay movimientos registrados para esta transacción.
                                 </Text>
                             ) : (
-                                <Box bg="white" borderRadius="md" boxShadow="sm" overflowX="auto">
+                                <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
                                     <Table size="sm" variant="striped">
                                         <Thead>
                                             <Tr>

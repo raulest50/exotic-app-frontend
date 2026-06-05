@@ -164,7 +164,7 @@ export default function IngresoOCMStep1VerifyQuantities({
     const proveedorLabel = proveedorNombre || "Proveedor no disponible";
 
     return (
-        <Box p="1em" bg="blue.50">
+        <Box p="1em" bg="app.stepperBlue">
             <Flex direction="column" gap={4} align="center">
                 <Heading fontFamily="Comfortaa Variable">
                     Verificar Cantidades y Lotes
@@ -246,9 +246,9 @@ export default function IngresoOCMStep1VerifyQuantities({
                     </Alert>
                 )}
 
-                <Box w="full" bg="white" borderRadius="md" boxShadow="sm" overflowX="auto">
+                <Box w="full" bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
                     <Table size="sm" variant="simple">
-                        <Thead bg="gray.50">
+                        <Thead bg="app.tableHeader">
                             <Tr>
                                 <Th>Material</Th>
                                 <Th>ID</Th>

@@ -26,6 +26,7 @@ import {
     Th,
     Thead,
     Tr,
+    useColorModeValue,
     useToast,
     VStack,
     Wrap,
@@ -61,6 +62,7 @@ export default function CategoriaHabilitadaPickerModal({
 
     const endPoints = new EndPointsURL();
     const toast = useToast();
+    const selectedRowHoverBg = useColorModeValue('teal.100', 'teal.800');
 
     useEffect(() => {
         if (!isOpen) {
@@ -180,7 +182,7 @@ export default function CategoriaHabilitadaPickerModal({
                             </HStack>
 
                             {selectedCategorias.length === 0 ? (
-                                <Text color="gray.500" fontSize="sm">
+                                <Text color="app.textSubtle" fontSize="sm">
                                     Sin categorías configuradas.
                                 </Text>
                             ) : (
@@ -201,7 +203,7 @@ export default function CategoriaHabilitadaPickerModal({
                                 <Spinner size="lg" />
                             </Flex>
                         ) : categorias.length === 0 ? (
-                            <Text textAlign="center" py={6} color="gray.500">
+                            <Text textAlign="center" py={6} color="app.textSubtle">
                                 No se encontraron categorías.
                             </Text>
                         ) : (
@@ -222,8 +224,8 @@ export default function CategoriaHabilitadaPickerModal({
                                                 return (
                                                     <Tr
                                                         key={categoria.categoriaId}
-                                                        bg={checked ? 'teal.50' : 'white'}
-                                                        _hover={{ bg: checked ? 'teal.100' : 'gray.50' }}
+                                                        bg={checked ? 'app.rowSelectedTeal' : 'app.surface'}
+                                                        _hover={{ bg: checked ? selectedRowHoverBg : 'app.rowHover' }}
                                                         cursor="pointer"
                                                         onClick={() => toggleCategoria(categoria)}
                                                     >

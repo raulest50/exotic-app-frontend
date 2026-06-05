@@ -91,7 +91,7 @@ export function AsistenteDispensacion(){
     return (
         <Container minW={['auto','container.lg','container.xl']} w='full' h='full'>
             <Flex direction='column' gap={4}>
-                <Stepper index={activeStep} p='1em' backgroundColor='teal.50' w='full'>
+                <Stepper index={activeStep} p='1em' backgroundColor='app.stepperTeal' w='full'>
                     {steps.map((step, index)=>(
                         <Step key={index}>
                             <StepIndicator>

@@ -236,7 +236,7 @@ export default function SoloInsumosStep2SubirValidar({
                     Cargue el mismo JSON exportado por el sistema. El archivo debe conservar
                     <code> schemaVersion </code>, <code> exportedAt </code>, la lista <code>terminados</code> y la receta <code>insumos</code>.
                 </Text>
-                <Text fontSize="sm" color="gray.600">
+                <Text fontSize="sm" color="app.textMuted">
                     Los IDs de producto deben venir solo con letras y numeros en mayusculas, sin espacios ni caracteres especiales.
                 </Text>
 

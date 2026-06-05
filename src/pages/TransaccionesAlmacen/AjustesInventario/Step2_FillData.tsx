@@ -42,7 +42,7 @@ export default function AjustesInventarioStep1SpecifyQuantities({
 }: Step2FillDataProps) {
     const renderAssignmentSummary = (productoId: string, quantity: number | "") => {
         if (quantity === "" || typeof quantity !== "number" || Number.isNaN(quantity) || quantity === 0) {
-            return <Text color="gray.500">Define primero la cantidad del ajuste.</Text>;
+            return <Text color="app.textSubtle">Define primero la cantidad del ajuste.</Text>;
         }
 
         const assignments = lotAssignments[productoId] ?? [];
@@ -55,7 +55,7 @@ export default function AjustesInventarioStep1SpecifyQuantities({
             return (
                 <Stack spacing={1}>
                     <Text fontWeight="semibold">{lote.batchNumber}</Text>
-                    <Text fontSize="sm" color="gray.600">
+                    <Text fontSize="sm" color="app.textMuted">
                         Ajuste al lote seleccionado: {quantity.toFixed(4)}
                     </Text>
                 </Stack>
@@ -105,7 +105,7 @@ export default function AjustesInventarioStep1SpecifyQuantities({
 
     return (
         <Stack spacing={4}>
-            <Box p={4} borderWidth="1px" borderRadius="md" borderColor="gray.200" w="full">
+            <Box p={4} borderWidth="1px" borderRadius="md" borderColor="app.border" w="full">
                 <Text fontSize="lg" fontWeight="semibold" mb={3}>
                     Ajustar inventario por lote
                 </Text>
@@ -166,11 +166,11 @@ export default function AjustesInventarioStep1SpecifyQuantities({
                         </Tbody>
                     </Table>
                 ) : (
-                    <Text color="gray.500">Selecciona productos para ajustar su inventario.</Text>
+                    <Text color="app.textSubtle">Selecciona productos para ajustar su inventario.</Text>
                 )}
             </Box>
 
-            <Box p={4} borderWidth="1px" borderRadius="md" borderColor="gray.200" w="full">
+            <Box p={4} borderWidth="1px" borderRadius="md" borderColor="app.border" w="full">
                 <Text fontSize="md" fontWeight="semibold" mb={2}>
                     Observaciones
                 </Text>

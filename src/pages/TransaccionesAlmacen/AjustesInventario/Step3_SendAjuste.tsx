@@ -16,6 +16,7 @@ import {
     Th,
     Thead,
     Tr,
+    useColorModeValue,
 } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import { ImCheckboxChecked } from "react-icons/im";
@@ -50,24 +51,26 @@ export default function AjustesInventarioStep2ReviewSubmit({
         50% { color: #22d3ee; }
         100% { color: #68D391; }
     `;
+    const successHeadingColor = useColorModeValue("green.800", "green.100");
+    const successTextColor = useColorModeValue("green.900", "green.100");
 
     if (isSuccess) {
         return (
             <Flex
                 p="1em"
                 direction="column"
-                backgroundColor="green.50"
+                backgroundColor="app.rowSelectedGreen"
                 gap={8}
                 alignItems="center"
                 textAlign="center"
             >
                 <Flex alignItems="center" gap={3}>
-                    <Heading fontFamily="Comfortaa Variable" color="green.800">
+                    <Heading fontFamily="Comfortaa Variable" color={successHeadingColor}>
                         Ajuste enviado correctamente
                     </Heading>
                     <Icon as={ImCheckboxChecked} w={{ base: "2.5em", md: "3em" }} h={{ base: "2.5em", md: "3em" }} color="green.500" />
                 </Flex>
-                <Text fontFamily="Comfortaa Variable" color="green.900">
+                <Text fontFamily="Comfortaa Variable" color={successTextColor}>
                     El ajuste de inventario se registró. Puedes iniciar un nuevo ajuste cuando lo necesites.
                 </Text>
 
@@ -88,7 +91,7 @@ export default function AjustesInventarioStep2ReviewSubmit({
 
     return (
         <Flex direction={{ base: "column" }} gap={4}>
-            <Box p={4} borderWidth="1px" borderRadius="md" borderColor="gray.200" w="full">
+            <Box p={4} borderWidth="1px" borderRadius="md" borderColor="app.border" w="full">
                 <Heading as="h3" size="md" mb={3}>
                     Resumen del ajuste
                 </Heading>
@@ -106,7 +109,7 @@ export default function AjustesInventarioStep2ReviewSubmit({
                         {observaciones?.trim() ? (
                             <Text whiteSpace="pre-line">{observaciones}</Text>
                         ) : (
-                            <Text color="gray.500">Sin observaciones adicionales.</Text>
+                            <Text color="app.textSubtle">Sin observaciones adicionales.</Text>
                         )}
                     </Box>
                 </Stack>

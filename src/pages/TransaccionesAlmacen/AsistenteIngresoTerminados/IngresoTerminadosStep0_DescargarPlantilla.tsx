@@ -99,7 +99,7 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
     return (
         <Box>
             <Heading size="md" mb={4}>Descargar Plantilla Excel</Heading>
-            <Text fontSize="sm" color="gray.500" mb={5}>
+            <Text fontSize="sm" color="app.textSubtle" mb={5}>
                 Este asistente permite registrar multiples ingresos de producto terminado de forma masiva
                 usando una plantilla Excel.
             </Text>
@@ -148,7 +148,7 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
                     <Text fontWeight="semibold" mb={2}>Estructura del Excel</Text>
                     <TableContainer borderWidth="1px" borderRadius="md">
                         <Table size="sm" variant="simple">
-                            <Thead bg="gray.50">
+                            <Thead bg="app.tableHeader">
                                 <Tr>
                                     <Th>Columna</Th>
                                     <Th>Nombre</Th>
@@ -163,7 +163,7 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
                                         <Td fontFamily="mono" fontSize="xs">{col.name}</Td>
                                         <Td>
                                             <Text
-                                                color={col.editable ? "green.600" : "gray.500"}
+                                                color={col.editable ? "green.600" : "app.textSubtle"}
                                                 fontWeight={col.editable ? "bold" : "normal"}
                                             >
                                                 {col.editable ? "SI" : "NO"}

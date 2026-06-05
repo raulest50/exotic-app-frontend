@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import type { MpsSemanalDraftDTO } from "../../PlaneacionProduccionTab/PlaneacionProduccionService";
+import type { MpsSemanalDraftDTO } from "../../ProgProdMensualTab/PlaneacionProduccionService";
 import {
     MPS_WEEK_DAY_LABELS,
     buildMpsCalendarPdfRows,
@@ -8,6 +8,7 @@ import {
     formatMpsEstadoLabel,
     formatMpsPdfDate,
     formatMpsPdfDateTime,
+    getMpsSemanaPdfLabel,
 } from "./mpsSemanalPdf.utils";
 
 interface AutoTableProperties {
@@ -47,7 +48,7 @@ class MpsSemanalPdfGenerator {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.text(`Generado: ${formatMpsPdfDateTime()}`, titleX, currentY + 12);
-        doc.text(`Semana: ${formatMpsPdfDate(mps.weekStartDate)} a ${formatMpsPdfDate(mps.weekEndDate)}`, titleX, currentY + 17);
+        doc.text(`Semana ${getMpsSemanaPdfLabel(mps)}: ${formatMpsPdfDate(mps.weekStartDate)} a ${formatMpsPdfDate(mps.weekEndDate)}`, titleX, currentY + 17);
 
         doc.setFont("helvetica", "bold");
         doc.setFontSize(11);

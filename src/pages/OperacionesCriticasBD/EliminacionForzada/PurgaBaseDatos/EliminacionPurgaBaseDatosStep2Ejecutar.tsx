@@ -154,7 +154,7 @@ export default function EliminacionPurgaBaseDatosStep2Ejecutar({
                     <Heading size="sm" mb={2}>
                         Tablas truncadas
                     </Heading>
-                    <Text color="gray.600" fontSize="sm">
+                    <Text color="app.textMuted" fontSize="sm">
                         {resultPurgaBaseDatos.truncatedTables.join(", ")}
                     </Text>
                 </Box>
@@ -165,7 +165,7 @@ export default function EliminacionPurgaBaseDatosStep2Ejecutar({
                     <Heading size="sm" mb={2}>
                         Tablas preservadas
                     </Heading>
-                    <Text color="gray.600" fontSize="sm">
+                    <Text color="app.textMuted" fontSize="sm">
                         {resultPurgaBaseDatos.preservedTables.join(", ")}
                     </Text>
                 </Box>
@@ -176,14 +176,14 @@ export default function EliminacionPurgaBaseDatosStep2Ejecutar({
                     <Heading size="sm" mb={2}>
                         Usuarios preservados
                     </Heading>
-                    <Text color="gray.600" fontSize="sm">
+                    <Text color="app.textMuted" fontSize="sm">
                         {resultPurgaBaseDatos.preservedUsers.join(", ")}
                     </Text>
                 </Box>
             )}
 
             {!hasResult && (
-                <Text color="gray.600">
+                <Text color="app.textMuted">
                     Revise la advertencia anterior y confirme solo si desea ejecutar la purga
                     total de la base de datos en el entorno actual.
                 </Text>

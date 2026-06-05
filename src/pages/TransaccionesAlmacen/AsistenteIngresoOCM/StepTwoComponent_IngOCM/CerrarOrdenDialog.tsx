@@ -140,7 +140,7 @@ export function CerrarOrdenDialog({ isOpen, onClose, orden, setActiveStep }: Cer
                         />
                     </FormControl>
 
-                    <Text fontFamily="Comfortaa Variable" fontSize="sm" color="gray.600">
+                    <Text fontFamily="Comfortaa Variable" fontSize="sm" color="app.textMuted">
                         Ingrese el token de 4 dígitos mostrado arriba para habilitar el botón de cierre.
                     </Text>
                 </ModalBody>

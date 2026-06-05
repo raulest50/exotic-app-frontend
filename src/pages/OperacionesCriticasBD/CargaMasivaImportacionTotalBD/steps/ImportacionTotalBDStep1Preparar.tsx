@@ -78,7 +78,7 @@ export default function ImportacionTotalBDStep1Preparar({
                     />
                 </FormControl>
 
-                <Text mt={2} color="gray.600" fontSize="sm">
+                <Text mt={2} color="app.textMuted" fontSize="sm">
                     {dumpFile ? `Archivo seleccionado: ${dumpFile.name}` : "Aun no ha seleccionado un archivo .dump."}
                 </Text>
             </Box>

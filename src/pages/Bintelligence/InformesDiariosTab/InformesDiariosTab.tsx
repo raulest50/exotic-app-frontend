@@ -9,6 +9,7 @@ import {
     IconButton,
     Text,
     Tooltip,
+    useColorModeValue,
     useDisclosure,
     VStack,
 } from "@chakra-ui/react";
@@ -36,7 +37,7 @@ function InformePlaceholder({ title }: { title: string }) {
         <Card variant="outline">
             <CardBody>
                 <Text fontWeight="medium">{title}</Text>
-                <Text fontSize="sm" color="gray.600" mt={2}>
+                <Text fontSize="sm" color="app.textMuted" mt={2}>
                     Contenido del informe (pendiente de implementar).
                 </Text>
             </CardBody>
@@ -48,6 +49,8 @@ export default function InformesDiariosTab() {
     const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
     const [selectedReport, setSelectedReport] = useState<InformeDiarioKey>("almacen");
     const [apiReachable, setApiReachable] = useState<boolean | null>(null);
+    const selectedReportBg = useColorModeValue("blue.50", "blue.900");
+    const selectedReportColor = useColorModeValue("blue.700", "blue.200");
 
     useEffect(() => {
         let cancelled = false;
@@ -72,9 +75,9 @@ export default function InformesDiariosTab() {
             <VStack
                 align="stretch"
                 spacing={0}
-                bg="white"
+                bg="app.surface"
                 borderWidth="1px"
-                borderColor="gray.200"
+                borderColor="app.border"
                 borderRadius="md"
                 overflow="hidden"
                 w={isOpen ? "280px" : "52px"}
@@ -86,7 +89,7 @@ export default function InformesDiariosTab() {
                     px={isOpen ? 3 : 1}
                     py={2}
                     borderBottomWidth="1px"
-                    borderColor="gray.200"
+                    borderColor="app.border"
                     justify={isOpen ? "space-between" : "center"}
                     spacing={2}
                 >
@@ -113,8 +116,8 @@ export default function InformesDiariosTab() {
                                 justifyContent="flex-start"
                                 leftIcon={opt.icon}
                                 fontWeight={selectedReport === opt.key ? "semibold" : "normal"}
-                                bg={selectedReport === opt.key ? "blue.50" : undefined}
-                                color={selectedReport === opt.key ? "blue.700" : undefined}
+                                bg={selectedReport === opt.key ? selectedReportBg : undefined}
+                                color={selectedReport === opt.key ? selectedReportColor : undefined}
                                 onClick={() => setSelectedReport(opt.key)}
                             >
                                 {opt.label}
@@ -142,7 +145,7 @@ export default function InformesDiariosTab() {
                     </Text>
                 )}
                 {apiReachable === false && (
-                    <Text fontSize="xs" color="gray.500" mb={2}>
+                    <Text fontSize="xs" color="app.textSubtle" mb={2}>
                         No se pudo contactar el servicio de informes diarios (normal si el backend no está en marcha).
                     </Text>
                 )}

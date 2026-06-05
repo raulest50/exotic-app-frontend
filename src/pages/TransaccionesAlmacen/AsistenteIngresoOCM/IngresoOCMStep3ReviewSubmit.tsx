@@ -102,7 +102,7 @@ export default function IngresoOCMStep3ReviewSubmit({
         <Flex
             p="1em"
             direction="column"
-            backgroundColor="blue.50"
+            backgroundColor="app.stepperBlue"
             gap={8}
             alignItems="center"
         >
@@ -134,7 +134,7 @@ export default function IngresoOCMStep3ReviewSubmit({
                         <Text>
                             Lote interno: {movimiento.lote.batchNumber || "se confirma al registrar"}
                         </Text>
-                        <Text fontSize="xs" color="gray.600">
+                        <Text fontSize="xs" color="app.textMuted">
                             El lote definitivo se confirma al registrar el ingreso.
                         </Text>
                         {movimiento.lote.productionDate && (
@@ -158,7 +158,7 @@ export default function IngresoOCMStep3ReviewSubmit({
                         boxSize="100%"
                     />
                 ) : (
-                    <Box p={4} bg="white" borderRadius="md" borderWidth="1px">
+                    <Box p={4} bg="app.surface" borderRadius="md" borderWidth="1px">
                         <Text fontFamily="Comfortaa Variable">
                             {supportFile?.name || "No hay soporte adjunto."}
                         </Text>

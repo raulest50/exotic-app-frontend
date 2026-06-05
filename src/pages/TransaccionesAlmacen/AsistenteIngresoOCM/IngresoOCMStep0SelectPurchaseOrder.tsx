@@ -160,7 +160,7 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
     )), [ordenes, mostrarPorcentaje]); // Incluir mostrarPorcentaje en las dependencias
 
     return (
-        <Box p="1em" bg="blue.50">
+        <Box p="1em" bg="app.stepperBlue">
             <VStack spacing={6} align="stretch">
                 <Heading fontFamily="Comfortaa Variable" textAlign="center">
                     Órdenes de compra pendientes por recibir
@@ -201,9 +201,9 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
                     </Button>
                 </Flex>
 
-                <Box bg="white" borderRadius="md" boxShadow="sm" overflowX="auto">
+                <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
                     <Table size="sm">
-                        <Thead bg="gray.50">
+                        <Thead bg="app.tableHeader">
                             <Tr>
                                 <Th>ID</Th>
                                 <Th>Proveedor</Th>

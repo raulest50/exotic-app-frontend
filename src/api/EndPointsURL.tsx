@@ -277,6 +277,7 @@ export default class EndPointsURL{
     public planeacion_mps_semanal_odps: string;
 
     // programacion de produccion endpoints
+    public programacion_mps_semanal_semanas: string;
     public programacion_mps_semanal_borrador_directo: string;
     public programacion_mps_semanal_borrador: string;
     public programacion_mps_semanal: string;
@@ -761,6 +762,7 @@ export default class EndPointsURL{
 
         // Programacion de produccion endpoints
         this.programacion_mps_semanal_borrador_directo = `${domain}/${programacion_produccion_res}/mps-semanal/borrador-directo`;
+        this.programacion_mps_semanal_semanas = `${domain}/${programacion_produccion_res}/mps-semanal/semanas`;
         this.programacion_mps_semanal_borrador = `${domain}/${programacion_produccion_res}/mps-semanal/borrador`;
         this.programacion_mps_semanal = `${domain}/${programacion_produccion_res}/mps-semanal`;
         this.programacion_mps_semanal_list = `${domain}/${programacion_produccion_res}/mps-semanal/list`;

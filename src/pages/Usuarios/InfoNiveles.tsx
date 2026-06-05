@@ -18,6 +18,7 @@ import {
   Tag,
   TagLabel,
   Text,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { Modulo } from "./GestionUsuarios/types";
@@ -324,6 +325,7 @@ const canSaveFromBi = biAccessLevel >= 3;`,
 export default function InfoNiveles() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredModules, setFilteredModules] = useState<Modulo[]>(Object.keys(moduleDocs) as Modulo[]);
+  const accordionExpandedColor = useColorModeValue("blue.700", "blue.200");
 
   useEffect(() => {
     if (searchTerm) {
@@ -395,8 +397,8 @@ export default function InfoNiveles() {
           onChange={(e) => setSearchTerm(e.target.value)}
           size="md"
           variant="filled"
-          _hover={{ bg: "gray.100" }}
-          _focus={{ bg: "white", borderColor: "blue.500" }}
+          _hover={{ bg: "app.rowHoverStrong" }}
+          _focus={{ bg: "app.surface", borderColor: "blue.500" }}
         />
       </InputGroup>
 
@@ -411,7 +413,7 @@ export default function InfoNiveles() {
         {filteredModules.map((moduleKey) => (
           <AccordionItem key={moduleKey} mb={2} borderWidth="1px" borderRadius="md">
             <h2>
-              <AccordionButton _expanded={{ bg: "blue.50", color: "blue.700" }}>
+              <AccordionButton _expanded={{ bg: "app.rowActiveBlue", color: accordionExpandedColor }}>
                 <Box flex="1" textAlign="left">
                   <Flex alignItems="center">
                     <Text fontWeight="bold" mr={2}>
@@ -431,13 +433,13 @@ export default function InfoNiveles() {
               <Heading size="sm" mb={3}>
                 Niveles de Acceso:
               </Heading>
-              <Box borderLeft="2px solid" borderColor="gray.200" pl={4} mb={4}>
+              <Box borderLeft="2px solid" borderColor="app.border" pl={4} mb={4}>
                 {moduleDocs[moduleKey].levels.map((level) => (
                   <Box
                     key={level.level}
                     mb={3}
                     p={3}
-                    bg="gray.50"
+                    bg="app.surfaceSubtle"
                     borderRadius="md"
                     borderLeft="4px solid"
                     borderLeftColor={getLevelColor(level.level)}
@@ -461,7 +463,7 @@ export default function InfoNiveles() {
                   <Heading size="sm" mb={2}>
                     Implementacion:
                   </Heading>
-                  <Box bg="gray.50" p={3} borderRadius="md" overflowX="auto">
+                  <Box bg="app.surfaceSubtle" p={3} borderRadius="md" overflowX="auto">
                     <Code display="block" whiteSpace="pre" p={2}>
                       {moduleDocs[moduleKey].implementationCode}
                     </Code>
@@ -472,7 +474,7 @@ export default function InfoNiveles() {
               <Divider my={4} />
 
               <Box mt={2}>
-                <Text fontSize="sm" color="gray.600">
+                <Text fontSize="sm" color="app.textMuted">
                   Nota: los niveles son acumulativos. Un usuario con nivel superior conserva los permisos de
                   los niveles anteriores.
                 </Text>

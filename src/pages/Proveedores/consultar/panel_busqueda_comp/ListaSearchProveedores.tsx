@@ -30,7 +30,7 @@ export function ListaSearchProveedores({ proveedores, onVerDetalle }: Props) {
                         proveedores.map((proveedor) => (
                             <Tr 
                                 key={proveedor.id}
-                                _hover={{ bg: "gray.100" }}
+                                _hover={{ bg: "app.rowHoverStrong" }}
                             >
                                 <Td>{proveedor.id}</Td>
                                 <Td>{proveedor.nombre}</Td>

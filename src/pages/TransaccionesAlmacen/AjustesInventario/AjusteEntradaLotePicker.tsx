@@ -111,7 +111,7 @@ export default function AjusteEntradaLotePicker({
                 <ModalCloseButton />
                 <ModalBody>
                     <Flex direction="column" gap={4}>
-                        <Text fontSize="sm" color="gray.600">
+                        <Text fontSize="sm" color="app.textMuted">
                             Este ajuste positivo ingresará <strong>{cantidadAjuste.toFixed(4)}</strong> unidades al lote seleccionado.
                         </Text>
 

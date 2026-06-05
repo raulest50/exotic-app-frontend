@@ -9,6 +9,7 @@ import {
     Heading,
     Spinner,
     Text,
+    useColorModeValue,
     useToast,
     VStack,
 } from "@chakra-ui/react";
@@ -37,6 +38,8 @@ export default function SoloInsumosStep3Ejecutar({
     const [executionSuccess, setExecutionSuccess] = useState(false);
     const [executionError, setExecutionError] = useState<string | null>(null);
     const [executionErrors, setExecutionErrors] = useState<ValidationResultDTO["errors"]>([]);
+    const successHeadingColor = useColorModeValue("blue.800", "blue.100");
+    const successTextColor = useColorModeValue("blue.900", "blue.100");
 
     const colorAnimation = keyframes`
         0% { color: #63B3ED; }
@@ -129,18 +132,18 @@ export default function SoloInsumosStep3Ejecutar({
             <Flex
                 p="1em"
                 direction="column"
-                backgroundColor="blue.50"
+                backgroundColor="app.stepperBlue"
                 gap={8}
                 alignItems="center"
                 textAlign="center"
             >
                 <Flex alignItems="center" gap={3}>
-                    <Heading fontFamily="Comfortaa Variable" color="blue.800">
+                    <Heading fontFamily="Comfortaa Variable" color={successHeadingColor}>
                         Carga masiva completada
                     </Heading>
                     <ImCheckboxChecked style={{ width: "3em", height: "3em", color: "#3182CE" }} />
                 </Flex>
-                <Text fontFamily="Comfortaa Variable" color="blue.900">
+                <Text fontFamily="Comfortaa Variable" color={successTextColor}>
                     Los terminados se registraron correctamente con su lista de insumos. El proceso y el case pack se conservaron en null.
                 </Text>
                 <RiSave3Fill

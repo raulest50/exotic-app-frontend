@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import {
     Box, Select, FormControl, FormLabel, Flex, useDisclosure,
-    Input, Card, CardBody, HStack, IconButton, Text, VStack, Button, Badge
+    Input, Card, CardBody, HStack, IconButton, Text, VStack, Button, Badge, useColorModeValue
 } from "@chakra-ui/react";
 import {FaSearch} from "react-icons/fa";
 import {format} from "date-fns";
@@ -34,6 +34,7 @@ interface FiltroTranAlmacenSearchProps {
 }
 
 function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchProps) {
+    const terminadoCardBorder = useColorModeValue("purple.200", "purple.700");
 
     enum MODE {
         OCM = 'OCM',
@@ -201,7 +202,7 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
 
                     <DateModeSelector />
 
-                    <Card variant="outline" borderColor="purple.200" minW="280px">
+                    <Card variant="outline" borderColor={terminadoCardBorder} minW="280px">
                         <CardBody>
                             <HStack justifyContent="space-between" alignItems="flex-start">
                                 <HStack alignItems="flex-start" spacing={3}>
@@ -222,7 +223,7 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
                                             )}
                                         </HStack>
                                         {selectedTerminado && (
-                                            <Text fontSize="sm" color="gray.600">
+                                            <Text fontSize="sm" color="app.textMuted">
                                                 ID: {selectedTerminado.productoId}
                                             </Text>
                                         )}

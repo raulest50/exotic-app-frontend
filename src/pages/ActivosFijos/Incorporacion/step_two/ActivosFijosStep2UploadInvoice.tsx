@@ -53,7 +53,7 @@ export function ActivosFijosStep2UploadInvoice({
 
     return (
         <Flex direction="column" gap={8} w="full">
-            <VStack spacing={4} align="stretch" bg="blue.50" p={6} borderRadius="md">
+            <VStack spacing={4} align="stretch" bg="app.stepperBlue" p={6} borderRadius="md">
                 <Heading size="md" textAlign="center">
                     Adjuntar Documento Soporte
                 </Heading>

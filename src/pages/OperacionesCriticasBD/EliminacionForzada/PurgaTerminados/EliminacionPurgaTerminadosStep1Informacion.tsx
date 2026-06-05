@@ -24,7 +24,7 @@ export default function EliminacionPurgaTerminadosStep1Informacion({
                     Purga Completa Terminados
                 </Heading>
 
-                <Text color="gray.600">
+                <Text color="app.textMuted">
                     Esta operación eliminará todos los productos de tipo terminado y sus
                     datos relacionados de producción, inventario, ventas y manufactura.
                     Está pensada únicamente para entornos de desarrollo local y staging.

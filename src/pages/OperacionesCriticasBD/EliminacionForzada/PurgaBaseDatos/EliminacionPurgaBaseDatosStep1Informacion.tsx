@@ -24,7 +24,7 @@ export default function EliminacionPurgaBaseDatosStep1Informacion({
                     Borrado Total Base de Datos
                 </Heading>
 
-                <Text color="gray.600">
+                <Text color="app.textMuted">
                     Esta operacion vaciara todas las tablas de la base de datos, preservando
                     solo lo minimo necesario para mantener a <strong>master</strong> y{" "}
                     <strong>super_master</strong>. Es una accion pensada unicamente para

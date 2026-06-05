@@ -14,6 +14,7 @@ import {
     Box,
     Badge,
     useToast,
+    useColorModeValue,
     Collapse,
     Checkbox
 } from '@chakra-ui/react';
@@ -59,6 +60,7 @@ export function CardIngresoMaterial({
     const { item, itemIndex, excluded, lotes } = draftItem;
     const totalCantidad = lotes.reduce((sum, lote) => sum + lote.cantidad, 0);
     const isValid = excluded || (totalCantidad <= maxPermitido + 0.01 && totalCantidad > 0);
+    const invalidRowBg = useColorModeValue("red.50", "red.900");
 
     useEffect(() => {
         if (excluded) {
@@ -110,7 +112,7 @@ export function CardIngresoMaterial({
 
     return (
         <>
-            <Tr bg={!isValid && !excluded ? "red.50" : excluded ? "gray.100" : "white"}>
+            <Tr bg={!isValid && !excluded ? invalidRowBg : excluded ? "app.surfaceMuted" : "app.surface"}>
                 <Td>
                     <Flex align="center" gap={2}>
                         <Checkbox
@@ -118,7 +120,7 @@ export function CardIngresoMaterial({
                             onChange={handleExcludedChange}
                             colorScheme="red"
                         />
-                        <Text fontWeight="semibold" as={excluded ? "s" : undefined} color={excluded ? "gray.500" : undefined}>
+                        <Text fontWeight="semibold" as={excluded ? "s" : undefined} color={excluded ? "app.textSubtle" : undefined}>
                             {item.material.nombre}
                         </Text>
                     </Flex>
@@ -169,7 +171,7 @@ export function CardIngresoMaterial({
                 <Tr>
                     <Td colSpan={6} p={0}>
                         <Collapse in={isExpanded} animateOpacity>
-                            <Box p={4} bg="gray.50">
+                            <Box p={4} bg="app.surfaceSubtle">
                                 <Flex justifyContent="space-between" alignItems="center" mb={4}>
                                     <Text fontWeight="semibold">Lotes del Material</Text>
                                     <Button
@@ -183,7 +185,7 @@ export function CardIngresoMaterial({
                                     </Button>
                                 </Flex>
 
-                                <Table size="sm" variant="simple" bg="white">
+                                <Table size="sm" variant="simple" bg="app.surface">
                                     <Thead>
                                         <Tr>
                                             <Th>Lote #</Th>

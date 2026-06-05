@@ -390,7 +390,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
     };
 
     return (
-        <Box p={5} bg="white" borderRadius="md" boxShadow="base">
+        <Box p={5} bg="app.surface" borderRadius="md" boxShadow="base">
             <Flex justifyContent="space-between" alignItems="center" mb={5}>
                 <Button 
                     leftIcon={<ArrowBackIcon />} 
@@ -451,9 +451,9 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
             </Flex>
 
             <Card mb={5} variant="outline" boxShadow="md">
-                <CardHeader bg="blue.50">
+                <CardHeader bg="app.stepperBlue">
                     <Heading size="md">{producto.nombre}</Heading>
-                    <Text color="gray.600">ID: {producto.productoId}</Text>
+                    <Text color="app.textMuted">ID: {producto.productoId}</Text>
                 </CardHeader>
                 <CardBody>
                     <Grid templateColumns="repeat(2, 1fr)" gap={6}>
@@ -616,7 +616,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
             </Card>
 
             <Card variant="outline" boxShadow="md">
-                <CardHeader bg="blue.50">
+                <CardHeader bg="app.stepperBlue">
                     <Heading size="md">Observaciones</Heading>
                 </CardHeader>
                 <CardBody>

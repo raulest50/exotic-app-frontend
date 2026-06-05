@@ -192,7 +192,7 @@ function CrearAreaProduccionTab() {
                             value={responsable ? `${responsable.cedula} - ${responsable.nombreCompleto || responsable.username}` : ''}
                             placeholder="Seleccione un responsable"
                             isReadOnly
-                            bg="gray.50"
+                            bg="app.inputReadonly"
                         />
                         <InputRightElement>
                             <IconButton
@@ -218,7 +218,7 @@ function CrearAreaProduccionTab() {
                     </Button>
 
                     {categoriasHabilitadas.length === 0 ? (
-                        <Text mt={2} color="gray.500" fontSize="sm">
+                        <Text mt={2} color="app.textSubtle" fontSize="sm">
                             Sin categorías configuradas.
                         </Text>
                     ) : (

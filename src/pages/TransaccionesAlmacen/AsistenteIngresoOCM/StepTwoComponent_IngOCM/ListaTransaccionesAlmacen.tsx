@@ -15,6 +15,7 @@ import {
     Collapse,
     IconButton,
     Badge,
+    useColorModeValue,
 } from '@chakra-ui/react';
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 
@@ -43,6 +44,14 @@ export function ListaTransaccionesAlmacen({
     const transacciones = usingExternalData ? transaccionesProp : localTransacciones;
     const loading = usingExternalData ? Boolean(loadingProp) : localLoading;
     const error = usingExternalData ? errorProp ?? null : localError;
+    const errorBg = useColorModeValue('red.50', 'red.900');
+    const errorColor = useColorModeValue('red.600', 'red.200');
+    const contabilizadaBg = useColorModeValue('green.100', 'green.900');
+    const contabilizadaColor = useColorModeValue('green.800', 'green.100');
+    const pendienteBg = useColorModeValue('yellow.100', 'yellow.900');
+    const pendienteColor = useColorModeValue('yellow.800', 'yellow.100');
+    const estadoDefaultBg = useColorModeValue('gray.100', 'whiteAlpha.200');
+    const estadoDefaultColor = useColorModeValue('gray.800', 'gray.100');
 
     useEffect(() => {
         if (usingExternalData) {
@@ -175,19 +184,19 @@ export function ListaTransaccionesAlmacen({
                     <Spinner size="xl" color="teal.500" />
                 </Flex>
             ) : error ? (
-                <Box p={4} bg="red.50" borderRadius="md">
-                    <Text color="red.600">{error}</Text>
+                <Box p={4} bg={errorBg} borderRadius="md">
+                    <Text color={errorColor}>{error}</Text>
                 </Box>
             ) : transacciones.length === 0 ? (
-                <Box p={4} bg="gray.50" borderRadius="md">
-                    <Text color="gray.600" textAlign="center">
+                <Box p={4} bg="app.surfaceSubtle" borderRadius="md">
+                    <Text color="app.textMuted" textAlign="center">
                         No se han registrado transacciones de almacen para esta orden de compra.
                     </Text>
                 </Box>
             ) : (
-                <Box w="full" bg="white" borderRadius="md" boxShadow="sm" overflowX="auto">
+                <Box w="full" bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
                     <Table size="sm" variant="simple">
-                        <Thead bg="gray.50">
+                        <Thead bg="app.tableHeader">
                             <Tr>
                                 <Th>ID Transaccion</Th>
                                 <Th>Fecha</Th>
@@ -221,17 +230,17 @@ export function ListaTransaccionesAlmacen({
                                                     display="inline-block"
                                                     bg={
                                                         transaccion.estadoContable === 'CONTABILIZADA'
-                                                            ? 'green.100'
+                                                            ? contabilizadaBg
                                                             : transaccion.estadoContable === 'PENDIENTE'
-                                                                ? 'yellow.100'
-                                                                : 'gray.100'
+                                                                ? pendienteBg
+                                                                : estadoDefaultBg
                                                     }
                                                     color={
                                                         transaccion.estadoContable === 'CONTABILIZADA'
-                                                            ? 'green.800'
+                                                            ? contabilizadaColor
                                                             : transaccion.estadoContable === 'PENDIENTE'
-                                                                ? 'yellow.800'
-                                                                : 'gray.800'
+                                                                ? pendienteColor
+                                                                : estadoDefaultColor
                                                     }
                                                 >
                                                     {transaccion.estadoContable || 'N/A'}
@@ -261,13 +270,13 @@ export function ListaTransaccionesAlmacen({
                                             <Tr>
                                                 <Td colSpan={6} p={0}>
                                                     <Collapse in={isExpanded} animateOpacity>
-                                                        <Box p={4} bg="gray.50" borderTopWidth="1px">
+                                                        <Box p={4} bg="app.surfaceSubtle" borderTopWidth="1px">
                                                             {isLoadingMov ? (
                                                                 <Flex justify="center" align="center" py={4}>
                                                                     <Spinner size="md" />
                                                                 </Flex>
                                                             ) : movimientos.length === 0 ? (
-                                                                <Text fontSize="sm" color="gray.600" textAlign="center" py={4}>
+                                                                <Text fontSize="sm" color="app.textMuted" textAlign="center" py={4}>
                                                                     No hay movimientos registrados para esta transaccion
                                                                 </Text>
                                                             ) : (
@@ -275,7 +284,7 @@ export function ListaTransaccionesAlmacen({
                                                                     <Text fontWeight="bold" mb={3} fontSize="sm">
                                                                         Materiales Recibidos en esta Transaccion
                                                                     </Text>
-                                                                    <Table size="sm" variant="simple" bg="white">
+                                                                    <Table size="sm" variant="simple" bg="app.surface">
                                                                         <Thead>
                                                                             <Tr>
                                                                                 <Th>Material</Th>

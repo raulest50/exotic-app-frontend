@@ -128,7 +128,7 @@ function HistorialTransaccionesAlmacenTab() {
                     )}
                 </>
             ) : filtroActual && !loading ? (
-                <Text textAlign="center" py={8} color="gray.500">
+                <Text textAlign="center" py={8} color="app.textSubtle">
                     No se encontraron transacciones con los filtros seleccionados.
                 </Text>
             ) : null}

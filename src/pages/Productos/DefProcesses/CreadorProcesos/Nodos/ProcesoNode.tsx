@@ -58,7 +58,7 @@ export default function ProcesoNode(props: NodeProps) {
                     isConnectable={true}
                 />
 
-                <VStack w={"full"} borderTop={"2px solid gray"} background={"gray.50"} pt={"1em"}>
+                <VStack w={"full"} borderTop={"2px solid gray"} background={"app.surfaceSubtle"} pt={"1em"}>
                     {String(data.nombreProceso).trim() !== "" && (
                         <HStack w="full">
                             <Icon mr="1em" ml="1em" as={BiRename} w="2em" h="2em" color="teal" />

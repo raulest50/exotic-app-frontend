@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import EndPointsURL from '../../../api/EndPointsURL.tsx';
+import EndPointsURL from '../../../../api/EndPointsURL.tsx';
 import {
     Modal,
     ModalOverlay,
@@ -25,7 +25,7 @@ import {
     useToast,
     Box,
 } from '@chakra-ui/react';
-import MyPagination from '../../../components/MyPagination.tsx';
+import MyPagination from '../../../../components/MyPagination.tsx';
 import { AreaOperativa } from './types.ts';
 
 interface Props {

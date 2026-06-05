@@ -28,14 +28,14 @@ function GestionAveriasTab() {
                         _hover={{ transform: 'scale(1.02)', shadow: 'lg' }}
                         transition="all 0.2s"
                         borderWidth={2}
-                        borderColor="gray.200"
+                        borderColor="app.border"
                     >
                         <CardBody>
                             <Flex direction="column" gap={3} align="center" textAlign="center">
                                 <Heading size="md" color="teal.600">
                                     Avería en Almacén
                                 </Heading>
-                                <Text color="gray.600">
+                                <Text color="app.textMuted">
                                     Registrar averías ocurridas en el almacén
                                 </Text>
                             </Flex>
@@ -48,14 +48,14 @@ function GestionAveriasTab() {
                         _hover={{ transform: 'scale(1.02)', shadow: 'lg' }}
                         transition="all 0.2s"
                         borderWidth={2}
-                        borderColor="gray.200"
+                        borderColor="app.border"
                     >
                         <CardBody>
                             <Flex direction="column" gap={3} align="center" textAlign="center">
                                 <Heading size="md" color="blue.600">
                                     Avería en Producción
                                 </Heading>
-                                <Text color="gray.600">
+                                <Text color="app.textMuted">
                                     Registrar averías ocurridas durante una orden de producción
                                 </Text>
                             </Flex>

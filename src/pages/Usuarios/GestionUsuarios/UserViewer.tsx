@@ -325,15 +325,15 @@ export default function UserViewer({
                                 <Tr
                                     key={user.id}
                                     onClick={() => handleUserSelect(user)}
-                                    _hover={{ bg: 'blue.50', cursor: 'pointer' }}
+                                    _hover={{ bg: 'app.rowActiveBlue', cursor: 'pointer' }}
                                     bg={
                                         selectedUser?.id === user.id
-                                            ? 'blue.100'
+                                            ? 'app.rowSelectedBlue'
                                             : user.username.toLowerCase() === 'master'
-                                                ? 'green.200'
+                                                ? 'app.rowMasterGreen'
                                                 : user.estado === 1
-                                                    ? 'green.50'
-                                                    : 'orange.50'
+                                                    ? 'app.rowSelectedGreen'
+                                                    : 'app.rowWarningOrange'
                                     }
                                 >
                                     <Td>{user.id}</Td>
@@ -387,7 +387,7 @@ export default function UserViewer({
                                                     <Text fontWeight="medium" fontSize="sm">
                                                         {title}
                                                     </Text>
-                                                    <Text fontSize="xs" color="gray.500">
+                                                    <Text fontSize="xs" color="app.textSubtle">
                                                         ID {ma.id}
                                                     </Text>
                                                 </Box>
@@ -399,14 +399,14 @@ export default function UserViewer({
                                                         {ma.tabs.map((t) => (
                                                             <Text as="li" key={t.id ?? `${t.tabId}-${t.nivel}`}>
                                                                 {tabDisplayLabel(modStr, t.tabId)}{' '}
-                                                                <Text as="span" color="gray.500" fontSize="xs">
+                                                                <Text as="span" color="app.textSubtle" fontSize="xs">
                                                                     ({t.tabId}) — nivel {t.nivel}
                                                                 </Text>
                                                             </Text>
                                                         ))}
                                                     </Box>
                                                 ) : (
-                                                    <Text fontSize="sm" color="gray.500">
+                                                    <Text fontSize="sm" color="app.textSubtle">
                                                         —
                                                     </Text>
                                                 )}

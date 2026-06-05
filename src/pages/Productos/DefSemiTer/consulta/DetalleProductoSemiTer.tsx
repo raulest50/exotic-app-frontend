@@ -689,7 +689,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     };
 
     return (
-        <Box p={5} bg="white" borderRadius="md" boxShadow="base">
+        <Box p={5} bg="app.surface" borderRadius="md" boxShadow="base">
             <Flex justifyContent="space-between" alignItems="center" mb={5}>
                 <Button
                     leftIcon={<ArrowBackIcon />}
@@ -704,9 +704,9 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
             </Flex>
 
             <Card mb={5} variant="outline" boxShadow="md">
-                <CardHeader bg="blue.50">
+                <CardHeader bg="app.stepperBlue">
                     <Heading size="md">{productoData.nombre}</Heading>
-                    <Text color="gray.600">ID: {productoData.productoId}</Text>
+                    <Text color="app.textMuted">ID: {productoData.productoId}</Text>
                 </CardHeader>
                 <CardBody>
                     <Grid templateColumns="repeat(2, 1fr)" gap={6}>
@@ -877,23 +877,23 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
 
             {isSemiOTerminado && (
                 <Card mb={5} variant="outline" boxShadow="md">
-                    <CardHeader bg="blue.50">
+                    <CardHeader bg="app.stepperBlue">
                         <Heading size="md">Insumos</Heading>
-                        <Text color="gray.600">
+                        <Text color="app.textMuted">
                             Las cantidades corresponden a una unidad del {producto.tipo_producto === 'S' ? 'semiterminado' : 'terminado'} ({producto.tipoUnidades}).
                         </Text>
                         {Array.isArray(productoData.insumos) && productoData.insumos.some((insumo) => {
                             const nestedInsumos = (insumo as unknown as { insumos?: Insumo[] }).insumos ?? (insumo.producto as ProductoDetalle | undefined)?.insumos;
                             return Array.isArray(nestedInsumos) && nestedInsumos.length > 0;
                         }) && (
-                            <Text color="gray.600" fontSize="sm" mt={1}>
+                            <Text color="app.textMuted" fontSize="sm" mt={1}>
                                 Usa la opción "Ver insumos" para explorar cantidades anidadas.
                             </Text>
                         )}
                     </CardHeader>
                     <CardBody>
                         {isLoadingDetalle ? (
-                            <Text color="gray.600">Cargando insumos...</Text>
+                            <Text color="app.textMuted">Cargando insumos...</Text>
                         ) : (
                             <InsumoListCard insumos={productoData.insumos ?? []} titulo="Insumos" />
                         )}
@@ -906,7 +906,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
             )}
 
             <Card variant="outline" boxShadow="md">
-                <CardHeader bg="blue.50">
+                <CardHeader bg="app.stepperBlue">
                     <Heading size="md">Observaciones</Heading>
                 </CardHeader>
                 <CardBody>

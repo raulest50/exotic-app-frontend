@@ -23,6 +23,7 @@ import {
     Textarea,
     VStack,
     useDisclosure,
+    useColorModeValue,
     useToast,
 } from "@chakra-ui/react";
 import { FiLogOut, FiRefreshCw, FiSearch, FiUser } from "react-icons/fi";
@@ -110,6 +111,7 @@ function matchesFilter(card: SeguimientoOrdenAreaCardDTO, searchTerm: string): b
 export default function AreaOperativaPanel() {
     const { meProfile, logout, areaResponsable } = useAuth();
     const toast = useToast();
+    const emptyTitleColor = useColorModeValue("gray.700", "gray.200");
 
     const {
         isOpen: isActionOpen,
@@ -257,7 +259,7 @@ export default function AreaOperativaPanel() {
                     <Box>
                         <Heading size="lg" mb={2}>Centro Operativo del Área</Heading>
                         {meProfile ? (
-                            <HStack spacing={2} color="gray.600">
+                            <HStack spacing={2} color="app.textMuted">
                                 <FiUser />
                                 <Text>{meProfile.nombreCompleto || meProfile.username}</Text>
                             </HStack>
@@ -293,7 +295,7 @@ export default function AreaOperativaPanel() {
                 completado={tablero.resumen.completado}
             />
 
-            <Box borderWidth="1px" borderRadius="lg" bg="white" p={4}>
+            <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
                 <VStack align="stretch" spacing={3}>
                     <Text fontWeight="semibold">Filtros y vista rápida</Text>
                     <HStack flexWrap="wrap" gap={3}>
@@ -309,7 +311,7 @@ export default function AreaOperativaPanel() {
                                 />
                             </InputGroup>
                         </Box>
-                        <Text fontSize="sm" color="gray.600">
+                        <Text fontSize="sm" color="app.textMuted">
                             Mostrando {totalFilteredCards} órdenes en el tablero filtrado.
                         </Text>
                     </HStack>
@@ -330,9 +332,9 @@ export default function AreaOperativaPanel() {
             ) : null}
 
             {!loading && tablero.resumen.total === 0 ? (
-                <Box borderWidth="1px" borderRadius="xl" bg="gray.50" p={10} textAlign="center">
-                    <Heading size="md" color="gray.700" mb={2}>No hay órdenes en seguimiento</Heading>
-                    <Text color="gray.500">
+                <Box borderWidth="1px" borderRadius="xl" bg="app.surfaceSubtle" p={10} textAlign="center">
+                    <Heading size="md" color={emptyTitleColor} mb={2}>No hay órdenes en seguimiento</Heading>
+                    <Text color="app.textSubtle">
                         Las órdenes aparecerán aquí cuando una ruta productiva involucre tus áreas asignadas.
                     </Text>
                 </Box>
@@ -382,7 +384,7 @@ export default function AreaOperativaPanel() {
                                         maxLength={500}
                                         rows={4}
                                     />
-                                    <Text fontSize="xs" color="gray.500" textAlign="right">
+                                    <Text fontSize="xs" color="app.textSubtle" textAlign="right">
                                         {observaciones.length}/500
                                     </Text>
                                 </Box>

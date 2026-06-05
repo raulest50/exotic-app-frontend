@@ -14,15 +14,16 @@ import {
     FormControl,
     FormLabel,
     IconButton,
-    Input,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
     NumberInput,
     NumberInputField,
     SimpleGrid,
-    Tab,
-    TabList,
-    TabPanel,
-    TabPanels,
-    Tabs,
     Text,
     Tooltip,
     VStack,
@@ -32,21 +33,16 @@ import {
 import TerminadoPicker, {
     type TerminadoPickerResult,
 } from "../../../components/Pickers/TerminadoPicker/TerminadoPicker";
-import AprobacionMPSWeekTab from "../AprobacionMPSWeekTab";
 import {
-    AprobarMpsSemanal,
-    GenerarOdpDesdeMps,
     GuardarBorradorProgramacionSemanal,
     ObtenerMpsSemanal,
     type MpsSemanalDraftDTO,
     type PropuestaMpsCalendarBlockDTO,
-} from "../PlaneacionProduccionTab/PlaneacionProduccionService";
+} from "../ProgProdMensualTab/PlaneacionProduccionService";
 import { downloadMpsSemanalPdf } from "./pdf/MpsSemanalPdfGenerator";
-
-interface OpenMpsWeekRequest {
-    weekStartDate: string;
-    token: number;
-}
+import type { SemanaMPSDTO } from "./SemanaMPSPicker";
+import SemanaMPSPickerModal from "./SemanaMPSPickerModal";
+import MpsCategoriaBreakdown from "./MpsCategoriaBreakdown";
 
 interface ProgramacionEntry {
     id: string;
@@ -104,12 +100,27 @@ function getAxiosErrorMessage(error: unknown, fallback: string): string {
     return error instanceof Error ? error.message : fallback;
 }
 
+function isNotFoundError(error: unknown): boolean {
+    return axios.isAxiosError(error) && error.response?.status === 404;
+}
+
 function isIntegerLike(value: number): boolean {
     return Number.isFinite(value) && Math.abs(value - Math.round(value)) <= EPSILON;
 }
 
 function buildEntryId(productoId: string, dayIndex: number): string {
     return `${productoId}__${dayIndex}`;
+}
+
+function getMpsSemanaLabel(mps: MpsSemanalDraftDTO): string {
+    return mps.semanaMpsCodigo ?? mps.weekStartDate;
+}
+
+function buildEntriesFingerprint(entries: ProgramacionEntry[]): string {
+    return entries
+        .map((entry) => `${entry.dayIndex}:${entry.productoId}:${entry.unidades}`)
+        .sort()
+        .join("|");
 }
 
 function buildEntryFromTerminado(terminado: TerminadoPickerResult, dayIndex: number): ProgramacionEntry {
@@ -172,22 +183,24 @@ function getEntryIssues(entry: ProgramacionEntry): string[] {
     return issues;
 }
 
-function ProgramacionEditor({ externalOpenRequest }: { externalOpenRequest: OpenMpsWeekRequest | null }) {
+export default function ProgramacionProduccionSemanalTab() {
     const [weekStartDate, setWeekStartDate] = useState(getCurrentWeekMonday());
+    const [selectedSemana, setSelectedSemana] = useState<SemanaMPSDTO | null>(null);
     const [entries, setEntries] = useState<ProgramacionEntry[]>([]);
     const [currentDraft, setCurrentDraft] = useState<MpsSemanalDraftDTO | null>(null);
-    const [lastExternalTokenHandled, setLastExternalTokenHandled] = useState<number | null>(null);
+    const [lastPersistedEntriesFingerprint, setLastPersistedEntriesFingerprint] = useState("");
+    const [pendingSemanaChange, setPendingSemanaChange] = useState<SemanaMPSDTO | null>(null);
     const [pickerDayIndex, setPickerDayIndex] = useState<number | null>(null);
     const [isLoadingDraft, setIsLoadingDraft] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [isApproving, setIsApproving] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
     const pickerDisclosure = useDisclosure();
+    const weekChangeConfirmDisclosure = useDisclosure();
     const toast = useToast();
 
-    const weekEndDate = useMemo(() => addDays(weekStartDate, 5), [weekStartDate]);
     const isReadOnly = currentDraft !== null && currentDraft.estado !== "BORRADOR";
+    const entriesFingerprint = useMemo(() => buildEntriesFingerprint(entries), [entries]);
+    const hasUnsavedChanges = entriesFingerprint !== lastPersistedEntriesFingerprint;
 
     const entriesByDay = useMemo(() => {
         const grouped = new Map<number, ProgramacionEntry[]>();
@@ -228,21 +241,45 @@ function ProgramacionEditor({ externalOpenRequest }: { externalOpenRequest: Open
         );
     }, [entries]);
 
-    const openPersistedWeek = useCallback(async (targetWeekStartDate: string) => {
+    const breakdownEntries = useMemo(() => entries.map((entry) => ({
+        productoId: entry.productoId,
+        productoNombre: entry.productoNombre,
+        categoriaNombre: entry.categoriaNombre,
+        loteSize: entry.loteSize,
+        unidades: entry.unidades,
+        dayIndex: entry.dayIndex,
+    })), [entries]);
+
+    const loadWeekForProgramming = useCallback(async (
+        targetWeekStartDate: string,
+        options: { showLoadedToast?: boolean } = {},
+    ): Promise<boolean> => {
         setIsLoadingDraft(true);
         try {
             const draft = await ObtenerMpsSemanal(targetWeekStartDate);
+            const draftEntries = buildEntriesFromDraft(draft);
             setWeekStartDate(draft.weekStartDate);
             setCurrentDraft(draft);
-            setEntries(buildEntriesFromDraft(draft));
-            toast({
-                title: "Semana cargada",
-                description: `MPS #${draft.mpsId} cargado en estado ${draft.estado}.`,
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
+            setEntries(draftEntries);
+            setLastPersistedEntriesFingerprint(buildEntriesFingerprint(draftEntries));
+            if (options.showLoadedToast) {
+                toast({
+                    title: "Semana cargada",
+                    description: `MPS #${draft.mpsId} cargado en estado ${draft.estado}.`,
+                    status: "success",
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+            return true;
         } catch (error) {
+            if (isNotFoundError(error)) {
+                setWeekStartDate(targetWeekStartDate);
+                setCurrentDraft(null);
+                setEntries([]);
+                setLastPersistedEntriesFingerprint("");
+                return true;
+            }
             toast({
                 title: "No se pudo abrir la semana",
                 description: getAxiosErrorMessage(error, "No fue posible cargar la semana MPS seleccionada."),
@@ -250,23 +287,46 @@ function ProgramacionEditor({ externalOpenRequest }: { externalOpenRequest: Open
                 duration: 5000,
                 isClosable: true,
             });
+            return false;
         } finally {
             setIsLoadingDraft(false);
         }
     }, [toast]);
 
     useEffect(() => {
-        if (!externalOpenRequest || externalOpenRequest.token === lastExternalTokenHandled) {
+        void loadWeekForProgramming(weekStartDate);
+    }, [loadWeekForProgramming]);
+
+    const applyWeekChange = async (semana: SemanaMPSDTO) => {
+        const wasLoaded = await loadWeekForProgramming(semana.startDate, { showLoadedToast: true });
+        if (wasLoaded) {
+            setSelectedSemana(semana);
+        }
+    };
+
+    const handleWeekChange = (semana: SemanaMPSDTO) => {
+        if (semana.startDate === weekStartDate) {
             return;
         }
-        setLastExternalTokenHandled(externalOpenRequest.token);
-        void openPersistedWeek(externalOpenRequest.weekStartDate);
-    }, [externalOpenRequest, lastExternalTokenHandled, openPersistedWeek]);
+        if (hasUnsavedChanges) {
+            setPendingSemanaChange(semana);
+            weekChangeConfirmDisclosure.onOpen();
+            return;
+        }
+        void applyWeekChange(semana);
+    };
 
-    const handleWeekChange = (value: string) => {
-        setWeekStartDate(value);
-        setCurrentDraft(null);
-        setEntries([]);
+    const handleConfirmWeekChange = () => {
+        if (pendingSemanaChange) {
+            void applyWeekChange(pendingSemanaChange);
+        }
+        setPendingSemanaChange(null);
+        weekChangeConfirmDisclosure.onClose();
+    };
+
+    const handleCancelWeekChange = () => {
+        setPendingSemanaChange(null);
+        weekChangeConfirmDisclosure.onClose();
     };
 
     const handleSelectTerminado = (terminado: TerminadoPickerResult) => {
@@ -325,10 +385,21 @@ function ProgramacionEditor({ externalOpenRequest }: { externalOpenRequest: Open
                 })),
             });
             setCurrentDraft(saved);
-            setEntries(buildEntriesFromDraft(saved));
+            setWeekStartDate(saved.weekStartDate);
+            const savedEntries = buildEntriesFromDraft(saved);
+            setEntries(savedEntries);
+            setLastPersistedEntriesFingerprint(buildEntriesFingerprint(savedEntries));
+            setSelectedSemana((current) => current?.startDate === saved.weekStartDate ? {
+                ...current,
+                id: saved.semanaMpsId ?? current.id,
+                codigo: saved.semanaMpsCodigo ?? current.codigo,
+                mpsId: saved.mpsId,
+                estado: saved.estado,
+                fechaGeneracionOdps: saved.fechaGeneracionOdps,
+            } : current);
             toast({
                 title: "Borrador guardado",
-                description: `MPS #${saved.mpsId} guardado para la semana ${saved.weekStartDate}.`,
+                description: `MPS #${saved.mpsId} guardado para la semana ${getMpsSemanaLabel(saved)}.`,
                 status: "success",
                 duration: 3000,
                 isClosable: true,
@@ -343,59 +414,6 @@ function ProgramacionEditor({ externalOpenRequest }: { externalOpenRequest: Open
             });
         } finally {
             setIsSaving(false);
-        }
-    };
-
-    const handleApprove = async () => {
-        setIsApproving(true);
-        try {
-            const approved = await AprobarMpsSemanal({ weekStartDate });
-            setCurrentDraft(approved);
-            setEntries(buildEntriesFromDraft(approved));
-            toast({
-                title: "Semana aprobada",
-                description: `La semana ${weekStartDate} fue aprobada correctamente.`,
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-        } catch (error) {
-            toast({
-                title: "No se pudo aprobar la semana",
-                description: getAxiosErrorMessage(error, "La aprobacion del MPS semanal fallo."),
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-            });
-        } finally {
-            setIsApproving(false);
-        }
-    };
-
-    const handleGenerateOdps = async () => {
-        setIsGenerating(true);
-        try {
-            const response = await GenerarOdpDesdeMps({ weekStartDate });
-            const reloaded = await ObtenerMpsSemanal(weekStartDate);
-            setCurrentDraft(reloaded);
-            setEntries(buildEntriesFromDraft(reloaded));
-            toast({
-                title: "ODPs generadas",
-                description: `Se crearon ${response.totalOrdenesCreadas} ordenes desde la semana ${weekStartDate}.`,
-                status: "success",
-                duration: 4000,
-                isClosable: true,
-            });
-        } catch (error) {
-            toast({
-                title: "No se pudieron generar las ODPs",
-                description: getAxiosErrorMessage(error, "La generacion de ordenes desde el MPS fallo."),
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-            });
-        } finally {
-            setIsGenerating(false);
         }
     };
 
@@ -419,43 +437,26 @@ function ProgramacionEditor({ externalOpenRequest }: { externalOpenRequest: Open
         }
     };
 
-    const canSave = validationIssues.length === 0 && !isReadOnly;
-    const canApprove = currentDraft?.estado === "BORRADOR" && validationIssues.length === 0;
-    const canGenerate = currentDraft?.estado === "APROBADO" && !currentDraft.fechaGeneracionOdps && validationIssues.length === 0;
+    const canSave = validationIssues.length === 0 && !isReadOnly && !isLoadingDraft;
 
     return (
         <VStack align="stretch" spacing={4}>
             <Box bg="white" borderRadius="md" boxShadow="sm" p={4}>
                 <Flex gap={4} align="end" wrap="wrap">
-                    <FormControl maxW="220px">
-                        <FormLabel>Semana inicio (lunes)</FormLabel>
-                        <Input
-                            type="date"
-                            value={weekStartDate}
-                            onChange={(event) => handleWeekChange(event.target.value)}
-                            isDisabled={isReadOnly}
-                        />
-                    </FormControl>
-                    <FormControl maxW="220px">
-                        <FormLabel>Semana fin (sabado)</FormLabel>
-                        <Input value={weekEndDate} isReadOnly bg="gray.50" />
-                    </FormControl>
-                    <Button
-                        variant="outline"
-                        onClick={() => void openPersistedWeek(weekStartDate)}
-                        isLoading={isLoadingDraft}
-                    >
-                        Abrir semana
-                    </Button>
-                    <Button
-                        variant="outline"
-                        onClick={() => {
-                            setCurrentDraft(null);
-                            setEntries([]);
-                        }}
-                    >
-                        Nueva programacion
-                    </Button>
+                    <SemanaMPSPickerModal
+                        value={weekStartDate}
+                        onChange={handleWeekChange}
+                        isDisabled={isLoadingDraft || isSaving}
+                        selectedSemana={selectedSemana}
+                        selectedCodigo={currentDraft?.semanaMpsCodigo ?? selectedSemana?.codigo}
+                        selectedStartDate={currentDraft?.weekStartDate ?? selectedSemana?.startDate ?? weekStartDate}
+                        selectedEndDate={currentDraft?.weekEndDate ?? selectedSemana?.endDate ?? addDays(weekStartDate, 5)}
+                        selectedMpsId={currentDraft?.mpsId ?? selectedSemana?.mpsId}
+                        selectedEstado={currentDraft?.estado ?? selectedSemana?.estado}
+                        selectedFechaGeneracionOdps={currentDraft?.fechaGeneracionOdps ?? selectedSemana?.fechaGeneracionOdps}
+                        buttonLabel="Semana MPS"
+                        modalTitle="Seleccionar semana para programacion"
+                    />
                     <Button
                         colorScheme="blue"
                         onClick={() => void handleSaveDraft()}
@@ -463,22 +464,6 @@ function ProgramacionEditor({ externalOpenRequest }: { externalOpenRequest: Open
                         isDisabled={!canSave}
                     >
                         Guardar borrador
-                    </Button>
-                    <Button
-                        colorScheme="green"
-                        onClick={() => void handleApprove()}
-                        isLoading={isApproving}
-                        isDisabled={!canApprove}
-                    >
-                        Aprobar
-                    </Button>
-                    <Button
-                        colorScheme="teal"
-                        onClick={() => void handleGenerateOdps()}
-                        isLoading={isGenerating}
-                        isDisabled={!canGenerate}
-                    >
-                        Generar ODPs
                     </Button>
                     <Button
                         variant="outline"
@@ -492,9 +477,13 @@ function ProgramacionEditor({ externalOpenRequest }: { externalOpenRequest: Open
                 </Flex>
 
                 <Flex mt={3} gap={3} align="center" wrap="wrap">
-                    <Badge colorScheme={currentDraft ? "blue" : "gray"}>
-                        {currentDraft ? `MPS #${currentDraft.mpsId} - ${currentDraft.estado}` : "Sin borrador guardado"}
+                    <Badge colorScheme={currentDraft ? "blue" : "orange"}>
+                        {currentDraft
+                            ? `MPS #${currentDraft.mpsId} - ${getMpsSemanaLabel(currentDraft)} - ${currentDraft.estado}`
+                            : "Sin MPS guardado - nueva programacion para esta semana"}
                     </Badge>
+                    {isLoadingDraft && <Badge colorScheme="gray">Cargando semana</Badge>}
+                    {hasUnsavedChanges && <Badge colorScheme="orange">Cambios sin guardar</Badge>}
                     {currentDraft?.fechaGeneracionOdps && <Badge colorScheme="green">ODPs generadas</Badge>}
                     <Badge colorScheme="purple">{formatNumber(totals.unidades)} unidades</Badge>
                     <Badge colorScheme={isIntegerLike(totals.lotes) ? "green" : "orange"}>
@@ -630,41 +619,42 @@ function ProgramacionEditor({ externalOpenRequest }: { externalOpenRequest: Open
                 })}
             </SimpleGrid>
 
+            <MpsCategoriaBreakdown
+                entries={breakdownEntries}
+                dayLabels={DAY_LABELS}
+            />
+
             <TerminadoPicker
                 isOpen={pickerDisclosure.isOpen}
                 onClose={pickerDisclosure.onClose}
                 onSelectTerminado={handleSelectTerminado}
             />
+
+            <Modal isOpen={weekChangeConfirmDisclosure.isOpen} onClose={handleCancelWeekChange} isCentered>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Descartar cambios sin guardar</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <Text color="gray.700">
+                            La programacion visible tiene cambios sin guardar. Si cambia de semana, esos cambios se descartaran.
+                        </Text>
+                        {pendingSemanaChange && (
+                            <Text mt={2} fontSize="sm" color="gray.600">
+                                Nueva semana: {pendingSemanaChange.codigo}
+                            </Text>
+                        )}
+                    </ModalBody>
+                    <ModalFooter gap={3}>
+                        <Button variant="ghost" onClick={handleCancelWeekChange}>
+                            Cancelar
+                        </Button>
+                        <Button colorScheme="red" onClick={handleConfirmWeekChange}>
+                            Descartar y cambiar semana
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
         </VStack>
-    );
-}
-
-export default function ProgramacionProduccionSemanalTab() {
-    const [tabIndex, setTabIndex] = useState(0);
-    const [openRequest, setOpenRequest] = useState<OpenMpsWeekRequest | null>(null);
-
-    return (
-        <Tabs index={tabIndex} onChange={setTabIndex}>
-            <TabList>
-                <Tab>Programar semana</Tab>
-                <Tab>Bandeja MPS</Tab>
-            </TabList>
-            <TabPanels>
-                <TabPanel px={0}>
-                    <ProgramacionEditor externalOpenRequest={openRequest} />
-                </TabPanel>
-                <TabPanel px={0}>
-                    <AprobacionMPSWeekTab
-                        onOpenMpsWeek={(weekStartDate) => {
-                            setOpenRequest((previous) => ({
-                                weekStartDate,
-                                token: (previous?.token ?? 0) + 1,
-                            }));
-                            setTabIndex(0);
-                        }}
-                    />
-                </TabPanel>
-            </TabPanels>
-        </Tabs>
     );
 }

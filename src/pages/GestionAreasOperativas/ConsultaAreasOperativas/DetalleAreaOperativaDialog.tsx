@@ -275,7 +275,7 @@ export default function DetalleAreaOperativaDialog({
                                             value={editResponsable ? `${editResponsable.cedula} - ${editResponsable.nombreCompleto || editResponsable.username}` : ''}
                                             placeholder="Seleccione un responsable"
                                             isReadOnly
-                                            bg="gray.50"
+                                            bg="app.inputReadonly"
                                         />
                                         <InputRightElement>
                                             <IconButton
@@ -299,7 +299,7 @@ export default function DetalleAreaOperativaDialog({
                                     <Text>{area.responsableArea.username}</Text>
                                 </SimpleGrid>
                             ) : (
-                                <Text color="gray.500">Sin responsable asignado</Text>
+                                <Text color="app.textSubtle">Sin responsable asignado</Text>
                             )}
                         </Box>
 
@@ -317,7 +317,7 @@ export default function DetalleAreaOperativaDialog({
                                     </Button>
 
                                     {categoriasEdicion.length === 0 ? (
-                                        <Text mt={2} color="gray.500" fontSize="sm">
+                                        <Text mt={2} color="app.textSubtle" fontSize="sm">
                                             Sin categorías configuradas.
                                         </Text>
                                     ) : (
@@ -333,7 +333,7 @@ export default function DetalleAreaOperativaDialog({
                                     )}
                                 </>
                             ) : categoriasLectura.length === 0 ? (
-                                <Text color="gray.500">Sin categorías configuradas.</Text>
+                                <Text color="app.textSubtle">Sin categorías configuradas.</Text>
                             ) : (
                                 <Wrap>
                                     {categoriasLectura.map((categoria) => (

@@ -82,7 +82,7 @@ export default function SeccionReposicionAverias({
                         </Heading>
                         <Tag colorScheme='orange' size='sm'>Reposición</Tag>
                     </Flex>
-                    <Text fontFamily='Comfortaa Variable' fontSize='sm' color='gray.600' textAlign='center'>
+                    <Text fontFamily='Comfortaa Variable' fontSize='sm' color='app.textMuted' textAlign='center'>
                         Los siguientes materiales tienen averías reportadas pendientes de reposición.
                         Puede definir lotes para dispensar material de reposición sin requerir privilegios especiales.
                     </Text>
@@ -118,7 +118,7 @@ export default function SeccionReposicionAverias({
                                             <Tr>
                                                 <Td>
                                                     <Text fontSize='sm' fontWeight='semibold'>{item.productoNombre}</Text>
-                                                    <Text fontSize='xs' color='gray.500'>{item.productoId}</Text>
+                                                    <Text fontSize='xs' color='app.textSubtle'>{item.productoId}</Text>
                                                 </Td>
                                                 <Td>{item.tipoUnidades}</Td>
                                                 <Td isNumeric color='red.600' fontWeight='semibold'>
@@ -130,7 +130,7 @@ export default function SeccionReposicionAverias({
                                                 <Td isNumeric fontWeight='bold' color='orange.600'>
                                                     {item.cantidadPendiente.toFixed(2)}
                                                 </Td>
-                                                <Td isNumeric color={completo ? 'green.600' : 'gray.600'}>
+                                                <Td isNumeric color={completo ? 'green.600' : 'app.textMuted'}>
                                                     {totalSel.toFixed(2)}
                                                 </Td>
                                                 <Td textAlign='center'>
@@ -147,12 +147,12 @@ export default function SeccionReposicionAverias({
                                             {lotesSeleccionados.map((lote) => (
                                                 <Tr key={`${item.productoId}-lote-${lote.loteId}`} bg='orange.50'>
                                                     <Td colSpan={2} pl={8}>
-                                                        <Text fontSize='xs' color='gray.600'>
+                                                        <Text fontSize='xs' color='app.textMuted'>
                                                             Lote: <strong>{lote.batchNumber}</strong>
                                                         </Text>
                                                     </Td>
                                                     <Td colSpan={2}>
-                                                        <Text fontSize='xs' color='gray.600'>
+                                                        <Text fontSize='xs' color='app.textMuted'>
                                                             {lote.expirationDate ? `Vence: ${lote.expirationDate}` : ''}
                                                         </Text>
                                                     </Td>

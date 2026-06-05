@@ -124,15 +124,15 @@ export default function ResetPasswordsNoProductivoTab() {
             {result && (
                 <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
                     <Box borderWidth="1px" borderRadius="md" p={4}>
-                        <Text color="gray.500" fontSize="sm">Usuarios saneados</Text>
+                        <Text color="app.textSubtle" fontSize="sm">Usuarios saneados</Text>
                         <Text fontSize="2xl" fontWeight="bold">{result.sanitizedUsers}</Text>
                     </Box>
                     <Box borderWidth="1px" borderRadius="md" p={4}>
-                        <Text color="gray.500" fontSize="sm">Privilegiados omitidos</Text>
+                        <Text color="app.textSubtle" fontSize="sm">Privilegiados omitidos</Text>
                         <Text fontSize="2xl" fontWeight="bold">{result.privilegedUsersSkipped}</Text>
                     </Box>
                     <Box borderWidth="1px" borderRadius="md" p={4}>
-                        <Text color="gray.500" fontSize="sm">Invalidos omitidos</Text>
+                        <Text color="app.textSubtle" fontSize="sm">Invalidos omitidos</Text>
                         <Text fontSize="2xl" fontWeight="bold">{result.invalidUsersSkipped}</Text>
                     </Box>
                 </SimpleGrid>

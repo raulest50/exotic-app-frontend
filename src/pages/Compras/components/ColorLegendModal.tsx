@@ -46,7 +46,7 @@ const ColorLegendModal: React.FC<ColorLegendModalProps> = ({ isOpen, onClose }) 
                                 borderRadius="md" 
                                 mr={3} 
                                 border="1px solid" 
-                                borderColor="gray.200"
+                                borderColor="app.border"
                             />
                             <Text>{legend.estado}</Text>
                         </Flex>

@@ -87,7 +87,7 @@ export default function EliminacionPurgaModuloStep2Ejecutar({
     if (!studyResultPurga) {
         return (
             <Box>
-                <Text color="gray.600">No hay datos del estudio. Regrese al paso anterior.</Text>
+                <Text color="app.textMuted">No hay datos del estudio. Regrese al paso anterior.</Text>
                 <Button variant="outline" mt={4} onClick={() => setActiveStep(1)}>
                     Atrás
                 </Button>

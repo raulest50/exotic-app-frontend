@@ -26,7 +26,7 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
                                                      }) => {
     return (
         <Card variant="outline" borderColor="blue.200" w={"full"}>
-            <CardHeader bg="blue.50">
+            <CardHeader bg="app.stepperBlue">
                 <HStack>
                     <IconButton
                         aria-label="Buscar Proveedor"

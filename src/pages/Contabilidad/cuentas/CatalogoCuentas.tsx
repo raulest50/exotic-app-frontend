@@ -14,7 +14,8 @@ import {
   InputLeftElement,
   Badge,
   useToast,
-  Button
+  Button,
+  useColorModeValue
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
 import axios from 'axios';
@@ -30,6 +31,8 @@ const CatalogoCuentas: React.FC = () => {
   const [selectedCuenta, setSelectedCuenta] = useState<CuentaContable | null>(null);
   const toast = useToast();
   const endpoints = new EndPointsURL();
+  const rowHoverBg = useColorModeValue("blue.50", "blue.900");
+  const searchIconColor = useColorModeValue("gray.300", "gray.500");
 
   useEffect(() => {
     fetchCuentas();
@@ -127,7 +130,7 @@ const CatalogoCuentas: React.FC = () => {
 
       <InputGroup mb={4}>
         <InputLeftElement pointerEvents="none">
-          <SearchIcon color="gray.300" />
+          <SearchIcon color={searchIconColor} />
         </InputLeftElement>
         <Input 
           placeholder="Buscar por código o nombre" 
@@ -166,7 +169,7 @@ const CatalogoCuentas: React.FC = () => {
                 <Tr 
                   key={cuenta.codigo}
                   _hover={{ 
-                    bg: "blue.50", 
+                    bg: rowHoverBg,
                     cursor: "pointer",
                     transition: "background-color 0.2s"
                   }}

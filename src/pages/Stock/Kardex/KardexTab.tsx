@@ -243,7 +243,7 @@ export function KardexTab(_: Props) {
 
           {data.content.length === 0 ? (
             <Box p={4} borderWidth="1px" borderRadius="md">
-              <Text color="gray.600">No hay movimientos para los parámetros de búsqueda especificados.</Text>
+              <Text color="app.textMuted">No hay movimientos para los parámetros de búsqueda especificados.</Text>
             </Box>
           ) : (
             <Box borderWidth="1px" borderRadius="md" overflowX="auto">

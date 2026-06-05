@@ -71,7 +71,7 @@ export default function StepFour_ModProdMF({ setActiveStep, semioter3, onReset, 
     return (
         <Flex direction="column" align="center" gap={4} w="full">
             <Heading size="md">Resumen de la modificacion</Heading>
-            <Box w="full" bg="gray.50" p={4} borderRadius="md" maxH="300px" overflowY="auto">
+            <Box w="full" bg="app.surfaceSubtle" p={4} borderRadius="md" maxH="300px" overflowY="auto">
                 <VStack align="start" spacing={4} w="full">
                     <VStack align="start" w="full" spacing={1}>
                         <Text><b>Codigo:</b> {semioter3.productoId}</Text>

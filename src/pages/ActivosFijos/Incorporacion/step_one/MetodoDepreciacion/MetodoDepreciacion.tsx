@@ -194,7 +194,7 @@ export function MetodoDepreciacionComponent(props: Props) {
     <Flex direction={{ base: 'column', md: 'row' }} gap={4} align="stretch" w="full">
       {/* Formulario de inputs (ahora vertical) */}
       <VStack spacing={4} align="stretch" w={{ base: 'full', md: '40%' }} pr={{ md: 4 }}>
-        <Box p={4} borderWidth="1px" borderRadius="lg" bg="white">
+        <Box p={4} borderWidth="1px" borderRadius="lg" bg="app.surface">
           <Text fontSize="xl" fontWeight="bold" mb={4}>Método de Depreciación</Text>
 
           <FormControl mb={4}>
@@ -216,11 +216,11 @@ export function MetodoDepreciacionComponent(props: Props) {
               value={valorInicial}
               isReadOnly={true}
               min={0}
-              bg="gray.100" // Indicación visual de que es de solo lectura
+              bg="app.inputReadonlyStrong" // Indicación visual de que es de solo lectura
             >
               <NumberInputField />
             </NumberInput>
-            <Text fontSize="sm" color="gray.500" mt={1}>
+            <Text fontSize="sm" color="app.textSubtle" mt={1}>
               Este valor se toma automáticamente del "Valor unitario con IVA" del grupo
             </Text>
           </FormControl>
@@ -286,14 +286,14 @@ export function MetodoDepreciacionComponent(props: Props) {
       </VStack>
 
       {/* Gráfico de depreciación */}
-      <Box w={{ base: 'full', md: '60%' }} mt={{ base: 4, md: 0 }} p={4} borderWidth="1px" borderRadius="lg" bg="white">
+      <Box w={{ base: 'full', md: '60%' }} mt={{ base: 4, md: 0 }} p={4} borderWidth="1px" borderRadius="lg" bg="app.surface">
         {depreciacionData.meses && depreciacionData.meses.length > 0 ? (
           <ReactECharts 
             option={chartOptions} 
             style={{ height: '400px', width: '100%' }}
           />
         ) : (
-          <Text textAlign="center" color="gray.500" py={10}>
+          <Text textAlign="center" color="app.textSubtle" py={10}>
             Ingrese valores válidos para visualizar la proyección de depreciación
           </Text>
         )}

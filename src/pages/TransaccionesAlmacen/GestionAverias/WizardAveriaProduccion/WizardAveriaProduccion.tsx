@@ -133,7 +133,7 @@ export default function WizardAveriaProduccion({ onBack }: WizardAveriaProduccio
                         ← Volver a selección de tipo
                     </Button>
                 </Flex>
-                <Stepper index={activeStep} p="1em" backgroundColor="blue.50" w="full">
+                <Stepper index={activeStep} p="1em" backgroundColor="app.stepperBlue" w="full">
                     {steps.map((step, index) => (
                         <Step key={index}>
                             <StepIndicator>

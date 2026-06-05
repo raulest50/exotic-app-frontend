@@ -156,7 +156,7 @@ export default function AveriaProduccionStep2ListAverias({
             </Text>
 
             {selectedArea && selectedOrden && (
-                <Box p={2} mb={4} bg="blue.50" borderRadius="md" borderWidth="1px" borderColor="blue.200">
+                <Box p={2} mb={4} bg="app.stepperBlue" borderRadius="md" borderWidth="1px" borderColor="app.cardItemBorderBlue">
                     <Text fontSize="sm">
                         Área: <strong>{selectedArea.nombre}</strong> | Orden:{' '}
                         <strong>{selectedOrden.loteAsignado}</strong> — {selectedOrden.productoNombre}
@@ -171,7 +171,7 @@ export default function AveriaProduccionStep2ListAverias({
                         Materiales Dispensados
                     </Heading>
                     {isLoading ? (
-                        <Text color="gray.500" textAlign="center">Cargando...</Text>
+                        <Text color="app.textSubtle" textAlign="center">Cargando...</Text>
                     ) : itemsDispensados.length > 0 ? (
                         <Box overflowX="auto">
                             <Table variant="simple" size="sm">
@@ -196,7 +196,7 @@ export default function AveriaProduccionStep2ListAverias({
                                             >
                                                 <Td>
                                                     <Text fontSize="sm">{item.productoNombre}</Text>
-                                                    <Text fontSize="xs" color="gray.500">{item.tipoUnidades}</Text>
+                                                    <Text fontSize="xs" color="app.textSubtle">{item.tipoUnidades}</Text>
                                                 </Td>
                                                 <Td>
                                                     <Text fontSize="sm">{item.batchNumber}</Text>
@@ -222,7 +222,7 @@ export default function AveriaProduccionStep2ListAverias({
                             </Table>
                         </Box>
                     ) : (
-                        <Text color="gray.500" textAlign="center">
+                        <Text color="app.textSubtle" textAlign="center">
                             No hay materiales dispensados para esta orden.
                         </Text>
                     )}
@@ -243,15 +243,15 @@ export default function AveriaProduccionStep2ListAverias({
                                         p={3}
                                         borderWidth="1px"
                                         borderRadius="md"
-                                        borderColor="teal.200"
-                                        bg="teal.50"
+                                        borderColor="app.cardItemHover"
+                                        bg="app.rowSelectedTeal"
                                     >
                                         <Flex justify="space-between" align="start" mb={2}>
                                             <Box>
                                                 <Text fontSize="sm" fontWeight="semibold">
                                                     {item.productoNombre}
                                                 </Text>
-                                                <Text fontSize="xs" color="gray.500">
+                                                <Text fontSize="xs" color="app.textSubtle">
                                                     Lote: {item.batchNumber} | Disponible: {item.cantidadDisponibleAveria} {item.tipoUnidades}
                                                 </Text>
                                             </Box>
@@ -292,7 +292,7 @@ export default function AveriaProduccionStep2ListAverias({
                             })}
                         </VStack>
                     ) : (
-                        <Text color="gray.500" textAlign="center">
+                        <Text color="app.textSubtle" textAlign="center">
                             Seleccione materiales del panel izquierdo.
                         </Text>
                     )}
@@ -305,7 +305,7 @@ export default function AveriaProduccionStep2ListAverias({
                     Averías Reportadas Anteriormente
                 </Heading>
                 {isLoadingHistorial ? (
-                    <Text color="gray.500" textAlign="center">Cargando historial...</Text>
+                    <Text color="app.textSubtle" textAlign="center">Cargando historial...</Text>
                 ) : historialAverias.length > 0 ? (
                     <VStack spacing={0} align="stretch" divider={<Divider />}>
                         {historialAverias.map((tx) => (
@@ -350,7 +350,7 @@ export default function AveriaProduccionStep2ListAverias({
                         ))}
                     </VStack>
                 ) : (
-                    <Text color="gray.500" textAlign="center">
+                    <Text color="app.textSubtle" textAlign="center">
                         No hay averías reportadas para esta orden.
                     </Text>
                 )}

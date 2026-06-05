@@ -298,7 +298,7 @@ export default function IngresoTerminadosStep1_SubirValidar({
     return (
         <Box>
             <Heading size="md" mb={4}>Subir y Validar Excel</Heading>
-            <Text fontSize="sm" color="gray.500" mb={5}>
+            <Text fontSize="sm" color="app.textSubtle" mb={5}>
                 Suba el archivo Excel completado con las cantidades reales de producto terminado.
             </Text>
 

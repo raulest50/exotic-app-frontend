@@ -42,7 +42,7 @@ function StatsBlock({ title, stats }: { title: string; stats: LeadTimeStatsDTO |
         <Box>
             <Heading size="sm" mb={3}>{title}</Heading>
             {!stats.calculable ? (
-                <Text color="gray.600">{stats.reason || "No se pudo calcular."}</Text>
+                <Text color="app.textMuted">{stats.reason || "No se pudo calcular."}</Text>
             ) : (
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                     <Stat>
@@ -129,15 +129,15 @@ export default function LeadTimeDetailDrawer({
                         {loading ? (
                             <Stack align="center" justify="center" h="full">
                                 <Spinner />
-                                <Text color="gray.600">Cargando detalle proveedor-material...</Text>
+                                <Text color="app.textMuted">Cargando detalle proveedor-material...</Text>
                             </Stack>
                         ) : !detail ? (
-                            <Text color="gray.600">No hay detalle disponible.</Text>
+                            <Text color="app.textMuted">No hay detalle disponible.</Text>
                         ) : (
                             <Stack spacing={6}>
                                 <Box>
                                     <Heading size="sm">{selectedProveedorNombre || detail.proveedorNombre}</Heading>
-                                    <Text color="gray.600">{detail.proveedorId}</Text>
+                                    <Text color="app.textMuted">{detail.proveedorId}</Text>
                                     <Text mt={2}>
                                         Material: <b>{detail.materialNombre}</b> ({detail.materialId})
                                     </Text>

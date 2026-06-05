@@ -19,6 +19,9 @@ export function MisionVision() {
 
     const cardBg = useColorModeValue('white', 'gray.700');
     const borderColor = useColorModeValue('blue.100', 'blue.700');
+    const missionHeadingColor = useColorModeValue('blue.600', 'blue.200');
+    const visionHeadingColor = useColorModeValue('teal.600', 'teal.200');
+    const valuesHeadingColor = useColorModeValue('purple.600', 'purple.200');
 
     return (
         <Box bgGradient={bgGradient} minH="100vh" py={8}>
@@ -39,7 +42,7 @@ export function MisionVision() {
                     >
                         Nuestra Identidad Corporativa
                     </Heading>
-                    <Text fontSize="xl" maxW="800px" color="gray.600">
+                    <Text fontSize="xl" maxW="800px" color="app.textMuted">
                         Conoce los principios que guían nuestro trabajo y definen quiénes somos como organización.
                     </Text>
                 </Flex>
@@ -73,7 +76,7 @@ export function MisionVision() {
                     >
                         <Flex align="center" mb={6}>
                             <Icon as={FaLightbulb} boxSize={10} color="blue.500" mr={4} />
-                            <Heading as="h2" size="xl" color="blue.600">
+                            <Heading as="h2" size="xl" color={missionHeadingColor}>
                                 Nuestra Misión
                             </Heading>
                         </Flex>
@@ -108,7 +111,7 @@ export function MisionVision() {
                     >
                         <Flex align="center" mb={6}>
                             <Icon as={FaEye} boxSize={10} color="teal.500" mr={4} />
-                            <Heading as="h2" size="xl" color="teal.600">
+                            <Heading as="h2" size="xl" color={visionHeadingColor}>
                                 Nuestra Visión
                             </Heading>
                         </Flex>
@@ -128,7 +131,7 @@ export function MisionVision() {
                         size="xl" 
                         textAlign="center" 
                         mb={10}
-                        color="purple.600"
+                        color={valuesHeadingColor}
                     >
                         Nuestros Valores
                     </Heading>
@@ -223,7 +226,7 @@ export function MisionVision() {
 
                 {/* Pie de página */}
                 <Divider mb={8} />
-                <Text textAlign="center" color="gray.500" fontSize="sm">
+                <Text textAlign="center" color="app.textSubtle" fontSize="sm">
                     © {new Date().getFullYear()} Exotic Expert. Todos los derechos reservados.
                 </Text>
             </Container>

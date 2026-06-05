@@ -220,7 +220,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
     return (
         <Flex direction="column" width="100%">
             <Card boxShadow='lg' mb={4}>
-                <CardHeader bg={"blue.200"} p={4}>
+                <CardHeader bg="app.tabSelected" p={4}>
                     <Flex justifyContent="space-between" alignItems="center">
                         <Heading size="md">{item.nombre}</Heading>
                         <HStack spacing={2}>
@@ -316,7 +316,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                     </Box>
 
                     {/* Atributos comunes para todo el grupo */}
-                    <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50" mb={4}>
+                    <Box p={4} borderWidth="1px" borderRadius="md" bg="app.surfaceSubtle" mb={4}>
                         <Text fontWeight="bold" mb={2}>Atributos comunes del grupo</Text>
                         <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                             <GridItem>
@@ -422,7 +422,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                             mb={3} 
                             borderWidth="1px" 
                             borderRadius="md"
-                            bg="gray.50"
+                            bg="app.surfaceSubtle"
                         >
                             <Text fontWeight="bold">Activo #{index + 1}</Text>
                             <Grid templateColumns="repeat(2, 1fr)" gap={4} mt={2}>
@@ -450,7 +450,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                     ))}
 
                     {listaActivos.length === 0 && (
-                        <Box p={4} textAlign="center" color="gray.500">
+                        <Box p={4} textAlign="center" color="app.textSubtle">
                             No hay activos registrados. {isAddEnabled ? 'Haga clic en el botón + para agregar.' : ''}
                         </Box>
                     )}
@@ -459,7 +459,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
 
                     {/* Método de depreciación común para todo el grupo */}
                     {listaActivos.length > 0 && (
-                        <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50" mb={4}>
+                        <Box p={4} borderWidth="1px" borderRadius="md" bg="app.surfaceSubtle" mb={4}>
                             <Text fontWeight="bold" mb={2}>Método de Depreciación (común para todo el grupo)</Text>
                             <MetodoDepreciacionComponent 
                                 setDepreciacion={handleDepreciacionChange}

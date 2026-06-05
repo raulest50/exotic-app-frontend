@@ -171,7 +171,7 @@ export function ActivosFijosStep1Form({
                 {grupos.length === 0 && (
                     <Card>
                         <CardBody>
-                            <Text textAlign="center" color="gray.500">
+                            <Text textAlign="center" color="app.textSubtle">
                                 {incorporacionActivoDto.tipoIncorporacion === TIPO_INCORPORACION.CON_OC 
                                     ? "No hay ítems en la orden de compra." 
                                     : "No hay grupos de activos. Haga clic en 'Agregar Grupo' para crear uno."}

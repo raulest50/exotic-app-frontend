@@ -111,11 +111,11 @@ export default function ResumenHistorialDispensaciones({
                     <Spinner />
                 </Flex>
             ) : dispensacionesState.length === 0 ? (
-                <Text fontSize="sm" color="gray.600">
+                <Text fontSize="sm" color="app.textMuted">
                     No hay dispensaciones registradas para esta orden.
                 </Text>
             ) : (
-                <Box bg="white" borderRadius="md" boxShadow="sm" overflowX="auto">
+                <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
                     <Table size="sm">
                         <Thead>
                             <Tr>
@@ -141,7 +141,7 @@ export default function ResumenHistorialDispensaciones({
                                     <Tr>
                                         <Td colSpan={4} p={0}>
                                             <Collapse in={!!expanded[disp.transaccionId]} animateOpacity>
-                                                <Box p={3} bg="gray.50">
+                                                <Box p={3} bg="app.surfaceSubtle">
                                                     <Table size="xs">
                                                         <Thead>
                                                             <Tr>
@@ -165,7 +165,7 @@ export default function ResumenHistorialDispensaciones({
                                                             {(movimientosPorTransaccion[disp.transaccionId] ?? []).length === 0 && (
                                                                 <Tr>
                                                                     <Td colSpan={5}>
-                                                                        <Text fontSize="xs" color="gray.500">
+                                                                        <Text fontSize="xs" color="app.textSubtle">
                                                                             No hay items para esta transacción.
                                                                         </Text>
                                                                     </Td>

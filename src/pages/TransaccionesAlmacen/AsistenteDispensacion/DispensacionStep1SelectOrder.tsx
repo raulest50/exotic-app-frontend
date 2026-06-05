@@ -192,7 +192,7 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
     const isNextDisabled = useMemo(() => totalPages === 0 || page + 1 >= totalPages, [page, totalPages]);
 
     return (
-        <Box p='1em' backgroundColor='blue.50'>
+        <Box p='1em' backgroundColor='app.stepperBlue'>
             <Flex align='center' justify='space-between' mb={4} gap={4}>
                 <Heading fontFamily='Comfortaa Variable' size='md'>Órdenes de Producción abiertas/en progreso</Heading>
                 <FiltroODP_AsistDisp 
@@ -201,7 +201,7 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
                     isLoading={loading}
                 />
             </Flex>
-            <Box bg='white' borderRadius='md' boxShadow='sm' overflowX='auto'>
+            <Box bg='app.surface' borderRadius='md' boxShadow='sm' overflowX='auto'>
                 <Table size='sm'>
                     <Thead>
                         <Tr>

@@ -154,8 +154,8 @@ const ProveedorPicker: React.FC<ProveedorPickerProps> = ({
                                                 <Tr 
                                                     key={proveedor.id} 
                                                     onClick={() => setSelectedProveedorId(proveedor.id.toString())}
-                                                    bg={selectedProveedorId === proveedor.id.toString() ? "blue.100" : "transparent"}
-                                                    _hover={{ bg: "gray.100", cursor: "pointer" }}
+                                                    bg={selectedProveedorId === proveedor.id.toString() ? "app.rowSelectedBlue" : "transparent"}
+                                                    _hover={{ bg: "app.rowHoverStrong", cursor: "pointer" }}
                                                 >
                                                     <Td>{proveedor.id}</Td>
                                                     <Td>{proveedor.nombre}</Td>

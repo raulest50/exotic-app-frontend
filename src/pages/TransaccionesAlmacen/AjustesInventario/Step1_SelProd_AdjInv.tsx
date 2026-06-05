@@ -126,7 +126,7 @@ export default function AjustesInventarioStep0SelectProducts({
 
                     <Box>
                         {loading ? (
-                            <Text color={"gray.500"}>Cargando productos...</Text>
+                            <Text color={"app.textSubtle"}>Cargando productos...</Text>
                         ) : productos.length > 0 ? (
                             <Table size={"sm"} variant={"simple"}>
                                 <Thead>
@@ -157,7 +157,7 @@ export default function AjustesInventarioStep0SelectProducts({
                                 </Tbody>
                             </Table>
                         ) : (
-                            <Text color={"gray.500"}>No hay productos para mostrar.</Text>
+                            <Text color={"app.textSubtle"}>No hay productos para mostrar.</Text>
                         )}
                     </Box>
 
@@ -212,7 +212,7 @@ export default function AjustesInventarioStep0SelectProducts({
                         </Tbody>
                     </Table>
                 ) : (
-                    <Text color={"gray.500"}>Añade productos para verlos aquí.</Text>
+                    <Text color={"app.textSubtle"}>Añade productos para verlos aquí.</Text>
                 )}
             </Box>
         </Flex>

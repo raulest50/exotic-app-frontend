@@ -119,8 +119,8 @@ export function ListaMaterialesIngresoDesgloce({
                 <Heading size="md" fontFamily="Comfortaa Variable">
                     Consolidado de Materiales Recibidos
                 </Heading>
-                <Box p={4} bg="gray.50" borderRadius="md">
-                    <Text color="gray.600" textAlign="center">
+                <Box p={4} bg="app.surfaceSubtle" borderRadius="md">
+                    <Text color="app.textMuted" textAlign="center">
                         No hay materiales recibidos para esta orden de compra.
                     </Text>
                 </Box>
@@ -133,13 +133,13 @@ export function ListaMaterialesIngresoDesgloce({
             <Heading size="md" fontFamily="Comfortaa Variable">
                 Consolidado de Materiales Recibidos
             </Heading>
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" color="app.textMuted">
                 Total de transacciones: <strong>{consolidado.totalTransacciones}</strong>
             </Text>
 
-            <Box w="full" bg="white" borderRadius="md" boxShadow="sm" overflowX="auto">
+            <Box w="full" bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
                 <Table size="sm" variant="simple">
-                    <Thead bg="gray.50">
+                    <Thead bg="app.tableHeader">
                         <Tr>
                             <Th>Material</Th>
                             <Th>ID Producto</Th>
@@ -182,7 +182,7 @@ export function ListaMaterialesIngresoDesgloce({
                                                     {lote.cantidad.toFixed(2)} {material.tipoUnidades}
                                                 </Text>
                                                 {lote.expirationDate && (
-                                                    <Text color="gray.600">
+                                                    <Text color="app.textMuted">
                                                         (Vence: {formatDate(lote.expirationDate)})
                                                     </Text>
                                                 )}

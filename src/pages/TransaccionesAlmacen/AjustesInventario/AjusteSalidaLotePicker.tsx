@@ -151,7 +151,7 @@ export default function AjusteSalidaLotePicker({
                 <ModalCloseButton />
                 <ModalBody>
                     <Flex direction="column" gap={4}>
-                        <Text fontSize="sm" color="gray.600">
+                        <Text fontSize="sm" color="app.textMuted">
                             Cantidad de salida requerida: <strong>{cantidadRequerida.toFixed(4)}</strong> ·
                             Asignada: <strong>{totalAsignado.toFixed(4)}</strong>
                         </Text>
@@ -262,7 +262,7 @@ export default function AjusteSalidaLotePicker({
                             <Box flex="1" borderWidth="1px" borderRadius="md" p={4}>
                                 <Text fontWeight="bold" mb={3}>Lotes asignados</Text>
                                 {lotesSeleccionados.length === 0 ? (
-                                    <Text color="gray.500" py={8} textAlign="center">
+                                    <Text color="app.textSubtle" py={8} textAlign="center">
                                         Aún no has asignado lotes a esta salida.
                                     </Text>
                                 ) : (

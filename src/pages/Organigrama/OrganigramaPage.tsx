@@ -14,6 +14,7 @@ import {
   TabPanel,
   Collapse,
   useDisclosure,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { ChevronRightIcon, ChevronLeftIcon } from "@chakra-ui/icons";
 import MyHeader from "../../components/MyHeader.tsx";
@@ -41,6 +42,10 @@ export default function OrganigramaPage() {
   const organizationChartId = "org-1";
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
   const [tabIndex, setTabIndex] = useState(0);
+  const tabHoverBg = useColorModeValue("blue.50", "blue.900");
+  const tabHoverColor = useColorModeValue("blue.600", "blue.200");
+  const tabSelectedBg = useColorModeValue("blue.100", "blue.800");
+  const tabSelectedColor = useColorModeValue("blue.700", "blue.200");
 
   const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
     {
@@ -84,7 +89,7 @@ export default function OrganigramaPage() {
         </Box>
       ) : (
         <Flex>
-          <Flex direction="column" bg="white" borderRight="1px" borderColor="gray.200" position="relative">
+          <Flex direction="column" bg="app.surface" borderRight="1px" borderColor="app.border" position="relative">
             <IconButton
               aria-label={isOpen ? "Colapsar panel" : "Expandir panel"}
               icon={isOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
@@ -110,8 +115,8 @@ export default function OrganigramaPage() {
                         px={4}
                         borderRadius="md"
                         fontWeight="medium"
-                        _hover={{ bg: "blue.50", color: "blue.600" }}
-                        _selected={{ bg: "blue.100", color: "blue.700", fontWeight: "bold" }}
+                        _hover={{ bg: tabHoverBg, color: tabHoverColor }}
+                        _selected={{ bg: tabSelectedBg, color: tabSelectedColor, fontWeight: "bold" }}
                         transition="all 0.2s"
                       >
                         {tab.label}

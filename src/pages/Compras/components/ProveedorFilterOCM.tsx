@@ -31,7 +31,7 @@ const ProveedorFilterOCM: React.FC<ProveedorFilterOCMProps> = ({
                                 {selectedProveedor ? selectedProveedor.nombre : "Sin Filtro por proveedor"}
                             </Text>
                             {selectedProveedor && (
-                                <Text fontSize="sm" color="gray.600">
+                                <Text fontSize="sm" color="app.textMuted">
                                     NIT: {selectedProveedor.id}
                                 </Text>
                             )}

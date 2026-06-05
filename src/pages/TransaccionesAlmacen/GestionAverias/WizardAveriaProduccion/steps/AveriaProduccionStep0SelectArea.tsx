@@ -15,6 +15,7 @@ import {
     Td,
     Text,
     VStack,
+    useColorModeValue,
     useToast,
 } from '@chakra-ui/react';
 import axios from 'axios';
@@ -46,6 +47,9 @@ export default function AveriaProduccionStep0SelectArea({
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
     const toast = useToast();
+    const selectedRowBg = useColorModeValue('teal.100', 'teal.900');
+    const selectedRowHoverBg = useColorModeValue('teal.200', 'teal.800');
+    const selectedPanelBorder = useColorModeValue('teal.200', 'teal.600');
 
     const handleSearch = async () => {
         setIsLoading(true);
@@ -139,8 +143,8 @@ export default function AveriaProduccionStep0SelectArea({
                                         <Tr
                                             key={area.areaId}
                                             onClick={() => handleRowClick(area)}
-                                            bg={selectedAreaId === area.areaId ? 'teal.100' : 'transparent'}
-                                            _hover={{ bg: selectedAreaId === area.areaId ? 'teal.200' : 'gray.100', cursor: 'pointer' }}
+                                            bg={selectedAreaId === area.areaId ? selectedRowBg : 'transparent'}
+                                            _hover={{ bg: selectedAreaId === area.areaId ? selectedRowHoverBg : 'app.rowHoverStrong', cursor: 'pointer' }}
                                         >
                                             <Td>{area.areaId}</Td>
                                             <Td>{area.nombre}</Td>
@@ -160,7 +164,7 @@ export default function AveriaProduccionStep0SelectArea({
                             />
                         </>
                     ) : (
-                        <Text textAlign="center" color="gray.500">
+                        <Text textAlign="center" color="app.textSubtle">
                             No hay áreas para mostrar. Realice una búsqueda.
                         </Text>
                     )}
@@ -168,12 +172,12 @@ export default function AveriaProduccionStep0SelectArea({
 
                 {/* Selected area confirmation */}
                 {selectedArea && (
-                    <Box p={3} bg="teal.50" borderRadius="md" borderWidth="1px" borderColor="teal.200">
+                    <Box p={3} bg="app.rowSelectedTeal" borderRadius="md" borderWidth="1px" borderColor={selectedPanelBorder}>
                         <Text fontWeight="semibold">
                             Área seleccionada: {selectedArea.nombre} (ID: {selectedArea.areaId})
                         </Text>
                         {selectedArea.descripcion && (
-                            <Text fontSize="sm" color="gray.600">{selectedArea.descripcion}</Text>
+                            <Text fontSize="sm" color="app.textMuted">{selectedArea.descripcion}</Text>
                         )}
                     </Box>
                 )}

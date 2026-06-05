@@ -196,7 +196,7 @@ const DetalleAsientosCuenta: React.FC<DetalleAsientosCuentaProps> = ({
       </Flex>
 
       <VStack spacing={4} align="stretch">
-        <Box bg="gray.50" p={4} borderRadius="md">
+        <Box bg="app.surfaceSubtle" p={4} borderRadius="md">
           <HStack spacing={4} wrap="wrap">
             <Box flex="1" minW="200px">
               <Text fontWeight="bold">Código:</Text>

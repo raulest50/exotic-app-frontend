@@ -64,7 +64,7 @@ function InsumoRow({
                         )}
                         <Box>
                             <Heading size="sm">{producto?.nombre ?? 'Producto sin nombre'}</Heading>
-                            <Text fontSize="sm" color="gray.600">ID: {producto?.productoId ?? 'N/D'}</Text>
+                            <Text fontSize="sm" color="app.textMuted">ID: {producto?.productoId ?? 'N/D'}</Text>
                         </Box>
                     </Box>
                 </Td>
@@ -92,7 +92,7 @@ function InsumoRow({
             {!hasSubInsumos && !isMaterial && (
                 <Tr>
                     <Td colSpan={4} p={0}>
-                        <Text color="gray.500" pl={nivelActual * 4} py={2}>
+                        <Text color="app.textSubtle" pl={nivelActual * 4} py={2}>
                             Sin insumos definidos para este producto.
                         </Text>
                     </Td>
@@ -124,7 +124,7 @@ export default function InsumoListCard({ insumos, nivel = 0, titulo }: Props) {
             )}
 
             {!lista.length ? (
-                <Text color="gray.500" pl={nivel * 4}>
+                <Text color="app.textSubtle" pl={nivel * 4}>
                     Sin insumos para mostrar.
                 </Text>
             ) : (

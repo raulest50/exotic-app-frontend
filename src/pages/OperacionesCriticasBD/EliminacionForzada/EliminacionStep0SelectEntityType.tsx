@@ -13,6 +13,7 @@ import {
     List,
     ListItem,
     Text,
+    useColorModeValue,
     useDisclosure,
     VStack,
 } from "@chakra-ui/react";
@@ -74,6 +75,14 @@ export default function EliminacionStep0SelectEntityType({
     const { isOpen, onOpen, onClose } = useDisclosure();
     const env = EndPointsURL.getEnvironment();
     const envBadgeLabel = env === "staging" ? "ENTORNO DE PRUEBAS" : "LOCAL DEV";
+    const dangerBg = useColorModeValue("red.50", "red.900");
+    const dangerHoverBg = useColorModeValue("red.100", "red.800");
+    const dangerActiveBg = useColorModeValue("red.200", "red.700");
+    const dangerBorder = useColorModeValue("red.200", "red.700");
+    const dangerHoverBorder = useColorModeValue("red.300", "red.600");
+    const dangerActiveBorder = useColorModeValue("red.400", "red.500");
+    const dangerTitleColor = useColorModeValue("red.700", "red.200");
+    const dangerTextColor = useColorModeValue("red.600", "red.200");
 
     const visibleOptions = ENTITY_OPTIONS.filter((opt) => {
         if (opt.visibleEnvs) {
@@ -92,7 +101,7 @@ export default function EliminacionStep0SelectEntityType({
         <Box>
             <VStack align="stretch" spacing={4}>
                 <Heading size="md">Seleccione el tipo de entidad a eliminar</Heading>
-                <Text color="gray.600">
+                <Text color="app.textMuted">
                     Elija el tipo de registro sobre el cual desea realizar una eliminacion forzada.
                     En el siguiente paso podra seleccionar el registro concreto o confirmar una
                     operacion masiva, segun el tipo elegido.
@@ -125,16 +134,16 @@ export default function EliminacionStep0SelectEntityType({
                                     onClick={() => handleSelect(opt)}
                                     textAlign="left"
                                     whiteSpace="normal"
-                                    borderColor={opt.tone === "danger" ? "red.200" : undefined}
-                                    bg={opt.tone === "danger" ? "red.50" : undefined}
+                                    borderColor={opt.tone === "danger" ? dangerBorder : undefined}
+                                    bg={opt.tone === "danger" ? dangerBg : undefined}
                                     _hover={
                                         opt.tone === "danger"
-                                            ? { bg: "red.100", borderColor: "red.300" }
+                                            ? { bg: dangerHoverBg, borderColor: dangerHoverBorder }
                                             : undefined
                                     }
                                     _active={
                                         opt.tone === "danger"
-                                            ? { bg: "red.200", borderColor: "red.400" }
+                                            ? { bg: dangerActiveBg, borderColor: dangerActiveBorder }
                                             : undefined
                                     }
                                 >
@@ -150,7 +159,7 @@ export default function EliminacionStep0SelectEntityType({
                                             <HStack spacing={2} mb={1} flexWrap="wrap">
                                                 <Text
                                                     fontWeight="semibold"
-                                                    color={opt.tone === "danger" ? "red.700" : undefined}
+                                                    color={opt.tone === "danger" ? dangerTitleColor : undefined}
                                                 >
                                                     {opt.label}
                                                 </Text>
@@ -162,7 +171,7 @@ export default function EliminacionStep0SelectEntityType({
                                             </HStack>
                                             <Text
                                                 fontSize="sm"
-                                                color={opt.tone === "danger" ? "red.600" : "gray.600"}
+                                                color={opt.tone === "danger" ? dangerTextColor : "app.textMuted"}
                                             >
                                                 {opt.description}
                                             </Text>

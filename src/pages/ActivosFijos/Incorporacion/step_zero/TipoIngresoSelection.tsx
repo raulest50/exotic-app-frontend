@@ -1,4 +1,4 @@
-import {Card, CardBody, CardHeader, Flex, Heading, Icon, SimpleGrid, Text} from '@chakra-ui/react';
+import {Card, CardBody, CardHeader, Flex, Heading, Icon, SimpleGrid, Text, useColorModeValue} from '@chakra-ui/react';
 import {FaClipboardList, FaFileAlt, FaFileInvoiceDollar} from "react-icons/fa";
 import {TIPO_INCORPORACION} from "../../types.tsx";
 
@@ -7,6 +7,12 @@ type Props = {
 };
 
 export function TipoIngresoSelection({setTipoIncorporacion}: Props) {
+    const conOcBg = useColorModeValue("blue.100", "blue.800");
+    const conOcHoverBg = useColorModeValue("blue.300", "blue.700");
+    const sinOcBg = useColorModeValue("green.100", "green.800");
+    const sinOcHoverBg = useColorModeValue("green.300", "green.700");
+    const existenteBg = useColorModeValue("purple.100", "purple.800");
+    const existenteHoverBg = useColorModeValue("purple.300", "purple.700");
 
 
     // Declare functions for handling card clicks
@@ -36,9 +42,9 @@ export function TipoIngresoSelection({setTipoIncorporacion}: Props) {
                 <Card
                     h="250px"
                     cursor="pointer"
-                    bg="blue.100"
+                    bg={conOcBg}
                     _hover={{
-                        bg: "blue.300",
+                        bg: conOcHoverBg,
                         transform: "translateY(-5px)",
                         boxShadow: "xl"
                     }}
@@ -63,9 +69,9 @@ export function TipoIngresoSelection({setTipoIncorporacion}: Props) {
                 <Card
                     h="250px"
                     cursor="pointer"
-                    bg="green.100"
+                    bg={sinOcBg}
                     _hover={{
-                        bg: "green.300",
+                        bg: sinOcHoverBg,
                         transform: "translateY(-5px)",
                         boxShadow: "xl"
                     }}
@@ -90,9 +96,9 @@ export function TipoIngresoSelection({setTipoIncorporacion}: Props) {
                 <Card
                     h="250px"
                     cursor="pointer"
-                    bg="purple.100"
+                    bg={existenteBg}
                     _hover={{
-                        bg: "purple.300",
+                        bg: existenteHoverBg,
                         transform: "translateY(-5px)",
                         boxShadow: "xl"
                     }}

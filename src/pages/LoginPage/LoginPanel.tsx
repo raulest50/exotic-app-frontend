@@ -15,7 +15,8 @@ import {
     Link,
     useToast,
     Spinner,
-    Text
+    Text,
+    useColorModeValue
 } from "@chakra-ui/react";
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL.tsx';
@@ -87,7 +88,7 @@ const FormularioLogin: React.FC<FormularioLoginProps> = ({
             {isLoading && (
                 <Flex align="center" justify="center" mt={2}>
                     <Spinner size="sm" color="blue.500" mr={2} />
-                    <Text fontSize="sm" color="gray.600">Verificando credenciales...</Text>
+                    <Text fontSize="sm" color="app.textMuted">Verificando credenciales...</Text>
                 </Flex>
             )}
             <Link
@@ -137,7 +138,7 @@ const FormularioForgot: React.FC<FormularioForgotProps> = ({
             {isLoading && (
                 <Flex align="center" justify="center" mt={2}>
                     <Spinner size="sm" color="blue.500" mr={2} />
-                    <Text fontSize="sm" color="gray.600">Enviando solicitud...</Text>
+                    <Text fontSize="sm" color="app.textMuted">Enviando solicitud...</Text>
                 </Flex>
             )}
             <Link
@@ -164,6 +165,20 @@ export default function LoginPanel() {
     const [isLoading, setIsLoading] = useState(false);
     const [isForgotLoading, setIsForgotLoading] = useState(false);
     const requestTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const pageBg = useColorModeValue("#f3f7fa", "gray.900");
+    const pageBackgroundImage = useColorModeValue(
+        `
+                radial-gradient(circle at top left, rgba(36, 74, 115, 0.09), transparent 32%),
+                radial-gradient(circle at top right, rgba(79, 140, 149, 0.08), transparent 28%),
+                linear-gradient(180deg, #fbfcfd 0%, #f1f6f8 45%, #e7eff3 100%)
+            `,
+        `
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.13), transparent 32%),
+                radial-gradient(circle at top right, rgba(45, 212, 191, 0.10), transparent 28%),
+                linear-gradient(180deg, #101826 0%, #111827 45%, #0b1220 100%)
+            `
+    );
+    const panelBackgroundColor = useColorModeValue("rgb(255 255 255 / 75%)", "rgb(17 24 39 / 78%)");
 
     // Clean up timeout on component unmount
     useEffect(() => {
@@ -242,12 +257,8 @@ export default function LoginPanel() {
             minH="100vh"
             overflow="hidden"
             isolation="isolate"
-            bg="#f3f7fa"
-            backgroundImage="
-                radial-gradient(circle at top left, rgba(36, 74, 115, 0.09), transparent 32%),
-                radial-gradient(circle at top right, rgba(79, 140, 149, 0.08), transparent 28%),
-                linear-gradient(180deg, #fbfcfd 0%, #f1f6f8 45%, #e7eff3 100%)
-            "
+            bg={pageBg}
+            backgroundImage={pageBackgroundImage}
         >
             <Box position="absolute" inset={0} zIndex={0} pointerEvents="none" opacity={0.92}>
                 <FloatingLines {...loginFloatingLinesPreset} />
@@ -268,7 +279,7 @@ export default function LoginPanel() {
                         flexDirection="column"
                     >
                         <BorderGlow
-                            backgroundColor="rgb(255 255 255 / 75%)"
+                            backgroundColor={panelBackgroundColor}
                             borderRadius={40}
                             borderWidth={3}
                             glowColor="40 92 72"

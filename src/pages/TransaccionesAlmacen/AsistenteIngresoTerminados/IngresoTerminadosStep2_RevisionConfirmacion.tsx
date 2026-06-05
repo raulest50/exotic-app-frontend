@@ -27,6 +27,7 @@ import {
     Th,
     Thead,
     Tr,
+    useColorModeValue,
     useToast,
     VStack,
 } from "@chakra-ui/react";
@@ -70,6 +71,9 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [registroExitoso, setRegistroExitoso] = useState(false);
+    const successHeadingColor = useColorModeValue("green.800", "green.100");
+    const successTextColor = useColorModeValue("green.900", "green.100");
+    const successSubtextColor = useColorModeValue("green.700", "green.200");
 
     const tokenValido = tokenInput === token;
     const puedeEnviar = tokenValido && !isLoading;
@@ -131,24 +135,24 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
             <Flex
                 p="2em"
                 direction="column"
-                backgroundColor="green.50"
+                backgroundColor="app.rowSelectedGreen"
                 gap={8}
                 alignItems="center"
                 textAlign="center"
                 borderRadius="lg"
             >
                 <Flex alignItems="center" gap={3}>
-                    <Heading fontFamily="Comfortaa Variable" color="green.800">
+                    <Heading fontFamily="Comfortaa Variable" color={successHeadingColor}>
                         Ingresos Registrados
                     </Heading>
                     <ImCheckboxChecked style={{ width: "2.5em", height: "2.5em", color: "#48BB78" }} />
                 </Flex>
 
                 <VStack spacing={2}>
-                    <Text fontFamily="Comfortaa Variable" color="green.900" fontSize="lg">
+                    <Text fontFamily="Comfortaa Variable" color={successTextColor} fontSize="lg">
                         Se registraron {totalOrdenes} ingreso(s) de producto terminado
                     </Text>
-                    <Text fontFamily="Comfortaa Variable" color="green.700">
+                    <Text fontFamily="Comfortaa Variable" color={successSubtextColor}>
                         Total de unidades ingresadas: <strong>{totalUnidades}</strong>
                     </Text>
                 </VStack>
@@ -180,7 +184,7 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
     return (
         <Box>
             <Heading size="md" mb={4}>Revision y Confirmacion</Heading>
-            <Text fontSize="sm" color="gray.500" mb={5}>
+            <Text fontSize="sm" color="app.textSubtle" mb={5}>
                 Revise el resumen de los ingresos a registrar. Esta operacion registrara todos los ingresos
                 y cerrara las ordenes de produccion correspondientes.
             </Text>
@@ -191,7 +195,7 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
                     <Card variant="outline">
                         <CardBody>
                             <Stat>
-                                <StatLabel color="gray.500">Total Ordenes</StatLabel>
+                                <StatLabel color="app.textSubtle">Total Ordenes</StatLabel>
                                 <StatNumber color="blue.600">{totalOrdenes}</StatNumber>
                             </Stat>
                         </CardBody>
@@ -199,7 +203,7 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
                     <Card variant="outline">
                         <CardBody>
                             <Stat>
-                                <StatLabel color="gray.500">Unidades a Ingresar</StatLabel>
+                                <StatLabel color="app.textSubtle">Unidades a Ingresar</StatLabel>
                                 <StatNumber color="green.600">{totalUnidades}</StatNumber>
                             </Stat>
                         </CardBody>
@@ -207,7 +211,7 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
                     <Card variant="outline">
                         <CardBody>
                             <Stat>
-                                <StatLabel color="gray.500">Unidades Esperadas</StatLabel>
+                                <StatLabel color="app.textSubtle">Unidades Esperadas</StatLabel>
                                 <StatNumber color="purple.600">{totalEsperado}</StatNumber>
                             </Stat>
                         </CardBody>
@@ -223,7 +227,7 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
                     <CardBody p={0}>
                         <TableContainer maxH="300px" overflowY="auto">
                             <Table size="sm" variant="simple">
-                                <Thead bg="gray.50" position="sticky" top={0}>
+                                <Thead bg="app.tableHeader" position="sticky" top={0}>
                                     <Tr>
                                         <Th>Lote</Th>
                                         <Th>Producto</Th>
@@ -285,7 +289,7 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
                     </CardHeader>
                     <Divider />
                     <CardBody>
-                        <Text fontSize="sm" color="gray.600" mb={3}>
+                        <Text fontSize="sm" color="app.textMuted" mb={3}>
                             Para confirmar esta operacion, ingrese el siguiente codigo de 4 digitos:
                         </Text>
                         <Flex justify="center" mb={4}>

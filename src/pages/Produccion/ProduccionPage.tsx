@@ -11,8 +11,9 @@ import ConfParamsCategoria from "./ConfParamsCategoria/ConfParamsCategoria.tsx";
 import CrearOrdenesProduccionTab from "./CrearOrdenesProduccionTab/CrearOrdenesProduccionTab.tsx";
 import HistorialOrdenesTab from "./HistorialOrdenesTab/HistorialOrdenesTab.tsx";
 import MonitorearAreasOperativasTab from "./MonitorearAreasOperativasTab.tsx";
-import { PlaneacionProduccionTab } from "./PlaneacionProduccionTab/PlaneacionProduccionTab.tsx";
-import ProgramacionProduccionSemanalTab from "./ProgramacionProduccionSemanalTab/ProgramacionProduccionSemanalTab.tsx";
+import { PlaneacionProduccionTab } from "./ProgProdMensualTab/PlaneacionProduccionTab.tsx";
+import AprobacionMPSWeekTab from "./ProgProdSemanalTab/AprobacionMPSWeekTab.tsx";
+import ProgramacionProduccionSemanalTab from "./ProgProdSemanalTab/ProgramacionProduccionSemanalTab.tsx";
 
 export default function ProduccionPage() {
     const access = useAccessSnapshot();
@@ -47,10 +48,13 @@ export default function ProduccionPage() {
             key: "programacion",
             label: "Programacion Produccion (Semanal)",
             render: () => <ProgramacionProduccionSemanalTab />,
-            accesoValido: (snapshot) => (
-                tabAccessRule(Modulo.PRODUCCION, "PROGRAMACION_PRODUCCION", 1)(snapshot)
-                || tabAccessRule(Modulo.PRODUCCION, "APROBACION_MPS_WEEK", 1)(snapshot)
-            ),
+            accesoValido: tabAccessRule(Modulo.PRODUCCION, "PROGRAMACION_PRODUCCION", 1),
+        },
+        {
+            key: "aprobacion-mps",
+            label: "Aprobacion MPS Semanal",
+            render: () => <AprobacionMPSWeekTab />,
+            accesoValido: tabAccessRule(Modulo.PRODUCCION, "APROBACION_MPS_WEEK", 1),
         },
         {
             key: "monitorear-areas-operativas",
@@ -82,9 +86,9 @@ export default function ProduccionPage() {
                     {visibleTabs.map((tab) => (
                         <TabPanel
                             key={tab.key}
-                            p={tab.key === "planeacion" || tab.key === "programacion" ? 0 : 4}
+                            p={tab.key === "planeacion" || tab.key === "programacion" || tab.key === "aprobacion-mps" ? 0 : 4}
                         >
-                            {tab.key === "planeacion" || tab.key === "programacion" ? (
+                            {tab.key === "planeacion" || tab.key === "programacion" || tab.key === "aprobacion-mps" ? (
                                 <Box w="full" minW={0}>
                                     {tab.render()}
                                 </Box>

@@ -62,7 +62,7 @@ export default function TablaDispensacionInsumos({
                 borderLeftWidth={esSemi ? "4px" : "0"}
                 borderLeftColor="purple.400"
                 cursor={(esSemi && tieneSubInsumos) ? "pointer" : "default"}
-                _hover={(esSemi && tieneSubInsumos) ? { bg: "purple.100" } : { bg: "gray.100" }}
+                _hover={(esSemi && tieneSubInsumos) ? { bg: "app.rowSelectedPurple" } : { bg: "app.rowHoverStrong" }}
                 onClick={() => {
                     if (esSemi && tieneSubInsumos) {
                         onToggleSemiterminado(insumo.productoId);
@@ -94,7 +94,7 @@ export default function TablaDispensacionInsumos({
                             Definir Lotes
                         </Button>
                     ) : esMaterial && !esInvent ? (
-                        <Text fontSize='xs' color='gray.500' fontStyle='italic'>
+                        <Text fontSize='xs' color='app.textSubtle' fontStyle='italic'>
                             No requiere lote
                         </Text>
                     ) : (
@@ -111,15 +111,15 @@ export default function TablaDispensacionInsumos({
         if (esMaterial && lotesSeleccionados.length > 0) {
             lotesSeleccionados.forEach((lote) => {
                 elements.push(
-                    <Tr key={`${insumoKey}-lote-${lote.loteId}`} bg='gray.50'>
+                    <Tr key={`${insumoKey}-lote-${lote.loteId}`} bg='app.surfaceSubtle'>
                         <Td></Td>
-                        <Td pl={8} fontSize='xs' color='gray.600'>
+                        <Td pl={8} fontSize='xs' color='app.textMuted'>
                             └─ Lote: {lote.batchNumber}
                         </Td>
-                        <Td fontSize='xs' color='gray.600'>
+                        <Td fontSize='xs' color='app.textMuted'>
                             {Math.abs(lote.cantidad).toFixed(2)}
                         </Td>
-                        <Td fontSize='xs' color='gray.600'>
+                        <Td fontSize='xs' color='app.textMuted'>
                             {formatDate(lote.expirationDate)}
                         </Td>
                         <Td>
@@ -143,15 +143,15 @@ export default function TablaDispensacionInsumos({
         if (esMaterial && historico.length > 0) {
             historico.forEach((lote) => {
                 elements.push(
-                    <Tr key={`${insumoKey}-hist-${lote.batchNumber}-${lote.loteId}`} bg='gray.100'>
+                    <Tr key={`${insumoKey}-hist-${lote.batchNumber}-${lote.loteId}`} bg='app.surfaceMuted'>
                         <Td></Td>
-                        <Td pl={8} fontSize='xs' color='gray.600'>
+                        <Td pl={8} fontSize='xs' color='app.textMuted'>
                             └─ Histórico: {lote.batchNumber}
                         </Td>
-                        <Td fontSize='xs' color='gray.600'>
+                        <Td fontSize='xs' color='app.textMuted'>
                             {lote.cantidad.toFixed(2)}
                         </Td>
-                        <Td fontSize='xs' color='gray.600'>
+                        <Td fontSize='xs' color='app.textMuted'>
                             {formatDate(lote.expirationDate)}
                         </Td>
                         <Td></Td>
@@ -167,14 +167,14 @@ export default function TablaDispensacionInsumos({
                         <Collapse in={isExpanded} animateOpacity>
                             <Box 
                                 p={4} 
-                                bg="gray.50" 
+                                bg="app.surfaceSubtle"
                                 borderWidth="1px" 
                                 borderColor="purple.200"
                                 borderRadius="md"
                                 m={2}
                             >
                                 <Table variant="simple" size="sm" colorScheme="purple">
-                                    <Thead bg="purple.100">
+                                    <Thead bg="app.rowSelectedPurple">
                                         <Tr>
                                             <Th>ID Producto</Th>
                                             <Th>Componente</Th>
@@ -200,7 +200,7 @@ export default function TablaDispensacionInsumos({
     };
 
     return (
-        <Box bg='white' borderRadius='md' boxShadow='sm' overflowX='auto' w='full' maxW='1200px'>
+        <Box bg='app.surface' borderRadius='md' boxShadow='sm' overflowX='auto' w='full' maxW='1200px'>
             <Table size='sm'>
                 <Thead>
                     <Tr>

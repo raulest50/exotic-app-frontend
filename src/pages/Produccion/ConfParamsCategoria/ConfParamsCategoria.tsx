@@ -31,7 +31,7 @@ import { LockIcon, UnlockIcon } from "@chakra-ui/icons";
 import { RiSave3Fill } from "react-icons/ri";
 import CustomIntegerInput from "../../../components/CustomIntegerInput/CustomIntegerInput.tsx";
 import type { Categoria, PoolCapacidad } from "../types.tsx";
-import { RutaProcesoCatDesigner } from "../RutaProcesoCatDesigner";
+import { RutaProcesoCatDesigner } from "./RutaProcesoCatDesigner";
 import PoolCapacidadManager from "./PoolCapacidadManager";
 
 const PAGE_SIZE = 10;

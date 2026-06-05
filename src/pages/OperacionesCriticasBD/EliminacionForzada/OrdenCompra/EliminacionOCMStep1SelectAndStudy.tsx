@@ -65,7 +65,7 @@ export default function EliminacionOCMStep1SelectAndStudy({
         <Box>
             <VStack align="stretch" spacing={4}>
                 <Heading size="md">Orden de compra a eliminar</Heading>
-                <Text color="gray.600">
+                <Text color="app.textMuted">
                     Seleccione la orden de compra sobre la cual desea estudiar la eliminación forzada.
                     El estudio mostrará todos los registros que referencian esta orden (ítems, lotes,
                     transacciones de almacén, asientos contables) y que habría que eliminar o ajustar.

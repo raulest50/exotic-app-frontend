@@ -87,7 +87,7 @@ export default function EliminacionMaterialStep2StudyResult({
     if (!studyResultMaterial) {
         return (
             <Box>
-                <Text color="gray.600">No hay resultado de estudio disponible.</Text>
+                <Text color="app.textMuted">No hay resultado de estudio disponible.</Text>
                 <Flex gap={3} mt={4}>
                     <Button variant="outline" onClick={() => setActiveStep(1)}>
                         Atrás
@@ -181,7 +181,7 @@ export default function EliminacionMaterialStep2StudyResult({
                         </Tbody>
                     </Table>
                 ) : (
-                    <Text color="gray.500">Ningún ítem de orden de compra.</Text>
+                    <Text color="app.textSubtle">Ningún ítem de orden de compra.</Text>
                 )}
             </Box>
 
@@ -213,7 +213,7 @@ export default function EliminacionMaterialStep2StudyResult({
                         </Tbody>
                     </Table>
                 ) : (
-                    <Text color="gray.500">El material no aparece en recetas activas.</Text>
+                    <Text color="app.textSubtle">El material no aparece en recetas activas.</Text>
                 )}
             </Box>
 
@@ -247,7 +247,7 @@ export default function EliminacionMaterialStep2StudyResult({
                         </Tbody>
                     </Table>
                 ) : (
-                    <Text color="gray.500">El material no aparece en case packs activos.</Text>
+                    <Text color="app.textSubtle">El material no aparece en case packs activos.</Text>
                 )}
             </Box>
 
@@ -277,7 +277,7 @@ export default function EliminacionMaterialStep2StudyResult({
                         </Tbody>
                     </Table>
                 ) : (
-                    <Text color="gray.500">Ningún lote candidato.</Text>
+                    <Text color="app.textSubtle">Ningún lote candidato.</Text>
                 )}
             </Box>
 
@@ -294,7 +294,7 @@ export default function EliminacionMaterialStep2StudyResult({
                                     {ta.estadoContable ?? "-"}
                                 </Text>
                                 {ta.observaciones && (
-                                    <Text fontSize="sm" color="gray.600">{ta.observaciones}</Text>
+                                    <Text fontSize="sm" color="app.textMuted">{ta.observaciones}</Text>
                                 )}
                                 {ta.movimientos.length > 0 && (
                                     <Table size="sm" mt={2} variant="simple">
@@ -326,7 +326,7 @@ export default function EliminacionMaterialStep2StudyResult({
                         ))}
                     </VStack>
                 ) : (
-                    <Text color="gray.500">Ninguna transacción de almacén.</Text>
+                    <Text color="app.textSubtle">Ninguna transacción de almacén.</Text>
                 )}
             </Box>
 
@@ -358,7 +358,7 @@ export default function EliminacionMaterialStep2StudyResult({
                         </Tbody>
                     </Table>
                 ) : (
-                    <Text color="gray.500">Ningún asiento contable.</Text>
+                    <Text color="app.textSubtle">Ningún asiento contable.</Text>
                 )}
             </Box>
 

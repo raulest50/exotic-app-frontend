@@ -341,10 +341,10 @@ export default function DispensacionStep2EditItems({
     // Si hay insumos desglosados, mostrar esos; sino, usar el sistema anterior
     if(insumosProcesados && insumosProcesados.length > 0) {
         return (
-            <Box p='1em' bg='blue.50'>
+            <Box p='1em' bg='app.stepperBlue'>
                 <Flex direction='column' gap={4} align='center'>
                     <Heading fontFamily='Comfortaa Variable'>Materiales Necesarios</Heading>
-                    <Text fontFamily='Comfortaa Variable' fontSize='sm' color='gray.600'>
+                    <Text fontFamily='Comfortaa Variable' fontSize='sm' color='app.textMuted'>
                         Lista completa desglosada de materiales base requeridos para la orden de producción
                     </Text>
                     <TablaDispensacionInsumos
@@ -363,7 +363,7 @@ export default function DispensacionStep2EditItems({
                             <Heading fontFamily='Comfortaa Variable' size='md' mt={6}>
                                 Materiales de Empaque
                             </Heading>
-                            <Text fontFamily='Comfortaa Variable' fontSize='sm' color='gray.600'>
+                            <Text fontFamily='Comfortaa Variable' fontSize='sm' color='app.textMuted'>
                                 Materiales de empaque requeridos para la orden de producción
                             </Text>
                             <TablaDispensacionInsumosEmpaque
@@ -486,7 +486,7 @@ export default function DispensacionStep2EditItems({
     }
 
     return (
-        <Box p='1em' bg='blue.50'>
+        <Box p='1em' bg='app.stepperBlue'>
             <Flex direction='column' gap={4} align='center'>
                 <Heading fontFamily='Comfortaa Variable'>Dispensación Sugerida</Heading>
                 <Text>No hay insumos disponibles para mostrar.</Text>
