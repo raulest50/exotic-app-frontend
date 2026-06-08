@@ -1,4 +1,4 @@
-import type { SemanaMPSDTO } from "../ProgProdMensualTab/PlaneacionProduccionService";
+import type { SemanaMPSDTO } from "./MpsSemanalService";
 
 export function formatLocalDate(date: Date): string {
     const year = date.getFullYear();

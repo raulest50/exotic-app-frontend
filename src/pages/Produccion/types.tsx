@@ -117,6 +117,7 @@ export interface OrdenProduccionDTO {
     origenOrden?: "MANUAL" | "MPS" | null;
     mpsId?: number | null;
     mpsWeekStartDate?: string | null;
-    mpsBlockId?: string | null;
+    mpsLotePlanificadoId?: number | null;
+    mpsItemId?: number | null;
     mpsLoteOrdinal?: number | null;
 }

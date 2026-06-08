@@ -1,4 +1,6 @@
 import {
+    Alert,
+    AlertIcon,
     Box,
     Button,
     Card,
@@ -6,91 +8,67 @@ import {
     Flex,
     HStack,
     IconButton,
-    Select,
+    SimpleGrid,
     Spinner,
     Stack,
-    Table,
-    Tbody,
-    Td,
+    Stat,
+    StatLabel,
+    StatNumber,
     Text,
-    Th,
-    Thead,
     Tooltip,
-    Tr,
     useDisclosure,
     useToast,
 } from "@chakra-ui/react";
 import { QuestionIcon } from "@chakra-ui/icons";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import BetterPagination from "../../../components/BetterPagination/BetterPagination.tsx";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import type { Material } from "../../Productos/types.tsx";
-import LeadTimeDetailDrawer from "./LeadTimeDetailDrawer.tsx";
-import LeadTimesRankingHelpModal from "./LeadTimesRankingHelpModal.tsx";
-import type {
-    LeadTimeDirection,
-    LeadTimeProveedorMaterialDTO,
-    LeadTimeProveedorMaterialPageRowDTO,
-    SpringPage,
-} from "./types.ts";
+import type { Proveedor } from "../../Compras/types.tsx";
+import type { ProveedorMaterialLeadTimeMetricDTO } from "./types.ts";
 import { formatNumber } from "./utils.ts";
+import LeadTimeMetricHelpModal from "./LeadTimeMetricHelpModal.tsx";
 
 type Props = {
     selectedMaterial: Material | null;
+    selectedProveedor: Proveedor | null;
     fechaCorte: string;
     ventanaDias: number;
 };
 
 const endPoints = new EndPointsURL();
 
-export default function LeadTimesView({ selectedMaterial, fechaCorte, ventanaDias }: Props) {
+export default function LeadTimesView({ selectedMaterial, selectedProveedor, fechaCorte, ventanaDias }: Props) {
     const toast = useToast();
-    const { isOpen, onOpen, onClose } = useDisclosure();
-    const {
-        isOpen: isHelpOpen,
-        onOpen: onHelpOpen,
-        onClose: onHelpClose,
-    } = useDisclosure();
-    const [direction, setDirection] = useState<LeadTimeDirection>("asc");
-    const [page, setPage] = useState(0);
-    const [size, setSize] = useState(10);
-    const [totalPages, setTotalPages] = useState(0);
-    const [rows, setRows] = useState<LeadTimeProveedorMaterialPageRowDTO[]>([]);
+    const { isOpen: isHelpOpen, onOpen: onHelpOpen, onClose: onHelpClose } = useDisclosure();
+    const [metric, setMetric] = useState<ProveedorMaterialLeadTimeMetricDTO | null>(null);
     const [loading, setLoading] = useState(false);
-    const [detailLoading, setDetailLoading] = useState(false);
-    const [detail, setDetail] = useState<LeadTimeProveedorMaterialDTO | null>(null);
-    const [selectedRow, setSelectedRow] = useState<LeadTimeProveedorMaterialPageRowDTO | null>(null);
 
-    const fetchRanking = async (pageNumber: number = page, pageSize: number = size) => {
-        if (!selectedMaterial) {
-            setRows([]);
-            setTotalPages(0);
+    const canLoad = Boolean(selectedMaterial && selectedProveedor);
+    const fallbackCount = metric?.observacionesConFallbackFechaEmision ?? 0;
+
+    const fetchMetric = async () => {
+        if (!selectedMaterial || !selectedProveedor) {
+            setMetric(null);
             return;
         }
 
         setLoading(true);
         try {
-            const url = endPoints.biMaterialLeadTimes(
+            const url = endPoints.biProveedorLeadTime(
+                selectedProveedor.id,
                 selectedMaterial.productoId,
                 fechaCorte,
-                ventanaDias,
-                pageNumber,
-                pageSize,
-                direction
+                ventanaDias
             );
-            const response = await axios.get<SpringPage<LeadTimeProveedorMaterialPageRowDTO>>(url);
-            setRows(response.data.content ?? []);
-            setPage(response.data.number ?? pageNumber);
-            setSize(response.data.size ?? pageSize);
-            setTotalPages(response.data.totalPages ?? 0);
+            const response = await axios.get<ProveedorMaterialLeadTimeMetricDTO>(url);
+            setMetric(response.data);
         } catch (error) {
-            console.error("Error loading lead time ranking:", error);
-            setRows([]);
-            setTotalPages(0);
+            console.error("Error loading supplier-material lead time:", error);
+            setMetric(null);
             toast({
                 title: "Error",
-                description: "No se pudo cargar el ranking de lead times.",
+                description: "No se pudo calcular el lead time informativo para el par seleccionado.",
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -100,56 +78,22 @@ export default function LeadTimesView({ selectedMaterial, fechaCorte, ventanaDia
         }
     };
 
-    const openDetail = async (row: LeadTimeProveedorMaterialPageRowDTO) => {
-        if (!selectedMaterial) return;
-        setSelectedRow(row);
-        setDetail(null);
-        setDetailLoading(true);
-        onOpen();
-        try {
-            const url = endPoints.biProveedorLeadTime(
-                row.proveedorId,
-                selectedMaterial.productoId,
-                fechaCorte,
-                ventanaDias
-            );
-            const response = await axios.get<LeadTimeProveedorMaterialDTO>(url);
-            setDetail(response.data);
-        } catch (error) {
-            console.error("Error loading lead time detail:", error);
-            toast({
-                title: "Error",
-                description: "No se pudo cargar el detalle del lead time.",
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-            });
-            onClose();
-        } finally {
-            setDetailLoading(false);
+    useEffect(() => {
+        if (!canLoad) {
+            setMetric(null);
+            return;
         }
-    };
-
-    useEffect(() => {
-        setPage(0);
-        setRows([]);
-        setTotalPages(0);
-        setDetail(null);
-        setSelectedRow(null);
-        onClose();
-    }, [selectedMaterial?.productoId, fechaCorte, ventanaDias, onClose]);
-
-    useEffect(() => {
-        if (!selectedMaterial) return;
-        fetchRanking(0, size);
+        fetchMetric();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedMaterial?.productoId, fechaCorte, ventanaDias, direction]);
+    }, [selectedMaterial?.productoId, selectedProveedor?.id, fechaCorte, ventanaDias]);
 
-    if (!selectedMaterial) {
+    if (!canLoad) {
         return (
             <Card variant="outline">
                 <CardBody>
-                    <Text color="app.textMuted">Seleccione un material para estudiar lead times de aprovisionamiento.</Text>
+                    <Text color="app.textMuted">
+                        Seleccione un material y un proveedor para calcular el lead time informativo.
+                    </Text>
                 </CardBody>
             </Card>
         );
@@ -162,10 +106,10 @@ export default function LeadTimesView({ selectedMaterial, fechaCorte, ventanaDia
                     <Flex justify="space-between" align={{ base: "stretch", md: "center" }} gap={4} direction={{ base: "column", md: "row" }}>
                         <Box>
                             <HStack spacing={2} align="center">
-                                <Text fontWeight="semibold">Ranking de proveedores para {selectedMaterial.nombre}</Text>
-                                <Tooltip label="Explicacion de columnas y criterios del ranking">
+                                <Text fontWeight="semibold">Lead time proveedor-material</Text>
+                                <Tooltip label="Formula y algoritmo de calculo">
                                     <IconButton
-                                        aria-label="Ayuda del ranking de lead times"
+                                        aria-label="Ayuda del calculo de lead time"
                                         icon={<QuestionIcon />}
                                         size="sm"
                                         variant="outline"
@@ -175,23 +119,12 @@ export default function LeadTimesView({ selectedMaterial, fechaCorte, ventanaDia
                                 </Tooltip>
                             </HStack>
                             <Text fontSize="sm" color="app.textMuted">
-                                Ordena por lead time ajustado, que combina rapidez observada y confiabilidad del historico.
+                                {selectedProveedor?.nombre} | {selectedMaterial?.nombre}
                             </Text>
                         </Box>
-                        <HStack>
-                            <Text fontSize="sm">Orden:</Text>
-                            <Select
-                                value={direction}
-                                onChange={(e) => setDirection(e.target.value as LeadTimeDirection)}
-                                width="180px"
-                            >
-                                <option value="asc">Mejores primero</option>
-                                <option value="desc">Peores primero</option>
-                            </Select>
-                            <Button colorScheme="blue" variant="outline" onClick={() => fetchRanking(page, size)} isLoading={loading}>
-                                Refrescar
-                            </Button>
-                        </HStack>
+                        <Button colorScheme="blue" variant="outline" onClick={fetchMetric} isLoading={loading}>
+                            Refrescar
+                        </Button>
                     </Flex>
                 </CardBody>
             </Card>
@@ -201,83 +134,59 @@ export default function LeadTimesView({ selectedMaterial, fechaCorte, ventanaDia
                     {loading ? (
                         <Stack align="center" py={10}>
                             <Spinner />
-                            <Text color="app.textMuted">Cargando ranking de lead times...</Text>
+                            <Text color="app.textMuted">Calculando lead time...</Text>
                         </Stack>
-                    ) : rows.length === 0 ? (
-                        <Text color="app.textMuted">
-                            No hay historico suficiente para ranking de este material.
-                        </Text>
+                    ) : !metric ? (
+                        <Text color="app.textMuted">No hay resultado disponible.</Text>
+                    ) : !metric.calculable ? (
+                        <Stack spacing={3}>
+                            <Text color="app.textMuted">{metric.reason || "No hay observaciones calculables."}</Text>
+                            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                                <Stat>
+                                    <StatLabel>Ordenes consideradas</StatLabel>
+                                    <StatNumber>{formatNumber(metric.ordenesConsideradas, 0)}</StatNumber>
+                                </Stat>
+                                <Stat>
+                                    <StatLabel>Fecha corte</StatLabel>
+                                    <StatNumber fontSize="xl">{metric.fechaCorte}</StatNumber>
+                                </Stat>
+                            </SimpleGrid>
+                        </Stack>
                     ) : (
                         <Stack spacing={4}>
-                            <Box overflowX="auto">
-                                <Table variant="striped" size="sm">
-                                    <Thead>
-                                        <Tr>
-                                            <Th>Proveedor ID</Th>
-                                            <Th>Proveedor</Th>
-                                            <Th isNumeric>Lead time 1ra recepcion</Th>
-                                            <Th isNumeric>Lead time recepcion completa</Th>
-                                            <Th isNumeric>Confianza 1ra recepcion</Th>
-                                            <Th isNumeric>Confianza recepcion completa</Th>
-                                            <Th isNumeric>Observaciones 1ra recepcion</Th>
-                                            <Th isNumeric>Observaciones recepcion completa</Th>
-                                            <Th isNumeric>Ordenes</Th>
-                                            <Th isNumeric>Lead time ajustado</Th>
-                                            <Th>Accion</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
-                                        {rows.map((row) => (
-                                            <Tr key={`${row.proveedorId}-${row.materialId}`}>
-                                                <Td>{row.proveedorId}</Td>
-                                                <Td>{row.proveedorNombre}</Td>
-                                                <Td isNumeric>{formatNumber(row.representativeFirstReceiptLeadTimeDays, 4)}</Td>
-                                                <Td isNumeric>{formatNumber(row.representativeCompleteReceiptLeadTimeDays, 4)}</Td>
-                                                <Td isNumeric>{formatNumber(row.firstReceiptConfidenceScore, 0)}</Td>
-                                                <Td isNumeric>{formatNumber(row.completeReceiptConfidenceScore, 0)}</Td>
-                                                <Td isNumeric>{formatNumber(row.firstReceiptValidObservations, 0)}</Td>
-                                                <Td isNumeric>{formatNumber(row.completeReceiptValidObservations, 0)}</Td>
-                                                <Td isNumeric>{formatNumber(row.totalOrdersConsidered, 0)}</Td>
-                                                <Td isNumeric>{formatNumber(row.adjustedLeadTimeDays, 4)}</Td>
-                                                <Td>
-                                                    <Button size="sm" colorScheme="blue" variant="ghost" onClick={() => openDetail(row)}>
-                                                        Ver detalle
-                                                    </Button>
-                                                </Td>
-                                            </Tr>
-                                        ))}
-                                    </Tbody>
-                                </Table>
-                            </Box>
+                            <SimpleGrid columns={{ base: 1, md: 4 }} spacing={4}>
+                                <Stat>
+                                    <StatLabel>Lead time mediano</StatLabel>
+                                    <StatNumber>{formatNumber(metric.leadTimeMedianoDias, 2)} dias</StatNumber>
+                                </Stat>
+                                <Stat>
+                                    <StatLabel>Observaciones validas</StatLabel>
+                                    <StatNumber>{formatNumber(metric.observaciones, 0)}</StatNumber>
+                                </Stat>
+                                <Stat>
+                                    <StatLabel>Ordenes consideradas</StatLabel>
+                                    <StatNumber>{formatNumber(metric.ordenesConsideradas, 0)}</StatNumber>
+                                </Stat>
+                                <Stat>
+                                    <StatLabel>Fecha corte</StatLabel>
+                                    <StatNumber fontSize="xl">{metric.fechaCorte}</StatNumber>
+                                </Stat>
+                            </SimpleGrid>
 
-                            <BetterPagination
-                                page={page}
-                                size={size}
-                                totalPages={totalPages}
-                                loading={loading}
-                                onPageChange={(newPage) => {
-                                    setPage(newPage);
-                                    fetchRanking(newPage, size);
-                                }}
-                                onSizeChange={(newSize) => {
-                                    setSize(newSize);
-                                    setPage(0);
-                                    fetchRanking(0, newSize);
-                                }}
-                            />
+                            {fallbackCount > 0 && (
+                                <Alert status="info" borderRadius="md">
+                                    <AlertIcon />
+                                    <Text fontSize="sm">
+                                        {fallbackCount} observacion(es) usaron fecha de emision porque la OCM no tenia fecha de envio al proveedor.
+                                    </Text>
+                                </Alert>
+                            )}
                         </Stack>
                     )}
                 </CardBody>
             </Card>
 
-            <LeadTimeDetailDrawer
-                isOpen={isOpen}
-                onClose={onClose}
-                loading={detailLoading}
-                detail={detail}
-                selectedProveedorNombre={selectedRow?.proveedorNombre}
-            />
-            <LeadTimesRankingHelpModal isOpen={isHelpOpen} onClose={onHelpClose} />
+            <LeadTimeMetricHelpModal isOpen={isHelpOpen} onClose={onHelpClose} />
         </Stack>
     );
 }

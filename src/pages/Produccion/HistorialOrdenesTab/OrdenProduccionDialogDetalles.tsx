@@ -224,7 +224,8 @@ export default function OrdenProduccionDialogDetalles({
                                 <Text fontSize="sm">Origen: MPS</Text>
                                 <Text fontSize="sm">MPS ID: {formatValue(orden.mpsId)}</Text>
                                 <Text fontSize="sm">Semana MPS: {formatValue(orden.mpsWeekStartDate)}</Text>
-                                <Text fontSize="sm">Block ID: {formatValue(orden.mpsBlockId)}</Text>
+                                <Text fontSize="sm">Item MPS: {formatValue(orden.mpsItemId)}</Text>
+                                <Text fontSize="sm">Lote planificado MPS: {formatValue(orden.mpsLotePlanificadoId)}</Text>
                                 <Text fontSize="sm">Lote ordinal: {formatValue(orden.mpsLoteOrdinal)}</Text>
                             </Box>
                         )}

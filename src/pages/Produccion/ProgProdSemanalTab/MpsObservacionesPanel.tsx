@@ -19,7 +19,7 @@ import type {
     MpsSemanalObservacionDTO,
     MpsSemanalObservacionEstado,
     MpsSemanalObservacionTipo,
-} from "../ProgProdMensualTab/PlaneacionProduccionService";
+} from "./MpsSemanalService";
 
 type MpsObservacionesMode = "programacion" | "aprobacion";
 

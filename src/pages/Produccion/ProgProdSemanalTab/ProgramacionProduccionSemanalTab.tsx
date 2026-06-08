@@ -40,8 +40,7 @@ import {
     ObtenerMpsSemanal,
     type MpsSemanalDraftDTO,
     type MpsSemanalObservacionDTO,
-    type PropuestaMpsCalendarBlockDTO,
-} from "../ProgProdMensualTab/PlaneacionProduccionService";
+} from "./MpsSemanalService";
 import { downloadMpsSemanalPdf } from "./pdf/MpsSemanalPdfGenerator";
 import type { SemanaMPSDTO } from "./SemanaMPSPicker";
 import SemanaMPSPickerModal from "./SemanaMPSPickerModal";
@@ -57,7 +56,8 @@ interface ProgramacionEntry {
     tiempoDiasFabricacion: number;
     prefijoLote?: string | null;
     prefijoVerificado: boolean;
-    unidades: number;
+    numeroLotes: number;
+    observacion?: string | null;
 }
 
 const DAY_LABELS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
@@ -141,7 +141,7 @@ function getMpsSemanaLabel(mps: MpsSemanalDraftDTO): string {
 
 function buildEntriesFingerprint(entries: ProgramacionEntry[]): string {
     return entries
-        .map((entry) => `${entry.dayIndex}:${entry.productoId}:${entry.unidades}`)
+        .map((entry) => `${entry.dayIndex}:${entry.productoId}:${entry.numeroLotes}:${entry.observacion ?? ""}`)
         .sort()
         .join("|");
 }
@@ -153,7 +153,7 @@ function buildLockedEntriesFingerprint(
 ): string {
     return entries
         .filter((entry) => !isMpsDateEditable(addDays(weekStartDate, entry.dayIndex), editableFromDate))
-        .map((entry) => `${entry.dayIndex}:${entry.productoId}:${entry.loteSize}:${entry.unidades}`)
+        .map((entry) => `${entry.dayIndex}:${entry.productoId}:${entry.loteSize}:${entry.numeroLotes}:${entry.observacion ?? ""}`)
         .sort()
         .join("|");
 }
@@ -169,30 +169,28 @@ function buildEntryFromTerminado(terminado: TerminadoPickerResult, dayIndex: num
         tiempoDiasFabricacion: terminado.categoria?.tiempoDiasFabricacion ?? 0,
         prefijoLote: terminado.prefijoLote,
         prefijoVerificado: false,
-        unidades: terminado.categoria?.loteSize && terminado.categoria.loteSize > 0 ? terminado.categoria.loteSize : 0,
+        numeroLotes: 1,
+        observacion: "",
     };
 }
 
 function buildEntriesFromDraft(draft: MpsSemanalDraftDTO): ProgramacionEntry[] {
-    const itemByProductoId = new Map(draft.items.map((item) => [item.productoId, item]));
     const entries: ProgramacionEntry[] = [];
 
-    draft.calendar.rows.forEach((row) => {
-        row.days.forEach((day) => {
-            day.blocks.forEach((block: PropuestaMpsCalendarBlockDTO) => {
-                const item = itemByProductoId.get(block.productoId);
-                entries.push({
-                    id: block.blockId || buildEntryId(block.productoId, day.dayIndex),
-                    dayIndex: day.dayIndex,
-                    productoId: block.productoId,
-                    productoNombre: block.productoNombre,
-                    categoriaNombre: block.categoriaNombre,
-                    loteSize: block.loteSize,
-                    tiempoDiasFabricacion: item?.tiempoDiasFabricacion ?? 0,
-                    prefijoLote: null,
-                    prefijoVerificado: true,
-                    unidades: block.cantidadAsignada,
-                });
+    draft.dias.forEach((dia) => {
+        dia.items.forEach((item) => {
+            entries.push({
+                id: buildEntryId(item.terminadoId, dia.dayIndex),
+                dayIndex: dia.dayIndex,
+                productoId: item.terminadoId,
+                productoNombre: item.terminadoNombre,
+                categoriaNombre: item.categoriaNombre,
+                loteSize: item.loteSize,
+                tiempoDiasFabricacion: item.tiempoDiasFabricacion,
+                prefijoLote: null,
+                prefijoVerificado: true,
+                numeroLotes: item.numeroLotes,
+                observacion: item.observacion ?? "",
             });
         });
     });
@@ -208,12 +206,11 @@ function getEntryIssues(entry: ProgramacionEntry): string[] {
     if (!entry.prefijoVerificado && !entry.prefijoLote?.trim()) {
         issues.push("Sin prefijo de lote");
     }
-    if (!Number.isFinite(entry.unidades) || entry.unidades <= 0) {
-        issues.push("Unidades requeridas");
+    if (!Number.isFinite(entry.numeroLotes) || entry.numeroLotes <= 0) {
+        issues.push("Lotes requeridos");
     }
-    const lotes = entry.loteSize > 0 ? entry.unidades / entry.loteSize : 0;
-    if (entry.loteSize > 0 && entry.unidades > 0 && !isIntegerLike(lotes)) {
-        issues.push("Unidades no divisibles por lote size");
+    if (!isIntegerLike(entry.numeroLotes)) {
+        issues.push("Numero de lotes no entero");
     }
     return issues;
 }
@@ -289,9 +286,10 @@ export default function ProgramacionProduccionSemanalTab() {
     const totals = useMemo(() => {
         return entries.reduce(
             (acc, entry) => {
-                const lotes = entry.loteSize > 0 ? entry.unidades / entry.loteSize : 0;
-                acc.unidades += Number.isFinite(entry.unidades) ? entry.unidades : 0;
-                acc.lotes += Number.isFinite(lotes) ? lotes : 0;
+                const lotes = Number.isFinite(entry.numeroLotes) ? entry.numeroLotes : 0;
+                const unidades = entry.loteSize > 0 ? lotes * entry.loteSize : 0;
+                acc.unidades += unidades;
+                acc.lotes += lotes;
                 return acc;
             },
             { unidades: 0, lotes: 0 },
@@ -452,29 +450,28 @@ export default function ProgramacionProduccionSemanalTab() {
         });
     };
 
-    const handleEntryUnitsChange = (entryId: string, valueAsString: string) => {
+    const handleEntryLotesChange = (entryId: string, valueAsString: string) => {
         const parsed = Number(valueAsString);
         setEntries((prev) => prev.map((entry) => (
             entry.id === entryId && !isReadOnly && isMpsDateEditable(addDays(weekStartDate, entry.dayIndex), editableFromDate)
-                ? { ...entry, unidades: Number.isFinite(parsed) ? parsed : 0 }
+                ? { ...entry, numeroLotes: Number.isFinite(parsed) ? parsed : 0 }
                 : entry
         )));
     };
 
-    const adjustEntryUnitsByLote = (entryId: string, direction: 1 | -1) => {
+    const adjustEntryLotes = (entryId: string, direction: 1 | -1) => {
         setEntries((prev) => prev.map((entry) => {
             if (
                 entry.id !== entryId
                 || isReadOnly
-                || entry.loteSize <= 0
                 || !isMpsDateEditable(addDays(weekStartDate, entry.dayIndex), editableFromDate)
             ) {
                 return entry;
             }
-            const nextUnits = entry.unidades + (direction * entry.loteSize);
+            const nextLotes = entry.numeroLotes + direction;
             return {
                 ...entry,
-                unidades: Math.max(entry.loteSize, nextUnits),
+                numeroLotes: Math.max(1, nextLotes),
             };
         }));
     };
@@ -495,10 +492,16 @@ export default function ProgramacionProduccionSemanalTab() {
         try {
             const saved = await GuardarBorradorProgramacionSemanal({
                 weekStartDate,
-                entradas: entries.map((entry) => ({
-                    date: addDays(weekStartDate, entry.dayIndex),
-                    productoId: entry.productoId,
-                    unidades: entry.unidades,
+                dias: DAY_LABELS.map((_, dayIndex) => ({
+                    fecha: addDays(weekStartDate, dayIndex),
+                    dayIndex,
+                    items: entries
+                        .filter((entry) => entry.dayIndex === dayIndex)
+                        .map((entry) => ({
+                            terminadoId: entry.productoId,
+                            numeroLotes: Math.round(entry.numeroLotes),
+                            observacion: entry.observacion?.trim() || undefined,
+                        })),
                 })),
             });
             setCurrentDraft(saved);
@@ -712,7 +715,8 @@ export default function ProgramacionProduccionSemanalTab() {
                                     <Text fontSize="sm" color="gray.500">Sin terminados programados.</Text>
                                 ) : (
                                     dayEntries.map((entry) => {
-                                        const lotes = entry.loteSize > 0 ? entry.unidades / entry.loteSize : 0;
+                                        const lotes = entry.numeroLotes;
+                                        const unidades = entry.loteSize > 0 ? entry.numeroLotes * entry.loteSize : 0;
                                         const entryIssues = getEntryIssues(entry);
                                         const isEntryEditable = !isReadOnly && isDayEditable;
                                         return (
@@ -741,7 +745,7 @@ export default function ProgramacionProduccionSemanalTab() {
                                                     />
                                                 </Flex>
                                                 <FormControl mt={2}>
-                                                    <FormLabel fontSize="xs" mb={1}>Unidades</FormLabel>
+                                                    <FormLabel fontSize="xs" mb={1}>Lotes</FormLabel>
                                                     <Flex gap={1} align="center">
                                                         <Tooltip label="Restar un lote">
                                                             <IconButton
@@ -749,15 +753,17 @@ export default function ProgramacionProduccionSemanalTab() {
                                                                 icon={<MinusIcon />}
                                                                 size="sm"
                                                                 variant="outline"
-                                                                isDisabled={!isEntryEditable || entry.loteSize <= 0 || entry.unidades <= entry.loteSize}
-                                                                onClick={() => adjustEntryUnitsByLote(entry.id, -1)}
+                                                                isDisabled={!isEntryEditable || entry.numeroLotes <= 1}
+                                                                onClick={() => adjustEntryLotes(entry.id, -1)}
                                                             />
                                                         </Tooltip>
                                                         <NumberInput
                                                             size="sm"
-                                                            min={0}
-                                                            value={entry.unidades}
-                                                            onChange={(valueAsString) => handleEntryUnitsChange(entry.id, valueAsString)}
+                                                            min={1}
+                                                            step={1}
+                                                            precision={0}
+                                                            value={entry.numeroLotes}
+                                                            onChange={(valueAsString) => handleEntryLotesChange(entry.id, valueAsString)}
                                                             isDisabled={!isEntryEditable}
                                                             flex="1"
                                                         >
@@ -770,8 +776,8 @@ export default function ProgramacionProduccionSemanalTab() {
                                                                 size="sm"
                                                                 variant="outline"
                                                                 colorScheme="teal"
-                                                                isDisabled={!isEntryEditable || entry.loteSize <= 0}
-                                                                onClick={() => adjustEntryUnitsByLote(entry.id, 1)}
+                                                                isDisabled={!isEntryEditable}
+                                                                onClick={() => adjustEntryLotes(entry.id, 1)}
                                                             />
                                                         </Tooltip>
                                                     </Flex>
@@ -782,6 +788,9 @@ export default function ProgramacionProduccionSemanalTab() {
                                                     </Badge>
                                                     <Badge colorScheme={isIntegerLike(lotes) ? "green" : "orange"}>
                                                         {formatNumber(lotes)} lotes
+                                                    </Badge>
+                                                    <Badge colorScheme="purple">
+                                                        {formatNumber(unidades)} und
                                                     </Badge>
                                                     {!isEntryEditable && <Badge colorScheme="gray">Solo lectura</Badge>}
                                                 </Flex>

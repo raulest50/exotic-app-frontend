@@ -20,8 +20,8 @@ import {
     Table,
     TableContainer,
     Tbody,
-    Text,
     Td,
+    Text,
     Th,
     Thead,
     Tr,
@@ -38,17 +38,18 @@ import {
     ListarSemanasMps,
     ObtenerMpsSemanal,
     ObtenerOdpsDesdeMpsSemanal,
+    type MpsEstado,
     type MpsSemanalDraftDTO,
+    type MpsSemanalItemDTO,
+    type MpsSemanalListItemDTO,
     type MpsSemanalObservacionDTO,
     type MpsSemanalObservacionTipo,
     type MpsSemanalOrdenProduccionListItemDTO,
-    type MpsSemanalListItemDTO,
-    type PropuestaMpsCalendarBlockDTO,
     type SemanaMPSDTO,
-} from "../ProgProdMensualTab/PlaneacionProduccionService.tsx";
+} from "./MpsSemanalService";
 import { downloadMpsSemanalPdf } from "./pdf/MpsSemanalPdfGenerator";
 import SemanaMPSPickerModal from "./SemanaMPSPickerModal";
-import MpsReadonlyReviewPanel, { type MpsReadonlyBlockContext } from "./MpsReadonlyReviewPanel";
+import MpsReadonlyReviewPanel, { type MpsReadonlyItemContext } from "./MpsReadonlyReviewPanel";
 import MpsObservacionesPanel from "./MpsObservacionesPanel";
 import {
     formatSemanaMpsDisplayDate,
@@ -57,17 +58,15 @@ import {
     sortSemanasByStartDate,
 } from "./semanaMps.utils";
 
-type MpsEstado = MpsSemanalListItemDTO["estado"];
-
 type SemanaMpsDisplayInfo = {
     semanaMpsCodigo?: string | null;
     weekStartDate: string;
     weekEndDate: string;
 };
 
-type SelectedMpsBlockOrders = {
-    block: PropuestaMpsCalendarBlockDTO;
-    context: MpsReadonlyBlockContext;
+type SelectedMpsItemOrders = {
+    item: MpsSemanalItemDTO;
+    context: MpsReadonlyItemContext;
 };
 
 function getAxiosErrorMessage(error: unknown, fallback: string): string {
@@ -173,17 +172,6 @@ function findDefaultSemana(semanas: SemanaMPSDTO[], currentWeekStartDate: string
         ?? null;
 }
 
-function getTotalOrdenesEsperadasFromMps(mps: MpsSemanalDraftDTO | null): number {
-    if (!mps?.calendar?.rows) {
-        return 0;
-    }
-
-    return mps.calendar.rows
-        .flatMap((row) => row.days ?? [])
-        .flatMap((day) => day.blocks ?? [])
-        .reduce((total, block) => total + Math.max(block.lotesAsignados ?? 0, 0), 0);
-}
-
 function generateApprovalToken(): string {
     return Math.floor(Math.random() * 10000)
         .toString()
@@ -198,48 +186,48 @@ function SummaryLine({ label, value }: { label: string; value: number }) {
     );
 }
 
-function MpsBlockOrdersModal({
-    selectedBlock,
+function MpsItemOrdersModal({
+    selectedItem,
     ordenes,
     isLoading,
     error,
     onClose,
 }: {
-    selectedBlock: SelectedMpsBlockOrders | null;
+    selectedItem: SelectedMpsItemOrders | null;
     ordenes: MpsSemanalOrdenProduccionListItemDTO[];
     isLoading: boolean;
     error: string | null;
     onClose: () => void;
 }) {
-    const isOpen = selectedBlock !== null;
-    const block = selectedBlock?.block ?? null;
-    const context = selectedBlock?.context ?? null;
+    const isOpen = selectedItem !== null;
+    const item = selectedItem?.item ?? null;
+    const context = selectedItem?.context ?? null;
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="5xl" isCentered>
             <ModalOverlay />
             <ModalContent>
-                <ModalHeader>OPs generadas del bloque MPS</ModalHeader>
+                <ModalHeader>OPs generadas del item MPS</ModalHeader>
                 <ModalCloseButton />
                 <ModalBody pb={6}>
-                    {block && context && (
+                    {item && context && (
                         <VStack align="stretch" spacing={4}>
                             <Box>
-                                <Heading size="sm">{block.productoNombre}</Heading>
+                                <Heading size="sm">{item.terminadoNombre}</Heading>
                                 <Text fontSize="sm" color="gray.600">
-                                    {block.productoId} - {context.dayLabel} {formatSemanaMpsDisplayDate(context.date)}
+                                    {item.terminadoId} - {context.dayLabel} {formatSemanaMpsDisplayDate(context.date)}
                                 </Text>
                                 <Flex mt={2} gap={2} wrap="wrap">
-                                    <Badge colorScheme="teal">{formatNumber(block.lotesAsignados)} lotes</Badge>
-                                    <Badge colorScheme="purple">{formatNumber(block.cantidadAsignada)} und</Badge>
-                                    <Badge colorScheme="gray">Block ID: {block.blockId}</Badge>
+                                    <Badge colorScheme="teal">{formatNumber(item.numeroLotes)} lotes</Badge>
+                                    <Badge colorScheme="purple">{formatNumber(item.cantidadTotal)} und</Badge>
+                                    <Badge colorScheme="gray">Item #{item.id}</Badge>
                                 </Flex>
                             </Box>
 
                             {isLoading ? (
                                 <Flex justify="center" align="center" py={8} gap={3}>
                                     <Spinner color="teal.500" />
-                                    <Text color="gray.600">Cargando OPs del bloque...</Text>
+                                    <Text color="gray.600">Cargando OPs del item...</Text>
                                 </Flex>
                             ) : error ? (
                                 <Box p={4} bg="red.50" borderWidth="1px" borderColor="red.200" borderRadius="md">
@@ -248,7 +236,7 @@ function MpsBlockOrdersModal({
                             ) : ordenes.length === 0 ? (
                                 <Box p={4} bg="orange.50" borderWidth="1px" borderColor="orange.200" borderRadius="md">
                                     <Text color="orange.700" fontSize="sm">
-                                        No se encontraron OPs asociadas a este bloque MPS.
+                                        No se encontraron OPs asociadas a este item MPS.
                                     </Text>
                                 </Box>
                             ) : (
@@ -257,12 +245,12 @@ function MpsBlockOrdersModal({
                                         <Thead>
                                             <Tr>
                                                 <Th>Orden</Th>
-                                                <Th>Lote</Th>
+                                                <Th>Lote real</Th>
                                                 <Th isNumeric>Cantidad</Th>
                                                 <Th>Lanzamiento</Th>
                                                 <Th>Fin planificado</Th>
                                                 <Th>Estado</Th>
-                                                <Th>Lote ordinal</Th>
+                                                <Th>Lote planificado</Th>
                                             </Tr>
                                         </Thead>
                                         <Tbody>
@@ -274,17 +262,16 @@ function MpsBlockOrdersModal({
                                                     <Td>{formatDateTimeLabel(orden.fechaLanzamiento)}</Td>
                                                     <Td>{formatDateTimeLabel(orden.fechaFinalPlanificada)}</Td>
                                                     <Td>{renderEstadoOrdenLabel(orden.estadoOrden)}</Td>
-                                                    <Td>{orden.mpsLoteOrdinal ?? "-"}</Td>
+                                                    <Td>
+                                                        {orden.mpsLoteOrdinal ?? "-"}
+                                                        {orden.mpsLotePlanificadoId ? ` (#${orden.mpsLotePlanificadoId})` : ""}
+                                                    </Td>
                                                 </Tr>
                                             ))}
                                         </Tbody>
                                     </Table>
                                 </TableContainer>
                             )}
-
-                            <Text fontSize="sm" color="gray.600">
-                                {ordenes.length} OPs asociadas a este bloque.
-                            </Text>
                         </VStack>
                     )}
                 </ModalBody>
@@ -316,7 +303,7 @@ export default function AprobacionMPSWeekTab() {
     const [selectedWeekOdps, setSelectedWeekOdps] = useState<MpsSemanalOrdenProduccionListItemDTO[]>([]);
     const [isLoadingOdps, setIsLoadingOdps] = useState(false);
     const [odpsError, setOdpsError] = useState<string | null>(null);
-    const [selectedMpsBlockOrders, setSelectedMpsBlockOrders] = useState<SelectedMpsBlockOrders | null>(null);
+    const [selectedMpsItemOrders, setSelectedMpsItemOrders] = useState<SelectedMpsItemOrders | null>(null);
     const [approvalToken, setApprovalToken] = useState<string | null>(null);
     const [approvalTokenInput, setApprovalTokenInput] = useState("");
 
@@ -332,29 +319,22 @@ export default function AprobacionMPSWeekTab() {
         return selectedSemana ? getSemanaMpsDisplayFromSemana(selectedSemana) : null;
     }, [selectedMpsItem, selectedSemana]);
 
-    const blockOrderCountById = useMemo(() => {
-        const counts = new Map<string, number>();
-        selectedWeekOdps.forEach((orden) => {
-            if (orden.mpsBlockId) {
-                counts.set(orden.mpsBlockId, (counts.get(orden.mpsBlockId) ?? 0) + 1);
-            }
-        });
-        return counts;
-    }, [selectedWeekOdps]);
-
-    const selectedBlockOrders = useMemo(() => {
-        if (!selectedMpsBlockOrders) {
+    const selectedItemOrders = useMemo(() => {
+        if (!selectedMpsItemOrders) {
             return [];
         }
-
+        const plannedLotIds = new Set(selectedMpsItemOrders.item.lotesPlanificados.map((lote) => lote.id));
         return selectedWeekOdps
-            .filter((orden) => orden.mpsBlockId === selectedMpsBlockOrders.block.blockId)
+            .filter((orden) => (
+                orden.mpsItemId === selectedMpsItemOrders.item.id
+                || (orden.mpsLotePlanificadoId != null && plannedLotIds.has(orden.mpsLotePlanificadoId))
+            ))
             .sort((a, b) => {
                 const aOrdinal = a.mpsLoteOrdinal ?? Number.MAX_SAFE_INTEGER;
                 const bOrdinal = b.mpsLoteOrdinal ?? Number.MAX_SAFE_INTEGER;
                 return aOrdinal - bOrdinal || a.ordenId - b.ordenId;
             });
-    }, [selectedMpsBlockOrders, selectedWeekOdps]);
+    }, [selectedMpsItemOrders, selectedWeekOdps]);
 
     const pendingObservacionesCount = useMemo(() => (
         observaciones.filter((observacion) => (
@@ -477,17 +457,19 @@ export default function AprobacionMPSWeekTab() {
         selectedMpsItem?.fechaActualizacion,
         selectedMpsItem?.fechaGeneracionOdps,
         selectedMpsItem?.mpsId,
+        selectedMpsItem?.totalLotesPlanificados,
+        selectedMpsItem?.totalOdpsGeneradas,
         selectedMpsItem?.weekStartDate,
     ]);
 
     useEffect(() => {
         let isCancelled = false;
 
-        if (!selectedMpsItem || selectedMpsItem.totalOrdenesGeneradas <= 0) {
+        if (!selectedMpsItem || selectedMpsItem.totalOdpsGeneradas <= 0) {
             setSelectedWeekOdps([]);
             setOdpsError(null);
             setIsLoadingOdps(false);
-            setSelectedMpsBlockOrders(null);
+            setSelectedMpsItemOrders(null);
             return () => {
                 isCancelled = true;
             };
@@ -520,7 +502,7 @@ export default function AprobacionMPSWeekTab() {
     }, [
         selectedMpsItem?.fechaGeneracionOdps,
         selectedMpsItem?.mpsId,
-        selectedMpsItem?.totalOrdenesGeneradas,
+        selectedMpsItem?.totalOdpsGeneradas,
         selectedMpsItem?.weekStartDate,
     ]);
 
@@ -536,62 +518,32 @@ export default function AprobacionMPSWeekTab() {
         loadObservaciones,
         selectedMpsItem?.fechaActualizacion,
         selectedMpsItem?.mpsId,
+        selectedMpsItem?.revisionNumero,
         selectedMpsItem?.weekStartDate,
     ]);
 
     const handleSemanaChange = (semana: SemanaMPSDTO) => {
         setSelectedSemana(semana);
         setSelectedWeekStartDate(semana.startDate);
-        setSelectedMpsDetail(null);
-        setSelectedWeekOdps([]);
-        setMpsDetailError(null);
-        setOdpsError(null);
-        setObservaciones([]);
-        setObservacionesError(null);
-        setSelectedMpsBlockOrders(null);
-        setApprovalToken(null);
-        setApprovalTokenInput("");
-        void refreshCurrentSelection(semana.startDate);
     };
 
     const handleApprove = async (mps: MpsSemanalDraftDTO) => {
-        if (pendingObservacionesCount > 0) {
-            toast({
-                title: "Observaciones pendientes",
-                description: "Cierre o acepte las observaciones pendientes antes de aprobar el MPS.",
-                status: "warning",
-                duration: 4000,
-                isClosable: true,
-            });
-            return;
-        }
-        if (!approvalToken || approvalTokenInput !== approvalToken) {
-            toast({
-                title: "Token requerido",
-                description: "Digite el token de 4 digitos mostrado para habilitar la aprobacion.",
-                status: "warning",
-                duration: 4000,
-                isClosable: true,
-            });
-            return;
-        }
         setApprovingWeekStartDate(mps.weekStartDate);
         try {
             await AprobarMpsSemanal({ weekStartDate: mps.weekStartDate });
-            setApprovalToken(null);
-            setApprovalTokenInput("");
             toast({
-                title: "Semana aprobada",
-                description: `La semana ${getSemanaMpsLabel(mps)} fue aprobada correctamente.`,
+                title: "MPS aprobado",
+                description: `La semana ${getSemanaMpsLabel(mps)} quedo aprobada.`,
                 status: "success",
-                duration: 3000,
+                duration: 4000,
                 isClosable: true,
             });
             await refreshCurrentSelection(mps.weekStartDate);
+            await loadObservaciones(mps.weekStartDate);
         } catch (error) {
             toast({
-                title: "No se pudo aprobar la semana",
-                description: getAxiosErrorMessage(error, "La aprobacion del MPS semanal fallo."),
+                title: "No se pudo aprobar el MPS",
+                description: getAxiosErrorMessage(error, "La aprobacion del MPS fallo."),
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -613,7 +565,7 @@ export default function AprobacionMPSWeekTab() {
             });
             toast({
                 title: "Observacion registrada",
-                description: "La observacion quedo disponible para programacion.",
+                description: "La observacion quedo asociada al MPS semanal.",
                 status: "success",
                 duration: 3000,
                 isClosable: true,
@@ -702,12 +654,13 @@ export default function AprobacionMPSWeekTab() {
         }
     };
 
-    const totalOrdenesEsperadasFromDetail = getTotalOrdenesEsperadasFromMps(selectedMpsDetail);
-    const canApproveBase = selectedMpsDetail?.estado === "BORRADOR" && totalOrdenesEsperadasFromDetail > 0;
+    const canApproveBase = selectedMpsDetail?.estado === "BORRADOR"
+        && selectedMpsDetail.totalLotesPlanificados > 0;
     const canApproveWithoutToken = canApproveBase
         && pendingObservacionesCount === 0
         && !isLoadingObservaciones
         && !observacionesError;
+
     useEffect(() => {
         setApprovalTokenInput("");
         if (canApproveWithoutToken) {
@@ -721,13 +674,14 @@ export default function AprobacionMPSWeekTab() {
         selectedMpsDetail?.revisionNumero,
         selectedMpsDetail?.weekStartDate,
     ]);
+
     const canApprove = canApproveWithoutToken
         && approvalToken !== null
         && approvalTokenInput === approvalToken;
     const canGenerateOdps = selectedMpsItem?.estado === "APROBADO"
-        && !selectedMpsItem.odpsGeneradasCompletas
-        && selectedMpsItem.totalOrdenesEsperadas > 0;
-    const areGeneratedOrdersAvailable = (selectedMpsItem?.totalOrdenesGeneradas ?? 0) > 0
+        && selectedMpsItem.totalLotesPlanificados > 0
+        && selectedMpsItem.totalOdpsGeneradas === 0;
+    const areGeneratedOrdersAvailable = (selectedMpsItem?.totalOdpsGeneradas ?? 0) > 0
         && !isLoadingOdps
         && !odpsError;
 
@@ -807,27 +761,27 @@ export default function AprobacionMPSWeekTab() {
                                             <Text fontWeight="semibold">{formatDateTimeLabel(selectedMpsItem.fechaCreacion)}</Text>
                                         </Box>
                                         <Box p={3} bg="gray.50" borderRadius="md">
-                                            <Text fontSize="xs" color="gray.500">ODPs esperadas</Text>
-                                            <Text fontWeight="semibold">{formatNumber(selectedMpsItem.totalOrdenesEsperadas)}</Text>
+                                            <Text fontSize="xs" color="gray.500">Lotes planificados</Text>
+                                            <Text fontWeight="semibold">{formatNumber(selectedMpsItem.totalLotesPlanificados)}</Text>
                                         </Box>
                                         <Box p={3} bg="gray.50" borderRadius="md">
                                             <Text fontSize="xs" color="gray.500">ODPs generadas</Text>
                                             <Text fontWeight="semibold">
-                                                {formatNumber(selectedMpsItem.totalOrdenesGeneradas)} / {formatNumber(selectedMpsItem.totalOrdenesEsperadas)}
+                                                {formatNumber(selectedMpsItem.totalOdpsGeneradas)} / {formatNumber(selectedMpsItem.totalLotesPlanificados)}
                                             </Text>
                                         </Box>
                                     </SimpleGrid>
 
                                     <SimpleGrid columns={[1, 2, 3]} gap={3}>
-                                        <SummaryLine label="Terminados evaluados" value={selectedMpsItem.summary.totalTerminadosEvaluados} />
-                                        <SummaryLine label="Lotes propuestos" value={selectedMpsItem.summary.totalLotesPropuestos} />
-                                        <SummaryLine label="Unidades propuestas" value={selectedMpsItem.summary.totalUnidadesPropuestas} />
+                                        <SummaryLine label="Items programados" value={selectedMpsItem.totalItems} />
+                                        <SummaryLine label="Lotes planificados" value={selectedMpsItem.totalLotesPlanificados} />
+                                        <SummaryLine label="ODPs generadas" value={selectedMpsItem.totalOdpsGeneradas} />
                                     </SimpleGrid>
 
-                                    {selectedMpsItem.estado === "BORRADOR" && selectedMpsItem.totalOrdenesEsperadas === 0 && (
+                                    {selectedMpsItem.estado === "BORRADOR" && selectedMpsItem.totalLotesPlanificados === 0 && (
                                         <Box p={3} bg="orange.50" borderWidth="1px" borderColor="orange.200" borderRadius="md">
                                             <Text fontSize="sm" color="orange.700">
-                                                No se puede aprobar una semana sin ODPs esperadas.
+                                                No se puede aprobar una semana sin lotes planificados.
                                             </Text>
                                         </Box>
                                     )}
@@ -930,7 +884,7 @@ export default function AprobacionMPSWeekTab() {
                         </Box>
                     ) : selectedMpsDetail ? (
                         <VStack align="stretch" spacing={4}>
-                            {selectedMpsItem.totalOrdenesGeneradas > 0 && odpsError && (
+                            {selectedMpsItem.totalOdpsGeneradas > 0 && odpsError && (
                                 <Box p={3} bg="red.50" borderWidth="1px" borderColor="red.200" borderRadius="md">
                                     <Text color="red.700" fontSize="sm">
                                         {odpsError}
@@ -939,10 +893,9 @@ export default function AprobacionMPSWeekTab() {
                             )}
                             <MpsReadonlyReviewPanel
                                 mps={selectedMpsDetail}
-                                totalOrdenesGeneradas={selectedMpsItem.totalOrdenesGeneradas}
+                                totalOrdenesGeneradas={selectedMpsItem.totalOdpsGeneradas}
                                 areGeneratedOrdersAvailable={areGeneratedOrdersAvailable}
-                                getBlockOrderCount={(blockId) => blockOrderCountById.get(blockId) ?? 0}
-                                onBlockClick={(block, context) => setSelectedMpsBlockOrders({ block, context })}
+                                onItemClick={(item, context) => setSelectedMpsItemOrders({ item, context })}
                             />
                             <MpsObservacionesPanel
                                 mode="aprobacion"
@@ -963,12 +916,12 @@ export default function AprobacionMPSWeekTab() {
                 </Box>
             )}
 
-            <MpsBlockOrdersModal
-                selectedBlock={selectedMpsBlockOrders}
-                ordenes={selectedBlockOrders}
+            <MpsItemOrdersModal
+                selectedItem={selectedMpsItemOrders}
+                ordenes={selectedItemOrders}
                 isLoading={isLoadingOdps}
                 error={odpsError}
-                onClose={() => setSelectedMpsBlockOrders(null)}
+                onClose={() => setSelectedMpsItemOrders(null)}
             />
         </VStack>
     );

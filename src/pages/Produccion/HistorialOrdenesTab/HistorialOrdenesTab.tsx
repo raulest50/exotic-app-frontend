@@ -96,7 +96,8 @@ const normalizeOrdenProduccion = (orden: any): OrdenProduccionDTO => {
         origenOrden: (toNullableString(orden?.origenOrden) as "MANUAL" | "MPS" | null) ?? "MANUAL",
         mpsId: toNullableNumber(orden?.mpsId),
         mpsWeekStartDate: toNullableString(orden?.mpsWeekStartDate),
-        mpsBlockId: toNullableString(orden?.mpsBlockId),
+        mpsLotePlanificadoId: toNullableNumber(orden?.mpsLotePlanificadoId),
+        mpsItemId: toNullableNumber(orden?.mpsItemId),
         mpsLoteOrdinal: toNullableNumber(orden?.mpsLoteOrdinal),
     };
 };

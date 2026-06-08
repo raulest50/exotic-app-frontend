@@ -19,7 +19,7 @@ import {
 import {
     ListarSemanasMps,
     type SemanaMPSDTO,
-} from "../ProgProdMensualTab/PlaneacionProduccionService";
+} from "./MpsSemanalService";
 import {
     addLocalDays,
     buildSemanaMpsCodigo,
@@ -49,6 +49,20 @@ const carouselSpring = {
     damping: 28,
     mass: 0.9,
 } as const;
+
+function getSlideInitialTarget(direction: -1 | 0 | 1) {
+    return {
+        x: direction === 1 ? 96 : direction === -1 ? -96 : 0,
+        opacity: direction === 0 ? 1 : 0.78,
+    };
+}
+
+function getSlideExitTarget(direction: -1 | 0 | 1) {
+    return {
+        x: direction === 1 ? -96 : direction === -1 ? 96 : 0,
+        opacity: direction === 0 ? 1 : 0.55,
+    };
+}
 
 function getAxiosErrorMessage(error: unknown, fallback: string): string {
     if (axios.isAxiosError(error)) {
@@ -228,16 +242,9 @@ export default function SemanaMPSCarouselPicker({
                     <AnimatePresence initial={false} mode="wait" custom={slideDirection}>
                         <motion.div
                             key={focusedStartDate}
-                            custom={slideDirection}
-                            initial={(direction: -1 | 0 | 1) => ({
-                                x: direction === 1 ? 96 : direction === -1 ? -96 : 0,
-                                opacity: direction === 0 ? 1 : 0.78,
-                            })}
+                            initial={getSlideInitialTarget(slideDirection)}
                             animate={{ x: 0, opacity: 1 }}
-                            exit={(direction: -1 | 0 | 1) => ({
-                                x: direction === 1 ? -96 : direction === -1 ? 96 : 0,
-                                opacity: direction === 0 ? 1 : 0.55,
-                            })}
+                            exit={getSlideExitTarget(slideDirection)}
                             transition={carouselSpring}
                         >
                             <SimpleGrid columns={[1, 1, 3]} spacing={3}>

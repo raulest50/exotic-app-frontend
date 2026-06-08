@@ -1,20 +1,20 @@
 import {
     Badge,
     Box,
+    Button,
     Flex,
     Grid,
     GridItem,
     Heading,
-    HStack,
     SimpleGrid,
     Text,
     VStack,
 } from "@chakra-ui/react";
 import type {
     MpsSemanalDraftDTO,
-    PropuestaMpsCalendarBlockDTO,
-    PropuestaMpsUnscheduledBlockDTO,
-} from "../ProgProdMensualTab/PlaneacionProduccionService";
+    MpsSemanalItemDTO,
+    MpsSemanalLotePlanificadoDTO,
+} from "./MpsSemanalService";
 import { formatSemanaMpsDisplayDate } from "./semanaMps.utils";
 
 const DAY_LABELS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
@@ -72,29 +72,14 @@ function getEstadoLabel(estado: MpsSemanalDraftDTO["estado"]): string {
     }
 }
 
-function getCalendarEstadoColorScheme(estado: string): string {
+function getLoteEstadoColor(estado: MpsSemanalLotePlanificadoDTO["estado"]): string {
     switch (estado) {
-        case "excedida":
-            return "red";
-        case "al_limite":
-            return "yellow";
-        case "sin_configurar":
-            return "orange";
-        default:
+        case "ODP_GENERADA":
             return "green";
-    }
-}
-
-function getCalendarEstadoLabel(estado: string): string {
-    switch (estado) {
-        case "excedida":
-            return "Excedida";
-        case "al_limite":
-            return "Al limite";
-        case "sin_configurar":
-            return "Sin configurar";
+        case "CANCELADO":
+            return "red";
         default:
-            return "Disponible";
+            return "yellow";
     }
 }
 
@@ -104,13 +89,6 @@ function getSemanaMpsLabel(mps: MpsSemanalDraftDTO): string {
 
 function getSemanaMpsDateRange(mps: MpsSemanalDraftDTO): string {
     return `${formatSemanaMpsDisplayDate(mps.weekStartDate)} a ${formatSemanaMpsDisplayDate(mps.weekEndDate)}`;
-}
-
-function getTotalOrdenesEsperadas(mps: MpsSemanalDraftDTO): number {
-    return (mps.calendar?.rows ?? [])
-        .flatMap((row) => row.days ?? [])
-        .flatMap((day) => day.blocks ?? [])
-        .reduce((total, block) => total + Math.max(block.lotesAsignados ?? 0, 0), 0);
 }
 
 function SummaryCard({
@@ -131,97 +109,91 @@ function SummaryCard({
     );
 }
 
-export interface MpsReadonlyBlockContext {
+export interface MpsReadonlyItemContext {
     date: string;
     dayIndex: number;
     dayLabel: string;
 }
 
-function MpsProductBlock({
-    block,
-    context,
-    isClickable,
-    orderCount,
-    onClick,
-}: {
-    block: PropuestaMpsCalendarBlockDTO;
-    context: MpsReadonlyBlockContext;
-    isClickable: boolean;
-    orderCount: number | null;
-    onClick?: () => void;
-}) {
-    const content = (
-        <>
-            <Text fontWeight="semibold" fontSize="sm" noOfLines={2}>{block.productoNombre}</Text>
-            <Text fontSize="xs" color="gray.600">{block.productoId}</Text>
-            <Text fontSize="xs" color="gray.600">
-                {block.poolCapacidadNombre ?? block.categoriaNombre ?? "Sin unidad de capacidad"}
-            </Text>
-            <Flex mt={2} gap={2} wrap="wrap">
-                <Badge colorScheme="teal">{formatNumber(block.lotesAsignados)} lotes</Badge>
-                <Badge colorScheme="purple">{formatNumber(block.cantidadAsignada)} und</Badge>
-                {orderCount !== null && (
-                    <Badge colorScheme={orderCount > 0 ? "blue" : "orange"}>
-                        {formatNumber(orderCount)} OP
-                    </Badge>
-                )}
-            </Flex>
-            {block.warning && (
-                <Text mt={2} fontSize="xs" color="orange.700">
-                    {block.warning}
-                </Text>
-            )}
-        </>
-    );
+interface MpsItemCardProps {
+    item: MpsSemanalItemDTO;
+    context: MpsReadonlyItemContext;
+    onItemClick?: (item: MpsSemanalItemDTO, context: MpsReadonlyItemContext) => void;
+    areGeneratedOrdersAvailable: boolean;
+}
 
-    if (isClickable) {
-        return (
-            <Box
-                as="button"
-                type="button"
-                textAlign="left"
-                w="full"
-                borderWidth="1px"
-                borderColor="teal.200"
-                borderRadius="md"
-                bg="teal.50"
-                p={2}
-                cursor="pointer"
-                aria-label={`Ver OPs generadas de ${block.productoNombre} en ${context.dayLabel}`}
-                onClick={onClick}
-                _hover={{ borderColor: "teal.400", bg: "teal.100" }}
-                _focusVisible={{ boxShadow: "outline" }}
-            >
-                {content}
-            </Box>
-        );
-    }
+function MpsItemCard({
+    item,
+    context,
+    onItemClick,
+    areGeneratedOrdersAvailable,
+}: MpsItemCardProps) {
+    const generatedLots = item.lotesPlanificados.filter((lote) => lote.estado === "ODP_GENERADA").length;
+    const isClickable = areGeneratedOrdersAvailable && generatedLots > 0 && Boolean(onItemClick);
 
     return (
         <Box borderWidth="1px" borderColor="teal.200" borderRadius="md" bg="teal.50" p={2}>
-            {content}
-        </Box>
-    );
-}
-
-function MpsUnscheduledBlock({ block }: { block: PropuestaMpsUnscheduledBlockDTO }) {
-    return (
-        <Box borderWidth="1px" borderColor="orange.200" borderRadius="md" bg="orange.50" p={3}>
-            <Text fontWeight="semibold" fontSize="sm" noOfLines={2}>{block.productoNombre}</Text>
-            <Text fontSize="xs" color="gray.600">{block.productoId}</Text>
-            <Text fontSize="xs" color="gray.600">
-                {block.poolCapacidadNombre ?? block.categoriaNombre ?? "Sin unidad de capacidad"}
-            </Text>
-            <Flex mt={2} gap={2} wrap="wrap">
-                <Badge colorScheme="orange">{block.reason}</Badge>
-                <Badge colorScheme="teal">{formatNumber(block.lotesAsignados)} lotes</Badge>
-                <Badge colorScheme="purple">{formatNumber(block.cantidadAsignada)} und</Badge>
+            <Flex justify="space-between" gap={2} align="start">
+                <Box minW={0}>
+                    <Text fontWeight="semibold" fontSize="sm" noOfLines={2}>{item.terminadoNombre}</Text>
+                    <Text fontSize="xs" color="gray.600">{item.terminadoId}</Text>
+                    <Text fontSize="xs" color="gray.600">{item.categoriaNombre ?? "Sin categoria"}</Text>
+                </Box>
+                {isClickable && (
+                    <Button size="xs" colorScheme="teal" variant="outline" onClick={() => onItemClick?.(item, context)}>
+                        OPs
+                    </Button>
+                )}
             </Flex>
-            {block.warning && (
-                <Text mt={2} fontSize="xs" color="orange.700">
-                    {block.warning}
+
+            <Flex mt={2} gap={2} wrap="wrap">
+                <Badge colorScheme="teal">{formatNumber(item.numeroLotes)} lotes</Badge>
+                <Badge colorScheme="purple">{formatNumber(item.cantidadTotal)} und</Badge>
+                <Badge colorScheme="blue">Lote {formatNumber(item.loteSize)}</Badge>
+                <Badge colorScheme={generatedLots > 0 ? "green" : "gray"}>
+                    {formatNumber(generatedLots)} ODP
+                </Badge>
+            </Flex>
+
+            <Text mt={2} fontSize="xs" color="gray.600">
+                Lanzamiento {formatSemanaMpsDisplayDate(item.fechaLanzamiento)} | Fin {formatSemanaMpsDisplayDate(item.fechaFinalPlanificada)}
+            </Text>
+
+            {item.observacion && (
+                <Text mt={2} fontSize="xs" color="gray.700">
+                    Obs.: {item.observacion}
                 </Text>
             )}
+            {item.warning && (
+                <Text mt={2} fontSize="xs" color="orange.700">
+                    {item.warning}
+                </Text>
+            )}
+
+            <VStack align="stretch" spacing={1} mt={2}>
+                {item.lotesPlanificados.map((lote) => (
+                    <Flex
+                        key={lote.id}
+                        justify="space-between"
+                        align="center"
+                        gap={2}
+                        p={1.5}
+                        bg="white"
+                        borderRadius="sm"
+                        borderWidth="1px"
+                        borderColor="gray.100"
+                    >
+                        <Text fontSize="xs" color="gray.700">
+                            Lote {lote.loteOrdinal} | {formatNumber(lote.cantidadPlanificada)} und
+                        </Text>
+                        <Flex gap={1} wrap="wrap" justify="end">
+                            <Badge colorScheme={getLoteEstadoColor(lote.estado)}>{lote.estado}</Badge>
+                            {lote.ordenProduccionId && <Badge colorScheme="blue">OP {lote.ordenProduccionId}</Badge>}
+                            {lote.loteAsignado && <Badge colorScheme="gray">{lote.loteAsignado}</Badge>}
+                        </Flex>
+                    </Flex>
+                ))}
+            </VStack>
         </Box>
     );
 }
@@ -229,22 +201,19 @@ function MpsUnscheduledBlock({ block }: { block: PropuestaMpsUnscheduledBlockDTO
 interface MpsReadonlyReviewPanelProps {
     mps: MpsSemanalDraftDTO;
     totalOrdenesGeneradas: number;
-    onBlockClick?: (block: PropuestaMpsCalendarBlockDTO, context: MpsReadonlyBlockContext) => void;
-    getBlockOrderCount?: (blockId: string) => number;
+    onItemClick?: (item: MpsSemanalItemDTO, context: MpsReadonlyItemContext) => void;
     areGeneratedOrdersAvailable?: boolean;
 }
 
 export default function MpsReadonlyReviewPanel({
     mps,
     totalOrdenesGeneradas,
-    onBlockClick,
-    getBlockOrderCount,
+    onItemClick,
     areGeneratedOrdersAvailable = false,
 }: MpsReadonlyReviewPanelProps) {
-    const rows = mps.calendar?.rows ?? [];
-    const days = mps.calendar?.days ?? [];
-    const unscheduled = mps.calendar?.unscheduled ?? [];
-    const totalOrdenesEsperadas = getTotalOrdenesEsperadas(mps);
+    const totalUnidades = mps.dias
+        .flatMap((dia) => dia.items)
+        .reduce((total, item) => total + item.cantidadTotal, 0);
 
     return (
         <VStack align="stretch" spacing={5}>
@@ -276,124 +245,53 @@ export default function MpsReadonlyReviewPanel({
             </SimpleGrid>
 
             <SimpleGrid columns={[1, 2, 4]} gap={3}>
-                <SummaryCard label="Terminados evaluados" value={formatNumber(mps.summary.totalTerminadosEvaluados)} />
-                <SummaryCard label="Lotes propuestos" value={formatNumber(mps.summary.totalLotesPropuestos)} />
-                <SummaryCard label="Unidades propuestas" value={formatNumber(mps.summary.totalUnidadesPropuestas)} />
+                <SummaryCard label="Items" value={formatNumber(mps.totalItems)} />
+                <SummaryCard label="Lotes planificados" value={formatNumber(mps.totalLotesPlanificados)} />
+                <SummaryCard label="Unidades planificadas" value={formatNumber(totalUnidades)} />
                 <SummaryCard
                     label="ODPs"
-                    value={`${formatNumber(totalOrdenesGeneradas)} / ${formatNumber(totalOrdenesEsperadas)}`}
-                    helper="Generadas / esperadas"
+                    value={`${formatNumber(totalOrdenesGeneradas)} / ${formatNumber(mps.totalLotesPlanificados)}`}
+                    helper="Generadas / planificadas"
                 />
             </SimpleGrid>
 
-            {rows.length === 0 ? (
-                <Box p={4} bg="gray.50" borderRadius="md">
-                    <Text color="gray.500" fontSize="sm">Este MPS no tiene filas de calendario.</Text>
-                </Box>
-            ) : (
-                <Box overflowX="auto">
-                    <Grid templateColumns="repeat(6, minmax(180px, 1fr))" gap={3} minW="1080px">
-                        {days.map((day) => (
-                            <GridItem key={day.dayIndex}>
-                                <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" p={3} bg="gray.50">
-                                    <Text fontWeight="bold">
-                                        {DAY_LABELS[day.dayIndex] ?? `Dia ${day.dayIndex + 1}`}
-                                    </Text>
-                                    <Text fontSize="sm" color="gray.600">
-                                        {formatSemanaMpsDisplayDate(day.date)}
-                                    </Text>
+            <Box overflowX="auto">
+                <Grid templateColumns="repeat(6, minmax(190px, 1fr))" gap={3} minW="1140px">
+                    {mps.dias.map((dia) => {
+                        const dayLabel = DAY_LABELS[dia.dayIndex] ?? `Dia ${dia.dayIndex + 1}`;
+                        return (
+                            <GridItem key={dia.id ?? dia.dayIndex}>
+                                <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" p={3} bg="gray.50" minH="420px">
+                                    <Flex justify="space-between" align="start" gap={2} mb={3}>
+                                        <Box>
+                                            <Text fontWeight="bold">{dayLabel}</Text>
+                                            <Text fontSize="sm" color="gray.600">
+                                                {formatSemanaMpsDisplayDate(dia.fecha)}
+                                            </Text>
+                                        </Box>
+                                        <Badge colorScheme="gray">{dia.items.length} items</Badge>
+                                    </Flex>
+
+                                    {dia.items.length === 0 ? (
+                                        <Text fontSize="sm" color="gray.500">Sin programacion.</Text>
+                                    ) : (
+                                        <VStack align="stretch" spacing={2}>
+                                            {dia.items.map((item) => (
+                                                <MpsItemCard
+                                                    key={item.id}
+                                                    item={item}
+                                                    context={{ date: dia.fecha, dayIndex: dia.dayIndex, dayLabel }}
+                                                    onItemClick={onItemClick}
+                                                    areGeneratedOrdersAvailable={areGeneratedOrdersAvailable}
+                                                />
+                                            ))}
+                                        </VStack>
+                                    )}
                                 </Box>
                             </GridItem>
-                        ))}
-
-                        {rows.map((row) => (
-                            <GridItem key={`row-${row.rowKey}`} colSpan={6}>
-                                <Grid templateColumns="repeat(6, minmax(180px, 1fr))" gap={3}>
-                                    {days.map((day) => {
-                                        const cell = row.days.find((candidate) => candidate.dayIndex === day.dayIndex);
-                                        const blocks = cell?.blocks ?? [];
-                                        const dayLabel = DAY_LABELS[day.dayIndex] ?? `Dia ${day.dayIndex + 1}`;
-                                        return (
-                                            <GridItem key={`${row.rowKey}-${day.dayIndex}`}>
-                                                <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" p={2} minH="160px">
-                                                    <VStack align="stretch" spacing={2} h="full">
-                                                        <HStack justify="space-between" align="start">
-                                                            <VStack align="start" spacing={0}>
-                                                                <Text fontSize="xs" color="gray.500">
-                                                                    {cell ? formatSemanaMpsDisplayDate(cell.date) : "-"}
-                                                                </Text>
-                                                                <Text fontSize="xs" fontWeight="semibold">
-                                                                    {formatNumber(cell?.totalAsignado)} / {formatNumber(cell?.capacidadDiaria)}
-                                                                </Text>
-                                                            </VStack>
-                                                            {cell && (
-                                                                <Badge colorScheme={getCalendarEstadoColorScheme(cell.estado)}>
-                                                                    {getCalendarEstadoLabel(cell.estado)}
-                                                                </Badge>
-                                                            )}
-                                                        </HStack>
-                                                        {blocks.length === 0 ? (
-                                                            <Text fontSize="xs" color="gray.400">Sin programacion.</Text>
-                                                        ) : (
-                                                            <VStack align="stretch" spacing={2}>
-                                                                {blocks.map((block) => {
-                                                                    const context = {
-                                                                        date: cell?.date ?? day.date,
-                                                                        dayIndex: day.dayIndex,
-                                                                        dayLabel,
-                                                                    };
-                                                                    const orderCount = getBlockOrderCount
-                                                                        ? getBlockOrderCount(block.blockId)
-                                                                        : null;
-                                                                    const isClickable = areGeneratedOrdersAvailable && Boolean(onBlockClick);
-                                                                    return (
-                                                                        <MpsProductBlock
-                                                                            key={block.blockId}
-                                                                            block={block}
-                                                                            context={context}
-                                                                            isClickable={isClickable}
-                                                                            orderCount={areGeneratedOrdersAvailable ? orderCount : null}
-                                                                            onClick={() => onBlockClick?.(block, context)}
-                                                                        />
-                                                                    );
-                                                                })}
-                                                            </VStack>
-                                                        )}
-                                                    </VStack>
-                                                </Box>
-                                            </GridItem>
-                                        );
-                                    })}
-                                </Grid>
-                            </GridItem>
-                        ))}
-                    </Grid>
-                </Box>
-            )}
-
-            <Box>
-                <Flex justify="space-between" align="center" gap={3} wrap="wrap" mb={3}>
-                    <Box>
-                        <Heading size="sm">Bloques no programados</Heading>
-                        <Text fontSize="sm" color="gray.600">
-                            Items fuera del calendario por restricciones de capacidad o configuracion.
-                        </Text>
-                    </Box>
-                    <Badge colorScheme={unscheduled.length > 0 ? "orange" : "gray"}>
-                        {unscheduled.length} bloques
-                    </Badge>
-                </Flex>
-                {unscheduled.length === 0 ? (
-                    <Box p={4} bg="gray.50" borderRadius="md">
-                        <Text fontSize="sm" color="gray.500">No hay bloques fuera del calendario.</Text>
-                    </Box>
-                ) : (
-                    <SimpleGrid columns={[1, 1, 2, 3]} gap={3}>
-                        {unscheduled.map((block) => (
-                            <MpsUnscheduledBlock key={block.blockId} block={block} />
-                        ))}
-                    </SimpleGrid>
-                )}
+                        );
+                    })}
+                </Grid>
             </Box>
         </VStack>
     );

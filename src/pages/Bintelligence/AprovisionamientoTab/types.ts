@@ -54,6 +54,23 @@ export interface LeadTimeProveedorMaterialPageRowDTO {
     adjustedLeadTimeDays?: number | null;
 }
 
+export interface ProveedorMaterialLeadTimeMetricDTO {
+    proveedorId: string;
+    proveedorNombre: string;
+    materialId: string;
+    materialNombre: string;
+    fechaCorte: string;
+    ventanaDias: number;
+    leadTimeMedianoDias?: number | null;
+    observaciones: number;
+    ordenesConsideradas: number;
+    calculable: boolean;
+    reason?: string | null;
+    calculadoEn: string;
+    observacionesConFechaEnvioProveedor: number;
+    observacionesConFallbackFechaEmision: number;
+}
+
 export interface PuntoReordenEstimadoDTO {
     materialId: string;
     materialNombre: string;

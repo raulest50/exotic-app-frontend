@@ -1,10 +1,10 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import type { MpsSemanalDraftDTO } from "../../ProgProdMensualTab/PlaneacionProduccionService";
+import type { MpsSemanalDraftDTO } from "../MpsSemanalService";
 import {
-    MPS_WEEK_DAY_LABELS,
-    buildMpsCalendarPdfRows,
+    buildMpsSemanalPdfRows,
     buildMpsSemanalPdfFileName,
+    formatMpsPdfNumber,
     formatMpsEstadoLabel,
     formatMpsPdfDate,
     formatMpsPdfDateTime,
@@ -56,17 +56,17 @@ class MpsSemanalPdfGenerator {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.text(`Estado: ${formatMpsEstadoLabel(mps.estado)}`, pageWidth - margin, currentY + 12, { align: "right" });
-        doc.text(`ODPs: ${mps.fechaGeneracionOdps ? "Generadas" : "No generadas"}`, pageWidth - margin, currentY + 17, { align: "right" });
+        doc.text(`ODPs: ${formatMpsPdfNumber(mps.totalOdpsGeneradas)} / ${formatMpsPdfNumber(mps.totalLotesPlanificados)}`, pageWidth - margin, currentY + 17, { align: "right" });
 
         currentY += 26;
 
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
-        doc.text("Calendario semanal", margin, currentY);
+        doc.text("Programacion semanal", margin, currentY);
         currentY += 4;
 
-        const head = [["Categoria / Pool", ...MPS_WEEK_DAY_LABELS]];
-        const body = buildMpsCalendarPdfRows(mps);
+        const head = [["Dia", "Terminado", "Categoria", "Lotes", "Unidades", "Fechas", "Lotes planificados", "Observacion"]];
+        const body = buildMpsSemanalPdfRows(mps);
 
         autoTable(doc, {
             startY: currentY,
@@ -77,13 +77,14 @@ class MpsSemanalPdfGenerator {
             styles: { fontSize: 6.5, valign: "top", cellPadding: 1.6 },
             headStyles: { fillColor: [31, 151, 148], textColor: 255, halign: "center" },
             columnStyles: {
-                0: { cellWidth: 34, fontStyle: "bold" },
-                1: { cellWidth: 38 },
-                2: { cellWidth: 38 },
-                3: { cellWidth: 38 },
-                4: { cellWidth: 38 },
-                5: { cellWidth: 38 },
-                6: { cellWidth: 38 },
+                0: { cellWidth: 24, fontStyle: "bold" },
+                1: { cellWidth: 48 },
+                2: { cellWidth: 32 },
+                3: { cellWidth: 18, halign: "right" },
+                4: { cellWidth: 22, halign: "right" },
+                5: { cellWidth: 30 },
+                6: { cellWidth: 76 },
+                7: { cellWidth: 28 },
             },
             didDrawPage: () => {
                 const pageCount = doc.getNumberOfPages();

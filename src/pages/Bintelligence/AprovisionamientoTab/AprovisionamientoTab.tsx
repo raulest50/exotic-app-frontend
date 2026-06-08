@@ -9,7 +9,6 @@ import {
     FormLabel,
     HStack,
     Input,
-    Select,
     Stack,
     Text,
     useDisclosure,
@@ -21,20 +20,21 @@ import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import { Modulo } from "../../Usuarios/GestionUsuarios/types.tsx";
 import { useModuleAccessLevel } from "../../../auth/usePermissions.ts";
 import type { Material } from "../../Productos/types.tsx";
+import type { Proveedor } from "../../Compras/types.tsx";
+import ProveedorPicker from "../../../components/Pickers/ProveedorPicker/ProveedorPicker.tsx";
 import MaterialSelectorModal from "./MaterialSelectorModal.tsx";
 import LeadTimesView from "./LeadTimesView.tsx";
-import ReorderPointView from "./ReorderPointView.tsx";
-import type { AprovisionamientoSubView } from "./types.ts";
-import { formatNumber, formatTipoMaterial, getTodayIsoDate } from "./utils.ts";
+import { formatTipoMaterial, getTodayIsoDate } from "./utils.ts";
 
 const endPoints = new EndPointsURL();
 
 export default function AprovisionamientoTab() {
     const toast = useToast();
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const materialPicker = useDisclosure();
+    const proveedorPicker = useDisclosure();
     const { nivel: biAccessLevel } = useModuleAccessLevel(Modulo.BINTELLIGENCE);
-    const [subView, setSubView] = useState<AprovisionamientoSubView>("lead-times");
     const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
+    const [selectedProveedor, setSelectedProveedor] = useState<Proveedor | null>(null);
     const [fechaCorte, setFechaCorte] = useState(getTodayIsoDate());
     const [ventanaDiasInput, setVentanaDiasInput] = useState("365");
     const [materialLoading, setMaterialLoading] = useState(false);
@@ -49,7 +49,7 @@ export default function AprovisionamientoTab() {
         try {
             const response = await axios.get<Material>(endPoints.getProductoById(material.productoId));
             setSelectedMaterial(response.data);
-            onClose();
+            materialPicker.onClose();
         } catch (error) {
             console.error("Error loading material detail:", error);
             toast({
@@ -73,28 +73,25 @@ export default function AprovisionamientoTab() {
                             <Box>
                                 <Text fontSize="lg" fontWeight="semibold">Aprovisionamiento</Text>
                                 <Text color="app.textMuted" fontSize="sm">
-                                    Analice lead times historicos y establezca puntos de reorden basados en datos BI.
+                                    Consulte el lead time informativo para un par material-proveedor.
                                 </Text>
                             </Box>
-                            <HStack align="center" spacing={2}>
-                                <Badge colorScheme="blue">BI nivel {biAccessLevel}</Badge>
-                                <Button onClick={onOpen} colorScheme="blue" isLoading={materialLoading}>
-                                    {selectedMaterial ? "Cambiar material" : "Seleccionar material"}
-                                </Button>
-                            </HStack>
+                            <Badge colorScheme="blue" alignSelf={{ base: "flex-start", md: "center" }}>
+                                BI nivel {biAccessLevel}
+                            </Badge>
                         </Flex>
 
-                        <Flex gap={4} direction={{ base: "column", lg: "row" }}>
+                        <Flex gap={4} direction={{ base: "column", xl: "row" }}>
                             <FormControl>
                                 <FormLabel>Material seleccionado</FormLabel>
-                                <Box borderWidth="1px" borderRadius="md" px={3} py={2} minH="42px">
+                                <Box borderWidth="1px" borderRadius="md" px={3} py={2} minH="70px">
                                     {selectedMaterial ? (
                                         <Stack spacing={1}>
                                             <Text fontWeight="medium">
                                                 {selectedMaterial.nombre} ({selectedMaterial.productoId})
                                             </Text>
                                             <Text fontSize="sm" color="app.textMuted">
-                                                {formatTipoMaterial(selectedMaterial.tipoMaterial)} | UOM: {selectedMaterial.tipoUnidades} | Punto reorden actual: {formatNumber(selectedMaterial.puntoReorden, 2)}
+                                                {formatTipoMaterial(selectedMaterial.tipoMaterial)} | UOM: {selectedMaterial.tipoUnidades}
                                             </Text>
                                         </Stack>
                                     ) : (
@@ -102,6 +99,31 @@ export default function AprovisionamientoTab() {
                                     )}
                                 </Box>
                             </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Proveedor seleccionado</FormLabel>
+                                <Box borderWidth="1px" borderRadius="md" px={3} py={2} minH="70px">
+                                    {selectedProveedor ? (
+                                        <Stack spacing={1}>
+                                            <Text fontWeight="medium">{selectedProveedor.nombre}</Text>
+                                            <Text fontSize="sm" color="app.textMuted">ID: {selectedProveedor.id}</Text>
+                                        </Stack>
+                                    ) : (
+                                        <Text color="app.textSubtle">Aun no ha seleccionado un proveedor.</Text>
+                                    )}
+                                </Box>
+                            </FormControl>
+                        </Flex>
+
+                        <Flex gap={4} direction={{ base: "column", lg: "row" }} align={{ base: "stretch", lg: "flex-end" }}>
+                            <HStack spacing={2}>
+                                <Button onClick={materialPicker.onOpen} colorScheme="blue" isLoading={materialLoading}>
+                                    {selectedMaterial ? "Cambiar material" : "Seleccionar material"}
+                                </Button>
+                                <Button onClick={proveedorPicker.onOpen} colorScheme="blue" variant="outline">
+                                    {selectedProveedor ? "Cambiar proveedor" : "Seleccionar proveedor"}
+                                </Button>
+                            </HStack>
 
                             <FormControl maxW={{ base: "full", lg: "220px" }}>
                                 <FormLabel>Fecha corte</FormLabel>
@@ -122,42 +144,28 @@ export default function AprovisionamientoTab() {
                                     onChange={(e) => setVentanaDiasInput(e.target.value)}
                                 />
                             </FormControl>
-
-                            <FormControl maxW={{ base: "full", lg: "260px" }}>
-                                <FormLabel>Vista</FormLabel>
-                                <Select
-                                    value={subView}
-                                    onChange={(e) => setSubView(e.target.value as AprovisionamientoSubView)}
-                                >
-                                    <option value="lead-times">Lead Times</option>
-                                    <option value="puntos-reorden">Puntos de Reorden</option>
-                                </Select>
-                            </FormControl>
                         </Flex>
                     </Stack>
                 </CardBody>
             </Card>
 
-            {subView === "lead-times" ? (
-                <LeadTimesView
-                    selectedMaterial={selectedMaterial}
-                    fechaCorte={fechaCorte}
-                    ventanaDias={ventanaDias}
-                />
-            ) : (
-                <ReorderPointView
-                    selectedMaterial={selectedMaterial}
-                    fechaCorte={fechaCorte}
-                    ventanaDias={ventanaDias}
-                    canSave={biAccessLevel >= 3}
-                    onMaterialUpdated={setSelectedMaterial}
-                />
-            )}
+            <LeadTimesView
+                selectedMaterial={selectedMaterial}
+                selectedProveedor={selectedProveedor}
+                fechaCorte={fechaCorte}
+                ventanaDias={ventanaDias}
+            />
 
             <MaterialSelectorModal
-                isOpen={isOpen}
-                onClose={onClose}
+                isOpen={materialPicker.isOpen}
+                onClose={materialPicker.onClose}
                 onSelectMaterial={hydrateMaterial}
+            />
+
+            <ProveedorPicker
+                isOpen={proveedorPicker.isOpen}
+                onClose={proveedorPicker.onClose}
+                onSelectProveedor={setSelectedProveedor}
             />
         </Stack>
     );

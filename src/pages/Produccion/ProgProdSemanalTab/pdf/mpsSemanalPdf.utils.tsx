@@ -1,8 +1,8 @@
 import type {
     MpsSemanalDraftDTO,
-    PropuestaMpsCalendarBlockDTO,
-    PropuestaMpsCalendarRowDTO,
-} from "../../ProgProdMensualTab/PlaneacionProduccionService";
+    MpsSemanalItemDTO,
+    MpsSemanalLotePlanificadoDTO,
+} from "../MpsSemanalService";
 
 export const MPS_WEEK_DAY_LABELS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
 
@@ -63,10 +63,6 @@ export function getMpsSemanaPdfLabel(mps: MpsSemanalDraftDTO): string {
     return mps.semanaMpsCodigo?.trim() || mps.weekStartDate;
 }
 
-export function getMpsCalendarRowLabel(row: PropuestaMpsCalendarRowDTO): string {
-    return row.poolCapacidadNombre ?? row.categoriaNombre ?? row.rowKey ?? "Sin categoria";
-}
-
 export function truncateMpsPdfText(value: string | null | undefined, maxLength: number): string {
     if (!value) {
         return "-";
@@ -74,29 +70,42 @@ export function truncateMpsPdfText(value: string | null | undefined, maxLength: 
     return value.length > maxLength ? `${value.slice(0, Math.max(maxLength - 3, 1))}...` : value;
 }
 
-export function formatMpsCalendarBlockLine(block: PropuestaMpsCalendarBlockDTO): string {
-    const productName = truncateMpsPdfText(block.productoNombre, 34);
-    const units = formatMpsPdfNumber(block.cantidadAsignada);
-    const lots = formatMpsPdfNumber(block.lotesAsignados);
-    return `${block.productoId} - ${productName}\n${units} und | ${lots} lotes`;
+function formatPlannedLotLine(lote: MpsSemanalLotePlanificadoDTO): string {
+    const orderSuffix = lote.ordenProduccionId ? ` | OP ${lote.ordenProduccionId}` : "";
+    const realLotSuffix = lote.loteAsignado ? ` | ${lote.loteAsignado}` : "";
+    return `#${lote.loteOrdinal}: ${formatMpsPdfNumber(lote.cantidadPlanificada)} und | ${lote.estado}${orderSuffix}${realLotSuffix}`;
 }
 
-export function buildMpsCalendarPdfRows(mps: MpsSemanalDraftDTO): string[][] {
-    const rows = mps.calendar?.rows ?? [];
-    if (rows.length === 0) {
-        return [["Sin filas programadas", "", "", "", "", "", ""]];
-    }
+function buildItemPdfRow(dayLabel: string, dayDate: string, item: MpsSemanalItemDTO): string[] {
+    return [
+        `${dayLabel}\n${formatMpsPdfDate(dayDate)}`,
+        `${item.terminadoId}\n${truncateMpsPdfText(item.terminadoNombre, 44)}`,
+        item.categoriaNombre ?? "-",
+        formatMpsPdfNumber(item.numeroLotes),
+        formatMpsPdfNumber(item.cantidadTotal),
+        `${formatMpsPdfDate(item.fechaLanzamiento)}\n${formatMpsPdfDate(item.fechaFinalPlanificada)}`,
+        item.lotesPlanificados.map(formatPlannedLotLine).join("\n"),
+        item.observacion || item.warning || "",
+    ];
+}
 
-    return rows.map((row) => {
-        const dayCells = MPS_WEEK_DAY_LABELS.map((_, dayIndex) => {
-            const cell = row.days?.find((day) => day.dayIndex === dayIndex) ?? row.days?.[dayIndex];
-            const blocks = cell?.blocks ?? [];
-            if (blocks.length === 0) {
-                return "";
-            }
-            return blocks.map(formatMpsCalendarBlockLine).join("\n\n");
-        });
-
-        return [getMpsCalendarRowLabel(row), ...dayCells];
+export function buildMpsSemanalPdfRows(mps: MpsSemanalDraftDTO): string[][] {
+    const rows = mps.dias.flatMap((dia) => {
+        const dayLabel = MPS_WEEK_DAY_LABELS[dia.dayIndex] ?? `Dia ${dia.dayIndex + 1}`;
+        if (dia.items.length === 0) {
+            return [[
+                `${dayLabel}\n${formatMpsPdfDate(dia.fecha)}`,
+                "Sin programacion",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ]];
+        }
+        return dia.items.map((item) => buildItemPdfRow(dayLabel, dia.fecha, item));
     });
+
+    return rows.length > 0 ? rows : [["Sin programacion semanal", "", "", "", "", "", "", ""]];
 }

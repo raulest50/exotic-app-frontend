@@ -14,7 +14,7 @@ import {
 import {
     ListarSemanasMps,
     type SemanaMPSDTO,
-} from "../ProgProdMensualTab/PlaneacionProduccionService";
+} from "./MpsSemanalService";
 import {
     formatSemanaMpsDisplayDate,
     getCurrentDateString,
