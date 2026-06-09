@@ -27,6 +27,17 @@ interface Props {
     onReset: () => void;
 }
 
+function getAxiosErrorMessage(error: unknown, fallback: string): string {
+    if (axios.isAxiosError(error)) {
+        return error.response?.data?.error
+            ?? error.response?.data?.message
+            ?? error.response?.data?.mensaje
+            ?? error.message
+            ?? fallback;
+    }
+    return error instanceof Error ? error.message : fallback;
+}
+
 export default function SemiterminadosStep3Confirmation({ setActiveStep, semioter3, onReset }: Props) {
     const toast = useToast();
     const [loading, setLoading] = useState(false);
@@ -48,9 +59,9 @@ export default function SemiterminadosStep3Confirmation({ setActiveStep, semiote
             console.error("Error guardando producto con manufacturing:", error);
             toast({
                 title: "Error",
-                description: "No se pudo guardar el producto",
+                description: getAxiosErrorMessage(error, "No se pudo guardar el producto"),
                 status: "error",
-                duration: 3000,
+                duration: 5000,
                 isClosable: true,
             });
         } finally {
