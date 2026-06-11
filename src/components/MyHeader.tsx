@@ -38,6 +38,7 @@ function MyHeader({title,}:MyHeaderProps){
             'bintelligence': Modulo.BINTELLIGENCE,
             'operaciones_criticas_bd': Modulo.OPERACIONES_CRITICAS_BD,
             'administracion_alertas': Modulo.ADMINISTRACION_ALERTAS,
+            'administracion_global': Modulo.ADMINISTRACION_GLOBAL,
             'master_directives': Modulo.MASTER_DIRECTIVES,
             'cronograma': Modulo.CRONOGRAMA,
             'organigrama': Modulo.ORGANIGRAMA,

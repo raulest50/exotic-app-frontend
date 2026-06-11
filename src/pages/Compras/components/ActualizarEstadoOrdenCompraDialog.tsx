@@ -25,6 +25,10 @@ import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
 import { OrdenCompraMateriales, getEstadoText, getCondicionPagoText, getCantidadCorrectaText, TipoEnvio } from '../types';
 import OCM_PDF_Generator from "../OCM_PDF_Generator.tsx";
+import {
+    getEmpresaIdentidadLegalVigente,
+    type EmpresaIdentidadLegalVersion,
+} from "../../../api/EmpresaIdentidadLegalApi";
 
 interface ActualizarEstadoOrdenCompraDialogProps {
     isOpen: boolean;
@@ -110,10 +114,15 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
         try {
             // const requestBody:EstadoUpdate = { newEstado: newEstado };
             const formData = new FormData();
+            let identidadLegal: EmpresaIdentidadLegalVersion | null = null;
+
+            if(newEstado === 2){
+                identidadLegal = orden.empresaIdentidadLegalVersion ?? await getEmpresaIdentidadLegalVigente();
+            }
 
             // Include tipoEnvio in the request when updating to estado 2
             const requestData = newEstado === 2 
-                ? { newEstado, tipoEnvio } 
+                ? { newEstado, tipoEnvio, empresaIdentidadLegalVersionId: identidadLegal?.id } 
                 : { newEstado };
 
             formData.append(
@@ -125,7 +134,7 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
             let OCMpdf: Blob|null = null;
             if(newEstado === 2){ // se adjunta OCM en pdf format para enviar como adjunto a proveedor
                 const generator = new OCM_PDF_Generator();
-                OCMpdf = await generator.getOCMpdf_Blob(orden);
+                OCMpdf = await generator.getOCMpdf_Blob(orden, identidadLegal ?? undefined);
                 formData.append(
                     'OCMpdf',
                     OCMpdf,

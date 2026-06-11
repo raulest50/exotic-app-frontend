@@ -31,7 +31,7 @@ import { MdOutlineInsights } from "react-icons/md";
 import { FaSteam } from "react-icons/fa";
 import { PiMicrosoftTeamsLogoFill } from "react-icons/pi";
 import { MdNotificationsActive } from "react-icons/md";
-import { FaCogs } from "react-icons/fa";
+import { FaCogs, FaCrown } from "react-icons/fa";
 import { FaCalendarAlt } from "react-icons/fa";
 import { MdRefresh } from "react-icons/md";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
@@ -91,6 +91,7 @@ export default function Home() {
         { to: "/Personal", name: "Personal", icon: PiMicrosoftTeamsLogoFill, notificationModulo: Modulo.PERSONAL_PLANTA, accesoValido: moduleAccessRule(Modulo.PERSONAL_PLANTA) },
         { to: "/Bintelligence", name: "BI", icon: MdOutlineInsights, notificationModulo: Modulo.BINTELLIGENCE, accesoValido: moduleAccessRule(Modulo.BINTELLIGENCE) },
         { to: "/administracion_alertas", name: "Administracion Alertas", icon: MdNotificationsActive, notificationModulo: Modulo.ADMINISTRACION_ALERTAS, accesoValido: moduleAccessRule(Modulo.ADMINISTRACION_ALERTAS) },
+        { to: "/administracion_global", name: "Administracion Global", icon: FaCrown, notificationModulo: Modulo.ADMINISTRACION_GLOBAL, accesoValido: moduleAccessRule(Modulo.ADMINISTRACION_GLOBAL) },
         { to: "/cronograma", name: "Cronograma", icon: FaCalendarAlt, notificationModulo: Modulo.CRONOGRAMA, accesoValido: moduleAccessRule(Modulo.CRONOGRAMA) },
         { to: "/organigrama", name: "Organigrama", icon: FaSitemap, notificationModulo: Modulo.ORGANIGRAMA, accesoValido: moduleAccessRule(Modulo.ORGANIGRAMA) },
     ];

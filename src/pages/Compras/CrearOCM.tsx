@@ -1,8 +1,8 @@
 // ./CrearOrdenCompra.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {Button, Container, Flex, FormControl, FormLabel, Input, Select, Textarea, useToast, Text} from '@chakra-ui/react';
 import axios from 'axios';
-import { Proveedor, Material, ItemOrdenCompra, OrdenCompraMateriales, DIVISAS } from './types';
+import { Proveedor, Material, ItemOrdenCompra, OrdenCompraMateriales, DIVISAS, LeadTimeProveedorKpiDTO } from './types';
 import EndPointsURL from '../../api/EndPointsURL';
 import ProveedorPicker from './components/ProveedorPicker.tsx';
 import ProveedorCard from './components/ProveedorCard.tsx';
@@ -20,6 +20,9 @@ export default function CrearOCM() {
     const [isProveedorPickerOpen, setIsProveedorPickerOpen] = useState(false);
     const [isMateriaPrimaPickerOpen, setIsMateriaPrimaPickerOpen] = useState(false);
     const [listaItemsOrdenCompra, setListaItemsOrdenCompra] = useState<ItemOrdenCompra[]>([]);
+    const [leadTimeKpi, setLeadTimeKpi] = useState<LeadTimeProveedorKpiDTO | null>(null);
+    const [isLeadTimeKpiLoading, setIsLeadTimeKpiLoading] = useState(false);
+    const [leadTimeKpiError, setLeadTimeKpiError] = useState(false);
     const toast = useToast();
 
     const [plazoPago, setPlazoPago] = useState(30);
@@ -42,6 +45,44 @@ export default function CrearOCM() {
     const handleTrmUpdate = (value: number) => {
         setCurrentUsd2Cop(value);
     };
+
+    useEffect(() => {
+        let ignoreResult = false;
+
+        if (!selectedProveedor) {
+            setLeadTimeKpi(null);
+            setLeadTimeKpiError(false);
+            setIsLeadTimeKpiLoading(false);
+            return;
+        }
+
+        setLeadTimeKpi(null);
+        setLeadTimeKpiError(false);
+        setIsLeadTimeKpiLoading(true);
+
+        axios.get<LeadTimeProveedorKpiDTO>(endPoints.biProveedorLeadTimeKpi(selectedProveedor.id))
+            .then((response) => {
+                if (!ignoreResult) {
+                    setLeadTimeKpi(response.data);
+                }
+            })
+            .catch((error) => {
+                console.error("Error al cargar KPI lead time proveedor", error);
+                if (!ignoreResult) {
+                    setLeadTimeKpiError(true);
+                    setLeadTimeKpi(null);
+                }
+            })
+            .finally(() => {
+                if (!ignoreResult) {
+                    setIsLeadTimeKpiLoading(false);
+                }
+            });
+
+        return () => {
+            ignoreResult = true;
+        };
+    }, [selectedProveedor?.id]);
 
     const updateTotalesAndGetValues = () => {
         const calculatedSubTotal = listaItemsOrdenCompra.reduce(
@@ -241,6 +282,9 @@ export default function CrearOCM() {
                         <ProveedorCard
                             selectedProveedor={selectedProveedor}
                             onSearchClick={() => setIsProveedorPickerOpen(true)}
+                            leadTimeKpi={leadTimeKpi}
+                            isLeadTimeKpiLoading={isLeadTimeKpiLoading}
+                            leadTimeKpiError={leadTimeKpiError}
                         />
                     </Flex>
                     <Flex flex={1} w={"full"}>

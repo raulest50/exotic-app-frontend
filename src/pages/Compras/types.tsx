@@ -3,6 +3,7 @@
 // Summary: Modelos de proveedor, materiales y órdenes de compra reutilizados en flujos de compras y activos fijos.
 // ./types.tsx
 import {Contacto} from "../Proveedores/types.tsx";
+import type { EmpresaIdentidadLegalVersion } from "../../api/EmpresaIdentidadLegalApi";
 
 export interface Proveedor {
     id: string;
@@ -20,6 +21,23 @@ export interface Proveedor {
     limiteRecepcionesParcialesOcm?: number;
     rutFile?: File;         // Optional file for RUT
     camaraFile?: File;      // Optional file for Cámara y Comercio
+}
+
+export type EstadoLeadTimeProveedorKpi = "VIGENTE" | "DESACTUALIZADO" | "SIN_INFORMACION";
+
+export interface LeadTimeProveedorKpiDTO {
+    proveedorId: string;
+    proveedorNombre: string;
+    estado: EstadoLeadTimeProveedorKpi;
+    leadTimeMedianoDias: number | null;
+    observaciones: number;
+    ordenesConsideradas: number;
+    fechaCorte: string | null;
+    ventanaDias: number | null;
+    calculadoEn: string | null;
+    motivoEstado: string | null;
+    ultimaEvaluacionEn: string | null;
+    ultimaFechaCorteEvaluada: string | null;
 }
 
 export function getRegimenTributario(regimen: number) {
@@ -91,6 +109,7 @@ export interface OrdenCompraMateriales {
     // The backend generates this id
     ordenCompraId?: number;
     fechaEmision?: string;
+    empresaIdentidadLegalVersion?: EmpresaIdentidadLegalVersion | null;
     fechaVencimiento: string;
     facturaCompraId?: string;
     proveedor: Proveedor;

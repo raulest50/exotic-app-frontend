@@ -306,6 +306,10 @@ export default class EndPointsURL{
     public get_master_directives: string;
     public update_master_directive: string;
 
+    // administracion global endpoints
+    public empresa_identidad_legal_vigente: string;
+    public empresa_identidad_legal_versiones: string;
+
     public get_master_directive(nombre: string): string {
         return `${this.domain}/api/master-directives/${encodeURIComponent(nombre)}`;
     }
@@ -328,6 +332,10 @@ export default class EndPointsURL{
         if (fechaCorte) q.set("fechaCorte", fechaCorte);
         if (ventanaDias != null) q.set("ventanaDias", String(ventanaDias));
         return `${base}?${q.toString()}`;
+    }
+
+    public biProveedorLeadTimeKpi(proveedorId: string): string {
+        return `${this.domain}/bi/proveedores/${encodeURIComponent(proveedorId)}/lead-time-kpi`;
     }
 
     public biMaterialLeadTimes(
@@ -492,6 +500,7 @@ export default class EndPointsURL{
         const averias_res = 'api/averias';
         const ingresos_terminados_res = 'ingresos_terminados_almacen';
         const informes_diarios_res = 'bi/informes-diarios';
+        const empresa_identidad_legal_res = 'api/empresa-identidad-legal';
 
         // productos endpoints
         this.search_mprima = `${domain}/${productos_res}/search_mprima`;
@@ -706,6 +715,10 @@ export default class EndPointsURL{
         // master directives endpoints
         this.get_master_directives = `${domain}/api/master-directives`;
         this.update_master_directive = `${domain}/api/master-directives/update`;
+
+        // administracion global endpoints
+        this.empresa_identidad_legal_vigente = `${domain}/${empresa_identidad_legal_res}/vigente`;
+        this.empresa_identidad_legal_versiones = `${domain}/${empresa_identidad_legal_res}/versiones`;
 
         // super master ops endpoints
         this.get_super_master_config = `${domain}/api/super-master-ops/config`;

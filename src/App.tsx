@@ -33,6 +33,7 @@ import ContabilidadPage from "./pages/Contabilidad/ContabilidadPage.tsx";
 import PersonalPage from "./pages/Personal/PersonalPage.tsx";
 import BintelligencePage from "./pages/Bintelligence/BintelligencePage.tsx";
 import AdministracionAlertasPage from "./pages/AdministracionAlertas/AdministracionAlertasPage.tsx";
+import AdministracionGlobalPage from "./pages/AdministracionGlobal/AdministracionGlobalPage.tsx";
 import MasterDirectivesPage from "./pages/MasterDirectives/MasterDirectivesPage.tsx";
 import CronogramaPage from "./pages/Cronograma/CronogramaPage.tsx";
 import OrganigramaPage from "./pages/Organigrama/OrganigramaPage.tsx";
@@ -172,6 +173,15 @@ const router = createBrowserRouter(
                     element={
                         <AccessRoute accessRule={moduleAccessRule(Modulo.ADMINISTRACION_ALERTAS)}>
                             <AdministracionAlertasPage/>
+                        </AccessRoute>
+                    }
+                />
+
+                <Route
+                    path="administracion_global"
+                    element={
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.ADMINISTRACION_GLOBAL)}>
+                            <AdministracionGlobalPage/>
                         </AccessRoute>
                     }
                 />

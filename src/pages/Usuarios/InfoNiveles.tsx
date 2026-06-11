@@ -280,6 +280,16 @@ const canSaveFromBi = biAccessLevel >= 3;`,
       { level: 3, description: "Administracion completa del sistema de alertas." },
     ],
   },
+  [Modulo.ADMINISTRACION_GLOBAL]: {
+    title: "Modulo de Administracion Global",
+    description: "Parametrizaciones transversales de la aplicacion",
+    implementationDetails: false,
+    levels: [
+      { level: 1, description: "Consulta de la identidad legal vigente y su historial." },
+      { level: 2, description: "Creacion de nuevas versiones vigentes de identidad legal." },
+      { level: 3, description: "Reservado para futuras parametrizaciones globales." },
+    ],
+  },
   [Modulo.CRONOGRAMA]: {
     title: "Modulo de Cronograma",
     description: "Gestion de planificacion y cronogramas",

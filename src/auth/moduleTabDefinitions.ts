@@ -81,6 +81,7 @@ export const TABS_BY_MODULO: Record<Modulo, TabDefinition[]> = {
         tab("EXPORTACION_DATOS", "Exportacion Datos"),
     ],
     [Modulo.ADMINISTRACION_ALERTAS]: [tab("MAIN", "General")],
+    [Modulo.ADMINISTRACION_GLOBAL]: [tab("IDENTIDAD_LEGAL", "Identidad Legal")],
     [Modulo.MASTER_DIRECTIVES]: [tab("MAIN", "General")],
     [Modulo.CRONOGRAMA]: [tab("MAIN", "General")],
     [Modulo.ORGANIGRAMA]: [

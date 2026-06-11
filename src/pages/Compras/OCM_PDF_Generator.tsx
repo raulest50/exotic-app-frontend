@@ -9,6 +9,10 @@ import {
 } from "./types";
 import { formatCOP, formatCurrency } from "../../utils/formatters";
 import { OrdenCompraActivo, ItemOrdenCompraActivo } from "../ActivosFijos/types";
+import {
+    getEmpresaIdentidadLegalVigente,
+    type EmpresaIdentidadLegalVersion,
+} from "../../api/EmpresaIdentidadLegalApi";
 
 // Extend jsPDF with properties added by jsPDF-AutoTable
 interface AutoTableProperties {
@@ -24,7 +28,11 @@ export default class OCM_PDF_Generator {
      * Generates the PDF file for the given OrdenCompra-Materiales (OCM) and triggers its download.
      * @param orden the order data to populate the PDF with.
      */
-    private async generatePDF_OCM(orden: OrdenCompraMateriales): Promise<jsPDFWithAutoTable> {
+    private async generatePDF_OCM(
+        orden: OrdenCompraMateriales,
+        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion
+    ): Promise<jsPDFWithAutoTable> {
+        const identidadLegal = await this.resolveEmpresaIdentidadLegal(orden, empresaIdentidadLegal);
         // Create a new jsPDF instance (A4 size, mm units) and cast to our extended interface
         const doc = new jsPDF({ unit: "mm", format: "a4" }) as jsPDFWithAutoTable;
         const margin = 10;
@@ -57,13 +65,13 @@ export default class OCM_PDF_Generator {
         currentY += 25; // reduced spacing below the logo
         doc.setFont("helvetica", "normal");
         doc.setFontSize(7); // smaller font size
-        doc.text("Napolitana J.P S.A.S.", margin, currentY);
+        doc.text(identidadLegal.razonSocial, margin, currentY);
         currentY += 4;
-        doc.text("Nit: 901751897-1", margin, currentY);
+        doc.text(this.formatIdentificacion(identidadLegal), margin, currentY);
         currentY += 4;
-        doc.text("Tel: 301 711 51 81", margin, currentY);
+        doc.text(`Tel: ${identidadLegal.telefonoPrincipal}`, margin, currentY);
         currentY += 4;
-        doc.text("produccion.exotic@gmail.com", margin, currentY);
+        doc.text(identidadLegal.emailPrincipal, margin, currentY);
 
         // --- Order Details ---
         const detailX = 140; // starting x for details on the right side
@@ -99,7 +107,7 @@ export default class OCM_PDF_Generator {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(7);
         entregaY += 4;
-        doc.text("Empresa: Napolitana JP S.A.S - EXOTIC EXPERT", detailX, entregaY);
+        doc.text(`Empresa: ${identidadLegal.razonSocial} - ${identidadLegal.nombreComercial}`, detailX, entregaY);
         entregaY += 3;
         doc.text("Direccion: vía 11, Juan Mina #4 100", detailX, entregaY);
         entregaY += 3;
@@ -238,8 +246,11 @@ export default class OCM_PDF_Generator {
      * hace trigger de descarga del pdf de OCM
      * @param orden
      */
-    public async downloadPDF_OCM(orden:OrdenCompraMateriales):Promise<void>{
-        const doc = await this.generatePDF_OCM(orden);
+    public async downloadPDF_OCM(
+        orden:OrdenCompraMateriales,
+        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion
+    ):Promise<void>{
+        const doc = await this.generatePDF_OCM(orden, empresaIdentidadLegal);
         doc.save(`orden-compra-${orden.ordenCompraId}.pdf`);
     }
 
@@ -248,9 +259,33 @@ export default class OCM_PDF_Generator {
      * ser adjuntado a correo proveedor.
      * @param orden
      */
-    public async getOCMpdf_Blob(orden:OrdenCompraMateriales):Promise<Blob>{
-        const doc = await this.generatePDF_OCM(orden);
+    public async getOCMpdf_Blob(
+        orden:OrdenCompraMateriales,
+        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion
+    ):Promise<Blob>{
+        const doc = await this.generatePDF_OCM(orden, empresaIdentidadLegal);
         return doc.output("blob");
+    }
+
+    private async resolveEmpresaIdentidadLegal(
+        orden: OrdenCompraMateriales,
+        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion
+    ): Promise<EmpresaIdentidadLegalVersion> {
+        if (empresaIdentidadLegal) {
+            return empresaIdentidadLegal;
+        }
+        if (orden.empresaIdentidadLegalVersion) {
+            return orden.empresaIdentidadLegalVersion;
+        }
+        return getEmpresaIdentidadLegalVigente();
+    }
+
+    private formatIdentificacion(identidadLegal: EmpresaIdentidadLegalVersion): string {
+        const digitoVerificacion = identidadLegal.digitoVerificacion?.trim();
+        const numero = digitoVerificacion
+            ? `${identidadLegal.numeroIdentificacion}-${digitoVerificacion}`
+            : identidadLegal.numeroIdentificacion;
+        return `${identidadLegal.tipoIdentificacion}: ${numero}`;
     }
 
     /**
