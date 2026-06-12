@@ -4,6 +4,7 @@
 // ./types.tsx
 import {Contacto} from "../Proveedores/types.tsx";
 import type { EmpresaIdentidadLegalVersion } from "../../api/EmpresaIdentidadLegalApi";
+import type { EmpresaLogoDocumentalVersion } from "../../api/EmpresaLogoDocumentalApi";
 
 export interface Proveedor {
     id: string;
@@ -110,6 +111,7 @@ export interface OrdenCompraMateriales {
     ordenCompraId?: number;
     fechaEmision?: string;
     empresaIdentidadLegalVersion?: EmpresaIdentidadLegalVersion | null;
+    empresaLogoDocumentalVersion?: EmpresaLogoDocumentalVersion | null;
     fechaVencimiento: string;
     facturaCompraId?: string;
     proveedor: Proveedor;

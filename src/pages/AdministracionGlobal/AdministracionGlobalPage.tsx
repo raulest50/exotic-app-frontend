@@ -41,6 +41,7 @@ import {
     type EmpresaIdentidadLegalVersion,
     type EmpresaIdentidadLegalVersionPayload,
 } from "../../api/EmpresaIdentidadLegalApi";
+import LogoDocumentalOcmSection from "./components/LogoDocumentalOcmSection";
 
 const TAB_IDENTIDAD_LEGAL = "IDENTIDAD_LEGAL";
 
@@ -301,6 +302,12 @@ export default function AdministracionGlobalPage() {
                                         </Button>
                                     </HStack>
                                 </Box>
+
+                                <LogoDocumentalOcmSection
+                                    canEdit={canEdit}
+                                    identidadLegalPreview={form}
+                                    identidadLegalVigente={vigente}
+                                />
 
                                 <Box overflowX="auto" borderWidth="1px" borderRadius="md">
                                     <Table size="sm" variant="simple">

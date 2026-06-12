@@ -13,6 +13,10 @@ import {
     getEmpresaIdentidadLegalVigente,
     type EmpresaIdentidadLegalVersion,
 } from "../../api/EmpresaIdentidadLegalApi";
+import {
+    getEmpresaLogoDocumentalImagenVersion,
+    getEmpresaLogoDocumentalImagenVigente,
+} from "../../api/EmpresaLogoDocumentalApi";
 
 // Extend jsPDF with properties added by jsPDF-AutoTable
 interface AutoTableProperties {
@@ -23,6 +27,12 @@ interface jsPDFWithAutoTable extends jsPDF {
     lastAutoTable?: AutoTableProperties;
 }
 
+export interface OcmPdfOptions {
+    logoDataUrl?: string;
+    logoVersionId?: number;
+    downloadFileName?: string;
+}
+
 export default class OCM_PDF_Generator {
     /**
      * Generates the PDF file for the given OrdenCompra-Materiales (OCM) and triggers its download.
@@ -30,7 +40,8 @@ export default class OCM_PDF_Generator {
      */
     private async generatePDF_OCM(
         orden: OrdenCompraMateriales,
-        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion
+        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion,
+        options: OcmPdfOptions = {}
     ): Promise<jsPDFWithAutoTable> {
         const identidadLegal = await this.resolveEmpresaIdentidadLegal(orden, empresaIdentidadLegal);
         // Create a new jsPDF instance (A4 size, mm units) and cast to our extended interface
@@ -39,16 +50,14 @@ export default class OCM_PDF_Generator {
         let currentY = margin;
 
         // --- Logo Section ---
-        // Fetch logo image as base64 and add it at top-left
-        let logoBase64: string | null = null;
+        let logoDataUrl: string | null = null;
         try {
-            logoBase64 = await this.getImageBase64("/logo_exotic.png");
+            logoDataUrl = await this.resolveOcmLogoDataUrl(orden, options);
         } catch (error) {
             console.error("Error fetching logo image", error);
         }
-        if (logoBase64) {
-            // Reduce the size of the logo; here it is set to half the original size (25mm x 20mm)
-            doc.addImage(logoBase64, "PNG", margin, currentY, 25, 20);
+        if (logoDataUrl) {
+            await this.addContainedPng(doc, logoDataUrl, margin, currentY, 25, 20);
         }
 
         // --- Header Title ---
@@ -248,10 +257,11 @@ export default class OCM_PDF_Generator {
      */
     public async downloadPDF_OCM(
         orden:OrdenCompraMateriales,
-        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion
+        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion,
+        options: OcmPdfOptions = {}
     ):Promise<void>{
-        const doc = await this.generatePDF_OCM(orden, empresaIdentidadLegal);
-        doc.save(`orden-compra-${orden.ordenCompraId}.pdf`);
+        const doc = await this.generatePDF_OCM(orden, empresaIdentidadLegal, options);
+        doc.save(options.downloadFileName ?? `orden-compra-${orden.ordenCompraId}.pdf`);
     }
 
     /**
@@ -261,9 +271,10 @@ export default class OCM_PDF_Generator {
      */
     public async getOCMpdf_Blob(
         orden:OrdenCompraMateriales,
-        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion
+        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion,
+        options: OcmPdfOptions = {}
     ):Promise<Blob>{
-        const doc = await this.generatePDF_OCM(orden, empresaIdentidadLegal);
+        const doc = await this.generatePDF_OCM(orden, empresaIdentidadLegal, options);
         return doc.output("blob");
     }
 
@@ -286,6 +297,69 @@ export default class OCM_PDF_Generator {
             ? `${identidadLegal.numeroIdentificacion}-${digitoVerificacion}`
             : identidadLegal.numeroIdentificacion;
         return `${identidadLegal.tipoIdentificacion}: ${numero}`;
+    }
+
+    private async resolveOcmLogoDataUrl(
+        orden: OrdenCompraMateriales,
+        options: OcmPdfOptions
+    ): Promise<string> {
+        if (options.logoDataUrl) {
+            return options.logoDataUrl;
+        }
+
+        try {
+            if (options.logoVersionId) {
+                return await getEmpresaLogoDocumentalImagenVersion(options.logoVersionId);
+            }
+            if (orden.empresaLogoDocumentalVersion?.id) {
+                return await getEmpresaLogoDocumentalImagenVersion(orden.empresaLogoDocumentalVersion.id);
+            }
+            return await getEmpresaLogoDocumentalImagenVigente();
+        } catch (error) {
+            console.error("Error fetching versioned OCM logo, falling back to static logo", error);
+            return this.getImageBase64("/logo_exotic.png");
+        }
+    }
+
+    private async addContainedPng(
+        doc: jsPDFWithAutoTable,
+        logoDataUrl: string,
+        x: number,
+        y: number,
+        boxWidth: number,
+        boxHeight: number
+    ): Promise<void> {
+        let renderWidth = boxWidth;
+        let renderHeight = boxHeight;
+
+        try {
+            const dimensions = await this.getImageDimensions(logoDataUrl);
+            const imageRatio = dimensions.width / dimensions.height;
+            const boxRatio = boxWidth / boxHeight;
+
+            if (imageRatio > boxRatio) {
+                renderWidth = boxWidth;
+                renderHeight = boxWidth / imageRatio;
+            } else {
+                renderHeight = boxHeight;
+                renderWidth = boxHeight * imageRatio;
+            }
+        } catch (error) {
+            console.error("Error reading logo dimensions", error);
+        }
+
+        const renderX = x + (boxWidth - renderWidth) / 2;
+        const renderY = y + (boxHeight - renderHeight) / 2;
+        doc.addImage(logoDataUrl, "PNG", renderX, renderY, renderWidth, renderHeight);
+    }
+
+    private getImageDimensions(source: string): Promise<{ width: number; height: number }> {
+        return new Promise((resolve, reject) => {
+            const image = new Image();
+            image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+            image.onerror = reject;
+            image.src = source;
+        });
     }
 
     /**
