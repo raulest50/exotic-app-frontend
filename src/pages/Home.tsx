@@ -86,10 +86,13 @@ export default function Home() {
         MASTER_DIRECTIVE_KEYS.ENABLE_MASTER_SUPERMASTER_DIRECTIVES_ACCESS,
         ENABLE_MASTER_SUPERMASTER_DIRECTIVES_ACCESS_DEFAULT
     );
+    const normalizedUser = user?.trim().toLowerCase();
+    const isMasterUser = normalizedUser === "master";
+    const isSuperMasterUser = normalizedUser === "super_master";
 
     const canShowSuperMasterDirectivesCard =
-        user === "super_master" ||
-        (user === "master" && !directivesLoading && masterCanAccessSuperMasterDirectives);
+        isSuperMasterUser ||
+        (isMasterUser && !directivesLoading && masterCanAccessSuperMasterDirectives);
 
     const cards: HomeCardDef[] = [
         { to: "/usuarios", name: "Roles y Usuarios", icon: FaUsersGear, notificationModulo: Modulo.USUARIOS, accesoValido: moduleAccessRule(Modulo.USUARIOS) },

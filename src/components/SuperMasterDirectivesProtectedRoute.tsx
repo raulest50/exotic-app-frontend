@@ -15,8 +15,11 @@ type SuperMasterDirectivesProtectedRouteProps = {
 const SuperMasterDirectivesProtectedRoute: React.FC<SuperMasterDirectivesProtectedRouteProps> = ({ children }) => {
     const { user, accesosReady } = useAuth();
     const { loading: directivesLoading, getBooleanDirective } = useMasterDirectives();
+    const normalizedUser = user?.trim().toLowerCase();
+    const isMasterUser = normalizedUser === "master";
+    const isSuperMasterUser = normalizedUser === "super_master";
 
-    if (!accesosReady || (user === "master" && directivesLoading)) {
+    if (!accesosReady || (isMasterUser && directivesLoading)) {
         return (
             <Center py={10}>
                 <Spinner size="lg" mr={3} />
@@ -29,7 +32,7 @@ const SuperMasterDirectivesProtectedRoute: React.FC<SuperMasterDirectivesProtect
         return <Navigate to="/login" replace />;
     }
 
-    if (user === "super_master") {
+    if (isSuperMasterUser) {
         return children;
     }
 
@@ -38,7 +41,7 @@ const SuperMasterDirectivesProtectedRoute: React.FC<SuperMasterDirectivesProtect
         ENABLE_MASTER_SUPERMASTER_DIRECTIVES_ACCESS_DEFAULT
     );
 
-    if (user === "master" && masterAccessEnabled) {
+    if (isMasterUser && masterAccessEnabled) {
         return children;
     }
 

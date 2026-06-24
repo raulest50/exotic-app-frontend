@@ -189,7 +189,7 @@ const router = createBrowserRouter(
                 <Route
                     path="super_master_directives"
                     element={
-                        <AccessRoute accessRule={(access) => access.isMasterLike}>
+                        <AccessRoute>
                             <SuperMasterDirectivesProtectedRoute>
                                 <MasterDirectivesPage/>
                             </SuperMasterDirectivesProtectedRoute>
