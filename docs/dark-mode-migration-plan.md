@@ -471,7 +471,7 @@ Use this template when closing a module migration:
 
 - Status: ✅ Migrado
 - Files changed:
-  - `src/pages/MasterDirectives/MasterDirectivesPage.tsx`
+  - `src/pages/SuperMasterDirectives/MasterDirectivesPage.tsx`
 - Light-mode compatibility:
   - Preserved previous light values through semantic token defaults or `useColorModeValue` light arguments.
 - Dark-mode checks:

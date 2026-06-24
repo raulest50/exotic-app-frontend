@@ -30,7 +30,7 @@ export default function OperacionesCriticasBDPage() {
     useEffect(() => {
         const fetchConfig = async () => {
             try {
-                const res = await axios.get<SuperMasterConfig>(endPoints.get_super_master_config);
+                const res = await axios.get<SuperMasterConfig>(endPoints.get_super_master_directives_config);
                 setConfig(res.data);
             } catch (err) {
                 console.error("Error fetching Super Master config", err);

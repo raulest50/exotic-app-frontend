@@ -82,7 +82,7 @@ export default function SuperMasterOnboardingModal({ isOpen, onClose, onSuccess 
         if (!emailValid || sendCodeLoading || sendCodeCooldown > 0) return;
         setSendCodeLoading(true);
         try {
-            await axios.post(endPoints.send_super_master_verification_code, { email: email.trim() });
+            await axios.post(endPoints.send_super_master_directives_verification_code, { email: email.trim() });
             setCodeSent(true);
             setSendCodeCooldown(60);
             toast({
@@ -110,7 +110,7 @@ export default function SuperMasterOnboardingModal({ isOpen, onClose, onSuccess 
         if (!canSubmit || submitLoading) return;
         setSubmitLoading(true);
         try {
-            await axios.post(endPoints.complete_super_master_profile, {
+            await axios.post(endPoints.complete_super_master_directives_profile, {
                 email: email.trim(),
                 code: code.trim(),
                 newPassword: password,

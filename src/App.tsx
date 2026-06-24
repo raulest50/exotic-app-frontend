@@ -24,7 +24,7 @@ import AreaResponsableRoute from "./components/AreaResponsableRoute.tsx";
 import LoginPanel from "./pages/LoginPage/LoginPanel.tsx";
 import ResetPasswordPage from "./pages/LoginPage/ResetPasswordPage.tsx";
 import UsuariosPage from "./pages/Usuarios/UsuariosPage.tsx";
-import SuperMasterProtectedRoute from "./components/SuperMasterProtectedRoute.tsx";
+import SuperMasterDirectivesProtectedRoute from "./components/SuperMasterDirectivesProtectedRoute.tsx";
 
 import { Modulo } from "./pages/Usuarios/GestionUsuarios/types.tsx";
 import OperacionesCriticasBDPage from "./pages/OperacionesCriticasBD/OperacionesCriticasBDPage.tsx";
@@ -34,13 +34,13 @@ import PersonalPage from "./pages/Personal/PersonalPage.tsx";
 import BintelligencePage from "./pages/Bintelligence/BintelligencePage.tsx";
 import AdministracionAlertasPage from "./pages/AdministracionAlertas/AdministracionAlertasPage.tsx";
 import AdministracionGlobalPage from "./pages/AdministracionGlobal/AdministracionGlobalPage.tsx";
-import MasterDirectivesPage from "./pages/MasterDirectives/MasterDirectivesPage.tsx";
+import MasterDirectivesPage from "./pages/SuperMasterDirectives/MasterDirectivesPage.tsx";
 import CronogramaPage from "./pages/Cronograma/CronogramaPage.tsx";
 import OrganigramaPage from "./pages/Organigrama/OrganigramaPage.tsx";
 import TransaccionesAlmacenPage from "./pages/TransaccionesAlmacen/TransaccionesAlmacenPage.tsx";
 import AreaOperativaPanel from "./pages/AreaOperativaPanel/AreaOperativaPanel.tsx";
 import { EnvironmentBadge } from "./components/EnvironmentBadge.tsx";
-import { canAccessModule, moduleAccessRule } from "./auth/accessHelpers.ts";
+import { moduleAccessRule } from "./auth/accessHelpers.ts";
 
 const router = createBrowserRouter(
     createRoutesFromElements(
@@ -187,12 +187,12 @@ const router = createBrowserRouter(
                 />
 
                 <Route
-                    path="master_directives"
+                    path="super_master_directives"
                     element={
-                        <AccessRoute accessRule={(access) => canAccessModule(access.moduloAccesos, Modulo.MASTER_DIRECTIVES)}>
-                            <SuperMasterProtectedRoute>
+                        <AccessRoute accessRule={(access) => access.isMasterLike}>
+                            <SuperMasterDirectivesProtectedRoute>
                                 <MasterDirectivesPage/>
-                            </SuperMasterProtectedRoute>
+                            </SuperMasterDirectivesProtectedRoute>
                         </AccessRoute>
                     }
                 />

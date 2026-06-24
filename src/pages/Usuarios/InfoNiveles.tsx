@@ -322,10 +322,10 @@ const canSaveFromBi = biAccessLevel >= 3;`,
   },
   [Modulo.MASTER_DIRECTIVES]: {
     title: "Modulo de Master Directives",
-    description: "Configuracion avanzada reservada para super_master",
+    description: "Configuracion avanzada para super_master y master cuando la directiva lo habilite",
     implementationDetails: false,
     levels: [
-      { level: 1, description: "Acceso base al modulo, ademas restringido por la regla especial de super_master." },
+      { level: 1, description: "Acceso base al modulo, ademas restringido por la regla especial de Directivas Super Master." },
       { level: 2, description: "Reservado para futuras capacidades adicionales." },
       { level: 3, description: "Control total del modulo, manteniendo la restriccion especial." },
     ],

@@ -302,9 +302,9 @@ export default class EndPointsURL{
     // BI — informes diarios
     public informes_diarios_ping: string;
 
-    // master directives endpoints
-    public get_master_directives: string;
-    public update_master_directive: string;
+    // super master directives endpoints
+    public get_super_master_directives: string;
+    public update_super_master_directive: string;
 
     // administracion global endpoints
     public empresa_identidad_legal_vigente: string;
@@ -314,8 +314,8 @@ export default class EndPointsURL{
     public empresa_logo_documental_versiones: string;
     public empresa_logo_documental_version_imagen: string;
 
-    public get_master_directive(nombre: string): string {
-        return `${this.domain}/api/master-directives/${encodeURIComponent(nombre)}`;
+    public get_super_master_directive(nombre: string): string {
+        return `${this.domain}/api/super-master-directives/directives/${encodeURIComponent(nombre)}`;
     }
 
     public getProductoById(productoId: string): string {
@@ -469,11 +469,11 @@ export default class EndPointsURL{
         return `${base}?${this.biPersonalHorasExtraQuery(params, true).toString()}`;
     }
 
-    // super master ops endpoints
-    public get_super_master_config: string;
-    public update_super_master_config: string;
-    public send_super_master_verification_code: string;
-    public complete_super_master_profile: string;
+    // super master directives config/profile endpoints
+    public get_super_master_directives_config: string;
+    public update_super_master_directives_config: string;
+    public send_super_master_directives_verification_code: string;
+    public complete_super_master_directives_profile: string;
 
     public domain: string;
 
@@ -717,9 +717,9 @@ export default class EndPointsURL{
         this.get_periodos = `${domain}/${contabilidad_res}/periodos`;
         this.search_transacciones_almacen = `${domain}/${contabilidad_res}/transacciones`;
 
-        // master directives endpoints
-        this.get_master_directives = `${domain}/api/master-directives`;
-        this.update_master_directive = `${domain}/api/master-directives/update`;
+        // super master directives endpoints
+        this.get_super_master_directives = `${domain}/api/super-master-directives/directives`;
+        this.update_super_master_directive = `${domain}/api/super-master-directives/directives/update`;
 
         // administracion global endpoints
         this.empresa_identidad_legal_vigente = `${domain}/${empresa_identidad_legal_res}/vigente`;
@@ -729,11 +729,11 @@ export default class EndPointsURL{
         this.empresa_logo_documental_versiones = `${domain}/${empresa_logo_documental_res}/versiones`;
         this.empresa_logo_documental_version_imagen = `${domain}/${empresa_logo_documental_res}/versiones/{id}/imagen`;
 
-        // super master ops endpoints
-        this.get_super_master_config = `${domain}/api/super-master-ops/config`;
-        this.update_super_master_config = `${domain}/api/super-master-ops/config`;
-        this.send_super_master_verification_code = `${domain}/api/super-master-ops/send-verification-code`;
-        this.complete_super_master_profile = `${domain}/api/super-master-ops/complete-profile`;
+        // super master directives config/profile endpoints
+        this.get_super_master_directives_config = `${domain}/api/super-master-directives/config`;
+        this.update_super_master_directives_config = `${domain}/api/super-master-directives/config`;
+        this.send_super_master_directives_verification_code = `${domain}/api/super-master-directives/send-verification-code`;
+        this.complete_super_master_directives_profile = `${domain}/api/super-master-directives/complete-profile`;
 
         // organigrama endpoints
         const organigrama_res = 'organigrama';

@@ -41,9 +41,14 @@ import "@fontsource-variable/comfortaa";
 import { Modulo } from "./Usuarios/GestionUsuarios/types.tsx";
 
 import { useAuth } from "../context/AuthContext";
+import { useMasterDirectives } from "../context/MasterDirectivesContext";
+import {
+    ENABLE_MASTER_SUPERMASTER_DIRECTIVES_ACCESS_DEFAULT,
+    MASTER_DIRECTIVE_KEYS,
+} from "../context/masterDirectiveConstants";
 import { useNotifications } from "../context/NotificationsContext";
 import type { AccessRule } from "../auth/accessModel.ts";
-import { canAccessModule, moduleAccessRule } from "../auth/accessHelpers.ts";
+import { moduleAccessRule } from "../auth/accessHelpers.ts";
 
 type HomeCardDef = {
     to: string;
@@ -58,6 +63,7 @@ export default function Home() {
     const { user, logout, meProfile, accesosReady, moduloAccesos, isMasterLike } = useAuth();
     const [showSuperMasterOnboarding, setShowSuperMasterOnboarding] = useState(false);
     const { colorMode, toggleColorMode } = useColorMode();
+    const { loading: directivesLoading, getBooleanDirective } = useMasterDirectives();
 
     const versionBgColor = useColorModeValue("purple.200", "purple.600");
     const userBgColor = useColorModeValue("green.200", "green.600");
@@ -75,6 +81,15 @@ export default function Home() {
         () => ({ moduloAccesos, isMasterLike }),
         [moduloAccesos, isMasterLike]
     );
+
+    const masterCanAccessSuperMasterDirectives = getBooleanDirective(
+        MASTER_DIRECTIVE_KEYS.ENABLE_MASTER_SUPERMASTER_DIRECTIVES_ACCESS,
+        ENABLE_MASTER_SUPERMASTER_DIRECTIVES_ACCESS_DEFAULT
+    );
+
+    const canShowSuperMasterDirectivesCard =
+        user === "super_master" ||
+        (user === "master" && !directivesLoading && masterCanAccessSuperMasterDirectives);
 
     const cards: HomeCardDef[] = [
         { to: "/usuarios", name: "Roles y Usuarios", icon: FaUsersGear, notificationModulo: Modulo.USUARIOS, accesoValido: moduleAccessRule(Modulo.USUARIOS) },
@@ -168,9 +183,9 @@ export default function Home() {
                             notification={card.notificationModulo ? getNotificationForModule(card.notificationModulo as Modulo) : undefined}
                         />
                     ))}
-                {user === "super_master" && canAccessModule(access.moduloAccesos, Modulo.MASTER_DIRECTIVES) && (
+                {canShowSuperMasterDirectivesCard && (
                     <SectionCard
-                        to={"/master_directives"}
+                        to={"/super_master_directives"}
                         name={"Directivas Super Master"}
                         icon={FaCogs}
                         bgColor="red.100"

@@ -24,6 +24,7 @@ import { FaCircleExclamation } from "react-icons/fa6";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
 import MyHeader from "../../components/MyHeader";
+import { useAuth } from "../../context/AuthContext";
 import { MasterDirective, useMasterDirectives } from "../../context/MasterDirectivesContext";
 import { MASTER_DIRECTIVE_KEYS } from "../../context/masterDirectiveConstants";
 
@@ -53,6 +54,18 @@ function isPositiveInteger(value: string) {
     return /^\d+$/.test(value.trim()) && Number(value.trim()) >= 1;
 }
 
+function isBooleanEnabled(value: string) {
+    return value.trim().toLowerCase() === "true";
+}
+
+function normalizeDirectiveDraftValue(directive: MasterDirective, value: string) {
+    if (directive.tipoDato === "BOOLEANO") {
+        return String(isBooleanEnabled(value));
+    }
+
+    return value.trim();
+}
+
 export default function MasterDirectivesPage() {
     const [config, setConfig] = useState<SuperMasterConfig | null>(null);
     const [draft, setDraft] = useState<SuperMasterConfig | null>(null);
@@ -63,18 +76,20 @@ export default function MasterDirectivesPage() {
     const endPoints = useMemo(() => new EndPointsURL(), []);
     const toast = useToast();
     const { refreshDirectives } = useMasterDirectives();
+    const { user } = useAuth();
+    const canManageSuperMasterConfig = user === "super_master";
     const explanatoryWarningColor = useColorModeValue("orange.600", "orange.300");
 
     const fetchConfig = useCallback(async () => {
         setLoading(true);
         try {
-            const superRes = await axios.get<SuperMasterConfig>(endPoints.get_super_master_config);
+            const superRes = await axios.get<SuperMasterConfig>(endPoints.get_super_master_directives_config);
             const superData = superRes.data;
             setConfig(superData);
             setDraft({ ...superData });
 
             try {
-                const directivesRes = await axios.get<DTOAllMasterDirectives>(endPoints.get_master_directives);
+                const directivesRes = await axios.get<DTOAllMasterDirectives>(endPoints.get_super_master_directives);
                 const directives = directivesRes.data.masterDirectives ?? [];
                 setMasterDirectives(directives);
                 setDirectiveDrafts(Object.fromEntries(directives.map(directive => [directive.id, directive.valor])));
@@ -111,7 +126,18 @@ export default function MasterDirectivesPage() {
         [masterDirectives]
     );
 
+    const booleanDirectives = useMemo(
+        () => masterDirectives.filter(directive => directive.tipoDato === "BOOLEANO"),
+        [masterDirectives]
+    );
+
+    const editableMasterDirectives = useMemo(
+        () => masterDirectives.filter(directive => directive.tipoDato === "NUMERO" || directive.tipoDato === "BOOLEANO"),
+        [masterDirectives]
+    );
+
     const superMasterHasChanges =
+        canManageSuperMasterConfig &&
         draft != null &&
         config != null &&
         (draft.habilitarEliminacionForzada !== config.habilitarEliminacionForzada ||
@@ -129,15 +155,16 @@ export default function MasterDirectivesPage() {
         return errors;
     }, [numericDirectives, directiveDrafts]);
 
-    const masterDirectivesHaveChanges = numericDirectives.some(directive => {
+    const masterDirectivesHaveChanges = editableMasterDirectives.some(directive => {
         const value = directiveDrafts[directive.id] ?? directive.valor;
-        return value.trim() !== directive.valor;
+        return normalizeDirectiveDraftValue(directive, value) !== normalizeDirectiveDraftValue(directive, directive.valor);
     });
 
     const hasDirectiveErrors = Object.keys(directiveErrors).length > 0;
     const hasChanges = superMasterHasChanges || masterDirectivesHaveChanges;
 
     const updateDraft = (key: SuperMasterConfigKey, value: boolean) => {
+        if (!canManageSuperMasterConfig) return;
         if (draft) setDraft({ ...draft, [key]: value });
     };
 
@@ -158,21 +185,21 @@ export default function MasterDirectivesPage() {
         setUpdating(true);
         try {
             if (superMasterHasChanges) {
-                await axios.put(endPoints.update_super_master_config, draft);
+                await axios.put(endPoints.update_super_master_directives_config, draft);
                 setConfig({ ...draft });
             }
 
-            const changedDirectives = numericDirectives.filter(directive => {
+            const changedDirectives = editableMasterDirectives.filter(directive => {
                 const value = directiveDrafts[directive.id] ?? directive.valor;
-                return value.trim() !== directive.valor;
+                return normalizeDirectiveDraftValue(directive, value) !== normalizeDirectiveDraftValue(directive, directive.valor);
             });
 
             await Promise.all(changedDirectives.map(directive => {
                 const newDirective = {
                     ...directive,
-                    valor: (directiveDrafts[directive.id] ?? directive.valor).trim(),
+                    valor: normalizeDirectiveDraftValue(directive, directiveDrafts[directive.id] ?? directive.valor),
                 };
-                return axios.put(endPoints.update_master_directive, {
+                return axios.put(endPoints.update_super_master_directive, {
                     oldMasterDirective: directive,
                     newMasterDirective: newDirective,
                 });
@@ -239,6 +266,7 @@ export default function MasterDirectivesPage() {
                                     <HStack>
                                         <Switch
                                             isChecked={value}
+                                            isDisabled={!canManageSuperMasterConfig}
                                             onChange={e => updateDraft(key, e.target.checked)}
                                         />
                                         {hasRowChange && (
@@ -296,6 +324,49 @@ export default function MasterDirectivesPage() {
                                                 </FormControl>
                                                 {hasRowChange && (
                                                     <Icon as={FaCircleExclamation} color="orange.400" mt={2} />
+                                                )}
+                                            </HStack>
+                                        </Td>
+                                    </Tr>
+                                );
+                            })}
+                        </Tbody>
+                    </Table>
+                </Box>
+            )}
+
+            {booleanDirectives.length > 0 && (
+                <Box mt={8}>
+                    <Text mb={2} fontWeight="bold">
+                        Directivas booleanas
+                    </Text>
+                    <Table variant="simple">
+                        <Thead>
+                            <Tr>
+                                <Th>Nombre</Th>
+                                <Th>Valor</Th>
+                            </Tr>
+                        </Thead>
+                        <Tbody>
+                            {booleanDirectives.map(directive => {
+                                const value = directiveDrafts[directive.id] ?? directive.valor;
+                                const hasRowChange = normalizeDirectiveDraftValue(directive, value) !== normalizeDirectiveDraftValue(directive, directive.valor);
+                                return (
+                                    <Tr key={directive.id}>
+                                        <Td>
+                                            <Text fontWeight="bold">{directive.nombre}</Text>
+                                            <Text fontSize="sm" color="app.textSubtle">
+                                                {directive.resumen}
+                                            </Text>
+                                        </Td>
+                                        <Td>
+                                            <HStack>
+                                                <Switch
+                                                    isChecked={isBooleanEnabled(value)}
+                                                    onChange={e => updateDirectiveDraft(directive.id, String(e.target.checked))}
+                                                />
+                                                {hasRowChange && (
+                                                    <Icon as={FaCircleExclamation} color="orange.400" />
                                                 )}
                                             </HStack>
                                         </Td>
