@@ -222,6 +222,7 @@ export default function MpsReadonlyReviewPanel({
                 <Grid templateColumns="repeat(6, minmax(190px, 1fr))" gap={3} minW="1140px">
                     {mps.dias.map((dia) => {
                         const dayLabel = DAY_LABELS[dia.dayIndex] ?? `Dia ${dia.dayIndex + 1}`;
+                        const totalDiaUnidades = dia.items.reduce((total, item) => total + item.cantidadTotal, 0);
                         return (
                             <GridItem key={dia.id ?? dia.dayIndex}>
                                 <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" p={3} bg="gray.50" minH="420px">
@@ -232,7 +233,10 @@ export default function MpsReadonlyReviewPanel({
                                                 {formatSemanaMpsDisplayDate(dia.fecha)}
                                             </Text>
                                         </Box>
-                                        <Badge colorScheme="gray">{dia.items.length} items</Badge>
+                                        <Flex gap={2} wrap="wrap" justify="end">
+                                            <Badge colorScheme="gray">{dia.items.length} items</Badge>
+                                            <Badge colorScheme="purple">{formatNumber(totalDiaUnidades)} und</Badge>
+                                        </Flex>
                                     </Flex>
 
                                     {dia.items.length === 0 ? (
