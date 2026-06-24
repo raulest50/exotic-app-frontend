@@ -15,7 +15,6 @@ import {
     Input,
     InputGroup,
     InputRightElement,
-    Select,
     Spinner,
     Table,
     TableContainer,
@@ -30,13 +29,12 @@ import {
 import { LockIcon, UnlockIcon } from "@chakra-ui/icons";
 import { RiSave3Fill } from "react-icons/ri";
 import CustomIntegerInput from "../../../components/CustomIntegerInput/CustomIntegerInput.tsx";
-import type { Categoria, PoolCapacidad } from "../types.tsx";
+import type { Categoria } from "../types.tsx";
 import { RutaProcesoCatDesigner } from "./RutaProcesoCatDesigner";
-import PoolCapacidadManager from "./PoolCapacidadManager";
 
 const PAGE_SIZE = 10;
 
-type EditableCategoriaField = "loteSize" | "tiempoDiasFabricacion" | "poolCapacidadId";
+type EditableCategoriaField = "loteSize" | "tiempoDiasFabricacion";
 
 function getAxiosErrorMessage(error: unknown, fallback: string): string {
     if (axios.isAxiosError(error)) {
@@ -47,16 +45,13 @@ function getAxiosErrorMessage(error: unknown, fallback: string): string {
 
 export default function ConfParamsCategoria() {
     const [categorias, setCategorias] = useState<Categoria[]>([]);
-    const [pools, setPools] = useState<PoolCapacidad[]>([]);
     const [searchNombre, setSearchNombre] = useState("");
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
-    const [loadingPools, setLoadingPools] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editingLoteSize, setEditingLoteSize] = useState<Record<number, number>>({});
     const [editingTiempoDiasFabricacion, setEditingTiempoDiasFabricacion] = useState<Record<number, number>>({});
-    const [editingPoolCapacidadId, setEditingPoolCapacidadId] = useState<Record<number, number | null>>({});
     const [unlockedFields, setUnlockedFields] = useState<Record<string, boolean>>({});
     const [savingFieldKey, setSavingFieldKey] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<"list" | "designer">("list");
@@ -98,25 +93,6 @@ export default function ConfParamsCategoria() {
         }
     };
 
-    const fetchPools = useCallback(async () => {
-        setLoadingPools(true);
-        try {
-            const response = await axios.get<PoolCapacidad[]>(endPoints.get_pooles_capacidad);
-            setPools(response.data);
-        } catch (err) {
-            console.error("Error fetching pools:", err);
-            toast({
-                title: "Error",
-                description: getAxiosErrorMessage(err, "No se pudieron cargar los pools de capacidad."),
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-            });
-        } finally {
-            setLoadingPools(false);
-        }
-    }, [endPoints, toast]);
-
     const fetchCategorias = useCallback(async (pageNumber: number) => {
         setLoading(true);
         setError(null);
@@ -151,14 +127,6 @@ export default function ConfParamsCategoria() {
                 return { ...prev, ...next };
             });
 
-            setEditingPoolCapacidadId((prev) => {
-                const next: Record<number, number | null> = {};
-                loadedCategorias.forEach((c) => {
-                    next[c.categoriaId] = c.poolCapacidadId ?? null;
-                });
-                return { ...prev, ...next };
-            });
-
             if (loadedCategorias.length > 0) {
                 await fetchRutasExistentes(loadedCategorias.map((c) => c.categoriaId));
             }
@@ -173,13 +141,8 @@ export default function ConfParamsCategoria() {
     }, [endPoints, searchNombre]);
 
     useEffect(() => {
-        void fetchPools();
         void fetchCategorias(0);
-    }, [fetchPools, fetchCategorias]);
-
-    const refreshPoolsAndCategorias = useCallback(async () => {
-        await Promise.all([fetchPools(), fetchCategorias(page)]);
-    }, [fetchPools, fetchCategorias, page]);
+    }, [fetchCategorias]);
 
     const handleSearch = () => {
         void fetchCategorias(0);
@@ -205,13 +168,6 @@ export default function ConfParamsCategoria() {
 
     const handleTiempoDiasFabricacionChange = (categoriaId: number, value: number) => {
         setEditingTiempoDiasFabricacion((prev) => ({ ...prev, [categoriaId]: value }));
-    };
-
-    const handlePoolCapacidadChange = (categoriaId: number, value: string) => {
-        setEditingPoolCapacidadId((prev) => ({
-            ...prev,
-            [categoriaId]: value === "" ? null : Number(value),
-        }));
     };
 
     const handleSaveLoteSize = async (categoria: Categoria) => {
@@ -282,61 +238,12 @@ export default function ConfParamsCategoria() {
         }
     };
 
-    const handleSavePoolCapacidad = async (categoria: Categoria) => {
-        const categoriaId = categoria.categoriaId;
-        const value = editingPoolCapacidadId[categoriaId] ?? null;
-        const fieldKey = buildFieldKey(categoriaId, "poolCapacidadId");
-        const selectedPool = pools.find((pool) => pool.id === value) ?? null;
-
-        setSavingFieldKey(fieldKey);
-        try {
-            const url = endPoints.update_categoria_pool_capacidad.replace("{categoriaId}", String(categoriaId));
-            await axios.patch(url, { poolCapacidadId: value });
-            setCategorias((prev) =>
-                prev.map((c) => (
-                    c.categoriaId === categoriaId
-                        ? {
-                            ...c,
-                            poolCapacidadId: value,
-                            poolCapacidadNombre: selectedPool?.nombre ?? null,
-                            poolCapacidadCapacidadDiaria: selectedPool?.capacidadDiaria ?? null,
-                        }
-                        : c
-                )),
-            );
-            setUnlockedFields((prev) => ({ ...prev, [fieldKey]: false }));
-            toast({
-                title: value === null ? "Pool desasignado" : "Pool asignado",
-                description: `Categoria "${categoria.categoriaNombre}" actualizada correctamente`,
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-        } catch (err) {
-            toast({
-                title: "Error",
-                description: getAxiosErrorMessage(err, "No se pudo actualizar el pool de capacidad."),
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-            });
-        } finally {
-            setSavingFieldKey(null);
-        }
-    };
-
     if (viewMode === "designer" && selectedCategoria) {
         return <RutaProcesoCatDesigner categoria={selectedCategoria} onBack={backToList} />;
     }
 
     return (
         <Flex direction="column" p={4}>
-            <PoolCapacidadManager
-                pools={pools}
-                isLoading={loadingPools}
-                onChanged={refreshPoolsAndCategorias}
-            />
-
             <Box p={4} borderWidth="1px" borderRadius="lg" mb={4}>
                 <FormControl>
                     <FormLabel>Buscar por nombre</FormLabel>
@@ -381,15 +288,13 @@ export default function ConfParamsCategoria() {
                 <>
                     <Box borderWidth="1px" borderRadius="lg" overflow="hidden" mb={4}>
                         <TableContainer w="full" overflowX="auto">
-                            <Table variant="simple" size="sm" minW="1200px">
+                            <Table variant="simple" size="sm" minW="900px">
                                 <Thead>
                                     <Tr>
                                         <Th>ID</Th>
                                         <Th>Nombre</Th>
                                         <Th>Tamano de lote</Th>
                                         <Th>Tiempo fabricacion (dias)</Th>
-                                        <Th>Pool capacidad</Th>
-                                        <Th>Capacidad efectiva</Th>
                                         <Th>Ruta de Proceso</Th>
                                     </Tr>
                                 </Thead>
@@ -398,13 +303,9 @@ export default function ConfParamsCategoria() {
                                         const catId = categoria.categoriaId;
                                         const loteFieldKey = buildFieldKey(catId, "loteSize");
                                         const tiempoFieldKey = buildFieldKey(catId, "tiempoDiasFabricacion");
-                                        const poolFieldKey = buildFieldKey(catId, "poolCapacidadId");
 
                                         const currentLote = editingLoteSize[catId] ?? categoria.loteSize ?? 0;
                                         const currentTiempo = editingTiempoDiasFabricacion[catId] ?? categoria.tiempoDiasFabricacion ?? 0;
-                                        const currentPoolId = editingPoolCapacidadId[catId] ?? categoria.poolCapacidadId ?? null;
-                                        const originalPoolId = categoria.poolCapacidadId ?? null;
-                                        const selectedPool = pools.find((pool) => pool.id === currentPoolId) ?? null;
 
                                         return (
                                             <Tr key={catId}>
@@ -472,44 +373,6 @@ export default function ConfParamsCategoria() {
                                                     )}
                                                 </Flex>
                                             </Td>
-                                            <Td>
-                                                <Flex align="center" gap={2}>
-                                                    <IconButton
-                                                        aria-label={unlockedFields[poolFieldKey] ? "Bloquear edicion" : "Habilitar edicion"}
-                                                        icon={unlockedFields[poolFieldKey] ? <UnlockIcon boxSize={5} /> : <LockIcon boxSize={5} />}
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        boxSize={10}
-                                                        onClick={() => toggleLock(catId, "poolCapacidadId")}
-                                                    />
-                                                    <Select
-                                                        value={currentPoolId === null ? "" : String(currentPoolId)}
-                                                        onChange={(e) => handlePoolCapacidadChange(catId, e.target.value)}
-                                                        isDisabled={!unlockedFields[poolFieldKey]}
-                                                        width="220px"
-                                                        size="sm"
-                                                    >
-                                                        <option value="">Sin pool</option>
-                                                        {pools.map((pool) => (
-                                                            <option key={pool.id} value={pool.id}>
-                                                                {pool.nombre}
-                                                            </option>
-                                                        ))}
-                                                    </Select>
-                                                    {unlockedFields[poolFieldKey] && currentPoolId !== originalPoolId && (
-                                                        <IconButton
-                                                            aria-label="Guardar"
-                                                            icon={<Icon as={RiSave3Fill} boxSize={5} />}
-                                                            colorScheme="green"
-                                                            size="sm"
-                                                            boxSize={10}
-                                                            onClick={() => handleSavePoolCapacidad(categoria)}
-                                                            isLoading={savingFieldKey === poolFieldKey}
-                                                        />
-                                                    )}
-                                                </Flex>
-                                            </Td>
-                                            <Td>{selectedPool?.capacidadDiaria ?? categoria.poolCapacidadCapacidadDiaria ?? "Sin pool"}</Td>
                                             <Td>
                                                 <Button
                                                     size="sm"

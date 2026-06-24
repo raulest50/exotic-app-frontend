@@ -77,6 +77,7 @@ export default function TablaDispensaciones({
                         <Tr>
                             <Th>ID Transacción</Th>
                             <Th>ID Orden Producción</Th>
+                            <Th>Lote Producción</Th>
                             <Th>Fecha</Th>
                             <Th>Estado Contable</Th>
                             <Th>Observaciones</Th>
@@ -92,6 +93,7 @@ export default function TablaDispensaciones({
                                         ? dispensacion.idEntidadCausante 
                                         : '-'}
                                 </Td>
+                                <Td>{dispensacion.loteAsignado || '-'}</Td>
                                 <Td>{formatFecha(dispensacion.fechaTransaccion)}</Td>
                                 <Td>{formatEstadoContable(dispensacion.estadoContable)}</Td>
                                 <Td>
@@ -129,7 +131,7 @@ export default function TablaDispensaciones({
                         ))}
                         {dispensaciones.length === 0 && (
                             <Tr>
-                                <Td colSpan={6}>
+                                <Td colSpan={7}>
                                     <Text textAlign='center' py={4}>
                                         No hay dispensaciones disponibles.
                                     </Text>

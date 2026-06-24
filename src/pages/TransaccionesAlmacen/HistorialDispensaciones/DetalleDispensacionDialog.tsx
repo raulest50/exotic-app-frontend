@@ -135,6 +135,12 @@ export default function DetalleDispensacionDialog({
                                         <Text fontSize="md" fontWeight="semibold">{transaccion.idEntidadCausante}</Text>
                                     </Box>
                                 )}
+                                {transaccion.loteAsignado && (
+                                    <Box>
+                                        <Text fontSize="sm" color="app.textMuted">Lote de Producción:</Text>
+                                        <Text fontSize="md" fontWeight="semibold">{transaccion.loteAsignado}</Text>
+                                    </Box>
+                                )}
                                 <Box>
                                     <Text fontSize="sm" color="app.textMuted">Fecha:</Text>
                                     <Text fontSize="md" fontWeight="semibold">{formatFecha(transaccion.fechaTransaccion)}</Text>

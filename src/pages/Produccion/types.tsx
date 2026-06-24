@@ -44,17 +44,6 @@ export interface Categoria {
     loteSize?: number;
     tiempoDiasFabricacion?: number;
     capacidadProductivaDiaria?: number;
-    poolCapacidadId?: number | null;
-    poolCapacidadNombre?: string | null;
-    poolCapacidadCapacidadDiaria?: number | null;
-}
-
-export interface PoolCapacidad {
-    id: number;
-    nombre: string;
-    capacidadDiaria: number;
-    descripcion?: string | null;
-    activo: boolean;
 }
 
 export interface Terminado extends Producto {

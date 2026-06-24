@@ -30,13 +30,13 @@ function ResumenCapacidadProductivaComponent({ rows }: ResumenCapacidadProductiv
     return (
         <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" p={3} bg="gray.50">
             <Text fontSize="sm" fontWeight="semibold" color="gray.700" mb={3}>
-                Capacidad productiva por pool/categoria
+                Capacidad productiva por categoria
             </Text>
             <TableContainer w="full" overflowX="auto">
                 <Table size="sm" variant="simple">
                     <Thead>
                         <Tr>
-                            <Th>Unidad capacidad</Th>
+                            <Th>Categoria</Th>
                             <Th isNumeric>Total asignado</Th>
                             <Th isNumeric>Capacidad diaria</Th>
                             <Th isNumeric>Uso total</Th>
@@ -50,10 +50,7 @@ function ResumenCapacidadProductivaComponent({ rows }: ResumenCapacidadProductiv
                             return (
                                 <Tr key={row.rowKey}>
                                     <Td>
-                                        <Text>{row.poolCapacidadNombre ?? row.categoriaNombre ?? "Sin categoria"}</Text>
-                                        {row.poolCapacidadId !== null && row.poolCapacidadId !== undefined && (
-                                            <Text fontSize="xs" color="gray.500">Pool compartido</Text>
-                                        )}
+                                        <Text>{row.categoriaNombre ?? "Sin categoria"}</Text>
                                     </Td>
                                     <Td isNumeric>{formatCantidad(row.totalAsignado)}</Td>
                                     <Td isNumeric>{formatCantidad(row.capacidadDiaria)}</Td>

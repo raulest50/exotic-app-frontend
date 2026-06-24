@@ -47,11 +47,6 @@ export default class EndPointsURL{
     public update_categoria_lote_size: string;
     public update_categoria_tiempo_dias_fabricacion: string;
     public update_categoria_capacidad_productiva_diaria: string;
-    public update_categoria_pool_capacidad: string;
-    public get_pooles_capacidad: string;
-    public create_pool_capacidad: string;
-    public update_pool_capacidad: string;
-    public delete_pool_capacidad: string;
 
     // ruta proceso cat endpoints
     public get_ruta_proceso_cat: string;
@@ -274,13 +269,6 @@ export default class EndPointsURL{
     public planeacion_asociar_terminados: string;
     public planeacion_debug_excel_structure: string;
     public planeacion_debug_asociacion_terminados: string;
-    public planeacion_propuesta_mps_semanal: string;
-    public planeacion_mps_semanal_borrador: string;
-    public planeacion_mps_semanal: string;
-    public planeacion_mps_semanal_list: string;
-    public planeacion_mps_semanal_aprobar: string;
-    public planeacion_mps_semanal_generar_odps: string;
-    public planeacion_mps_semanal_odps: string;
 
     // programacion de produccion endpoints
     public programacion_mps_semanal_semanas: string;
@@ -547,11 +535,6 @@ export default class EndPointsURL{
         this.update_categoria_lote_size = `${domain}/categorias/{categoriaId}/lote-size`;
         this.update_categoria_tiempo_dias_fabricacion = `${domain}/categorias/{categoriaId}/tiempo-dias-fabricacion`;
         this.update_categoria_capacidad_productiva_diaria = `${domain}/categorias/{categoriaId}/capacidad-productiva-diaria`;
-        this.update_categoria_pool_capacidad = `${domain}/categorias/{categoriaId}/pool-capacidad`;
-        this.get_pooles_capacidad = `${domain}/api/pool-capacidad`;
-        this.create_pool_capacidad = `${domain}/api/pool-capacidad`;
-        this.update_pool_capacidad = `${domain}/api/pool-capacidad/{id}`;
-        this.delete_pool_capacidad = `${domain}/api/pool-capacidad/{id}`;
 
         // Ruta proceso cat endpoints
         const ruta_proceso_cat_res = 'api/ruta-proceso-cat';
@@ -787,13 +770,6 @@ export default class EndPointsURL{
         this.planeacion_asociar_terminados = `${domain}/${planeacion_produccion_res}/asociar_terminados`;
         this.planeacion_debug_excel_structure = `${domain}/${planeacion_produccion_res}/debug/excel-structure`;
         this.planeacion_debug_asociacion_terminados = `${domain}/${planeacion_produccion_res}/debug/asociacion-terminados`;
-        this.planeacion_propuesta_mps_semanal = `${domain}/${planeacion_produccion_res}/propuesta-mps-semanal`;
-        this.planeacion_mps_semanal_borrador = `${domain}/${planeacion_produccion_res}/mps-semanal/borrador`;
-        this.planeacion_mps_semanal = `${domain}/${planeacion_produccion_res}/mps-semanal`;
-        this.planeacion_mps_semanal_list = `${domain}/${planeacion_produccion_res}/mps-semanal/list`;
-        this.planeacion_mps_semanal_aprobar = `${domain}/${planeacion_produccion_res}/mps-semanal/aprobar`;
-        this.planeacion_mps_semanal_generar_odps = `${domain}/${planeacion_produccion_res}/mps-semanal/generar-odps`;
-        this.planeacion_mps_semanal_odps = `${domain}/${planeacion_produccion_res}/mps-semanal/odps`;
 
         // Programacion de produccion endpoints
         this.programacion_mps_semanal_borrador_directo = `${domain}/${programacion_produccion_res}/mps-semanal/borrador-directo`;

@@ -21,9 +21,10 @@ export interface PaginatedResponse<T> {
 }
 
 export interface FiltroHistDispensacionDTO {
-    tipoFiltroId: number; // 0 = ninguno, 1 = transaccionId, 2 = ordenProduccionId
+    tipoFiltroId: number; // 0 = ninguno, 1 = transaccionId, 2 = ordenProduccionId, 3 = loteAsignado
     transaccionId?: number | null;
     ordenProduccionId?: number | null;
+    loteAsignado?: string | null;
     tipoFiltroFecha: number; // 0 = ninguno, 1 = rango, 2 = específica
     fechaInicio?: string | null;
     fechaFin?: string | null;
@@ -31,4 +32,3 @@ export interface FiltroHistDispensacionDTO {
     page: number;
     size: number;
 }
-

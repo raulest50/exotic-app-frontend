@@ -27,8 +27,6 @@ export interface ResumenCapacidadCategoriaRow {
     rowKey: string;
     categoriaId: number | null;
     categoriaNombre: string | null;
-    poolCapacidadId: number | null;
-    poolCapacidadNombre: string | null;
     capacidadDiaria: number;
     totalAsignado: number;
     porcentajeUso: number | null;
@@ -100,16 +98,8 @@ export function buildResumenCapacidadPorCategoria(
         const categoria = fila.terminado.categoria;
         const categoriaId = categoria?.categoriaId ?? null;
         const categoriaNombre = categoria?.categoriaNombre?.trim() || "Sin categoria";
-        const poolCapacidadId = categoria?.poolCapacidadId ?? null;
-        const poolCapacidadNombre = categoria?.poolCapacidadNombre?.trim() || null;
-        const capacidadDiaria = poolCapacidadId !== null
-            ? (categoria?.poolCapacidadCapacidadDiaria ?? 0)
-            : (categoria?.capacidadProductivaDiaria ?? 0);
-        const rowKey = poolCapacidadId !== null
-            ? `pool::${poolCapacidadId}`
-            : categoriaId !== null
-                ? `categoria::${categoriaId}`
-                : "sin-categoria";
+        const capacidadDiaria = categoria?.capacidadProductivaDiaria ?? 0;
+        const rowKey = categoriaId !== null ? `categoria::${categoriaId}` : "sin-categoria";
         const necesidad = Math.max(0, necesidades[fila.terminado.productoId] ?? 0);
 
         if (!resumenMap.has(rowKey)) {
@@ -117,8 +107,6 @@ export function buildResumenCapacidadPorCategoria(
                 rowKey,
                 categoriaId,
                 categoriaNombre,
-                poolCapacidadId,
-                poolCapacidadNombre,
                 capacidadDiaria,
                 totalAsignado: 0,
                 porcentajeUso: capacidadDiaria > 0 ? 0 : null,
