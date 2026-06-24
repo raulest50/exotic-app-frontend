@@ -19,6 +19,11 @@ import {
     ModalOverlay,
     SimpleGrid,
     Spinner,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
     Text,
     Textarea,
     VStack,
@@ -42,6 +47,7 @@ import type {
 } from "../Produccion/components/seguimientoBoard.types.ts";
 import type { SeguimientoActionType } from "../Produccion/components/SeguimientoBoardUI.tsx";
 import AreaOperativaOrderDetailDrawer from "./AreaOperativaOrderDetailDrawer.tsx";
+import AreaOperativaMpsSemanalTab from "./AreaOperativaMpsSemanalTab.tsx";
 import type { AreaOperativaOrdenDetalleDTO } from "./areaOperativaPanel.types.ts";
 
 const endpoints = new EndPointsURL();
@@ -287,73 +293,88 @@ export default function AreaOperativaPanel() {
                 </HStack>
             </Box>
 
-            <SeguimientoResumenCards
-                total={tablero.resumen.total}
-                cola={tablero.resumen.cola}
-                espera={tablero.resumen.espera}
-                enProceso={tablero.resumen.enProceso}
-                completado={tablero.resumen.completado}
-            />
+            <Tabs variant="enclosed" colorScheme="teal" isLazy>
+                <TabList>
+                    <Tab>Tablero operativo</Tab>
+                    <Tab>MPS semanal</Tab>
+                </TabList>
+                <TabPanels>
+                    <TabPanel px={0} pb={0}>
+                        <VStack w="full" spacing={6} align="stretch">
+                            <SeguimientoResumenCards
+                                total={tablero.resumen.total}
+                                cola={tablero.resumen.cola}
+                                espera={tablero.resumen.espera}
+                                enProceso={tablero.resumen.enProceso}
+                                completado={tablero.resumen.completado}
+                            />
 
-            <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
-                <VStack align="stretch" spacing={3}>
-                    <Text fontWeight="semibold">Filtros y vista rápida</Text>
-                    <HStack flexWrap="wrap" gap={3}>
-                        <Box flex="1" minW={{ base: "100%", md: "320px" }}>
-                            <InputGroup>
-                                <InputLeftElement pointerEvents="none">
-                                    <FiSearch />
-                                </InputLeftElement>
-                                <Input
-                                    value={searchTerm}
-                                    onChange={(event) => setSearchTerm(event.target.value)}
-                                    placeholder="Buscar por lote, OP, producto o nodo"
-                                />
-                            </InputGroup>
-                        </Box>
-                        <Text fontSize="sm" color="app.textMuted">
-                            Mostrando {totalFilteredCards} órdenes en el tablero filtrado.
-                        </Text>
-                    </HStack>
-                </VStack>
-            </Box>
+                            <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
+                                <VStack align="stretch" spacing={3}>
+                                    <Text fontWeight="semibold">Filtros y vista rápida</Text>
+                                    <HStack flexWrap="wrap" gap={3}>
+                                        <Box flex="1" minW={{ base: "100%", md: "320px" }}>
+                                            <InputGroup>
+                                                <InputLeftElement pointerEvents="none">
+                                                    <FiSearch />
+                                                </InputLeftElement>
+                                                <Input
+                                                    value={searchTerm}
+                                                    onChange={(event) => setSearchTerm(event.target.value)}
+                                                    placeholder="Buscar por lote, OP, producto o nodo"
+                                                />
+                                            </InputGroup>
+                                        </Box>
+                                        <Text fontSize="sm" color="app.textMuted">
+                                            Mostrando {totalFilteredCards} órdenes en el tablero filtrado.
+                                        </Text>
+                                    </HStack>
+                                </VStack>
+                            </Box>
 
-            {error ? (
-                <Alert status="error" borderRadius="md">
-                    <AlertIcon />
-                    {error}
-                </Alert>
-            ) : null}
+                            {error ? (
+                                <Alert status="error" borderRadius="md">
+                                    <AlertIcon />
+                                    {error}
+                                </Alert>
+                            ) : null}
 
-            {loading ? (
-                <Flex justify="center" align="center" py={12}>
-                    <Spinner size="xl" color="teal.500" />
-                </Flex>
-            ) : null}
+                            {loading ? (
+                                <Flex justify="center" align="center" py={12}>
+                                    <Spinner size="xl" color="teal.500" />
+                                </Flex>
+                            ) : null}
 
-            {!loading && tablero.resumen.total === 0 ? (
-                <Box borderWidth="1px" borderRadius="xl" bg="app.surfaceSubtle" p={10} textAlign="center">
-                    <Heading size="md" color={emptyTitleColor} mb={2}>No hay órdenes en seguimiento</Heading>
-                    <Text color="app.textSubtle">
-                        Las órdenes aparecerán aquí cuando una ruta productiva involucre tus áreas asignadas.
-                    </Text>
-                </Box>
-            ) : null}
+                            {!loading && tablero.resumen.total === 0 ? (
+                                <Box borderWidth="1px" borderRadius="xl" bg="app.surfaceSubtle" p={10} textAlign="center">
+                                    <Heading size="md" color={emptyTitleColor} mb={2}>No hay órdenes en seguimiento</Heading>
+                                    <Text color="app.textSubtle">
+                                        Las órdenes aparecerán aquí cuando una ruta productiva involucre tus áreas asignadas.
+                                    </Text>
+                                </Box>
+                            ) : null}
 
-            {!loading && tablero.resumen.total > 0 ? (
-                <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
-                    {(Object.keys(BOARD_COLUMN_META) as EstadoTableroKey[]).map((estadoKey) => (
-                        <SeguimientoBoardColumn
-                            key={estadoKey}
-                            estadoKey={estadoKey}
-                            items={filteredBoard[estadoKey]}
-                            mode="leader"
-                            onOpenDetail={openDetail}
-                            onAction={openActionModal}
-                        />
-                    ))}
-                </SimpleGrid>
-            ) : null}
+                            {!loading && tablero.resumen.total > 0 ? (
+                                <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
+                                    {(Object.keys(BOARD_COLUMN_META) as EstadoTableroKey[]).map((estadoKey) => (
+                                        <SeguimientoBoardColumn
+                                            key={estadoKey}
+                                            estadoKey={estadoKey}
+                                            items={filteredBoard[estadoKey]}
+                                            mode="leader"
+                                            onOpenDetail={openDetail}
+                                            onAction={openActionModal}
+                                        />
+                                    ))}
+                                </SimpleGrid>
+                            ) : null}
+                        </VStack>
+                    </TabPanel>
+                    <TabPanel px={0} pb={0}>
+                        <AreaOperativaMpsSemanalTab />
+                    </TabPanel>
+                </TabPanels>
+            </Tabs>
 
             <Modal isOpen={isActionOpen} onClose={onActionClose} size="md">
                 <ModalOverlay />

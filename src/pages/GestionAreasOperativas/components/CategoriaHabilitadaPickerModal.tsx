@@ -3,6 +3,7 @@ import {
     Box,
     Button,
     Checkbox,
+    Divider,
     Flex,
     HStack,
     Input,
@@ -16,6 +17,7 @@ import {
     ModalHeader,
     ModalOverlay,
     Spinner,
+    SimpleGrid,
     Table,
     TableContainer,
     Tag,
@@ -36,13 +38,19 @@ import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import MyPagination from '../../../components/MyPagination.tsx';
 import { Categoria } from '../../Produccion/types.tsx';
-import { CategoriaHabilitada, PaginatedResponse } from '../ConsultaAreasOperativas/types.ts';
+import {
+    CategoriaHabilitada,
+    PaginatedResponse,
+    UnidadMedidaAreaOperativa,
+} from '../ConsultaAreasOperativas/types.ts';
 
 interface CategoriaHabilitadaPickerModalProps {
     isOpen: boolean;
     onClose: () => void;
     initialSelected: CategoriaHabilitada[];
     onConfirm: (categorias: CategoriaHabilitada[]) => void;
+    unidadesDisponibles?: UnidadMedidaAreaOperativa[];
+    allowUnidadSelection?: boolean;
 }
 
 const PAGE_SIZE = 10;
@@ -52,6 +60,8 @@ export default function CategoriaHabilitadaPickerModal({
     onClose,
     initialSelected,
     onConfirm,
+    unidadesDisponibles = [],
+    allowUnidadSelection = false,
 }: CategoriaHabilitadaPickerModalProps) {
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [searchNombre, setSearchNombre] = useState('');
@@ -70,7 +80,10 @@ export default function CategoriaHabilitadaPickerModal({
         }
 
         const nextSelected = initialSelected.reduce<Record<number, CategoriaHabilitada>>((acc, categoria) => {
-            acc[categoria.categoriaId] = categoria;
+            acc[categoria.categoriaId] = {
+                ...categoria,
+                unidadMedidaIds: categoria.unidadMedidaIds ?? [],
+            };
             return acc;
         }, {});
 
@@ -116,16 +129,44 @@ export default function CategoriaHabilitadaPickerModal({
                 next[categoria.categoriaId] = {
                     categoriaId: categoria.categoriaId,
                     categoriaNombre: categoria.categoriaNombre,
+                    unidadMedidaIds: [],
                 };
             }
             return next;
         });
     };
 
+    const toggleUnidadForCategoria = (categoriaId: number, unidadId: number) => {
+        setSelectedById((prev) => {
+            const selected = prev[categoriaId];
+            if (!selected) {
+                return prev;
+            }
+
+            const currentIds = selected.unidadMedidaIds ?? [];
+            const nextUnidadIds = currentIds.includes(unidadId)
+                ? currentIds.filter((id) => id !== unidadId)
+                : [...currentIds, unidadId];
+
+            return {
+                ...prev,
+                [categoriaId]: {
+                    ...selected,
+                    unidadMedidaIds: nextUnidadIds.sort((a, b) => a - b),
+                },
+            };
+        });
+    };
+
     const handleConfirm = () => {
-        const selectedCategorias = Object.values(selectedById).sort((a, b) =>
-            a.categoriaNombre.localeCompare(b.categoriaNombre, 'es', { sensitivity: 'base' }),
-        );
+        const selectedCategorias = Object.values(selectedById)
+            .map((categoria) => ({
+                ...categoria,
+                unidadMedidaIds: [...(categoria.unidadMedidaIds ?? [])].sort((a, b) => a - b),
+            }))
+            .sort((a, b) =>
+                a.categoriaNombre.localeCompare(b.categoriaNombre, 'es', { sensitivity: 'base' }),
+            );
         onConfirm(selectedCategorias);
         onClose();
     };
@@ -197,6 +238,47 @@ export default function CategoriaHabilitadaPickerModal({
                                 </Wrap>
                             )}
                         </Box>
+
+                        {allowUnidadSelection && selectedCategorias.length > 0 && (
+                            <>
+                                <Divider />
+                                <Box>
+                                    <Text fontWeight="semibold" mb={2}>
+                                        Unidades por categoría
+                                    </Text>
+                                    {unidadesDisponibles.length === 0 ? (
+                                        <Text color="app.textSubtle" fontSize="sm">
+                                            Sin unidades activas disponibles para asociar.
+                                        </Text>
+                                    ) : (
+                                        <VStack align="stretch" spacing={3}>
+                                            {selectedCategorias.map((categoria) => {
+                                                const selectedUnidadIds = categoria.unidadMedidaIds ?? [];
+                                                return (
+                                                    <Box key={categoria.categoriaId} borderWidth="1px" borderRadius="md" p={3}>
+                                                        <Text fontSize="sm" fontWeight="semibold" mb={2}>
+                                                            {categoria.categoriaNombre}
+                                                        </Text>
+                                                        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={2}>
+                                                            {unidadesDisponibles.map((unidad) => (
+                                                                <Checkbox
+                                                                    key={unidad.id}
+                                                                    size="sm"
+                                                                    isChecked={selectedUnidadIds.includes(unidad.id)}
+                                                                    onChange={() => toggleUnidadForCategoria(categoria.categoriaId, unidad.id)}
+                                                                >
+                                                                    {unidad.codigo} - {unidad.nombre}
+                                                                </Checkbox>
+                                                            ))}
+                                                        </SimpleGrid>
+                                                    </Box>
+                                                );
+                                            })}
+                                        </VStack>
+                                    )}
+                                </Box>
+                            </>
+                        )}
 
                         {loading ? (
                             <Flex justify="center" py={8}>

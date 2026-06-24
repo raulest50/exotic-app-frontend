@@ -291,6 +291,7 @@ export default class EndPointsURL{
     public seguimiento_pausar_proceso: string;
     public seguimiento_reportar_completado: string;
     public area_operativa_panel_detalle_operativo_orden: string;
+    public area_operativa_panel_mps_semanal_actual: string;
 
     // BI — informes diarios
     public informes_diarios_ping: string;
@@ -795,6 +796,7 @@ export default class EndPointsURL{
 
         const area_operativa_panel_res = 'api/area-operativa-panel';
         this.area_operativa_panel_detalle_operativo_orden = `${domain}/${area_operativa_panel_res}/ordenes/{ordenId}/detalle-operativo`;
+        this.area_operativa_panel_mps_semanal_actual = `${domain}/${area_operativa_panel_res}/mps-semanal/actual`;
 
         // BI — informes diarios
         this.informes_diarios_ping = `${domain}/${informes_diarios_res}/ping`;

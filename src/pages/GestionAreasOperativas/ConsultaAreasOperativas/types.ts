@@ -1,6 +1,12 @@
 export interface CategoriaHabilitada {
     categoriaId: number;
     categoriaNombre: string;
+    unidadMedidaIds?: number[];
+}
+
+export interface CategoriaHabilitadaMutation {
+    categoriaId: number;
+    unidadMedidaIds: number[];
 }
 
 export interface AreaOperativa {
@@ -36,6 +42,7 @@ export interface AreaOperativaMutationDTO {
     descripcion: string;
     responsableId: number;
     categoriaIds?: number[];
+    categoriasHabilitadas?: CategoriaHabilitadaMutation[];
 }
 
 export type DimensionUnidadAreaOperativa = 'VOLUMEN' | 'MASA' | 'CONTEO' | 'TIEMPO';
@@ -49,8 +56,8 @@ export interface UnidadMedidaAreaOperativa {
     nombre: string;
     descripcion: string | null;
     dimension: DimensionUnidadAreaOperativa;
-    unidadReferencia: string;
-    factorAReferencia: number;
+    unidadEstandar: string;
+    cantidadUnidadEstandar: number;
     principal: boolean;
     discreta: boolean;
     activo: boolean;
@@ -61,8 +68,8 @@ export interface UnidadMedidaAreaOperativaRequest {
     nombre: string;
     descripcion?: string | null;
     dimension: DimensionUnidadAreaOperativa;
-    unidadReferencia: string;
-    factorAReferencia: number;
+    unidadEstandar: string;
+    cantidadUnidadEstandar: number;
     principal: boolean;
     discreta: boolean;
     activo: boolean;
@@ -74,7 +81,7 @@ export interface CapacidadAreaOperativa {
     unidadMedidaId: number;
     unidadCodigo: string;
     unidadNombre: string;
-    unidadReferencia: string;
+    unidadEstandar: string;
     tipoCapacidad: TipoCapacidadAreaOperativa;
     cantidad: number;
     periodo: PeriodoCapacidadAreaOperativa;
@@ -101,8 +108,8 @@ export interface ConversionUnidadAreaOperativaResponse {
     unidadOrigen: UnidadMedidaAreaOperativa;
     unidadDestino: UnidadMedidaAreaOperativa;
     cantidadOrigen: number;
-    cantidadReferencia: number;
-    unidadReferencia: string;
+    cantidadEstandar: number;
+    unidadEstandar: string;
     cantidadDestino: number;
 }
 

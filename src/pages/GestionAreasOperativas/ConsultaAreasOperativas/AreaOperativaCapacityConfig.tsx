@@ -42,7 +42,11 @@ import {
 interface AreaOperativaCapacityConfigProps {
     areaId: number;
     isReadOnly?: boolean;
+    visibleSections?: readonly AreaOperativaCapacitySection[];
+    onUnidadesLoaded?: (unidades: UnidadMedidaAreaOperativa[]) => void;
 }
+
+type AreaOperativaCapacitySection = 'unidades' | 'capacidades' | 'conversion';
 
 interface UnidadDraft extends UnidadMedidaAreaOperativaRequest {
     descripcion: string;
@@ -64,7 +68,9 @@ const DIMENSIONES: DimensionUnidadAreaOperativa[] = ['VOLUMEN', 'MASA', 'CONTEO'
 const TIPOS_CAPACIDAD: TipoCapacidadAreaOperativa[] = ['PRODUCTIVA', 'ALMACENAMIENTO'];
 const PERIODOS: PeriodoCapacidadAreaOperativa[] = ['HORA', 'TURNO', 'DIA', 'SEMANA'];
 
-const REFERENCIAS: Record<DimensionUnidadAreaOperativa, string[]> = {
+const DEFAULT_SECTIONS: readonly AreaOperativaCapacitySection[] = ['unidades', 'capacidades', 'conversion'];
+
+const UNIDADES_ESTANDAR: Record<DimensionUnidadAreaOperativa, string[]> = {
     VOLUMEN: ['L'],
     MASA: ['KG'],
     CONTEO: ['U'],
@@ -89,8 +95,8 @@ function buildUnidadDraft(unidad?: UnidadMedidaAreaOperativa): UnidadDraft {
         nombre: unidad?.nombre ?? '',
         descripcion: unidad?.descripcion ?? '',
         dimension: unidad?.dimension ?? 'VOLUMEN',
-        unidadReferencia: unidad?.unidadReferencia ?? 'L',
-        factorAReferencia: unidad?.factorAReferencia ?? 1,
+        unidadEstandar: unidad?.unidadEstandar ?? 'L',
+        cantidadUnidadEstandar: unidad?.cantidadUnidadEstandar ?? 1,
         principal: unidad?.principal ?? false,
         discreta: unidad?.discreta ?? false,
         activo: unidad?.activo ?? true,
@@ -137,8 +143,8 @@ function normalizeUnidadRequest(draft: UnidadDraft): UnidadMedidaAreaOperativaRe
         nombre: draft.nombre.trim(),
         descripcion: draft.descripcion.trim() || null,
         dimension: draft.dimension,
-        unidadReferencia: draft.unidadReferencia,
-        factorAReferencia: draft.factorAReferencia,
+        unidadEstandar: draft.unidadEstandar,
+        cantidadUnidadEstandar: draft.cantidadUnidadEstandar,
         principal: draft.principal,
         discreta: draft.discreta,
         activo: draft.activo,
@@ -166,6 +172,8 @@ function normalizeCapacidadRequest(draft: CapacidadDraft): CapacidadAreaOperativ
 export default function AreaOperativaCapacityConfig({
     areaId,
     isReadOnly = false,
+    visibleSections = DEFAULT_SECTIONS,
+    onUnidadesLoaded,
 }: AreaOperativaCapacityConfigProps) {
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const toast = useToast();
@@ -185,6 +193,9 @@ export default function AreaOperativaCapacityConfig({
     const [conversionResult, setConversionResult] = useState<ConversionUnidadAreaOperativaResponse | null>(null);
 
     const unidadesActivas = useMemo(() => unidades.filter((unidad) => unidad.activo), [unidades]);
+    const showUnidades = visibleSections.includes('unidades');
+    const showCapacidades = visibleSections.includes('capacidades');
+    const showConversion = visibleSections.includes('conversion');
 
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -199,6 +210,7 @@ export default function AreaOperativaCapacityConfig({
 
             const nextUnidades = unidadesResponse.data;
             setUnidades(nextUnidades);
+            onUnidadesLoaded?.(nextUnidades);
             setCapacidades(capacidadesResponse.data);
             setUnidadDrafts(Object.fromEntries(nextUnidades.map((unidad) => [unidad.id, buildUnidadDraft(unidad)])));
             setCapacidadDrafts(Object.fromEntries(
@@ -216,7 +228,7 @@ export default function AreaOperativaCapacityConfig({
         } finally {
             setLoading(false);
         }
-    }, [areaId, endpoints]);
+    }, [areaId, endpoints, onUnidadesLoaded]);
 
     useEffect(() => {
         void loadData();
@@ -438,6 +450,7 @@ export default function AreaOperativaCapacityConfig({
                 </Alert>
             )}
 
+            {showUnidades && (
             <Box borderWidth="1px" borderRadius="md" p={3}>
                 <Text fontWeight="bold" mb={3}>Unidades del área</Text>
                 {!isReadOnly && (
@@ -470,7 +483,7 @@ export default function AreaOperativaCapacityConfig({
                                     setCreateUnidadDraft((prev) => ({
                                         ...prev,
                                         dimension,
-                                        unidadReferencia: REFERENCIAS[dimension][0],
+                                        unidadEstandar: UNIDADES_ESTANDAR[dimension][0],
                                     }));
                                 }}
                             >
@@ -480,28 +493,28 @@ export default function AreaOperativaCapacityConfig({
                             </Select>
                         </FormControl>
                         <FormControl>
-                            <FormLabel>Referencia</FormLabel>
+                            <FormLabel>Unidad estandar</FormLabel>
                             <Select
                                 size="sm"
-                                value={createUnidadDraft.unidadReferencia}
-                                onChange={(event) => setCreateUnidadDraft((prev) => ({ ...prev, unidadReferencia: event.target.value }))}
+                                value={createUnidadDraft.unidadEstandar}
+                                onChange={(event) => setCreateUnidadDraft((prev) => ({ ...prev, unidadEstandar: event.target.value }))}
                             >
-                                {REFERENCIAS[createUnidadDraft.dimension].map((referencia) => (
-                                    <option key={referencia} value={referencia}>{referencia}</option>
+                                {UNIDADES_ESTANDAR[createUnidadDraft.dimension].map((unidadEstandar) => (
+                                    <option key={unidadEstandar} value={unidadEstandar}>{unidadEstandar}</option>
                                 ))}
                             </Select>
                         </FormControl>
                         <FormControl>
-                            <FormLabel>Factor</FormLabel>
+                            <FormLabel>Cantidad en unidad estandar</FormLabel>
                             <Input
                                 size="sm"
                                 type="number"
                                 min={0.000001}
                                 step="0.000001"
-                                value={createUnidadDraft.factorAReferencia}
+                                value={createUnidadDraft.cantidadUnidadEstandar}
                                 onChange={(event) => setCreateUnidadDraft((prev) => ({
                                     ...prev,
-                                    factorAReferencia: parseNumber(event.target.value, 1),
+                                    cantidadUnidadEstandar: parseNumber(event.target.value, 1),
                                 }))}
                             />
                         </FormControl>
@@ -556,8 +569,8 @@ export default function AreaOperativaCapacityConfig({
                                     <Th>Codigo</Th>
                                     <Th>Nombre</Th>
                                     <Th>Dimension</Th>
-                                    <Th>Referencia</Th>
-                                    <Th>Factor</Th>
+                                    <Th>Unidad estandar</Th>
+                                    <Th>Cantidad estandar</Th>
                                     <Th>Estado</Th>
                                     {!isReadOnly && <Th>Acciones</Th>}
                                 </Tr>
@@ -595,7 +608,7 @@ export default function AreaOperativaCapacityConfig({
                                                             [unidad.id]: {
                                                                 ...draft,
                                                                 dimension,
-                                                                unidadReferencia: REFERENCIAS[dimension][0],
+                                                                unidadEstandar: UNIDADES_ESTANDAR[dimension][0],
                                                             },
                                                         }));
                                                     }}
@@ -608,12 +621,12 @@ export default function AreaOperativaCapacityConfig({
                                             <Td>
                                                 <Select
                                                     size="sm"
-                                                    value={draft.unidadReferencia}
+                                                    value={draft.unidadEstandar}
                                                     isDisabled={isReadOnly}
-                                                    onChange={(event) => setUnidadDraftField(unidad.id, 'unidadReferencia', event.target.value)}
+                                                    onChange={(event) => setUnidadDraftField(unidad.id, 'unidadEstandar', event.target.value)}
                                                 >
-                                                    {REFERENCIAS[draft.dimension].map((referencia) => (
-                                                        <option key={referencia} value={referencia}>{referencia}</option>
+                                                    {UNIDADES_ESTANDAR[draft.dimension].map((unidadEstandar) => (
+                                                        <option key={unidadEstandar} value={unidadEstandar}>{unidadEstandar}</option>
                                                     ))}
                                                 </Select>
                                             </Td>
@@ -623,11 +636,11 @@ export default function AreaOperativaCapacityConfig({
                                                     type="number"
                                                     min={0.000001}
                                                     step="0.000001"
-                                                    value={draft.factorAReferencia}
+                                                    value={draft.cantidadUnidadEstandar}
                                                     isReadOnly={isReadOnly}
                                                     onChange={(event) => setUnidadDraftField(
                                                         unidad.id,
-                                                        'factorAReferencia',
+                                                        'cantidadUnidadEstandar',
                                                         parseNumber(event.target.value, 1),
                                                     )}
                                                 />
@@ -687,7 +700,9 @@ export default function AreaOperativaCapacityConfig({
                     </TableContainer>
                 )}
             </Box>
+            )}
 
+            {showCapacidades && (
             <Box borderWidth="1px" borderRadius="md" p={3}>
                 <Text fontWeight="bold" mb={3}>Capacidades del área</Text>
                 {!isReadOnly && (
@@ -967,7 +982,9 @@ export default function AreaOperativaCapacityConfig({
                     </TableContainer>
                 )}
             </Box>
+            )}
 
+            {showConversion && (
             <Box borderWidth="1px" borderRadius="md" p={3}>
                 <Text fontWeight="bold" mb={3}>Probar equivalencia</Text>
                 {unidadesActivas.length < 1 ? (
@@ -1034,7 +1051,7 @@ export default function AreaOperativaCapacityConfig({
                                     {formatNumber(conversionResult.cantidadDestino)} {conversionResult.unidadDestino.codigo}
                                     {' '}
                                     <Text as="span" color="app.textSubtle">
-                                        ({formatNumber(conversionResult.cantidadReferencia)} {conversionResult.unidadReferencia})
+                                        ({formatNumber(conversionResult.cantidadEstandar)} {conversionResult.unidadEstandar})
                                     </Text>
                                 </Text>
                             </>
@@ -1042,6 +1059,7 @@ export default function AreaOperativaCapacityConfig({
                     </>
                 )}
             </Box>
+            )}
         </VStack>
     );
 }

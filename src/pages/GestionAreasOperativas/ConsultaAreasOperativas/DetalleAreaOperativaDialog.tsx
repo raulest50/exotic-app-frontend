@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -11,6 +11,11 @@ import {
     Input,
     InputGroup,
     InputRightElement,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
     Modal,
     ModalBody,
     ModalCloseButton,
@@ -40,6 +45,7 @@ import {
     AreaOperativa,
     AreaOperativaMutationDTO,
     CategoriaHabilitada,
+    UnidadMedidaAreaOperativa,
     isAlmacenGeneralArea,
 } from './types';
 
@@ -53,14 +59,33 @@ interface DetalleAreaOperativaDialogProps {
 }
 
 function sameCategoriaSelection(current: CategoriaHabilitada[], original: CategoriaHabilitada[]): boolean {
-    const currentIds = [...current].map((categoria) => categoria.categoriaId).sort((a, b) => a - b);
-    const originalIds = [...original].map((categoria) => categoria.categoriaId).sort((a, b) => a - b);
+    const normalize = (categorias: CategoriaHabilitada[]) => [...categorias]
+        .map((categoria) => ({
+            categoriaId: categoria.categoriaId,
+            unidadMedidaIds: [...(categoria.unidadMedidaIds ?? [])].sort((a, b) => a - b),
+        }))
+        .sort((a, b) => a.categoriaId - b.categoriaId);
 
-    if (currentIds.length !== originalIds.length) {
+    const currentNormalized = normalize(current);
+    const originalNormalized = normalize(original);
+
+    if (currentNormalized.length !== originalNormalized.length) {
         return false;
     }
 
-    return currentIds.every((id, index) => id === originalIds[index]);
+    return currentNormalized.every((categoria, index) => {
+        const originalCategoria = originalNormalized[index];
+        return categoria.categoriaId === originalCategoria.categoriaId
+            && categoria.unidadMedidaIds.length === originalCategoria.unidadMedidaIds.length
+            && categoria.unidadMedidaIds.every((id, unidadIndex) => id === originalCategoria.unidadMedidaIds[unidadIndex]);
+    });
+}
+
+function cloneCategorias(categorias: CategoriaHabilitada[]): CategoriaHabilitada[] {
+    return categorias.map((categoria) => ({
+        ...categoria,
+        unidadMedidaIds: [...(categoria.unidadMedidaIds ?? [])],
+    }));
 }
 
 export default function DetalleAreaOperativaDialog({
@@ -81,6 +106,7 @@ export default function DetalleAreaOperativaDialog({
     const [isSaving, setIsSaving] = useState(false);
     const [isValidatingResponsable, setIsValidatingResponsable] = useState(false);
     const [responsableError, setResponsableError] = useState<string | null>(null);
+    const [areaUnidades, setAreaUnidades] = useState<UnidadMedidaAreaOperativa[]>([]);
 
     useEffect(() => {
         if (!isOpen) {
@@ -88,8 +114,39 @@ export default function DetalleAreaOperativaDialog({
         }
     }, [isOpen]);
 
+    const loadAreaUnidades = useCallback(async () => {
+        if (!area) {
+            setAreaUnidades([]);
+            return;
+        }
+
+        try {
+            const url = endpoints.area_operativa_unidades.replace('{areaId}', String(area.areaId));
+            const response = await axios.get<UnidadMedidaAreaOperativa[]>(url, { withCredentials: true });
+            setAreaUnidades(response.data);
+        } catch {
+            setAreaUnidades([]);
+        }
+    }, [area]);
+
+    useEffect(() => {
+        if (isOpen && area) {
+            void loadAreaUnidades();
+        }
+    }, [area, isOpen, loadAreaUnidades]);
+
+    const handleUnidadesLoaded = useCallback((unidades: UnidadMedidaAreaOperativa[]) => {
+        setAreaUnidades(unidades);
+    }, []);
+
+    const unidadById = useMemo(
+        () => new Map(areaUnidades.map((unidad) => [unidad.id, unidad])),
+        [areaUnidades],
+    );
+
     if (!area) return null;
     const isSpecialSystemArea = isAlmacenGeneralArea(area);
+    const unidadesActivas = areaUnidades.filter((unidad) => unidad.activo);
 
     const enterEditMode = () => {
         if (isSpecialSystemArea) {
@@ -108,7 +165,7 @@ export default function DetalleAreaOperativaDialog({
                 } as User
                 : null,
         );
-        setEditCategoriasHabilitadas(area.categoriasHabilitadas ?? []);
+        setEditCategoriasHabilitadas(cloneCategorias(area.categoriasHabilitadas ?? []));
         setResponsableError(null);
         setIsEditing(true);
     };
@@ -173,6 +230,10 @@ export default function DetalleAreaOperativaDialog({
             descripcion: editDescripcion.trim(),
             responsableId: editResponsable.id,
             categoriaIds: editCategoriasHabilitadas.map((categoria) => categoria.categoriaId),
+            categoriasHabilitadas: editCategoriasHabilitadas.map((categoria) => ({
+                categoriaId: categoria.categoriaId,
+                unidadMedidaIds: [...(categoria.unidadMedidaIds ?? [])].sort((a, b) => a - b),
+            })),
         };
 
         try {
@@ -208,6 +269,41 @@ export default function DetalleAreaOperativaDialog({
     const categoriasLectura = area.categoriasHabilitadas ?? [];
     const categoriasEdicion = editCategoriasHabilitadas;
 
+    const renderCategoriasConUnidades = (categorias: CategoriaHabilitada[]) => {
+        if (categorias.length === 0) {
+            return <Text color="app.textSubtle">Sin categorías configuradas.</Text>;
+        }
+
+        return (
+            <VStack align="stretch" spacing={3}>
+                {categorias.map((categoria) => {
+                    const unidadesCategoria = (categoria.unidadMedidaIds ?? [])
+                        .map((unidadId) => unidadById.get(unidadId))
+                        .filter((unidad): unidad is UnidadMedidaAreaOperativa => Boolean(unidad));
+
+                    return (
+                        <Box key={categoria.categoriaId} borderWidth="1px" borderRadius="md" p={3}>
+                            <Text fontWeight="semibold" mb={2}>{categoria.categoriaNombre}</Text>
+                            {unidadesCategoria.length === 0 ? (
+                                <Text color="app.textSubtle" fontSize="sm">Sin unidades asociadas.</Text>
+                            ) : (
+                                <Wrap>
+                                    {unidadesCategoria.map((unidad) => (
+                                        <WrapItem key={unidad.id}>
+                                            <Tag colorScheme="blue" borderRadius="full">
+                                                <TagLabel>{unidad.codigo} - {unidad.nombre}</TagLabel>
+                                            </Tag>
+                                        </WrapItem>
+                                    ))}
+                                </Wrap>
+                            )}
+                        </Box>
+                    );
+                })}
+            </VStack>
+        );
+    };
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="5xl" isCentered closeOnOverlayClick={!isEditing}>
             <ModalOverlay />
@@ -225,136 +321,132 @@ export default function DetalleAreaOperativaDialog({
                             </Alert>
                         )}
 
-                        <Box>
-                            <Text fontWeight="bold" mb={2} fontSize="md">Información del Área</Text>
+                        <Tabs variant="enclosed" colorScheme="teal" isLazy>
+                            <TabList flexWrap="wrap">
+                                <Tab>Información</Tab>
+                                <Tab>Categorías</Tab>
+                                <Tab>Unidades de medida</Tab>
+                                <Tab>Capacidades</Tab>
+                            </TabList>
+                            <TabPanels>
+                                <TabPanel px={0}>
+                                    <VStack align="stretch" spacing={5}>
+                                        <Box>
+                                            <Text fontWeight="bold" mb={2} fontSize="md">Información del Área</Text>
 
-                            {isEditing ? (
-                                <VStack spacing={3} align="stretch">
-                                    <SimpleGrid columns={2} spacing={2} alignItems="center">
-                                        <Text fontWeight="semibold">ID:</Text>
-                                        <Text>{area.areaId}</Text>
-                                    </SimpleGrid>
+                                            {isEditing ? (
+                                                <VStack spacing={3} align="stretch">
+                                                    <SimpleGrid columns={2} spacing={2} alignItems="center">
+                                                        <Text fontWeight="semibold">ID:</Text>
+                                                        <Text>{area.areaId}</Text>
+                                                    </SimpleGrid>
 
-                                    <FormControl isRequired>
-                                        <FormLabel>Nombre</FormLabel>
-                                        <Input
-                                            value={editNombre}
-                                            onChange={(event) => setEditNombre(event.target.value)}
-                                            placeholder="Nombre del área"
-                                        />
-                                    </FormControl>
+                                                    <FormControl isRequired>
+                                                        <FormLabel>Nombre</FormLabel>
+                                                        <Input
+                                                            value={editNombre}
+                                                            onChange={(event) => setEditNombre(event.target.value)}
+                                                            placeholder="Nombre del área"
+                                                        />
+                                                    </FormControl>
 
-                                    <FormControl>
-                                        <FormLabel>Descripción</FormLabel>
-                                        <Input
-                                            value={editDescripcion}
-                                            onChange={(event) => setEditDescripcion(event.target.value)}
-                                            placeholder="Descripción del área"
-                                        />
-                                    </FormControl>
-                                </VStack>
-                            ) : (
-                                <SimpleGrid columns={2} spacing={2}>
-                                    <Text fontWeight="semibold">ID:</Text>
-                                    <Text>{area.areaId}</Text>
-                                    <Text fontWeight="semibold">Nombre:</Text>
-                                    <Text>{area.nombre}</Text>
-                                    <Text fontWeight="semibold">Descripción:</Text>
-                                    <Text>{area.descripcion || '—'}</Text>
-                                </SimpleGrid>
-                            )}
-                        </Box>
+                                                    <FormControl>
+                                                        <FormLabel>Descripción</FormLabel>
+                                                        <Input
+                                                            value={editDescripcion}
+                                                            onChange={(event) => setEditDescripcion(event.target.value)}
+                                                            placeholder="Descripción del área"
+                                                        />
+                                                    </FormControl>
+                                                </VStack>
+                                            ) : (
+                                                <SimpleGrid columns={2} spacing={2}>
+                                                    <Text fontWeight="semibold">ID:</Text>
+                                                    <Text>{area.areaId}</Text>
+                                                    <Text fontWeight="semibold">Nombre:</Text>
+                                                    <Text>{area.nombre}</Text>
+                                                    <Text fontWeight="semibold">Descripción:</Text>
+                                                    <Text>{area.descripcion || '—'}</Text>
+                                                </SimpleGrid>
+                                            )}
+                                        </Box>
 
-                        <Box>
-                            <Text fontWeight="bold" mb={2} fontSize="md">Responsable</Text>
+                                        <Box>
+                                            <Text fontWeight="bold" mb={2} fontSize="md">Responsable</Text>
 
-                            {isEditing ? (
-                                <FormControl isRequired isInvalid={Boolean(responsableError)}>
-                                    <FormLabel>Responsable del Área</FormLabel>
-                                    <InputGroup>
-                                        <Input
-                                            value={editResponsable ? `${editResponsable.cedula} - ${editResponsable.nombreCompleto || editResponsable.username}` : ''}
-                                            placeholder="Seleccione un responsable"
-                                            isReadOnly
-                                            bg="app.inputReadonly"
-                                        />
-                                        <InputRightElement>
-                                            <IconButton
-                                                aria-label="Buscar usuario"
-                                                icon={<SearchIcon />}
-                                                size="sm"
-                                                onClick={() => setIsUserPickerOpen(true)}
+                                            {isEditing ? (
+                                                <FormControl isRequired isInvalid={Boolean(responsableError)}>
+                                                    <FormLabel>Responsable del Área</FormLabel>
+                                                    <InputGroup>
+                                                        <Input
+                                                            value={editResponsable ? `${editResponsable.cedula} - ${editResponsable.nombreCompleto || editResponsable.username}` : ''}
+                                                            placeholder="Seleccione un responsable"
+                                                            isReadOnly
+                                                            bg="app.inputReadonly"
+                                                        />
+                                                        <InputRightElement>
+                                                            <IconButton
+                                                                aria-label="Buscar usuario"
+                                                                icon={<SearchIcon />}
+                                                                size="sm"
+                                                                onClick={() => setIsUserPickerOpen(true)}
+                                                                isDisabled={isSaving || isValidatingResponsable}
+                                                            />
+                                                        </InputRightElement>
+                                                    </InputGroup>
+                                                    {responsableError && <FormErrorMessage>{responsableError}</FormErrorMessage>}
+                                                </FormControl>
+                                            ) : area.responsableArea ? (
+                                                <SimpleGrid columns={2} spacing={2}>
+                                                    <Text fontWeight="semibold">Cédula:</Text>
+                                                    <Text>{area.responsableArea.cedula}</Text>
+                                                    <Text fontWeight="semibold">Nombre:</Text>
+                                                    <Text>{area.responsableArea.nombreCompleto || area.responsableArea.username}</Text>
+                                                    <Text fontWeight="semibold">Correo:</Text>
+                                                    <Text>{area.responsableArea.username}</Text>
+                                                </SimpleGrid>
+                                            ) : (
+                                                <Text color="app.textSubtle">Sin responsable asignado</Text>
+                                            )}
+                                        </Box>
+                                    </VStack>
+                                </TabPanel>
+
+                                <TabPanel px={0}>
+                                    <VStack align="stretch" spacing={4}>
+                                        {isEditing ? (
+                                            <Button
+                                                alignSelf="flex-start"
+                                                variant="outline"
+                                                onClick={() => setIsCategoriaPickerOpen(true)}
                                                 isDisabled={isSaving || isValidatingResponsable}
-                                            />
-                                        </InputRightElement>
-                                    </InputGroup>
-                                    {responsableError && <FormErrorMessage>{responsableError}</FormErrorMessage>}
-                                </FormControl>
-                            ) : area.responsableArea ? (
-                                <SimpleGrid columns={2} spacing={2}>
-                                    <Text fontWeight="semibold">Cédula:</Text>
-                                    <Text>{area.responsableArea.cedula}</Text>
-                                    <Text fontWeight="semibold">Nombre:</Text>
-                                    <Text>{area.responsableArea.nombreCompleto || area.responsableArea.username}</Text>
-                                    <Text fontWeight="semibold">Correo:</Text>
-                                    <Text>{area.responsableArea.username}</Text>
-                                </SimpleGrid>
-                            ) : (
-                                <Text color="app.textSubtle">Sin responsable asignado</Text>
-                            )}
-                        </Box>
+                                            >
+                                                Seleccionar categorías y unidades
+                                            </Button>
+                                        ) : null}
+                                        {renderCategoriasConUnidades(isEditing ? categoriasEdicion : categoriasLectura)}
+                                    </VStack>
+                                </TabPanel>
 
-                        <Box>
-                            <Text fontWeight="bold" mb={2} fontSize="md">Categorías que puede procesar</Text>
+                                <TabPanel px={0}>
+                                    <AreaOperativaCapacityConfig
+                                        areaId={area.areaId}
+                                        isReadOnly={isSpecialSystemArea}
+                                        visibleSections={['unidades', 'conversion']}
+                                        onUnidadesLoaded={handleUnidadesLoaded}
+                                    />
+                                </TabPanel>
 
-                            {isEditing ? (
-                                <>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setIsCategoriaPickerOpen(true)}
-                                        isDisabled={isSaving || isValidatingResponsable}
-                                    >
-                                        Seleccionar categorías
-                                    </Button>
-
-                                    {categoriasEdicion.length === 0 ? (
-                                        <Text mt={2} color="app.textSubtle" fontSize="sm">
-                                            Sin categorías configuradas.
-                                        </Text>
-                                    ) : (
-                                        <Wrap mt={3}>
-                                            {categoriasEdicion.map((categoria) => (
-                                                <WrapItem key={categoria.categoriaId}>
-                                                    <Tag colorScheme="teal" borderRadius="full">
-                                                        <TagLabel>{categoria.categoriaNombre}</TagLabel>
-                                                    </Tag>
-                                                </WrapItem>
-                                            ))}
-                                        </Wrap>
-                                    )}
-                                </>
-                            ) : categoriasLectura.length === 0 ? (
-                                <Text color="app.textSubtle">Sin categorías configuradas.</Text>
-                            ) : (
-                                <Wrap>
-                                    {categoriasLectura.map((categoria) => (
-                                        <WrapItem key={categoria.categoriaId}>
-                                            <Tag colorScheme="teal" borderRadius="full">
-                                                <TagLabel>{categoria.categoriaNombre}</TagLabel>
-                                            </Tag>
-                                        </WrapItem>
-                                    ))}
-                                </Wrap>
-                            )}
-                        </Box>
-
-                        <Box>
-                            <Text fontWeight="bold" mb={2} fontSize="md">Unidades y capacidades operativas</Text>
-                            <AreaOperativaCapacityConfig
-                                areaId={area.areaId}
-                                isReadOnly={isSpecialSystemArea}
-                            />
-                        </Box>
+                                <TabPanel px={0}>
+                                    <AreaOperativaCapacityConfig
+                                        areaId={area.areaId}
+                                        isReadOnly={isSpecialSystemArea}
+                                        visibleSections={['capacidades']}
+                                        onUnidadesLoaded={handleUnidadesLoaded}
+                                    />
+                                </TabPanel>
+                            </TabPanels>
+                        </Tabs>
                     </VStack>
                 </ModalBody>
                 <ModalFooter gap={2}>
@@ -402,6 +494,8 @@ export default function DetalleAreaOperativaDialog({
                         onClose={() => setIsCategoriaPickerOpen(false)}
                         initialSelected={editCategoriasHabilitadas}
                         onConfirm={setEditCategoriasHabilitadas}
+                        unidadesDisponibles={unidadesActivas}
+                        allowUnidadSelection
                     />
                 </>
             )}
