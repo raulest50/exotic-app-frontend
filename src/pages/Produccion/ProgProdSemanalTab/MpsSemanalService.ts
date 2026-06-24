@@ -2,6 +2,7 @@ import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
 
 export type MpsEstado = "BORRADOR" | "APROBADO" | "CERRADO";
+export type EstadoMpsSemanalItem = "ACTIVO" | "CANCELADO";
 export type EstadoMpsSemanalLotePlanificado = "PENDIENTE_ODP" | "ODP_GENERADA" | "CANCELADO";
 
 export interface ProgramacionProduccionSemanalItemRequestDTO {
@@ -28,6 +29,8 @@ export interface MpsSemanalLotePlanificadoDTO {
     estado: EstadoMpsSemanalLotePlanificado;
     ordenProduccionId: number | null;
     loteAsignado: string | null;
+    ordenIniciada: boolean;
+    ordenCancelable: boolean;
 }
 
 export interface MpsSemanalItemDTO {
@@ -39,12 +42,19 @@ export interface MpsSemanalItemDTO {
     loteSize: number;
     tiempoDiasFabricacion: number;
     numeroLotes: number;
+    estadoItem: EstadoMpsSemanalItem | null;
     cantidadTotal: number;
     fechaLanzamiento: string;
     fechaFinalPlanificada: string;
     observacion: string | null;
     warning: string | null;
     displayOrder: number;
+    editable: boolean;
+    blockedReason: string | null;
+    ordenesIniciadas: number;
+    ordenesCancelables: number;
+    lotesActivos: number;
+    lotesCancelados: number;
     lotesPlanificados: MpsSemanalLotePlanificadoDTO[];
 }
 
@@ -122,6 +132,12 @@ export interface GenerarOdpDesdeMpsRequestDTO {
     weekStartDate: string;
 }
 
+export interface EditarMpsSemanalAprobadoItemRequestDTO {
+    dayIndex: number;
+    numeroLotes: number;
+    observacion?: string;
+}
+
 export interface GenerarOdpDesdeMpsResponseDTO {
     mpsId: number;
     weekStartDate: string;
@@ -196,6 +212,18 @@ export async function GuardarBorradorProgramacionSemanal(
     const endPoints = new EndPointsURL();
     const response = await axios.post<MpsSemanalDraftDTO>(
         endPoints.programacion_mps_semanal_borrador_directo,
+        payload,
+    );
+    return response.data;
+}
+
+export async function EditarMpsSemanalAprobadoItem(
+    itemId: number,
+    payload: EditarMpsSemanalAprobadoItemRequestDTO,
+): Promise<MpsSemanalDraftDTO> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.patch<MpsSemanalDraftDTO>(
+        `${endPoints.programacion_mps_semanal}/items/${itemId}/edicion-aprobada`,
         payload,
     );
     return response.data;

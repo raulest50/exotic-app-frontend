@@ -1,5 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import {
+    closestCenter,
+    DndContext,
+    type DragEndEvent,
+    PointerSensor,
+    useDraggable,
+    useDroppable,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import {
     AddIcon,
     DeleteIcon,
@@ -35,9 +46,11 @@ import TerminadoPicker4MPS, {
 } from "./TerminadoPicker4MPS/TerminadoPicker4MPS";
 import {
     AtenderObservacionMpsSemanal,
+    EditarMpsSemanalAprobadoItem,
     GuardarBorradorProgramacionSemanal,
     ListarObservacionesMpsSemanal,
     ObtenerMpsSemanal,
+    type EstadoMpsSemanalItem,
     type MpsSemanalDraftDTO,
     type MpsSemanalObservacionDTO,
 } from "./MpsSemanalService";
@@ -53,6 +66,7 @@ import {
 
 interface ProgramacionEntry {
     id: string;
+    mpsItemId?: number;
     dayIndex: number;
     productoId: string;
     productoNombre: string;
@@ -63,12 +77,20 @@ interface ProgramacionEntry {
     prefijoVerificado: boolean;
     numeroLotes: number;
     observacion?: string | null;
+    estadoItem?: EstadoMpsSemanalItem | null;
+    editable?: boolean;
+    blockedReason?: string | null;
+    ordenesIniciadas?: number;
+    ordenesCancelables?: number;
+    lotesActivos?: number;
+    lotesCancelados?: number;
 }
 
 const DAY_LABELS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
 const EPSILON = 0.000001;
 const MPS_SEMANAL_DIAS_BLOQUEO_EDICION_MIN = 0;
 const MPS_SEMANAL_DIAS_BLOQUEO_EDICION_MAX = 7;
+const PENDING_CANCEL_REASON = "Cancelacion pendiente de guardar.";
 
 function formatLocalDate(date: Date): string {
     const year = date.getFullYear();
@@ -141,13 +163,30 @@ function buildEntryId(productoId: string, dayIndex: number): string {
     return `${productoId}__${dayIndex}`;
 }
 
+function buildPersistedEntryId(itemId: number): string {
+    return `mps-item__${itemId}`;
+}
+
+function getDayDroppableId(dayIndex: number): string {
+    return `mps-week-day__${dayIndex}`;
+}
+
+function parseDayDropTarget(id: string | number): number | null {
+    const value = String(id);
+    if (!value.startsWith("mps-week-day__")) {
+        return null;
+    }
+    const parsed = Number(value.replace("mps-week-day__", ""));
+    return Number.isInteger(parsed) && parsed >= 0 && parsed <= 5 ? parsed : null;
+}
+
 function getMpsSemanaLabel(mps: MpsSemanalDraftDTO): string {
     return mps.semanaMpsCodigo ?? mps.weekStartDate;
 }
 
 function buildEntriesFingerprint(entries: ProgramacionEntry[]): string {
     return entries
-        .map((entry) => `${entry.dayIndex}:${entry.productoId}:${entry.numeroLotes}:${entry.observacion ?? ""}`)
+        .map((entry) => `${entry.mpsItemId ?? ""}:${entry.dayIndex}:${entry.productoId}:${entry.numeroLotes}:${entry.estadoItem ?? ""}:${entry.observacion ?? ""}`)
         .sort()
         .join("|");
 }
@@ -159,9 +198,35 @@ function buildLockedEntriesFingerprint(
 ): string {
     return entries
         .filter((entry) => !isMpsDateEditable(addDays(weekStartDate, entry.dayIndex), editableFromDate))
-        .map((entry) => `${entry.dayIndex}:${entry.productoId}:${entry.loteSize}:${entry.numeroLotes}:${entry.observacion ?? ""}`)
+        .map((entry) => `${entry.mpsItemId ?? ""}:${entry.dayIndex}:${entry.productoId}:${entry.loteSize}:${entry.numeroLotes}:${entry.estadoItem ?? ""}:${entry.observacion ?? ""}`)
         .sort()
         .join("|");
+}
+
+function isApprovedEditEstado(estado: MpsSemanalDraftDTO["estado"] | null | undefined): boolean {
+    return estado === "APROBADO" || estado === "CERRADO";
+}
+
+function isEntryCanceled(entry: ProgramacionEntry): boolean {
+    return entry.estadoItem === "CANCELADO";
+}
+
+function isPendingCancellation(entry: ProgramacionEntry): boolean {
+    return isEntryCanceled(entry) && entry.blockedReason === PENDING_CANCEL_REASON;
+}
+
+function normalizeObservation(value?: string | null): string {
+    return value?.trim() ?? "";
+}
+
+function hasPersistedEntryChanged(entry: ProgramacionEntry, persisted?: ProgramacionEntry): boolean {
+    if (!persisted) {
+        return true;
+    }
+    return entry.dayIndex !== persisted.dayIndex
+        || Math.round(entry.numeroLotes) !== Math.round(persisted.numeroLotes)
+        || normalizeObservation(entry.observacion) !== normalizeObservation(persisted.observacion)
+        || (entry.estadoItem ?? "ACTIVO") !== (persisted.estadoItem ?? "ACTIVO");
 }
 
 function buildEntryFromTerminado(terminado: TerminadoPickerResult, dayIndex: number): ProgramacionEntry {
@@ -186,7 +251,8 @@ function buildEntriesFromDraft(draft: MpsSemanalDraftDTO): ProgramacionEntry[] {
     draft.dias.forEach((dia) => {
         dia.items.forEach((item) => {
             entries.push({
-                id: buildEntryId(item.terminadoId, dia.dayIndex),
+                id: buildPersistedEntryId(item.id),
+                mpsItemId: item.id,
                 dayIndex: dia.dayIndex,
                 productoId: item.terminadoId,
                 productoNombre: item.terminadoNombre,
@@ -197,6 +263,13 @@ function buildEntriesFromDraft(draft: MpsSemanalDraftDTO): ProgramacionEntry[] {
                 prefijoVerificado: true,
                 numeroLotes: item.numeroLotes,
                 observacion: item.observacion ?? "",
+                estadoItem: item.estadoItem ?? "ACTIVO",
+                editable: item.editable,
+                blockedReason: item.blockedReason,
+                ordenesIniciadas: item.ordenesIniciadas,
+                ordenesCancelables: item.ordenesCancelables,
+                lotesActivos: item.lotesActivos,
+                lotesCancelados: item.lotesCancelados,
             });
         });
     });
@@ -206,6 +279,9 @@ function buildEntriesFromDraft(draft: MpsSemanalDraftDTO): ProgramacionEntry[] {
 
 function getEntryIssues(entry: ProgramacionEntry): string[] {
     const issues: string[] = [];
+    if (isEntryCanceled(entry)) {
+        return issues;
+    }
     if (entry.loteSize <= 0) {
         issues.push("Sin lote size");
     }
@@ -219,6 +295,66 @@ function getEntryIssues(entry: ProgramacionEntry): string[] {
         issues.push("Numero de lotes no entero");
     }
     return issues;
+}
+
+function DroppableDayColumn({
+    dayIndex,
+    isDayEditable,
+    isDropDisabled,
+    children,
+}: {
+    dayIndex: number;
+    isDayEditable: boolean;
+    isDropDisabled: boolean;
+    children: ReactNode;
+}) {
+    const { setNodeRef, isOver } = useDroppable({
+        id: getDayDroppableId(dayIndex),
+        disabled: isDropDisabled,
+    });
+
+    return (
+        <Box
+            ref={setNodeRef}
+            bg={!isDropDisabled && isOver ? "teal.50" : (isDayEditable ? "white" : "gray.50")}
+            borderWidth="1px"
+            borderColor={!isDropDisabled && isOver ? "teal.300" : (isDayEditable ? "gray.200" : "gray.300")}
+            borderRadius="md"
+            p={3}
+            minH="280px"
+        >
+            {children}
+        </Box>
+    );
+}
+
+function DraggableEntryCard({
+    entry,
+    isDragDisabled,
+    children,
+}: {
+    entry: ProgramacionEntry;
+    isDragDisabled: boolean;
+    children: ReactNode;
+}) {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+        id: entry.id,
+        data: { entryId: entry.id },
+        disabled: isDragDisabled,
+    });
+
+    return (
+        <Box
+            ref={setNodeRef}
+            transform={CSS.Translate.toString(transform)}
+            opacity={isDragging ? 0.45 : 1}
+            cursor={isDragDisabled ? "default" : "grab"}
+            {...(!isDragDisabled ? listeners : {})}
+            {...(!isDragDisabled ? attributes : {})}
+        >
+            {children}
+        </Box>
+    );
 }
 
 export default function ProgramacionProduccionSemanalTab() {
@@ -250,9 +386,36 @@ export default function ProgramacionProduccionSemanalTab() {
     const weekChangeConfirmDisclosure = useDisclosure();
     const toast = useToast();
 
-    const isReadOnly = currentDraft !== null && currentDraft.estado !== "BORRADOR";
+    const isApprovedEditMode = isApprovedEditEstado(currentDraft?.estado);
+    const isDraftMode = currentDraft === null || currentDraft.estado === "BORRADOR";
+    const isReadOnly = currentDraft !== null && !isDraftMode && !isApprovedEditMode;
+    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
     const entriesFingerprint = useMemo(() => buildEntriesFingerprint(entries), [entries]);
     const hasUnsavedChanges = entriesFingerprint !== lastPersistedEntriesFingerprint;
+
+    const canEditEntry = useCallback((entry: ProgramacionEntry, targetDayIndex = entry.dayIndex): boolean => {
+        if (isReadOnly || (isEntryCanceled(entry) && !isPendingCancellation(entry))) {
+            return false;
+        }
+        if (!isMpsDateEditable(addDays(weekStartDate, targetDayIndex), editableFromDate)) {
+            return false;
+        }
+        if (isApprovedEditMode) {
+            return entry.editable === true;
+        }
+        return isDraftMode;
+    }, [editableFromDate, isApprovedEditMode, isDraftMode, isReadOnly, weekStartDate]);
+
+    const hasDuplicateProductOnDay = useCallback((
+        entry: ProgramacionEntry,
+        targetDayIndex: number,
+        sourceEntries = entries,
+    ): boolean => sourceEntries.some((candidate) => (
+        candidate.id !== entry.id
+        && candidate.dayIndex === targetDayIndex
+        && candidate.productoId === entry.productoId
+        && !isEntryCanceled(candidate)
+    )), [entries]);
 
     const entriesByDay = useMemo(() => {
         const grouped = new Map<number, ProgramacionEntry[]>();
@@ -287,19 +450,20 @@ export default function ProgramacionProduccionSemanalTab() {
         if (lockedEntriesChanged) {
             issues.push(`No se pueden modificar dias bloqueados. La primera fecha editable es ${editableFromDate}.`);
         }
-        if (entries.length === 0) {
+        const activeEntries = entries.filter((entry) => !isEntryCanceled(entry));
+        if (isDraftMode && activeEntries.length === 0) {
             issues.push("Agregue al menos un terminado.");
         }
-        entries.forEach((entry) => {
+        activeEntries.forEach((entry) => {
             getEntryIssues(entry).forEach((issue) => {
                 issues.push(`${entry.productoId}: ${issue}`);
             });
         });
         return issues;
-    }, [editableFromDate, entries, isWeekFullyLocked, lockedEntriesChanged, weekStartDate]);
+    }, [editableFromDate, entries, isDraftMode, isWeekFullyLocked, lockedEntriesChanged, weekStartDate]);
 
     const totals = useMemo(() => {
-        return entries.reduce(
+        return entries.filter((entry) => !isEntryCanceled(entry)).reduce(
             (acc, entry) => {
                 const lotes = Number.isFinite(entry.numeroLotes) ? entry.numeroLotes : 0;
                 const unidades = entry.loteSize > 0 ? lotes * entry.loteSize : 0;
@@ -445,10 +609,12 @@ export default function ProgramacionProduccionSemanalTab() {
             return;
         }
         const dayDate = addDays(weekStartDate, pickerDayIndex);
-        if (isReadOnly || !isMpsDateEditable(dayDate, editableFromDate)) {
+        if (!isDraftMode || isReadOnly || !isMpsDateEditable(dayDate, editableFromDate)) {
             toast({
-                title: "Dia bloqueado",
-                description: `No se puede programar antes de ${editableFromDate}.`,
+                title: !isDraftMode ? "MPS aprobado" : "Dia bloqueado",
+                description: !isDraftMode
+                    ? "La edicion aprobada permite mover, aumentar, reducir o cancelar tarjetas existentes; no agrega productos nuevos."
+                    : `No se puede programar antes de ${editableFromDate}.`,
                 status: "warning",
                 duration: 4000,
                 isClosable: true,
@@ -468,39 +634,171 @@ export default function ProgramacionProduccionSemanalTab() {
 
     const handleEntryLotesChange = (entryId: string, valueAsString: string) => {
         const parsed = Number(valueAsString);
-        setEntries((prev) => prev.map((entry) => (
-            entry.id === entryId && !isReadOnly && isMpsDateEditable(addDays(weekStartDate, entry.dayIndex), editableFromDate)
-                ? { ...entry, numeroLotes: Number.isFinite(parsed) ? parsed : 0 }
-                : entry
-        )));
+        setEntries((prev) => prev.map((entry) => {
+            if (entry.id !== entryId || !canEditEntry(entry)) {
+                return entry;
+            }
+            const normalizedLotes = Number.isFinite(parsed)
+                ? (isApprovedEditMode ? Math.max(0, parsed) : parsed)
+                : 0;
+            return {
+                ...entry,
+                numeroLotes: normalizedLotes,
+                estadoItem: isApprovedEditMode ? (normalizedLotes <= 0 ? "CANCELADO" : "ACTIVO") : entry.estadoItem,
+                blockedReason: isApprovedEditMode && normalizedLotes <= 0
+                    ? PENDING_CANCEL_REASON
+                    : null,
+            };
+        }));
     };
 
     const adjustEntryLotes = (entryId: string, direction: 1 | -1) => {
         setEntries((prev) => prev.map((entry) => {
-            if (
-                entry.id !== entryId
-                || isReadOnly
-                || !isMpsDateEditable(addDays(weekStartDate, entry.dayIndex), editableFromDate)
-            ) {
+            if (entry.id !== entryId || !canEditEntry(entry)) {
                 return entry;
             }
             const nextLotes = entry.numeroLotes + direction;
+            const normalizedLotes = Math.max(isApprovedEditMode ? 0 : 1, nextLotes);
             return {
                 ...entry,
-                numeroLotes: Math.max(1, nextLotes),
+                numeroLotes: normalizedLotes,
+                estadoItem: isApprovedEditMode ? (normalizedLotes <= 0 ? "CANCELADO" : "ACTIVO") : entry.estadoItem,
+                blockedReason: isApprovedEditMode && normalizedLotes <= 0 ? PENDING_CANCEL_REASON : null,
             };
         }));
     };
 
     const handleRemoveEntry = (entryId: string) => {
-        setEntries((prev) => prev.filter((entry) => (
-            entry.id !== entryId
-            || isReadOnly
-            || !isMpsDateEditable(addDays(weekStartDate, entry.dayIndex), editableFromDate)
+        setEntries((prev) => prev.flatMap((entry) => {
+            if (entry.id !== entryId || !canEditEntry(entry)) {
+                return [entry];
+            }
+            if (isApprovedEditMode) {
+                return [{
+                    ...entry,
+                    numeroLotes: 0,
+                    estadoItem: "CANCELADO",
+                    blockedReason: PENDING_CANCEL_REASON,
+                }];
+            }
+            return [];
+        }));
+    };
+
+    const applySavedMpsState = useCallback((saved: MpsSemanalDraftDTO) => {
+        setCurrentDraft(saved);
+        setWeekStartDate(saved.weekStartDate);
+        const savedEntries = buildEntriesFromDraft(saved);
+        setEntries(savedEntries);
+        setLastPersistedEntries(savedEntries);
+        setLastPersistedEntriesFingerprint(buildEntriesFingerprint(savedEntries));
+        setSelectedSemana((current) => current?.startDate === saved.weekStartDate ? {
+            ...current,
+            id: saved.semanaMpsId ?? current.id,
+            codigo: saved.semanaMpsCodigo ?? current.codigo,
+            mpsId: saved.mpsId,
+            estado: saved.estado,
+            fechaGeneracionOdps: saved.fechaGeneracionOdps,
+        } : current);
+    }, []);
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const targetDayIndex = event.over ? parseDayDropTarget(event.over.id) : null;
+        if (targetDayIndex == null) {
+            return;
+        }
+        const activeEntryId = String(event.active.id);
+        const entry = entries.find((candidate) => candidate.id === activeEntryId);
+        if (!entry || entry.dayIndex === targetDayIndex) {
+            return;
+        }
+        if (!canEditEntry(entry)) {
+            toast({
+                title: "Tarjeta bloqueada",
+                description: entry.blockedReason ?? "La tarjeta no se puede mover.",
+                status: "warning",
+                duration: 4000,
+                isClosable: true,
+            });
+            return;
+        }
+        if (!isMpsDateEditable(addDays(weekStartDate, targetDayIndex), editableFromDate)) {
+            toast({
+                title: "Dia destino bloqueado",
+                description: `No se puede programar antes de ${editableFromDate}.`,
+                status: "warning",
+                duration: 4000,
+                isClosable: true,
+            });
+            return;
+        }
+        if (hasDuplicateProductOnDay(entry, targetDayIndex)) {
+            toast({
+                title: "Producto duplicado",
+                description: "El producto ya existe en el dia destino.",
+                status: "warning",
+                duration: 4000,
+                isClosable: true,
+            });
+            return;
+        }
+        setEntries((prev) => prev.map((candidate) => (
+            candidate.id === entry.id ? { ...candidate, dayIndex: targetDayIndex } : candidate
         )));
     };
 
+    const handleSaveApprovedChanges = async () => {
+        if (!currentDraft || !isApprovedEditMode || validationIssues.length > 0 || isReadOnly) {
+            return;
+        }
+
+        const persistedById = new Map(lastPersistedEntries.map((entry) => [entry.id, entry]));
+        const changedEntries = entries.filter((entry) => (
+            entry.mpsItemId != null && hasPersistedEntryChanged(entry, persistedById.get(entry.id))
+        ));
+        if (changedEntries.length === 0) {
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            let latestSaved: MpsSemanalDraftDTO | null = null;
+            for (const entry of changedEntries) {
+                latestSaved = await EditarMpsSemanalAprobadoItem(entry.mpsItemId!, {
+                    dayIndex: entry.dayIndex,
+                    numeroLotes: Math.max(0, Math.round(entry.numeroLotes)),
+                    observacion: normalizeObservation(entry.observacion) || undefined,
+                });
+            }
+
+            if (latestSaved) {
+                applySavedMpsState(latestSaved);
+            }
+            toast({
+                title: "MPS actualizado",
+                description: `Se guardaron ${changedEntries.length} tarjeta(s) del MPS ${currentDraft.estado}.`,
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+        } catch (error) {
+            toast({
+                title: "No se pudo editar el MPS",
+                description: getAxiosErrorMessage(error, "Los cambios de la tarjeta aprobada no pudieron guardarse."),
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleSaveDraft = async () => {
+        if (isApprovedEditMode) {
+            await handleSaveApprovedChanges();
+            return;
+        }
         if (validationIssues.length > 0 || isReadOnly) {
             return;
         }
@@ -520,20 +818,7 @@ export default function ProgramacionProduccionSemanalTab() {
                         })),
                 })),
             });
-            setCurrentDraft(saved);
-            setWeekStartDate(saved.weekStartDate);
-            const savedEntries = buildEntriesFromDraft(saved);
-            setEntries(savedEntries);
-            setLastPersistedEntries(savedEntries);
-            setLastPersistedEntriesFingerprint(buildEntriesFingerprint(savedEntries));
-            setSelectedSemana((current) => current?.startDate === saved.weekStartDate ? {
-                ...current,
-                id: saved.semanaMpsId ?? current.id,
-                codigo: saved.semanaMpsCodigo ?? current.codigo,
-                mpsId: saved.mpsId,
-                estado: saved.estado,
-                fechaGeneracionOdps: saved.fechaGeneracionOdps,
-            } : current);
+            applySavedMpsState(saved);
             toast({
                 title: "Borrador guardado",
                 description: `MPS #${saved.mpsId} guardado para la semana ${getMpsSemanaLabel(saved)}.`,
@@ -580,7 +865,7 @@ export default function ProgramacionProduccionSemanalTab() {
         }
         if (hasUnsavedChanges) {
             toast({
-                title: "Guarde primero el borrador",
+                title: isApprovedEditMode ? "Guarde primero los cambios" : "Guarde primero el borrador",
                 description: "Para atender una observacion, primero guarde el MPS corregido.",
                 status: "warning",
                 duration: 4000,
@@ -610,7 +895,11 @@ export default function ProgramacionProduccionSemanalTab() {
         }
     };
 
-    const canSave = validationIssues.length === 0 && !isReadOnly && !isLoadingDraft && !isWeekFullyLocked;
+    const canSave = validationIssues.length === 0
+        && !isReadOnly
+        && !isLoadingDraft
+        && !isWeekFullyLocked
+        && (isDraftMode || (isApprovedEditMode && hasUnsavedChanges));
 
     return (
         <VStack align="stretch" spacing={4}>
@@ -637,7 +926,7 @@ export default function ProgramacionProduccionSemanalTab() {
                         isLoading={isSaving}
                         isDisabled={!canSave}
                     >
-                        Guardar borrador
+                        {isApprovedEditMode ? "Guardar cambios MPS" : "Guardar borrador"}
                     </Button>
                     <Button
                         variant="outline"
@@ -659,6 +948,7 @@ export default function ProgramacionProduccionSemanalTab() {
                     {isLoadingDraft && <Badge colorScheme="gray">Cargando semana</Badge>}
                     {hasUnsavedChanges && <Badge colorScheme="orange">Cambios sin guardar</Badge>}
                     {currentDraft?.fechaGeneracionOdps && <Badge colorScheme="green">ODPs generadas</Badge>}
+                    {isApprovedEditMode && <Badge colorScheme="teal">Edicion controlada</Badge>}
                     <Badge colorScheme="gray">Editable desde {editableFromDate}</Badge>
                     {isWeekFullyLocked && <Badge colorScheme="red">Semana bloqueada</Badge>}
                     <Badge colorScheme="purple">{formatNumber(totals.unidades)} unidades</Badge>
@@ -683,147 +973,171 @@ export default function ProgramacionProduccionSemanalTab() {
                 )}
             </Box>
 
-            <SimpleGrid columns={[1, 1, 2, 3, 6]} spacing={3}>
-                {DAY_LABELS.map((label, dayIndex) => {
-                    const dayEntries = entriesByDay.get(dayIndex) ?? [];
-                    const dayDate = addDays(weekStartDate, dayIndex);
-                    const isDayEditable = isMpsDateEditable(dayDate, editableFromDate);
-                    return (
-                        <Box
-                            key={label}
-                            bg={isDayEditable ? "white" : "gray.50"}
-                            borderWidth="1px"
-                            borderColor={isDayEditable ? "gray.200" : "gray.300"}
-                            borderRadius="md"
-                            p={3}
-                            minH="280px"
-                        >
-                            <Flex align="start" justify="space-between" gap={2}>
-                                <Box>
-                                    <Flex align="center" gap={2} wrap="wrap">
-                                        <Text fontWeight="bold">{label}</Text>
-                                        {!isDayEditable && <Badge colorScheme="gray">Bloqueado</Badge>}
-                                    </Flex>
-                                    <Text fontSize="sm" color="gray.600">{dayDate}</Text>
-                                </Box>
-                                <Tooltip
-                                    label={isDayEditable ? "Agregar terminado" : `No editable antes de ${editableFromDate}`}
-                                    shouldWrapChildren
-                                >
-                                    <IconButton
-                                        aria-label={`Agregar terminado ${label}`}
-                                        icon={<AddIcon />}
-                                        size="sm"
-                                        colorScheme="teal"
-                                        isDisabled={isReadOnly || !isMonday(weekStartDate) || !isDayEditable}
-                                        onClick={() => {
-                                            setPickerDayIndex(dayIndex);
-                                            pickerDisclosure.onOpen();
-                                        }}
-                                    />
-                                </Tooltip>
-                            </Flex>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SimpleGrid columns={[1, 1, 2, 3, 6]} spacing={3}>
+                    {DAY_LABELS.map((label, dayIndex) => {
+                        const dayEntries = entriesByDay.get(dayIndex) ?? [];
+                        const dayDate = addDays(weekStartDate, dayIndex);
+                        const isDayEditable = isMpsDateEditable(dayDate, editableFromDate);
+                        const addButtonLabel = !isDraftMode
+                            ? "No se agregan productos en MPS aprobado"
+                            : (isDayEditable ? "Agregar terminado" : `No editable antes de ${editableFromDate}`);
+                        return (
+                            <DroppableDayColumn
+                                key={label}
+                                dayIndex={dayIndex}
+                                isDayEditable={isDayEditable}
+                                isDropDisabled={isReadOnly || !isDayEditable}
+                            >
+                                <Flex align="start" justify="space-between" gap={2}>
+                                    <Box>
+                                        <Flex align="center" gap={2} wrap="wrap">
+                                            <Text fontWeight="bold">{label}</Text>
+                                            {!isDayEditable && <Badge colorScheme="gray">Bloqueado</Badge>}
+                                        </Flex>
+                                        <Text fontSize="sm" color="gray.600">{dayDate}</Text>
+                                    </Box>
+                                    <Tooltip label={addButtonLabel} shouldWrapChildren>
+                                        <IconButton
+                                            aria-label={`Agregar terminado ${label}`}
+                                            icon={<AddIcon />}
+                                            size="sm"
+                                            colorScheme="teal"
+                                            isDisabled={!isDraftMode || isReadOnly || !isMonday(weekStartDate) || !isDayEditable}
+                                            onClick={() => {
+                                                setPickerDayIndex(dayIndex);
+                                                pickerDisclosure.onOpen();
+                                            }}
+                                        />
+                                    </Tooltip>
+                                </Flex>
 
-                            <Divider my={3} />
+                                <Divider my={3} />
 
-                            <VStack align="stretch" spacing={3}>
-                                {dayEntries.length === 0 ? (
-                                    <Text fontSize="sm" color="gray.500">Sin terminados programados.</Text>
-                                ) : (
-                                    dayEntries.map((entry) => {
-                                        const lotes = entry.numeroLotes;
-                                        const unidades = entry.loteSize > 0 ? entry.numeroLotes * entry.loteSize : 0;
-                                        const entryIssues = getEntryIssues(entry);
-                                        const isEntryEditable = !isReadOnly && isDayEditable;
-                                        return (
-                                            <Box
-                                                key={entry.id}
-                                                bg={isEntryEditable ? "white" : "gray.50"}
-                                                borderWidth="1px"
-                                                borderColor={entryIssues.length ? "orange.300" : "gray.200"}
-                                                borderRadius="md"
-                                                p={2}
-                                            >
-                                                <Flex justify="space-between" gap={2} align="start">
-                                                    <Box minW={0}>
-                                                        <Text fontWeight="semibold" fontSize="sm" noOfLines={2}>{entry.productoNombre}</Text>
-                                                        <Text fontSize="xs" color="gray.600">{entry.productoId}</Text>
-                                                        <Text fontSize="xs" color="gray.600">{entry.categoriaNombre ?? "Sin categoria"}</Text>
-                                                    </Box>
-                                                    <IconButton
-                                                        aria-label="Quitar terminado"
-                                                        icon={<DeleteIcon />}
-                                                        size="xs"
-                                                        variant="ghost"
-                                                        colorScheme="red"
-                                                        isDisabled={!isEntryEditable}
-                                                        onClick={() => handleRemoveEntry(entry.id)}
-                                                    />
-                                                </Flex>
-                                                <FormControl mt={2}>
-                                                    <FormLabel fontSize="xs" mb={1}>Lotes</FormLabel>
-                                                    <Flex gap={1} align="center">
-                                                        <Tooltip label="Restar un lote">
+                                <VStack align="stretch" spacing={3}>
+                                    {dayEntries.length === 0 ? (
+                                        <Text fontSize="sm" color="gray.500">Sin terminados programados.</Text>
+                                    ) : (
+                                        dayEntries.map((entry) => {
+                                            const lotes = entry.numeroLotes;
+                                            const unidades = entry.loteSize > 0 ? entry.numeroLotes * entry.loteSize : 0;
+                                            const entryIssues = getEntryIssues(entry);
+                                            const entryCanceled = isEntryCanceled(entry);
+                                            const isEntryEditable = canEditEntry(entry);
+                                            return (
+                                                <DraggableEntryCard
+                                                    key={entry.id}
+                                                    entry={entry}
+                                                    isDragDisabled={!isEntryEditable || entry.numeroLotes <= 0}
+                                                >
+                                                    <Box
+                                                        bg={entryCanceled || !isEntryEditable ? "gray.50" : "white"}
+                                                        borderWidth="1px"
+                                                        borderColor={entryIssues.length ? "orange.300" : (entryCanceled ? "gray.300" : "gray.200")}
+                                                        borderRadius="md"
+                                                        p={2}
+                                                    >
+                                                        <Flex justify="space-between" gap={2} align="start">
+                                                            <Box minW={0}>
+                                                                <Text fontWeight="semibold" fontSize="sm" noOfLines={2}>{entry.productoNombre}</Text>
+                                                                <Text fontSize="xs" color="gray.600">{entry.productoId}</Text>
+                                                                <Text fontSize="xs" color="gray.600">{entry.categoriaNombre ?? "Sin categoria"}</Text>
+                                                            </Box>
                                                             <IconButton
-                                                                aria-label={`Restar lote a ${entry.productoNombre}`}
-                                                                icon={<MinusIcon />}
-                                                                size="sm"
-                                                                variant="outline"
-                                                                isDisabled={!isEntryEditable || entry.numeroLotes <= 1}
-                                                                onClick={() => adjustEntryLotes(entry.id, -1)}
-                                                            />
-                                                        </Tooltip>
-                                                        <NumberInput
-                                                            size="sm"
-                                                            min={1}
-                                                            step={1}
-                                                            precision={0}
-                                                            value={entry.numeroLotes}
-                                                            onChange={(valueAsString) => handleEntryLotesChange(entry.id, valueAsString)}
-                                                            isDisabled={!isEntryEditable}
-                                                            flex="1"
-                                                        >
-                                                            <NumberInputField />
-                                                        </NumberInput>
-                                                        <Tooltip label="Sumar un lote">
-                                                            <IconButton
-                                                                aria-label={`Sumar lote a ${entry.productoNombre}`}
-                                                                icon={<AddIcon />}
-                                                                size="sm"
-                                                                variant="outline"
-                                                                colorScheme="teal"
+                                                                aria-label={isApprovedEditMode ? "Cancelar tarjeta MPS" : "Quitar terminado"}
+                                                                icon={<DeleteIcon />}
+                                                                size="xs"
+                                                                variant="ghost"
+                                                                colorScheme="red"
                                                                 isDisabled={!isEntryEditable}
-                                                                onClick={() => adjustEntryLotes(entry.id, 1)}
+                                                                onClick={() => handleRemoveEntry(entry.id)}
                                                             />
-                                                        </Tooltip>
-                                                    </Flex>
-                                                </FormControl>
-                                                <Flex mt={2} gap={2} align="center" wrap="wrap">
-                                                    <Badge colorScheme={entry.loteSize > 0 ? "blue" : "orange"}>
-                                                        Lote {entry.loteSize || "-"}
-                                                    </Badge>
-                                                    <Badge colorScheme={isIntegerLike(lotes) ? "green" : "orange"}>
-                                                        {formatNumber(lotes)} lotes
-                                                    </Badge>
-                                                    <Badge colorScheme="purple">
-                                                        {formatNumber(unidades)} und
-                                                    </Badge>
-                                                    {!isEntryEditable && <Badge colorScheme="gray">Solo lectura</Badge>}
-                                                </Flex>
-                                                {entryIssues.length > 0 && (
-                                                    <Text mt={2} fontSize="xs" color="orange.700">
-                                                        {entryIssues.join(" | ")}
-                                                    </Text>
-                                                )}
-                                            </Box>
-                                        );
-                                    })
-                                )}
-                            </VStack>
-                        </Box>
-                    );
-                })}
-            </SimpleGrid>
+                                                        </Flex>
+                                                        <FormControl mt={2}>
+                                                            <FormLabel fontSize="xs" mb={1}>Lotes</FormLabel>
+                                                            <Flex gap={1} align="center">
+                                                                <Tooltip label="Restar un lote">
+                                                                    <IconButton
+                                                                        aria-label={`Restar lote a ${entry.productoNombre}`}
+                                                                        icon={<MinusIcon />}
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        isDisabled={!isEntryEditable || entry.numeroLotes <= (isApprovedEditMode ? 0 : 1)}
+                                                                        onClick={() => adjustEntryLotes(entry.id, -1)}
+                                                                    />
+                                                                </Tooltip>
+                                                                <NumberInput
+                                                                    size="sm"
+                                                                    min={isApprovedEditMode ? 0 : 1}
+                                                                    step={1}
+                                                                    precision={0}
+                                                                    value={entry.numeroLotes}
+                                                                    onChange={(valueAsString) => handleEntryLotesChange(entry.id, valueAsString)}
+                                                                    isDisabled={!isEntryEditable}
+                                                                    flex="1"
+                                                                >
+                                                                    <NumberInputField />
+                                                                </NumberInput>
+                                                                <Tooltip label="Sumar un lote">
+                                                                    <IconButton
+                                                                        aria-label={`Sumar lote a ${entry.productoNombre}`}
+                                                                        icon={<AddIcon />}
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        colorScheme="teal"
+                                                                        isDisabled={!isEntryEditable}
+                                                                        onClick={() => adjustEntryLotes(entry.id, 1)}
+                                                                    />
+                                                                </Tooltip>
+                                                            </Flex>
+                                                        </FormControl>
+                                                        <Flex mt={2} gap={2} align="center" wrap="wrap">
+                                                            <Badge colorScheme={entry.loteSize > 0 ? "blue" : "orange"}>
+                                                                Lote {entry.loteSize || "-"}
+                                                            </Badge>
+                                                            <Badge colorScheme={isIntegerLike(lotes) ? "green" : "orange"}>
+                                                                {formatNumber(lotes)} lotes
+                                                            </Badge>
+                                                            <Badge colorScheme="purple">
+                                                                {formatNumber(unidades)} und
+                                                            </Badge>
+                                                            {entryCanceled && (
+                                                                <Badge colorScheme="red">
+                                                                    {isPendingCancellation(entry) ? "Cancelacion pendiente" : "Cancelada"}
+                                                                </Badge>
+                                                            )}
+                                                            {(entry.ordenesIniciadas ?? 0) > 0 && (
+                                                                <Badge colorScheme="red">{entry.ordenesIniciadas} OP iniciada(s)</Badge>
+                                                            )}
+                                                            {(entry.lotesCancelados ?? 0) > 0 && (
+                                                                <Badge colorScheme="orange">{entry.lotesCancelados} lote(s) cancelado(s)</Badge>
+                                                            )}
+                                                            {isApprovedEditMode && (entry.ordenesCancelables ?? 0) > 0 && !entryCanceled && (
+                                                                <Badge colorScheme="gray">{entry.ordenesCancelables} OP cancelable(s)</Badge>
+                                                            )}
+                                                            {!isEntryEditable && !entryCanceled && <Badge colorScheme="gray">Solo lectura</Badge>}
+                                                        </Flex>
+                                                        {entry.blockedReason && (!isEntryEditable || isPendingCancellation(entry)) && (
+                                                            <Text mt={2} fontSize="xs" color={entryCanceled ? "gray.600" : "red.600"}>
+                                                                {entry.blockedReason}
+                                                            </Text>
+                                                        )}
+                                                        {entryIssues.length > 0 && (
+                                                            <Text mt={2} fontSize="xs" color="orange.700">
+                                                                {entryIssues.join(" | ")}
+                                                            </Text>
+                                                        )}
+                                                    </Box>
+                                                </DraggableEntryCard>
+                                            );
+                                        })
+                                    )}
+                                </VStack>
+                            </DroppableDayColumn>
+                        );
+                    })}
+                </SimpleGrid>
+            </DndContext>
 
             <MpsObservacionesPanel
                 mode="programacion"
