@@ -50,8 +50,18 @@ const ROWS: { key: SuperMasterConfigKey; label: string; resumen: string }[] = [
     { key: "habilitarAjustesInventario", label: "Habilitar Ajustes Inventario", resumen: "Permite acceder a Ajustes de Inventario en Transacciones de Almacen" },
 ];
 
-function isPositiveInteger(value: string) {
-    return /^\d+$/.test(value.trim()) && Number(value.trim()) >= 1;
+function isIntegerInRange(value: string, min: number, max: number) {
+    if (!/^\d+$/.test(value.trim())) return false;
+    const parsed = Number(value.trim());
+    return Number.isInteger(parsed) && parsed >= min && parsed <= max;
+}
+
+function getNumericDirectiveBounds(directive: MasterDirective) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION) {
+        return { min: 0, max: 7, error: "Debe ser un entero entre 0 y 7" };
+    }
+
+    return { min: 1, max: undefined, error: "Debe ser un entero mayor o igual a 1" };
 }
 
 function isBooleanEnabled(value: string) {
@@ -148,8 +158,9 @@ export default function MasterDirectivesPage() {
         const errors: Record<number, string> = {};
         numericDirectives.forEach(directive => {
             const value = directiveDrafts[directive.id] ?? directive.valor;
-            if (!isPositiveInteger(value)) {
-                errors[directive.id] = "Debe ser un entero mayor o igual a 1";
+            const bounds = getNumericDirectiveBounds(directive);
+            if (!isIntegerInRange(value, bounds.min, bounds.max ?? Number.POSITIVE_INFINITY)) {
+                errors[directive.id] = bounds.error;
             }
         });
         return errors;
@@ -315,7 +326,8 @@ export default function MasterDirectivesPage() {
                                                 <FormControl isInvalid={Boolean(error)} maxW="180px">
                                                     <Input
                                                         type="number"
-                                                        min={1}
+                                                        min={getNumericDirectiveBounds(directive).min}
+                                                        max={getNumericDirectiveBounds(directive).max}
                                                         step={1}
                                                         value={value}
                                                         onChange={e => updateDirectiveDraft(directive.id, e.target.value)}

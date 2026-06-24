@@ -18,13 +18,17 @@ interface DTOAllMasterDirectives {
 }
 
 type MasterDirectivesMap = Record<string, unknown>;
+type NumberDirectiveOptions = {
+    min?: number;
+    max?: number;
+};
 
 interface MasterDirectivesContextValue extends MasterDirectivesMap {
     directives: MasterDirectivesMap;
     rawDirectives: MasterDirective[];
     loading: boolean;
     refreshDirectives: () => Promise<void>;
-    getNumberDirective: (nombre: string, fallback: number) => number;
+    getNumberDirective: (nombre: string, fallback: number, options?: NumberDirectiveOptions) => number;
     getBooleanDirective: (nombre: string, fallback: boolean) => boolean;
 }
 
@@ -118,15 +122,17 @@ export function MasterDirectivesProvider({ children }: { children: ReactNode }) 
 
     const effectiveLoading = loading || (Boolean(user) && loadedForUser !== user);
 
-    const getNumberDirective = useCallback((nombre: string, fallback: number) => {
+    const getNumberDirective = useCallback((nombre: string, fallback: number, options: NumberDirectiveOptions = {}) => {
+        const min = options.min ?? 1;
+        const max = options.max ?? Number.POSITIVE_INFINITY;
         const value = directives[nombre];
-        if (typeof value === "number" && Number.isInteger(value) && value >= 1) {
+        if (typeof value === "number" && Number.isInteger(value) && value >= min && value <= max) {
             return value;
         }
 
         if (typeof value === "string") {
             const parsed = Number(value);
-            if (Number.isInteger(parsed) && parsed >= 1) {
+            if (Number.isInteger(parsed) && parsed >= min && parsed <= max) {
                 return parsed;
             }
         }

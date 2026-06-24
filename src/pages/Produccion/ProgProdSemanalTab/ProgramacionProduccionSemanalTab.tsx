@@ -45,6 +45,11 @@ import { downloadMpsSemanalPdf } from "./pdf/MpsSemanalPdfGenerator";
 import type { SemanaMPSDTO } from "./SemanaMPSPicker";
 import SemanaMPSPickerModal from "./SemanaMPSPickerModal";
 import MpsObservacionesPanel from "./MpsObservacionesPanel";
+import { useMasterDirectives } from "../../../context/MasterDirectivesContext";
+import {
+    MASTER_DIRECTIVE_KEYS,
+    MPS_SEMANAL_DIAS_BLOQUEO_EDICION_DEFAULT,
+} from "../../../context/masterDirectiveConstants";
 
 interface ProgramacionEntry {
     id: string;
@@ -62,7 +67,8 @@ interface ProgramacionEntry {
 
 const DAY_LABELS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
 const EPSILON = 0.000001;
-const LOCKED_DAYS_AHEAD = 2;
+const MPS_SEMANAL_DIAS_BLOQUEO_EDICION_MIN = 0;
+const MPS_SEMANAL_DIAS_BLOQUEO_EDICION_MAX = 7;
 
 function formatLocalDate(date: Date): string {
     const year = date.getFullYear();
@@ -97,8 +103,8 @@ function addDays(dateString: string, days: number): string {
     return formatLocalDate(date);
 }
 
-function getMpsEditableFromDate(): string {
-    return addDays(getBogotaTodayDateString(), LOCKED_DAYS_AHEAD);
+function getMpsEditableFromDate(lockedDaysAhead: number): string {
+    return addDays(getBogotaTodayDateString(), lockedDaysAhead);
 }
 
 function isMpsDateEditable(dateString: string, editableFromDate: string): boolean {
@@ -216,6 +222,15 @@ function getEntryIssues(entry: ProgramacionEntry): string[] {
 }
 
 export default function ProgramacionProduccionSemanalTab() {
+    const { getNumberDirective } = useMasterDirectives();
+    const lockedDaysAhead = getNumberDirective(
+        MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION,
+        MPS_SEMANAL_DIAS_BLOQUEO_EDICION_DEFAULT,
+        {
+            min: MPS_SEMANAL_DIAS_BLOQUEO_EDICION_MIN,
+            max: MPS_SEMANAL_DIAS_BLOQUEO_EDICION_MAX,
+        },
+    );
     const [weekStartDate, setWeekStartDate] = useState(getCurrentWeekMonday());
     const [selectedSemana, setSelectedSemana] = useState<SemanaMPSDTO | null>(null);
     const [entries, setEntries] = useState<ProgramacionEntry[]>([]);
@@ -230,7 +245,7 @@ export default function ProgramacionProduccionSemanalTab() {
     const [isLoadingDraft, setIsLoadingDraft] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
-    const [editableFromDate, setEditableFromDate] = useState(getMpsEditableFromDate);
+    const [editableFromDate, setEditableFromDate] = useState(() => getMpsEditableFromDate(lockedDaysAhead));
     const pickerDisclosure = useDisclosure();
     const weekChangeConfirmDisclosure = useDisclosure();
     const toast = useToast();
@@ -366,11 +381,12 @@ export default function ProgramacionProduccionSemanalTab() {
     }, [toast]);
 
     useEffect(() => {
+        setEditableFromDate(getMpsEditableFromDate(lockedDaysAhead));
         const intervalId = window.setInterval(() => {
-            setEditableFromDate(getMpsEditableFromDate());
+            setEditableFromDate(getMpsEditableFromDate(lockedDaysAhead));
         }, 60_000);
         return () => window.clearInterval(intervalId);
-    }, []);
+    }, [lockedDaysAhead]);
 
     useEffect(() => {
         void loadWeekForProgramming(weekStartDate);
