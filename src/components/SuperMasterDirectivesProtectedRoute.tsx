@@ -13,13 +13,13 @@ type SuperMasterDirectivesProtectedRouteProps = {
 };
 
 const SuperMasterDirectivesProtectedRoute: React.FC<SuperMasterDirectivesProtectedRouteProps> = ({ children }) => {
-    const { user, accesosReady } = useAuth();
+    const { user, accesosReady, isMasterLike } = useAuth();
     const { loading: directivesLoading, getBooleanDirective } = useMasterDirectives();
     const normalizedUser = user?.trim().toLowerCase();
-    const isMasterUser = normalizedUser === "master";
     const isSuperMasterUser = normalizedUser === "super_master";
+    const isDirectiveControlledMasterUser = isMasterLike && !isSuperMasterUser;
 
-    if (!accesosReady || (isMasterUser && directivesLoading)) {
+    if (!accesosReady || (isDirectiveControlledMasterUser && directivesLoading)) {
         return (
             <Center py={10}>
                 <Spinner size="lg" mr={3} />
@@ -41,7 +41,7 @@ const SuperMasterDirectivesProtectedRoute: React.FC<SuperMasterDirectivesProtect
         ENABLE_MASTER_SUPERMASTER_DIRECTIVES_ACCESS_DEFAULT
     );
 
-    if (isMasterUser && masterAccessEnabled) {
+    if (isDirectiveControlledMasterUser && masterAccessEnabled) {
         return children;
     }
 
