@@ -139,14 +139,13 @@ export function buildIngresoOcmDta(
         ordenCompraMateriales: orden,
         userId: undefined,
         observaciones: "",
-        file: new File([], "placeholder"),
     };
 }
 
 export function buildIngresoOcmSubmitPayload(
     docIngresoDTA: IngresoOCM_DTA,
     observaciones: string
-): { payload: Omit<IngresoOCM_DTA, "file">; file: File } {
+): { payload: Omit<IngresoOCM_DTA, "file">; file?: File } {
     const { file, ...docData } = docIngresoDTA;
     const itemsOrdenCompra = docData.ordenCompraMateriales.itemsOrdenCompra.map(item => {
         const itemCopy = { ...item } as Record<string, unknown>;

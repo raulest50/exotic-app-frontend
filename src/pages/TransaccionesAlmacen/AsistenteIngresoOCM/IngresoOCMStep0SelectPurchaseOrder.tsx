@@ -41,12 +41,9 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
     const toast = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [proveedor, setProveedor] = useState<Proveedor | null>(null);
-    const [fechaInicio, setFechaInicio] = useState<string>(() => {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        return yesterday.toISOString().split("T")[0];
-    });
-    const [fechaFin, setFechaFin] = useState<string>(() => new Date().toISOString().split("T")[0]);
+    const [ordenCompraId, setOrdenCompraId] = useState("");
+    const [fechaInicio, setFechaInicio] = useState("");
+    const [fechaFin, setFechaFin] = useState("");
     const [ordenes, setOrdenes] = useState<OrdenCompra[]>([]);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
@@ -66,9 +63,11 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
     const fetchOrdenesPendientes = async (pageNum: number, pageSize: number) => {
         setIsLoading(true);
         try {
+            const trimmedOrdenCompraId = ordenCompraId.trim();
             const data = await fetchOrdenesPendientesOcm({
                 page: pageNum,
                 size: pageSize,
+                ordenCompraId: trimmedOrdenCompraId ? Number(trimmedOrdenCompraId) : undefined,
                 fechaInicio: serializeDate(fechaInicio),
                 fechaFin: serializeDate(fechaFin, true),
                 proveedorId: proveedor?.id ?? undefined,
@@ -167,6 +166,18 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
                 </Heading>
 
                 <Flex gap={4} wrap="wrap" alignItems="flex-end">
+                    <FormControl minW="180px">
+                        <FormLabel>ID OCM</FormLabel>
+                        <Input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={ordenCompraId}
+                            onChange={(e) => setOrdenCompraId(e.target.value.replace(/\D/g, ""))}
+                            placeholder="Ej: 123"
+                        />
+                    </FormControl>
+
                     <ProveedorFilterOCM
                         selectedProveedor={proveedor as import("../../Compras/types").Proveedor | null}
                         onOpenPicker={onOpen}

@@ -18,6 +18,7 @@ const endpoints = new EndPointsURL();
 export async function fetchOrdenesPendientesOcm({
     page,
     size,
+    ordenCompraId,
     fechaInicio,
     fechaFin,
     proveedorId,
@@ -29,6 +30,7 @@ export async function fetchOrdenesPendientesOcm({
             params: {
                 page,
                 size,
+                ordenCompraId,
                 fechaInicio,
                 fechaFin,
                 proveedorId,
@@ -110,7 +112,9 @@ export async function submitIngresoOcm(
         "docIngresoDTA",
         new Blob([JSON.stringify(payload)], { type: "application/json" })
     );
-    formData.append("file", file);
+    if (file) {
+        formData.append("file", file);
+    }
 
     await axios.post(endpoints.save_doc_ingreso_oc, formData, {
         headers: {

@@ -207,7 +207,7 @@ export interface IngresoOCM_DTA{
     ordenCompraMateriales: OrdenCompra;
     userId: string | undefined; // responsable del ingreso a almacen
     observaciones: string;
-    file: File;
+    file?: File;
 }
 
 // ===== Dispensación de Materiales =====

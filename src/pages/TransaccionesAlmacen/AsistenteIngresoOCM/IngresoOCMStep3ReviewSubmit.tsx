@@ -63,10 +63,10 @@ export default function IngresoOCMStep3ReviewSubmit({
     }, [supportFile]);
 
     const onClickEnviar = async () => {
-        if (!docIngresoDTA || !docIngresoDTA.file) {
+        if (!docIngresoDTA) {
             toast({
                 title: "Datos incompletos",
-                description: "No se encontro el documento de ingreso o el soporte adjunto.",
+                description: "No se encontro el documento de ingreso.",
                 status: "error",
                 duration: 4000,
                 isClosable: true,

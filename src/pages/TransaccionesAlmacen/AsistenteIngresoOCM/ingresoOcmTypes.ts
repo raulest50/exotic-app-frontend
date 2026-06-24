@@ -49,6 +49,7 @@ export interface OcmReceptionDataState {
 export interface FetchOrdenesPendientesParams {
     page: number;
     size: number;
+    ordenCompraId?: number;
     fechaInicio: string | null;
     fechaFin: string | null;
     proveedorId?: string;

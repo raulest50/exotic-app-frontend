@@ -1,4 +1,4 @@
-import React, { type Dispatch, type SetStateAction, useState, useRef } from "react";
+import { type Dispatch, type SetStateAction } from "react";
 import {IngresoOCM_DTA, OrdenCompra, TipoEntidadCausante} from "../../types.tsx";
 import {
     Button,
@@ -8,12 +8,10 @@ import {
     Icon,
     IconButton,
     Text,
-    useToast,
 } from "@chakra-ui/react";
 import { MdAddAPhoto } from "react-icons/md";
 import { FaFolderOpen } from "react-icons/fa";
 import { FaFileCircleQuestion } from "react-icons/fa6";
-import { FaFileCircleCheck } from "react-icons/fa6";
 
 import { useAuth } from '../../../../context/AuthContext';
 
@@ -30,91 +28,11 @@ export default function IngresoOCMStep2UploadDocument({
                                          }: StepTwoComponentProps) {
 
     const { meProfile: currentUser } = useAuth();
-    const [file, setFile] = useState<File | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const cameraInputRef = useRef<HTMLInputElement>(null);
-    const toast = useToast();
 
-    // Handles file selection from either input
-    const handleFileChange = (
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        const files = event.target.files;
-        if (files && files.length > 0) {
-            setFile(files[0]);
-        }
-    };
-
-    // Triggers the file browsing input
-    const onClickBrowse = () => {
-        fileInputRef.current?.click();
-    };
-
-    // Checks for available camera(s) and triggers the camera capture input
-    const onClickCamera = () => {
-        if (
-            navigator.mediaDevices &&
-            navigator.mediaDevices.enumerateDevices
-        ) {
-            navigator.mediaDevices
-                .enumerateDevices()
-                .then((devices) => {
-                    const videoInputs = devices.filter(
-                        (device) => device.kind === "videoinput"
-                    );
-                    if (videoInputs.length > 0) {
-                        cameraInputRef.current?.click();
-                    } else {
-                        toast({
-                            title: "No camera detected",
-                            description:
-                                "Your device does not have a camera available.",
-                            status: "warning",
-                            duration: 3000,
-                            isClosable: true,
-                        });
-                    }
-                })
-                .catch(() => {
-                    toast({
-                        title: "Error accessing devices",
-                        description:
-                            "Could not check for camera availability.",
-                        status: "error",
-                        duration: 3000,
-                        isClosable: true,
-                    });
-                });
-        } else {
-            toast({
-                title: "Camera not supported",
-                description:
-                    "Camera API is not supported on your browser.",
-                status: "warning",
-                duration: 3000,
-                isClosable: true,
-            });
-        }
-    };
-
-    // When continuing, update the ingresoOCM_DTA with the file and proceed
+    // El soporte queda deshabilitado temporalmente; el usuario lo gestiona por fuera de la app.
     const onClickContinuar = async () => {
-        if (!file) {
-            toast({
-                title: "No file selected",
-                description:
-                    "Please select or capture a file before continuing.",
-                status: "warning",
-                duration: 3000,
-                isClosable: true,
-            });
-            return;
-        }
-
-        // Actualizar el ingresoOCM_DTA existente con el archivo y el usuario
         setIngresoOCM_DTA(prevState => {
             if (!prevState) {
-                // Si por alguna razón no existe el objeto previo, crearlo
                 return {
                     transaccionAlmacen: {
                         movimientosTransaccion: [],
@@ -126,15 +44,12 @@ export default function IngresoOCMStep2UploadDocument({
                     ordenCompraMateriales: orden!,
                     userId: currentUser?.id.toString(),
                     observaciones: "",
-                    file: file,
                 };
             }
 
-            // Mantener los movimientos existentes y actualizar solo el archivo y usuario
             return {
                 ...prevState,
                 userId: currentUser?.id.toString(),
-                file: file
             };
         });
 
@@ -155,12 +70,10 @@ export default function IngresoOCMStep2UploadDocument({
             </Heading>
 
             <Text fontFamily="Comfortaa Variable">
-                Debe adjuntar un documento soporte para terminar de diligenciar el
-                formato de ingreso a almacén.
+                El documento soporte es opcional para este ingreso.
             </Text>
             <Text fontFamily="Comfortaa Variable">
-                El soporte lo puede adjuntar tomando una foto del documento físico
-                presentado por el proveedor o adjuntando un scan del mismo.
+                Por ahora se guarda fuera de la app; puede continuar sin adjuntar archivo.
             </Text>
             <Divider />
             <Flex
@@ -177,7 +90,7 @@ export default function IngresoOCMStep2UploadDocument({
                     fontSize="5em"
                     w="2em"
                     h="2em"
-                    onClick={onClickBrowse}
+                    isDisabled
                 />
                 <IconButton
                     colorScheme="teal"
@@ -186,7 +99,7 @@ export default function IngresoOCMStep2UploadDocument({
                     fontSize="5em"
                     w="2em"
                     h="2em"
-                    onClick={onClickCamera}
+                    isDisabled
                 />
             </Flex>
 
@@ -200,14 +113,12 @@ export default function IngresoOCMStep2UploadDocument({
                 w="full"
             >
                 <Icon
-                    as={file ? FaFileCircleCheck : FaFileCircleQuestion}
+                    as={FaFileCircleQuestion}
                     boxSize="4em"
-                    color={file ? "green" : "orange.500"}
+                    color="orange.500"
                 />
                 <Text fontFamily="Comfortaa Variable">
-                    {file
-                        ? "Se ha cargado el documento soporte correctamente y puede continuar al paso final."
-                        : "Aún no ha subido ningún archivo/foto soporte."}
+                    Carga de soporte deshabilitada temporalmente. El ingreso puede continuar.
                 </Text>
             </Flex>
 
@@ -215,28 +126,9 @@ export default function IngresoOCMStep2UploadDocument({
                 colorScheme="teal"
                 variant="solid"
                 onClick={onClickContinuar}
-                isDisabled={!file}
             >
                 Continuar
             </Button>
-
-            {/* Hidden input for file browsing */}
-            <input
-                type="file"
-                accept="application/pdf,image/jpeg,image/png"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                style={{ display: "none" }}
-            />
-            {/* Hidden input for camera capture */}
-            <input
-                type="file"
-                accept="image/jpeg,image/png"
-                capture="environment"
-                ref={cameraInputRef}
-                onChange={handleFileChange}
-                style={{ display: "none" }}
-            />
         </Flex>
     );
 }
