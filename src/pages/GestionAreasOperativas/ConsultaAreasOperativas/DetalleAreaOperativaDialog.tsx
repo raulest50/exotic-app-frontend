@@ -35,6 +35,7 @@ import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/Use
 import { fetchUserAssignmentStatus } from '../../../api/userAssignmentStatus.ts';
 import { User } from '../../Usuarios/GestionUsuarios/types';
 import CategoriaHabilitadaPickerModal from '../components/CategoriaHabilitadaPickerModal.tsx';
+import AreaOperativaCapacityConfig from './AreaOperativaCapacityConfig.tsx';
 import {
     AreaOperativa,
     AreaOperativaMutationDTO,
@@ -208,7 +209,7 @@ export default function DetalleAreaOperativaDialog({
     const categoriasEdicion = editCategoriasHabilitadas;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered closeOnOverlayClick={!isEditing}>
+        <Modal isOpen={isOpen} onClose={onClose} size="5xl" isCentered closeOnOverlayClick={!isEditing}>
             <ModalOverlay />
             <ModalContent>
                 <ModalHeader fontFamily="Comfortaa Variable">
@@ -345,6 +346,14 @@ export default function DetalleAreaOperativaDialog({
                                     ))}
                                 </Wrap>
                             )}
+                        </Box>
+
+                        <Box>
+                            <Text fontWeight="bold" mb={2} fontSize="md">Unidades y capacidades operativas</Text>
+                            <AreaOperativaCapacityConfig
+                                areaId={area.areaId}
+                                isReadOnly={isSpecialSystemArea}
+                            />
                         </Box>
                     </VStack>
                 </ModalBody>

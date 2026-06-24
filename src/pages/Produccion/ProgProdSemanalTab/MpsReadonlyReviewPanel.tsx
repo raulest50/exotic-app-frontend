@@ -13,7 +13,6 @@ import {
 import type {
     MpsSemanalDraftDTO,
     MpsSemanalItemDTO,
-    MpsSemanalLotePlanificadoDTO,
 } from "./MpsSemanalService";
 import { formatSemanaMpsDisplayDate } from "./semanaMps.utils";
 
@@ -69,17 +68,6 @@ function getEstadoLabel(estado: MpsSemanalDraftDTO["estado"]): string {
             return "Cerrada";
         default:
             return estado;
-    }
-}
-
-function getLoteEstadoColor(estado: MpsSemanalLotePlanificadoDTO["estado"]): string {
-    switch (estado) {
-        case "ODP_GENERADA":
-            return "green";
-        case "CANCELADO":
-            return "red";
-        default:
-            return "yellow";
     }
 }
 
@@ -169,31 +157,6 @@ function MpsItemCard({
                     {item.warning}
                 </Text>
             )}
-
-            <VStack align="stretch" spacing={1} mt={2}>
-                {item.lotesPlanificados.map((lote) => (
-                    <Flex
-                        key={lote.id}
-                        justify="space-between"
-                        align="center"
-                        gap={2}
-                        p={1.5}
-                        bg="white"
-                        borderRadius="sm"
-                        borderWidth="1px"
-                        borderColor="gray.100"
-                    >
-                        <Text fontSize="xs" color="gray.700">
-                            Lote {lote.loteOrdinal} | {formatNumber(lote.cantidadPlanificada)} und
-                        </Text>
-                        <Flex gap={1} wrap="wrap" justify="end">
-                            <Badge colorScheme={getLoteEstadoColor(lote.estado)}>{lote.estado}</Badge>
-                            {lote.ordenProduccionId && <Badge colorScheme="blue">OP {lote.ordenProduccionId}</Badge>}
-                            {lote.loteAsignado && <Badge colorScheme="gray">{lote.loteAsignado}</Badge>}
-                        </Flex>
-                    </Flex>
-                ))}
-            </VStack>
         </Box>
     );
 }

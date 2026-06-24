@@ -38,6 +38,74 @@ export interface AreaOperativaMutationDTO {
     categoriaIds?: number[];
 }
 
+export type DimensionUnidadAreaOperativa = 'VOLUMEN' | 'MASA' | 'CONTEO' | 'TIEMPO';
+export type TipoCapacidadAreaOperativa = 'PRODUCTIVA' | 'ALMACENAMIENTO';
+export type PeriodoCapacidadAreaOperativa = 'HORA' | 'TURNO' | 'DIA' | 'SEMANA';
+
+export interface UnidadMedidaAreaOperativa {
+    id: number;
+    areaId: number;
+    codigo: string;
+    nombre: string;
+    descripcion: string | null;
+    dimension: DimensionUnidadAreaOperativa;
+    unidadReferencia: string;
+    factorAReferencia: number;
+    principal: boolean;
+    discreta: boolean;
+    activo: boolean;
+}
+
+export interface UnidadMedidaAreaOperativaRequest {
+    codigo: string;
+    nombre: string;
+    descripcion?: string | null;
+    dimension: DimensionUnidadAreaOperativa;
+    unidadReferencia: string;
+    factorAReferencia: number;
+    principal: boolean;
+    discreta: boolean;
+    activo: boolean;
+}
+
+export interface CapacidadAreaOperativa {
+    id: number;
+    areaId: number;
+    unidadMedidaId: number;
+    unidadCodigo: string;
+    unidadNombre: string;
+    unidadReferencia: string;
+    tipoCapacidad: TipoCapacidadAreaOperativa;
+    cantidad: number;
+    periodo: PeriodoCapacidadAreaOperativa;
+    eficiencia: number;
+    vigenteDesde: string | null;
+    vigenteHasta: string | null;
+    descripcion: string | null;
+    activo: boolean;
+}
+
+export interface CapacidadAreaOperativaRequest {
+    unidadMedidaId: number;
+    tipoCapacidad: TipoCapacidadAreaOperativa;
+    cantidad: number;
+    periodo: PeriodoCapacidadAreaOperativa;
+    eficiencia: number;
+    vigenteDesde?: string | null;
+    vigenteHasta?: string | null;
+    descripcion?: string | null;
+    activo: boolean;
+}
+
+export interface ConversionUnidadAreaOperativaResponse {
+    unidadOrigen: UnidadMedidaAreaOperativa;
+    unidadDestino: UnidadMedidaAreaOperativa;
+    cantidadOrigen: number;
+    cantidadReferencia: number;
+    unidadReferencia: string;
+    cantidadDestino: number;
+}
+
 export interface PaginatedResponse<T> {
     content: T[];
     totalPages: number;
