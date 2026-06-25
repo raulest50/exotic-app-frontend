@@ -126,45 +126,38 @@ function SeguimientoOrdenCard({
             borderWidth="1px"
             borderRadius="lg"
             bg="app.surface"
-            p={4}
+            p={3}
             boxShadow="sm"
         >
-            <VStack align="stretch" spacing={3}>
-                <HStack justify="space-between" align="start">
-                    <VStack align="start" spacing={1}>
-                        <Badge colorScheme="teal" px={2} py={1}>
-                            {card.loteAsignado || `OP-${card.ordenId}`}
-                        </Badge>
-                        <Text fontSize="sm" color="app.textSubtle">
-                            {card.nodeLabel || "Sin nodo"}
-                        </Text>
-                    </VStack>
-                    <Badge colorScheme={getEstadoBadgeColor(card.estado)}>
-                        {card.estadoDescripcion}
+            <VStack align="stretch" spacing={2}>
+                <VStack align="start" spacing={1}>
+                    <Badge colorScheme="teal" px={2} py={1}>
+                        {card.loteAsignado || `OP-${card.ordenId}`}
                     </Badge>
-                </HStack>
+                    <Text fontSize="xs" color="app.textSubtle" noOfLines={1}>
+                        {card.nodeLabel || "Sin nodo"}
+                    </Text>
+                </VStack>
 
                 <Box>
-                    <Text fontWeight="bold">{card.productoNombre}</Text>
-                    <Text fontSize="sm" color="app.textMuted">
-                        {card.productoId} · Cantidad: {card.cantidadProducir}
+                    <Text fontWeight="bold" noOfLines={2}>{card.productoNombre}</Text>
+                    <Text fontSize="xs" color="app.textMuted">
+                        {card.productoId} · Cant. {card.cantidadProducir}
                     </Text>
                 </Box>
 
-                <Stack spacing={1} fontSize="sm" color="app.textMuted">
-                    <Text>Área: {card.areaNombre}</Text>
-                    <Text>Visible desde: {formatDateTime(card.fechaVisible)}</Text>
-                    <Text>Estado actual desde: {formatDateTime(card.fechaEstadoActual)}</Text>
-                    <Text>Tiempo en estado: {formatMinutesDuration(card.minutosEnEstadoActual)}</Text>
+                <Stack spacing={0.5} fontSize="xs" color="app.textMuted">
+                    <Text>Desde: {formatDateTime(card.fechaEstadoActual)}</Text>
+                    <Text>Tiempo: {formatMinutesDuration(card.minutosEnEstadoActual)}</Text>
                     <Text>
-                        Fin planificada: {card.fechaFinalPlanificada ? formatDateTime(card.fechaFinalPlanificada) : "Sin fecha"}
+                        Fin: {card.fechaFinalPlanificada ? formatDateTime(card.fechaFinalPlanificada) : "Sin fecha"}
                     </Text>
                 </Stack>
 
                 {card.ordenObservaciones?.trim() ? (
                     <Box p={2} bg="app.surfaceSubtle" borderRadius="md">
                         <Text fontSize="xs" color="app.textSubtle" mb={1}>
-                            Observaciones de la orden
+                            Obs.
                         </Text>
                         <Text fontSize="sm" noOfLines={2}>
                             {card.ordenObservaciones}
@@ -172,7 +165,7 @@ function SeguimientoOrdenCard({
                     </Box>
                 ) : null}
 
-                <HStack justify="space-between" align="center" pt={1}>
+                <HStack justify="space-between" align="center" pt={1} flexWrap="wrap" gap={2}>
                     <Button
                         size="sm"
                         variant="outline"

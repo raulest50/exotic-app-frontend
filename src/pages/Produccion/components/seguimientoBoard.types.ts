@@ -101,6 +101,9 @@ export interface AreaOperativaTableroDTO {
     responsableArea: ResponsableAreaResumenDTO | null;
     fechaConsulta: string;
     instanteFoto: string;
+    ultimaFechaReporteResponsable: string | null;
+    ultimaOrdenReporteResponsableId: number | null;
+    ultimaOrdenReporteResponsableLote: string | null;
     resumen: EstadoResumenDTO;
     promedioMinutosEspera: number | null;
     promedioMinutosEnProceso: number | null;

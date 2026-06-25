@@ -74,6 +74,41 @@ function resolveMetricModeLabel(mode: MetricMode): string {
     }
 }
 
+function formatTimeWithSeconds(value: string | null | undefined): string {
+    if (!value) {
+        return "Sin reportes";
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+        return value;
+    }
+
+    return parsed.toLocaleTimeString("es-CO", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+    });
+}
+
+function formatShortDate(value: string | null | undefined): string {
+    if (!value) {
+        return "";
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+        return value;
+    }
+
+    return parsed.toLocaleDateString("es-CO", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    });
+}
+
 export default function MonitorearAreasOperativasTab() {
     const toast = useToast();
     const {
@@ -284,6 +319,16 @@ export default function MonitorearAreasOperativasTab() {
             : metricas
                 ? `${resolveMetricModeLabel(metricas.modo)}`
                 : `Modo ${resolveMetricModeLabel(metricMode)}`;
+        const ultimoReporteRef = tablero.ultimaOrdenReporteResponsableLote
+            || (tablero.ultimaOrdenReporteResponsableId
+                ? `OP-${tablero.ultimaOrdenReporteResponsableId}`
+                : null);
+        const ultimoReporteHelpText = tablero.ultimaFechaReporteResponsable
+            ? [
+                tablero.fechaConsulta !== getTodayIsoDate() ? formatShortDate(tablero.ultimaFechaReporteResponsable) : null,
+                ultimoReporteRef ? `Orden ${ultimoReporteRef}` : "Reporte manual del líder",
+            ].filter(Boolean).join(" · ")
+            : "Sin eventos manuales del líder";
 
         return [
             {
@@ -310,6 +355,11 @@ export default function MonitorearAreasOperativasTab() {
                     ? `${tablero.ordenMasAtrasada.loteAsignado || `OP-${tablero.ordenMasAtrasada.ordenId}`} · ${formatMinutesDuration(tablero.ordenMasAtrasada.minutosEnEstadoActual)}`
                     : "Sin dato",
                 helpText: "Basada en la foto actual del tablero",
+            },
+            {
+                label: "Último reporte líder",
+                value: formatTimeWithSeconds(tablero.ultimaFechaReporteResponsable),
+                helpText: ultimoReporteHelpText,
             },
         ];
     }, [metricMode, metricas, metricasLoading, tablero]);
@@ -540,7 +590,7 @@ export default function MonitorearAreasOperativasTab() {
                         completado={tablero.resumen.completado}
                     />
 
-                    <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+                    <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
                         {metricCards.map((metric) => (
                             <Box key={metric.label} borderWidth="1px" borderRadius="lg" bg="white" p={4}>
                                 <Stat>

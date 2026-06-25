@@ -394,6 +394,16 @@ export default class EndPointsURL{
         return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/excel?fecha=${encodeURIComponent(fecha)}`;
     }
 
+    /** GET JSON reporte diario enriquecido de producción de terminados. @param fecha ISO date YYYY-MM-DD */
+    public informesDiariosAlmacenIngresoTerminadosReporte(fecha: string): string {
+        return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/reporte?fecha=${encodeURIComponent(fecha)}`;
+    }
+
+    /** GET Excel reporte diario enriquecido de producción de terminados. @param fecha ISO date YYYY-MM-DD */
+    public informesDiariosAlmacenIngresoTerminadosReporteExcel(fecha: string): string {
+        return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/reporte-excel?fecha=${encodeURIComponent(fecha)}`;
+    }
+
     /** GET Excel ajustes de almacén (BI). @param fechas ISO date YYYY-MM-DD, sentido ENTRADAS|SALIDAS|MIXTA */
     /** GET Excel informe diario de compras OCM (BI). @param fecha ISO date YYYY-MM-DD */
     public informesDiariosComprasExcel(fecha: string): string {

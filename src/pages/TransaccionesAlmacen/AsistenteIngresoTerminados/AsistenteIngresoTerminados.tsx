@@ -2,6 +2,11 @@ import {
     Box,
     Container,
     Flex,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
     StepDescription,
     StepNumber,
     StepSeparator,
@@ -15,6 +20,7 @@ import { IngresoTerminadoValidado } from "./types.ts";
 import IngresoTerminadosStep0_DescargarPlantilla from "./IngresoTerminadosStep0_DescargarPlantilla.tsx";
 import IngresoTerminadosStep1_SubirValidar from "./IngresoTerminadosStep1_SubirValidar.tsx";
 import IngresoTerminadosStep2_RevisionConfirmacion from "./IngresoTerminadosStep2_RevisionConfirmacion.tsx";
+import IngresoTerminadosReporteDiario from "./IngresoTerminadosReporteDiario.tsx";
 
 const steps = [
     { title: "Paso 1", description: "Descargar Plantilla" },
@@ -29,6 +35,7 @@ export function AsistenteIngresoTerminados() {
     });
 
     const [ingresosValidados, setIngresosValidados] = useState<IngresoTerminadoValidado[]>([]);
+    const [tabIndex, setTabIndex] = useState(0);
 
     const { user } = useAuth();
 
@@ -69,29 +76,42 @@ export function AsistenteIngresoTerminados() {
 
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
-            <Flex direction="column" gap={4}>
-                <Stepper index={activeStep} p="1em" backgroundColor="app.stepperTeal" w="full">
-                    {steps.map((step, index) => (
-                        <Step key={index}>
-                            <StepIndicator>
-                                <StepStatus
-                                    complete={<StepIcon />}
-                                    incomplete={<StepNumber />}
-                                    active={<StepNumber />}
-                                />
-                            </StepIndicator>
+            <Tabs index={tabIndex} onChange={setTabIndex} colorScheme="teal" variant="enclosed" isLazy>
+                <TabList>
+                    <Tab>Registrar produccion</Tab>
+                    <Tab>Reporte diario</Tab>
+                </TabList>
+                <TabPanels>
+                    <TabPanel px={0}>
+                        <Flex direction="column" gap={4}>
+                            <Stepper index={activeStep} p="1em" backgroundColor="app.stepperTeal" w="full">
+                                {steps.map((step, index) => (
+                                    <Step key={index}>
+                                        <StepIndicator>
+                                            <StepStatus
+                                                complete={<StepIcon />}
+                                                incomplete={<StepNumber />}
+                                                active={<StepNumber />}
+                                            />
+                                        </StepIndicator>
 
-                            <Box flexShrink="0">
-                                <StepTitle>{step.title}</StepTitle>
-                                <StepDescription>{step.description}</StepDescription>
-                            </Box>
+                                        <Box flexShrink="0">
+                                            <StepTitle>{step.title}</StepTitle>
+                                            <StepDescription>{step.description}</StepDescription>
+                                        </Box>
 
-                            <StepSeparator />
-                        </Step>
-                    ))}
-                </Stepper>
-                <ConditionalRenderStep />
-            </Flex>
+                                        <StepSeparator />
+                                    </Step>
+                                ))}
+                            </Stepper>
+                            <ConditionalRenderStep />
+                        </Flex>
+                    </TabPanel>
+                    <TabPanel px={0}>
+                        <IngresoTerminadosReporteDiario />
+                    </TabPanel>
+                </TabPanels>
+            </Tabs>
         </Container>
     );
 }

@@ -93,3 +93,76 @@ export interface ValidacionExcelResponse {
     errors: ValidationError[];
     rowCount: number;
 }
+
+export interface IngresoTerminadosReporteResumen {
+    unidadesPlaneadas: number;
+    unidadesProducidas: number;
+    unidadesProducidasDiaAnterior: number;
+    capacidadProductivaDia: number;
+    rendimientoPlaneacionPct: number | null;
+    cumplimientoReferenciasPct: number | null;
+    rendimientoOperativoPct: number | null;
+    tendenciaVsDiaAnteriorPct: number | null;
+    referenciasPlaneadas: number;
+    referenciasProducidas: number;
+    referenciasPlaneadasProducidas: number;
+    referenciasNoPlaneadas: number;
+    categoriasConCapacidad: number;
+    categoriasSinCapacidad: number;
+}
+
+export interface IngresoTerminadosReporteCategoria {
+    categoriaId: number | null;
+    categoriaNombre: string;
+    unidadesPlaneadas: number;
+    unidadesProducidas: number;
+    capacidadProductivaDia: number;
+    rendimientoPlaneacionPct: number | null;
+    rendimientoOperativoPct: number | null;
+    referenciasPlaneadas: number;
+    referenciasProducidas: number;
+    referenciasPlaneadasProducidas: number;
+}
+
+export interface IngresoTerminadosReporteReferencia {
+    productoId: string;
+    productoNombre: string;
+    categoriaId: number | null;
+    categoriaNombre: string;
+    cantidadPlaneada: number;
+    cantidadProducida: number;
+    diferencia: number;
+    rendimientoPlaneacionPct: number | null;
+    planeado: boolean;
+    producido: boolean;
+    noPlaneado: boolean;
+}
+
+export interface IngresoTerminadosReporteMovimiento {
+    movimientoId: number;
+    fechaMovimiento: string;
+    transaccionId: number | null;
+    ordenProduccionId: number | null;
+    productoId: string | null;
+    productoNombre: string | null;
+    categoriaId: number | null;
+    categoriaNombre: string;
+    cantidad: number;
+    unidad: string | null;
+    almacen: string | null;
+    loteBatchNumber: string | null;
+    fechaVencimiento: string | null;
+    observaciones: string | null;
+}
+
+export interface IngresoTerminadosReporteDiario {
+    fecha: string;
+    mpsId: number | null;
+    mpsEstado: string | null;
+    weekStartDate: string | null;
+    weekEndDate: string | null;
+    resumen: IngresoTerminadosReporteResumen;
+    consolidadoCategorias: IngresoTerminadosReporteCategoria[];
+    detalleReferencias: IngresoTerminadosReporteReferencia[];
+    movimientos: IngresoTerminadosReporteMovimiento[];
+}
