@@ -33,14 +33,14 @@ interface Props {
 }
 
 const COLUMN_INFO = [
-    { col: "A", name: "lote_asignado", editable: false, desc: "Identificador del lote (ej: LAC-0042-25)" },
-    { col: "B", name: "orden_id", editable: false, desc: "ID interno de la orden de produccion" },
-    { col: "C", name: "producto_id", editable: false, desc: "Codigo del producto terminado" },
-    { col: "D", name: "producto_nombre", editable: false, desc: "Nombre del producto" },
-    { col: "E", name: "categoria_nombre", editable: false, desc: "Categoria del producto" },
-    { col: "F", name: "cantidad_esperada", editable: false, desc: "Unidades esperadas (de Categoria.loteSize)" },
-    { col: "G", name: "cantidad_ingresada", editable: true, desc: "Unidades reales a ingresar (usuario llena)" },
-    { col: "H", name: "fecha_vencimiento", editable: true, desc: "Fecha de vencimiento (pre-llenada: hoy + 2 anios)" },
+    { col: "A", name: "producto_id", editable: false, desc: "Codigo del producto terminado" },
+    { col: "B", name: "producto_nombre", editable: false, desc: "Nombre del producto" },
+    { col: "C", name: "categoria_nombre", editable: false, desc: "Categoria del producto" },
+    { col: "D", name: "tipo_unidades", editable: false, desc: "Unidad base reportada para el terminado" },
+    { col: "E", name: "capacidad_productiva_diaria", editable: false, desc: "Capacidad diaria configurada para la categoria" },
+    { col: "F", name: "cantidad_producida", editable: true, desc: "Unidades producidas en el dia; deje vacia si no hubo produccion" },
+    { col: "G", name: "fecha_produccion", editable: true, desc: "Fecha del reporte diario" },
+    { col: "H", name: "observaciones", editable: true, desc: "Notas opcionales para socializar el reporte" },
 ];
 
 export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveStep }: Props) {
@@ -75,7 +75,7 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
 
             toast({
                 title: "Plantilla descargada",
-                description: "Complete las columnas G y H, luego suba el archivo en el siguiente paso.",
+                description: "Complete las columnas F, G y H, luego suba el archivo en el siguiente paso.",
                 status: "success",
                 duration: 5000,
                 isClosable: true,
@@ -100,7 +100,7 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
         <Box>
             <Heading size="md" mb={4}>Descargar Plantilla Excel</Heading>
             <Text fontSize="sm" color="app.textSubtle" mb={5}>
-                Este asistente permite registrar multiples ingresos de producto terminado de forma masiva
+                Este asistente permite preparar el reporte diario consolidado de produccion de terminados
                 usando una plantilla Excel.
             </Text>
 
@@ -117,15 +117,15 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
                     <CardBody>
                         <VStack align="stretch" spacing={3} fontSize="sm">
                             <Text>
-                                <strong>1.</strong> Descargue la plantilla Excel con las ordenes de produccion pendientes.
+                                <strong>1.</strong> Descargue la plantilla Excel con todos los productos terminados.
                             </Text>
                             <Text>
-                                <strong>2.</strong> Abra el archivo en Excel y complete la columna <strong>G (cantidad_ingresada)</strong> con
-                                las unidades reales producidas para cada orden.
+                                <strong>2.</strong> Abra el archivo en Excel y complete la columna <strong>F (cantidad_producida)</strong> solo
+                                para las referencias producidas en el dia.
                             </Text>
                             <Text>
-                                <strong>3.</strong> Opcionalmente, modifique la columna <strong>H (fecha_vencimiento)</strong> si necesita
-                                una fecha diferente a la predeterminada (hoy + 2 anios).
+                                <strong>3.</strong> Verifique la columna <strong>G (fecha_produccion)</strong>. Todas las filas reportadas
+                                deben corresponder al mismo dia.
                             </Text>
                             <Text>
                                 <strong>4.</strong> Guarde el archivo y regrese al sistema para subirlo en el siguiente paso.
@@ -138,8 +138,8 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
                 <Alert status="info" borderRadius="md">
                     <AlertIcon />
                     <AlertDescription fontSize="sm">
-                        <strong>Solo las columnas G y H son editables.</strong> Las demas columnas contienen informacion
-                        de referencia y no deben modificarse. Si se alteran, la validacion fallara.
+                        <strong>Solo las columnas F, G y H son editables.</strong> Las demas columnas contienen informacion
+                        de referencia y no deben modificarse. Las filas sin cantidad producida se omiten del reporte.
                     </AlertDescription>
                 </Alert>
 
@@ -186,12 +186,12 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
                     <CardBody>
                         <VStack align="stretch" spacing={2} fontSize="sm">
                             <Text>
-                                <strong>cantidad_ingresada:</strong> Debe ser un numero entero mayor o igual a 1,
-                                y estar dentro del ±20% del valor esperado.
+                                <strong>cantidad_producida:</strong> Debe ser un numero entero mayor o igual a 1.
+                                Las filas vacias no se incluyen en el reporte.
                             </Text>
                             <Text>
-                                <strong>fecha_vencimiento:</strong> Debe ser una fecha valida en formato YYYY-MM-DD
-                                y posterior a la fecha actual.
+                                <strong>fecha_produccion:</strong> Debe ser una fecha valida en formato YYYY-MM-DD.
+                                Todas las filas producidas deben tener la misma fecha.
                             </Text>
                         </VStack>
                     </CardBody>

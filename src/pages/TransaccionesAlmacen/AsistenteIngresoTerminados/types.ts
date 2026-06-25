@@ -54,23 +54,25 @@ export interface IngresoTerminadoDatos {
 }
 
 // ============================================================================
-// Nuevos tipos para el flujo basado en Excel (carga masiva de ingresos)
+// Tipos para el flujo temporal de reporte diario consolidado de terminados.
+// El flujo por lote/OP y RegistroMasivoPayload queda temporalmente en desuso,
+// pero se conserva por posible reintegracion futura al workflow de cierre de OP.
 // ============================================================================
 
-/** Datos validados del Excel subido - representa una fila del Excel procesada */
+/** Datos validados del Excel subido - representa una fila consolidada por terminado */
 export interface IngresoTerminadoValidado {
-    ordenId: number;
-    loteAsignado: string;
     productoId: string;
     productoNombre: string;
     categoriaNombre: string;
-    cantidadEsperada: number;
-    cantidadIngresada: number;
-    fechaVencimiento: string; // YYYY-MM-DD
-    diferenciaPorcentaje: number; // Para mostrar en UI
+    tipoUnidades: string;
+    capacidadProductivaDiaria: number;
+    cantidadProducida: number;
+    fechaProduccion: string; // YYYY-MM-DD
+    observaciones?: string;
+    rendimientoOperativoPct: number | null;
 }
 
-/** Payload para registro masivo de ingresos */
+/** Temporalmente en desuso: payload para registro masivo por lote/OP. */
 export interface RegistroMasivoPayload {
     username: string;
     ingresos: {
@@ -83,7 +85,7 @@ export interface RegistroMasivoPayload {
 /** Error de validación individual */
 export interface ValidationError {
     rowNumber: number;
-    loteAsignado: string;
+    productoId: string;
     message: string;
 }
 

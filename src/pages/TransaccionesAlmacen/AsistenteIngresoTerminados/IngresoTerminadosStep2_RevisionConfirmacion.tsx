@@ -10,11 +10,7 @@ import {
     CardHeader,
     Divider,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
-    PinInput,
-    PinInputField,
     SimpleGrid,
     Stat,
     StatLabel,
@@ -27,28 +23,44 @@ import {
     Th,
     Thead,
     Tr,
-    useColorModeValue,
     useToast,
     VStack,
 } from "@chakra-ui/react";
-import { ArrowBackIcon, CheckIcon } from "@chakra-ui/icons";
-import { ImCheckboxChecked } from "react-icons/im";
-import { RiSave3Fill } from "react-icons/ri";
-import { keyframes } from "@emotion/react";
-import axios from "axios";
+import { ArrowBackIcon, DownloadIcon } from "@chakra-ui/icons";
+import ExcelJS from "exceljs";
 import { useMemo, useState } from "react";
-import EndPointsURL from "../../../api/EndPointsURL";
-import { IngresoTerminadoValidado, RegistroMasivoPayload } from "./types";
+import { IngresoTerminadoValidado } from "./types";
 
 interface Props {
     ingresosValidados: IngresoTerminadoValidado[];
-    username?: string;
     setActiveStep: (step: number) => void;
     onSuccess: () => void;
 }
 
-function generateToken(): string {
-    return String(Math.floor(1000 + Math.random() * 9000));
+interface CategoriaConsolidada {
+    categoriaNombre: string;
+    referencias: number;
+    unidadesProducidas: number;
+    capacidadProductivaDiaria: number;
+    rendimientoOperativoPct: number | null;
+}
+
+const numberFormatter = new Intl.NumberFormat("es-CO", {
+    maximumFractionDigits: 0,
+});
+
+const decimalFormatter = new Intl.NumberFormat("es-CO", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+});
+
+function formatNumber(value: number): string {
+    return numberFormatter.format(value);
+}
+
+function formatPct(value: number | null): string {
+    if (value == null || Number.isNaN(value)) return "Sin base";
+    return `${decimalFormatter.format(value)}%`;
 }
 
 function formatDateDisplay(isoDate: string): string {
@@ -57,223 +69,264 @@ function formatDateDisplay(isoDate: string): string {
     return `${day}/${month}/${year}`;
 }
 
+function triggerFileDownload(data: BlobPart, filename: string) {
+    const blob = new Blob([data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+
+function buildCategoriaRows(ingresos: IngresoTerminadoValidado[]): CategoriaConsolidada[] {
+    const byCategoria = new Map<string, CategoriaConsolidada>();
+
+    for (const ingreso of ingresos) {
+        const categoriaNombre = ingreso.categoriaNombre || "Sin categoria";
+        const current = byCategoria.get(categoriaNombre) ?? {
+            categoriaNombre,
+            referencias: 0,
+            unidadesProducidas: 0,
+            capacidadProductivaDiaria: ingreso.capacidadProductivaDiaria,
+            rendimientoOperativoPct: null,
+        };
+
+        current.referencias += 1;
+        current.unidadesProducidas += ingreso.cantidadProducida;
+        if (!current.capacidadProductivaDiaria && ingreso.capacidadProductivaDiaria) {
+            current.capacidadProductivaDiaria = ingreso.capacidadProductivaDiaria;
+        }
+        current.rendimientoOperativoPct = current.capacidadProductivaDiaria > 0
+            ? (current.unidadesProducidas / current.capacidadProductivaDiaria) * 100
+            : null;
+
+        byCategoria.set(categoriaNombre, current);
+    }
+
+    return Array.from(byCategoria.values()).sort((a, b) =>
+        a.categoriaNombre.localeCompare(b.categoriaNombre)
+    );
+}
+
+async function buildReporteExcel(
+    ingresos: IngresoTerminadoValidado[],
+    categorias: CategoriaConsolidada[],
+    resumen: {
+        fechaProduccion: string;
+        totalReferencias: number;
+        totalUnidades: number;
+        capacidadTotal: number;
+        rendimientoOperativoPct: number | null;
+    }
+): Promise<BlobPart> {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Exotic App";
+    workbook.created = new Date();
+
+    const headerFill = {
+        type: "pattern" as const,
+        pattern: "solid" as const,
+        fgColor: { argb: "FFE2E8F0" },
+    };
+
+    const resumenSheet = workbook.addWorksheet("Resumen");
+    resumenSheet.columns = [
+        { header: "Metrica", key: "metric", width: 34 },
+        { header: "Valor", key: "value", width: 24 },
+    ];
+    resumenSheet.getRow(1).font = { bold: true };
+    resumenSheet.getRow(1).eachCell((cell) => {
+        cell.fill = headerFill;
+    });
+    resumenSheet.addRows([
+        { metric: "Fecha produccion", value: resumen.fechaProduccion },
+        { metric: "Referencias producidas", value: resumen.totalReferencias },
+        { metric: "Unidades producidas", value: resumen.totalUnidades },
+        { metric: "Categorias reportadas", value: categorias.length },
+        { metric: "Capacidad productiva diaria total", value: resumen.capacidadTotal },
+        { metric: "Rendimiento operativo (%)", value: resumen.rendimientoOperativoPct ?? "" },
+    ]);
+
+    const categoriaSheet = workbook.addWorksheet("Consolidado Categoria");
+    categoriaSheet.columns = [
+        { header: "Categoria", key: "categoriaNombre", width: 32 },
+        { header: "Referencias producidas", key: "referencias", width: 24 },
+        { header: "Unidades producidas", key: "unidadesProducidas", width: 22 },
+        { header: "Capacidad productiva dia", key: "capacidadProductivaDiaria", width: 26 },
+        { header: "Rendimiento operativo (%)", key: "rendimientoOperativoPct", width: 28 },
+    ];
+    categoriaSheet.getRow(1).font = { bold: true };
+    categoriaSheet.getRow(1).eachCell((cell) => {
+        cell.fill = headerFill;
+    });
+    categoriaSheet.addRows(categorias.map((categoria) => ({
+        ...categoria,
+        rendimientoOperativoPct: categoria.rendimientoOperativoPct ?? "",
+    })));
+
+    const detalleSheet = workbook.addWorksheet("Detalle Terminados");
+    detalleSheet.columns = [
+        { header: "Producto ID", key: "productoId", width: 18 },
+        { header: "Producto", key: "productoNombre", width: 44 },
+        { header: "Categoria", key: "categoriaNombre", width: 28 },
+        { header: "Unidad", key: "tipoUnidades", width: 14 },
+        { header: "Cantidad producida", key: "cantidadProducida", width: 22 },
+        { header: "Fecha produccion", key: "fechaProduccion", width: 18 },
+        { header: "Observaciones", key: "observaciones", width: 42 },
+    ];
+    detalleSheet.getRow(1).font = { bold: true };
+    detalleSheet.getRow(1).eachCell((cell) => {
+        cell.fill = headerFill;
+    });
+    detalleSheet.addRows(ingresos.map((ingreso) => ({
+        productoId: ingreso.productoId,
+        productoNombre: ingreso.productoNombre,
+        categoriaNombre: ingreso.categoriaNombre,
+        tipoUnidades: ingreso.tipoUnidades,
+        cantidadProducida: ingreso.cantidadProducida,
+        fechaProduccion: ingreso.fechaProduccion,
+        observaciones: ingreso.observaciones ?? "",
+    })));
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    return buffer as BlobPart;
+}
+
 export default function IngresoTerminadosStep2_RevisionConfirmacion({
     ingresosValidados,
-    username,
     setActiveStep,
     onSuccess,
 }: Props) {
     const toast = useToast();
-    const endpoints = useMemo(() => new EndPointsURL(), []);
+    const [isGenerating, setIsGenerating] = useState(false);
 
-    const [token] = useState<string>(generateToken);
-    const [tokenInput, setTokenInput] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [registroExitoso, setRegistroExitoso] = useState(false);
-    const successHeadingColor = useColorModeValue("green.800", "green.100");
-    const successTextColor = useColorModeValue("green.900", "green.100");
-    const successSubtextColor = useColorModeValue("green.700", "green.200");
+    const categorias = useMemo(() => buildCategoriaRows(ingresosValidados), [ingresosValidados]);
+    const totalReferencias = ingresosValidados.length;
+    const totalUnidades = ingresosValidados.reduce((acc, item) => acc + item.cantidadProducida, 0);
+    const fechaProduccion = ingresosValidados[0]?.fechaProduccion ?? "";
+    const capacidadTotal = categorias.reduce((acc, categoria) => acc + categoria.capacidadProductivaDiaria, 0);
+    const rendimientoOperativoPct = capacidadTotal > 0 ? (totalUnidades / capacidadTotal) * 100 : null;
 
-    const tokenValido = tokenInput === token;
-    const puedeEnviar = tokenValido && !isLoading;
-
-    // Calcular estadisticas
-    const totalOrdenes = ingresosValidados.length;
-    const totalUnidades = ingresosValidados.reduce((acc, i) => acc + i.cantidadIngresada, 0);
-    const totalEsperado = ingresosValidados.reduce((acc, i) => acc + i.cantidadEsperada, 0);
-
-    const colorAnimation = keyframes`
-        0% { color: #68D391; }
-        50% { color: #22d3ee; }
-        100% { color: #68D391; }
-    `;
-
-    const handleConfirmar = async () => {
-        if (!puedeEnviar) return;
-        setIsLoading(true);
-        setError(null);
-
+    const handleDownloadReporte = async () => {
+        setIsGenerating(true);
         try {
-            const payload: RegistroMasivoPayload = {
-                username: username ?? "",
-                ingresos: ingresosValidados.map((i) => ({
-                    ordenProduccionId: i.ordenId,
-                    cantidadIngresada: i.cantidadIngresada,
-                    fechaVencimiento: i.fechaVencimiento,
-                })),
-            };
-
-            await axios.post(endpoints.ingreso_terminados_registrar_masivo, payload, {
-                withCredentials: true,
+            const data = await buildReporteExcel(ingresosValidados, categorias, {
+                fechaProduccion,
+                totalReferencias,
+                totalUnidades,
+                capacidadTotal,
+                rendimientoOperativoPct,
             });
-
-            setRegistroExitoso(true);
-
+            triggerFileDownload(data, `reporte_produccion_terminados_consolidado_${fechaProduccion}.xlsx`);
             toast({
-                title: "Ingresos registrados exitosamente",
-                description: `Se registraron ${totalOrdenes} ingreso(s) con un total de ${totalUnidades} unidades.`,
+                title: "Reporte generado",
+                description: "El Excel consolidado de produccion diaria fue descargado.",
                 status: "success",
+                duration: 5000,
+                isClosable: true,
+            });
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "No se pudo generar el reporte.";
+            toast({
+                title: "Error generando reporte",
+                description: message,
+                status: "error",
                 duration: 6000,
                 isClosable: true,
-                position: "top",
             });
-        } catch (err: unknown) {
-            if (axios.isAxiosError(err)) {
-                setError(err.response?.data?.detail ?? "Error al registrar los ingresos. Por favor intente nuevamente.");
-            } else {
-                setError("Error de conexion. Verifique la red e intente nuevamente.");
-            }
         } finally {
-            setIsLoading(false);
+            setIsGenerating(false);
         }
     };
 
-    // Pantalla de exito
-    if (registroExitoso) {
-        return (
-            <Flex
-                p="2em"
-                direction="column"
-                backgroundColor="app.rowSelectedGreen"
-                gap={8}
-                alignItems="center"
-                textAlign="center"
-                borderRadius="lg"
-            >
-                <Flex alignItems="center" gap={3}>
-                    <Heading fontFamily="Comfortaa Variable" color={successHeadingColor}>
-                        Ingresos Registrados
-                    </Heading>
-                    <ImCheckboxChecked style={{ width: "2.5em", height: "2.5em", color: "#48BB78" }} />
-                </Flex>
-
-                <VStack spacing={2}>
-                    <Text fontFamily="Comfortaa Variable" color={successTextColor} fontSize="lg">
-                        Se registraron {totalOrdenes} ingreso(s) de producto terminado
-                    </Text>
-                    <Text fontFamily="Comfortaa Variable" color={successSubtextColor}>
-                        Total de unidades ingresadas: <strong>{totalUnidades}</strong>
-                    </Text>
-                </VStack>
-
-                <RiSave3Fill
-                    style={{
-                        width: "8em",
-                        height: "8em",
-                        color: "#68D391",
-                        animation: `${colorAnimation} 3s infinite ease-in-out`,
-                    }}
-                />
-
-                <Button
-                    variant="solid"
-                    colorScheme="green"
-                    size="lg"
-                    onClick={() => {
-                        setRegistroExitoso(false);
-                        onSuccess();
-                    }}
-                >
-                    Iniciar Nuevo Proceso
-                </Button>
-            </Flex>
-        );
-    }
-
     return (
         <Box>
-            <Heading size="md" mb={4}>Revision y Confirmacion</Heading>
+            <Heading size="md" mb={4}>Revision y Generacion de Reporte</Heading>
             <Text fontSize="sm" color="app.textSubtle" mb={5}>
-                Revise el resumen de los ingresos a registrar. Esta operacion registrara todos los ingresos
-                y cerrara las ordenes de produccion correspondientes.
+                Revise el consolidado antes de generar el Excel. Esta operacion no registra movimientos
+                de inventario ni cierra ordenes de produccion.
             </Text>
 
             <VStack align="stretch" spacing={5}>
-                {/* Estadisticas */}
-                <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+                <Alert status="info" borderRadius="md">
+                    <AlertIcon />
+                    <AlertDescription fontSize="sm">
+                        El workflow por lote/OP esta temporalmente en desuso. Por ahora el asistente solo
+                        genera el reporte diario consolidado por producto terminado.
+                    </AlertDescription>
+                </Alert>
+
+                <SimpleGrid columns={{ base: 1, md: 4 }} spacing={4}>
                     <Card variant="outline">
                         <CardBody>
                             <Stat>
-                                <StatLabel color="app.textSubtle">Total Ordenes</StatLabel>
-                                <StatNumber color="blue.600">{totalOrdenes}</StatNumber>
+                                <StatLabel color="app.textSubtle">Fecha produccion</StatLabel>
+                                <StatNumber color="blue.600" fontSize="2xl">
+                                    {formatDateDisplay(fechaProduccion)}
+                                </StatNumber>
                             </Stat>
                         </CardBody>
                     </Card>
                     <Card variant="outline">
                         <CardBody>
                             <Stat>
-                                <StatLabel color="app.textSubtle">Unidades a Ingresar</StatLabel>
-                                <StatNumber color="green.600">{totalUnidades}</StatNumber>
+                                <StatLabel color="app.textSubtle">Referencias</StatLabel>
+                                <StatNumber color="teal.600">{formatNumber(totalReferencias)}</StatNumber>
                             </Stat>
                         </CardBody>
                     </Card>
                     <Card variant="outline">
                         <CardBody>
                             <Stat>
-                                <StatLabel color="app.textSubtle">Unidades Esperadas</StatLabel>
-                                <StatNumber color="purple.600">{totalEsperado}</StatNumber>
+                                <StatLabel color="app.textSubtle">Unidades producidas</StatLabel>
+                                <StatNumber color="green.600">{formatNumber(totalUnidades)}</StatNumber>
+                            </Stat>
+                        </CardBody>
+                    </Card>
+                    <Card variant="outline">
+                        <CardBody>
+                            <Stat>
+                                <StatLabel color="app.textSubtle">Rendimiento operativo</StatLabel>
+                                <StatNumber color="orange.600">{formatPct(rendimientoOperativoPct)}</StatNumber>
                             </Stat>
                         </CardBody>
                     </Card>
                 </SimpleGrid>
 
-                {/* Tabla de resumen */}
                 <Card variant="outline">
                     <CardHeader pb={2}>
-                        <Heading size="sm" color="purple.600">Detalle de Ingresos</Heading>
+                        <Heading size="sm" color="teal.700">Consolidado por Categoria</Heading>
                     </CardHeader>
                     <Divider />
                     <CardBody p={0}>
-                        <TableContainer maxH="300px" overflowY="auto">
+                        <TableContainer maxH="260px" overflowY="auto">
                             <Table size="sm" variant="simple">
                                 <Thead bg="app.tableHeader" position="sticky" top={0}>
                                     <Tr>
-                                        <Th>Lote</Th>
-                                        <Th>Producto</Th>
                                         <Th>Categoria</Th>
-                                        <Th isNumeric>Esperado</Th>
-                                        <Th isNumeric>Ingresa</Th>
-                                        <Th isNumeric>Dif. %</Th>
-                                        <Th>Vencimiento</Th>
+                                        <Th isNumeric>Referencias</Th>
+                                        <Th isNumeric>Unidades</Th>
+                                        <Th isNumeric>Capacidad dia</Th>
+                                        <Th isNumeric>Rend. operativo</Th>
                                     </Tr>
                                 </Thead>
                                 <Tbody>
-                                    {ingresosValidados.map((ingreso, idx) => (
-                                        <Tr key={idx}>
-                                            <Td fontWeight="bold" color="green.600">
-                                                {ingreso.loteAsignado}
-                                            </Td>
+                                    {categorias.map((categoria) => (
+                                        <Tr key={categoria.categoriaNombre}>
                                             <Td>
-                                                <Text fontSize="xs" noOfLines={1} maxW="150px">
-                                                    {ingreso.productoNombre}
-                                                </Text>
+                                                <Badge colorScheme="gray">{categoria.categoriaNombre}</Badge>
                                             </Td>
-                                            <Td>
-                                                <Badge colorScheme="gray" fontSize="xs">
-                                                    {ingreso.categoriaNombre}
-                                                </Badge>
-                                            </Td>
-                                            <Td isNumeric>{ingreso.cantidadEsperada}</Td>
+                                            <Td isNumeric>{formatNumber(categoria.referencias)}</Td>
                                             <Td isNumeric fontWeight="bold" color="green.600">
-                                                {ingreso.cantidadIngresada}
+                                                {formatNumber(categoria.unidadesProducidas)}
                                             </Td>
-                                            <Td isNumeric>
-                                                <Badge
-                                                    colorScheme={
-                                                        ingreso.diferenciaPorcentaje === 0
-                                                            ? "green"
-                                                            : ingreso.diferenciaPorcentaje > 0
-                                                            ? "blue"
-                                                            : "orange"
-                                                    }
-                                                    fontSize="xs"
-                                                >
-                                                    {ingreso.diferenciaPorcentaje > 0 ? "+" : ""}
-                                                    {ingreso.diferenciaPorcentaje.toFixed(1)}%
-                                                </Badge>
-                                            </Td>
-                                            <Td fontSize="xs">{formatDateDisplay(ingreso.fechaVencimiento)}</Td>
+                                            <Td isNumeric>{formatNumber(categoria.capacidadProductivaDiaria)}</Td>
+                                            <Td isNumeric>{formatPct(categoria.rendimientoOperativoPct)}</Td>
                                         </Tr>
                                     ))}
                                 </Tbody>
@@ -282,85 +335,75 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
                     </CardBody>
                 </Card>
 
-                {/* Token de validacion */}
-                <Card variant="outline" borderColor="orange.300">
+                <Card variant="outline">
                     <CardHeader pb={2}>
-                        <Heading size="sm" color="orange.600">Validacion de Seguridad</Heading>
+                        <Heading size="sm" color="purple.600">Detalle por Producto Terminado</Heading>
                     </CardHeader>
                     <Divider />
-                    <CardBody>
-                        <Text fontSize="sm" color="app.textMuted" mb={3}>
-                            Para confirmar esta operacion, ingrese el siguiente codigo de 4 digitos:
-                        </Text>
-                        <Flex justify="center" mb={4}>
-                            <Text
-                                fontSize="3xl"
-                                fontWeight="black"
-                                letterSpacing="widest"
-                                color="orange.500"
-                                fontFamily="mono"
-                            >
-                                {token}
-                            </Text>
-                        </Flex>
-                        <FormControl>
-                            <FormLabel fontSize="sm" fontWeight="semibold">Confirme el codigo</FormLabel>
-                            <Flex justify="center">
-                                <PinInput
-                                    value={tokenInput}
-                                    onChange={setTokenInput}
-                                    otp
-                                    size="lg"
-                                    isInvalid={tokenInput.length === 4 && !tokenValido}
-                                >
-                                    <PinInputField />
-                                    <PinInputField />
-                                    <PinInputField />
-                                    <PinInputField />
-                                </PinInput>
-                            </Flex>
-                            {tokenInput.length === 4 && !tokenValido && (
-                                <Text fontSize="xs" color="red.500" mt={1} textAlign="center">
-                                    Codigo incorrecto. Intentelo de nuevo.
-                                </Text>
-                            )}
-                            {tokenValido && (
-                                <Text fontSize="xs" color="green.600" mt={1} textAlign="center" fontWeight="semibold">
-                                    Codigo validado
-                                </Text>
-                            )}
-                        </FormControl>
+                    <CardBody p={0}>
+                        <TableContainer maxH="320px" overflowY="auto">
+                            <Table size="sm" variant="simple">
+                                <Thead bg="app.tableHeader" position="sticky" top={0}>
+                                    <Tr>
+                                        <Th>Producto</Th>
+                                        <Th>Categoria</Th>
+                                        <Th>Unidad</Th>
+                                        <Th isNumeric>Cantidad</Th>
+                                        <Th>Observaciones</Th>
+                                    </Tr>
+                                </Thead>
+                                <Tbody>
+                                    {ingresosValidados.map((ingreso) => (
+                                        <Tr key={ingreso.productoId}>
+                                            <Td>
+                                                <Text fontSize="sm" fontWeight="semibold" noOfLines={1}>
+                                                    {ingreso.productoNombre}
+                                                </Text>
+                                                <Text fontSize="xs" color="app.textSubtle">
+                                                    {ingreso.productoId}
+                                                </Text>
+                                            </Td>
+                                            <Td>{ingreso.categoriaNombre}</Td>
+                                            <Td>{ingreso.tipoUnidades || "-"}</Td>
+                                            <Td isNumeric fontWeight="bold" color="green.600">
+                                                {formatNumber(ingreso.cantidadProducida)}
+                                            </Td>
+                                            <Td fontSize="xs">{ingreso.observaciones || "-"}</Td>
+                                        </Tr>
+                                    ))}
+                                </Tbody>
+                            </Table>
+                        </TableContainer>
                     </CardBody>
                 </Card>
 
-                {/* Error */}
-                {error && (
-                    <Alert status="error" borderRadius="md">
-                        <AlertIcon />
-                        <AlertDescription fontSize="sm">{error}</AlertDescription>
-                    </Alert>
-                )}
-
-                {/* Botones de navegacion */}
                 <Flex justify="space-between">
                     <Button
                         leftIcon={<ArrowBackIcon />}
                         variant="outline"
                         onClick={() => setActiveStep(1)}
-                        isDisabled={isLoading}
+                        isDisabled={isGenerating}
                     >
                         Atras
                     </Button>
-                    <Button
-                        leftIcon={<CheckIcon />}
-                        colorScheme="green"
-                        onClick={handleConfirmar}
-                        isLoading={isLoading}
-                        loadingText="Registrando..."
-                        isDisabled={!puedeEnviar}
-                    >
-                        Confirmar Ingresos ({totalOrdenes})
-                    </Button>
+                    <Flex gap={3} wrap="wrap" justify="flex-end">
+                        <Button
+                            variant="ghost"
+                            onClick={onSuccess}
+                            isDisabled={isGenerating}
+                        >
+                            Nuevo Reporte
+                        </Button>
+                        <Button
+                            leftIcon={<DownloadIcon />}
+                            colorScheme="green"
+                            onClick={handleDownloadReporte}
+                            isLoading={isGenerating}
+                            loadingText="Generando..."
+                        >
+                            Generar Excel Consolidado
+                        </Button>
+                    </Flex>
                 </Flex>
             </VStack>
         </Box>

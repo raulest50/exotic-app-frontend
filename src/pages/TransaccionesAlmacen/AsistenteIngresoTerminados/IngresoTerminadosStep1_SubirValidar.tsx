@@ -26,17 +26,17 @@ interface Props {
 }
 
 const EXPECTED_HEADERS = [
-    "lote_asignado",
-    "orden_id",
     "producto_id",
     "producto_nombre",
     "categoria_nombre",
-    "cantidad_esperada",
-    "cantidad_ingresada",
-    "fecha_vencimiento",
+    "tipo_unidades",
+    "capacidad_productiva_diaria",
+    "cantidad_producida",
+    "fecha_produccion",
+    "observaciones",
 ];
 
-const SHEET_NAME = "Ingreso Producto Terminado";
+const SHEET_NAME = "Produccion Diaria PT";
 
 export default function IngresoTerminadosStep1_SubirValidar({
     setActiveStep,
@@ -128,13 +128,6 @@ export default function IngresoTerminadosStep1_SubirValidar({
         return !isNaN(date.getTime());
     };
 
-    const isFutureDate = (dateStr: string): boolean => {
-        const date = new Date(dateStr);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return date > today;
-    };
-
     const validateExcelFile = async (file: File) => {
         setIsValidating(true);
         setValidationErrors([]);
@@ -166,6 +159,7 @@ export default function IngresoTerminadosStep1_SubirValidar({
 
             const errors: string[] = [];
             const validatedRows: IngresoTerminadoValidado[] = [];
+            let fechaProduccionReporte: string | null = null;
 
             // Validar headers
             const headerRow = worksheet.getRow(1);
@@ -187,72 +181,66 @@ export default function IngresoTerminadosStep1_SubirValidar({
             worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
                 if (rowNumber === 1) return; // Saltar header
 
-                const loteAsignado = getCellStr(row, 1);
-                const ordenId = getCellNum(row, 2);
-                const productoId = getCellStr(row, 3);
-                const productoNombre = getCellStr(row, 4);
-                const categoriaNombre = getCellStr(row, 5);
-                const cantidadEsperada = getCellNum(row, 6);
-                const cantidadIngresada = getCellNum(row, 7);
-                const fechaVencimiento = getCellDate(row, 8);
+                const productoId = getCellStr(row, 1);
+                const productoNombre = getCellStr(row, 2);
+                const categoriaNombre = getCellStr(row, 3);
+                const tipoUnidades = getCellStr(row, 4);
+                const capacidadProductivaDiaria = getCellNum(row, 5);
+                const cantidadProducida = getCellNum(row, 6);
+                const fechaProduccion = getCellDate(row, 7);
+                const observaciones = getCellStr(row, 8);
 
-                // Validar campos obligatorios de referencia
-                if (!loteAsignado) {
-                    errors.push(`Fila ${rowNumber}: lote_asignado esta vacio`);
-                    return;
-                }
-                if (!ordenId || ordenId <= 0) {
-                    errors.push(`Fila ${rowNumber} (${loteAsignado}): orden_id invalido`);
+                if (!cantidadProducida) {
                     return;
                 }
 
-                // Validar cantidad_ingresada
-                if (!cantidadIngresada || cantidadIngresada < 1) {
-                    errors.push(`Fila ${rowNumber} (${loteAsignado}): cantidad_ingresada debe ser un entero >= 1`);
-                    return;
-                }
-                if (!Number.isInteger(cantidadIngresada)) {
-                    errors.push(`Fila ${rowNumber} (${loteAsignado}): cantidad_ingresada debe ser un numero entero`);
+                // Validar campos obligatorios de referencia
+                if (!productoId) {
+                    errors.push(`Fila ${rowNumber}: producto_id esta vacio`);
                     return;
                 }
 
-                // Validar rango ±20%
-                const minAllowed = cantidadEsperada * 0.8;
-                const maxAllowed = cantidadEsperada * 1.2;
-                if (cantidadIngresada < minAllowed || cantidadIngresada > maxAllowed) {
+                // Validar cantidad_producida
+                if (cantidadProducida < 1) {
+                    errors.push(`Fila ${rowNumber} (${productoId}): cantidad_producida debe ser un entero >= 1`);
+                    return;
+                }
+                if (!Number.isInteger(cantidadProducida)) {
+                    errors.push(`Fila ${rowNumber} (${productoId}): cantidad_producida debe ser un numero entero`);
+                    return;
+                }
+
+                // Validar fecha_produccion
+                if (!fechaProduccion) {
+                    errors.push(`Fila ${rowNumber} (${productoId}): fecha_produccion esta vacia`);
+                    return;
+                }
+                if (!isValidDate(fechaProduccion)) {
+                    errors.push(`Fila ${rowNumber} (${productoId}): fecha_produccion debe ser formato YYYY-MM-DD`);
+                    return;
+                }
+                if (fechaProduccionReporte && fechaProduccionReporte !== fechaProduccion) {
                     errors.push(
-                        `Fila ${rowNumber} (${loteAsignado}): cantidad_ingresada (${cantidadIngresada}) fuera del rango permitido (${Math.ceil(minAllowed)}-${Math.floor(maxAllowed)})`
+                        `Fila ${rowNumber} (${productoId}): fecha_produccion (${fechaProduccion}) no coincide con la fecha del reporte (${fechaProduccionReporte})`
                     );
                     return;
                 }
+                fechaProduccionReporte = fechaProduccion;
 
-                // Validar fecha_vencimiento
-                if (!fechaVencimiento) {
-                    errors.push(`Fila ${rowNumber} (${loteAsignado}): fecha_vencimiento esta vacia`);
-                    return;
-                }
-                if (!isValidDate(fechaVencimiento)) {
-                    errors.push(`Fila ${rowNumber} (${loteAsignado}): fecha_vencimiento debe ser formato YYYY-MM-DD`);
-                    return;
-                }
-                if (!isFutureDate(fechaVencimiento)) {
-                    errors.push(`Fila ${rowNumber} (${loteAsignado}): fecha_vencimiento debe ser posterior a hoy`);
-                    return;
-                }
-
-                // Calcular diferencia porcentual
-                const diferenciaPorcentaje = ((cantidadIngresada - cantidadEsperada) / cantidadEsperada) * 100;
+                const rendimientoOperativoPct = capacidadProductivaDiaria > 0
+                    ? (cantidadProducida / capacidadProductivaDiaria) * 100
+                    : null;
 
                 validatedRows.push({
-                    ordenId,
-                    loteAsignado,
                     productoId,
                     productoNombre,
                     categoriaNombre,
-                    cantidadEsperada,
-                    cantidadIngresada,
-                    fechaVencimiento,
-                    diferenciaPorcentaje,
+                    tipoUnidades,
+                    capacidadProductivaDiaria,
+                    cantidadProducida,
+                    fechaProduccion,
+                    observaciones,
+                    rendimientoOperativoPct,
                 });
             });
 
@@ -275,7 +263,7 @@ export default function IngresoTerminadosStep1_SubirValidar({
 
             toast({
                 title: "Validacion exitosa",
-                description: `Se validaron ${validatedRows.length} orden(es) correctamente`,
+                description: `Se validaron ${validatedRows.length} referencia(s) producida(s) correctamente`,
                 status: "success",
                 duration: 5000,
                 isClosable: true,
@@ -299,7 +287,7 @@ export default function IngresoTerminadosStep1_SubirValidar({
         <Box>
             <Heading size="md" mb={4}>Subir y Validar Excel</Heading>
             <Text fontSize="sm" color="app.textSubtle" mb={5}>
-                Suba el archivo Excel completado con las cantidades reales de producto terminado.
+                Suba el archivo Excel completado con las cantidades producidas del dia.
             </Text>
 
             <VStack align="stretch" spacing={5}>
@@ -370,8 +358,8 @@ export default function IngresoTerminadosStep1_SubirValidar({
                     <Alert status="success" borderRadius="md">
                         <AlertIcon />
                         <AlertDescription>
-                            Archivo validado correctamente. Se encontraron <strong>{parsedData.length}</strong> orden(es)
-                            de produccion para registrar ingreso.
+                            Archivo validado correctamente. Se encontraron <strong>{parsedData.length}</strong> referencia(s)
+                            de produccion para incluir en el reporte consolidado.
                         </AlertDescription>
                     </Alert>
                 )}

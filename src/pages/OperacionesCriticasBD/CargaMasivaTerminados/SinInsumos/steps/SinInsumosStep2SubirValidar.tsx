@@ -124,9 +124,18 @@ export default function SinInsumosStep2SubirValidar({
             return { value: "", error: "producto_id esta vacio" };
         }
         if (typeof value === "number") {
+            const numericValue = value;
+            const productoId = String(numericValue);
+            if (!Number.isSafeInteger(numericValue) || numericValue < 0) {
+                return {
+                    value: cell.text || productoId,
+                    error: "producto_id numerico debe ser un entero no negativo sin decimales.",
+                };
+            }
+
             return {
-                value: cell.text || String(value),
-                error: "producto_id debe escribirse como texto en Excel. No se aceptan celdas numericas.",
+                value: productoId,
+                error: validateBulkProductoId(productoId, "producto_id"),
             };
         }
 

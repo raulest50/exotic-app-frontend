@@ -23,7 +23,7 @@ interface SinInsumosStep1InformacionProps {
 
 const EXAMPLE_ROWS = [
     {
-        producto_id: "EJEMPLO_TER01",
+        producto_id: "EJEMPLOTER01",
         nombre: "Terminado ejemplo",
         costo: 150,
         iva_percentual: 19,
@@ -101,7 +101,7 @@ export default function SinInsumosStep1Informacion({ setActiveStep }: SinInsumos
                     <strong>Obligatorios:</strong> producto_id, nombre, costo, iva_percentual (0, 5 o 19), tipo_unidades (L, KG o U), cantidad_unidad y status (0 = activo, 1 = obsoleto).
                 </Text>
                 <Text>
-                    <strong>Formato de producto_id:</strong> escribalo como texto en Excel, solo con letras y numeros en mayusculas. No se aceptan celdas numericas, espacios, puntos, guiones ni guion bajo.
+                    <strong>Formato de producto_id:</strong> use letras y numeros en mayusculas. Tambien se aceptan celdas numericas si son enteros sin decimales. No se aceptan espacios, puntos, guiones ni guion bajo.
                 </Text>
                 <Text>
                     <strong>Opcionales:</strong> observaciones, stock_minimo, categoria_id, foto_url y prefijo_lote (unico entre terminados).
