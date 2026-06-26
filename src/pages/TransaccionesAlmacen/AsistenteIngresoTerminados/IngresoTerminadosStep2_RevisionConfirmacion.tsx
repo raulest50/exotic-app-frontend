@@ -13,6 +13,7 @@ import {
     Heading,
     SimpleGrid,
     Stat,
+    StatHelpText,
     StatLabel,
     StatNumber,
     Table,
@@ -23,12 +24,10 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     VStack,
 } from "@chakra-ui/react";
 import { ArrowBackIcon, DownloadIcon } from "@chakra-ui/icons";
-import ExcelJS from "exceljs";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { IngresoTerminadoValidado } from "./types";
 
 interface Props {
@@ -39,28 +38,16 @@ interface Props {
 
 interface CategoriaConsolidada {
     categoriaNombre: string;
-    referencias: number;
+    referenciasProducidas: number;
     unidadesProducidas: number;
-    capacidadProductivaDiaria: number;
-    rendimientoOperativoPct: number | null;
 }
 
 const numberFormatter = new Intl.NumberFormat("es-CO", {
     maximumFractionDigits: 0,
 });
 
-const decimalFormatter = new Intl.NumberFormat("es-CO", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-});
-
 function formatNumber(value: number): string {
     return numberFormatter.format(value);
-}
-
-function formatPct(value: number | null): string {
-    if (value == null || Number.isNaN(value)) return "Sin base";
-    return `${decimalFormatter.format(value)}%`;
 }
 
 function formatDateDisplay(isoDate: string): string {
@@ -69,42 +56,21 @@ function formatDateDisplay(isoDate: string): string {
     return `${day}/${month}/${year}`;
 }
 
-function triggerFileDownload(data: BlobPart, filename: string) {
-    const blob = new Blob([data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-}
-
 function buildCategoriaRows(ingresos: IngresoTerminadoValidado[]): CategoriaConsolidada[] {
     const byCategoria = new Map<string, CategoriaConsolidada>();
 
     for (const ingreso of ingresos) {
+        if (ingreso.cantidadProducida <= 0) continue;
+
         const categoriaNombre = ingreso.categoriaNombre || "Sin categoria";
         const current = byCategoria.get(categoriaNombre) ?? {
             categoriaNombre,
-            referencias: 0,
+            referenciasProducidas: 0,
             unidadesProducidas: 0,
-            capacidadProductivaDiaria: ingreso.capacidadProductivaDiaria,
-            rendimientoOperativoPct: null,
         };
 
-        current.referencias += 1;
+        current.referenciasProducidas += 1;
         current.unidadesProducidas += ingreso.cantidadProducida;
-        if (!current.capacidadProductivaDiaria && ingreso.capacidadProductivaDiaria) {
-            current.capacidadProductivaDiaria = ingreso.capacidadProductivaDiaria;
-        }
-        current.rendimientoOperativoPct = current.capacidadProductivaDiaria > 0
-            ? (current.unidadesProducidas / current.capacidadProductivaDiaria) * 100
-            : null;
-
         byCategoria.set(categoriaNombre, current);
     }
 
@@ -113,151 +79,38 @@ function buildCategoriaRows(ingresos: IngresoTerminadoValidado[]): CategoriaCons
     );
 }
 
-async function buildReporteExcel(
-    ingresos: IngresoTerminadoValidado[],
-    categorias: CategoriaConsolidada[],
-    resumen: {
-        fechaProduccion: string;
-        totalReferencias: number;
-        totalUnidades: number;
-        capacidadTotal: number;
-        rendimientoOperativoPct: number | null;
-    }
-): Promise<BlobPart> {
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = "Exotic App";
-    workbook.created = new Date();
-
-    const headerFill = {
-        type: "pattern" as const,
-        pattern: "solid" as const,
-        fgColor: { argb: "FFE2E8F0" },
-    };
-
-    const resumenSheet = workbook.addWorksheet("Resumen");
-    resumenSheet.columns = [
-        { header: "Metrica", key: "metric", width: 34 },
-        { header: "Valor", key: "value", width: 24 },
-    ];
-    resumenSheet.getRow(1).font = { bold: true };
-    resumenSheet.getRow(1).eachCell((cell) => {
-        cell.fill = headerFill;
-    });
-    resumenSheet.addRows([
-        { metric: "Fecha produccion", value: resumen.fechaProduccion },
-        { metric: "Referencias producidas", value: resumen.totalReferencias },
-        { metric: "Unidades producidas", value: resumen.totalUnidades },
-        { metric: "Categorias reportadas", value: categorias.length },
-        { metric: "Capacidad productiva diaria total", value: resumen.capacidadTotal },
-        { metric: "Rendimiento operativo (%)", value: resumen.rendimientoOperativoPct ?? "" },
-    ]);
-
-    const categoriaSheet = workbook.addWorksheet("Consolidado Categoria");
-    categoriaSheet.columns = [
-        { header: "Categoria", key: "categoriaNombre", width: 32 },
-        { header: "Referencias producidas", key: "referencias", width: 24 },
-        { header: "Unidades producidas", key: "unidadesProducidas", width: 22 },
-        { header: "Capacidad productiva dia", key: "capacidadProductivaDiaria", width: 26 },
-        { header: "Rendimiento operativo (%)", key: "rendimientoOperativoPct", width: 28 },
-    ];
-    categoriaSheet.getRow(1).font = { bold: true };
-    categoriaSheet.getRow(1).eachCell((cell) => {
-        cell.fill = headerFill;
-    });
-    categoriaSheet.addRows(categorias.map((categoria) => ({
-        ...categoria,
-        rendimientoOperativoPct: categoria.rendimientoOperativoPct ?? "",
-    })));
-
-    const detalleSheet = workbook.addWorksheet("Detalle Terminados");
-    detalleSheet.columns = [
-        { header: "Producto ID", key: "productoId", width: 18 },
-        { header: "Producto", key: "productoNombre", width: 44 },
-        { header: "Categoria", key: "categoriaNombre", width: 28 },
-        { header: "Unidad", key: "tipoUnidades", width: 14 },
-        { header: "Cantidad producida", key: "cantidadProducida", width: 22 },
-        { header: "Fecha produccion", key: "fechaProduccion", width: 18 },
-        { header: "Observaciones", key: "observaciones", width: 42 },
-    ];
-    detalleSheet.getRow(1).font = { bold: true };
-    detalleSheet.getRow(1).eachCell((cell) => {
-        cell.fill = headerFill;
-    });
-    detalleSheet.addRows(ingresos.map((ingreso) => ({
-        productoId: ingreso.productoId,
-        productoNombre: ingreso.productoNombre,
-        categoriaNombre: ingreso.categoriaNombre,
-        tipoUnidades: ingreso.tipoUnidades,
-        cantidadProducida: ingreso.cantidadProducida,
-        fechaProduccion: ingreso.fechaProduccion,
-        observaciones: ingreso.observaciones ?? "",
-    })));
-
-    const buffer = await workbook.xlsx.writeBuffer();
-    return buffer as BlobPart;
-}
-
 export default function IngresoTerminadosStep2_RevisionConfirmacion({
     ingresosValidados,
     setActiveStep,
     onSuccess,
 }: Props) {
-    const toast = useToast();
-    const [isGenerating, setIsGenerating] = useState(false);
-
+    const productosProducidos = useMemo(
+        () => ingresosValidados.filter((ingreso) => ingreso.cantidadProducida > 0),
+        [ingresosValidados]
+    );
     const categorias = useMemo(() => buildCategoriaRows(ingresosValidados), [ingresosValidados]);
-    const totalReferencias = ingresosValidados.length;
-    const totalUnidades = ingresosValidados.reduce((acc, item) => acc + item.cantidadProducida, 0);
-    const fechaProduccion = ingresosValidados[0]?.fechaProduccion ?? "";
-    const capacidadTotal = categorias.reduce((acc, categoria) => acc + categoria.capacidadProductivaDiaria, 0);
-    const rendimientoOperativoPct = capacidadTotal > 0 ? (totalUnidades / capacidadTotal) * 100 : null;
 
-    const handleDownloadReporte = async () => {
-        setIsGenerating(true);
-        try {
-            const data = await buildReporteExcel(ingresosValidados, categorias, {
-                fechaProduccion,
-                totalReferencias,
-                totalUnidades,
-                capacidadTotal,
-                rendimientoOperativoPct,
-            });
-            triggerFileDownload(data, `reporte_produccion_terminados_consolidado_${fechaProduccion}.xlsx`);
-            toast({
-                title: "Reporte generado",
-                description: "El Excel consolidado de produccion diaria fue descargado.",
-                status: "success",
-                duration: 5000,
-                isClosable: true,
-            });
-        } catch (error) {
-            const message = error instanceof Error ? error.message : "No se pudo generar el reporte.";
-            toast({
-                title: "Error generando reporte",
-                description: message,
-                status: "error",
-                duration: 6000,
-                isClosable: true,
-            });
-        } finally {
-            setIsGenerating(false);
-        }
-    };
+    const fechaReporte = ingresosValidados[0]?.fechaReporte ?? "";
+    const totalReferenciasPlantilla = ingresosValidados.length;
+    const totalReferenciasProducidas = productosProducidos.length;
+    const referenciasSinProduccion = totalReferenciasPlantilla - totalReferenciasProducidas;
+    const totalUnidades = productosProducidos.reduce((acc, item) => acc + item.cantidadProducida, 0);
 
     return (
         <Box>
-            <Heading size="md" mb={4}>Revision y Generacion de Reporte</Heading>
+            <Heading size="md" mb={4}>Resumen y Reportes</Heading>
             <Text fontSize="sm" color="app.textSubtle" mb={5}>
-                Revise el consolidado antes de generar el Excel. Esta operacion no registra movimientos
-                de inventario ni cierra ordenes de produccion.
+                Revise el reporte local antes de generar los formatos finales. Esta version aun no registra
+                movimientos de inventario ni cierra ordenes de produccion.
             </Text>
 
             <VStack align="stretch" spacing={5}>
                 <Alert status="info" borderRadius="md">
                     <AlertIcon />
                     <AlertDescription fontSize="sm">
-                        El workflow por lote/OP esta temporalmente en desuso. Por ahora el asistente solo
-                        genera el reporte diario consolidado por producto terminado.
+                        Los datos estan guardados solo en este asistente. Los lotes ficticios usan el prefijo
+                        <Text as="span" fontFamily="mono" fontWeight="bold"> FICTICIO-PT </Text>
+                        para identificarlos facilmente cuando se implemente el guardado real.
                     </AlertDescription>
                 </Alert>
 
@@ -265,9 +118,9 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
                     <Card variant="outline">
                         <CardBody>
                             <Stat>
-                                <StatLabel color="app.textSubtle">Fecha produccion</StatLabel>
+                                <StatLabel color="app.textSubtle">Fecha reporte</StatLabel>
                                 <StatNumber color="blue.600" fontSize="2xl">
-                                    {formatDateDisplay(fechaProduccion)}
+                                    {formatDateDisplay(fechaReporte)}
                                 </StatNumber>
                             </Stat>
                         </CardBody>
@@ -275,8 +128,11 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
                     <Card variant="outline">
                         <CardBody>
                             <Stat>
-                                <StatLabel color="app.textSubtle">Referencias</StatLabel>
-                                <StatNumber color="teal.600">{formatNumber(totalReferencias)}</StatNumber>
+                                <StatLabel color="app.textSubtle">Referencias producidas</StatLabel>
+                                <StatNumber color="teal.600">{formatNumber(totalReferenciasProducidas)}</StatNumber>
+                                <StatHelpText mb={0}>
+                                    de {formatNumber(totalReferenciasPlantilla)} en plantilla
+                                </StatHelpText>
                             </Stat>
                         </CardBody>
                     </Card>
@@ -291,12 +147,21 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
                     <Card variant="outline">
                         <CardBody>
                             <Stat>
-                                <StatLabel color="app.textSubtle">Rendimiento operativo</StatLabel>
-                                <StatNumber color="orange.600">{formatPct(rendimientoOperativoPct)}</StatNumber>
+                                <StatLabel color="app.textSubtle">Sin produccion</StatLabel>
+                                <StatNumber color="orange.600">{formatNumber(referenciasSinProduccion)}</StatNumber>
                             </Stat>
                         </CardBody>
                     </Card>
                 </SimpleGrid>
+
+                {productosProducidos.length === 0 && (
+                    <Alert status="warning" borderRadius="md">
+                        <AlertIcon />
+                        <AlertDescription>
+                            La plantilla fue valida, pero no contiene referencias con cantidad producida mayor a cero.
+                        </AlertDescription>
+                    </Alert>
+                )}
 
                 <Card variant="outline">
                     <CardHeader pb={2}>
@@ -304,15 +169,13 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
                     </CardHeader>
                     <Divider />
                     <CardBody p={0}>
-                        <TableContainer maxH="260px" overflowY="auto">
+                        <TableContainer maxH="280px" overflowY="auto">
                             <Table size="sm" variant="simple">
                                 <Thead bg="app.tableHeader" position="sticky" top={0}>
                                     <Tr>
                                         <Th>Categoria</Th>
                                         <Th isNumeric>Referencias</Th>
                                         <Th isNumeric>Unidades</Th>
-                                        <Th isNumeric>Capacidad dia</Th>
-                                        <Th isNumeric>Rend. operativo</Th>
                                     </Tr>
                                 </Thead>
                                 <Tbody>
@@ -321,14 +184,21 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
                                             <Td>
                                                 <Badge colorScheme="gray">{categoria.categoriaNombre}</Badge>
                                             </Td>
-                                            <Td isNumeric>{formatNumber(categoria.referencias)}</Td>
+                                            <Td isNumeric>{formatNumber(categoria.referenciasProducidas)}</Td>
                                             <Td isNumeric fontWeight="bold" color="green.600">
                                                 {formatNumber(categoria.unidadesProducidas)}
                                             </Td>
-                                            <Td isNumeric>{formatNumber(categoria.capacidadProductivaDiaria)}</Td>
-                                            <Td isNumeric>{formatPct(categoria.rendimientoOperativoPct)}</Td>
                                         </Tr>
                                     ))}
+                                    {categorias.length === 0 && (
+                                        <Tr>
+                                            <Td colSpan={3}>
+                                                <Text color="app.textSubtle" textAlign="center" py={4}>
+                                                    No hay categorias con produccion reportada.
+                                                </Text>
+                                            </Td>
+                                        </Tr>
+                                    )}
                                 </Tbody>
                             </Table>
                         </TableContainer>
@@ -337,23 +207,22 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
 
                 <Card variant="outline">
                     <CardHeader pb={2}>
-                        <Heading size="sm" color="purple.600">Detalle por Producto Terminado</Heading>
+                        <Heading size="sm" color="purple.600">Detalle de Producto Terminado Producido</Heading>
                     </CardHeader>
                     <Divider />
                     <CardBody p={0}>
-                        <TableContainer maxH="320px" overflowY="auto">
+                        <TableContainer maxH="360px" overflowY="auto">
                             <Table size="sm" variant="simple">
                                 <Thead bg="app.tableHeader" position="sticky" top={0}>
                                     <Tr>
                                         <Th>Producto</Th>
                                         <Th>Categoria</Th>
-                                        <Th>Unidad</Th>
                                         <Th isNumeric>Cantidad</Th>
-                                        <Th>Observaciones</Th>
+                                        <Th>Lote ficticio local</Th>
                                     </Tr>
                                 </Thead>
                                 <Tbody>
-                                    {ingresosValidados.map((ingreso) => (
+                                    {productosProducidos.map((ingreso) => (
                                         <Tr key={ingreso.productoId}>
                                             <Td>
                                                 <Text fontSize="sm" fontWeight="semibold" noOfLines={1}>
@@ -364,44 +233,54 @@ export default function IngresoTerminadosStep2_RevisionConfirmacion({
                                                 </Text>
                                             </Td>
                                             <Td>{ingreso.categoriaNombre}</Td>
-                                            <Td>{ingreso.tipoUnidades || "-"}</Td>
                                             <Td isNumeric fontWeight="bold" color="green.600">
                                                 {formatNumber(ingreso.cantidadProducida)}
                                             </Td>
-                                            <Td fontSize="xs">{ingreso.observaciones || "-"}</Td>
+                                            <Td fontFamily="mono" fontSize="xs">{ingreso.loteFicticio}</Td>
                                         </Tr>
                                     ))}
+                                    {productosProducidos.length === 0 && (
+                                        <Tr>
+                                            <Td colSpan={4}>
+                                                <Text color="app.textSubtle" textAlign="center" py={4}>
+                                                    No hay productos con produccion mayor a cero.
+                                                </Text>
+                                            </Td>
+                                        </Tr>
+                                    )}
                                 </Tbody>
                             </Table>
                         </TableContainer>
                     </CardBody>
                 </Card>
 
-                <Flex justify="space-between">
+                <Flex justify="space-between" gap={4} wrap="wrap">
                     <Button
                         leftIcon={<ArrowBackIcon />}
                         variant="outline"
                         onClick={() => setActiveStep(1)}
-                        isDisabled={isGenerating}
                     >
                         Atras
                     </Button>
                     <Flex gap={3} wrap="wrap" justify="flex-end">
-                        <Button
-                            variant="ghost"
-                            onClick={onSuccess}
-                            isDisabled={isGenerating}
-                        >
+                        <Button variant="ghost" onClick={onSuccess}>
                             Nuevo Reporte
                         </Button>
                         <Button
                             leftIcon={<DownloadIcon />}
                             colorScheme="green"
-                            onClick={handleDownloadReporte}
-                            isLoading={isGenerating}
-                            loadingText="Generando..."
+                            isDisabled
+                            title="Pendiente de implementar"
                         >
-                            Generar Excel Consolidado
+                            Descargar Reporte HyL
+                        </Button>
+                        <Button
+                            leftIcon={<DownloadIcon />}
+                            colorScheme="blue"
+                            isDisabled
+                            title="Pendiente de implementar"
+                        >
+                            Descargar Reporte Dorance
                         </Button>
                     </Flex>
                 </Flex>

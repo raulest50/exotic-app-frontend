@@ -64,12 +64,9 @@ export interface IngresoTerminadoValidado {
     productoId: string;
     productoNombre: string;
     categoriaNombre: string;
-    tipoUnidades: string;
-    capacidadProductivaDiaria: number;
     cantidadProducida: number;
-    fechaProduccion: string; // YYYY-MM-DD
-    observaciones?: string;
-    rendimientoOperativoPct: number | null;
+    fechaReporte: string; // YYYY-MM-DD
+    loteFicticio: string;
 }
 
 /** Temporalmente en desuso: payload para registro masivo por lote/OP. */

@@ -18,8 +18,16 @@ import IngresoTerminadosStep2_RevisionConfirmacion from "./IngresoTerminadosStep
 const steps = [
     { title: "Paso 1", description: "Descargar Plantilla" },
     { title: "Paso 2", description: "Subir y Validar" },
-    { title: "Paso 3", description: "Generar Reporte" },
+    { title: "Paso 3", description: "Resumen y Reportes" },
 ];
+
+function todayIso(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
 
 export function AsistenteIngresoTerminados() {
     const { activeStep, setActiveStep } = useSteps({
@@ -27,11 +35,18 @@ export function AsistenteIngresoTerminados() {
         count: steps.length,
     });
 
+    const [fechaReporte, setFechaReporte] = useState(() => todayIso());
     const [ingresosValidados, setIngresosValidados] = useState<IngresoTerminadoValidado[]>([]);
+
+    const handleFechaReporteChange = (fecha: string) => {
+        setFechaReporte(fecha);
+        setIngresosValidados([]);
+    };
 
     const handleSuccess = () => {
         // Reiniciar todo el wizard al paso 0
         setIngresosValidados([]);
+        setFechaReporte(todayIso());
         setActiveStep(0);
     };
 
@@ -39,6 +54,8 @@ export function AsistenteIngresoTerminados() {
         if (activeStep === 0) {
             return (
                 <IngresoTerminadosStep0_DescargarPlantilla
+                    fechaReporte={fechaReporte}
+                    setFechaReporte={handleFechaReporteChange}
                     setActiveStep={setActiveStep}
                 />
             );
@@ -46,6 +63,7 @@ export function AsistenteIngresoTerminados() {
         if (activeStep === 1) {
             return (
                 <IngresoTerminadosStep1_SubirValidar
+                    fechaReporte={fechaReporte}
                     setActiveStep={setActiveStep}
                     setIngresosValidados={setIngresosValidados}
                 />

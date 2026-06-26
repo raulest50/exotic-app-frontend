@@ -10,6 +10,10 @@ import {
     HStack,
     Icon,
     Input,
+    SimpleGrid,
+    Stat,
+    StatLabel,
+    StatNumber,
     Text,
     useToast,
     VStack,
@@ -17,10 +21,11 @@ import {
 import { ArrowBackIcon, ArrowForwardIcon } from "@chakra-ui/icons";
 import { FaFileCircleCheck, FaFileCircleQuestion } from "react-icons/fa6";
 import ExcelJS from "exceljs";
-import { useRef, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 import { IngresoTerminadoValidado } from "./types";
 
 interface Props {
+    fechaReporte: string;
     setActiveStep: (step: number) => void;
     setIngresosValidados: (ingresos: IngresoTerminadoValidado[]) => void;
 }
@@ -29,16 +34,114 @@ const EXPECTED_HEADERS = [
     "producto_id",
     "producto_nombre",
     "categoria_nombre",
-    "tipo_unidades",
-    "capacidad_productiva_diaria",
     "cantidad_producida",
-    "fecha_produccion",
-    "observaciones",
 ];
 
 const SHEET_NAME = "Produccion Diaria PT";
+const MAX_VISIBLE_ERRORS = 15;
+
+const numberFormatter = new Intl.NumberFormat("es-CO", {
+    maximumFractionDigits: 0,
+});
+
+function formatNumber(value: number): string {
+    return numberFormatter.format(value);
+}
+
+function formatDateDisplay(isoDate: string): string {
+    if (!isoDate) return "-";
+    const [year, month, day] = isoDate.split("-");
+    return `${day}/${month}/${year}`;
+}
+
+function buildLoteFicticio(fechaReporte: string, sequence: number): string {
+    return `FICTICIO-PT-${fechaReporte.replace(/-/g, "")}-${String(sequence).padStart(4, "0")}`;
+}
+
+function isFormulaValue(value: ExcelJS.CellValue): boolean {
+    return value != null && typeof value === "object" && "formula" in value;
+}
+
+function getCellText(cell: ExcelJS.Cell): string {
+    const value = cell.value;
+    if (value == null || isFormulaValue(value) || typeof value === "object") return "";
+    return String(value).trim();
+}
+
+function readRequiredText(
+    row: ExcelJS.Row,
+    col: number,
+    fieldName: string,
+    rowNumber: number,
+    errors: string[]
+): string | null {
+    const cell = row.getCell(col);
+    const value = cell.value;
+
+    if (isFormulaValue(value)) {
+        errors.push(`Fila ${rowNumber}: ${fieldName} no puede ser una formula`);
+        return null;
+    }
+    if (value == null || String(value).trim() === "") {
+        errors.push(`Fila ${rowNumber}: ${fieldName} esta vacio`);
+        return null;
+    }
+    if (typeof value === "object" || typeof value === "boolean") {
+        errors.push(`Fila ${rowNumber}: ${fieldName} tiene un valor no permitido`);
+        return null;
+    }
+
+    return String(value).trim();
+}
+
+function readCantidadProducida(
+    row: ExcelJS.Row,
+    rowNumber: number,
+    productoId: string,
+    errors: string[]
+): number | null {
+    const cell = row.getCell(4);
+    const value = cell.value;
+
+    if (value == null) return 0;
+
+    if (isFormulaValue(value)) {
+        errors.push(`Fila ${rowNumber} (${productoId}): cantidad_producida no puede ser una formula`);
+        return null;
+    }
+
+    if (typeof value === "number") {
+        if (!Number.isFinite(value)) {
+            errors.push(`Fila ${rowNumber} (${productoId}): cantidad_producida no es un numero valido`);
+            return null;
+        }
+        if (value < 0) {
+            errors.push(`Fila ${rowNumber} (${productoId}): cantidad_producida no puede ser negativa`);
+            return null;
+        }
+        if (!Number.isInteger(value)) {
+            errors.push(`Fila ${rowNumber} (${productoId}): cantidad_producida debe ser un numero entero`);
+            return null;
+        }
+        return value;
+    }
+
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (!trimmed) return 0;
+        if (!/^\d+$/.test(trimmed)) {
+            errors.push(`Fila ${rowNumber} (${productoId}): cantidad_producida debe ser un entero mayor o igual a cero`);
+            return null;
+        }
+        return Number(trimmed);
+    }
+
+    errors.push(`Fila ${rowNumber} (${productoId}): cantidad_producida tiene un valor no permitido`);
+    return null;
+}
 
 export default function IngresoTerminadosStep1_SubirValidar({
+    fechaReporte,
     setActiveStep,
     setIngresosValidados,
 }: Props) {
@@ -51,13 +154,17 @@ export default function IngresoTerminadosStep1_SubirValidar({
     const [validationErrors, setValidationErrors] = useState<string[]>([]);
     const [parsedData, setParsedData] = useState<IngresoTerminadoValidado[]>([]);
 
+    const totalUnidades = parsedData.reduce((acc, item) => acc + item.cantidadProducida, 0);
+    const referenciasProducidas = parsedData.filter((item) => item.cantidadProducida > 0).length;
+    const referenciasSinProduccion = parsedData.length - referenciasProducidas;
+
     const isValidExcelExtension = (file: File): boolean => {
         const lower = file.name.toLowerCase();
         return lower.endsWith(".xlsx");
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
         if (file) {
             if (!isValidExcelExtension(file)) {
                 toast({
@@ -67,79 +174,35 @@ export default function IngresoTerminadosStep1_SubirValidar({
                     duration: 5000,
                     isClosable: true,
                 });
-                e.target.value = "";
+                event.target.value = "";
                 return;
             }
             setExcelFile(file);
             setExcelIsValid(false);
             setValidationErrors([]);
             setParsedData([]);
+            setIngresosValidados([]);
         }
-        e.target.value = "";
-    };
-
-    const getCellStr = (row: ExcelJS.Row, col: number): string => {
-        const cell = row.getCell(col);
-        const v = cell?.value;
-        if (v == null) return "";
-        return String(v).trim();
-    };
-
-    const getCellNum = (row: ExcelJS.Row, col: number): number => {
-        const cell = row.getCell(col);
-        const v = cell?.value;
-        if (v == null) return 0;
-        if (typeof v === "number" && !Number.isNaN(v)) return v;
-        const n = parseFloat(String(v));
-        return Number.isNaN(n) ? 0 : n;
-    };
-
-    const getCellDate = (row: ExcelJS.Row, col: number): string => {
-        const cell = row.getCell(col);
-        const v = cell?.value;
-        if (v == null) return "";
-
-        // Si es un objeto Date de JavaScript
-        if (v instanceof Date) {
-            const year = v.getFullYear();
-            const month = String(v.getMonth() + 1).padStart(2, "0");
-            const day = String(v.getDate()).padStart(2, "0");
-            return `${year}-${month}-${day}`;
-        }
-
-        // Si es un string, intentar parsearlo
-        const str = String(v).trim();
-        // Formato YYYY-MM-DD
-        if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-            return str;
-        }
-        // Formato DD/MM/YYYY
-        const match = str.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-        if (match) {
-            return `${match[3]}-${match[2]}-${match[1]}`;
-        }
-
-        return str;
-    };
-
-    const isValidDate = (dateStr: string): boolean => {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
-        const date = new Date(dateStr);
-        return !isNaN(date.getTime());
+        event.target.value = "";
     };
 
     const validateExcelFile = async (file: File) => {
+        if (!fechaReporte) {
+            setValidationErrors(["Debe seleccionar la fecha del reporte antes de validar"]);
+            return;
+        }
+
         setIsValidating(true);
         setValidationErrors([]);
         setExcelIsValid(false);
         setParsedData([]);
+        setIngresosValidados([]);
 
         try {
             const data = await file.arrayBuffer();
             const workbook = new ExcelJS.Workbook();
             await workbook.xlsx.load(data);
 
-            // Buscar la hoja por nombre o usar la primera
             let worksheet = workbook.getWorksheet(SHEET_NAME);
             if (!worksheet) {
                 worksheet = workbook.worksheets[0];
@@ -147,123 +210,85 @@ export default function IngresoTerminadosStep1_SubirValidar({
 
             if (!worksheet) {
                 setValidationErrors(["No se encontro ninguna hoja en el archivo"]);
-                setIsValidating(false);
                 return;
             }
 
             if ((worksheet.rowCount ?? 0) < 2) {
-                setValidationErrors(["El archivo debe contener al menos una fila de encabezados y una fila de datos"]);
-                setIsValidating(false);
+                setValidationErrors(["El archivo debe contener encabezados y al menos una fila de producto terminado"]);
                 return;
             }
 
             const errors: string[] = [];
             const validatedRows: IngresoTerminadoValidado[] = [];
-            let fechaProduccionReporte: string | null = null;
 
-            // Validar headers
             const headerRow = worksheet.getRow(1);
-            for (let c = 0; c < EXPECTED_HEADERS.length; c++) {
-                const expected = EXPECTED_HEADERS[c];
-                const actual = getCellStr(headerRow, c + 1).toLowerCase();
+            for (let col = 0; col < EXPECTED_HEADERS.length; col++) {
+                const expected = EXPECTED_HEADERS[col];
+                const actual = getCellText(headerRow.getCell(col + 1)).toLowerCase();
                 if (actual !== expected.toLowerCase()) {
-                    errors.push(`Columna ${c + 1} esperada "${expected}", encontrada "${actual || "(vacia)"}"`);
+                    errors.push(`Columna ${col + 1} esperada "${expected}", encontrada "${actual || "(vacia)"}"`);
+                }
+            }
+            for (let col = EXPECTED_HEADERS.length + 1; col <= headerRow.cellCount; col++) {
+                const extraCell = headerRow.getCell(col);
+                const extraHeader = getCellText(extraCell);
+                if (extraHeader || extraCell.value != null) {
+                    errors.push(`Columna ${col} no esperada "${extraHeader || "(valor no permitido)"}". La plantilla solo debe tener 4 columnas`);
                 }
             }
 
             if (errors.length > 0) {
                 setValidationErrors(errors);
-                setIsValidating(false);
                 return;
             }
 
-            // Validar cada fila de datos
             worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-                if (rowNumber === 1) return; // Saltar header
+                if (rowNumber === 1) return;
 
-                const productoId = getCellStr(row, 1);
-                const productoNombre = getCellStr(row, 2);
-                const categoriaNombre = getCellStr(row, 3);
-                const tipoUnidades = getCellStr(row, 4);
-                const capacidadProductivaDiaria = getCellNum(row, 5);
-                const cantidadProducida = getCellNum(row, 6);
-                const fechaProduccion = getCellDate(row, 7);
-                const observaciones = getCellStr(row, 8);
+                const productoId = readRequiredText(row, 1, "producto_id", rowNumber, errors);
+                const productoNombre = readRequiredText(row, 2, "producto_nombre", rowNumber, errors);
+                const categoriaNombre = readRequiredText(row, 3, "categoria_nombre", rowNumber, errors);
 
-                if (!cantidadProducida) {
+                if (!productoId || !productoNombre || !categoriaNombre) {
                     return;
                 }
 
-                // Validar campos obligatorios de referencia
-                if (!productoId) {
-                    errors.push(`Fila ${rowNumber}: producto_id esta vacio`);
+                const cantidadProducida = readCantidadProducida(row, rowNumber, productoId, errors);
+                if (cantidadProducida == null) {
                     return;
                 }
-
-                // Validar cantidad_producida
-                if (cantidadProducida < 1) {
-                    errors.push(`Fila ${rowNumber} (${productoId}): cantidad_producida debe ser un entero >= 1`);
-                    return;
-                }
-                if (!Number.isInteger(cantidadProducida)) {
-                    errors.push(`Fila ${rowNumber} (${productoId}): cantidad_producida debe ser un numero entero`);
-                    return;
-                }
-
-                // Validar fecha_produccion
-                if (!fechaProduccion) {
-                    errors.push(`Fila ${rowNumber} (${productoId}): fecha_produccion esta vacia`);
-                    return;
-                }
-                if (!isValidDate(fechaProduccion)) {
-                    errors.push(`Fila ${rowNumber} (${productoId}): fecha_produccion debe ser formato YYYY-MM-DD`);
-                    return;
-                }
-                if (fechaProduccionReporte && fechaProduccionReporte !== fechaProduccion) {
-                    errors.push(
-                        `Fila ${rowNumber} (${productoId}): fecha_produccion (${fechaProduccion}) no coincide con la fecha del reporte (${fechaProduccionReporte})`
-                    );
-                    return;
-                }
-                fechaProduccionReporte = fechaProduccion;
-
-                const rendimientoOperativoPct = capacidadProductivaDiaria > 0
-                    ? (cantidadProducida / capacidadProductivaDiaria) * 100
-                    : null;
 
                 validatedRows.push({
                     productoId,
                     productoNombre,
                     categoriaNombre,
-                    tipoUnidades,
-                    capacidadProductivaDiaria,
                     cantidadProducida,
-                    fechaProduccion,
-                    observaciones,
-                    rendimientoOperativoPct,
+                    fechaReporte,
+                    loteFicticio: buildLoteFicticio(fechaReporte, validatedRows.length + 1),
                 });
             });
 
             if (errors.length > 0) {
                 setValidationErrors(errors);
-                setIsValidating(false);
                 return;
             }
 
             if (validatedRows.length === 0) {
-                setValidationErrors(["No se encontraron filas de datos validas en el archivo"]);
-                setIsValidating(false);
+                setValidationErrors(["No se encontraron productos terminados en el archivo"]);
                 return;
             }
 
-            // Validacion exitosa
+            const referenciasProducidasValidadas = validatedRows.filter(
+                (item) => item.cantidadProducida > 0
+            ).length;
+
             setParsedData(validatedRows);
             setIngresosValidados(validatedRows);
             setExcelIsValid(true);
 
             toast({
                 title: "Validacion exitosa",
-                description: `Se validaron ${validatedRows.length} referencia(s) producida(s) correctamente`,
+                description: `Plantilla valida: ${referenciasProducidasValidadas} referencia(s) con produccion.`,
                 status: "success",
                 duration: 5000,
                 isClosable: true,
@@ -287,11 +312,10 @@ export default function IngresoTerminadosStep1_SubirValidar({
         <Box>
             <Heading size="md" mb={4}>Subir y Validar Excel</Heading>
             <Text fontSize="sm" color="app.textSubtle" mb={5}>
-                Suba el archivo Excel completado con las cantidades producidas del dia.
+                Suba la plantilla completada para el reporte del {formatDateDisplay(fechaReporte)}.
             </Text>
 
             <VStack align="stretch" spacing={5}>
-                {/* Seccion de subida */}
                 <Box p={5} borderWidth="1px" borderRadius="lg">
                     <VStack spacing={4} align="stretch">
                         <HStack spacing={4} alignItems="center">
@@ -320,7 +344,7 @@ export default function IngresoTerminadosStep1_SubirValidar({
                         <Button
                             colorScheme="teal"
                             onClick={() => excelFile && validateExcelFile(excelFile)}
-                            isDisabled={!excelFile || isValidating}
+                            isDisabled={!excelFile || isValidating || !fechaReporte}
                             isLoading={isValidating}
                             loadingText="Validando..."
                         >
@@ -329,7 +353,6 @@ export default function IngresoTerminadosStep1_SubirValidar({
                     </VStack>
                 </Box>
 
-                {/* Errores de validacion */}
                 {validationErrors.length > 0 && (
                     <Alert status="error" borderRadius="md">
                         <AlertIcon />
@@ -337,14 +360,14 @@ export default function IngresoTerminadosStep1_SubirValidar({
                             <AlertTitle>Errores de validacion encontrados:</AlertTitle>
                             <AlertDescription>
                                 <VStack align="stretch" spacing={1} mt={2}>
-                                    {validationErrors.slice(0, 15).map((error, index) => (
+                                    {validationErrors.slice(0, MAX_VISIBLE_ERRORS).map((error, index) => (
                                         <Text key={index} fontSize="sm">
                                             {error}
                                         </Text>
                                     ))}
-                                    {validationErrors.length > 15 && (
+                                    {validationErrors.length > MAX_VISIBLE_ERRORS && (
                                         <Text fontSize="sm" fontStyle="italic">
-                                            ... y {validationErrors.length - 15} errores mas
+                                            ... y {validationErrors.length - MAX_VISIBLE_ERRORS} errores mas
                                         </Text>
                                     )}
                                 </VStack>
@@ -353,18 +376,38 @@ export default function IngresoTerminadosStep1_SubirValidar({
                     </Alert>
                 )}
 
-                {/* Mensaje de exito */}
                 {excelIsValid && parsedData.length > 0 && (
                     <Alert status="success" borderRadius="md">
                         <AlertIcon />
                         <AlertDescription>
-                            Archivo validado correctamente. Se encontraron <strong>{parsedData.length}</strong> referencia(s)
-                            de produccion para incluir en el reporte consolidado.
+                            Archivo validado correctamente. Las cantidades vacias fueron interpretadas como cero.
                         </AlertDescription>
                     </Alert>
                 )}
 
-                {/* Botones de navegacion */}
+                {excelIsValid && parsedData.length > 0 && (
+                    <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+                        <Box p={4} borderWidth="1px" borderRadius="md">
+                            <Stat>
+                                <StatLabel color="app.textSubtle">Referencias producidas</StatLabel>
+                                <StatNumber color="teal.600">{formatNumber(referenciasProducidas)}</StatNumber>
+                            </Stat>
+                        </Box>
+                        <Box p={4} borderWidth="1px" borderRadius="md">
+                            <Stat>
+                                <StatLabel color="app.textSubtle">Sin produccion</StatLabel>
+                                <StatNumber color="orange.600">{formatNumber(referenciasSinProduccion)}</StatNumber>
+                            </Stat>
+                        </Box>
+                        <Box p={4} borderWidth="1px" borderRadius="md">
+                            <Stat>
+                                <StatLabel color="app.textSubtle">Unidades reportadas</StatLabel>
+                                <StatNumber color="green.600">{formatNumber(totalUnidades)}</StatNumber>
+                            </Stat>
+                        </Box>
+                    </SimpleGrid>
+                )}
+
                 <Flex gap={4} justify="space-between">
                     <Button
                         leftIcon={<ArrowBackIcon />}

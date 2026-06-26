@@ -9,8 +9,11 @@ import {
     CardHeader,
     Divider,
     Flex,
+    FormControl,
+    FormLabel,
     Heading,
     Icon,
+    Input,
     Table,
     TableContainer,
     Tbody,
@@ -29,21 +32,23 @@ import { useMemo, useState } from "react";
 import EndPointsURL from "../../../api/EndPointsURL";
 
 interface Props {
+    fechaReporte: string;
+    setFechaReporte: (fecha: string) => void;
     setActiveStep: (step: number) => void;
 }
 
 const COLUMN_INFO = [
     { col: "A", name: "producto_id", editable: false, desc: "Codigo del producto terminado" },
-    { col: "B", name: "producto_nombre", editable: false, desc: "Nombre del producto" },
-    { col: "C", name: "categoria_nombre", editable: false, desc: "Categoria del producto" },
-    { col: "D", name: "tipo_unidades", editable: false, desc: "Unidad base reportada para el terminado" },
-    { col: "E", name: "capacidad_productiva_diaria", editable: false, desc: "Capacidad diaria configurada para la categoria" },
-    { col: "F", name: "cantidad_producida", editable: true, desc: "Unidades producidas en el dia; deje vacia si no hubo produccion" },
-    { col: "G", name: "fecha_produccion", editable: true, desc: "Fecha del reporte diario" },
-    { col: "H", name: "observaciones", editable: true, desc: "Notas opcionales para socializar el reporte" },
+    { col: "B", name: "producto_nombre", editable: false, desc: "Nombre del producto terminado" },
+    { col: "C", name: "categoria_nombre", editable: false, desc: "Categoria del terminado para ubicarlo rapido" },
+    { col: "D", name: "cantidad_producida", editable: true, desc: "Unidades producidas en el dia; vacio equivale a cero" },
 ];
 
-export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveStep }: Props) {
+export default function IngresoTerminadosStep0_DescargarPlantilla({
+    fechaReporte,
+    setFechaReporte,
+    setActiveStep,
+}: Props) {
     const toast = useToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const [isDownloading, setIsDownloading] = useState(false);
@@ -62,9 +67,9 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
             a.href = url;
 
             const contentDisposition = response.headers["content-disposition"];
-            let filename = "plantilla_ingreso_terminados.xlsx";
+            let filename = "plantilla_reporte_produccion_terminados.xlsx";
             if (contentDisposition) {
-                const match = contentDisposition.match(/filename="?(.+)"?/);
+                const match = contentDisposition.match(/filename="?([^"]+)"?/);
                 if (match && match[1]) filename = match[1].trim();
             }
             a.download = filename;
@@ -75,7 +80,7 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
 
             toast({
                 title: "Plantilla descargada",
-                description: "Complete las columnas F, G y H, luego suba el archivo en el siguiente paso.",
+                description: "Digite solo las cantidades producidas en la columna D.",
                 status: "success",
                 duration: 5000,
                 isClosable: true,
@@ -100,50 +105,60 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
         <Box>
             <Heading size="md" mb={4}>Descargar Plantilla Excel</Heading>
             <Text fontSize="sm" color="app.textSubtle" mb={5}>
-                Este asistente permite preparar el reporte diario consolidado de produccion de terminados
-                usando una plantilla Excel.
+                Use esta plantilla para reportar el consolidado diario de producto terminado. El archivo
+                contiene todos los terminados de la planta agrupados por categoria.
             </Text>
 
             <VStack align="stretch" spacing={5}>
-                {/* Card de instrucciones */}
                 <Card variant="outline">
                     <CardHeader pb={2}>
                         <Flex align="center" gap={2}>
                             <Icon as={FaFileExcel} color="green.500" boxSize={5} />
-                            <Heading size="sm" color="green.700">Instrucciones</Heading>
+                            <Heading size="sm" color="green.700">Datos del reporte</Heading>
                         </Flex>
                     </CardHeader>
                     <Divider />
                     <CardBody>
-                        <VStack align="stretch" spacing={3} fontSize="sm">
-                            <Text>
-                                <strong>1.</strong> Descargue la plantilla Excel con todos los productos terminados.
-                            </Text>
-                            <Text>
-                                <strong>2.</strong> Abra el archivo en Excel y complete la columna <strong>F (cantidad_producida)</strong> solo
-                                para las referencias producidas en el dia.
-                            </Text>
-                            <Text>
-                                <strong>3.</strong> Verifique la columna <strong>G (fecha_produccion)</strong>. Todas las filas reportadas
-                                deben corresponder al mismo dia.
-                            </Text>
-                            <Text>
-                                <strong>4.</strong> Guarde el archivo y regrese al sistema para subirlo en el siguiente paso.
+                        <VStack align="stretch" spacing={4}>
+                            <FormControl maxW={{ base: "full", md: "260px" }} isRequired>
+                                <FormLabel>Fecha del reporte</FormLabel>
+                                <Input
+                                    type="date"
+                                    value={fechaReporte}
+                                    onChange={(event) => setFechaReporte(event.target.value)}
+                                />
+                            </FormControl>
+                            <Text fontSize="sm">
+                                La fecha se define aqui para evitar que el jefe de produccion tenga que editarla
+                                fila por fila en Excel.
                             </Text>
                         </VStack>
                     </CardBody>
                 </Card>
 
-                {/* Alerta de columnas editables */}
+                <Card variant="outline">
+                    <CardHeader pb={2}>
+                        <Heading size="sm" color="teal.700">Instrucciones</Heading>
+                    </CardHeader>
+                    <Divider />
+                    <CardBody>
+                        <VStack align="stretch" spacing={3} fontSize="sm">
+                            <Text><strong>1.</strong> Descargue la plantilla Excel.</Text>
+                            <Text><strong>2.</strong> En Excel, diligencie unicamente la columna <strong>D (cantidad_producida)</strong>.</Text>
+                            <Text><strong>3.</strong> Deje la celda vacia si ese terminado no tuvo produccion en el dia.</Text>
+                            <Text><strong>4.</strong> No cambie codigos, nombres, categorias ni encabezados.</Text>
+                        </VStack>
+                    </CardBody>
+                </Card>
+
                 <Alert status="info" borderRadius="md">
                     <AlertIcon />
                     <AlertDescription fontSize="sm">
-                        <strong>Solo las columnas F, G y H son editables.</strong> Las demas columnas contienen informacion
-                        de referencia y no deben modificarse. Las filas sin cantidad producida se omiten del reporte.
+                        El archivo no registra inventario ni cierra ordenes de produccion. Esta primera version
+                        prepara un reporte local para revisar cantidades y formatos futuros.
                     </AlertDescription>
                 </Alert>
 
-                {/* Tabla de columnas */}
                 <Box>
                     <Text fontWeight="semibold" mb={2}>Estructura del Excel</Text>
                     <TableContainer borderWidth="1px" borderRadius="md">
@@ -177,7 +192,6 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
                     </TableContainer>
                 </Box>
 
-                {/* Reglas de validacion */}
                 <Card variant="outline" borderColor="orange.200">
                     <CardHeader pb={2}>
                         <Heading size="sm" color="orange.600">Reglas de Validacion</Heading>
@@ -185,19 +199,13 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
                     <Divider />
                     <CardBody>
                         <VStack align="stretch" spacing={2} fontSize="sm">
-                            <Text>
-                                <strong>cantidad_producida:</strong> Debe ser un numero entero mayor o igual a 1.
-                                Las filas vacias no se incluyen en el reporte.
-                            </Text>
-                            <Text>
-                                <strong>fecha_produccion:</strong> Debe ser una fecha valida en formato YYYY-MM-DD.
-                                Todas las filas producidas deben tener la misma fecha.
-                            </Text>
+                            <Text><strong>cantidad_producida:</strong> acepta enteros mayores o iguales a cero.</Text>
+                            <Text><strong>Celda vacia:</strong> se interpreta como cero unidades producidas.</Text>
+                            <Text><strong>No permitido:</strong> decimales, negativos, texto, formulas o cambios en la estructura.</Text>
                         </VStack>
                     </CardBody>
                 </Card>
 
-                {/* Botones de accion */}
                 <Flex gap={4} wrap="wrap" justify="space-between">
                     <Button
                         leftIcon={<DownloadIcon />}
@@ -212,6 +220,7 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({ setActiveSte
                         rightIcon={<ArrowForwardIcon />}
                         colorScheme="blue"
                         onClick={() => setActiveStep(1)}
+                        isDisabled={!fechaReporte}
                     >
                         Siguiente
                     </Button>
