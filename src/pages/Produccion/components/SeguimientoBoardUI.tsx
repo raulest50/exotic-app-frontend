@@ -21,6 +21,8 @@ import {
     useColorModeValue,
     VStack,
 } from "@chakra-ui/react";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import { FiEye, FiPause, FiPlay, FiRefreshCw } from "react-icons/fi";
 import type {
     EstadoTableroKey,
@@ -30,6 +32,14 @@ import type {
 
 export type SeguimientoActionType = "iniciar" | "pausar" | "completar";
 export type SeguimientoBoardMode = "leader" | "monitor";
+
+export function getSeguimientoColumnDroppableId(estadoKey: EstadoTableroKey): string {
+    return `seguimiento-column-${estadoKey}`;
+}
+
+export function getSeguimientoCardDraggableId(card: SeguimientoOrdenAreaCardDTO): string {
+    return `seguimiento-card-${card.id}`;
+}
 
 export const BOARD_COLUMN_META: Record<
     EstadoTableroKey,
@@ -111,6 +121,7 @@ interface SeguimientoOrdenCardProps {
     mode: SeguimientoBoardMode;
     onOpenDetail: (card: SeguimientoOrdenAreaCardDTO) => void;
     onAction?: (action: SeguimientoActionType, card: SeguimientoOrdenAreaCardDTO) => void;
+    dndEnabled?: boolean;
 }
 
 function SeguimientoOrdenCard({
@@ -118,8 +129,22 @@ function SeguimientoOrdenCard({
     mode,
     onOpenDetail,
     onAction,
+    dndEnabled = false,
 }: SeguimientoOrdenCardProps) {
     const isAlmacenGeneral = card.areaId === -1;
+    const isDragEnabled = dndEnabled && mode === "leader";
+
+    if (isDragEnabled) {
+        return (
+            <DraggableSeguimientoOrdenCard
+                card={card}
+                mode={mode}
+                onOpenDetail={onOpenDetail}
+                onAction={onAction}
+                isAlmacenGeneral={isAlmacenGeneral}
+            />
+        );
+    }
 
     return (
         <Box
@@ -129,94 +154,151 @@ function SeguimientoOrdenCard({
             p={3}
             boxShadow="sm"
         >
-            <VStack align="stretch" spacing={2}>
-                <VStack align="start" spacing={1}>
-                    <Badge colorScheme="teal" px={2} py={1}>
-                        {card.loteAsignado || `OP-${card.ordenId}`}
-                    </Badge>
-                    <Text fontSize="xs" color="app.textSubtle" noOfLines={1}>
-                        {card.nodeLabel || "Sin nodo"}
-                    </Text>
-                </VStack>
+            <SeguimientoOrdenCardContent
+                card={card}
+                mode={mode}
+                onOpenDetail={onOpenDetail}
+                onAction={onAction}
+                isAlmacenGeneral={isAlmacenGeneral}
+            />
+        </Box>
+    );
+}
 
-                <Box>
-                    <Text fontWeight="bold" noOfLines={2}>{card.productoNombre}</Text>
-                    <Text fontSize="xs" color="app.textMuted">
-                        {card.productoId} · Cant. {card.cantidadProducir}
+function DraggableSeguimientoOrdenCard({
+    card,
+    mode,
+    onOpenDetail,
+    onAction,
+    isAlmacenGeneral,
+}: SeguimientoOrdenCardProps & { isAlmacenGeneral: boolean }) {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+        id: getSeguimientoCardDraggableId(card),
+        data: { card },
+    });
+
+    return (
+        <Box
+            ref={setNodeRef}
+            borderWidth="1px"
+            borderRadius="lg"
+            bg="app.surface"
+            p={3}
+            boxShadow="sm"
+            transform={CSS.Translate.toString(transform)}
+            opacity={isDragging ? 0.45 : 1}
+            position="relative"
+            zIndex={isDragging ? 20 : 1}
+            cursor="grab"
+            {...listeners}
+            {...attributes}
+        >
+            <SeguimientoOrdenCardContent
+                card={card}
+                mode={mode}
+                onOpenDetail={onOpenDetail}
+                onAction={onAction}
+                isAlmacenGeneral={isAlmacenGeneral}
+            />
+        </Box>
+    );
+}
+
+function SeguimientoOrdenCardContent({
+    card,
+    mode,
+    onOpenDetail,
+    onAction,
+    isAlmacenGeneral,
+}: SeguimientoOrdenCardProps & { isAlmacenGeneral: boolean }) {
+    return (
+        <VStack align="stretch" spacing={2}>
+            <VStack align="start" spacing={1}>
+                <Badge colorScheme="teal" px={2} py={1}>
+                    {card.loteAsignado || `OP-${card.ordenId}`}
+                </Badge>
+                <Text fontSize="xs" color="app.textSubtle" noOfLines={1}>
+                    {card.nodeLabel || "Sin nodo"}
+                </Text>
+            </VStack>
+
+            <Box>
+                <Text fontWeight="bold" noOfLines={2}>{card.productoNombre}</Text>
+                <Text fontSize="xs" color="app.textMuted">
+                    {card.productoId} · Cant. {card.cantidadProducir}
+                </Text>
+            </Box>
+
+            <Stack spacing={0.5} fontSize="xs" color="app.textMuted">
+                <Text>Desde: {formatDateTime(card.fechaEstadoActual)}</Text>
+                <Text>Tiempo: {formatMinutesDuration(card.minutosEnEstadoActual)}</Text>
+                <Text>
+                    Fin: {card.fechaFinalPlanificada ? formatDateTime(card.fechaFinalPlanificada) : "Sin fecha"}
+                </Text>
+            </Stack>
+
+            {card.ordenObservaciones?.trim() ? (
+                <Box p={2} bg="app.surfaceSubtle" borderRadius="md">
+                    <Text fontSize="xs" color="app.textSubtle" mb={1}>
+                        Obs.
+                    </Text>
+                    <Text fontSize="sm" noOfLines={2}>
+                        {card.ordenObservaciones}
                     </Text>
                 </Box>
+            ) : null}
 
-                <Stack spacing={0.5} fontSize="xs" color="app.textMuted">
-                    <Text>Desde: {formatDateTime(card.fechaEstadoActual)}</Text>
-                    <Text>Tiempo: {formatMinutesDuration(card.minutosEnEstadoActual)}</Text>
-                    <Text>
-                        Fin: {card.fechaFinalPlanificada ? formatDateTime(card.fechaFinalPlanificada) : "Sin fecha"}
-                    </Text>
-                </Stack>
+            <HStack justify="space-between" align="center" pt={1} flexWrap="wrap" gap={2}>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    leftIcon={<FiEye />}
+                    onClick={() => onOpenDetail(card)}
+                >
+                    Detalle
+                </Button>
 
-                {card.ordenObservaciones?.trim() ? (
-                    <Box p={2} bg="app.surfaceSubtle" borderRadius="md">
-                        <Text fontSize="xs" color="app.textSubtle" mb={1}>
-                            Obs.
-                        </Text>
-                        <Text fontSize="sm" noOfLines={2}>
-                            {card.ordenObservaciones}
-                        </Text>
-                    </Box>
-                ) : null}
+                {mode === "leader" ? (
+                    <HStack spacing={2}>
+                        {card.estado === 1 && !isAlmacenGeneral ? (
+                            <Button
+                                size="sm"
+                                colorScheme="blue"
+                                leftIcon={<FiPlay />}
+                                onClick={() => onAction?.("iniciar", card)}
+                            >
+                                Iniciar
+                            </Button>
+                        ) : null}
 
-                <HStack justify="space-between" align="center" pt={1} flexWrap="wrap" gap={2}>
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        leftIcon={<FiEye />}
-                        onClick={() => onOpenDetail(card)}
-                    >
-                        Detalle
-                    </Button>
-
-                    {mode === "leader" ? (
-                        <HStack spacing={2}>
-                            {card.estado === 1 && !isAlmacenGeneral ? (
+                        {card.estado === 4 && !isAlmacenGeneral ? (
+                            <>
                                 <Button
                                     size="sm"
-                                    colorScheme="blue"
-                                    leftIcon={<FiPlay />}
-                                    onClick={() => onAction?.("iniciar", card)}
+                                    variant="outline"
+                                    leftIcon={<FiPause />}
+                                    onClick={() => onAction?.("pausar", card)}
                                 >
-                                    Iniciar
+                                    Pausar
                                 </Button>
-                            ) : null}
+                                <Button
+                                    size="sm"
+                                    colorScheme="green"
+                                    leftIcon={<FiRefreshCw />}
+                                    onClick={() => onAction?.("completar", card)}
+                                >
+                                    Completar
+                                </Button>
+                            </>
+                        ) : null}
 
-                            {card.estado === 4 && !isAlmacenGeneral ? (
-                                <>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        leftIcon={<FiPause />}
-                                        onClick={() => onAction?.("pausar", card)}
-                                    >
-                                        Pausar
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        colorScheme="green"
-                                        leftIcon={<FiRefreshCw />}
-                                        onClick={() => onAction?.("completar", card)}
-                                    >
-                                        Completar
-                                    </Button>
-                                </>
-                            ) : null}
-
-                            {isAlmacenGeneral ? (
-                                <Badge colorScheme="purple">Se reporta al dispensar</Badge>
-                            ) : null}
-                        </HStack>
-                    ) : null}
-                </HStack>
-            </VStack>
-        </Box>
+                        {isAlmacenGeneral ? (
+                            <Badge colorScheme="purple">Se reporta al dispensar</Badge>
+                        ) : null}
+                    </HStack>
+                ) : null}
+            </HStack>
+        </VStack>
     );
 }
 
@@ -226,6 +308,7 @@ interface SeguimientoBoardColumnProps {
     mode: SeguimientoBoardMode;
     onOpenDetail: (card: SeguimientoOrdenAreaCardDTO) => void;
     onAction?: (action: SeguimientoActionType, card: SeguimientoOrdenAreaCardDTO) => void;
+    dndEnabled?: boolean;
 }
 
 export function SeguimientoBoardColumn({
@@ -234,9 +317,24 @@ export function SeguimientoBoardColumn({
     mode,
     onOpenDetail,
     onAction,
+    dndEnabled = false,
 }: SeguimientoBoardColumnProps) {
     const meta = BOARD_COLUMN_META[estadoKey];
     const columnBg = useColorModeValue("whiteAlpha.900", "whiteAlpha.100");
+
+    if (dndEnabled) {
+        return (
+            <DroppableSeguimientoBoardColumn
+                estadoKey={estadoKey}
+                items={items}
+                mode={mode}
+                onOpenDetail={onOpenDetail}
+                onAction={onAction}
+                columnBg={columnBg}
+                meta={meta}
+            />
+        );
+    }
 
     return (
         <Box
@@ -246,6 +344,70 @@ export function SeguimientoBoardColumn({
             overflow="hidden"
             minH="280px"
         >
+            <SeguimientoBoardColumnContent
+                meta={meta}
+                items={items}
+                mode={mode}
+                onOpenDetail={onOpenDetail}
+                onAction={onAction}
+                dndEnabled={false}
+            />
+        </Box>
+    );
+}
+
+function DroppableSeguimientoBoardColumn({
+    estadoKey,
+    items,
+    mode,
+    onOpenDetail,
+    onAction,
+    columnBg,
+    meta,
+}: SeguimientoBoardColumnProps & {
+    columnBg: string;
+    meta: (typeof BOARD_COLUMN_META)[EstadoTableroKey];
+}) {
+    const columnOverBg = useColorModeValue("teal.50", "whiteAlpha.200");
+    const { setNodeRef, isOver } = useDroppable({
+        id: getSeguimientoColumnDroppableId(estadoKey),
+        data: { estadoKey },
+    });
+
+    return (
+        <Box
+            ref={setNodeRef}
+            borderWidth="1px"
+            borderRadius="xl"
+            borderColor={isOver ? "teal.300" : undefined}
+            bg={isOver ? columnOverBg : columnBg}
+            overflow="visible"
+            minH="280px"
+        >
+            <SeguimientoBoardColumnContent
+                meta={meta}
+                items={items}
+                mode={mode}
+                onOpenDetail={onOpenDetail}
+                onAction={onAction}
+                dndEnabled
+            />
+        </Box>
+    );
+}
+
+function SeguimientoBoardColumnContent({
+    meta,
+    items,
+    mode,
+    onOpenDetail,
+    onAction,
+    dndEnabled,
+}: Omit<SeguimientoBoardColumnProps, "estadoKey"> & {
+    meta: (typeof BOARD_COLUMN_META)[EstadoTableroKey];
+}) {
+    return (
+        <>
             <Box borderTop="4px solid" borderTopColor={meta.accentColor} px={4} py={3} bg="app.surfaceSubtle">
                 <HStack justify="space-between">
                     <Text fontWeight="bold">{meta.title}</Text>
@@ -266,11 +428,12 @@ export function SeguimientoBoardColumn({
                             mode={mode}
                             onOpenDetail={onOpenDetail}
                             onAction={onAction}
+                            dndEnabled={dndEnabled}
                         />
                     ))
                 )}
             </VStack>
-        </Box>
+        </>
     );
 }
 

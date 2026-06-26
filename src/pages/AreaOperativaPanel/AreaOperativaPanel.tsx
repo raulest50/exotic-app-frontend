@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+    closestCenter,
+    DndContext,
+    type DragEndEvent,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import {
     Alert,
     AlertIcon,
     Box,
@@ -66,6 +74,56 @@ const EMPTY_BOARD: TableroOperativoDTO = {
     completado: [],
 };
 
+function isEstadoTableroKey(value: unknown): value is EstadoTableroKey {
+    return value === "cola"
+        || value === "espera"
+        || value === "enProceso"
+        || value === "completado";
+}
+
+function getCardEstadoKey(card: SeguimientoOrdenAreaCardDTO): EstadoTableroKey | null {
+    switch (card.estado) {
+        case 0:
+            return "cola";
+        case 1:
+            return "espera";
+        case 2:
+            return "completado";
+        case 4:
+            return "enProceso";
+        default:
+            return null;
+    }
+}
+
+function getDropAction(
+    card: SeguimientoOrdenAreaCardDTO,
+    targetEstadoKey: EstadoTableroKey,
+): SeguimientoActionType | null {
+    if (card.areaId === -1) {
+        return null;
+    }
+
+    const sourceEstadoKey = getCardEstadoKey(card);
+    if (!sourceEstadoKey || sourceEstadoKey === targetEstadoKey) {
+        return null;
+    }
+
+    if (sourceEstadoKey === "espera" && targetEstadoKey === "enProceso") {
+        return "iniciar";
+    }
+
+    if (sourceEstadoKey === "enProceso" && targetEstadoKey === "espera") {
+        return "pausar";
+    }
+
+    if (sourceEstadoKey === "enProceso" && targetEstadoKey === "completado") {
+        return "completar";
+    }
+
+    return null;
+}
+
 function getActionMeta(action: SeguimientoActionType | null): {
     title: string;
     submitLabel: string;
@@ -118,6 +176,7 @@ export default function AreaOperativaPanel() {
     const { meProfile, logout, areaResponsable } = useAuth();
     const toast = useToast();
     const emptyTitleColor = useColorModeValue("gray.700", "gray.200");
+    const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
     const {
         isOpen: isActionOpen,
@@ -199,6 +258,32 @@ export default function AreaOperativaPanel() {
         setSelectedOrden(orden);
         setObservaciones("");
         onActionOpen();
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const card = event.active.data.current?.card as SeguimientoOrdenAreaCardDTO | undefined;
+        const targetEstadoKey = event.over?.data.current?.estadoKey;
+
+        if (!card || !isEstadoTableroKey(targetEstadoKey)) {
+            return;
+        }
+
+        const action = getDropAction(card, targetEstadoKey);
+        if (!action) {
+            const sourceEstadoKey = getCardEstadoKey(card);
+            const targetTitle = BOARD_COLUMN_META[targetEstadoKey].title;
+            const sourceTitle = sourceEstadoKey ? BOARD_COLUMN_META[sourceEstadoKey].title : "estado actual";
+            toast({
+                title: "Movimiento no permitido",
+                description: `No se puede mover de ${sourceTitle} a ${targetTitle}.`,
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        openActionModal(action, card);
     };
 
     const handleSubmitAction = async () => {
@@ -355,18 +440,25 @@ export default function AreaOperativaPanel() {
                             ) : null}
 
                             {!loading && tablero.resumen.total > 0 ? (
-                                <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
-                                    {(Object.keys(BOARD_COLUMN_META) as EstadoTableroKey[]).map((estadoKey) => (
-                                        <SeguimientoBoardColumn
-                                            key={estadoKey}
-                                            estadoKey={estadoKey}
-                                            items={filteredBoard[estadoKey]}
-                                            mode="leader"
-                                            onOpenDetail={openDetail}
-                                            onAction={openActionModal}
-                                        />
-                                    ))}
-                                </SimpleGrid>
+                                <DndContext
+                                    sensors={dndSensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
+                                        {(Object.keys(BOARD_COLUMN_META) as EstadoTableroKey[]).map((estadoKey) => (
+                                            <SeguimientoBoardColumn
+                                                key={estadoKey}
+                                                estadoKey={estadoKey}
+                                                items={filteredBoard[estadoKey]}
+                                                mode="leader"
+                                                onOpenDetail={openDetail}
+                                                onAction={openActionModal}
+                                                dndEnabled
+                                            />
+                                        ))}
+                                    </SimpleGrid>
+                                </DndContext>
                             ) : null}
                         </VStack>
                     </TabPanel>
