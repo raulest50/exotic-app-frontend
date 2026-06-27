@@ -235,6 +235,16 @@ export interface ProductoManufacturingDTO {
     procesoProduccionCompleto?: ProcesoProduccionCompleto;
 }
 
+export interface CategoriaManufacturingTemplateDTO {
+    id?: number;
+    categoriaId: number;
+    categoriaNombre?: string;
+    rendimientoTeorico: number;
+    insumos: ProductoManufacturingInsumoDTO[];
+    casePack?: ProductoManufacturingCasePackDTO;
+    procesoProduccionCompleto?: ProcesoProduccionCompleto;
+}
+
 export interface RecursoProduccion {
     id?: number;
     nombre: string;

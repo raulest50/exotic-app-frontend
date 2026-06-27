@@ -41,7 +41,7 @@ import { normalizeProductId } from "../productIdUtils.ts";
 
 const endpoints = new EndPointsURL();
 
-type SearchType = "NOMBRE" | "ID";
+type SearchType = "NOMBRE" | "ID" | "ID_PARCIAL";
 
 export default function InformeProductosTab() {
     const [chkbox, setChkbox] = useState<string[]>(["material empaque"]);
@@ -63,7 +63,7 @@ export default function InformeProductosTab() {
         setLoading(true);
         try {
             const normalizedSearch =
-                searchType === "ID"
+                searchType === "ID" || searchType === "ID_PARCIAL"
                     ? normalizeProductId(searchText.trim())
                     : searchText;
 
@@ -130,14 +130,22 @@ export default function InformeProductosTab() {
         <Flex direction="column" p={4}>
             <Flex direction="row" align="center" gap={10} w="full" mb={4}>
                 <FormControl>
-                    <FormLabel>{searchType === "ID" ? "Buscar por ID:" : "Buscar por nombre:"}</FormLabel>
+                    <FormLabel>
+                        {searchType === "ID"
+                            ? "Buscar por ID exacto:"
+                            : searchType === "ID_PARCIAL"
+                                ? "Buscar por ID parcial:"
+                                : "Buscar por nombre:"}
+                    </FormLabel>
                     <Input
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
                         placeholder={
                             searchType === "ID"
                                 ? "Ingrese codigo o identificador unico"
-                                : "Ingrese nombre del producto"
+                                : searchType === "ID_PARCIAL"
+                                    ? "Ingrese parte del codigo o identificador"
+                                    : "Ingrese nombre del producto"
                         }
                         isDisabled={chkbox.length === 0}
                         onKeyDown={(e) => {
@@ -155,7 +163,8 @@ export default function InformeProductosTab() {
                         onChange={(e) => setSearchType(e.target.value as SearchType)}
                     >
                         <option value="NOMBRE">Nombre</option>
-                        <option value="ID">ID</option>
+                        <option value="ID">ID exacto</option>
+                        <option value="ID_PARCIAL">ID parcial</option>
                     </Select>
                 </FormControl>
 

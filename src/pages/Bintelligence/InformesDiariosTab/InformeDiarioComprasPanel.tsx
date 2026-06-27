@@ -12,11 +12,15 @@ import {
     useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
-import EndPointsURL from "../../../api/EndPointsURL.tsx";
+import EndPointsURL, { type ExcelDecimalSeparator } from "../../../api/EndPointsURL.tsx";
+import ExcelDecimalSeparatorSelector, {
+    DEFAULT_EXCEL_DECIMAL_SEPARATOR,
+} from "../../../components/ExcelDecimalSeparatorSelector.tsx";
 
 export default function InformeDiarioComprasPanel() {
     const toast = useToast();
     const [fecha, setFecha] = useState("");
+    const [decimalSeparator, setDecimalSeparator] = useState<ExcelDecimalSeparator>(DEFAULT_EXCEL_DECIMAL_SEPARATOR);
     const [downloading, setDownloading] = useState(false);
 
     const endPoints = useMemo(() => new EndPointsURL(), []);
@@ -39,7 +43,7 @@ export default function InformeDiarioComprasPanel() {
         if (!canDownload) return;
         setDownloading(true);
         try {
-            const url = endPoints.informesDiariosComprasExcel(fecha);
+            const url = endPoints.informesDiariosComprasExcel(fecha, decimalSeparator);
             const response = await axios.get<ArrayBuffer>(url, { responseType: "arraybuffer" });
             triggerFileDownload(response.data, `informe_compras_ocm_${fecha}.xlsx`);
         } catch (e) {
@@ -74,6 +78,10 @@ export default function InformeDiarioComprasPanel() {
                             onChange={(e) => setFecha(e.target.value)}
                         />
                     </FormControl>
+                    <ExcelDecimalSeparatorSelector
+                        value={decimalSeparator}
+                        onChange={setDecimalSeparator}
+                    />
                     <Box>
                         <Button
                             colorScheme="blue"

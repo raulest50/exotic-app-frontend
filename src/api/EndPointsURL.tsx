@@ -1,4 +1,6 @@
 
+export type ExcelDecimalSeparator = "COMMA" | "DOT";
+
 export default class EndPointsURL{
 
     // producto resource
@@ -47,6 +49,10 @@ export default class EndPointsURL{
     public update_categoria_lote_size: string;
     public update_categoria_tiempo_dias_fabricacion: string;
     public update_categoria_capacidad_productiva_diaria: string;
+    public get_categoria_manufacturing_template: string;
+    public save_categoria_manufacturing_template: string;
+    public delete_categoria_manufacturing_template: string;
+    public check_categoria_manufacturing_templates_exist_batch: string;
 
     // ruta proceso cat endpoints
     public get_ruta_proceso_cat: string;
@@ -295,6 +301,7 @@ export default class EndPointsURL{
     public area_operativa_panel_mps_semanal_odps: string;
     public area_operativa_panel_mps_semanal_actual: string;
     public area_operativa_panel_mps_semanal_actual_odps: string;
+    public area_operativa_panel_ruido_muestras: string;
 
     // BI — informes diarios
     public informes_diarios_ping: string;
@@ -381,19 +388,37 @@ export default class EndPointsURL{
         return `${this.domain}/api/importacion-datos/backup-total/jobs/${encodeURIComponent(jobId)}`;
     }
 
+    private informesDiariosExcelQuery(fecha: string, decimalSeparator?: ExcelDecimalSeparator): URLSearchParams {
+        const q = new URLSearchParams({ fecha });
+        if (decimalSeparator) q.set("decimalSeparator", decimalSeparator);
+        return q;
+    }
+
     /** GET Excel ingreso de materiales (BI). @param fecha ISO date YYYY-MM-DD */
-    public informesDiariosAlmacenIngresoMaterialesExcel(fecha: string): string {
-        return `${this.domain}/bi/informes-diarios/almacen/ingreso-materiales/excel?fecha=${encodeURIComponent(fecha)}`;
+    public informesDiariosAlmacenIngresoMaterialesExcel(
+        fecha: string,
+        decimalSeparator?: ExcelDecimalSeparator
+    ): string {
+        const q = this.informesDiariosExcelQuery(fecha, decimalSeparator);
+        return `${this.domain}/bi/informes-diarios/almacen/ingreso-materiales/excel?${q.toString()}`;
     }
 
     /** GET Excel dispensación de materiales (BI). @param fecha ISO date YYYY-MM-DD */
-    public informesDiariosAlmacenDispensacionMaterialesExcel(fecha: string): string {
-        return `${this.domain}/bi/informes-diarios/almacen/dispensacion-materiales/excel?fecha=${encodeURIComponent(fecha)}`;
+    public informesDiariosAlmacenDispensacionMaterialesExcel(
+        fecha: string,
+        decimalSeparator?: ExcelDecimalSeparator
+    ): string {
+        const q = this.informesDiariosExcelQuery(fecha, decimalSeparator);
+        return `${this.domain}/bi/informes-diarios/almacen/dispensacion-materiales/excel?${q.toString()}`;
     }
 
     /** GET Excel ingreso producto terminado (BI). @param fecha ISO date YYYY-MM-DD */
-    public informesDiariosAlmacenIngresoTerminadosExcel(fecha: string): string {
-        return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/excel?fecha=${encodeURIComponent(fecha)}`;
+    public informesDiariosAlmacenIngresoTerminadosExcel(
+        fecha: string,
+        decimalSeparator?: ExcelDecimalSeparator
+    ): string {
+        const q = this.informesDiariosExcelQuery(fecha, decimalSeparator);
+        return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/excel?${q.toString()}`;
     }
 
     /** GET JSON reporte diario enriquecido de producción de terminados. @param fecha ISO date YYYY-MM-DD */
@@ -402,23 +427,34 @@ export default class EndPointsURL{
     }
 
     /** GET Excel reporte diario enriquecido de producción de terminados. @param fecha ISO date YYYY-MM-DD */
-    public informesDiariosAlmacenIngresoTerminadosReporteExcel(fecha: string): string {
-        return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/reporte-excel?fecha=${encodeURIComponent(fecha)}`;
+    public informesDiariosAlmacenIngresoTerminadosReporteExcel(
+        fecha: string,
+        decimalSeparator?: ExcelDecimalSeparator
+    ): string {
+        const q = this.informesDiariosExcelQuery(fecha, decimalSeparator);
+        return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/reporte-excel?${q.toString()}`;
+    }
+
+    /** GET Excel informe diario de compras OCM (BI). @param fecha ISO date YYYY-MM-DD */
+    public informesDiariosComprasExcel(fecha: string, decimalSeparator?: ExcelDecimalSeparator): string {
+        const q = this.informesDiariosExcelQuery(fecha, decimalSeparator);
+        return `${this.domain}/bi/informes-diarios/compras/excel?${q.toString()}`;
     }
 
     /** GET Excel ajustes de almacén (BI). @param fechas ISO date YYYY-MM-DD, sentido ENTRADAS|SALIDAS|MIXTA */
-    /** GET Excel informe diario de compras OCM (BI). @param fecha ISO date YYYY-MM-DD */
-    public informesDiariosComprasExcel(fecha: string): string {
-        return `${this.domain}/bi/informes-diarios/compras/excel?fecha=${encodeURIComponent(fecha)}`;
-    }
-
-    public informesDiariosAlmacenAjustesExcel(fechaDesde: string, fechaHasta: string, sentido: string): string {
+    public informesDiariosAlmacenAjustesExcel(
+        fechaDesde: string,
+        fechaHasta: string,
+        sentido: string,
+        decimalSeparator?: ExcelDecimalSeparator
+    ): string {
         const base = `${this.domain}/bi/informes-diarios/almacen/ajustes/excel`;
         const q = new URLSearchParams({
             fechaDesde,
             fechaHasta,
             sentido,
         });
+        if (decimalSeparator) q.set("decimalSeparator", decimalSeparator);
         return `${base}?${q.toString()}`;
     }
 
@@ -549,6 +585,10 @@ export default class EndPointsURL{
         this.update_categoria_lote_size = `${domain}/categorias/{categoriaId}/lote-size`;
         this.update_categoria_tiempo_dias_fabricacion = `${domain}/categorias/{categoriaId}/tiempo-dias-fabricacion`;
         this.update_categoria_capacidad_productiva_diaria = `${domain}/categorias/{categoriaId}/capacidad-productiva-diaria`;
+        this.get_categoria_manufacturing_template = `${domain}/${productos_res}/categorias/{categoriaId}/manufacturing-template`;
+        this.save_categoria_manufacturing_template = `${domain}/${productos_res}/categorias/{categoriaId}/manufacturing-template`;
+        this.delete_categoria_manufacturing_template = `${domain}/${productos_res}/categorias/{categoriaId}/manufacturing-template`;
+        this.check_categoria_manufacturing_templates_exist_batch = `${domain}/${productos_res}/categorias/manufacturing-template/exists-batch`;
 
         // Ruta proceso cat endpoints
         const ruta_proceso_cat_res = 'api/ruta-proceso-cat';
@@ -813,6 +853,7 @@ export default class EndPointsURL{
         this.area_operativa_panel_mps_semanal_odps = `${domain}/${area_operativa_panel_res}/mps-semanal/odps`;
         this.area_operativa_panel_mps_semanal_actual = `${domain}/${area_operativa_panel_res}/mps-semanal/actual`;
         this.area_operativa_panel_mps_semanal_actual_odps = `${domain}/${area_operativa_panel_res}/mps-semanal/actual/odps`;
+        this.area_operativa_panel_ruido_muestras = `${domain}/${area_operativa_panel_res}/ruido-muestras`;
 
         // BI — informes diarios
         this.informes_diarios_ping = `${domain}/${informes_diarios_res}/ping`;

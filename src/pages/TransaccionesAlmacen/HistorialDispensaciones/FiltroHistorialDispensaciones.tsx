@@ -15,9 +15,11 @@ import {
     AlertIcon,
     Divider,
     Grid,
+    useDisclosure,
 } from '@chakra-ui/react';
 import DatePicker from '../../../components/MyDatePicker.tsx';
 import { FiltroHistDispensacionDTO } from './types';
+import TerminadoPicker, { TerminadoPickerResult } from '../../../components/Pickers/TerminadoPicker/TerminadoPicker.tsx';
 
 interface Props {
     onBuscar: (filtro: FiltroHistDispensacionDTO) => void;
@@ -36,6 +38,14 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
     const [fechaInicio, setFechaInicio] = useState<string>('');
     const [fechaFin, setFechaFin] = useState<string>('');
     const [fechaEspecifica, setFechaEspecifica] = useState<string>('');
+
+    // Estado para filtro de producto terminado
+    const [selectedTerminado, setSelectedTerminado] = useState<TerminadoPickerResult | null>(null);
+    const {
+        isOpen: isTerminadoPickerOpen,
+        onOpen: onOpenTerminadoPicker,
+        onClose: onCloseTerminadoPicker
+    } = useDisclosure();
 
     // Estado para validación
     const [errorMessage, setErrorMessage] = useState<string>('');
@@ -101,6 +111,7 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
             transaccionId: tipoFiltroId === 1 ? parseInt(transaccionId) : null,
             ordenProduccionId: tipoFiltroId === 2 ? parseInt(ordenProduccionId) : null,
             loteAsignado: tipoFiltroId === 3 ? loteAsignado.trim() : null,
+            productoTerminadoId: selectedTerminado?.productoId ?? null,
             tipoFiltroFecha,
             fechaInicio: tipoFiltroFecha === 1 ? fechaInicio : null,
             fechaFin: tipoFiltroFecha === 1 ? fechaFin : null,
@@ -122,6 +133,7 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
         setFechaInicio('');
         setFechaFin('');
         setFechaEspecifica('');
+        setSelectedTerminado(null);
         setErrorMessage('');
         if (onLimpiar) {
             onLimpiar();
@@ -203,6 +215,48 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
                             </FormControl>
                         )}
                     </Grid>
+                </Box>
+
+                <Divider />
+
+                {/* Filtro por producto terminado */}
+                <Box>
+                    <FormLabel fontWeight="bold" mb={3}>
+                        Filtrar por Producto Terminado
+                    </FormLabel>
+                    <Grid templateColumns="repeat(12, 1fr)" gap={4} alignItems="center">
+                        <Box gridColumn="span 8">
+                            <Text fontWeight="semibold">
+                                {selectedTerminado ? selectedTerminado.nombre : 'Sin producto terminado seleccionado'}
+                            </Text>
+                            {selectedTerminado && (
+                                <Text fontSize="sm" color="gray.600">
+                                    ID: {selectedTerminado.productoId}
+                                </Text>
+                            )}
+                        </Box>
+
+                        <HStack gridColumn="span 4" justify="flex-end" spacing={3}>
+                            <Button colorScheme="purple" variant="outline" onClick={onOpenTerminadoPicker}>
+                                {selectedTerminado ? 'Cambiar' : 'Seleccionar'}
+                            </Button>
+                            {selectedTerminado && (
+                                <Button
+                                    colorScheme="red"
+                                    variant="ghost"
+                                    onClick={() => setSelectedTerminado(null)}
+                                >
+                                    Quitar
+                                </Button>
+                            )}
+                        </HStack>
+                    </Grid>
+
+                    <TerminadoPicker
+                        isOpen={isTerminadoPickerOpen}
+                        onClose={onCloseTerminadoPicker}
+                        onSelectTerminado={(terminado) => setSelectedTerminado(terminado)}
+                    />
                 </Box>
 
                 <Divider />

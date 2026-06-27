@@ -13,7 +13,10 @@ import {
     useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
-import EndPointsURL from "../../../api/EndPointsURL.tsx";
+import EndPointsURL, { type ExcelDecimalSeparator } from "../../../api/EndPointsURL.tsx";
+import ExcelDecimalSeparatorSelector, {
+    DEFAULT_EXCEL_DECIMAL_SEPARATOR,
+} from "../../../components/ExcelDecimalSeparatorSelector.tsx";
 
 type TipoReporteAlmacen = "ingreso_materiales" | "dispensacion_materiales" | "ingreso_terminado";
 
@@ -21,6 +24,7 @@ export default function InformeDiarioAlmacenPanel() {
     const toast = useToast();
     const [tipoReporte, setTipoReporte] = useState<TipoReporteAlmacen>("ingreso_materiales");
     const [fecha, setFecha] = useState("");
+    const [decimalSeparator, setDecimalSeparator] = useState<ExcelDecimalSeparator>(DEFAULT_EXCEL_DECIMAL_SEPARATOR);
     const [downloading, setDownloading] = useState(false);
 
     const endPoints = useMemo(() => new EndPointsURL(), []);
@@ -50,13 +54,13 @@ export default function InformeDiarioAlmacenPanel() {
             let url: string;
             let filename: string;
             if (tipoReporte === "ingreso_materiales") {
-                url = endPoints.informesDiariosAlmacenIngresoMaterialesExcel(fecha);
+                url = endPoints.informesDiariosAlmacenIngresoMaterialesExcel(fecha, decimalSeparator);
                 filename = `informe_ingreso_materiales_${fecha}.xlsx`;
             } else if (tipoReporte === "dispensacion_materiales") {
-                url = endPoints.informesDiariosAlmacenDispensacionMaterialesExcel(fecha);
+                url = endPoints.informesDiariosAlmacenDispensacionMaterialesExcel(fecha, decimalSeparator);
                 filename = `informe_dispensacion_materiales_${fecha}.xlsx`;
             } else {
-                url = endPoints.informesDiariosAlmacenIngresoTerminadosExcel(fecha);
+                url = endPoints.informesDiariosAlmacenIngresoTerminadosExcel(fecha, decimalSeparator);
                 filename = `informe_ingreso_terminados_${fecha}.xlsx`;
             }
             const response = await axios.get<ArrayBuffer>(url, { responseType: "arraybuffer" });
@@ -104,6 +108,10 @@ export default function InformeDiarioAlmacenPanel() {
                             onChange={(e) => setFecha(e.target.value)}
                         />
                     </FormControl>
+                    <ExcelDecimalSeparatorSelector
+                        value={decimalSeparator}
+                        onChange={setDecimalSeparator}
+                    />
                     <Box>
                         <Button
                             colorScheme="blue"

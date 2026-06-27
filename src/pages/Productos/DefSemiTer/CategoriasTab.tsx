@@ -25,11 +25,14 @@ import {
 } from '@chakra-ui/react';
 
 import {Categoria} from '../types.tsx';
+import CategoriaManufacturingTemplateDesigner from './Templates/CategoriaManufacturingTemplateDesigner.tsx';
 
 export function CategoriasTab() {
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [templatesExistentes, setTemplatesExistentes] = useState<Record<number, boolean>>({});
+    const [selectedTemplateCategoria, setSelectedTemplateCategoria] = useState<Categoria | null>(null);
 
     const [formData, setFormData] = useState({
         categoriaId: '',
@@ -41,12 +44,32 @@ export function CategoriasTab() {
     const toast = useToast();
     const endPoints = new EndPointsURL();
 
+    const fetchTemplatesExistentes = async (categoriasActuales: Categoria[]) => {
+        if (categoriasActuales.length === 0) {
+            setTemplatesExistentes({});
+            return;
+        }
+        try {
+            const params = new URLSearchParams({
+                categoriaIds: categoriasActuales.map((categoria) => String(categoria.categoriaId)).join(',')
+            });
+            const response = await axios.get<Record<number, boolean>>(
+                `${endPoints.check_categoria_manufacturing_templates_exist_batch}?${params.toString()}`
+            );
+            setTemplatesExistentes(response.data ?? {});
+        } catch (error) {
+            console.error('Error fetching manufacturing template status:', error);
+            setTemplatesExistentes({});
+        }
+    };
+
     const fetchCategorias = async () => {
         try {
             setLoading(true);
             setError(null);
             const response = await axios.get(endPoints.get_categorias);
             setCategorias(response.data);
+            await fetchTemplatesExistentes(response.data);
         } catch (error) {
             console.error('Error fetching categorias:', error);
             setError('Error al cargar las categorías. Por favor, intente nuevamente.');
@@ -126,6 +149,16 @@ export function CategoriasTab() {
 
     const isFormValid = formData.categoriaNombre.trim() !== '' && formData.categoriaDescripcion.trim() !== '';
 
+    if (selectedTemplateCategoria) {
+        return (
+            <CategoriaManufacturingTemplateDesigner
+                categoria={selectedTemplateCategoria}
+                onBack={() => setSelectedTemplateCategoria(null)}
+                onSaved={() => fetchTemplatesExistentes(categorias)}
+            />
+        );
+    }
+
     return (
         <Grid templateColumns="1fr 1fr" gap={6} p={4}>
             <Box p={6} borderWidth="1px" borderRadius="lg">
@@ -204,6 +237,7 @@ export function CategoriasTab() {
                                 <Th>ID</Th>
                                 <Th>Nombre</Th>
                                 <Th>Descripción</Th>
+                                <Th>Plantilla</Th>
                             </Tr>
                         </Thead>
                         <Tbody>
@@ -212,6 +246,15 @@ export function CategoriasTab() {
                                     <Td>{categoria.categoriaId}</Td>
                                     <Td>{categoria.categoriaNombre}</Td>
                                     <Td>{categoria.categoriaDescripcion}</Td>
+                                    <Td>
+                                        <Button
+                                            size="sm"
+                                            colorScheme={templatesExistentes[categoria.categoriaId] ? 'purple' : 'teal'}
+                                            onClick={() => setSelectedTemplateCategoria(categoria)}
+                                        >
+                                            {templatesExistentes[categoria.categoriaId] ? 'Editar plantilla' : 'Crear plantilla'}
+                                        </Button>
+                                    </Td>
                                 </Tr>
                             ))}
                         </Tbody>

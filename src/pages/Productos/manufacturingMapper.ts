@@ -1,5 +1,7 @@
 import { Edge, Node } from "@xyflow/react";
 import {
+    Categoria,
+    CategoriaManufacturingTemplateDTO,
     CasePack,
     NodoInsumoDTO,
     NodoProcesoDTO,
@@ -319,6 +321,99 @@ export const fromProductoManufacturingResponse = (dto: ProductoManufacturingDTO)
         casePack,
         prefijoLote: dto.prefijoLote,
         ivaPercentual: dto.ivaPercentual,
+    };
+};
+
+export const templateToProductoSemiter = (
+    template: CategoriaManufacturingTemplateDTO,
+    categoria: Categoria
+): ProductoSemiter => ({
+    productoId: `TEMPLATE-${categoria.categoriaId}`,
+    nombre: `Plantilla ${categoria.categoriaNombre}`,
+    observaciones: "",
+    costo: String((template.insumos ?? []).reduce((sum, insumo) => sum + (insumo.subtotal ?? 0), 0)),
+    insumos: (template.insumos ?? []).map((insumo) => ({
+        cantidadRequerida: insumo.cantidadRequerida,
+        subtotal: insumo.subtotal,
+        producto: {
+            productoId: insumo.productoId,
+            tipo_producto: "",
+            nombre: insumo.productoNombre ?? insumo.productoId,
+            costo: insumo.costoUnitario ?? 0,
+            tipoUnidades: insumo.tipoUnidades ?? "",
+            cantidadUnidad: "0",
+        },
+    })),
+    tipoUnidades: "U",
+    cantidadUnidad: "1",
+    tipo_producto: TIPOS_PRODUCTOS.terminado,
+    procesoProduccionCompleto: template.procesoProduccionCompleto,
+    inventareable: true,
+    categoria,
+    casePack: template.casePack
+        ? {
+              id: template.casePack.id,
+              unitsPerCase: template.casePack.unitsPerCase,
+              ean14: template.casePack.ean14,
+              largoCm: template.casePack.largoCm,
+              anchoCm: template.casePack.anchoCm,
+              altoCm: template.casePack.altoCm,
+              grossWeightKg: template.casePack.grossWeightKg,
+              defaultForShipping: template.casePack.defaultForShipping,
+              insumosEmpaque: (template.casePack.insumosEmpaque ?? []).map((insumoEmpaque) => ({
+                  id: insumoEmpaque.id,
+                  cantidad: insumoEmpaque.cantidad,
+                  uom: insumoEmpaque.uom,
+                  material: {
+                      productoId: insumoEmpaque.materialId,
+                      nombre: insumoEmpaque.materialNombre ?? insumoEmpaque.materialId,
+                      tipoUnidades: insumoEmpaque.uom ?? "",
+                      tipoMaterial: 2,
+                  },
+              })),
+          }
+        : undefined,
+});
+
+export const productoSemiterToTemplatePayload = (
+    categoria: Categoria,
+    producto: ProductoSemiter
+): CategoriaManufacturingTemplateDTO => {
+    const manufacturingPayload = toProductoManufacturingPayload(producto);
+    return {
+        categoriaId: categoria.categoriaId,
+        categoriaNombre: categoria.categoriaNombre,
+        rendimientoTeorico: producto.procesoProduccionCompleto?.rendimientoTeorico ?? 0,
+        insumos: manufacturingPayload.insumos,
+        casePack: manufacturingPayload.casePack,
+        procesoProduccionCompleto: producto.procesoProduccionCompleto,
+    };
+};
+
+export const applyTemplateToProducto = (
+    template: CategoriaManufacturingTemplateDTO,
+    producto: ProductoSemiter
+): ProductoSemiter => {
+    const templateProduct = templateToProductoSemiter(template, producto.categoria!);
+    const procesoProduccionCompleto = template.procesoProduccionCompleto
+        ? {
+              ...template.procesoProduccionCompleto,
+              id: undefined,
+              nodes: (template.procesoProduccionCompleto.nodes ?? []).map((node) => (
+                  node.nodeType === "TARGET"
+                      ? { ...node, id: undefined, label: producto.nombre }
+                      : { ...node, id: undefined }
+              )),
+              edges: (template.procesoProduccionCompleto.edges ?? []).map((edge) => ({ ...edge, id: undefined })),
+          }
+        : undefined;
+
+    return {
+        ...producto,
+        costo: templateProduct.costo,
+        insumos: templateProduct.insumos,
+        casePack: templateProduct.casePack,
+        procesoProduccionCompleto,
     };
 };
 

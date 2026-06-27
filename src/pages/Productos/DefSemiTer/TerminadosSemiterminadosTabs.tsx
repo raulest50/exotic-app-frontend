@@ -3,6 +3,7 @@ import { Button, Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-u
 import { FaArrowLeft } from 'react-icons/fa';
 import CodificarSemioTermiTab from './CodificarSemioTermiTab/CodificarSemioTermiTab.tsx';
 import { CategoriasTab } from './CategoriasTab.tsx';
+import CrearDesdePlantillaTab from './CrearDesdePlantilla/CrearDesdePlantillaTab.tsx';
 import InformeProductosTabAdvanced from './consulta/InformeProductosTabAdvanced.tsx';
 import { my_style_tab } from '../../../styles/styles_general.tsx';
 import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
@@ -36,6 +37,12 @@ export function TerminadosSemiterminadosTabs({ onBack }: Props) {
             key: 'categorias',
             label: 'Categorias',
             render: () => <CategoriasTab />,
+            accesoValido: moduleAccessRule(Modulo.PRODUCTOS, 2),
+        },
+        {
+            key: 'crear-desde-plantilla',
+            label: 'Crear desde plantilla',
+            render: () => <CrearDesdePlantillaTab />,
             accesoValido: moduleAccessRule(Modulo.PRODUCTOS, 2),
         },
         {

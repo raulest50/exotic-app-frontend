@@ -35,7 +35,10 @@ import {
 import { DownloadIcon, RepeatIcon, SearchIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import EndPointsURL from "../../../api/EndPointsURL";
+import EndPointsURL, { type ExcelDecimalSeparator } from "../../../api/EndPointsURL";
+import ExcelDecimalSeparatorSelector, {
+    DEFAULT_EXCEL_DECIMAL_SEPARATOR,
+} from "../../../components/ExcelDecimalSeparatorSelector";
 import {
     IngresoTerminadosReporteCategoria,
     IngresoTerminadosReporteDiario,
@@ -155,6 +158,7 @@ export default function IngresoTerminadosReporteDiario() {
 
     const [fecha, setFecha] = useState(() => todayIso());
     const [reporte, setReporte] = useState<IngresoTerminadosReporteDiario | null>(null);
+    const [decimalSeparator, setDecimalSeparator] = useState<ExcelDecimalSeparator>(DEFAULT_EXCEL_DECIMAL_SEPARATOR);
     const [loading, setLoading] = useState(false);
     const [downloading, setDownloading] = useState(false);
 
@@ -196,7 +200,7 @@ export default function IngresoTerminadosReporteDiario() {
         setDownloading(true);
         try {
             const response = await axios.get<ArrayBuffer>(
-                endpoints.informesDiariosAlmacenIngresoTerminadosReporteExcel(fecha),
+                endpoints.informesDiariosAlmacenIngresoTerminadosReporteExcel(fecha, decimalSeparator),
                 {
                     responseType: "arraybuffer",
                     withCredentials: true,
@@ -245,6 +249,12 @@ export default function IngresoTerminadosReporteDiario() {
                         }}
                     />
                 </FormControl>
+
+                <ExcelDecimalSeparatorSelector
+                    value={decimalSeparator}
+                    onChange={setDecimalSeparator}
+                    maxW={{ base: "full", md: "320px" }}
+                />
 
                 <HStack spacing={3} justify={{ base: "stretch", md: "flex-end" }} flexWrap="wrap">
                     <Button

@@ -57,6 +57,7 @@ import type { SeguimientoActionType } from "../Produccion/components/Seguimiento
 import AreaOperativaOrderDetailDrawer from "./AreaOperativaOrderDetailDrawer.tsx";
 import AreaOperativaMpsSemanalTab from "./AreaOperativaMpsSemanalTab.tsx";
 import type { AreaOperativaOrdenDetalleDTO } from "./areaOperativaPanel.types.ts";
+import { useAreaOperativaNoiseSampler } from "./Analitica/Noise/useAreaOperativaNoiseSampler.ts";
 
 const endpoints = new EndPointsURL();
 
@@ -177,6 +178,7 @@ export default function AreaOperativaPanel() {
     const toast = useToast();
     const emptyTitleColor = useColorModeValue("gray.700", "gray.200");
     const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+    useAreaOperativaNoiseSampler();
 
     const {
         isOpen: isActionOpen,

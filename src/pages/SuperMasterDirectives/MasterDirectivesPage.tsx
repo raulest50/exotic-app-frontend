@@ -10,6 +10,11 @@ import {
     Input,
     Spinner,
     Switch,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
     Table,
     Tbody,
     Td,
@@ -26,7 +31,13 @@ import EndPointsURL from "../../api/EndPointsURL";
 import MyHeader from "../../components/MyHeader";
 import { useAuth } from "../../context/AuthContext";
 import { MasterDirective, useMasterDirectives } from "../../context/MasterDirectivesContext";
-import { MASTER_DIRECTIVE_KEYS } from "../../context/masterDirectiveConstants";
+import {
+    AREA_OPERATIVA_NOISE_INTERVAL_MINUTES_MAX,
+    AREA_OPERATIVA_NOISE_INTERVAL_MINUTES_MIN,
+    AREA_OPERATIVA_NOISE_SAMPLE_SECONDS_MAX,
+    AREA_OPERATIVA_NOISE_SAMPLE_SECONDS_MIN,
+    MASTER_DIRECTIVE_KEYS,
+} from "../../context/masterDirectiveConstants";
 
 interface SuperMasterConfig {
     id: number;
@@ -50,6 +61,12 @@ const ROWS: { key: SuperMasterConfigKey; label: string; resumen: string }[] = [
     { key: "habilitarAjustesInventario", label: "Habilitar Ajustes Inventario", resumen: "Permite acceder a Ajustes de Inventario en Transacciones de Almacen" },
 ];
 
+const AREA_OPERATIVA_NOISE_DIRECTIVE_NAMES = new Set<string>([
+    MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_ENABLED,
+    MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_INTERVAL_MINUTES,
+    MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_SAMPLE_SECONDS,
+]);
+
 function isIntegerInRange(value: string, min: number, max: number) {
     if (!/^\d+$/.test(value.trim())) return false;
     const parsed = Number(value.trim());
@@ -61,7 +78,58 @@ function getNumericDirectiveBounds(directive: MasterDirective) {
         return { min: 0, max: 7, error: "Debe ser un entero entre 0 y 7" };
     }
 
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_INTERVAL_MINUTES) {
+        return {
+            min: AREA_OPERATIVA_NOISE_INTERVAL_MINUTES_MIN,
+            max: AREA_OPERATIVA_NOISE_INTERVAL_MINUTES_MAX,
+            error: `Debe ser un entero entre ${AREA_OPERATIVA_NOISE_INTERVAL_MINUTES_MIN} y ${AREA_OPERATIVA_NOISE_INTERVAL_MINUTES_MAX}`,
+        };
+    }
+
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_SAMPLE_SECONDS) {
+        return {
+            min: AREA_OPERATIVA_NOISE_SAMPLE_SECONDS_MIN,
+            max: AREA_OPERATIVA_NOISE_SAMPLE_SECONDS_MAX,
+            error: `Debe ser un entero entre ${AREA_OPERATIVA_NOISE_SAMPLE_SECONDS_MIN} y ${AREA_OPERATIVA_NOISE_SAMPLE_SECONDS_MAX}`,
+        };
+    }
+
     return { min: 1, max: undefined, error: "Debe ser un entero mayor o igual a 1" };
+}
+
+function isAreaOperativaNoiseDirective(directive: MasterDirective) {
+    return AREA_OPERATIVA_NOISE_DIRECTIVE_NAMES.has(directive.nombre);
+}
+
+function findDirectiveByName(directives: MasterDirective[], name: string) {
+    return directives.find(directive => directive.nombre === name);
+}
+
+function isPresentDirective(directive: MasterDirective | undefined): directive is MasterDirective {
+    return Boolean(directive);
+}
+
+function getAreaOperativaNoiseDirectiveLabel(directive: MasterDirective) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_ENABLED) {
+        return "Habilitar medicion de ruido";
+    }
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_INTERVAL_MINUTES) {
+        return "Intervalo de muestreo";
+    }
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_SAMPLE_SECONDS) {
+        return "Tamano de muestra";
+    }
+    return directive.nombre;
+}
+
+function getAreaOperativaNoiseDirectiveUnit(directive: MasterDirective) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_INTERVAL_MINUTES) {
+        return "min";
+    }
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_SAMPLE_SECONDS) {
+        return "s";
+    }
+    return null;
 }
 
 function isBooleanEnabled(value: string) {
@@ -131,13 +199,23 @@ export default function MasterDirectivesPage() {
         fetchConfig();
     }, [fetchConfig]);
 
-    const numericDirectives = useMemo(
-        () => masterDirectives.filter(directive => directive.tipoDato === "NUMERO"),
+    const genericMasterDirectives = useMemo(
+        () => masterDirectives.filter(directive => !isAreaOperativaNoiseDirective(directive)),
         [masterDirectives]
     );
 
+    const numericDirectives = useMemo(
+        () => genericMasterDirectives.filter(directive => directive.tipoDato === "NUMERO"),
+        [genericMasterDirectives]
+    );
+
     const booleanDirectives = useMemo(
-        () => masterDirectives.filter(directive => directive.tipoDato === "BOOLEANO"),
+        () => genericMasterDirectives.filter(directive => directive.tipoDato === "BOOLEANO"),
+        [genericMasterDirectives]
+    );
+
+    const numericEditableDirectives = useMemo(
+        () => masterDirectives.filter(directive => directive.tipoDato === "NUMERO"),
         [masterDirectives]
     );
 
@@ -145,6 +223,28 @@ export default function MasterDirectivesPage() {
         () => masterDirectives.filter(directive => directive.tipoDato === "NUMERO" || directive.tipoDato === "BOOLEANO"),
         [masterDirectives]
     );
+
+    const noiseEnabledDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_ENABLED),
+        [masterDirectives]
+    );
+
+    const noiseIntervalDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_INTERVAL_MINUTES),
+        [masterDirectives]
+    );
+
+    const noiseSampleDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_SAMPLE_SECONDS),
+        [masterDirectives]
+    );
+
+    const noiseNumericDirectives = useMemo(
+        () => [noiseIntervalDirective, noiseSampleDirective].filter(isPresentDirective),
+        [noiseIntervalDirective, noiseSampleDirective]
+    );
+
+    const hasAllNoiseDirectives = Boolean(noiseEnabledDirective && noiseIntervalDirective && noiseSampleDirective);
 
     const superMasterHasChanges =
         canManageSuperMasterConfig &&
@@ -156,7 +256,7 @@ export default function MasterDirectivesPage() {
 
     const directiveErrors = useMemo(() => {
         const errors: Record<number, string> = {};
-        numericDirectives.forEach(directive => {
+        numericEditableDirectives.forEach(directive => {
             const value = directiveDrafts[directive.id] ?? directive.valor;
             const bounds = getNumericDirectiveBounds(directive);
             if (!isIntegerInRange(value, bounds.min, bounds.max ?? Number.POSITIVE_INFINITY)) {
@@ -164,7 +264,7 @@ export default function MasterDirectivesPage() {
             }
         });
         return errors;
-    }, [numericDirectives, directiveDrafts]);
+    }, [numericEditableDirectives, directiveDrafts]);
 
     const masterDirectivesHaveChanges = editableMasterDirectives.some(directive => {
         const value = directiveDrafts[directive.id] ?? directive.valor;
@@ -253,142 +353,241 @@ export default function MasterDirectivesPage() {
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <MyHeader title="Directivas Maestras" />
 
-            <Table variant="simple">
-                <Thead>
-                    <Tr>
-                        <Th>Nombre</Th>
-                        <Th>Valor</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
-                    {ROWS.map(({ key, label, resumen }) => {
-                        const value = draft[key];
-                        const original = config[key];
-                        const hasRowChange = value !== original;
-                        return (
-                            <Tr key={key}>
-                                <Td>
-                                    <Text fontWeight="bold">{label}</Text>
-                                    <Text fontSize="sm" color="app.textSubtle">
-                                        {resumen}
-                                    </Text>
-                                </Td>
-                                <Td>
-                                    <HStack>
-                                        <Switch
-                                            isChecked={value}
-                                            isDisabled={!canManageSuperMasterConfig}
-                                            onChange={e => updateDraft(key, e.target.checked)}
-                                        />
-                                        {hasRowChange && (
-                                            <Icon as={FaCircleExclamation} color="orange.400" />
-                                        )}
-                                    </HStack>
-                                </Td>
-                            </Tr>
-                        );
-                    })}
-                </Tbody>
-            </Table>
-
-            {numericDirectives.length > 0 && (
-                <Box mt={8}>
-                    <Text mb={2} fontWeight="bold">
-                        Directivas numericas
-                    </Text>
-                    <Table variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>Nombre</Th>
-                                <Th>Valor</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            {numericDirectives.map(directive => {
-                                const value = directiveDrafts[directive.id] ?? directive.valor;
-                                const hasRowChange = value.trim() !== directive.valor;
-                                const error = directiveErrors[directive.id];
-                                return (
-                                    <Tr key={directive.id}>
-                                        <Td>
-                                            <Text fontWeight="bold">{directive.nombre}</Text>
-                                            <Text fontSize="sm" color="app.textSubtle">
-                                                {directive.resumen}
-                                            </Text>
-                                            {directive.nombre === MASTER_DIRECTIVE_KEYS.LIMITE_RECEPCIONES_PARCIALES_OCM && (
-                                                <Text fontSize="xs" color={explanatoryWarningColor} mt={1}>
-                                                    Este tope solo valida cambios futuros en proveedores. No modifica limites ya configurados ni valida ingresos OCM directamente.
+            <Tabs variant="enclosed" colorScheme="teal">
+                <TabList>
+                    <Tab>General</Tab>
+                    <Tab>Area Operativa</Tab>
+                </TabList>
+                <TabPanels>
+                    <TabPanel px={0}>
+                        <Table variant="simple">
+                            <Thead>
+                                <Tr>
+                                    <Th>Nombre</Th>
+                                    <Th>Valor</Th>
+                                </Tr>
+                            </Thead>
+                            <Tbody>
+                                {ROWS.map(({ key, label, resumen }) => {
+                                    const value = draft[key];
+                                    const original = config[key];
+                                    const hasRowChange = value !== original;
+                                    return (
+                                        <Tr key={key}>
+                                            <Td>
+                                                <Text fontWeight="bold">{label}</Text>
+                                                <Text fontSize="sm" color="app.textSubtle">
+                                                    {resumen}
                                                 </Text>
-                                            )}
-                                        </Td>
-                                        <Td>
-                                            <HStack align="flex-start">
-                                                <FormControl isInvalid={Boolean(error)} maxW="180px">
-                                                    <Input
-                                                        type="number"
-                                                        min={getNumericDirectiveBounds(directive).min}
-                                                        max={getNumericDirectiveBounds(directive).max}
-                                                        step={1}
-                                                        value={value}
-                                                        onChange={e => updateDirectiveDraft(directive.id, e.target.value)}
+                                            </Td>
+                                            <Td>
+                                                <HStack>
+                                                    <Switch
+                                                        isChecked={value}
+                                                        isDisabled={!canManageSuperMasterConfig}
+                                                        onChange={e => updateDraft(key, e.target.checked)}
                                                     />
-                                                    {error && <FormErrorMessage>{error}</FormErrorMessage>}
-                                                </FormControl>
-                                                {hasRowChange && (
-                                                    <Icon as={FaCircleExclamation} color="orange.400" mt={2} />
-                                                )}
-                                            </HStack>
-                                        </Td>
-                                    </Tr>
-                                );
-                            })}
-                        </Tbody>
-                    </Table>
-                </Box>
-            )}
+                                                    {hasRowChange && (
+                                                        <Icon as={FaCircleExclamation} color="orange.400" />
+                                                    )}
+                                                </HStack>
+                                            </Td>
+                                        </Tr>
+                                    );
+                                })}
+                            </Tbody>
+                        </Table>
 
-            {booleanDirectives.length > 0 && (
-                <Box mt={8}>
-                    <Text mb={2} fontWeight="bold">
-                        Directivas booleanas
-                    </Text>
-                    <Table variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>Nombre</Th>
-                                <Th>Valor</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            {booleanDirectives.map(directive => {
-                                const value = directiveDrafts[directive.id] ?? directive.valor;
-                                const hasRowChange = normalizeDirectiveDraftValue(directive, value) !== normalizeDirectiveDraftValue(directive, directive.valor);
-                                return (
-                                    <Tr key={directive.id}>
-                                        <Td>
-                                            <Text fontWeight="bold">{directive.nombre}</Text>
-                                            <Text fontSize="sm" color="app.textSubtle">
-                                                {directive.resumen}
-                                            </Text>
-                                        </Td>
-                                        <Td>
-                                            <HStack>
-                                                <Switch
-                                                    isChecked={isBooleanEnabled(value)}
-                                                    onChange={e => updateDirectiveDraft(directive.id, String(e.target.checked))}
-                                                />
-                                                {hasRowChange && (
-                                                    <Icon as={FaCircleExclamation} color="orange.400" />
-                                                )}
-                                            </HStack>
-                                        </Td>
+                        {numericDirectives.length > 0 && (
+                            <Box mt={8}>
+                                <Text mb={2} fontWeight="bold">
+                                    Directivas numericas
+                                </Text>
+                                <Table variant="simple">
+                                    <Thead>
+                                        <Tr>
+                                            <Th>Nombre</Th>
+                                            <Th>Valor</Th>
+                                        </Tr>
+                                    </Thead>
+                                    <Tbody>
+                                        {numericDirectives.map(directive => {
+                                            const value = directiveDrafts[directive.id] ?? directive.valor;
+                                            const hasRowChange = value.trim() !== directive.valor;
+                                            const error = directiveErrors[directive.id];
+                                            return (
+                                                <Tr key={directive.id}>
+                                                    <Td>
+                                                        <Text fontWeight="bold">{directive.nombre}</Text>
+                                                        <Text fontSize="sm" color="app.textSubtle">
+                                                            {directive.resumen}
+                                                        </Text>
+                                                        {directive.nombre === MASTER_DIRECTIVE_KEYS.LIMITE_RECEPCIONES_PARCIALES_OCM && (
+                                                            <Text fontSize="xs" color={explanatoryWarningColor} mt={1}>
+                                                                Este tope solo valida cambios futuros en proveedores. No modifica limites ya configurados ni valida ingresos OCM directamente.
+                                                            </Text>
+                                                        )}
+                                                    </Td>
+                                                    <Td>
+                                                        <HStack align="flex-start">
+                                                            <FormControl isInvalid={Boolean(error)} maxW="180px">
+                                                                <Input
+                                                                    type="number"
+                                                                    min={getNumericDirectiveBounds(directive).min}
+                                                                    max={getNumericDirectiveBounds(directive).max}
+                                                                    step={1}
+                                                                    value={value}
+                                                                    onChange={e => updateDirectiveDraft(directive.id, e.target.value)}
+                                                                />
+                                                                {error && <FormErrorMessage>{error}</FormErrorMessage>}
+                                                            </FormControl>
+                                                            {hasRowChange && (
+                                                                <Icon as={FaCircleExclamation} color="orange.400" mt={2} />
+                                                            )}
+                                                        </HStack>
+                                                    </Td>
+                                                </Tr>
+                                            );
+                                        })}
+                                    </Tbody>
+                                </Table>
+                            </Box>
+                        )}
+
+                        {booleanDirectives.length > 0 && (
+                            <Box mt={8}>
+                                <Text mb={2} fontWeight="bold">
+                                    Directivas booleanas
+                                </Text>
+                                <Table variant="simple">
+                                    <Thead>
+                                        <Tr>
+                                            <Th>Nombre</Th>
+                                            <Th>Valor</Th>
+                                        </Tr>
+                                    </Thead>
+                                    <Tbody>
+                                        {booleanDirectives.map(directive => {
+                                            const value = directiveDrafts[directive.id] ?? directive.valor;
+                                            const hasRowChange = normalizeDirectiveDraftValue(directive, value) !== normalizeDirectiveDraftValue(directive, directive.valor);
+                                            return (
+                                                <Tr key={directive.id}>
+                                                    <Td>
+                                                        <Text fontWeight="bold">{directive.nombre}</Text>
+                                                        <Text fontSize="sm" color="app.textSubtle">
+                                                            {directive.resumen}
+                                                        </Text>
+                                                    </Td>
+                                                    <Td>
+                                                        <HStack>
+                                                            <Switch
+                                                                isChecked={isBooleanEnabled(value)}
+                                                                onChange={e => updateDirectiveDraft(directive.id, String(e.target.checked))}
+                                                            />
+                                                            {hasRowChange && (
+                                                                <Icon as={FaCircleExclamation} color="orange.400" />
+                                                            )}
+                                                        </HStack>
+                                                    </Td>
+                                                </Tr>
+                                            );
+                                        })}
+                                    </Tbody>
+                                </Table>
+                            </Box>
+                        )}
+                    </TabPanel>
+
+                    <TabPanel px={0}>
+                        <Box>
+                            <Text mb={2} fontWeight="bold">
+                                Analitica / Ruido
+                            </Text>
+                            {!hasAllNoiseDirectives && (
+                                <Text color="app.textSubtle" fontSize="sm" mb={4}>
+                                    Las directivas de ruido aun no estan disponibles. Verifica que el backend haya inicializado las directivas maestras.
+                                </Text>
+                            )}
+                            <Table variant="simple">
+                                <Thead>
+                                    <Tr>
+                                        <Th>Configuracion</Th>
+                                        <Th>Valor</Th>
                                     </Tr>
-                                );
-                            })}
-                        </Tbody>
-                    </Table>
-                </Box>
-            )}
+                                </Thead>
+                                <Tbody>
+                                    {noiseEnabledDirective && (() => {
+                                        const value = directiveDrafts[noiseEnabledDirective.id] ?? noiseEnabledDirective.valor;
+                                        const hasRowChange = normalizeDirectiveDraftValue(noiseEnabledDirective, value) !== normalizeDirectiveDraftValue(noiseEnabledDirective, noiseEnabledDirective.valor);
+                                        return (
+                                            <Tr key={noiseEnabledDirective.id}>
+                                                <Td>
+                                                    <Text fontWeight="bold">{getAreaOperativaNoiseDirectiveLabel(noiseEnabledDirective)}</Text>
+                                                    <Text fontSize="sm" color="app.textSubtle">
+                                                        {noiseEnabledDirective.resumen}
+                                                    </Text>
+                                                </Td>
+                                                <Td>
+                                                    <HStack>
+                                                        <Switch
+                                                            isChecked={isBooleanEnabled(value)}
+                                                            onChange={e => updateDirectiveDraft(noiseEnabledDirective.id, String(e.target.checked))}
+                                                        />
+                                                        {hasRowChange && (
+                                                            <Icon as={FaCircleExclamation} color="orange.400" />
+                                                        )}
+                                                    </HStack>
+                                                </Td>
+                                            </Tr>
+                                        );
+                                    })()}
+
+                                    {noiseNumericDirectives.map(directive => {
+                                        const value = directiveDrafts[directive.id] ?? directive.valor;
+                                        const hasRowChange = value.trim() !== directive.valor;
+                                        const error = directiveErrors[directive.id];
+                                        const bounds = getNumericDirectiveBounds(directive);
+                                        const unit = getAreaOperativaNoiseDirectiveUnit(directive);
+                                        return (
+                                            <Tr key={directive.id}>
+                                                <Td>
+                                                    <Text fontWeight="bold">{getAreaOperativaNoiseDirectiveLabel(directive)}</Text>
+                                                    <Text fontSize="sm" color="app.textSubtle">
+                                                        {directive.resumen}
+                                                    </Text>
+                                                </Td>
+                                                <Td>
+                                                    <HStack align="flex-start">
+                                                        <FormControl isInvalid={Boolean(error)} maxW="180px">
+                                                            <Input
+                                                                type="number"
+                                                                min={bounds.min}
+                                                                max={bounds.max}
+                                                                step={1}
+                                                                value={value}
+                                                                onChange={e => updateDirectiveDraft(directive.id, e.target.value)}
+                                                            />
+                                                            {error && <FormErrorMessage>{error}</FormErrorMessage>}
+                                                        </FormControl>
+                                                        {unit && (
+                                                            <Text color="app.textMuted" mt={2}>
+                                                                {unit}
+                                                            </Text>
+                                                        )}
+                                                        {hasRowChange && (
+                                                            <Icon as={FaCircleExclamation} color="orange.400" mt={2} />
+                                                        )}
+                                                    </HStack>
+                                                </Td>
+                                            </Tr>
+                                        );
+                                    })}
+                                </Tbody>
+                            </Table>
+                        </Box>
+                    </TabPanel>
+                </TabPanels>
+            </Tabs>
 
             <HStack mt={4}>
                 <Button

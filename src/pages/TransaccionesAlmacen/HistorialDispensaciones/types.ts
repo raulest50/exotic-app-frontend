@@ -25,6 +25,7 @@ export interface FiltroHistDispensacionDTO {
     transaccionId?: number | null;
     ordenProduccionId?: number | null;
     loteAsignado?: string | null;
+    productoTerminadoId?: string | null;
     tipoFiltroFecha: number; // 0 = ninguno, 1 = rango, 2 = específica
     fechaInicio?: string | null;
     fechaFin?: string | null;
