@@ -7,6 +7,7 @@ import {
     FormErrorMessage,
     HStack,
     Icon,
+    IconButton,
     Input,
     Spinner,
     Switch,
@@ -21,10 +22,12 @@ import {
     Text,
     Th,
     Thead,
+    Tooltip,
     Tr,
     useColorModeValue,
     useToast,
 } from "@chakra-ui/react";
+import { QuestionIcon } from "@chakra-ui/icons";
 import { FaCircleExclamation } from "react-icons/fa6";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
@@ -71,6 +74,11 @@ const PRODUCTION_DIRECTIVE_NAMES = new Set<string>([
     MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION,
     MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO,
 ]);
+
+const PRODUCTION_DIRECTIVE_EXTENDED_HELP: Record<string, string> = {
+    [MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO]:
+        "Cuando esta apagada, una MPS aprobada conserva el flujo actual: solo permite mover, aumentar, reducir o cancelar tarjetas existentes. Cuando esta activa, se pueden agregar nuevos terminados a una MPS APROBADA o CERRADA. Si la MPS ya esta cerrada o ya tiene ODPs generadas, el backend genera inmediatamente las ODPs de los nuevos lotes.",
+};
 
 function isIntegerInRange(value: string, min: number, max: number) {
     if (!/^\d+$/.test(value.trim())) return false;
@@ -156,6 +164,10 @@ function getProductionDirectiveUnit(directive: MasterDirective) {
         return "dias";
     }
     return null;
+}
+
+function getProductionDirectiveExtendedHelp(directive: MasterDirective) {
+    return PRODUCTION_DIRECTIVE_EXTENDED_HELP[directive.nombre];
 }
 
 function isBooleanEnabled(value: string) {
@@ -565,10 +577,25 @@ export default function MasterDirectivesPage() {
                                         const error = directiveErrors[directive.id];
                                         const bounds = getNumericDirectiveBounds(directive);
                                         const unit = getProductionDirectiveUnit(directive);
+                                        const label = getProductionDirectiveLabel(directive);
+                                        const extendedHelp = getProductionDirectiveExtendedHelp(directive);
                                         return (
                                             <Tr key={directive.id}>
                                                 <Td>
-                                                    <Text fontWeight="bold">{getProductionDirectiveLabel(directive)}</Text>
+                                                    <HStack spacing={2} align="center">
+                                                        <Text fontWeight="bold">{label}</Text>
+                                                        {extendedHelp && (
+                                                            <Tooltip label={extendedHelp} hasArrow placement="top" maxW="360px" whiteSpace="normal">
+                                                                <IconButton
+                                                                    aria-label={`Ayuda detallada ${label}`}
+                                                                    icon={<QuestionIcon />}
+                                                                    size="xs"
+                                                                    variant="ghost"
+                                                                    colorScheme="teal"
+                                                                />
+                                                            </Tooltip>
+                                                        )}
+                                                    </HStack>
                                                     <Text fontSize="sm" color="app.textSubtle">
                                                         {directive.resumen}
                                                     </Text>
