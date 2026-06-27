@@ -139,8 +139,8 @@ export default function MpsItemOrdersModal({
                                                 <Th>Orden</Th>
                                                 <Th>Lote real</Th>
                                                 <Th isNumeric>Cantidad</Th>
-                                                <Th>Lanzamiento</Th>
-                                                <Th>Fin planificado</Th>
+                                                <Th>Lanzamiento estimado</Th>
+                                                <Th>Entrega planificada</Th>
                                                 <Th>Estado</Th>
                                                 <Th>Lote planificado</Th>
                                             </Tr>

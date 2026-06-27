@@ -67,6 +67,11 @@ const AREA_OPERATIVA_NOISE_DIRECTIVE_NAMES = new Set<string>([
     MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_SAMPLE_SECONDS,
 ]);
 
+const PRODUCTION_DIRECTIVE_NAMES = new Set<string>([
+    MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION,
+    MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO,
+]);
+
 function isIntegerInRange(value: string, min: number, max: number) {
     if (!/^\d+$/.test(value.trim())) return false;
     const parsed = Number(value.trim());
@@ -101,6 +106,10 @@ function isAreaOperativaNoiseDirective(directive: MasterDirective) {
     return AREA_OPERATIVA_NOISE_DIRECTIVE_NAMES.has(directive.nombre);
 }
 
+function isProductionDirective(directive: MasterDirective) {
+    return PRODUCTION_DIRECTIVE_NAMES.has(directive.nombre);
+}
+
 function findDirectiveByName(directives: MasterDirective[], name: string) {
     return directives.find(directive => directive.nombre === name);
 }
@@ -128,6 +137,23 @@ function getAreaOperativaNoiseDirectiveUnit(directive: MasterDirective) {
     }
     if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_SAMPLE_SECONDS) {
         return "s";
+    }
+    return null;
+}
+
+function getProductionDirectiveLabel(directive: MasterDirective) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION) {
+        return "Dias bloqueados para edicion MPS";
+    }
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO) {
+        return "Agregar terminados en MPS aprobada";
+    }
+    return directive.nombre;
+}
+
+function getProductionDirectiveUnit(directive: MasterDirective) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION) {
+        return "dias";
     }
     return null;
 }
@@ -200,7 +226,7 @@ export default function MasterDirectivesPage() {
     }, [fetchConfig]);
 
     const genericMasterDirectives = useMemo(
-        () => masterDirectives.filter(directive => !isAreaOperativaNoiseDirective(directive)),
+        () => masterDirectives.filter(directive => !isAreaOperativaNoiseDirective(directive) && !isProductionDirective(directive)),
         [masterDirectives]
     );
 
@@ -239,12 +265,28 @@ export default function MasterDirectivesPage() {
         [masterDirectives]
     );
 
+    const mpsDiasBloqueoDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION),
+        [masterDirectives]
+    );
+
+    const mpsAgregarTerminadosAprobadoDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO),
+        [masterDirectives]
+    );
+
     const noiseNumericDirectives = useMemo(
         () => [noiseIntervalDirective, noiseSampleDirective].filter(isPresentDirective),
         [noiseIntervalDirective, noiseSampleDirective]
     );
 
+    const productionDirectives = useMemo(
+        () => [mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective].filter(isPresentDirective),
+        [mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective]
+    );
+
     const hasAllNoiseDirectives = Boolean(noiseEnabledDirective && noiseIntervalDirective && noiseSampleDirective);
+    const hasAllProductionDirectives = Boolean(mpsDiasBloqueoDirective && mpsAgregarTerminadosAprobadoDirective);
 
     const superMasterHasChanges =
         canManageSuperMasterConfig &&
@@ -356,6 +398,7 @@ export default function MasterDirectivesPage() {
             <Tabs variant="enclosed" colorScheme="teal">
                 <TabList>
                     <Tab>General</Tab>
+                    <Tab>Produccion</Tab>
                     <Tab>Area Operativa</Tab>
                 </TabList>
                 <TabPanels>
@@ -496,6 +539,86 @@ export default function MasterDirectivesPage() {
                                 </Table>
                             </Box>
                         )}
+                    </TabPanel>
+
+                    <TabPanel px={0}>
+                        <Box>
+                            <Text mb={2} fontWeight="bold">
+                                MPS semanal
+                            </Text>
+                            {!hasAllProductionDirectives && (
+                                <Text color="app.textSubtle" fontSize="sm" mb={4}>
+                                    Las directivas de produccion aun no estan disponibles. Verifica que el backend haya inicializado las directivas maestras.
+                                </Text>
+                            )}
+                            <Table variant="simple">
+                                <Thead>
+                                    <Tr>
+                                        <Th>Configuracion</Th>
+                                        <Th>Valor</Th>
+                                    </Tr>
+                                </Thead>
+                                <Tbody>
+                                    {productionDirectives.map(directive => {
+                                        const value = directiveDrafts[directive.id] ?? directive.valor;
+                                        const hasRowChange = normalizeDirectiveDraftValue(directive, value) !== normalizeDirectiveDraftValue(directive, directive.valor);
+                                        const error = directiveErrors[directive.id];
+                                        const bounds = getNumericDirectiveBounds(directive);
+                                        const unit = getProductionDirectiveUnit(directive);
+                                        return (
+                                            <Tr key={directive.id}>
+                                                <Td>
+                                                    <Text fontWeight="bold">{getProductionDirectiveLabel(directive)}</Text>
+                                                    <Text fontSize="sm" color="app.textSubtle">
+                                                        {directive.resumen}
+                                                    </Text>
+                                                    {directive.ayuda && (
+                                                        <Text fontSize="xs" color="app.textSubtle" mt={1}>
+                                                            {directive.ayuda}
+                                                        </Text>
+                                                    )}
+                                                </Td>
+                                                <Td>
+                                                    {directive.tipoDato === "BOOLEANO" ? (
+                                                        <HStack>
+                                                            <Switch
+                                                                isChecked={isBooleanEnabled(value)}
+                                                                onChange={e => updateDirectiveDraft(directive.id, String(e.target.checked))}
+                                                            />
+                                                            {hasRowChange && (
+                                                                <Icon as={FaCircleExclamation} color="orange.400" />
+                                                            )}
+                                                        </HStack>
+                                                    ) : (
+                                                        <HStack align="flex-start">
+                                                            <FormControl isInvalid={Boolean(error)} maxW="180px">
+                                                                <Input
+                                                                    type="number"
+                                                                    min={bounds.min}
+                                                                    max={bounds.max}
+                                                                    step={1}
+                                                                    value={value}
+                                                                    onChange={e => updateDirectiveDraft(directive.id, e.target.value)}
+                                                                />
+                                                                {error && <FormErrorMessage>{error}</FormErrorMessage>}
+                                                            </FormControl>
+                                                            {unit && (
+                                                                <Text color="app.textMuted" mt={2}>
+                                                                    {unit}
+                                                                </Text>
+                                                            )}
+                                                            {hasRowChange && (
+                                                                <Icon as={FaCircleExclamation} color="orange.400" mt={2} />
+                                                            )}
+                                                        </HStack>
+                                                    )}
+                                                </Td>
+                                            </Tr>
+                                        );
+                                    })}
+                                </Tbody>
+                            </Table>
+                        </Box>
                     </TabPanel>
 
                     <TabPanel px={0}>

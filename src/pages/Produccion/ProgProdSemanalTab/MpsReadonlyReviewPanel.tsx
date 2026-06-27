@@ -144,7 +144,7 @@ function MpsItemCard({
             </Flex>
 
             <Text mt={2} fontSize="xs" color="gray.600">
-                Lanzamiento {formatSemanaMpsDisplayDate(item.fechaLanzamiento)} | Fin {formatSemanaMpsDisplayDate(item.fechaFinalPlanificada)}
+                Lanzamiento estimado {formatSemanaMpsDisplayDate(item.fechaLanzamiento)} | Entrega planificada {formatSemanaMpsDisplayDate(item.fechaFinalPlanificada)}
             </Text>
 
             {item.observacion && (
@@ -228,7 +228,7 @@ export default function MpsReadonlyReviewPanel({
                                 <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" p={3} bg="gray.50" minH="420px">
                                     <Flex justify="space-between" align="start" gap={2} mb={3}>
                                         <Box>
-                                            <Text fontWeight="bold">{dayLabel}</Text>
+                                            <Text fontWeight="bold">Entrega {dayLabel}</Text>
                                             <Text fontSize="sm" color="gray.600">
                                                 {formatSemanaMpsDisplayDate(dia.fecha)}
                                             </Text>

@@ -65,7 +65,7 @@ class MpsSemanalPdfGenerator {
         doc.text("Programacion semanal", margin, currentY);
         currentY += 4;
 
-        const head = [["Dia", "Terminado", "Categoria", "Lotes", "Unidades", "Fechas", "Lotes planificados", "Observacion"]];
+        const head = [["Entrega", "Terminado", "Categoria", "Lotes", "Unidades", "Lanz. / Entrega", "Lotes planificados", "Observacion"]];
         const body = buildMpsSemanalPdfRows(mps);
 
         autoTable(doc, {

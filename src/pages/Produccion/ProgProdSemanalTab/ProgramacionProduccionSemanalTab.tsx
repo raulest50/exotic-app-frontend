@@ -46,6 +46,7 @@ import TerminadoPicker4MPS, {
 } from "./TerminadoPicker4MPS/TerminadoPicker4MPS";
 import {
     AtenderObservacionMpsSemanal,
+    CrearMpsSemanalAprobadoItem,
     EditarMpsSemanalAprobadoItem,
     GuardarBorradorProgramacionSemanal,
     ListarObservacionesMpsSemanal,
@@ -62,6 +63,7 @@ import { useMasterDirectives } from "../../../context/MasterDirectivesContext";
 import {
     MASTER_DIRECTIVE_KEYS,
     MPS_SEMANAL_DIAS_BLOQUEO_EDICION_DEFAULT,
+    MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO_DEFAULT,
 } from "../../../context/masterDirectiveConstants";
 
 interface ProgramacionEntry {
@@ -159,8 +161,12 @@ function isIntegerLike(value: number): boolean {
     return Number.isFinite(value) && Math.abs(value - Math.round(value)) <= EPSILON;
 }
 
+function getMinimumLotesForEntry(entry: ProgramacionEntry, isApprovedEditMode: boolean): number {
+    return isApprovedEditMode && entry.mpsItemId != null ? 0 : 1;
+}
+
 function buildEntryId(productoId: string, dayIndex: number): string {
-    return `${productoId}__${dayIndex}`;
+    return `${productoId}__${dayIndex}__${Date.now()}__${Math.random().toString(36).slice(2)}`;
 }
 
 function buildPersistedEntryId(itemId: number): string {
@@ -358,7 +364,7 @@ function DraggableEntryCard({
 }
 
 export default function ProgramacionProduccionSemanalTab() {
-    const { getNumberDirective } = useMasterDirectives();
+    const { getNumberDirective, getBooleanDirective } = useMasterDirectives();
     const lockedDaysAhead = getNumberDirective(
         MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION,
         MPS_SEMANAL_DIAS_BLOQUEO_EDICION_DEFAULT,
@@ -366,6 +372,10 @@ export default function ProgramacionProduccionSemanalTab() {
             min: MPS_SEMANAL_DIAS_BLOQUEO_EDICION_MIN,
             max: MPS_SEMANAL_DIAS_BLOQUEO_EDICION_MAX,
         },
+    );
+    const allowAddTerminadosToApprovedMps = getBooleanDirective(
+        MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO,
+        MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO_DEFAULT,
     );
     const [weekStartDate, setWeekStartDate] = useState(getCurrentWeekMonday());
     const [selectedSemana, setSelectedSemana] = useState<SemanaMPSDTO | null>(null);
@@ -397,14 +407,27 @@ export default function ProgramacionProduccionSemanalTab() {
         if (isReadOnly || (isEntryCanceled(entry) && !isPendingCancellation(entry))) {
             return false;
         }
+        if (isApprovedEditMode) {
+            return entry.mpsItemId == null ? allowAddTerminadosToApprovedMps : entry.editable === true;
+        }
         if (!isMpsDateEditable(addDays(weekStartDate, targetDayIndex), editableFromDate)) {
             return false;
         }
-        if (isApprovedEditMode) {
-            return entry.editable === true;
-        }
         return isDraftMode;
-    }, [editableFromDate, isApprovedEditMode, isDraftMode, isReadOnly, weekStartDate]);
+    }, [allowAddTerminadosToApprovedMps, editableFromDate, isApprovedEditMode, isDraftMode, isReadOnly, weekStartDate]);
+
+    const canAddTerminadoOnDay = useCallback((dayIndex: number): boolean => {
+        if (isReadOnly || !isMonday(weekStartDate)) {
+            return false;
+        }
+        if (isDraftMode) {
+            return isMpsDateEditable(addDays(weekStartDate, dayIndex), editableFromDate);
+        }
+        if (isApprovedEditMode) {
+            return allowAddTerminadosToApprovedMps;
+        }
+        return false;
+    }, [allowAddTerminadosToApprovedMps, editableFromDate, isApprovedEditMode, isDraftMode, isReadOnly, weekStartDate]);
 
     const hasDuplicateProductOnDay = useCallback((
         entry: ProgramacionEntry,
@@ -444,10 +467,10 @@ export default function ProgramacionProduccionSemanalTab() {
         if (!isMonday(weekStartDate)) {
             issues.push("La semana debe iniciar un lunes.");
         }
-        if (isWeekFullyLocked) {
+        if (isDraftMode && isWeekFullyLocked) {
             issues.push(`Esta semana no tiene dias editables. La primera fecha editable es ${editableFromDate}.`);
         }
-        if (lockedEntriesChanged) {
+        if (isDraftMode && lockedEntriesChanged) {
             issues.push(`No se pueden modificar dias bloqueados. La primera fecha editable es ${editableFromDate}.`);
         }
         const activeEntries = entries.filter((entry) => !isEntryCanceled(entry));
@@ -608,13 +631,18 @@ export default function ProgramacionProduccionSemanalTab() {
         if (pickerDayIndex == null) {
             return;
         }
-        const dayDate = addDays(weekStartDate, pickerDayIndex);
-        if (!isDraftMode || isReadOnly || !isMpsDateEditable(dayDate, editableFromDate)) {
+        if (!canAddTerminadoOnDay(pickerDayIndex)) {
+            const isApprovedDirectiveBlocked = isApprovedEditMode && !allowAddTerminadosToApprovedMps;
+            const description = isApprovedDirectiveBlocked
+                ? "Super Master mantiene bloqueada la adicion de nuevos terminados en MPS aprobada."
+                : (!isDraftMode
+                    ? "La MPS actual no admite agregar nuevos terminados."
+                    : `No se puede programar antes de ${editableFromDate}.`);
             toast({
-                title: !isDraftMode ? "MPS aprobado" : "Dia bloqueado",
-                description: !isDraftMode
-                    ? "La edicion aprobada permite mover, aumentar, reducir o cancelar tarjetas existentes; no agrega productos nuevos."
-                    : `No se puede programar antes de ${editableFromDate}.`,
+                title: isApprovedDirectiveBlocked
+                    ? "Directiva inhabilitada"
+                    : (!isDraftMode ? "MPS no editable" : "Dia bloqueado"),
+                description,
                 status: "warning",
                 duration: 4000,
                 isClosable: true,
@@ -638,14 +666,16 @@ export default function ProgramacionProduccionSemanalTab() {
             if (entry.id !== entryId || !canEditEntry(entry)) {
                 return entry;
             }
+            const minLotes = getMinimumLotesForEntry(entry, isApprovedEditMode);
             const normalizedLotes = Number.isFinite(parsed)
-                ? (isApprovedEditMode ? Math.max(0, parsed) : parsed)
-                : 0;
+                ? Math.max(minLotes, parsed)
+                : minLotes;
+            const canCancelApprovedEntry = isApprovedEditMode && entry.mpsItemId != null;
             return {
                 ...entry,
                 numeroLotes: normalizedLotes,
-                estadoItem: isApprovedEditMode ? (normalizedLotes <= 0 ? "CANCELADO" : "ACTIVO") : entry.estadoItem,
-                blockedReason: isApprovedEditMode && normalizedLotes <= 0
+                estadoItem: canCancelApprovedEntry ? (normalizedLotes <= 0 ? "CANCELADO" : "ACTIVO") : entry.estadoItem,
+                blockedReason: canCancelApprovedEntry && normalizedLotes <= 0
                     ? PENDING_CANCEL_REASON
                     : null,
             };
@@ -658,12 +688,14 @@ export default function ProgramacionProduccionSemanalTab() {
                 return entry;
             }
             const nextLotes = entry.numeroLotes + direction;
-            const normalizedLotes = Math.max(isApprovedEditMode ? 0 : 1, nextLotes);
+            const minLotes = getMinimumLotesForEntry(entry, isApprovedEditMode);
+            const normalizedLotes = Math.max(minLotes, nextLotes);
+            const canCancelApprovedEntry = isApprovedEditMode && entry.mpsItemId != null;
             return {
                 ...entry,
                 numeroLotes: normalizedLotes,
-                estadoItem: isApprovedEditMode ? (normalizedLotes <= 0 ? "CANCELADO" : "ACTIVO") : entry.estadoItem,
-                blockedReason: isApprovedEditMode && normalizedLotes <= 0 ? PENDING_CANCEL_REASON : null,
+                estadoItem: canCancelApprovedEntry ? (normalizedLotes <= 0 ? "CANCELADO" : "ACTIVO") : entry.estadoItem,
+                blockedReason: canCancelApprovedEntry && normalizedLotes <= 0 ? PENDING_CANCEL_REASON : null,
             };
         }));
     };
@@ -673,7 +705,7 @@ export default function ProgramacionProduccionSemanalTab() {
             if (entry.id !== entryId || !canEditEntry(entry)) {
                 return [entry];
             }
-            if (isApprovedEditMode) {
+            if (isApprovedEditMode && entry.mpsItemId != null) {
                 return [{
                     ...entry,
                     numeroLotes: 0,
@@ -722,7 +754,7 @@ export default function ProgramacionProduccionSemanalTab() {
             });
             return;
         }
-        if (!isMpsDateEditable(addDays(weekStartDate, targetDayIndex), editableFromDate)) {
+        if (!isApprovedEditMode && !isMpsDateEditable(addDays(weekStartDate, targetDayIndex), editableFromDate)) {
             toast({
                 title: "Dia destino bloqueado",
                 description: `No se puede programar antes de ${editableFromDate}.`,
@@ -756,7 +788,20 @@ export default function ProgramacionProduccionSemanalTab() {
         const changedEntries = entries.filter((entry) => (
             entry.mpsItemId != null && hasPersistedEntryChanged(entry, persistedById.get(entry.id))
         ));
-        if (changedEntries.length === 0) {
+        const newEntries = entries.filter((entry) => (
+            entry.mpsItemId == null && !isEntryCanceled(entry)
+        ));
+        if (newEntries.length > 0 && !allowAddTerminadosToApprovedMps) {
+            toast({
+                title: "Directiva inhabilitada",
+                description: "No se pueden agregar nuevos terminados en MPS aprobada mientras la directiva este apagada.",
+                status: "warning",
+                duration: 4000,
+                isClosable: true,
+            });
+            return;
+        }
+        if (changedEntries.length === 0 && newEntries.length === 0) {
             return;
         }
 
@@ -770,13 +815,23 @@ export default function ProgramacionProduccionSemanalTab() {
                     observacion: normalizeObservation(entry.observacion) || undefined,
                 });
             }
+            for (const entry of newEntries) {
+                latestSaved = await CrearMpsSemanalAprobadoItem({
+                    weekStartDate: currentDraft.weekStartDate,
+                    dayIndex: entry.dayIndex,
+                    terminadoId: entry.productoId,
+                    numeroLotes: Math.max(1, Math.round(entry.numeroLotes)),
+                    observacion: normalizeObservation(entry.observacion) || undefined,
+                });
+            }
 
             if (latestSaved) {
                 applySavedMpsState(latestSaved);
             }
+            const totalSaved = changedEntries.length + newEntries.length;
             toast({
                 title: "MPS actualizado",
-                description: `Se guardaron ${changedEntries.length} tarjeta(s) del MPS ${currentDraft.estado}.`,
+                description: `Se guardaron ${totalSaved} tarjeta(s) del MPS ${currentDraft.estado}.`,
                 status: "success",
                 duration: 3000,
                 isClosable: true,
@@ -898,7 +953,7 @@ export default function ProgramacionProduccionSemanalTab() {
     const canSave = validationIssues.length === 0
         && !isReadOnly
         && !isLoadingDraft
-        && !isWeekFullyLocked
+        && (!isWeekFullyLocked || isApprovedEditMode)
         && (isDraftMode || (isApprovedEditMode && hasUnsavedChanges));
 
     return (
@@ -979,21 +1034,25 @@ export default function ProgramacionProduccionSemanalTab() {
                         const dayEntries = entriesByDay.get(dayIndex) ?? [];
                         const dayDate = addDays(weekStartDate, dayIndex);
                         const isDayEditable = isMpsDateEditable(dayDate, editableFromDate);
-                        const addButtonLabel = !isDraftMode
-                            ? "No se agregan productos en MPS aprobado"
-                            : (isDayEditable ? "Agregar terminado" : `No editable antes de ${editableFromDate}`);
+                        const canDropOnDay = isApprovedEditMode || isDayEditable;
+                        const canAddOnDay = canAddTerminadoOnDay(dayIndex);
+                        const addButtonLabel = isDraftMode
+                            ? (isDayEditable ? "Agregar terminado" : `No editable antes de ${editableFromDate}`)
+                            : (isApprovedEditMode
+                                ? (allowAddTerminadosToApprovedMps ? "Agregar terminado en MPS aprobada" : "No se agregan productos en MPS aprobado")
+                                : "MPS no editable");
                         return (
                             <DroppableDayColumn
                                 key={label}
                                 dayIndex={dayIndex}
-                                isDayEditable={isDayEditable}
-                                isDropDisabled={isReadOnly || !isDayEditable}
+                                isDayEditable={canDropOnDay}
+                                isDropDisabled={isReadOnly || !canDropOnDay}
                             >
                                 <Flex align="start" justify="space-between" gap={2}>
                                     <Box>
                                         <Flex align="center" gap={2} wrap="wrap">
-                                            <Text fontWeight="bold">{label}</Text>
-                                            {!isDayEditable && <Badge colorScheme="gray">Bloqueado</Badge>}
+                                            <Text fontWeight="bold">Entrega {label}</Text>
+                                            {!isApprovedEditMode && !isDayEditable && <Badge colorScheme="gray">Bloqueado</Badge>}
                                         </Flex>
                                         <Text fontSize="sm" color="gray.600">{dayDate}</Text>
                                     </Box>
@@ -1003,7 +1062,7 @@ export default function ProgramacionProduccionSemanalTab() {
                                             icon={<AddIcon />}
                                             size="sm"
                                             colorScheme="teal"
-                                            isDisabled={!isDraftMode || isReadOnly || !isMonday(weekStartDate) || !isDayEditable}
+                                            isDisabled={!canAddOnDay}
                                             onClick={() => {
                                                 setPickerDayIndex(dayIndex);
                                                 pickerDisclosure.onOpen();
@@ -1024,6 +1083,7 @@ export default function ProgramacionProduccionSemanalTab() {
                                             const entryIssues = getEntryIssues(entry);
                                             const entryCanceled = isEntryCanceled(entry);
                                             const isEntryEditable = canEditEntry(entry);
+                                            const minLotes = getMinimumLotesForEntry(entry, isApprovedEditMode);
                                             return (
                                                 <DraggableEntryCard
                                                     key={entry.id}
@@ -1044,7 +1104,7 @@ export default function ProgramacionProduccionSemanalTab() {
                                                                 <Text fontSize="xs" color="gray.600">{entry.categoriaNombre ?? "Sin categoria"}</Text>
                                                             </Box>
                                                             <IconButton
-                                                                aria-label={isApprovedEditMode ? "Cancelar tarjeta MPS" : "Quitar terminado"}
+                                                                aria-label={isApprovedEditMode && entry.mpsItemId != null ? "Cancelar tarjeta MPS" : "Quitar terminado"}
                                                                 icon={<DeleteIcon />}
                                                                 size="xs"
                                                                 variant="ghost"
@@ -1062,13 +1122,13 @@ export default function ProgramacionProduccionSemanalTab() {
                                                                         icon={<MinusIcon />}
                                                                         size="sm"
                                                                         variant="outline"
-                                                                        isDisabled={!isEntryEditable || entry.numeroLotes <= (isApprovedEditMode ? 0 : 1)}
+                                                                        isDisabled={!isEntryEditable || entry.numeroLotes <= minLotes}
                                                                         onClick={() => adjustEntryLotes(entry.id, -1)}
                                                                     />
                                                                 </Tooltip>
                                                                 <NumberInput
                                                                     size="sm"
-                                                                    min={isApprovedEditMode ? 0 : 1}
+                                                                    min={minLotes}
                                                                     step={1}
                                                                     precision={0}
                                                                     value={entry.numeroLotes}

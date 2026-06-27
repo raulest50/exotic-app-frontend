@@ -138,6 +138,14 @@ export interface EditarMpsSemanalAprobadoItemRequestDTO {
     observacion?: string;
 }
 
+export interface CrearMpsSemanalAprobadoItemRequestDTO {
+    weekStartDate: string;
+    dayIndex: number;
+    terminadoId: string;
+    numeroLotes: number;
+    observacion?: string;
+}
+
 export interface GenerarOdpDesdeMpsResponseDTO {
     mpsId: number;
     weekStartDate: string;
@@ -224,6 +232,17 @@ export async function EditarMpsSemanalAprobadoItem(
     const endPoints = new EndPointsURL();
     const response = await axios.patch<MpsSemanalDraftDTO>(
         `${endPoints.programacion_mps_semanal}/items/${itemId}/edicion-aprobada`,
+        payload,
+    );
+    return response.data;
+}
+
+export async function CrearMpsSemanalAprobadoItem(
+    payload: CrearMpsSemanalAprobadoItemRequestDTO,
+): Promise<MpsSemanalDraftDTO> {
+    const endPoints = new EndPointsURL();
+    const response = await axios.post<MpsSemanalDraftDTO>(
+        `${endPoints.programacion_mps_semanal}/items/edicion-aprobada`,
         payload,
     );
     return response.data;

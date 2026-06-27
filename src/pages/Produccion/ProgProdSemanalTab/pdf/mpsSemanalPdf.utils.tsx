@@ -83,7 +83,7 @@ function buildItemPdfRow(dayLabel: string, dayDate: string, item: MpsSemanalItem
         item.categoriaNombre ?? "-",
         formatMpsPdfNumber(item.numeroLotes),
         formatMpsPdfNumber(item.cantidadTotal),
-        `${formatMpsPdfDate(item.fechaLanzamiento)}\n${formatMpsPdfDate(item.fechaFinalPlanificada)}`,
+        `Lanz. ${formatMpsPdfDate(item.fechaLanzamiento)}\nEntrega ${formatMpsPdfDate(item.fechaFinalPlanificada)}`,
         item.lotesPlanificados.map(formatPlannedLotLine).join("\n"),
         item.observacion || item.warning || "",
     ];
