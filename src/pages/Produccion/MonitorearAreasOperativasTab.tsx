@@ -34,6 +34,8 @@ import {
 import { FiArrowLeft, FiCalendar, FiEye, FiRefreshCw } from "react-icons/fi";
 
 import EndPointsURL from "../../api/EndPointsURL.tsx";
+import AreaOperativaInactivityBell from "./Alertas/AreaOperativaInactivityBell.tsx";
+import { useAreaOperativaInactivityAlerts } from "./Alertas/useAreaOperativaInactivityAlerts.ts";
 import {
     BOARD_COLUMN_META,
     formatDateTime,
@@ -109,6 +111,18 @@ function formatShortDate(value: string | null | undefined): string {
     });
 }
 
+function formatLastAlertUpdate(value: Date | null): string {
+    if (!value) {
+        return "Sin actualización";
+    }
+
+    return value.toLocaleTimeString("es-CO", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+    });
+}
+
 export default function MonitorearAreasOperativasTab() {
     const toast = useToast();
     const {
@@ -141,6 +155,14 @@ export default function MonitorearAreasOperativasTab() {
 
     const [detailLoading, setDetailLoading] = useState(false);
     const [detail, setDetail] = useState<OrdenProduccionSeguimientoDetalleDTO | null>(null);
+    const {
+        alertsByAreaId,
+        checkIntervalMinutes,
+        error: alertsError,
+        lastUpdatedAt: alertsLastUpdatedAt,
+        loading: alertsLoading,
+        refreshAlerts,
+    } = useAreaOperativaInactivityAlerts();
 
     const fetchAreas = useCallback(async () => {
         setLoading(true);
@@ -302,6 +324,8 @@ export default function MonitorearAreasOperativasTab() {
         }
     }, [onDetailOpen, toast]);
 
+    const selectedAreaAlert = selectedArea ? alertsByAreaId.get(selectedArea.areaId) : undefined;
+
     const metricCards = useMemo(() => {
         if (!tablero) {
             return [];
@@ -368,13 +392,35 @@ export default function MonitorearAreasOperativasTab() {
         return (
             <VStack align="stretch" spacing={4}>
                 <Box p={6} bg="white" borderRadius="md" boxShadow="sm">
-                    <VStack align="start" spacing={1}>
-                        <Heading size="md">Monitorear Áreas Operativas</Heading>
-                        <Text color="gray.600">
-                            Seleccione un área para entrar en modo vista de producción.
-                        </Text>
-                    </VStack>
+                    <HStack justify="space-between" align="start" flexWrap="wrap" gap={3}>
+                        <VStack align="start" spacing={1}>
+                            <Heading size="md">Monitorear Áreas Operativas</Heading>
+                            <Text color="gray.600">
+                                Seleccione un área para entrar en modo vista de producción.
+                            </Text>
+                            <Text fontSize="sm" color="gray.500">
+                                Alertas cada {checkIntervalMinutes} min · {formatLastAlertUpdate(alertsLastUpdatedAt)}
+                            </Text>
+                        </VStack>
+                        <Tooltip label="Refrescar alertas de inactividad" hasArrow>
+                            <IconButton
+                                aria-label="Refrescar alertas de inactividad"
+                                icon={<FiRefreshCw />}
+                                variant="outline"
+                                isLoading={alertsLoading}
+                                isDisabled={alertsLoading}
+                                onClick={() => void refreshAlerts()}
+                            />
+                        </Tooltip>
+                    </HStack>
                 </Box>
+
+                {alertsError ? (
+                    <Alert status="warning" borderRadius="md">
+                        <AlertIcon />
+                        {alertsError}
+                    </Alert>
+                ) : null}
 
                 {loading ? (
                     <Flex justify="center" align="center" py={10}>
@@ -412,7 +458,12 @@ export default function MonitorearAreasOperativasTab() {
                                 <Tbody>
                                     {areas.map((area) => (
                                         <Tr key={area.areaId}>
-                                            <Td>{area.nombre}</Td>
+                                            <Td>
+                                                <HStack spacing={2}>
+                                                    <AreaOperativaInactivityBell alert={alertsByAreaId.get(area.areaId)} />
+                                                    <Text>{area.nombre}</Text>
+                                                </HStack>
+                                            </Td>
                                             <Td>
                                                 <Text noOfLines={2} maxW="320px">
                                                     {area.descripcion || "Sin descripción"}
@@ -449,12 +500,28 @@ export default function MonitorearAreasOperativasTab() {
                 <VStack align="stretch" spacing={4}>
                     <HStack justify="space-between" flexWrap="wrap" gap={3}>
                         <Box>
-                            <Heading size="md">{selectedArea.nombre}</Heading>
+                            <HStack spacing={2}>
+                                <Heading size="md">{selectedArea.nombre}</Heading>
+                                <AreaOperativaInactivityBell alert={selectedAreaAlert} />
+                            </HStack>
                             <Text color="gray.600">
                                 Líder: {selectedArea.responsableArea.nombreCompleto || selectedArea.responsableArea.username}
                             </Text>
+                            <Text fontSize="sm" color="gray.500">
+                                Alertas cada {checkIntervalMinutes} min · {formatLastAlertUpdate(alertsLastUpdatedAt)}
+                            </Text>
                         </Box>
                         <HStack spacing={3}>
+                            <Tooltip label="Refrescar alertas de inactividad" hasArrow>
+                                <IconButton
+                                    aria-label="Refrescar alertas de inactividad"
+                                    icon={<FiRefreshCw />}
+                                    variant="outline"
+                                    isLoading={alertsLoading}
+                                    isDisabled={alertsLoading}
+                                    onClick={() => void refreshAlerts()}
+                                />
+                            </Tooltip>
                             <Button
                                 variant="outline"
                                 leftIcon={<FiArrowLeft />}
@@ -481,6 +548,13 @@ export default function MonitorearAreasOperativasTab() {
                             </Button>
                         </HStack>
                     </HStack>
+
+                    {alertsError ? (
+                        <Alert status="warning" borderRadius="md">
+                            <AlertIcon />
+                            {alertsError}
+                        </Alert>
+                    ) : null}
 
                     <HStack flexWrap="wrap" gap={3}>
                         <HStack spacing={2}>

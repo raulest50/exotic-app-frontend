@@ -270,6 +270,7 @@ export default class EndPointsURL{
     public monitoreo_areas_operativas: string;
     public monitoreo_area_tablero: string;
     public monitoreo_area_metricas: string;
+    public monitoreo_area_alertas_inactividad: string;
 
     // planeacion de produccion endpoints
     public planeacion_asociar_terminados: string;
@@ -819,6 +820,7 @@ export default class EndPointsURL{
         this.monitoreo_areas_operativas = `${domain}/api/produccion/monitoreo-areas-operativas/areas`;
         this.monitoreo_area_tablero = `${domain}/api/produccion/monitoreo-areas-operativas/areas/{areaId}/tablero`;
         this.monitoreo_area_metricas = `${domain}/api/produccion/monitoreo-areas-operativas/areas/{areaId}/metricas`;
+        this.monitoreo_area_alertas_inactividad = `${domain}/api/produccion/monitoreo-areas-operativas/alertas-inactividad`;
 
         // Planeacion de produccion endpoints
         this.planeacion_asociar_terminados = `${domain}/${planeacion_produccion_res}/asociar_terminados`;

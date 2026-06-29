@@ -35,6 +35,10 @@ import MyHeader from "../../components/MyHeader";
 import { useAuth } from "../../context/AuthContext";
 import { MasterDirective, useMasterDirectives } from "../../context/MasterDirectivesContext";
 import {
+    AREA_OPERATIVA_INACTIVITY_CHECK_INTERVAL_MINUTES_MAX,
+    AREA_OPERATIVA_INACTIVITY_CHECK_INTERVAL_MINUTES_MIN,
+    AREA_OPERATIVA_INACTIVITY_THRESHOLD_MINUTES_MAX,
+    AREA_OPERATIVA_INACTIVITY_THRESHOLD_MINUTES_MIN,
     AREA_OPERATIVA_NOISE_INTERVAL_MINUTES_MAX,
     AREA_OPERATIVA_NOISE_INTERVAL_MINUTES_MIN,
     AREA_OPERATIVA_NOISE_SAMPLE_SECONDS_MAX,
@@ -68,6 +72,17 @@ const AREA_OPERATIVA_NOISE_DIRECTIVE_NAMES = new Set<string>([
     MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_ENABLED,
     MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_INTERVAL_MINUTES,
     MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_SAMPLE_SECONDS,
+]);
+
+const AREA_OPERATIVA_INACTIVITY_DIRECTIVE_NAMES = new Set<string>([
+    MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_ALERT_ENABLED,
+    MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_THRESHOLD_MINUTES,
+    MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_CHECK_INTERVAL_MINUTES,
+]);
+
+const AREA_OPERATIVA_DIRECTIVE_NAMES = new Set<string>([
+    ...AREA_OPERATIVA_NOISE_DIRECTIVE_NAMES,
+    ...AREA_OPERATIVA_INACTIVITY_DIRECTIVE_NAMES,
 ]);
 
 const PRODUCTION_DIRECTIVE_NAMES = new Set<string>([
@@ -107,11 +122,27 @@ function getNumericDirectiveBounds(directive: MasterDirective) {
         };
     }
 
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_THRESHOLD_MINUTES) {
+        return {
+            min: AREA_OPERATIVA_INACTIVITY_THRESHOLD_MINUTES_MIN,
+            max: AREA_OPERATIVA_INACTIVITY_THRESHOLD_MINUTES_MAX,
+            error: `Debe ser un entero entre ${AREA_OPERATIVA_INACTIVITY_THRESHOLD_MINUTES_MIN} y ${AREA_OPERATIVA_INACTIVITY_THRESHOLD_MINUTES_MAX}`,
+        };
+    }
+
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_CHECK_INTERVAL_MINUTES) {
+        return {
+            min: AREA_OPERATIVA_INACTIVITY_CHECK_INTERVAL_MINUTES_MIN,
+            max: AREA_OPERATIVA_INACTIVITY_CHECK_INTERVAL_MINUTES_MAX,
+            error: `Debe ser un entero entre ${AREA_OPERATIVA_INACTIVITY_CHECK_INTERVAL_MINUTES_MIN} y ${AREA_OPERATIVA_INACTIVITY_CHECK_INTERVAL_MINUTES_MAX}`,
+        };
+    }
+
     return { min: 1, max: undefined, error: "Debe ser un entero mayor o igual a 1" };
 }
 
-function isAreaOperativaNoiseDirective(directive: MasterDirective) {
-    return AREA_OPERATIVA_NOISE_DIRECTIVE_NAMES.has(directive.nombre);
+function isAreaOperativaDirective(directive: MasterDirective) {
+    return AREA_OPERATIVA_DIRECTIVE_NAMES.has(directive.nombre);
 }
 
 function isProductionDirective(directive: MasterDirective) {
@@ -145,6 +176,29 @@ function getAreaOperativaNoiseDirectiveUnit(directive: MasterDirective) {
     }
     if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_NOISE_SAMPLE_SECONDS) {
         return "s";
+    }
+    return null;
+}
+
+function getAreaOperativaInactivityDirectiveLabel(directive: MasterDirective) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_ALERT_ENABLED) {
+        return "Habilitar alertas de inactividad";
+    }
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_THRESHOLD_MINUTES) {
+        return "Umbral sin terminaciones";
+    }
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_CHECK_INTERVAL_MINUTES) {
+        return "Intervalo de chequeo";
+    }
+    return directive.nombre;
+}
+
+function getAreaOperativaInactivityDirectiveUnit(directive: MasterDirective) {
+    if (
+        directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_THRESHOLD_MINUTES ||
+        directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_CHECK_INTERVAL_MINUTES
+    ) {
+        return "min";
     }
     return null;
 }
@@ -238,7 +292,7 @@ export default function MasterDirectivesPage() {
     }, [fetchConfig]);
 
     const genericMasterDirectives = useMemo(
-        () => masterDirectives.filter(directive => !isAreaOperativaNoiseDirective(directive) && !isProductionDirective(directive)),
+        () => masterDirectives.filter(directive => !isAreaOperativaDirective(directive) && !isProductionDirective(directive)),
         [masterDirectives]
     );
 
@@ -277,6 +331,21 @@ export default function MasterDirectivesPage() {
         [masterDirectives]
     );
 
+    const inactivityEnabledDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_ALERT_ENABLED),
+        [masterDirectives]
+    );
+
+    const inactivityThresholdDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_THRESHOLD_MINUTES),
+        [masterDirectives]
+    );
+
+    const inactivityCheckIntervalDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_CHECK_INTERVAL_MINUTES),
+        [masterDirectives]
+    );
+
     const mpsDiasBloqueoDirective = useMemo(
         () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION),
         [masterDirectives]
@@ -292,12 +361,18 @@ export default function MasterDirectivesPage() {
         [noiseIntervalDirective, noiseSampleDirective]
     );
 
+    const inactivityNumericDirectives = useMemo(
+        () => [inactivityThresholdDirective, inactivityCheckIntervalDirective].filter(isPresentDirective),
+        [inactivityThresholdDirective, inactivityCheckIntervalDirective]
+    );
+
     const productionDirectives = useMemo(
         () => [mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective].filter(isPresentDirective),
         [mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective]
     );
 
     const hasAllNoiseDirectives = Boolean(noiseEnabledDirective && noiseIntervalDirective && noiseSampleDirective);
+    const hasAllInactivityDirectives = Boolean(inactivityEnabledDirective && inactivityThresholdDirective && inactivityCheckIntervalDirective);
     const hasAllProductionDirectives = Boolean(mpsDiasBloqueoDirective && mpsAgregarTerminadosAprobadoDirective);
 
     const superMasterHasChanges =
@@ -734,6 +809,93 @@ export default function MasterDirectivesPage() {
                                     })}
                                 </Tbody>
                             </Table>
+
+                            <Box mt={8}>
+                                <Text mb={2} fontWeight="bold">
+                                    Alertas de inactividad
+                                </Text>
+                                {!hasAllInactivityDirectives && (
+                                    <Text color="app.textSubtle" fontSize="sm" mb={4}>
+                                        Las directivas de inactividad aun no estan disponibles. Verifica que el backend haya inicializado las directivas maestras.
+                                    </Text>
+                                )}
+                                <Table variant="simple">
+                                    <Thead>
+                                        <Tr>
+                                            <Th>Configuracion</Th>
+                                            <Th>Valor</Th>
+                                        </Tr>
+                                    </Thead>
+                                    <Tbody>
+                                        {inactivityEnabledDirective && (() => {
+                                            const value = directiveDrafts[inactivityEnabledDirective.id] ?? inactivityEnabledDirective.valor;
+                                            const hasRowChange = normalizeDirectiveDraftValue(inactivityEnabledDirective, value) !== normalizeDirectiveDraftValue(inactivityEnabledDirective, inactivityEnabledDirective.valor);
+                                            return (
+                                                <Tr key={inactivityEnabledDirective.id}>
+                                                    <Td>
+                                                        <Text fontWeight="bold">{getAreaOperativaInactivityDirectiveLabel(inactivityEnabledDirective)}</Text>
+                                                        <Text fontSize="sm" color="app.textSubtle">
+                                                            {inactivityEnabledDirective.resumen}
+                                                        </Text>
+                                                    </Td>
+                                                    <Td>
+                                                        <HStack>
+                                                            <Switch
+                                                                isChecked={isBooleanEnabled(value)}
+                                                                onChange={e => updateDirectiveDraft(inactivityEnabledDirective.id, String(e.target.checked))}
+                                                            />
+                                                            {hasRowChange && (
+                                                                <Icon as={FaCircleExclamation} color="orange.400" />
+                                                            )}
+                                                        </HStack>
+                                                    </Td>
+                                                </Tr>
+                                            );
+                                        })()}
+
+                                        {inactivityNumericDirectives.map(directive => {
+                                            const value = directiveDrafts[directive.id] ?? directive.valor;
+                                            const hasRowChange = value.trim() !== directive.valor;
+                                            const error = directiveErrors[directive.id];
+                                            const bounds = getNumericDirectiveBounds(directive);
+                                            const unit = getAreaOperativaInactivityDirectiveUnit(directive);
+                                            return (
+                                                <Tr key={directive.id}>
+                                                    <Td>
+                                                        <Text fontWeight="bold">{getAreaOperativaInactivityDirectiveLabel(directive)}</Text>
+                                                        <Text fontSize="sm" color="app.textSubtle">
+                                                            {directive.resumen}
+                                                        </Text>
+                                                    </Td>
+                                                    <Td>
+                                                        <HStack align="flex-start">
+                                                            <FormControl isInvalid={Boolean(error)} maxW="180px">
+                                                                <Input
+                                                                    type="number"
+                                                                    min={bounds.min}
+                                                                    max={bounds.max}
+                                                                    step={1}
+                                                                    value={value}
+                                                                    onChange={e => updateDirectiveDraft(directive.id, e.target.value)}
+                                                                />
+                                                                {error && <FormErrorMessage>{error}</FormErrorMessage>}
+                                                            </FormControl>
+                                                            {unit && (
+                                                                <Text color="app.textMuted" mt={2}>
+                                                                    {unit}
+                                                                </Text>
+                                                            )}
+                                                            {hasRowChange && (
+                                                                <Icon as={FaCircleExclamation} color="orange.400" mt={2} />
+                                                            )}
+                                                        </HStack>
+                                                    </Td>
+                                                </Tr>
+                                            );
+                                        })}
+                                    </Tbody>
+                                </Table>
+                            </Box>
                         </Box>
                     </TabPanel>
                 </TabPanels>
