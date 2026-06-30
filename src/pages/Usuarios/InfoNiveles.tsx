@@ -285,9 +285,9 @@ const canSaveFromBi = biAccessLevel >= 3;`,
     description: "Parametrizaciones transversales de la aplicacion",
     implementationDetails: false,
     levels: [
-      { level: 1, description: "Consulta de la identidad legal vigente y su historial." },
-      { level: 2, description: "Creacion de nuevas versiones vigentes de identidad legal." },
-      { level: 3, description: "Reservado para futuras parametrizaciones globales." },
+      { level: 1, description: "Consulta de identidad legal, logo documental, jornada laboral vigente e historiales." },
+      { level: 2, description: "Creacion de nuevas versiones vigentes de identidad legal, logo documental y jornada laboral." },
+      { level: 3, description: "Control total de parametrizaciones globales." },
     ],
   },
   [Modulo.CRONOGRAMA]: {

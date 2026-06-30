@@ -62,7 +62,8 @@ function sameCategoriaSelection(current: CategoriaHabilitada[], original: Catego
     const normalize = (categorias: CategoriaHabilitada[]) => [...categorias]
         .map((categoria) => ({
             categoriaId: categoria.categoriaId,
-            unidadMedidaIds: [...(categoria.unidadMedidaIds ?? [])].sort((a, b) => a - b),
+            unidadMedidaId: categoria.unidadMedidaId ?? null,
+            factorLote: categoria.factorLote ?? null,
         }))
         .sort((a, b) => a.categoriaId - b.categoriaId);
 
@@ -76,15 +77,16 @@ function sameCategoriaSelection(current: CategoriaHabilitada[], original: Catego
     return currentNormalized.every((categoria, index) => {
         const originalCategoria = originalNormalized[index];
         return categoria.categoriaId === originalCategoria.categoriaId
-            && categoria.unidadMedidaIds.length === originalCategoria.unidadMedidaIds.length
-            && categoria.unidadMedidaIds.every((id, unidadIndex) => id === originalCategoria.unidadMedidaIds[unidadIndex]);
+            && categoria.unidadMedidaId === originalCategoria.unidadMedidaId
+            && categoria.factorLote === originalCategoria.factorLote;
     });
 }
 
 function cloneCategorias(categorias: CategoriaHabilitada[]): CategoriaHabilitada[] {
     return categorias.map((categoria) => ({
         ...categoria,
-        unidadMedidaIds: [...(categoria.unidadMedidaIds ?? [])],
+        unidadMedidaId: categoria.unidadMedidaId ?? null,
+        factorLote: categoria.factorLote ?? null,
     }));
 }
 
@@ -146,7 +148,7 @@ export default function DetalleAreaOperativaDialog({
 
     if (!area) return null;
     const isSpecialSystemArea = isAlmacenGeneralArea(area);
-    const unidadesActivas = areaUnidades.filter((unidad) => unidad.activo);
+    const unidadesDisponibles = areaUnidades;
 
     const enterEditMode = () => {
         if (isSpecialSystemArea) {
@@ -232,7 +234,8 @@ export default function DetalleAreaOperativaDialog({
             categoriaIds: editCategoriasHabilitadas.map((categoria) => categoria.categoriaId),
             categoriasHabilitadas: editCategoriasHabilitadas.map((categoria) => ({
                 categoriaId: categoria.categoriaId,
-                unidadMedidaIds: [...(categoria.unidadMedidaIds ?? [])].sort((a, b) => a - b),
+                unidadMedidaId: categoria.unidadMedidaId ?? null,
+                factorLote: categoria.unidadMedidaId ? categoria.factorLote ?? 1 : null,
             })),
         };
 
@@ -277,24 +280,23 @@ export default function DetalleAreaOperativaDialog({
         return (
             <VStack align="stretch" spacing={3}>
                 {categorias.map((categoria) => {
-                    const unidadesCategoria = (categoria.unidadMedidaIds ?? [])
-                        .map((unidadId) => unidadById.get(unidadId))
-                        .filter((unidad): unidad is UnidadMedidaAreaOperativa => Boolean(unidad));
+                    const unidadCategoria = categoria.unidadMedidaId ? unidadById.get(categoria.unidadMedidaId) : null;
 
                     return (
                         <Box key={categoria.categoriaId} borderWidth="1px" borderRadius="md" p={3}>
                             <Text fontWeight="semibold" mb={2}>{categoria.categoriaNombre}</Text>
-                            {unidadesCategoria.length === 0 ? (
+                            {!unidadCategoria ? (
                                 <Text color="app.textSubtle" fontSize="sm">Sin unidades asociadas.</Text>
                             ) : (
                                 <Wrap>
-                                    {unidadesCategoria.map((unidad) => (
-                                        <WrapItem key={unidad.id}>
-                                            <Tag colorScheme="blue" borderRadius="full">
-                                                <TagLabel>{unidad.codigo} - {unidad.nombre}</TagLabel>
-                                            </Tag>
-                                        </WrapItem>
-                                    ))}
+                                    <WrapItem>
+                                        <Tag colorScheme="blue" borderRadius="full">
+                                            <TagLabel>
+                                                {unidadCategoria.nombre}
+                                                {categoria.factorLote ? ` · factor ${categoria.factorLote}` : ''}
+                                            </TagLabel>
+                                        </Tag>
+                                    </WrapItem>
                                 </Wrap>
                             )}
                         </Box>
@@ -432,7 +434,7 @@ export default function DetalleAreaOperativaDialog({
                                     <AreaOperativaCapacityConfig
                                         areaId={area.areaId}
                                         isReadOnly={isSpecialSystemArea}
-                                        visibleSections={['unidades', 'conversion']}
+                                        visibleSections={['unidades']}
                                         onUnidadesLoaded={handleUnidadesLoaded}
                                     />
                                 </TabPanel>
@@ -494,7 +496,7 @@ export default function DetalleAreaOperativaDialog({
                         onClose={() => setIsCategoriaPickerOpen(false)}
                         initialSelected={editCategoriasHabilitadas}
                         onConfirm={setEditCategoriasHabilitadas}
-                        unidadesDisponibles={unidadesActivas}
+                        unidadesDisponibles={unidadesDisponibles}
                         allowUnidadSelection
                     />
                 </>

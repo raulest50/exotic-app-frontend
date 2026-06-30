@@ -1,12 +1,14 @@
 export interface CategoriaHabilitada {
     categoriaId: number;
     categoriaNombre: string;
-    unidadMedidaIds?: number[];
+    unidadMedidaId?: number | null;
+    factorLote?: number | null;
 }
 
 export interface CategoriaHabilitadaMutation {
     categoriaId: number;
-    unidadMedidaIds: number[];
+    unidadMedidaId?: number | null;
+    factorLote?: number | null;
 }
 
 export interface AreaOperativa {
@@ -45,43 +47,31 @@ export interface AreaOperativaMutationDTO {
     categoriasHabilitadas?: CategoriaHabilitadaMutation[];
 }
 
-export type DimensionUnidadAreaOperativa = 'VOLUMEN' | 'MASA' | 'CONTEO' | 'TIEMPO';
+export type UnidadRelacionAreaOperativa = 'ML' | 'L' | 'G' | 'KG' | 'U';
 export type TipoCapacidadAreaOperativa = 'PRODUCTIVA' | 'ALMACENAMIENTO';
 export type PeriodoCapacidadAreaOperativa = 'HORA' | 'TURNO' | 'DIA' | 'SEMANA';
 
 export interface UnidadMedidaAreaOperativa {
     id: number;
     areaId: number;
-    codigo: string;
     nombre: string;
-    descripcion: string | null;
-    dimension: DimensionUnidadAreaOperativa;
-    unidadEstandar: string;
-    cantidadUnidadEstandar: number;
-    principal: boolean;
-    discreta: boolean;
-    activo: boolean;
+    relacionEstandar: number;
+    unidadRelacion: UnidadRelacionAreaOperativa;
 }
 
 export interface UnidadMedidaAreaOperativaRequest {
-    codigo: string;
     nombre: string;
-    descripcion?: string | null;
-    dimension: DimensionUnidadAreaOperativa;
-    unidadEstandar: string;
-    cantidadUnidadEstandar: number;
-    principal: boolean;
-    discreta: boolean;
-    activo: boolean;
+    relacionEstandar: number;
+    unidadRelacion: UnidadRelacionAreaOperativa;
 }
 
 export interface CapacidadAreaOperativa {
     id: number;
     areaId: number;
     unidadMedidaId: number;
-    unidadCodigo: string;
     unidadNombre: string;
-    unidadEstandar: string;
+    unidadRelacionEstandar: number;
+    unidadRelacion: UnidadRelacionAreaOperativa;
     tipoCapacidad: TipoCapacidadAreaOperativa;
     cantidad: number;
     periodo: PeriodoCapacidadAreaOperativa;
@@ -108,8 +98,8 @@ export interface ConversionUnidadAreaOperativaResponse {
     unidadOrigen: UnidadMedidaAreaOperativa;
     unidadDestino: UnidadMedidaAreaOperativa;
     cantidadOrigen: number;
-    cantidadEstandar: number;
-    unidadEstandar: string;
+    cantidadBase: number;
+    unidadBase: string;
     cantidadDestino: number;
 }
 

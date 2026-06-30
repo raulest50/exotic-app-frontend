@@ -5,6 +5,8 @@ import {
     Checkbox,
     Divider,
     Flex,
+    FormControl,
+    FormLabel,
     HStack,
     Input,
     InputGroup,
@@ -16,8 +18,9 @@ import {
     ModalFooter,
     ModalHeader,
     ModalOverlay,
-    Spinner,
     SimpleGrid,
+    Spinner,
+    Select,
     Table,
     TableContainer,
     Tag,
@@ -82,7 +85,8 @@ export default function CategoriaHabilitadaPickerModal({
         const nextSelected = initialSelected.reduce<Record<number, CategoriaHabilitada>>((acc, categoria) => {
             acc[categoria.categoriaId] = {
                 ...categoria,
-                unidadMedidaIds: categoria.unidadMedidaIds ?? [],
+                unidadMedidaId: categoria.unidadMedidaId ?? null,
+                factorLote: categoria.factorLote ?? null,
             };
             return acc;
         }, {});
@@ -129,40 +133,69 @@ export default function CategoriaHabilitadaPickerModal({
                 next[categoria.categoriaId] = {
                     categoriaId: categoria.categoriaId,
                     categoriaNombre: categoria.categoriaNombre,
-                    unidadMedidaIds: [],
+                    unidadMedidaId: null,
+                    factorLote: null,
                 };
             }
             return next;
         });
     };
 
-    const toggleUnidadForCategoria = (categoriaId: number, unidadId: number) => {
+    const setUnidadForCategoria = (categoriaId: number, unidadId: number | null) => {
         setSelectedById((prev) => {
             const selected = prev[categoriaId];
             if (!selected) {
                 return prev;
             }
 
-            const currentIds = selected.unidadMedidaIds ?? [];
-            const nextUnidadIds = currentIds.includes(unidadId)
-                ? currentIds.filter((id) => id !== unidadId)
-                : [...currentIds, unidadId];
+            return {
+                ...prev,
+                [categoriaId]: {
+                    ...selected,
+                    unidadMedidaId: unidadId,
+                    factorLote: unidadId === null ? null : selected.factorLote ?? 1,
+                },
+            };
+        });
+    };
+
+    const setFactorLoteForCategoria = (categoriaId: number, factorLote: number | null) => {
+        setSelectedById((prev) => {
+            const selected = prev[categoriaId];
+            if (!selected) {
+                return prev;
+            }
 
             return {
                 ...prev,
                 [categoriaId]: {
                     ...selected,
-                    unidadMedidaIds: nextUnidadIds.sort((a, b) => a - b),
+                    factorLote,
                 },
             };
         });
     };
 
     const handleConfirm = () => {
+        const hasInvalidFactor = Object.values(selectedById).some((categoria) =>
+            Boolean(categoria.unidadMedidaId) && (!categoria.factorLote || categoria.factorLote <= 0),
+        );
+        if (hasInvalidFactor) {
+            toast({
+                title: 'Factor lote requerido',
+                description: 'Toda categoría con unidad asociada debe tener un factor lote mayor que cero.',
+                status: 'warning',
+                duration: 4000,
+                isClosable: true,
+            });
+            return;
+        }
+
         const selectedCategorias = Object.values(selectedById)
             .map((categoria) => ({
                 ...categoria,
-                unidadMedidaIds: [...(categoria.unidadMedidaIds ?? [])].sort((a, b) => a - b),
+                unidadMedidaId: categoria.unidadMedidaId ?? null,
+                factorLote: categoria.unidadMedidaId ? categoria.factorLote ?? 1 : null,
             }))
             .sort((a, b) =>
                 a.categoriaNombre.localeCompare(b.categoriaNombre, 'es', { sensitivity: 'base' }),
@@ -173,6 +206,9 @@ export default function CategoriaHabilitadaPickerModal({
 
     const selectedCategorias = Object.values(selectedById).sort((a, b) =>
         a.categoriaNombre.localeCompare(b.categoriaNombre, 'es', { sensitivity: 'base' }),
+    );
+    const hasInvalidFactor = selectedCategorias.some((categoria) =>
+        Boolean(categoria.unidadMedidaId) && (!categoria.factorLote || categoria.factorLote <= 0),
     );
 
     return (
@@ -248,28 +284,53 @@ export default function CategoriaHabilitadaPickerModal({
                                     </Text>
                                     {unidadesDisponibles.length === 0 ? (
                                         <Text color="app.textSubtle" fontSize="sm">
-                                            Sin unidades activas disponibles para asociar.
+                                            Sin unidades disponibles para asociar.
                                         </Text>
                                     ) : (
                                         <VStack align="stretch" spacing={3}>
                                             {selectedCategorias.map((categoria) => {
-                                                const selectedUnidadIds = categoria.unidadMedidaIds ?? [];
                                                 return (
                                                     <Box key={categoria.categoriaId} borderWidth="1px" borderRadius="md" p={3}>
                                                         <Text fontSize="sm" fontWeight="semibold" mb={2}>
                                                             {categoria.categoriaNombre}
                                                         </Text>
-                                                        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={2}>
-                                                            {unidadesDisponibles.map((unidad) => (
-                                                                <Checkbox
-                                                                    key={unidad.id}
+                                                        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
+                                                            <FormControl>
+                                                                <FormLabel fontSize="xs">Unidad</FormLabel>
+                                                                <Select
                                                                     size="sm"
-                                                                    isChecked={selectedUnidadIds.includes(unidad.id)}
-                                                                    onChange={() => toggleUnidadForCategoria(categoria.categoriaId, unidad.id)}
+                                                                    value={categoria.unidadMedidaId ?? ''}
+                                                                    onChange={(event) => setUnidadForCategoria(
+                                                                        categoria.categoriaId,
+                                                                        event.target.value ? Number(event.target.value) : null,
+                                                                    )}
                                                                 >
-                                                                    {unidad.codigo} - {unidad.nombre}
-                                                                </Checkbox>
-                                                            ))}
+                                                                    <option value="">Sin unidad</option>
+                                                                    {unidadesDisponibles.map((unidad) => (
+                                                                        <option key={unidad.id} value={unidad.id}>
+                                                                            {unidad.nombre}
+                                                                        </option>
+                                                                    ))}
+                                                                </Select>
+                                                            </FormControl>
+                                                            <FormControl>
+                                                                <FormLabel fontSize="xs">Factor lote</FormLabel>
+                                                                <Input
+                                                                    size="sm"
+                                                                    type="number"
+                                                                    min={0.000001}
+                                                                    step="0.000001"
+                                                                    value={categoria.factorLote ?? ''}
+                                                                    isDisabled={!categoria.unidadMedidaId}
+                                                                    onChange={(event) => {
+                                                                        const parsed = Number(event.target.value);
+                                                                        setFactorLoteForCategoria(
+                                                                            categoria.categoriaId,
+                                                                            event.target.value && Number.isFinite(parsed) ? parsed : null,
+                                                                        );
+                                                                    }}
+                                                                />
+                                                            </FormControl>
                                                         </SimpleGrid>
                                                     </Box>
                                                 );
@@ -341,7 +402,7 @@ export default function CategoriaHabilitadaPickerModal({
                     <Button variant="ghost" mr={3} onClick={onClose}>
                         Cancelar
                     </Button>
-                    <Button colorScheme="teal" onClick={handleConfirm}>
+                    <Button colorScheme="teal" onClick={handleConfirm} isDisabled={hasInvalidFactor}>
                         Confirmar
                     </Button>
                 </ModalFooter>

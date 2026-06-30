@@ -318,6 +318,8 @@ export default class EndPointsURL{
     public empresa_logo_documental_vigente_imagen: string;
     public empresa_logo_documental_versiones: string;
     public empresa_logo_documental_version_imagen: string;
+    public jornada_laboral_vigente: string;
+    public jornada_laboral_versiones: string;
 
     public get_super_master_directive(nombre: string): string {
         return `${this.domain}/api/super-master-directives/directives/${encodeURIComponent(nombre)}`;
@@ -550,6 +552,7 @@ export default class EndPointsURL{
         const informes_diarios_res = 'bi/informes-diarios';
         const empresa_identidad_legal_res = 'api/empresa-identidad-legal';
         const empresa_logo_documental_res = 'api/empresa-logo-documental';
+        const jornada_laboral_res = 'api/jornada-laboral';
 
         // productos endpoints
         this.search_mprima = `${domain}/${productos_res}/search_mprima`;
@@ -771,6 +774,8 @@ export default class EndPointsURL{
         this.empresa_logo_documental_vigente_imagen = `${domain}/${empresa_logo_documental_res}/vigente/imagen`;
         this.empresa_logo_documental_versiones = `${domain}/${empresa_logo_documental_res}/versiones`;
         this.empresa_logo_documental_version_imagen = `${domain}/${empresa_logo_documental_res}/versiones/{id}/imagen`;
+        this.jornada_laboral_vigente = `${domain}/${jornada_laboral_res}/vigente`;
+        this.jornada_laboral_versiones = `${domain}/${jornada_laboral_res}/versiones`;
 
         // super master directives config/profile endpoints
         this.get_super_master_directives_config = `${domain}/api/super-master-directives/config`;
