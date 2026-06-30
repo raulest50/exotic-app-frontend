@@ -56,6 +56,8 @@ export default class EndPointsURL{
 
     // ruta proceso cat endpoints
     public get_ruta_proceso_cat: string;
+    public get_ruta_proceso_cat_versiones: string;
+    public get_ruta_proceso_cat_version: string;
     public save_ruta_proceso_cat: string;
     public delete_ruta_proceso_cat: string;
     public check_rutas_exist_batch: string;
@@ -397,12 +399,31 @@ export default class EndPointsURL{
         return q;
     }
 
+    private informesDiariosExcelRangeQuery(
+        fechaDesde: string,
+        fechaHasta: string,
+        decimalSeparator?: ExcelDecimalSeparator
+    ): URLSearchParams {
+        const q = new URLSearchParams({ fechaDesde, fechaHasta });
+        if (decimalSeparator) q.set("decimalSeparator", decimalSeparator);
+        return q;
+    }
+
     /** GET Excel ingreso de materiales (BI). @param fecha ISO date YYYY-MM-DD */
     public informesDiariosAlmacenIngresoMaterialesExcel(
         fecha: string,
         decimalSeparator?: ExcelDecimalSeparator
     ): string {
         const q = this.informesDiariosExcelQuery(fecha, decimalSeparator);
+        return `${this.domain}/bi/informes-diarios/almacen/ingreso-materiales/excel?${q.toString()}`;
+    }
+
+    public informesDiariosAlmacenIngresoMaterialesExcelRango(
+        fechaDesde: string,
+        fechaHasta: string,
+        decimalSeparator?: ExcelDecimalSeparator
+    ): string {
+        const q = this.informesDiariosExcelRangeQuery(fechaDesde, fechaHasta, decimalSeparator);
         return `${this.domain}/bi/informes-diarios/almacen/ingreso-materiales/excel?${q.toString()}`;
     }
 
@@ -415,12 +436,30 @@ export default class EndPointsURL{
         return `${this.domain}/bi/informes-diarios/almacen/dispensacion-materiales/excel?${q.toString()}`;
     }
 
+    public informesDiariosAlmacenDispensacionMaterialesExcelRango(
+        fechaDesde: string,
+        fechaHasta: string,
+        decimalSeparator?: ExcelDecimalSeparator
+    ): string {
+        const q = this.informesDiariosExcelRangeQuery(fechaDesde, fechaHasta, decimalSeparator);
+        return `${this.domain}/bi/informes-diarios/almacen/dispensacion-materiales/excel?${q.toString()}`;
+    }
+
     /** GET Excel ingreso producto terminado (BI). @param fecha ISO date YYYY-MM-DD */
     public informesDiariosAlmacenIngresoTerminadosExcel(
         fecha: string,
         decimalSeparator?: ExcelDecimalSeparator
     ): string {
         const q = this.informesDiariosExcelQuery(fecha, decimalSeparator);
+        return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/excel?${q.toString()}`;
+    }
+
+    public informesDiariosAlmacenIngresoTerminadosExcelRango(
+        fechaDesde: string,
+        fechaHasta: string,
+        decimalSeparator?: ExcelDecimalSeparator
+    ): string {
+        const q = this.informesDiariosExcelRangeQuery(fechaDesde, fechaHasta, decimalSeparator);
         return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/excel?${q.toString()}`;
     }
 
@@ -441,6 +480,15 @@ export default class EndPointsURL{
     /** GET Excel informe diario de compras OCM (BI). @param fecha ISO date YYYY-MM-DD */
     public informesDiariosComprasExcel(fecha: string, decimalSeparator?: ExcelDecimalSeparator): string {
         const q = this.informesDiariosExcelQuery(fecha, decimalSeparator);
+        return `${this.domain}/bi/informes-diarios/compras/excel?${q.toString()}`;
+    }
+
+    public informesDiariosComprasExcelRango(
+        fechaDesde: string,
+        fechaHasta: string,
+        decimalSeparator?: ExcelDecimalSeparator
+    ): string {
+        const q = this.informesDiariosExcelRangeQuery(fechaDesde, fechaHasta, decimalSeparator);
         return `${this.domain}/bi/informes-diarios/compras/excel?${q.toString()}`;
     }
 
@@ -597,6 +645,8 @@ export default class EndPointsURL{
         // Ruta proceso cat endpoints
         const ruta_proceso_cat_res = 'api/ruta-proceso-cat';
         this.get_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/{categoriaId}`;
+        this.get_ruta_proceso_cat_versiones = `${domain}/${ruta_proceso_cat_res}/{categoriaId}/versiones`;
+        this.get_ruta_proceso_cat_version = `${domain}/${ruta_proceso_cat_res}/{categoriaId}/versiones/{versionId}`;
         this.save_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/save_ruprocat`;
         this.delete_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/{categoriaId}`;
         this.check_rutas_exist_batch = `${domain}/${ruta_proceso_cat_res}/exists-batch`;

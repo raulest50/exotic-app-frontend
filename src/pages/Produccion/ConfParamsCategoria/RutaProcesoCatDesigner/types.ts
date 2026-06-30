@@ -32,6 +32,14 @@ export interface RutaProcesoEdgeDTO {
 export interface RutaProcesoCatDTO {
     id?: number;
     categoriaId: number;
+    versionId?: number | null;
+    versionNumber?: number | null;
+    estado?: string | null;
+    vigenteDesde?: string | null;
+    vigenteHasta?: string | null;
+    creadoEn?: string | null;
+    creadoPor?: string | null;
+    motivoCambio?: string | null;
     nodes: RutaProcesoNodeDTO[];
     edges: RutaProcesoEdgeDTO[];
 }

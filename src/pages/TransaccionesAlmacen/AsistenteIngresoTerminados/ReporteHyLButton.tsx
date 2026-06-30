@@ -170,7 +170,7 @@ export default function ReporteHyLButton({ ingresosValidados }: ReporteHyLButton
 
             const xml = buildHyLXml(rows);
             const fechaReporte = productosProducidos[0]?.fechaReporte ?? new Date().toISOString().slice(0, 10);
-            downloadXml(xml, `reporte_hyl_${fechaReporte.replace(/-/g, "")}.xml`);
+            downloadXml(xml, `reporte_hyl_${fechaReporte.replace(/-/g, "")}.xls`);
 
             toast({
                 title: "Reporte HyL generado",
