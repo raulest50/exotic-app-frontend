@@ -1,3 +1,4 @@
+import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import {
     Badge,
     Box,
@@ -7,6 +8,7 @@ import {
     FormLabel,
     Grid,
     HStack,
+    IconButton,
     Input,
     Spinner,
     Switch,
@@ -17,6 +19,7 @@ import {
     Textarea,
     Th,
     Thead,
+    Tooltip,
     Tr,
     VStack,
     useToast,
@@ -44,7 +47,7 @@ interface BlockDraft {
 
 interface SectionDraft {
     laborable: boolean;
-    bloques: [BlockDraft, BlockDraft];
+    bloques: BlockDraft[];
 }
 
 type JornadaDraft = Record<SectionKey, SectionDraft> & {
@@ -68,23 +71,17 @@ const DAY_LABELS: Record<number, string> = {
 };
 
 const EMPTY_BLOCK: BlockDraft = { horaInicio: "", horaFin: "" };
-const DEFAULT_WORKDAY_BLOCKS: [BlockDraft, BlockDraft] = [
+const MAX_BLOCKS_PER_SECTION = 2;
+const DEFAULT_WORKDAY_BLOCKS: BlockDraft[] = [
     { horaInicio: "07:30", horaFin: "12:00" },
     { horaInicio: "13:00", horaFin: "17:00" },
 ];
-
-const DEFAULT_DRAFT: JornadaDraft = {
-    weekdays: { laborable: true, bloques: cloneDefaultBlocks() },
-    saturday: { laborable: true, bloques: cloneDefaultBlocks() },
-    sunday: { laborable: false, bloques: cloneDefaultBlocks() },
-    motivoCambio: "",
-};
 
 export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSectionProps) {
     const toast = useToast();
     const [vigente, setVigente] = useState<JornadaLaboralVersion | null>(null);
     const [versiones, setVersiones] = useState<JornadaLaboralVersion[]>([]);
-    const [draft, setDraft] = useState<JornadaDraft>(DEFAULT_DRAFT);
+    const [draft, setDraft] = useState<JornadaDraft>(() => createDefaultDraft());
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
@@ -126,20 +123,23 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
             [sectionKey]: {
                 ...current[sectionKey],
                 laborable,
+                bloques: laborable
+                    ? (current[sectionKey].bloques.length > 0 ? current[sectionKey].bloques : cloneDefaultBlocks())
+                    : [],
             },
         }));
     };
 
     const updateBlock = (
         sectionKey: SectionKey,
-        blockIndex: 0 | 1,
+        blockIndex: number,
         field: keyof BlockDraft,
         value: string
     ) => {
         setDraft((current) => {
             const nextBlocks = current[sectionKey].bloques.map((block, index) => (
                 index === blockIndex ? { ...block, [field]: value } : block
-            )) as [BlockDraft, BlockDraft];
+            ));
             return {
                 ...current,
                 [sectionKey]: {
@@ -150,8 +150,35 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
         });
     };
 
+    const addBlock = (sectionKey: SectionKey) => {
+        setDraft((current) => {
+            const section = current[sectionKey];
+            if (!section.laborable || section.bloques.length >= MAX_BLOCKS_PER_SECTION) return current;
+            return {
+                ...current,
+                [sectionKey]: {
+                    ...section,
+                    bloques: [...section.bloques, { ...EMPTY_BLOCK }],
+                },
+            };
+        });
+    };
+
+    const removeBlock = (sectionKey: SectionKey, blockIndex: number) => {
+        setDraft((current) => {
+            const section = current[sectionKey];
+            return {
+                ...current,
+                [sectionKey]: {
+                    ...section,
+                    bloques: section.bloques.filter((_, index) => index !== blockIndex),
+                },
+            };
+        });
+    };
+
     const handleRestore = () => {
-        setDraft(vigente ? draftFromVersion(vigente) : DEFAULT_DRAFT);
+        setDraft(vigente ? draftFromVersion(vigente) : createDefaultDraft());
     };
 
     const handleSave = async () => {
@@ -220,30 +247,59 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
                             </HStack>
 
                             <VStack align="stretch" spacing={3}>
-                                {draft[section.key].bloques.map((block, index) => (
-                                    <Grid key={index} templateColumns="1fr 1fr" gap={2}>
-                                        <FormControl isDisabled={!canEdit || !draft[section.key].laborable}>
+                                {draft[section.key].laborable && draft[section.key].bloques.map((block, index) => (
+                                    <Grid
+                                        key={index}
+                                        templateColumns={canEdit ? "1fr 1fr auto" : "1fr 1fr"}
+                                        gap={2}
+                                        alignItems="end"
+                                    >
+                                        <FormControl isDisabled={!canEdit}>
                                             <FormLabel fontSize="xs" mb={1}>
-                                                {index === 0 ? "Inicio" : "Inicio opcional"}
+                                                Inicio {index + 1}
                                             </FormLabel>
                                             <Input
                                                 type="time"
                                                 value={block.horaInicio}
-                                                onChange={(event) => updateBlock(section.key, index as 0 | 1, "horaInicio", event.target.value)}
+                                                onChange={(event) => updateBlock(section.key, index, "horaInicio", event.target.value)}
                                             />
                                         </FormControl>
-                                        <FormControl isDisabled={!canEdit || !draft[section.key].laborable}>
+                                        <FormControl isDisabled={!canEdit}>
                                             <FormLabel fontSize="xs" mb={1}>
-                                                {index === 0 ? "Fin" : "Fin opcional"}
+                                                Fin {index + 1}
                                             </FormLabel>
                                             <Input
                                                 type="time"
                                                 value={block.horaFin}
-                                                onChange={(event) => updateBlock(section.key, index as 0 | 1, "horaFin", event.target.value)}
+                                                onChange={(event) => updateBlock(section.key, index, "horaFin", event.target.value)}
                                             />
                                         </FormControl>
+                                        {canEdit && (
+                                            <Tooltip label="Eliminar bloque">
+                                                <IconButton
+                                                    aria-label={`Eliminar bloque ${index + 1}`}
+                                                    icon={<DeleteIcon />}
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    colorScheme="red"
+                                                    onClick={() => removeBlock(section.key, index)}
+                                                />
+                                            </Tooltip>
+                                        )}
                                     </Grid>
                                 ))}
+                                {canEdit
+                                    && draft[section.key].laborable
+                                    && draft[section.key].bloques.length < MAX_BLOCKS_PER_SECTION && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            leftIcon={<AddIcon />}
+                                            onClick={() => addBlock(section.key)}
+                                        >
+                                            Agregar bloque
+                                        </Button>
+                                    )}
                             </VStack>
                         </Box>
                     ))}
@@ -335,12 +391,17 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
     );
 }
 
-function cloneDefaultBlocks(): [BlockDraft, BlockDraft] {
-    return DEFAULT_WORKDAY_BLOCKS.map((block) => ({ ...block })) as [BlockDraft, BlockDraft];
+function createDefaultDraft(): JornadaDraft {
+    return {
+        weekdays: { laborable: true, bloques: cloneDefaultBlocks() },
+        saturday: { laborable: true, bloques: cloneDefaultBlocks() },
+        sunday: { laborable: false, bloques: [] },
+        motivoCambio: "",
+    };
 }
 
-function emptyBlocks(): [BlockDraft, BlockDraft] {
-    return [{ ...EMPTY_BLOCK }, { ...EMPTY_BLOCK }];
+function cloneDefaultBlocks(): BlockDraft[] {
+    return DEFAULT_WORKDAY_BLOCKS.map((block) => ({ ...block }));
 }
 
 function draftFromVersion(version: JornadaLaboralVersion): JornadaDraft {
@@ -358,20 +419,17 @@ function sectionFromVersion(version: JornadaLaboralVersion, days: number[]): Sec
         .find((blocks) => blocks.length > 0);
 
     if (!firstDayWithBlocks) {
-        return { laborable: false, bloques: emptyBlocks() };
+        return { laborable: false, bloques: [] };
     }
 
-    const normalized = firstDayWithBlocks.slice(0, 2).map((block) => ({
+    const normalized = firstDayWithBlocks.slice(0, MAX_BLOCKS_PER_SECTION).map((block) => ({
         horaInicio: toTimeInputValue(block.horaInicio),
         horaFin: toTimeInputValue(block.horaFin),
     }));
 
     return {
         laborable: true,
-        bloques: [
-            normalized[0] ?? { ...EMPTY_BLOCK },
-            normalized[1] ?? { ...EMPTY_BLOCK },
-        ],
+        bloques: normalized,
     };
 }
 
@@ -389,7 +447,7 @@ function payloadFromDraft(draft: JornadaDraft): JornadaLaboralVersionPayload {
                 diaSemana: day,
                 laborable: draft[section.key].laborable,
                 bloques: draft[section.key].laborable
-                    ? completeBlocks(draft[section.key].bloques)
+                    ? sortBlocksByStart(completeBlocks(draft[section.key].bloques))
                     : [],
             }))
         )),
@@ -426,6 +484,9 @@ function validateDraft(draft: JornadaDraft): ValidationError[] {
         const hasPartialBlock = sectionDraft.bloques.some((block) => (
             Boolean(block.horaInicio.trim()) !== Boolean(block.horaFin.trim())
         ));
+        if (sectionDraft.bloques.length > MAX_BLOCKS_PER_SECTION) {
+            errors.push({ field: section.key, message: `${section.label}: maximo dos bloques horarios.` });
+        }
         if (hasPartialBlock) {
             errors.push({ field: section.key, message: `${section.label}: complete inicio y fin de cada bloque.` });
         }
@@ -437,8 +498,12 @@ function validateDraft(draft: JornadaDraft): ValidationError[] {
                 errors.push({ field: section.key, message: `${section.label}: el inicio debe ser anterior al fin.` });
             }
         });
-        if (complete.length === 2 && complete[0].horaFin > complete[1].horaInicio) {
-            errors.push({ field: section.key, message: `${section.label}: los bloques no pueden solaparse.` });
+        const orderedBlocks = sortBlocksByStart(complete);
+        for (let index = 1; index < orderedBlocks.length; index++) {
+            if (orderedBlocks[index - 1].horaFin > orderedBlocks[index].horaInicio) {
+                errors.push({ field: section.key, message: `${section.label}: los bloques no pueden solaparse.` });
+                break;
+            }
         }
     });
 
@@ -451,6 +516,10 @@ function validateDraft(draft: JornadaDraft): ValidationError[] {
 
 function getMotivoError(errors: ValidationError[]) {
     return errors.find((error) => error.field === "motivoCambio")?.message;
+}
+
+function sortBlocksByStart(blocks: BlockDraft[]): BlockDraft[] {
+    return [...blocks].sort((left, right) => left.horaInicio.localeCompare(right.horaInicio));
 }
 
 function calculateDraftMinutes(draft: JornadaDraft): number {
