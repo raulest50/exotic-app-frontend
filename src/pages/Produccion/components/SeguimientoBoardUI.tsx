@@ -21,6 +21,7 @@ import {
     useColorModeValue,
     VStack,
 } from "@chakra-ui/react";
+import { useCallback, type MutableRefObject } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { FiEye, FiPause, FiPlay, FiRefreshCw } from "react-icons/fi";
@@ -309,6 +310,7 @@ interface SeguimientoBoardColumnProps {
     onOpenDetail: (card: SeguimientoOrdenAreaCardDTO) => void;
     onAction?: (action: SeguimientoActionType, card: SeguimientoOrdenAreaCardDTO) => void;
     dndEnabled?: boolean;
+    containerRef?: MutableRefObject<HTMLDivElement | null>;
 }
 
 export function SeguimientoBoardColumn({
@@ -318,6 +320,7 @@ export function SeguimientoBoardColumn({
     onOpenDetail,
     onAction,
     dndEnabled = false,
+    containerRef,
 }: SeguimientoBoardColumnProps) {
     const meta = BOARD_COLUMN_META[estadoKey];
     const columnBg = useColorModeValue("whiteAlpha.900", "whiteAlpha.100");
@@ -332,17 +335,20 @@ export function SeguimientoBoardColumn({
                 onAction={onAction}
                 columnBg={columnBg}
                 meta={meta}
+                containerRef={containerRef}
             />
         );
     }
 
     return (
         <Box
+            ref={containerRef}
             borderWidth="1px"
             borderRadius="xl"
             bg={columnBg}
             overflow="hidden"
             minH="280px"
+            scrollMarginTop={4}
         >
             <SeguimientoBoardColumnContent
                 meta={meta}
@@ -364,6 +370,7 @@ function DroppableSeguimientoBoardColumn({
     onAction,
     columnBg,
     meta,
+    containerRef,
 }: SeguimientoBoardColumnProps & {
     columnBg: string;
     meta: (typeof BOARD_COLUMN_META)[EstadoTableroKey];
@@ -373,16 +380,23 @@ function DroppableSeguimientoBoardColumn({
         id: getSeguimientoColumnDroppableId(estadoKey),
         data: { estadoKey },
     });
+    const setCombinedNodeRef = useCallback((node: HTMLDivElement | null) => {
+        setNodeRef(node);
+        if (containerRef) {
+            containerRef.current = node;
+        }
+    }, [containerRef, setNodeRef]);
 
     return (
         <Box
-            ref={setNodeRef}
+            ref={setCombinedNodeRef}
             borderWidth="1px"
             borderRadius="xl"
             borderColor={isOver ? "teal.300" : undefined}
             bg={isOver ? columnOverBg : columnBg}
             overflow="visible"
             minH="280px"
+            scrollMarginTop={4}
         >
             <SeguimientoBoardColumnContent
                 meta={meta}
@@ -443,6 +457,11 @@ interface SeguimientoResumenCardsProps {
     espera: number;
     enProceso: number;
     completado: number;
+    onTotalClick?: () => void;
+    onColaClick?: () => void;
+    onEsperaClick?: () => void;
+    onEnProcesoClick?: () => void;
+    onCompletadoClick?: () => void;
 }
 
 export function SeguimientoResumenCards({
@@ -451,25 +470,62 @@ export function SeguimientoResumenCards({
     espera,
     enProceso,
     completado,
+    onTotalClick,
+    onColaClick,
+    onEsperaClick,
+    onEnProcesoClick,
+    onCompletadoClick,
 }: SeguimientoResumenCardsProps) {
     const stats = [
-        { label: "Total", value: total, color: "teal.500" },
-        { label: "En cola", value: cola, color: "orange.500" },
-        { label: "En espera", value: espera, color: "yellow.500" },
-        { label: "En proceso", value: enProceso, color: "blue.500" },
-        { label: "Completadas", value: completado, color: "green.500" },
+        { label: "Total", value: total, color: "teal.500", onClick: onTotalClick, ariaLabel: "Ir al tablero operativo" },
+        { label: "En cola", value: cola, color: "orange.500", onClick: onColaClick, ariaLabel: "Ir a la columna En cola" },
+        { label: "En espera", value: espera, color: "yellow.500", onClick: onEsperaClick, ariaLabel: "Ir a la columna En espera" },
+        { label: "En proceso", value: enProceso, color: "blue.500", onClick: onEnProcesoClick, ariaLabel: "Ir a la columna En proceso" },
+        { label: "Completadas", value: completado, color: "green.500", onClick: onCompletadoClick, ariaLabel: "Ir a la columna Completadas" },
     ];
 
     return (
         <SimpleGrid columns={{ base: 2, md: 3, xl: 5 }} spacing={4}>
-            {stats.map((item) => (
-                <Box key={item.label} borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
+            {stats.map((item) => {
+                const content = (
                     <Stat>
                         <StatLabel>{item.label}</StatLabel>
                         <StatNumber color={item.color}>{item.value}</StatNumber>
                     </Stat>
-                </Box>
-            ))}
+                );
+
+                if (item.onClick) {
+                    return (
+                        <Box
+                            key={item.label}
+                            as="button"
+                            type="button"
+                            borderWidth="1px"
+                            borderRadius="lg"
+                            bg="app.surface"
+                            p={4}
+                            w="full"
+                            textAlign="left"
+                            fontFamily="inherit"
+                            color="inherit"
+                            cursor="pointer"
+                            transition="border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease"
+                            _hover={{ borderColor: "teal.300", boxShadow: "sm", transform: "translateY(-1px)" }}
+                            _focusVisible={{ outline: "2px solid", outlineColor: "teal.400", outlineOffset: "2px" }}
+                            aria-label={item.ariaLabel}
+                            onClick={item.onClick}
+                        >
+                            {content}
+                        </Box>
+                    );
+                }
+
+                return (
+                    <Box key={item.label} borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
+                        {content}
+                    </Box>
+                );
+            })}
         </SimpleGrid>
     );
 }

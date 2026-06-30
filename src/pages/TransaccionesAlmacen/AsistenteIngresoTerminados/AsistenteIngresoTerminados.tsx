@@ -18,7 +18,7 @@ import IngresoTerminadosStep2_RevisionConfirmacion from "./IngresoTerminadosStep
 const steps = [
     { title: "Paso 1", description: "Descargar Plantilla" },
     { title: "Paso 2", description: "Subir y Validar" },
-    { title: "Paso 3", description: "Resumen y Reportes" },
+    { title: "Paso 3", description: "Descargar Reportes" },
 ];
 
 function todayIso(): string {
@@ -41,13 +41,6 @@ export function AsistenteIngresoTerminados() {
     const handleFechaReporteChange = (fecha: string) => {
         setFechaReporte(fecha);
         setIngresosValidados([]);
-    };
-
-    const handleSuccess = () => {
-        // Reiniciar todo el wizard al paso 0
-        setIngresosValidados([]);
-        setFechaReporte(todayIso());
-        setActiveStep(0);
     };
 
     function renderCurrentStep() {
@@ -74,7 +67,6 @@ export function AsistenteIngresoTerminados() {
                 <IngresoTerminadosStep2_RevisionConfirmacion
                     ingresosValidados={ingresosValidados}
                     setActiveStep={setActiveStep}
-                    onSuccess={handleSuccess}
                 />
             );
         }

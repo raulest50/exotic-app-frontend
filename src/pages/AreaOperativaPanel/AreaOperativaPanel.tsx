@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     closestCenter,
     DndContext,
@@ -178,6 +178,11 @@ export default function AreaOperativaPanel() {
     const toast = useToast();
     const emptyTitleColor = useColorModeValue("gray.700", "gray.200");
     const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+    const boardColumnsStartRef = useRef<HTMLDivElement | null>(null);
+    const colaColumnRef = useRef<HTMLDivElement | null>(null);
+    const esperaColumnRef = useRef<HTMLDivElement | null>(null);
+    const enProcesoColumnRef = useRef<HTMLDivElement | null>(null);
+    const completadoColumnRef = useRef<HTMLDivElement | null>(null);
     useAreaOperativaNoiseSampler();
 
     const {
@@ -203,6 +208,47 @@ export default function AreaOperativaPanel() {
 
     const [detailLoading, setDetailLoading] = useState(false);
     const [detail, setDetail] = useState<AreaOperativaOrdenDetalleDTO | null>(null);
+
+    const scrollToElement = useCallback((element: HTMLDivElement | null) => {
+        element?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, []);
+
+    const scrollToBoardColumns = useCallback(() => {
+        scrollToElement(boardColumnsStartRef.current);
+    }, [scrollToElement]);
+
+    const scrollToColumn = useCallback((estadoKey: EstadoTableroKey) => {
+        const columnRef = (() => {
+            switch (estadoKey) {
+                case "cola":
+                    return colaColumnRef;
+                case "espera":
+                    return esperaColumnRef;
+                case "enProceso":
+                    return enProcesoColumnRef;
+                case "completado":
+                    return completadoColumnRef;
+                default:
+                    return null;
+            }
+        })();
+
+        scrollToElement(columnRef?.current ?? null);
+    }, [scrollToElement]);
+
+    const getColumnContainerRef = (estadoKey: EstadoTableroKey) => {
+        switch (estadoKey) {
+            case "cola":
+                return colaColumnRef;
+            case "espera":
+                return esperaColumnRef;
+            case "enProceso":
+                return enProcesoColumnRef;
+            case "completado":
+            default:
+                return completadoColumnRef;
+        }
+    };
 
     const fetchTablero = useCallback(async () => {
         setLoading(true);
@@ -394,6 +440,11 @@ export default function AreaOperativaPanel() {
                                 espera={tablero.resumen.espera}
                                 enProceso={tablero.resumen.enProceso}
                                 completado={tablero.resumen.completado}
+                                onTotalClick={scrollToBoardColumns}
+                                onColaClick={() => scrollToColumn("cola")}
+                                onEsperaClick={() => scrollToColumn("espera")}
+                                onEnProcesoClick={() => scrollToColumn("enProceso")}
+                                onCompletadoClick={() => scrollToColumn("completado")}
                             />
 
                             <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
@@ -442,25 +493,28 @@ export default function AreaOperativaPanel() {
                             ) : null}
 
                             {!loading && tablero.resumen.total > 0 ? (
-                                <DndContext
-                                    sensors={dndSensors}
-                                    collisionDetection={closestCenter}
-                                    onDragEnd={handleDragEnd}
-                                >
-                                    <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
-                                        {(Object.keys(BOARD_COLUMN_META) as EstadoTableroKey[]).map((estadoKey) => (
-                                            <SeguimientoBoardColumn
-                                                key={estadoKey}
-                                                estadoKey={estadoKey}
-                                                items={filteredBoard[estadoKey]}
-                                                mode="leader"
-                                                onOpenDetail={openDetail}
-                                                onAction={openActionModal}
-                                                dndEnabled
-                                            />
-                                        ))}
-                                    </SimpleGrid>
-                                </DndContext>
+                                <Box ref={boardColumnsStartRef} scrollMarginTop={4}>
+                                    <DndContext
+                                        sensors={dndSensors}
+                                        collisionDetection={closestCenter}
+                                        onDragEnd={handleDragEnd}
+                                    >
+                                        <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
+                                            {(Object.keys(BOARD_COLUMN_META) as EstadoTableroKey[]).map((estadoKey) => (
+                                                <SeguimientoBoardColumn
+                                                    key={estadoKey}
+                                                    estadoKey={estadoKey}
+                                                    items={filteredBoard[estadoKey]}
+                                                    mode="leader"
+                                                    onOpenDetail={openDetail}
+                                                    onAction={openActionModal}
+                                                    dndEnabled
+                                                    containerRef={getColumnContainerRef(estadoKey)}
+                                                />
+                                            ))}
+                                        </SimpleGrid>
+                                    </DndContext>
+                                </Box>
                             ) : null}
                         </VStack>
                     </TabPanel>
