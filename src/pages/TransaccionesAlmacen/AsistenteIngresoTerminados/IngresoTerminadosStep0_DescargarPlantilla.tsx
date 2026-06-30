@@ -42,6 +42,7 @@ const COLUMN_INFO = [
     { col: "B", name: "producto_nombre", editable: false, desc: "Nombre del producto terminado" },
     { col: "C", name: "categoria_nombre", editable: false, desc: "Categoria del terminado para ubicarlo rapido" },
     { col: "D", name: "cantidad_producida", editable: true, desc: "Unidades producidas en el dia; vacio equivale a cero" },
+    { col: "E", name: "fecha_reporte", editable: false, desc: "Fecha del reporte duplicada en cada fila para formulas" },
 ];
 
 export default function IngresoTerminadosStep0_DescargarPlantilla({
@@ -56,7 +57,10 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({
     const handleDownloadTemplate = async () => {
         setIsDownloading(true);
         try {
-            const response = await axios.get(endpoints.ingreso_terminados_plantilla, {
+            const templateUrl = fechaReporte
+                ? `${endpoints.ingreso_terminados_plantilla}?fechaReporte=${encodeURIComponent(fechaReporte)}`
+                : endpoints.ingreso_terminados_plantilla;
+            const response = await axios.get(templateUrl, {
                 withCredentials: true,
                 responseType: "blob",
             });
@@ -146,7 +150,7 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({
                             <Text><strong>1.</strong> Descargue la plantilla Excel.</Text>
                             <Text><strong>2.</strong> En Excel, diligencie unicamente la columna <strong>D (cantidad_producida)</strong>.</Text>
                             <Text><strong>3.</strong> Deje la celda vacia si ese terminado no tuvo produccion en el dia.</Text>
-                            <Text><strong>4.</strong> No cambie codigos, nombres, categorias ni encabezados.</Text>
+                            <Text><strong>4.</strong> No cambie codigos, nombres, categorias, fecha ni encabezados.</Text>
                         </VStack>
                     </CardBody>
                 </Card>
@@ -212,6 +216,7 @@ export default function IngresoTerminadosStep0_DescargarPlantilla({
                         colorScheme="teal"
                         onClick={handleDownloadTemplate}
                         isLoading={isDownloading}
+                        isDisabled={!fechaReporte}
                         loadingText="Descargando..."
                     >
                         Descargar Plantilla Excel

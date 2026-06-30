@@ -48,8 +48,6 @@ export interface AreaOperativaMutationDTO {
 }
 
 export type UnidadRelacionAreaOperativa = 'ML' | 'L' | 'G' | 'KG' | 'U';
-export type TipoCapacidadAreaOperativa = 'PRODUCTIVA' | 'ALMACENAMIENTO';
-export type PeriodoCapacidadAreaOperativa = 'HORA' | 'TURNO' | 'DIA' | 'SEMANA';
 
 export interface UnidadMedidaAreaOperativa {
     id: number;
@@ -63,35 +61,6 @@ export interface UnidadMedidaAreaOperativaRequest {
     nombre: string;
     relacionEstandar: number;
     unidadRelacion: UnidadRelacionAreaOperativa;
-}
-
-export interface CapacidadAreaOperativa {
-    id: number;
-    areaId: number;
-    unidadMedidaId: number;
-    unidadNombre: string;
-    unidadRelacionEstandar: number;
-    unidadRelacion: UnidadRelacionAreaOperativa;
-    tipoCapacidad: TipoCapacidadAreaOperativa;
-    cantidad: number;
-    periodo: PeriodoCapacidadAreaOperativa;
-    eficiencia: number;
-    vigenteDesde: string | null;
-    vigenteHasta: string | null;
-    descripcion: string | null;
-    activo: boolean;
-}
-
-export interface CapacidadAreaOperativaRequest {
-    unidadMedidaId: number;
-    tipoCapacidad: TipoCapacidadAreaOperativa;
-    cantidad: number;
-    periodo: PeriodoCapacidadAreaOperativa;
-    eficiencia: number;
-    vigenteDesde?: string | null;
-    vigenteHasta?: string | null;
-    descripcion?: string | null;
-    activo: boolean;
 }
 
 export interface ConversionUnidadAreaOperativaResponse {

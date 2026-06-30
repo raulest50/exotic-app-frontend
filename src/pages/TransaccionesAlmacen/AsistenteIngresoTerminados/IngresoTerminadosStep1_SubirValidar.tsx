@@ -37,6 +37,7 @@ const EXPECTED_HEADERS = [
     "cantidad_producida",
 ];
 
+const FECHA_REPORTE_HEADER = "fecha_reporte";
 const SHEET_NAME = "Produccion Diaria PT";
 const MAX_VISIBLE_ERRORS = 15;
 
@@ -58,6 +59,13 @@ function buildLoteFicticio(fechaReporte: string, sequence: number): string {
     return `FICTICIO-PT-${fechaReporte.replace(/-/g, "")}-${String(sequence).padStart(4, "0")}`;
 }
 
+function formatDateForInput(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
 function isFormulaValue(value: ExcelJS.CellValue): boolean {
     return value != null && typeof value === "object" && "formula" in value;
 }
@@ -66,6 +74,10 @@ function getCellText(cell: ExcelJS.Cell): string {
     const value = cell.value;
     if (value == null || isFormulaValue(value) || typeof value === "object") return "";
     return String(value).trim();
+}
+
+function cellHasAnyValue(cell: ExcelJS.Cell): boolean {
+    return getCellText(cell) !== "" || cell.value != null;
 }
 
 function readRequiredText(
@@ -92,6 +104,47 @@ function readRequiredText(
     }
 
     return String(value).trim();
+}
+
+function readFechaReporte(
+    row: ExcelJS.Row,
+    rowNumber: number,
+    productoId: string,
+    fechaReporte: string,
+    errors: string[]
+): boolean {
+    const cell = row.getCell(5);
+    const value = cell.value;
+
+    if (value == null) {
+        errors.push(`Fila ${rowNumber} (${productoId}): fecha_reporte esta vacia`);
+        return false;
+    }
+    if (isFormulaValue(value)) {
+        errors.push(`Fila ${rowNumber} (${productoId}): fecha_reporte no puede ser una formula`);
+        return false;
+    }
+
+    let actual = "";
+    if (value instanceof Date) {
+        actual = formatDateForInput(value);
+    } else if (typeof value === "string") {
+        actual = value.trim();
+    } else {
+        errors.push(`Fila ${rowNumber} (${productoId}): fecha_reporte tiene un valor no permitido`);
+        return false;
+    }
+
+    if (!actual) {
+        errors.push(`Fila ${rowNumber} (${productoId}): fecha_reporte esta vacia`);
+        return false;
+    }
+    if (actual !== fechaReporte) {
+        errors.push(`Fila ${rowNumber} (${productoId}): fecha_reporte debe ser ${fechaReporte}, encontrada ${actual}`);
+        return false;
+    }
+
+    return true;
 }
 
 function readCantidadProducida(
@@ -229,11 +282,24 @@ export default function IngresoTerminadosStep1_SubirValidar({
                     errors.push(`Columna ${col + 1} esperada "${expected}", encontrada "${actual || "(vacia)"}"`);
                 }
             }
-            for (let col = EXPECTED_HEADERS.length + 1; col <= headerRow.cellCount; col++) {
+
+            const fechaReporteHeaderCell = headerRow.getCell(EXPECTED_HEADERS.length + 1);
+            const fechaReporteHeader = getCellText(fechaReporteHeaderCell).toLowerCase();
+            const hasFechaReporteColumn = cellHasAnyValue(fechaReporteHeaderCell);
+            if (hasFechaReporteColumn && fechaReporteHeader !== FECHA_REPORTE_HEADER.toLowerCase()) {
+                errors.push(
+                    `Columna 5 esperada "${FECHA_REPORTE_HEADER}", encontrada "${fechaReporteHeader || "(vacia)"}"`
+                );
+            }
+
+            const maxExpectedColumns = hasFechaReporteColumn
+                ? EXPECTED_HEADERS.length + 1
+                : EXPECTED_HEADERS.length;
+            for (let col = maxExpectedColumns + 1; col <= headerRow.cellCount; col++) {
                 const extraCell = headerRow.getCell(col);
                 const extraHeader = getCellText(extraCell);
                 if (extraHeader || extraCell.value != null) {
-                    errors.push(`Columna ${col} no esperada "${extraHeader || "(valor no permitido)"}". La plantilla solo debe tener 4 columnas`);
+                    errors.push(`Columna ${col} no esperada "${extraHeader || "(valor no permitido)"}". La plantilla solo debe tener las columnas esperadas`);
                 }
             }
 
@@ -255,6 +321,10 @@ export default function IngresoTerminadosStep1_SubirValidar({
 
                 const cantidadProducida = readCantidadProducida(row, rowNumber, productoId, errors);
                 if (cantidadProducida == null) {
+                    return;
+                }
+
+                if (hasFechaReporteColumn && !readFechaReporte(row, rowNumber, productoId, fechaReporte, errors)) {
                     return;
                 }
 

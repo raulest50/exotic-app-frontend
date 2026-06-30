@@ -266,8 +266,6 @@ export default class EndPointsURL{
     public update_area_operativa: string;
     public area_operativa_unidades: string;
     public area_operativa_unidad: string;
-    public area_operativa_capacidades: string;
-    public area_operativa_capacidad: string;
     public area_operativa_conversion_unidades: string;
     public monitoreo_areas_operativas: string;
     public monitoreo_area_tablero: string;
@@ -869,8 +867,6 @@ export default class EndPointsURL{
         this.update_area_operativa = `${domain}/${area_produccion_res}/{areaId}`;
         this.area_operativa_unidades = `${domain}/${area_produccion_res}/{areaId}/unidades`;
         this.area_operativa_unidad = `${domain}/${area_produccion_res}/{areaId}/unidades/{unidadId}`;
-        this.area_operativa_capacidades = `${domain}/${area_produccion_res}/{areaId}/capacidades`;
-        this.area_operativa_capacidad = `${domain}/${area_produccion_res}/{areaId}/capacidades/{capacidadId}`;
         this.area_operativa_conversion_unidades = `${domain}/${area_produccion_res}/conversion-unidades`;
         this.monitoreo_areas_operativas = `${domain}/api/produccion/monitoreo-areas-operativas/areas`;
         this.monitoreo_area_tablero = `${domain}/api/produccion/monitoreo-areas-operativas/areas/{areaId}/tablero`;

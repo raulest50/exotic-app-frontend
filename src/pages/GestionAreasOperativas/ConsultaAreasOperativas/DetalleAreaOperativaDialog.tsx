@@ -40,7 +40,7 @@ import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/Use
 import { fetchUserAssignmentStatus } from '../../../api/userAssignmentStatus.ts';
 import { User } from '../../Usuarios/GestionUsuarios/types';
 import CategoriaHabilitadaPickerModal from '../components/CategoriaHabilitadaPickerModal.tsx';
-import AreaOperativaCapacityConfig from './AreaOperativaCapacityConfig.tsx';
+import AreaOperativaUnidadMedidaConfig from './AreaOperativaUnidadMedidaConfig.tsx';
 import {
     AreaOperativa,
     AreaOperativaMutationDTO,
@@ -328,7 +328,6 @@ export default function DetalleAreaOperativaDialog({
                                 <Tab>Información</Tab>
                                 <Tab>Categorías</Tab>
                                 <Tab>Unidades de medida</Tab>
-                                <Tab>Capacidades</Tab>
                             </TabList>
                             <TabPanels>
                                 <TabPanel px={0}>
@@ -431,19 +430,9 @@ export default function DetalleAreaOperativaDialog({
                                 </TabPanel>
 
                                 <TabPanel px={0}>
-                                    <AreaOperativaCapacityConfig
+                                    <AreaOperativaUnidadMedidaConfig
                                         areaId={area.areaId}
                                         isReadOnly={isSpecialSystemArea}
-                                        visibleSections={['unidades']}
-                                        onUnidadesLoaded={handleUnidadesLoaded}
-                                    />
-                                </TabPanel>
-
-                                <TabPanel px={0}>
-                                    <AreaOperativaCapacityConfig
-                                        areaId={area.areaId}
-                                        isReadOnly={isSpecialSystemArea}
-                                        visibleSections={['capacidades']}
                                         onUnidadesLoaded={handleUnidadesLoaded}
                                     />
                                 </TabPanel>
