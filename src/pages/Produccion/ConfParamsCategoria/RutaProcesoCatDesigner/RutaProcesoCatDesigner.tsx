@@ -25,6 +25,7 @@ import {
     Thead,
     Tr,
     UnorderedList,
+    Switch,
     useToast,
 } from "@chakra-ui/react";
 import { ArrowBackIcon, CloseIcon, AddIcon, DeleteIcon } from "@chakra-ui/icons";
@@ -92,6 +93,8 @@ function toFlowNodes(ruta: RutaProcesoCatDTO): Node<RutaProcesoNodeData>[] {
             areaOperativaNombre: node.areaOperativaNombre,
             hasLeftHandle: node.hasLeftHandle ?? true,
             hasRightHandle: node.hasRightHandle ?? true,
+            duracionEstimadaMinutos: node.duracionEstimadaMinutos ?? 0,
+            requiereJornadaLaboral: node.requiereJornadaLaboral ?? true,
         },
     }));
 }
@@ -121,6 +124,8 @@ function buildGraphSignature(nodes: Node<RutaProcesoNodeData>[], edges: Edge[]):
                 label: node.data.label ?? '',
                 hasLeftHandle: node.data.hasLeftHandle ?? true,
                 hasRightHandle: node.data.hasRightHandle ?? true,
+                duracionEstimadaMinutos: node.data.duracionEstimadaMinutos ?? 0,
+                requiereJornadaLaboral: node.data.requiereJornadaLaboral ?? true,
             }))
             .sort((left, right) => left.id.localeCompare(right.id)),
         edges: edges
@@ -182,6 +187,12 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     const endPoints = useMemo(() => new EndPointsURL(), []);
     const toast = useToast();
     const isReadOnly = viewingHistorical;
+    const selectedNode = useMemo(() => {
+        if (!selectedElement || !('position' in selectedElement)) {
+            return null;
+        }
+        return nodes.find((node) => node.id === selectedElement.id) ?? null;
+    }, [nodes, selectedElement]);
 
     const onConnect = useCallback(
         (params: Connection) => {
@@ -324,10 +335,37 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                 areaOperativaNombre: area.nombre,
                 hasLeftHandle: true,
                 hasRightHandle: true,
+                duracionEstimadaMinutos: 0,
+                requiereJornadaLaboral: true,
             },
         };
         setNodes((currentNodes) => [...currentNodes, newNode]);
         setNodeIdCounter((currentCounter) => currentCounter + 1);
+    };
+
+    const updateSelectedNodeData = (patch: Partial<RutaProcesoNodeData>) => {
+        if (!selectedNode || isReadOnly) {
+            return;
+        }
+
+        setNodes((currentNodes) =>
+            currentNodes.map((node) =>
+                node.id === selectedNode.id
+                    ? { ...node, data: { ...node.data, ...patch } }
+                    : node
+            )
+        );
+    };
+
+    const handleSelectedNodeDurationChange = (rawValue: string) => {
+        const parsed = Number.parseInt(rawValue, 10);
+        updateSelectedNodeData({
+            duracionEstimadaMinutos: Number.isFinite(parsed) ? Math.max(parsed, 0) : 0,
+        });
+    };
+
+    const handleSelectedNodeJornadaChange = (checked: boolean) => {
+        updateSelectedNodeData({ requiereJornadaLaboral: checked });
     };
 
     const handleSave = async () => {
@@ -379,6 +417,8 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     label: node.data.label || '',
                     hasLeftHandle: node.data.hasLeftHandle ?? true,
                     hasRightHandle: node.data.hasRightHandle ?? true,
+                    duracionEstimadaMinutos: node.data.duracionEstimadaMinutos ?? 0,
+                    requiereJornadaLaboral: node.data.requiereJornadaLaboral ?? true,
                 })),
                 edges: edges.map((edge) => ({
                     id: edge.id,
@@ -688,6 +728,41 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     </>
                 )}
             </Box>
+
+            {selectedNode && (
+                <Box borderWidth="1px" borderRadius="md" p={4} bg="gray.50">
+                    <Flex direction={{ base: "column", md: "row" }} gap={4} align={{ base: "stretch", md: "end" }}>
+                        <Box flex={1}>
+                            <Text fontWeight="semibold">{selectedNode.data.label || "Nodo seleccionado"}</Text>
+                            <Text fontSize="sm" color="gray.500">
+                                {selectedNode.data.areaOperativaNombre || "Área sin asignar"}
+                            </Text>
+                        </Box>
+
+                        <FormControl maxW={{ base: "full", md: "220px" }}>
+                            <FormLabel>Duración estimada (min)</FormLabel>
+                            <Input
+                                type="number"
+                                min={0}
+                                step={1}
+                                value={selectedNode.data.duracionEstimadaMinutos ?? 0}
+                                onChange={(event) => handleSelectedNodeDurationChange(event.target.value)}
+                                isDisabled={isReadOnly}
+                            />
+                        </FormControl>
+
+                        <FormControl display="flex" alignItems="center" gap={3} maxW={{ base: "full", md: "260px" }}>
+                            <FormLabel mb={0}>Requiere jornada laboral</FormLabel>
+                            <Switch
+                                colorScheme="purple"
+                                isChecked={selectedNode.data.requiereJornadaLaboral !== false}
+                                onChange={(event) => handleSelectedNodeJornadaChange(event.target.checked)}
+                                isDisabled={isReadOnly}
+                            />
+                        </FormControl>
+                    </Flex>
+                </Box>
+            )}
 
             <Flex direction="row" gap={4} alignItems="center" flexWrap="wrap">
                 <Button

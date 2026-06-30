@@ -56,6 +56,8 @@ type RouteNodeData = {
     estadoDescripcion: string;
     estadoActual: number | null;
     currentLeaderArea: boolean;
+    duracionEstimadaMinutos: number;
+    requiereJornadaLaboral: boolean;
     currentAreaId?: number | null;
 };
 
@@ -104,6 +106,22 @@ function formatCantidad(value: number | null | undefined): string {
     });
 }
 
+function formatDurationMinutes(value: number | null | undefined): string {
+    if (typeof value !== "number" || Number.isNaN(value) || value <= 0) {
+        return "0 min";
+    }
+
+    const hours = Math.floor(value / 60);
+    const minutes = value % 60;
+    if (hours <= 0) {
+        return `${minutes} min`;
+    }
+    if (minutes === 0) {
+        return `${hours} h`;
+    }
+    return `${hours} h ${minutes} min`;
+}
+
 function RouteNode({ data }: NodeProps<RouteNodeData>) {
     const isCurrentAreaNode = data.currentAreaId != null && data.currentLeaderArea;
     const accentColor = getEstadoColor(data.estadoActual);
@@ -132,6 +150,12 @@ function RouteNode({ data }: NodeProps<RouteNodeData>) {
                 <Badge alignSelf="start" colorScheme={getEstadoBadgeScheme(data.estadoActual)}>
                     {data.estadoDescripcion}
                 </Badge>
+                <HStack spacing={2} flexWrap="wrap">
+                    <Badge colorScheme="purple">{formatDurationMinutes(data.duracionEstimadaMinutos)}</Badge>
+                    <Badge colorScheme={data.requiereJornadaLaboral ? "green" : "orange"}>
+                        {data.requiereJornadaLaboral ? "Jornada" : "Continuo"}
+                    </Badge>
+                </HStack>
                 {isCurrentAreaNode ? (
                     <Badge alignSelf="start" colorScheme="teal">
                         Tu área
@@ -166,6 +190,8 @@ function buildRouteNodes(detail: AreaOperativaOrdenDetalleDTO | null, currentAre
             estadoDescripcion: node.estadoDescripcion || "Sin estado",
             estadoActual: node.estadoActual,
             currentLeaderArea: node.currentLeaderArea,
+            duracionEstimadaMinutos: node.duracionEstimadaMinutos ?? 0,
+            requiereJornadaLaboral: node.requiereJornadaLaboral !== false,
             currentAreaId,
         },
     }));
@@ -302,6 +328,18 @@ export default function AreaOperativaOrderDetailDrawer({
                                                 <Text>{formatDateTime(detail.orden.fechaFinalPlanificada)}</Text>
                                             </Box>
                                             <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                <Text fontSize="sm" color="app.textSubtle">Inicio estimado</Text>
+                                                <Text>{formatDateTime(detail.orden.fechaInicioEstimacion)}</Text>
+                                            </Box>
+                                            <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                <Text fontSize="sm" color="app.textSubtle">Fin estimado</Text>
+                                                <Text>{formatDateTime(detail.orden.fechaFinalEstimada)}</Text>
+                                            </Box>
+                                            <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                <Text fontSize="sm" color="app.textSubtle">Duración estimada</Text>
+                                                <Text>{formatDurationMinutes(detail.orden.duracionCalendarioRutaCriticaMinutos)}</Text>
+                                            </Box>
+                                            <Box borderWidth="1px" borderRadius="md" p={3}>
                                                 <Text fontSize="sm" color="app.textSubtle">Inicio real</Text>
                                                 <Text>{formatDateTime(detail.orden.fechaInicio)}</Text>
                                             </Box>
@@ -340,6 +378,9 @@ export default function AreaOperativaOrderDetailDrawer({
                                                         </HStack>
 
                                                         <Stack spacing={1} fontSize="sm" color="app.textMuted">
+                                                            <Text>
+                                                                Estimado: {formatDurationMinutes(item.duracionEstimadaMinutos)} · {item.requiereJornadaLaboral ? "Jornada laboral" : "Tiempo continuo"}
+                                                            </Text>
                                                             <Text>Visible desde: {formatDateTime(item.fechaVisible)}</Text>
                                                             <Text>Estado actual desde: {formatDateTime(item.fechaEstadoActual)}</Text>
                                                             <Text>Completado: {formatDateTime(item.fechaCompletado)}</Text>

@@ -17,6 +17,9 @@ export interface OrdenOperativaResumenDTO {
     fechaInicio: string | null;
     fechaFinal: string | null;
     fechaFinalPlanificada: string | null;
+    fechaInicioEstimacion: string | null;
+    fechaFinalEstimada: string | null;
+    duracionCalendarioRutaCriticaMinutos: number | null;
     categoriaId: number | null;
     categoriaNombre: string | null;
 }
@@ -32,6 +35,8 @@ export interface SeguimientoOperativoItemDTO {
     fechaVisible: string | null;
     fechaEstadoActual: string | null;
     fechaCompletado: string | null;
+    duracionEstimadaMinutos: number;
+    requiereJornadaLaboral: boolean;
     usuarioReportaNombre: string | null;
     observaciones: string | null;
 }
@@ -55,6 +60,8 @@ export interface RutaProcesoVisualNodeDTO {
     estadoActual: number | null;
     estadoDescripcion: string | null;
     fechaEstadoActual: string | null;
+    duracionEstimadaMinutos: number;
+    requiereJornadaLaboral: boolean;
     currentLeaderArea: boolean;
 }
 

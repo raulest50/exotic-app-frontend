@@ -1,4 +1,4 @@
-import { Box, Flex, Text, Icon, VStack, Checkbox } from "@chakra-ui/react";
+import { Badge, Box, Flex, Text, Icon, VStack, Checkbox } from "@chakra-ui/react";
 import { Handle, Position, NodeProps, useReactFlow } from "@xyflow/react";
 import { MdLocationOn } from "react-icons/md";
 
@@ -13,6 +13,10 @@ export default function AreaOperativaNode(props: NodeProps) {
 
     const hasLeftHandle = data.hasLeftHandle !== false;
     const hasRightHandle = data.hasRightHandle !== false;
+    const duracionEstimadaMinutos = typeof data.duracionEstimadaMinutos === "number"
+        ? Math.max(0, data.duracionEstimadaMinutos)
+        : 0;
+    const requiereJornadaLaboral = data.requiereJornadaLaboral !== false;
 
     const handleLeftHandleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setNodes((nodes) =>
@@ -96,6 +100,12 @@ export default function AreaOperativaNode(props: NodeProps) {
                         <Text fontWeight={"bold"} fontSize={"md"} textAlign={"center"}>
                             {String(data.label || "Sin asignar")}
                         </Text>
+                        <Flex gap={2} justify="center" wrap="wrap">
+                            <Badge colorScheme="purple">{duracionEstimadaMinutos} min</Badge>
+                            <Badge colorScheme={requiereJornadaLaboral ? "green" : "orange"}>
+                                {requiereJornadaLaboral ? "Jornada" : "Continuo"}
+                            </Badge>
+                        </Flex>
                     </VStack>
 
                     {hasLeftHandle && (

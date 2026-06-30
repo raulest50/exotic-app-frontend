@@ -10,6 +10,8 @@ export interface RutaProcesoNodeData {
     areaOperativaNombre: string | null;
     hasLeftHandle?: boolean;
     hasRightHandle?: boolean;
+    duracionEstimadaMinutos?: number;
+    requiereJornadaLaboral?: boolean;
 }
 
 export interface RutaProcesoNodeDTO {
@@ -21,6 +23,8 @@ export interface RutaProcesoNodeDTO {
     label: string;
     hasLeftHandle: boolean;
     hasRightHandle: boolean;
+    duracionEstimadaMinutos: number;
+    requiereJornadaLaboral: boolean;
 }
 
 export interface RutaProcesoEdgeDTO {

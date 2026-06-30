@@ -577,6 +577,18 @@ export function SeguimientoOrdenDetailDrawer({
                                     <Text>{formatDateTime(detail.fechaFinalPlanificada)}</Text>
                                 </Box>
                                 <Box borderWidth="1px" borderRadius="md" p={3}>
+                                    <Text fontSize="sm" color="app.textSubtle">Inicio estimado</Text>
+                                    <Text>{formatDateTime(detail.fechaInicioEstimacion)}</Text>
+                                </Box>
+                                <Box borderWidth="1px" borderRadius="md" p={3}>
+                                    <Text fontSize="sm" color="app.textSubtle">Fin estimado</Text>
+                                    <Text>{formatDateTime(detail.fechaFinalEstimada)}</Text>
+                                </Box>
+                                <Box borderWidth="1px" borderRadius="md" p={3}>
+                                    <Text fontSize="sm" color="app.textSubtle">Duración estimada</Text>
+                                    <Text>{formatMinutesDuration(detail.duracionCalendarioRutaCriticaMinutos)}</Text>
+                                </Box>
+                                <Box borderWidth="1px" borderRadius="md" p={3}>
                                     <Text fontSize="sm" color="app.textSubtle">Inicio real</Text>
                                     <Text>{formatDateTime(detail.fechaInicio)}</Text>
                                 </Box>
@@ -615,6 +627,9 @@ export function SeguimientoOrdenDetailDrawer({
                                             </HStack>
 
                                             <Stack spacing={1} fontSize="sm" color="app.textMuted">
+                                                <Text>
+                                                    Estimado: {formatMinutesDuration(ruta.duracionEstimadaMinutos)} · {ruta.requiereJornadaLaboral ? "Jornada laboral" : "Tiempo continuo"}
+                                                </Text>
                                                 <Text>Visible desde: {formatDateTime(ruta.fechaVisible)}</Text>
                                                 <Text>Estado actual desde: {formatDateTime(ruta.fechaEstadoActual)}</Text>
                                                 <Text>Completado: {formatDateTime(ruta.fechaCompletado)}</Text>

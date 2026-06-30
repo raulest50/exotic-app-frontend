@@ -20,6 +20,8 @@ export interface SeguimientoOrdenAreaCardDTO {
     fechaEstadoActual: string | null;
     fechaCompletado: string | null;
     minutosEnEstadoActual: number | null;
+    duracionEstimadaMinutos: number;
+    requiereJornadaLaboral: boolean;
     usuarioReportaId: number | null;
     usuarioReportaNombre: string | null;
     observaciones: string | null;
@@ -52,6 +54,8 @@ export interface RutaEstadoDTO {
     fechaVisible: string | null;
     fechaEstadoActual: string | null;
     fechaCompletado: string | null;
+    duracionEstimadaMinutos: number;
+    requiereJornadaLaboral: boolean;
     usuarioReportaId: number | null;
     usuarioReportaNombre: string | null;
     observaciones: string | null;
@@ -69,6 +73,9 @@ export interface OrdenProduccionSeguimientoDetalleDTO {
     fechaInicio: string | null;
     fechaFinal: string | null;
     fechaFinalPlanificada: string | null;
+    fechaInicioEstimacion: string | null;
+    fechaFinalEstimada: string | null;
+    duracionCalendarioRutaCriticaMinutos: number | null;
     rutaEstados: RutaEstadoDTO[];
 }
 
