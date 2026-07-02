@@ -14,7 +14,7 @@ import {
     useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
-import EndPointsURL, { type ExcelDecimalSeparator } from "../../../api/EndPointsURL.tsx";
+import EndPointsURL, { type ExcelDecimalSeparator, type ExcelExportMode } from "../../../api/EndPointsURL.tsx";
 import ExcelDecimalSeparatorSelector, {
     DEFAULT_EXCEL_DECIMAL_SEPARATOR,
 } from "../../../components/ExcelDecimalSeparatorSelector.tsx";
@@ -30,7 +30,7 @@ export default function InformeDiarioAlmacenPanel() {
     const [fechaDesde, setFechaDesde] = useState("");
     const [fechaHasta, setFechaHasta] = useState("");
     const [decimalSeparator, setDecimalSeparator] = useState<ExcelDecimalSeparator>(DEFAULT_EXCEL_DECIMAL_SEPARATOR);
-    const [downloading, setDownloading] = useState(false);
+    const [downloadingMode, setDownloadingMode] = useState<ExcelExportMode | null>(null);
 
     const endPoints = useMemo(() => new EndPointsURL(), []);
 
@@ -62,29 +62,35 @@ export default function InformeDiarioAlmacenPanel() {
         return fechaDesde === fechaHasta ? fechaDesde : `${fechaDesde}_a_${fechaHasta}`;
     };
 
-    const handleDownload = async () => {
+    const buildCopySuffix = () => decimalSeparator === "COMMA" ? "_para_copiar_coma" : "_para_copiar_punto";
+
+    const handleDownload = async (exportMode: ExcelExportMode) => {
         if (!canDownload) return;
-        setDownloading(true);
+        setDownloadingMode(exportMode);
         try {
             let url: string;
             let filename: string;
             const isRange = modoFecha === "rango";
             const fileSuffix = buildFileSuffix();
+            const modeSuffix = exportMode === "TEXT_DETERMINISTIC" ? buildCopySuffix() : "";
+            const exportOptions = exportMode === "NUMERIC"
+                ? { exportMode }
+                : { exportMode, decimalSeparator };
             if (tipoReporte === "ingreso_materiales") {
                 url = isRange
-                    ? endPoints.informesDiariosAlmacenIngresoMaterialesExcelRango(fechaDesde, fechaHasta, decimalSeparator)
-                    : endPoints.informesDiariosAlmacenIngresoMaterialesExcel(fecha, decimalSeparator);
-                filename = `informe_ingreso_materiales_${fileSuffix}.xlsx`;
+                    ? endPoints.informesDiariosAlmacenIngresoMaterialesExcelRango(fechaDesde, fechaHasta, exportOptions)
+                    : endPoints.informesDiariosAlmacenIngresoMaterialesExcel(fecha, exportOptions);
+                filename = `informe_ingreso_materiales_${fileSuffix}${modeSuffix}.xlsx`;
             } else if (tipoReporte === "dispensacion_materiales") {
                 url = isRange
-                    ? endPoints.informesDiariosAlmacenDispensacionMaterialesExcelRango(fechaDesde, fechaHasta, decimalSeparator)
-                    : endPoints.informesDiariosAlmacenDispensacionMaterialesExcel(fecha, decimalSeparator);
-                filename = `informe_dispensacion_materiales_${fileSuffix}.xlsx`;
+                    ? endPoints.informesDiariosAlmacenDispensacionMaterialesExcelRango(fechaDesde, fechaHasta, exportOptions)
+                    : endPoints.informesDiariosAlmacenDispensacionMaterialesExcel(fecha, exportOptions);
+                filename = `informe_dispensacion_materiales_${fileSuffix}${modeSuffix}.xlsx`;
             } else {
                 url = isRange
-                    ? endPoints.informesDiariosAlmacenIngresoTerminadosExcelRango(fechaDesde, fechaHasta, decimalSeparator)
-                    : endPoints.informesDiariosAlmacenIngresoTerminadosExcel(fecha, decimalSeparator);
-                filename = `informe_ingreso_terminados_${fileSuffix}.xlsx`;
+                    ? endPoints.informesDiariosAlmacenIngresoTerminadosExcelRango(fechaDesde, fechaHasta, exportOptions)
+                    : endPoints.informesDiariosAlmacenIngresoTerminadosExcel(fecha, exportOptions);
+                filename = `informe_ingreso_terminados_${fileSuffix}${modeSuffix}.xlsx`;
             }
             const response = await axios.get<ArrayBuffer>(url, { responseType: "arraybuffer" });
             triggerFileDownload(response.data, filename);
@@ -101,7 +107,7 @@ export default function InformeDiarioAlmacenPanel() {
                 isClosable: true,
             });
         } finally {
-            setDownloading(false);
+            setDownloadingMode(null);
         }
     };
 
@@ -174,11 +180,21 @@ export default function InformeDiarioAlmacenPanel() {
                     <Box>
                         <Button
                             colorScheme="blue"
-                            onClick={handleDownload}
+                            onClick={() => handleDownload("NUMERIC")}
                             isDisabled={!canDownload}
-                            isLoading={downloading}
+                            isLoading={downloadingMode === "NUMERIC"}
+                            mr={3}
                         >
-                            Descargar Excel
+                            Descargar Excel funcional
+                        </Button>
+                        <Button
+                            colorScheme="green"
+                            variant="outline"
+                            onClick={() => handleDownload("TEXT_DETERMINISTIC")}
+                            isDisabled={!canDownload}
+                            isLoading={downloadingMode === "TEXT_DETERMINISTIC"}
+                        >
+                            Descargar Excel para copiar
                         </Button>
                     </Box>
                 </VStack>

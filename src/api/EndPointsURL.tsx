@@ -1,5 +1,10 @@
 
 export type ExcelDecimalSeparator = "COMMA" | "DOT";
+export type ExcelExportMode = "NUMERIC" | "TEXT_DETERMINISTIC";
+export type ExcelExportOptions = {
+    exportMode?: ExcelExportMode;
+    decimalSeparator?: ExcelDecimalSeparator;
+};
 
 export default class EndPointsURL{
 
@@ -393,73 +398,85 @@ export default class EndPointsURL{
         return `${this.domain}/api/importacion-datos/backup-total/jobs/${encodeURIComponent(jobId)}`;
     }
 
-    private informesDiariosExcelQuery(fecha: string, decimalSeparator?: ExcelDecimalSeparator): URLSearchParams {
+    private normalizeExcelExportOptions(options?: ExcelExportOptions | ExcelDecimalSeparator): ExcelExportOptions {
+        if (!options) return {};
+        if (typeof options === "string") return { decimalSeparator: options };
+        return options;
+    }
+
+    private appendExcelExportOptions(q: URLSearchParams, options?: ExcelExportOptions | ExcelDecimalSeparator) {
+        const normalized = this.normalizeExcelExportOptions(options);
+        if (normalized.exportMode) q.set("exportMode", normalized.exportMode);
+        if (normalized.decimalSeparator) q.set("decimalSeparator", normalized.decimalSeparator);
+    }
+
+    private informesDiariosExcelQuery(fecha: string, options?: ExcelExportOptions | ExcelDecimalSeparator): URLSearchParams {
         const q = new URLSearchParams({ fecha });
-        if (decimalSeparator) q.set("decimalSeparator", decimalSeparator);
+        this.appendExcelExportOptions(q, options);
         return q;
     }
 
     private informesDiariosExcelRangeQuery(
         fechaDesde: string,
         fechaHasta: string,
-        decimalSeparator?: ExcelDecimalSeparator
+        options?: ExcelExportOptions | ExcelDecimalSeparator
     ): URLSearchParams {
         const q = new URLSearchParams({ fechaDesde, fechaHasta });
-        if (decimalSeparator) q.set("decimalSeparator", decimalSeparator);
+        this.appendExcelExportOptions(q, options);
         return q;
     }
 
     /** GET Excel ingreso de materiales (BI). @param fecha ISO date YYYY-MM-DD */
     public informesDiariosAlmacenIngresoMaterialesExcel(
         fecha: string,
-        decimalSeparator?: ExcelDecimalSeparator
+        options?: ExcelExportOptions | ExcelDecimalSeparator
     ): string {
-        const q = this.informesDiariosExcelQuery(fecha, decimalSeparator);
+        const q = this.informesDiariosExcelQuery(fecha, options);
         return `${this.domain}/bi/informes-diarios/almacen/ingreso-materiales/excel?${q.toString()}`;
     }
 
     public informesDiariosAlmacenIngresoMaterialesExcelRango(
         fechaDesde: string,
         fechaHasta: string,
-        decimalSeparator?: ExcelDecimalSeparator
+        options?: ExcelExportOptions | ExcelDecimalSeparator
     ): string {
-        const q = this.informesDiariosExcelRangeQuery(fechaDesde, fechaHasta, decimalSeparator);
+        const q = this.informesDiariosExcelRangeQuery(fechaDesde, fechaHasta, options);
         return `${this.domain}/bi/informes-diarios/almacen/ingreso-materiales/excel?${q.toString()}`;
     }
 
     /** GET Excel dispensación de materiales (BI). @param fecha ISO date YYYY-MM-DD */
     public informesDiariosAlmacenDispensacionMaterialesExcel(
         fecha: string,
-        decimalSeparator?: ExcelDecimalSeparator
+        options?: ExcelExportOptions | ExcelDecimalSeparator
     ): string {
-        const q = this.informesDiariosExcelQuery(fecha, decimalSeparator);
+        const q = this.informesDiariosExcelQuery(fecha, options);
         return `${this.domain}/bi/informes-diarios/almacen/dispensacion-materiales/excel?${q.toString()}`;
     }
 
     public informesDiariosAlmacenDispensacionMaterialesExcelRango(
         fechaDesde: string,
         fechaHasta: string,
-        decimalSeparator?: ExcelDecimalSeparator
+        options?: ExcelExportOptions | ExcelDecimalSeparator
     ): string {
-        const q = this.informesDiariosExcelRangeQuery(fechaDesde, fechaHasta, decimalSeparator);
+        const q = this.informesDiariosExcelRangeQuery(fechaDesde, fechaHasta, options);
         return `${this.domain}/bi/informes-diarios/almacen/dispensacion-materiales/excel?${q.toString()}`;
     }
 
     /** GET Excel ingreso producto terminado (BI). @param fecha ISO date YYYY-MM-DD */
     public informesDiariosAlmacenIngresoTerminadosExcel(
         fecha: string,
-        decimalSeparator?: ExcelDecimalSeparator
+        options?: ExcelExportOptions | ExcelDecimalSeparator
     ): string {
-        const q = this.informesDiariosExcelQuery(fecha, decimalSeparator);
+        const q = this.informesDiariosExcelQuery(fecha, options);
         return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/excel?${q.toString()}`;
     }
 
     public informesDiariosAlmacenIngresoTerminadosExcelRango(
         fechaDesde: string,
         fechaHasta: string,
-        decimalSeparator?: ExcelDecimalSeparator
+        options?: ExcelExportOptions | ExcelDecimalSeparator
     ): string {
-        const q = this.informesDiariosExcelRangeQuery(fechaDesde, fechaHasta, decimalSeparator);
+        const q = this.informesDiariosExcelRangeQuery(fechaDesde, fechaHasta, options);
         return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/excel?${q.toString()}`;
     }
 
@@ -471,24 +488,24 @@ export default class EndPointsURL{
     /** GET Excel reporte diario enriquecido de producción de terminados. @param fecha ISO date YYYY-MM-DD */
     public informesDiariosAlmacenIngresoTerminadosReporteExcel(
         fecha: string,
-        decimalSeparator?: ExcelDecimalSeparator
+        options?: ExcelExportOptions | ExcelDecimalSeparator
     ): string {
-        const q = this.informesDiariosExcelQuery(fecha, decimalSeparator);
+        const q = this.informesDiariosExcelQuery(fecha, options);
         return `${this.domain}/bi/informes-diarios/almacen/ingreso-terminados/reporte-excel?${q.toString()}`;
     }
 
     /** GET Excel informe diario de compras OCM (BI). @param fecha ISO date YYYY-MM-DD */
-    public informesDiariosComprasExcel(fecha: string, decimalSeparator?: ExcelDecimalSeparator): string {
-        const q = this.informesDiariosExcelQuery(fecha, decimalSeparator);
+    public informesDiariosComprasExcel(fecha: string, options?: ExcelExportOptions | ExcelDecimalSeparator): string {
+        const q = this.informesDiariosExcelQuery(fecha, options);
         return `${this.domain}/bi/informes-diarios/compras/excel?${q.toString()}`;
     }
 
     public informesDiariosComprasExcelRango(
         fechaDesde: string,
         fechaHasta: string,
-        decimalSeparator?: ExcelDecimalSeparator
+        options?: ExcelExportOptions | ExcelDecimalSeparator
     ): string {
-        const q = this.informesDiariosExcelRangeQuery(fechaDesde, fechaHasta, decimalSeparator);
+        const q = this.informesDiariosExcelRangeQuery(fechaDesde, fechaHasta, options);
         return `${this.domain}/bi/informes-diarios/compras/excel?${q.toString()}`;
     }
 
@@ -497,7 +514,7 @@ export default class EndPointsURL{
         fechaDesde: string,
         fechaHasta: string,
         sentido: string,
-        decimalSeparator?: ExcelDecimalSeparator
+        options?: ExcelExportOptions | ExcelDecimalSeparator
     ): string {
         const base = `${this.domain}/bi/informes-diarios/almacen/ajustes/excel`;
         const q = new URLSearchParams({
@@ -505,7 +522,7 @@ export default class EndPointsURL{
             fechaHasta,
             sentido,
         });
-        if (decimalSeparator) q.set("decimalSeparator", decimalSeparator);
+        this.appendExcelExportOptions(q, options);
         return `${base}?${q.toString()}`;
     }
 

@@ -26,7 +26,7 @@ export default function ExcelDecimalSeparatorSelector({ value, onChange, maxW = 
             <FormLabel mb={2}>
                 <HStack spacing={2}>
                     <Icon as={FaFileExcel} color="green.500" boxSize={4} />
-                    <Text as="span">Separador decimal Excel</Text>
+                    <Text as="span">Separador decimal para copiar</Text>
                 </HStack>
             </FormLabel>
             <Box borderWidth="1px" borderRadius="md" borderColor="app.border" px={3} py={2}>

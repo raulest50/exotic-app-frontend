@@ -14,7 +14,7 @@ import {
     useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
-import EndPointsURL, { type ExcelDecimalSeparator } from "../../../api/EndPointsURL.tsx";
+import EndPointsURL, { type ExcelDecimalSeparator, type ExcelExportMode } from "../../../api/EndPointsURL.tsx";
 import ExcelDecimalSeparatorSelector, {
     DEFAULT_EXCEL_DECIMAL_SEPARATOR,
 } from "../../../components/ExcelDecimalSeparatorSelector.tsx";
@@ -28,7 +28,7 @@ export default function InformeDiarioComprasPanel() {
     const [fechaDesde, setFechaDesde] = useState("");
     const [fechaHasta, setFechaHasta] = useState("");
     const [decimalSeparator, setDecimalSeparator] = useState<ExcelDecimalSeparator>(DEFAULT_EXCEL_DECIMAL_SEPARATOR);
-    const [downloading, setDownloading] = useState(false);
+    const [downloadingMode, setDownloadingMode] = useState<ExcelExportMode | null>(null);
 
     const endPoints = useMemo(() => new EndPointsURL(), []);
 
@@ -55,17 +55,23 @@ export default function InformeDiarioComprasPanel() {
         return fechaDesde === fechaHasta ? fechaDesde : `${fechaDesde}_a_${fechaHasta}`;
     };
 
-    const handleDownload = async () => {
+    const buildCopySuffix = () => decimalSeparator === "COMMA" ? "_para_copiar_coma" : "_para_copiar_punto";
+
+    const handleDownload = async (exportMode: ExcelExportMode) => {
         if (!canDownload) return;
-        setDownloading(true);
+        setDownloadingMode(exportMode);
         try {
             const isRange = modoFecha === "rango";
+            const exportOptions = exportMode === "NUMERIC"
+                ? { exportMode }
+                : { exportMode, decimalSeparator };
             const url = isRange
-                ? endPoints.informesDiariosComprasExcelRango(fechaDesde, fechaHasta, decimalSeparator)
-                : endPoints.informesDiariosComprasExcel(fecha, decimalSeparator);
+                ? endPoints.informesDiariosComprasExcelRango(fechaDesde, fechaHasta, exportOptions)
+                : endPoints.informesDiariosComprasExcel(fecha, exportOptions);
             const fileSuffix = buildFileSuffix();
+            const modeSuffix = exportMode === "TEXT_DETERMINISTIC" ? buildCopySuffix() : "";
             const response = await axios.get<ArrayBuffer>(url, { responseType: "arraybuffer" });
-            triggerFileDownload(response.data, `informe_compras_ocm_${fileSuffix}.xlsx`);
+            triggerFileDownload(response.data, `informe_compras_ocm_${fileSuffix}${modeSuffix}.xlsx`);
         } catch (e) {
             toast({
                 title: "No se pudo descargar el informe",
@@ -79,7 +85,7 @@ export default function InformeDiarioComprasPanel() {
                 isClosable: true,
             });
         } finally {
-            setDownloading(false);
+            setDownloadingMode(null);
         }
     };
 
@@ -141,11 +147,21 @@ export default function InformeDiarioComprasPanel() {
                     <Box>
                         <Button
                             colorScheme="blue"
-                            onClick={handleDownload}
+                            onClick={() => handleDownload("NUMERIC")}
                             isDisabled={!canDownload}
-                            isLoading={downloading}
+                            isLoading={downloadingMode === "NUMERIC"}
+                            mr={3}
                         >
-                            Descargar Excel
+                            Descargar Excel funcional
+                        </Button>
+                        <Button
+                            colorScheme="green"
+                            variant="outline"
+                            onClick={() => handleDownload("TEXT_DETERMINISTIC")}
+                            isDisabled={!canDownload}
+                            isLoading={downloadingMode === "TEXT_DETERMINISTIC"}
+                        >
+                            Descargar Excel para copiar
                         </Button>
                     </Box>
                 </VStack>

@@ -35,7 +35,7 @@ import {
 import { DownloadIcon, RepeatIcon, SearchIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import { useCallback, useMemo, useRef, useState, useEffect } from "react";
-import EndPointsURL, { type ExcelDecimalSeparator } from "../../../api/EndPointsURL";
+import EndPointsURL, { type ExcelDecimalSeparator, type ExcelExportMode } from "../../../api/EndPointsURL";
 import ExcelDecimalSeparatorSelector, {
     DEFAULT_EXCEL_DECIMAL_SEPARATOR,
 } from "../../../components/ExcelDecimalSeparatorSelector";
@@ -160,7 +160,7 @@ export default function IngresoTerminadosReporteDiario() {
     const [reporte, setReporte] = useState<IngresoTerminadosReporteDiario | null>(null);
     const [decimalSeparator, setDecimalSeparator] = useState<ExcelDecimalSeparator>(DEFAULT_EXCEL_DECIMAL_SEPARATOR);
     const [loading, setLoading] = useState(false);
-    const [downloading, setDownloading] = useState(false);
+    const [downloadingMode, setDownloadingMode] = useState<ExcelExportMode | null>(null);
 
     const cargarReporte = useCallback(
         async (fechaConsulta: string) => {
@@ -195,18 +195,24 @@ export default function IngresoTerminadosReporteDiario() {
         void cargarReporte(fecha);
     }, [cargarReporte, fecha]);
 
-    const descargarExcel = async () => {
+    const buildCopySuffix = () => decimalSeparator === "COMMA" ? "_para_copiar_coma" : "_para_copiar_punto";
+
+    const descargarExcel = async (exportMode: ExcelExportMode) => {
         if (!fecha) return;
-        setDownloading(true);
+        setDownloadingMode(exportMode);
         try {
+            const exportOptions = exportMode === "NUMERIC"
+                ? { exportMode }
+                : { exportMode, decimalSeparator };
             const response = await axios.get<ArrayBuffer>(
-                endpoints.informesDiariosAlmacenIngresoTerminadosReporteExcel(fecha, decimalSeparator),
+                endpoints.informesDiariosAlmacenIngresoTerminadosReporteExcel(fecha, exportOptions),
                 {
                     responseType: "arraybuffer",
                     withCredentials: true,
                 }
             );
-            triggerFileDownload(response.data, `reporte_produccion_terminados_${fecha}.xlsx`);
+            const modeSuffix = exportMode === "TEXT_DETERMINISTIC" ? buildCopySuffix() : "";
+            triggerFileDownload(response.data, `reporte_produccion_terminados_${fecha}${modeSuffix}.xlsx`);
         } catch (error) {
             toast({
                 title: "No se pudo descargar el Excel",
@@ -218,7 +224,7 @@ export default function IngresoTerminadosReporteDiario() {
                 isClosable: true,
             });
         } finally {
-            setDownloading(false);
+            setDownloadingMode(null);
         }
     };
 
@@ -268,13 +274,23 @@ export default function IngresoTerminadosReporteDiario() {
                     </Button>
                     <Button
                         leftIcon={<DownloadIcon />}
-                        colorScheme="green"
-                        variant="outline"
-                        onClick={descargarExcel}
-                        isLoading={downloading}
+                        colorScheme="blue"
+                        variant="solid"
+                        onClick={() => descargarExcel("NUMERIC")}
+                        isLoading={downloadingMode === "NUMERIC"}
                         isDisabled={!fecha}
                     >
-                        Descargar Excel
+                        Excel funcional
+                    </Button>
+                    <Button
+                        leftIcon={<DownloadIcon />}
+                        colorScheme="green"
+                        variant="outline"
+                        onClick={() => descargarExcel("TEXT_DETERMINISTIC")}
+                        isLoading={downloadingMode === "TEXT_DETERMINISTIC"}
+                        isDisabled={!fecha}
+                    >
+                        Excel para copiar
                     </Button>
                     <Button
                         leftIcon={<RepeatIcon />}
