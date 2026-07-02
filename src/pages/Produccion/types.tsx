@@ -97,6 +97,9 @@ export interface OrdenProduccionDTO {
     fechaLanzamiento: string | null;
     fechaFinalPlanificada: string | null;
     estadoOrden: number; // 0: en produccion, 1: terminada
+    politicaDispensacionInicio?: string | null;
+    fechaAplicacionPoliticaDispensacion?: string | null;
+    estadoDispensacionMateriales?: string | null;
     cantidadProducir: number | null;
     numeroPedidoComercial: string | null;
     areaOperativa: string | null;

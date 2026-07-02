@@ -6,6 +6,9 @@ export interface SeguimientoOrdenAreaCardDTO {
     productoNombre: string;
     cantidadProducir: number;
     estadoOrden: number;
+    politicaDispensacionInicio: string | null;
+    fechaAplicacionPoliticaDispensacion: string | null;
+    estadoDispensacionMateriales: string | null;
     ordenObservaciones: string | null;
     fechaFinalPlanificada: string | null;
     nodeId: number;
@@ -35,7 +38,12 @@ export interface EstadoResumenDTO {
     completado: number;
 }
 
+export type TableroVista = "HISTORICO" | "SEMANA_ACTUAL";
+
 export interface TableroOperativoDTO {
+    vista?: TableroVista | null;
+    weekStartDate?: string | null;
+    weekEndDate?: string | null;
     resumen: EstadoResumenDTO;
     cola: SeguimientoOrdenAreaCardDTO[];
     espera: SeguimientoOrdenAreaCardDTO[];
@@ -68,6 +76,9 @@ export interface OrdenProduccionSeguimientoDetalleDTO {
     productoNombre: string;
     cantidadProducir: number;
     estadoOrden: number;
+    politicaDispensacionInicio: string | null;
+    fechaAplicacionPoliticaDispensacion: string | null;
+    estadoDispensacionMateriales: string | null;
     ordenObservaciones: string | null;
     fechaCreacion: string | null;
     fechaInicio: string | null;

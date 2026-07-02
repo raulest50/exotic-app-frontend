@@ -12,6 +12,9 @@ export interface OrdenOperativaResumenDTO {
     productoNombre: string;
     cantidadProducir: number;
     estadoOrden: number;
+    politicaDispensacionInicio: string | null;
+    fechaAplicacionPoliticaDispensacion: string | null;
+    estadoDispensacionMateriales: string | null;
     ordenObservaciones: string | null;
     fechaCreacion: string | null;
     fechaInicio: string | null;

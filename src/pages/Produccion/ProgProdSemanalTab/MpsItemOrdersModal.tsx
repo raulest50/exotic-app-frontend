@@ -28,6 +28,12 @@ import type {
 } from "./MpsSemanalService";
 import type { MpsReadonlyItemContext } from "./MpsReadonlyReviewPanel";
 import { formatSemanaMpsDisplayDate } from "./semanaMps.utils";
+import {
+    getEstadoDispensacionMaterialesColor,
+    getEstadoDispensacionMaterialesLabel,
+    getPoliticaDispensacionInicioColor,
+    getPoliticaDispensacionInicioLabel,
+} from "../components/SeguimientoBoardUI";
 
 export type SelectedMpsItemOrders = {
     item: MpsSemanalItemDTO;
@@ -142,6 +148,7 @@ export default function MpsItemOrdersModal({
                                                 <Th>Lanzamiento estimado</Th>
                                                 <Th>Entrega planificada</Th>
                                                 <Th>Estado</Th>
+                                                <Th>Materiales</Th>
                                                 <Th>Lote planificado</Th>
                                             </Tr>
                                         </Thead>
@@ -154,6 +161,16 @@ export default function MpsItemOrdersModal({
                                                     <Td>{formatDateTimeLabel(orden.fechaLanzamiento)}</Td>
                                                     <Td>{formatDateTimeLabel(orden.fechaFinalPlanificada)}</Td>
                                                     <Td>{renderEstadoOrdenLabel(orden.estadoOrden)}</Td>
+                                                    <Td>
+                                                        <Flex gap={2} wrap="wrap">
+                                                            <Badge colorScheme={getEstadoDispensacionMaterialesColor(orden.estadoDispensacionMateriales)}>
+                                                                {getEstadoDispensacionMaterialesLabel(orden.estadoDispensacionMateriales)}
+                                                            </Badge>
+                                                            <Badge colorScheme={getPoliticaDispensacionInicioColor(orden.politicaDispensacionInicio)}>
+                                                                {getPoliticaDispensacionInicioLabel(orden.politicaDispensacionInicio)}
+                                                            </Badge>
+                                                        </Flex>
+                                                    </Td>
                                                     <Td>
                                                         {orden.mpsLoteOrdinal ?? "-"}
                                                         {orden.mpsLotePlanificadoId ? ` (#${orden.mpsLotePlanificadoId})` : ""}

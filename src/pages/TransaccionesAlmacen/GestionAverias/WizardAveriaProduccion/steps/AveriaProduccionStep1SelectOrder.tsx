@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+    Badge,
     Box,
     Button,
     Flex,
@@ -22,6 +23,12 @@ import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL.tsx';
 import BetterPagination from '../../../../../components/BetterPagination/BetterPagination';
 import { AreaProduccion, OrdenProduccionDTO } from '../WizardAveriaProduccion';
+import {
+    getEstadoDispensacionMaterialesColor,
+    getEstadoDispensacionMaterialesLabel,
+    getPoliticaDispensacionInicioColor,
+    getPoliticaDispensacionInicioLabel,
+} from '../../../../Produccion/components/SeguimientoBoardUI';
 
 const endPoints = new EndPointsURL();
 
@@ -153,6 +160,7 @@ export default function AveriaProduccionStep1SelectOrder({
                                         <Th>Lote Asignado</Th>
                                         <Th>Producto</Th>
                                         <Th>Estado</Th>
+                                        <Th>Materiales</Th>
                                         <Th>Cantidad a Producir</Th>
                                         <Th>Fecha Creación</Th>
                                     </Tr>
@@ -168,6 +176,16 @@ export default function AveriaProduccionStep1SelectOrder({
                                             <Td>{orden.loteAsignado}</Td>
                                             <Td>{orden.productoNombre}</Td>
                                             <Td>{getEstadoLabel(orden.estadoOrden)}</Td>
+                                            <Td>
+                                                <Flex gap={2} wrap="wrap">
+                                                    <Badge colorScheme={getEstadoDispensacionMaterialesColor(orden.estadoDispensacionMateriales)}>
+                                                        {getEstadoDispensacionMaterialesLabel(orden.estadoDispensacionMateriales)}
+                                                    </Badge>
+                                                    <Badge colorScheme={getPoliticaDispensacionInicioColor(orden.politicaDispensacionInicio)}>
+                                                        {getPoliticaDispensacionInicioLabel(orden.politicaDispensacionInicio)}
+                                                    </Badge>
+                                                </Flex>
+                                            </Td>
                                             <Td>{orden.cantidadProducir}</Td>
                                             <Td>{orden.fechaCreacion ? new Date(orden.fechaCreacion).toLocaleDateString() : '-'}</Td>
                                         </Tr>
@@ -199,6 +217,14 @@ export default function AveriaProduccionStep1SelectOrder({
                         <Text fontSize="sm" color="app.textMuted">
                             Estado: {getEstadoLabel(selectedOrden.estadoOrden)} | Cantidad: {selectedOrden.cantidadProducir}
                         </Text>
+                        <Flex mt={2} gap={2} wrap="wrap">
+                            <Badge colorScheme={getEstadoDispensacionMaterialesColor(selectedOrden.estadoDispensacionMateriales)}>
+                                {getEstadoDispensacionMaterialesLabel(selectedOrden.estadoDispensacionMateriales)}
+                            </Badge>
+                            <Badge colorScheme={getPoliticaDispensacionInicioColor(selectedOrden.politicaDispensacionInicio)}>
+                                {getPoliticaDispensacionInicioLabel(selectedOrden.politicaDispensacionInicio)}
+                            </Badge>
+                        </Flex>
                     </Box>
                 )}
 

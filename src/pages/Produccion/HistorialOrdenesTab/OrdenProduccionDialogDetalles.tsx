@@ -23,6 +23,12 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import { OrdenProduccionDTO } from "../types.tsx";
+import {
+    getEstadoDispensacionMaterialesColor,
+    getEstadoDispensacionMaterialesLabel,
+    getPoliticaDispensacionInicioColor,
+    getPoliticaDispensacionInicioLabel,
+} from "../components/SeguimientoBoardUI.tsx";
 
 interface OrdenProduccionDialogDetallesProps {
     isOpen: boolean;
@@ -213,6 +219,13 @@ export default function OrdenProduccionDialogDetalles({
                             <Text fontSize="sm">
                                 Estado: <Badge ml={1} colorScheme={orden.estadoOrden === 2 ? "green" : orden.estadoOrden === -1 ? "red" : orden.estadoOrden === 3 ? "blue" : "yellow"}>{getEstadoOrdenLabel(orden.estadoOrden)}</Badge>
                             </Text>
+                            <Text fontSize="sm">
+                                Materiales: <Badge ml={1} colorScheme={getEstadoDispensacionMaterialesColor(orden.estadoDispensacionMateriales)}>{getEstadoDispensacionMaterialesLabel(orden.estadoDispensacionMateriales)}</Badge>
+                            </Text>
+                            <Text fontSize="sm">
+                                Politica inicio: <Badge ml={1} colorScheme={getPoliticaDispensacionInicioColor(orden.politicaDispensacionInicio)}>{getPoliticaDispensacionInicioLabel(orden.politicaDispensacionInicio)}</Badge>
+                            </Text>
+                            <Text fontSize="sm">Fecha politica: {formatDateTimeValue(orden.fechaAplicacionPoliticaDispensacion)}</Text>
                             <Text fontSize="sm">Pedido comercial: {formatValue(orden.numeroPedidoComercial)}</Text>
                             <Text fontSize="sm">{"\u00C1rea operativa: "}{formatValue(orden.areaOperativa)}</Text>
                             <Text fontSize="sm">Departamento operativo: {formatValue(orden.departamentoOperativo)}</Text>

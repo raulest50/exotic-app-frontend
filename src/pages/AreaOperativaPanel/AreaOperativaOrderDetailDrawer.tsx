@@ -40,7 +40,13 @@ import {
     BomRecetaNodeDTO,
     RutaProcesoVisualNodeDTO,
 } from "./areaOperativaPanel.types.ts";
-import { formatDateTime } from "../Produccion/components/SeguimientoBoardUI.tsx";
+import {
+    formatDateTime,
+    getEstadoDispensacionMaterialesColor,
+    getEstadoDispensacionMaterialesLabel,
+    getPoliticaDispensacionInicioColor,
+    getPoliticaDispensacionInicioLabel,
+} from "../Produccion/components/SeguimientoBoardUI.tsx";
 
 interface Props {
     isOpen: boolean;
@@ -316,9 +322,28 @@ export default function AreaOperativaOrderDetailDrawer({
                                             <Text color="app.textMuted">
                                                 Categoría: {detail.orden.categoriaNombre || "Sin categoría"} · Cantidad: {formatCantidad(detail.orden.cantidadProducir)}
                                             </Text>
+                                            <HStack mt={2} spacing={2} flexWrap="wrap">
+                                                <Badge colorScheme={getEstadoDispensacionMaterialesColor(detail.orden.estadoDispensacionMateriales)}>
+                                                    {getEstadoDispensacionMaterialesLabel(detail.orden.estadoDispensacionMateriales)}
+                                                </Badge>
+                                                <Badge colorScheme={getPoliticaDispensacionInicioColor(detail.orden.politicaDispensacionInicio)}>
+                                                    {getPoliticaDispensacionInicioLabel(detail.orden.politicaDispensacionInicio)}
+                                                </Badge>
+                                            </HStack>
                                         </Box>
 
                                         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                                            <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                <Text fontSize="sm" color="app.textSubtle">Politica dispensacion</Text>
+                                                <Text>{getPoliticaDispensacionInicioLabel(detail.orden.politicaDispensacionInicio)}</Text>
+                                                <Text fontSize="xs" color="app.textMuted">
+                                                    {formatDateTime(detail.orden.fechaAplicacionPoliticaDispensacion)}
+                                                </Text>
+                                            </Box>
+                                            <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                <Text fontSize="sm" color="app.textSubtle">Estado materiales</Text>
+                                                <Text>{getEstadoDispensacionMaterialesLabel(detail.orden.estadoDispensacionMateriales)}</Text>
+                                            </Box>
                                             <Box borderWidth="1px" borderRadius="md" p={3}>
                                                 <Text fontSize="sm" color="app.textSubtle">Creación</Text>
                                                 <Text>{formatDateTime(detail.orden.fechaCreacion)}</Text>

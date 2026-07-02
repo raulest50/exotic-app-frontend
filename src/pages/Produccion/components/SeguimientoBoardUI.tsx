@@ -117,6 +117,58 @@ function getEstadoBadgeColor(estado: number): string {
     }
 }
 
+export function getEstadoDispensacionMaterialesLabel(value: string | null | undefined): string {
+    switch (value) {
+        case "PENDIENTE":
+            return "Materiales pendientes";
+        case "PARCIAL":
+            return "Dispensacion parcial";
+        case "COMPLETA":
+            return "Dispensacion completa";
+        case "LIBERADA_SIN_DISPENSACION":
+            return "Liberada sin dispensacion";
+        default:
+            return "Materiales sin estado";
+    }
+}
+
+export function getEstadoDispensacionMaterialesColor(value: string | null | undefined): string {
+    switch (value) {
+        case "PENDIENTE":
+            return "yellow";
+        case "PARCIAL":
+            return "orange";
+        case "COMPLETA":
+            return "green";
+        case "LIBERADA_SIN_DISPENSACION":
+            return "purple";
+        default:
+            return "gray";
+    }
+}
+
+export function getPoliticaDispensacionInicioLabel(value: string | null | undefined): string {
+    switch (value) {
+        case "NO_BLOQUEANTE":
+            return "Inicio no bloqueante";
+        case "BLOQUEANTE":
+            return "Inicio bloqueante";
+        default:
+            return "Politica no registrada";
+    }
+}
+
+export function getPoliticaDispensacionInicioColor(value: string | null | undefined): string {
+    switch (value) {
+        case "NO_BLOQUEANTE":
+            return "purple";
+        case "BLOQUEANTE":
+            return "gray";
+        default:
+            return "gray";
+    }
+}
+
 interface SeguimientoOrdenCardProps {
     card: SeguimientoOrdenAreaCardDTO;
     mode: SeguimientoBoardMode;
@@ -229,6 +281,19 @@ function SeguimientoOrdenCardContent({
                     {card.productoId} · Cant. {card.cantidadProducir}
                 </Text>
             </Box>
+
+            <HStack spacing={2} flexWrap="wrap">
+                {card.estadoDispensacionMateriales ? (
+                    <Badge colorScheme={getEstadoDispensacionMaterialesColor(card.estadoDispensacionMateriales)}>
+                        {getEstadoDispensacionMaterialesLabel(card.estadoDispensacionMateriales)}
+                    </Badge>
+                ) : null}
+                {card.politicaDispensacionInicio === "NO_BLOQUEANTE" ? (
+                    <Badge colorScheme={getPoliticaDispensacionInicioColor(card.politicaDispensacionInicio)}>
+                        No bloqueante
+                    </Badge>
+                ) : null}
+            </HStack>
 
             <Stack spacing={0.5} fontSize="xs" color="app.textMuted">
                 <Text>Desde: {formatDateTime(card.fechaEstadoActual)}</Text>
@@ -565,9 +630,28 @@ export function SeguimientoOrdenDetailDrawer({
                                     {detail.productoNombre} · {detail.productoId}
                                 </Text>
                                 <Text color="app.textMuted">Cantidad: {detail.cantidadProducir}</Text>
+                                <HStack mt={2} spacing={2} flexWrap="wrap">
+                                    <Badge colorScheme={getEstadoDispensacionMaterialesColor(detail.estadoDispensacionMateriales)}>
+                                        {getEstadoDispensacionMaterialesLabel(detail.estadoDispensacionMateriales)}
+                                    </Badge>
+                                    <Badge colorScheme={getPoliticaDispensacionInicioColor(detail.politicaDispensacionInicio)}>
+                                        {getPoliticaDispensacionInicioLabel(detail.politicaDispensacionInicio)}
+                                    </Badge>
+                                </HStack>
                             </Box>
 
                             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                                <Box borderWidth="1px" borderRadius="md" p={3}>
+                                    <Text fontSize="sm" color="app.textSubtle">Politica dispensacion</Text>
+                                    <Text>{getPoliticaDispensacionInicioLabel(detail.politicaDispensacionInicio)}</Text>
+                                    <Text fontSize="xs" color="app.textMuted">
+                                        {formatDateTime(detail.fechaAplicacionPoliticaDispensacion)}
+                                    </Text>
+                                </Box>
+                                <Box borderWidth="1px" borderRadius="md" p={3}>
+                                    <Text fontSize="sm" color="app.textSubtle">Estado materiales</Text>
+                                    <Text>{getEstadoDispensacionMaterialesLabel(detail.estadoDispensacionMateriales)}</Text>
+                                </Box>
                                 <Box borderWidth="1px" borderRadius="md" p={3}>
                                     <Text fontSize="sm" color="app.textSubtle">Creación</Text>
                                     <Text>{formatDateTime(detail.fechaCreacion)}</Text>

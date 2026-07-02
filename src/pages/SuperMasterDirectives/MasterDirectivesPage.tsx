@@ -57,6 +57,16 @@ interface DTOAllMasterDirectives {
     masterDirectives: MasterDirective[];
 }
 
+interface DispensacionRetroactividadDTO {
+    directivaActual: boolean;
+    ejecutable: boolean;
+    ordenesCandidatas: number;
+    ordenesAplicadas: number;
+    ordenesOmitidas: number;
+    ordenIdsAplicadas: number[];
+    mensaje: string;
+}
+
 type SuperMasterConfigKey = keyof Pick<
     SuperMasterConfig,
     "habilitarEliminacionForzada" | "habilitarCargaMasiva" | "habilitarAjustesInventario"
@@ -80,17 +90,25 @@ const AREA_OPERATIVA_INACTIVITY_DIRECTIVE_NAMES = new Set<string>([
     MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_INACTIVITY_CHECK_INTERVAL_MINUTES,
 ]);
 
+const AREA_OPERATIVA_PANEL_DIRECTIVE_NAMES = new Set<string>([
+    MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_PANEL_HISTORICO_TOGGLE_ENABLED,
+]);
+
 const AREA_OPERATIVA_DIRECTIVE_NAMES = new Set<string>([
     ...AREA_OPERATIVA_NOISE_DIRECTIVE_NAMES,
     ...AREA_OPERATIVA_INACTIVITY_DIRECTIVE_NAMES,
+    ...AREA_OPERATIVA_PANEL_DIRECTIVE_NAMES,
 ]);
 
 const PRODUCTION_DIRECTIVE_NAMES = new Set<string>([
+    MASTER_DIRECTIVE_KEYS.DISPENSACION_NO_BLOQUEA_INICIO_PRODUCCION,
     MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION,
     MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO,
 ]);
 
 const PRODUCTION_DIRECTIVE_EXTENDED_HELP: Record<string, string> = {
+    [MASTER_DIRECTIVE_KEYS.DISPENSACION_NO_BLOQUEA_INICIO_PRODUCCION]:
+        "Esta directiva se copia a cada ODP al momento de crearla. Cambiar el switch no modifica ODPs ya existentes; para esas ODPs use la accion retroactiva controlada de esta pantalla.",
     [MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO]:
         "Cuando esta apagada, una MPS aprobada conserva el flujo actual: solo permite mover, aumentar, reducir o cancelar tarjetas existentes. Cuando esta activa, se pueden agregar nuevos terminados a una MPS APROBADA o CERRADA. Si la MPS ya esta cerrada o ya tiene ODPs generadas, el backend genera inmediatamente las ODPs de los nuevos lotes.",
 };
@@ -203,7 +221,17 @@ function getAreaOperativaInactivityDirectiveUnit(directive: MasterDirective) {
     return null;
 }
 
+function getAreaOperativaPanelDirectiveLabel(directive: MasterDirective) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_PANEL_HISTORICO_TOGGLE_ENABLED) {
+        return "Selector semana actual / historico";
+    }
+    return directive.nombre;
+}
+
 function getProductionDirectiveLabel(directive: MasterDirective) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.DISPENSACION_NO_BLOQUEA_INICIO_PRODUCCION) {
+        return "Dispensacion no bloquea inicio";
+    }
     if (directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION) {
         return "Dias bloqueados para edicion MPS";
     }
@@ -247,8 +275,39 @@ export default function MasterDirectivesPage() {
     const toast = useToast();
     const { refreshDirectives } = useMasterDirectives();
     const { user } = useAuth();
-    const canManageSuperMasterConfig = user === "super_master";
+    const normalizedUser = user?.trim().toLowerCase();
+    const canManageSuperMasterConfig = normalizedUser === "super_master";
+    const canApplyDispensacionRetroactivity = normalizedUser === "master" || normalizedUser === "super_master";
+    const [retroactivityPreview, setRetroactivityPreview] = useState<DispensacionRetroactividadDTO | null>(null);
+    const [retroactivityLoading, setRetroactivityLoading] = useState<boolean>(false);
+    const [retroactivityApplying, setRetroactivityApplying] = useState<boolean>(false);
     const explanatoryWarningColor = useColorModeValue("orange.600", "orange.300");
+
+    const fetchDispensacionRetroactivityPreview = useCallback(async () => {
+        if (!canApplyDispensacionRetroactivity) {
+            setRetroactivityPreview(null);
+            return;
+        }
+
+        setRetroactivityLoading(true);
+        try {
+            const response = await axios.get<DispensacionRetroactividadDTO>(
+                endPoints.super_master_dispensacion_retroactividad_preview
+            );
+            setRetroactivityPreview(response.data);
+        } catch (err) {
+            console.error("Error fetching dispensacion retroactivity preview", err);
+            setRetroactivityPreview(null);
+            toast({
+                title: "No se pudo consultar retroactividad de dispensacion",
+                status: "warning",
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setRetroactivityLoading(false);
+        }
+    }, [canApplyDispensacionRetroactivity, endPoints, toast]);
 
     const fetchConfig = useCallback(async () => {
         setLoading(true);
@@ -290,6 +349,10 @@ export default function MasterDirectivesPage() {
     useEffect(() => {
         fetchConfig();
     }, [fetchConfig]);
+
+    useEffect(() => {
+        fetchDispensacionRetroactivityPreview();
+    }, [fetchDispensacionRetroactivityPreview]);
 
     const genericMasterDirectives = useMemo(
         () => masterDirectives.filter(directive => !isAreaOperativaDirective(directive) && !isProductionDirective(directive)),
@@ -346,8 +409,18 @@ export default function MasterDirectivesPage() {
         [masterDirectives]
     );
 
+    const panelHistoricoToggleDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_PANEL_HISTORICO_TOGGLE_ENABLED),
+        [masterDirectives]
+    );
+
     const mpsDiasBloqueoDirective = useMemo(
         () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION),
+        [masterDirectives]
+    );
+
+    const dispensacionNoBloqueaDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.DISPENSACION_NO_BLOQUEA_INICIO_PRODUCCION),
         [masterDirectives]
     );
 
@@ -367,13 +440,14 @@ export default function MasterDirectivesPage() {
     );
 
     const productionDirectives = useMemo(
-        () => [mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective].filter(isPresentDirective),
-        [mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective]
+        () => [dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective].filter(isPresentDirective),
+        [dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective]
     );
 
     const hasAllNoiseDirectives = Boolean(noiseEnabledDirective && noiseIntervalDirective && noiseSampleDirective);
     const hasAllInactivityDirectives = Boolean(inactivityEnabledDirective && inactivityThresholdDirective && inactivityCheckIntervalDirective);
-    const hasAllProductionDirectives = Boolean(mpsDiasBloqueoDirective && mpsAgregarTerminadosAprobadoDirective);
+    const hasAllPanelDirectives = Boolean(panelHistoricoToggleDirective);
+    const hasAllProductionDirectives = Boolean(dispensacionNoBloqueaDirective && mpsDiasBloqueoDirective && mpsAgregarTerminadosAprobadoDirective);
 
     const superMasterHasChanges =
         canManageSuperMasterConfig &&
@@ -449,6 +523,7 @@ export default function MasterDirectivesPage() {
                 await refreshDirectives();
             }
             await fetchConfig();
+            await fetchDispensacionRetroactivityPreview();
 
             toast({
                 title: "Directivas actualizadas",
@@ -466,6 +541,44 @@ export default function MasterDirectivesPage() {
             });
         } finally {
             setUpdating(false);
+        }
+    };
+
+    const handleApplyDispensacionRetroactivity = async () => {
+        if (!canApplyDispensacionRetroactivity || retroactivityApplying || !retroactivityPreview?.ejecutable) {
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `Se aplicara la politica no bloqueante a ${retroactivityPreview.ordenesCandidatas} ODP(s) activas candidatas. Esta accion libera el seguimiento de Almacen General, pero no crea transacciones de almacen ni descuenta inventario. Desea continuar?`
+        );
+        if (!confirmed) {
+            return;
+        }
+
+        setRetroactivityApplying(true);
+        try {
+            const response = await axios.post<DispensacionRetroactividadDTO>(
+                endPoints.super_master_dispensacion_retroactividad_apply
+            );
+            setRetroactivityPreview(response.data);
+            toast({
+                title: "Retroactividad aplicada",
+                description: response.data.mensaje,
+                status: "success",
+                duration: 6000,
+                isClosable: true,
+            });
+        } catch (err) {
+            console.error("Error applying dispensacion retroactivity", err);
+            toast({
+                title: "Error al aplicar retroactividad",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setRetroactivityApplying(false);
         }
     };
 
@@ -631,7 +744,7 @@ export default function MasterDirectivesPage() {
                     <TabPanel px={0}>
                         <Box>
                             <Text mb={2} fontWeight="bold">
-                                MPS semanal
+                                Inicio de produccion y MPS semanal
                             </Text>
                             {!hasAllProductionDirectives && (
                                 <Text color="app.textSubtle" fontSize="sm" mb={4}>
@@ -720,17 +833,68 @@ export default function MasterDirectivesPage() {
                                     })}
                                 </Tbody>
                             </Table>
+
+                            {dispensacionNoBloqueaDirective && canApplyDispensacionRetroactivity ? (
+                                <Box mt={6} borderWidth="1px" borderRadius="md" p={4} bg="app.surfaceSubtle">
+                                    <HStack justify="space-between" align="start" flexWrap="wrap" gap={4}>
+                                        <Box flex="1" minW={{ base: "100%", md: "420px" }}>
+                                            <Text fontWeight="bold">
+                                                Aplicar politica no bloqueante a ODPs existentes
+                                            </Text>
+                                            <Text fontSize="sm" color="app.textSubtle" mt={1}>
+                                                Solo afecta ODPs activas con Almacen General en espera y sin avances en otras areas. No crea transacciones de almacen, no descuenta inventario y no acredita la dispensacion real.
+                                            </Text>
+                                            {retroactivityLoading ? (
+                                                <HStack mt={3}>
+                                                    <Spinner size="sm" />
+                                                    <Text fontSize="sm" color="app.textMuted">Consultando ODPs candidatas...</Text>
+                                                </HStack>
+                                            ) : (
+                                                <Box mt={3}>
+                                                    <Text fontSize="sm">
+                                                        Directiva persistida: {retroactivityPreview ? (retroactivityPreview.directivaActual ? "activa" : "apagada") : "sin consultar"}
+                                                    </Text>
+                                                    <Text fontSize="sm">
+                                                        ODPs candidatas: {retroactivityPreview?.ordenesCandidatas ?? 0}
+                                                    </Text>
+                                                    {retroactivityPreview?.ordenesAplicadas ? (
+                                                        <Text fontSize="sm">
+                                                            Ultima aplicacion: {retroactivityPreview.ordenesAplicadas} ODP(s)
+                                                            {retroactivityPreview.ordenIdsAplicadas.length > 0
+                                                                ? ` (${retroactivityPreview.ordenIdsAplicadas.slice(0, 8).join(", ")}${retroactivityPreview.ordenIdsAplicadas.length > 8 ? ", ..." : ""})`
+                                                                : ""}
+                                                        </Text>
+                                                    ) : null}
+                                                    {retroactivityPreview?.mensaje ? (
+                                                        <Text fontSize="sm" color="app.textMuted" mt={1}>
+                                                            {retroactivityPreview.mensaje}
+                                                        </Text>
+                                                    ) : null}
+                                                </Box>
+                                            )}
+                                        </Box>
+                                        <Button
+                                            colorScheme="purple"
+                                            onClick={handleApplyDispensacionRetroactivity}
+                                            isDisabled={!retroactivityPreview?.ejecutable || retroactivityLoading || retroactivityApplying}
+                                            isLoading={retroactivityApplying}
+                                        >
+                                            Aplicar retroactividad
+                                        </Button>
+                                    </HStack>
+                                </Box>
+                            ) : null}
                         </Box>
                     </TabPanel>
 
                     <TabPanel px={0}>
                         <Box>
                             <Text mb={2} fontWeight="bold">
-                                Analitica / Ruido
+                                Tablero operativo
                             </Text>
-                            {!hasAllNoiseDirectives && (
+                            {!hasAllPanelDirectives && (
                                 <Text color="app.textSubtle" fontSize="sm" mb={4}>
-                                    Las directivas de ruido aun no estan disponibles. Verifica que el backend haya inicializado las directivas maestras.
+                                    Las directivas del tablero operativo aun no estan disponibles. Verifica que el backend haya inicializado las directivas maestras.
                                 </Text>
                             )}
                             <Table variant="simple">
@@ -741,22 +905,22 @@ export default function MasterDirectivesPage() {
                                     </Tr>
                                 </Thead>
                                 <Tbody>
-                                    {noiseEnabledDirective && (() => {
-                                        const value = directiveDrafts[noiseEnabledDirective.id] ?? noiseEnabledDirective.valor;
-                                        const hasRowChange = normalizeDirectiveDraftValue(noiseEnabledDirective, value) !== normalizeDirectiveDraftValue(noiseEnabledDirective, noiseEnabledDirective.valor);
+                                    {panelHistoricoToggleDirective && (() => {
+                                        const value = directiveDrafts[panelHistoricoToggleDirective.id] ?? panelHistoricoToggleDirective.valor;
+                                        const hasRowChange = normalizeDirectiveDraftValue(panelHistoricoToggleDirective, value) !== normalizeDirectiveDraftValue(panelHistoricoToggleDirective, panelHistoricoToggleDirective.valor);
                                         return (
-                                            <Tr key={noiseEnabledDirective.id}>
+                                            <Tr key={panelHistoricoToggleDirective.id}>
                                                 <Td>
-                                                    <Text fontWeight="bold">{getAreaOperativaNoiseDirectiveLabel(noiseEnabledDirective)}</Text>
+                                                    <Text fontWeight="bold">{getAreaOperativaPanelDirectiveLabel(panelHistoricoToggleDirective)}</Text>
                                                     <Text fontSize="sm" color="app.textSubtle">
-                                                        {noiseEnabledDirective.resumen}
+                                                        {panelHistoricoToggleDirective.resumen}
                                                     </Text>
                                                 </Td>
                                                 <Td>
                                                     <HStack>
                                                         <Switch
                                                             isChecked={isBooleanEnabled(value)}
-                                                            onChange={e => updateDirectiveDraft(noiseEnabledDirective.id, String(e.target.checked))}
+                                                            onChange={e => updateDirectiveDraft(panelHistoricoToggleDirective.id, String(e.target.checked))}
                                                         />
                                                         {hasRowChange && (
                                                             <Icon as={FaCircleExclamation} color="orange.400" />
@@ -766,49 +930,95 @@ export default function MasterDirectivesPage() {
                                             </Tr>
                                         );
                                     })()}
-
-                                    {noiseNumericDirectives.map(directive => {
-                                        const value = directiveDrafts[directive.id] ?? directive.valor;
-                                        const hasRowChange = value.trim() !== directive.valor;
-                                        const error = directiveErrors[directive.id];
-                                        const bounds = getNumericDirectiveBounds(directive);
-                                        const unit = getAreaOperativaNoiseDirectiveUnit(directive);
-                                        return (
-                                            <Tr key={directive.id}>
-                                                <Td>
-                                                    <Text fontWeight="bold">{getAreaOperativaNoiseDirectiveLabel(directive)}</Text>
-                                                    <Text fontSize="sm" color="app.textSubtle">
-                                                        {directive.resumen}
-                                                    </Text>
-                                                </Td>
-                                                <Td>
-                                                    <HStack align="flex-start">
-                                                        <FormControl isInvalid={Boolean(error)} maxW="180px">
-                                                            <Input
-                                                                type="number"
-                                                                min={bounds.min}
-                                                                max={bounds.max}
-                                                                step={1}
-                                                                value={value}
-                                                                onChange={e => updateDirectiveDraft(directive.id, e.target.value)}
-                                                            />
-                                                            {error && <FormErrorMessage>{error}</FormErrorMessage>}
-                                                        </FormControl>
-                                                        {unit && (
-                                                            <Text color="app.textMuted" mt={2}>
-                                                                {unit}
-                                                            </Text>
-                                                        )}
-                                                        {hasRowChange && (
-                                                            <Icon as={FaCircleExclamation} color="orange.400" mt={2} />
-                                                        )}
-                                                    </HStack>
-                                                </Td>
-                                            </Tr>
-                                        );
-                                    })}
                                 </Tbody>
                             </Table>
+
+                            <Box mt={8}>
+                                <Text mb={2} fontWeight="bold">
+                                    Analitica / Ruido
+                                </Text>
+                                {!hasAllNoiseDirectives && (
+                                    <Text color="app.textSubtle" fontSize="sm" mb={4}>
+                                        Las directivas de ruido aun no estan disponibles. Verifica que el backend haya inicializado las directivas maestras.
+                                    </Text>
+                                )}
+                                <Table variant="simple">
+                                    <Thead>
+                                        <Tr>
+                                            <Th>Configuracion</Th>
+                                            <Th>Valor</Th>
+                                        </Tr>
+                                    </Thead>
+                                    <Tbody>
+                                        {noiseEnabledDirective && (() => {
+                                            const value = directiveDrafts[noiseEnabledDirective.id] ?? noiseEnabledDirective.valor;
+                                            const hasRowChange = normalizeDirectiveDraftValue(noiseEnabledDirective, value) !== normalizeDirectiveDraftValue(noiseEnabledDirective, noiseEnabledDirective.valor);
+                                            return (
+                                                <Tr key={noiseEnabledDirective.id}>
+                                                    <Td>
+                                                        <Text fontWeight="bold">{getAreaOperativaNoiseDirectiveLabel(noiseEnabledDirective)}</Text>
+                                                        <Text fontSize="sm" color="app.textSubtle">
+                                                            {noiseEnabledDirective.resumen}
+                                                        </Text>
+                                                    </Td>
+                                                    <Td>
+                                                        <HStack>
+                                                            <Switch
+                                                                isChecked={isBooleanEnabled(value)}
+                                                                onChange={e => updateDirectiveDraft(noiseEnabledDirective.id, String(e.target.checked))}
+                                                            />
+                                                            {hasRowChange && (
+                                                                <Icon as={FaCircleExclamation} color="orange.400" />
+                                                            )}
+                                                        </HStack>
+                                                    </Td>
+                                                </Tr>
+                                            );
+                                        })()}
+
+                                        {noiseNumericDirectives.map(directive => {
+                                            const value = directiveDrafts[directive.id] ?? directive.valor;
+                                            const hasRowChange = value.trim() !== directive.valor;
+                                            const error = directiveErrors[directive.id];
+                                            const bounds = getNumericDirectiveBounds(directive);
+                                            const unit = getAreaOperativaNoiseDirectiveUnit(directive);
+                                            return (
+                                                <Tr key={directive.id}>
+                                                    <Td>
+                                                        <Text fontWeight="bold">{getAreaOperativaNoiseDirectiveLabel(directive)}</Text>
+                                                        <Text fontSize="sm" color="app.textSubtle">
+                                                            {directive.resumen}
+                                                        </Text>
+                                                    </Td>
+                                                    <Td>
+                                                        <HStack align="flex-start">
+                                                            <FormControl isInvalid={Boolean(error)} maxW="180px">
+                                                                <Input
+                                                                    type="number"
+                                                                    min={bounds.min}
+                                                                    max={bounds.max}
+                                                                    step={1}
+                                                                    value={value}
+                                                                    onChange={e => updateDirectiveDraft(directive.id, e.target.value)}
+                                                                />
+                                                                {error && <FormErrorMessage>{error}</FormErrorMessage>}
+                                                            </FormControl>
+                                                            {unit && (
+                                                                <Text color="app.textMuted" mt={2}>
+                                                                    {unit}
+                                                                </Text>
+                                                            )}
+                                                            {hasRowChange && (
+                                                                <Icon as={FaCircleExclamation} color="orange.400" mt={2} />
+                                                            )}
+                                                        </HStack>
+                                                    </Td>
+                                                </Tr>
+                                            );
+                                        })}
+                                    </Tbody>
+                                </Table>
+                            </Box>
 
                             <Box mt={8}>
                                 <Text mb={2} fontWeight="bold">

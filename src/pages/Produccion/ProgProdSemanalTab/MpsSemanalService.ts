@@ -164,6 +164,9 @@ export interface MpsSemanalOrdenProduccionListItemDTO {
     fechaLanzamiento: string | null;
     fechaFinalPlanificada: string | null;
     estadoOrden: number;
+    politicaDispensacionInicio: string | null;
+    fechaAplicacionPoliticaDispensacion: string | null;
+    estadoDispensacionMateriales: string | null;
     mpsLotePlanificadoId: number | null;
     mpsItemId: number | null;
     mpsLoteOrdinal: number | null;

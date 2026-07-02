@@ -27,6 +27,9 @@ export interface OrdenProduccionBE {
     ordenId: number;
     loteAsignado: string;
     estadoOrden: number;
+    politicaDispensacionInicio?: string | null;
+    fechaAplicacionPoliticaDispensacion?: string | null;
+    estadoDispensacionMateriales?: string | null;
     cantidadProducir: number;
     observaciones?: string;
     fechaCreacion?: string;

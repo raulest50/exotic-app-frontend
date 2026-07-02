@@ -310,6 +310,8 @@ export default class EndPointsURL{
     // super master directives endpoints
     public get_super_master_directives: string;
     public update_super_master_directive: string;
+    public super_master_dispensacion_retroactividad_preview: string;
+    public super_master_dispensacion_retroactividad_apply: string;
 
     // administracion global endpoints
     public empresa_identidad_legal_vigente: string;
@@ -814,6 +816,8 @@ export default class EndPointsURL{
         // super master directives endpoints
         this.get_super_master_directives = `${domain}/api/super-master-directives/directives`;
         this.update_super_master_directive = `${domain}/api/super-master-directives/directives/update`;
+        this.super_master_dispensacion_retroactividad_preview = `${domain}/api/super-master-directives/dispensacion-inicio/retroactividad-preview`;
+        this.super_master_dispensacion_retroactividad_apply = `${domain}/api/super-master-directives/dispensacion-inicio/aplicar-retroactividad`;
 
         // administracion global endpoints
         this.empresa_identidad_legal_vigente = `${domain}/${empresa_identidad_legal_res}/vigente`;

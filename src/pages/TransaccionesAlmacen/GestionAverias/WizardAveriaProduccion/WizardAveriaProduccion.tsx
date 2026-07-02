@@ -29,6 +29,9 @@ export interface OrdenProduccionDTO {
     productoId: string;
     productoNombre: string;
     estadoOrden: number;
+    politicaDispensacionInicio?: string | null;
+    fechaAplicacionPoliticaDispensacion?: string | null;
+    estadoDispensacionMateriales?: string | null;
     cantidadProducir: number;
     fechaCreacion: string;
     observaciones: string;

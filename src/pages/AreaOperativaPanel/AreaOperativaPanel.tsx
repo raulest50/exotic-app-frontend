@@ -12,6 +12,7 @@ import {
     AlertIcon,
     Box,
     Button,
+    ButtonGroup,
     Flex,
     HStack,
     Heading,
@@ -39,10 +40,15 @@ import {
     useColorModeValue,
     useToast,
 } from "@chakra-ui/react";
-import { FiLogOut, FiRefreshCw, FiSearch, FiUser } from "react-icons/fi";
+import { FiArchive, FiCalendar, FiLogOut, FiRefreshCw, FiSearch, FiUser } from "react-icons/fi";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL.tsx";
 import { useAuth } from "../../context/AuthContext.tsx";
+import { useMasterDirectives } from "../../context/MasterDirectivesContext.tsx";
+import {
+    AREA_OPERATIVA_PANEL_HISTORICO_TOGGLE_ENABLED_DEFAULT,
+    MASTER_DIRECTIVE_KEYS,
+} from "../../context/masterDirectiveConstants.ts";
 import {
     BOARD_COLUMN_META,
     SeguimientoBoardColumn,
@@ -52,16 +58,22 @@ import type {
     EstadoTableroKey,
     SeguimientoOrdenAreaCardDTO,
     TableroOperativoDTO,
+    TableroVista,
 } from "../Produccion/components/seguimientoBoard.types.ts";
 import type { SeguimientoActionType } from "../Produccion/components/SeguimientoBoardUI.tsx";
 import AreaOperativaOrderDetailDrawer from "./AreaOperativaOrderDetailDrawer.tsx";
 import AreaOperativaMpsSemanalTab from "./AreaOperativaMpsSemanalTab.tsx";
 import type { AreaOperativaOrdenDetalleDTO } from "./areaOperativaPanel.types.ts";
 import { useAreaOperativaNoiseSampler } from "./Analitica/Noise/useAreaOperativaNoiseSampler.ts";
+import { formatSemanaMpsDisplayDate } from "../Produccion/ProgProdSemanalTab/semanaMps.utils.ts";
 
 const endpoints = new EndPointsURL();
+const TABLERO_VISTA_STORAGE_KEY = "areaOperativaPanel.tableroVista";
 
 const EMPTY_BOARD: TableroOperativoDTO = {
+    vista: "HISTORICO",
+    weekStartDate: null,
+    weekEndDate: null,
     resumen: {
         total: 0,
         cola: 0,
@@ -74,6 +86,35 @@ const EMPTY_BOARD: TableroOperativoDTO = {
     enProceso: [],
     completado: [],
 };
+
+function isTableroVista(value: unknown): value is TableroVista {
+    return value === "HISTORICO" || value === "SEMANA_ACTUAL";
+}
+
+function getStoredTableroVista(): TableroVista {
+    if (typeof window === "undefined") {
+        return "SEMANA_ACTUAL";
+    }
+
+    try {
+        const stored = window.localStorage.getItem(TABLERO_VISTA_STORAGE_KEY);
+        return isTableroVista(stored) ? stored : "SEMANA_ACTUAL";
+    } catch {
+        return "SEMANA_ACTUAL";
+    }
+}
+
+function storeTableroVista(vista: TableroVista) {
+    if (typeof window === "undefined") {
+        return;
+    }
+
+    try {
+        window.localStorage.setItem(TABLERO_VISTA_STORAGE_KEY, vista);
+    } catch {
+        // La preferencia local no debe bloquear el tablero operativo.
+    }
+}
 
 function isEstadoTableroKey(value: unknown): value is EstadoTableroKey {
     return value === "cola"
@@ -175,6 +216,7 @@ function matchesFilter(card: SeguimientoOrdenAreaCardDTO, searchTerm: string): b
 
 export default function AreaOperativaPanel() {
     const { meProfile, logout, areaResponsable } = useAuth();
+    const { loading: directivesLoading, getBooleanDirective } = useMasterDirectives();
     const toast = useToast();
     const emptyTitleColor = useColorModeValue("gray.700", "gray.200");
     const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -200,6 +242,7 @@ export default function AreaOperativaPanel() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [tableroVista, setTableroVista] = useState<TableroVista>(getStoredTableroVista);
 
     const [selectedOrden, setSelectedOrden] = useState<SeguimientoOrdenAreaCardDTO | null>(null);
     const [selectedAction, setSelectedAction] = useState<SeguimientoActionType | null>(null);
@@ -250,6 +293,17 @@ export default function AreaOperativaPanel() {
         }
     };
 
+    const tableroVistaToggleEnabled = !directivesLoading && getBooleanDirective(
+        MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_PANEL_HISTORICO_TOGGLE_ENABLED,
+        AREA_OPERATIVA_PANEL_HISTORICO_TOGGLE_ENABLED_DEFAULT,
+    );
+    const effectiveTableroVista: TableroVista = tableroVistaToggleEnabled ? tableroVista : "HISTORICO";
+
+    const handleTableroVistaChange = useCallback((nextVista: TableroVista) => {
+        setTableroVista(nextVista);
+        storeTableroVista(nextVista);
+    }, []);
+
     const fetchTablero = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -257,7 +311,10 @@ export default function AreaOperativaPanel() {
         try {
             const response = await axios.get<TableroOperativoDTO>(
                 endpoints.seguimiento_mis_ordenes_tablero,
-                { withCredentials: true },
+                {
+                    params: { vista: effectiveTableroVista },
+                    withCredentials: true,
+                },
             );
             setTablero(response.data ?? EMPTY_BOARD);
         } catch (err: any) {
@@ -270,11 +327,14 @@ export default function AreaOperativaPanel() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [effectiveTableroVista]);
 
     useEffect(() => {
+        if (directivesLoading) {
+            return;
+        }
         void fetchTablero();
-    }, [fetchTablero]);
+    }, [directivesLoading, fetchTablero]);
 
     const openDetail = useCallback(async (orden: SeguimientoOrdenAreaCardDTO) => {
         setSelectedOrden(orden);
@@ -390,6 +450,13 @@ export default function AreaOperativaPanel() {
         filteredBoard.espera.length +
         filteredBoard.enProceso.length +
         filteredBoard.completado.length;
+    const weekRangeLabel = tablero.weekStartDate && tablero.weekEndDate
+        ? `${formatSemanaMpsDisplayDate(tablero.weekStartDate)} a ${formatSemanaMpsDisplayDate(tablero.weekEndDate)}`
+        : "semana actual";
+    const activeVistaLabel = effectiveTableroVista === "SEMANA_ACTUAL"
+        ? `la semana actual (${weekRangeLabel})`
+        : "el histórico";
+    const boardLoading = loading || directivesLoading;
 
     return (
         <VStack w="full" spacing={6} align="stretch" p={4}>
@@ -410,7 +477,8 @@ export default function AreaOperativaPanel() {
                             variant="outline"
                             leftIcon={<FiRefreshCw />}
                             onClick={() => void fetchTablero()}
-                            isLoading={loading}
+                            isLoading={boardLoading}
+                            isDisabled={directivesLoading}
                         >
                             Refrescar
                         </Button>
@@ -463,8 +531,28 @@ export default function AreaOperativaPanel() {
                                                 />
                                             </InputGroup>
                                         </Box>
+                                        {tableroVistaToggleEnabled ? (
+                                            <ButtonGroup isAttached size="sm" variant="outline">
+                                                <Button
+                                                    leftIcon={<FiCalendar />}
+                                                    colorScheme={effectiveTableroVista === "SEMANA_ACTUAL" ? "teal" : "gray"}
+                                                    variant={effectiveTableroVista === "SEMANA_ACTUAL" ? "solid" : "outline"}
+                                                    onClick={() => handleTableroVistaChange("SEMANA_ACTUAL")}
+                                                >
+                                                    Semana actual
+                                                </Button>
+                                                <Button
+                                                    leftIcon={<FiArchive />}
+                                                    colorScheme={effectiveTableroVista === "HISTORICO" ? "teal" : "gray"}
+                                                    variant={effectiveTableroVista === "HISTORICO" ? "solid" : "outline"}
+                                                    onClick={() => handleTableroVistaChange("HISTORICO")}
+                                                >
+                                                    Histórico
+                                                </Button>
+                                            </ButtonGroup>
+                                        ) : null}
                                         <Text fontSize="sm" color="app.textMuted">
-                                            Mostrando {totalFilteredCards} órdenes en el tablero filtrado.
+                                            Mostrando {totalFilteredCards} órdenes en {tableroVistaToggleEnabled ? activeVistaLabel : "el tablero filtrado"}.
                                         </Text>
                                     </HStack>
                                 </VStack>
@@ -477,22 +565,24 @@ export default function AreaOperativaPanel() {
                                 </Alert>
                             ) : null}
 
-                            {loading ? (
+                            {boardLoading ? (
                                 <Flex justify="center" align="center" py={12}>
                                     <Spinner size="xl" color="teal.500" />
                                 </Flex>
                             ) : null}
 
-                            {!loading && tablero.resumen.total === 0 ? (
+                            {!boardLoading && tablero.resumen.total === 0 ? (
                                 <Box borderWidth="1px" borderRadius="xl" bg="app.surfaceSubtle" p={10} textAlign="center">
                                     <Heading size="md" color={emptyTitleColor} mb={2}>No hay órdenes en seguimiento</Heading>
                                     <Text color="app.textSubtle">
-                                        Las órdenes aparecerán aquí cuando una ruta productiva involucre tus áreas asignadas.
+                                        {effectiveTableroVista === "SEMANA_ACTUAL"
+                                            ? "Las órdenes aparecerán aquí cuando tengan fecha planificada de entrega en la semana actual."
+                                            : "Las órdenes aparecerán aquí cuando una ruta productiva involucre tus áreas asignadas."}
                                     </Text>
                                 </Box>
                             ) : null}
 
-                            {!loading && tablero.resumen.total > 0 ? (
+                            {!boardLoading && tablero.resumen.total > 0 ? (
                                 <Box ref={boardColumnsStartRef} scrollMarginTop={4}>
                                     <DndContext
                                         sensors={dndSensors}

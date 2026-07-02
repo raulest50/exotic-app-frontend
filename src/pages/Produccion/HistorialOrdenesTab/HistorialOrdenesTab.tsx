@@ -85,6 +85,9 @@ const normalizeOrdenProduccion = (orden: any): OrdenProduccionDTO => {
         fechaLanzamiento: toNullableString(orden?.fechaLanzamiento),
         fechaFinalPlanificada: toNullableString(orden?.fechaFinalPlanificada),
         estadoOrden: toNullableNumber(orden?.estadoOrden) ?? 0,
+        politicaDispensacionInicio: toNullableString(orden?.politicaDispensacionInicio),
+        fechaAplicacionPoliticaDispensacion: toNullableString(orden?.fechaAplicacionPoliticaDispensacion),
+        estadoDispensacionMateriales: toNullableString(orden?.estadoDispensacionMateriales),
         cantidadProducir: toNullableNumber(
             orden?.cantidadProducir ?? orden?.cantidadAProducir ?? orden?.numeroLotes
         ),

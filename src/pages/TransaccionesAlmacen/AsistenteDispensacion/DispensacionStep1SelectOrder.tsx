@@ -1,5 +1,6 @@
 import {useEffect, useMemo, useState} from 'react';
 import {
+    Badge,
     Box,
     Button,
     Flex,
@@ -18,6 +19,12 @@ import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
 import {CasePackResponseDTO, DispensacionDTO, DispensacionResumenResponse, InsumoDesglosado, ItemPendienteReposicion, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
 import FiltroODP_AsistDisp from './FiltroODP_AsistDisp';
+import {
+    getEstadoDispensacionMaterialesColor,
+    getEstadoDispensacionMaterialesLabel,
+    getPoliticaDispensacionInicioColor,
+    getPoliticaDispensacionInicioLabel,
+} from '../../Produccion/components/SeguimientoBoardUI';
 
 interface Props {
     setActiveStep: (step:number) => void;
@@ -48,6 +55,9 @@ interface OrdenDispensacionResumen {
     fechaCreacion?: string;
     estado?: string | number;
     estadoOrden?: string | number;
+    politicaDispensacionInicio?: string | null;
+    fechaAplicacionPoliticaDispensacion?: string | null;
+    estadoDispensacionMateriales?: string | null;
     ultimaAreaDispensada?: string;
     loteAsignado?: string;
     items?: DispensacionDTO['items'];
@@ -208,6 +218,7 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
                             <Th>Lote</Th>
                             <Th>Producto</Th>
                             <Th>Fecha</Th>
+                            <Th>Materiales</Th>
                             <Th>Ultima area dispensada</Th>
                             <Th textAlign='center'>Acciones</Th>
                         </Tr>
@@ -220,6 +231,16 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
                                     <Td>{orden.loteAsignado ?? 'N/A'}</Td>
                                     <Td>{orden.productoNombre ?? orden.producto?.nombre ?? 'Sin nombre'}</Td>
                                     <Td>{formatFecha(orden.fechaInicio ?? orden.fechaCreacion)}</Td>
+                                    <Td>
+                                        <Flex gap={2} wrap='wrap'>
+                                            <Badge colorScheme={getEstadoDispensacionMaterialesColor(orden.estadoDispensacionMateriales)}>
+                                                {getEstadoDispensacionMaterialesLabel(orden.estadoDispensacionMateriales)}
+                                            </Badge>
+                                            <Badge colorScheme={getPoliticaDispensacionInicioColor(orden.politicaDispensacionInicio)}>
+                                                {getPoliticaDispensacionInicioLabel(orden.politicaDispensacionInicio)}
+                                            </Badge>
+                                        </Flex>
+                                    </Td>
                                     <Td>{orden.ultimaAreaDispensada ?? 'Sin dispensacion'}</Td>
                                     <Td>
                                         <Flex justify='center'>
@@ -233,7 +254,7 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
                         })}
                         {ordenes.length === 0 && (
                             <Tr>
-                                <Td colSpan={5}>
+                                <Td colSpan={6}>
                                     <Text textAlign='center' py={4}>{loading ? 'Cargando órdenes...' : 'No hay órdenes disponibles.'}</Text>
                                 </Td>
                             </Tr>
