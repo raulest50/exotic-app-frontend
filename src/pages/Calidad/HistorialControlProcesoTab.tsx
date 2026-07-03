@@ -19,8 +19,8 @@ import {
     buscarEjecuciones,
     detalleEjecucion,
     extractApiError,
-    searchAreasOperativas,
 } from "./calidadApi";
+import CalidadAreaOperativaPicker from "./CalidadAreaOperativaPicker";
 import type {
     AreaOperativaOption,
     EjecucionDetalleResponse,
@@ -54,8 +54,6 @@ function resumenMuestra(muestra: MuestraResponse) {
 
 export default function HistorialControlProcesoTab() {
     const toast = useToast();
-    const [areaSearch, setAreaSearch] = useState("");
-    const [areas, setAreas] = useState<AreaOperativaOption[]>([]);
     const [selectedArea, setSelectedArea] = useState<AreaOperativaOption | null>(null);
     const [producto, setProducto] = useState("");
     const [fechaDesde, setFechaDesde] = useState("");
@@ -63,7 +61,6 @@ export default function HistorialControlProcesoTab() {
     const [page, setPage] = useState(0);
     const [resultados, setResultados] = useState<PageResponse<EjecucionListItemResponse> | null>(null);
     const [detalle, setDetalle] = useState<EjecucionDetalleResponse | null>(null);
-    const [loadingAreas, setLoadingAreas] = useState(false);
     const [loadingSearch, setLoadingSearch] = useState(false);
     const [loadingDetalle, setLoadingDetalle] = useState(false);
 
@@ -76,21 +73,11 @@ export default function HistorialControlProcesoTab() {
         return Array.from(grouped.entries());
     }, [detalle]);
 
-    const buscarAreas = async () => {
-        setLoadingAreas(true);
-        try {
-            setAreas(await searchAreasOperativas(areaSearch));
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: extractApiError(error, "No fue posible buscar areas operativas."),
-                status: "error",
-                duration: 4000,
-                isClosable: true,
-            });
-        } finally {
-            setLoadingAreas(false);
-        }
+    const handleAreaChange = (area: AreaOperativaOption | null) => {
+        setSelectedArea(area);
+        setResultados(null);
+        setDetalle(null);
+        setPage(0);
     };
 
     const buscar = async (targetPage = 0) => {
@@ -139,45 +126,11 @@ export default function HistorialControlProcesoTab() {
 
     return (
         <VStack align="stretch" spacing={5}>
-            <Box borderWidth="1px" borderRadius="md" p={4}>
-                <HStack align="end" spacing={3}>
-                    <Box flex="1">
-                        <Text fontWeight="semibold" mb={1}>Area operativa</Text>
-                        <Input
-                            value={areaSearch}
-                            onChange={(event) => setAreaSearch(event.target.value)}
-                            onKeyDown={(event) => event.key === "Enter" && buscarAreas()}
-                            placeholder="Buscar por nombre"
-                        />
-                    </Box>
-                    <Button onClick={buscarAreas} isLoading={loadingAreas}>Buscar area</Button>
-                    <Button
-                        variant="outline"
-                        onClick={() => {
-                            setSelectedArea(null);
-                            setAreas([]);
-                            setAreaSearch("");
-                        }}
-                    >
-                        Limpiar area
-                    </Button>
-                </HStack>
-                {areas.length > 0 && (
-                    <HStack mt={3} spacing={2} flexWrap="wrap">
-                        {areas.map((area) => (
-                            <Button
-                                key={area.areaId}
-                                size="sm"
-                                variant={selectedArea?.areaId === area.areaId ? "solid" : "outline"}
-                                colorScheme={selectedArea?.areaId === area.areaId ? "teal" : "gray"}
-                                onClick={() => setSelectedArea(area)}
-                            >
-                                {area.nombre}
-                            </Button>
-                        ))}
-                    </HStack>
-                )}
-            </Box>
+            <CalidadAreaOperativaPicker
+                value={selectedArea}
+                onChange={handleAreaChange}
+                helperText="Este filtro es opcional para consultar controles registrados."
+            />
 
             <Box borderWidth="1px" borderRadius="md" p={4}>
                 <HStack align="end" spacing={3}>

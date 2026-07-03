@@ -24,8 +24,8 @@ import {
     listPlantillas,
     publicarPlantilla,
     retirarPlantilla,
-    searchAreasOperativas,
 } from "./calidadApi";
+import CalidadAreaOperativaPicker from "./CalidadAreaOperativaPicker";
 import type {
     AreaOperativaOption,
     CaracteristicaRequest,
@@ -96,31 +96,11 @@ function estadoColor(estado: PlantillaResponse["estado"]) {
 
 export default function VersionadoControlProcesoTab() {
     const toast = useToast();
-    const [areaSearch, setAreaSearch] = useState("");
-    const [areas, setAreas] = useState<AreaOperativaOption[]>([]);
     const [selectedArea, setSelectedArea] = useState<AreaOperativaOption | null>(null);
     const [plantillas, setPlantillas] = useState<PlantillaResponse[]>([]);
     const [rows, setRows] = useState<DraftCaracteristica[]>([newDraftRow()]);
-    const [loadingAreas, setLoadingAreas] = useState(false);
     const [loadingPlantillas, setLoadingPlantillas] = useState(false);
     const [saving, setSaving] = useState(false);
-
-    const buscarAreas = async () => {
-        setLoadingAreas(true);
-        try {
-            setAreas(await searchAreasOperativas(areaSearch));
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: extractApiError(error, "No fue posible buscar areas operativas."),
-                status: "error",
-                duration: 4000,
-                isClosable: true,
-            });
-        } finally {
-            setLoadingAreas(false);
-        }
-    };
 
     const cargarPlantillas = async (area: AreaOperativaOption) => {
         setLoadingPlantillas(true);
@@ -142,9 +122,14 @@ export default function VersionadoControlProcesoTab() {
         }
     };
 
-    const seleccionarArea = (area: AreaOperativaOption) => {
+    const handleAreaChange = (area: AreaOperativaOption | null) => {
         setSelectedArea(area);
-        cargarPlantillas(area);
+        if (area) {
+            cargarPlantillas(area);
+        } else {
+            setPlantillas([]);
+            setRows([newDraftRow()]);
+        }
     };
 
     const updateRow = (key: string, patch: Partial<DraftCaracteristica>) => {
@@ -240,35 +225,11 @@ export default function VersionadoControlProcesoTab() {
 
     return (
         <VStack align="stretch" spacing={5}>
-            <Box borderWidth="1px" borderRadius="md" p={4}>
-                <HStack align="end" spacing={3}>
-                    <Box flex="1">
-                        <Text fontWeight="semibold" mb={1}>Area operativa</Text>
-                        <Input
-                            value={areaSearch}
-                            onChange={(event) => setAreaSearch(event.target.value)}
-                            onKeyDown={(event) => event.key === "Enter" && buscarAreas()}
-                            placeholder="Buscar por nombre"
-                        />
-                    </Box>
-                    <Button onClick={buscarAreas} isLoading={loadingAreas}>Buscar</Button>
-                </HStack>
-                {areas.length > 0 && (
-                    <HStack mt={3} spacing={2} flexWrap="wrap">
-                        {areas.map((area) => (
-                            <Button
-                                key={area.areaId}
-                                size="sm"
-                                variant={selectedArea?.areaId === area.areaId ? "solid" : "outline"}
-                                colorScheme={selectedArea?.areaId === area.areaId ? "teal" : "gray"}
-                                onClick={() => seleccionarArea(area)}
-                            >
-                                {area.nombre}
-                            </Button>
-                        ))}
-                    </HStack>
-                )}
-            </Box>
+            <CalidadAreaOperativaPicker
+                value={selectedArea}
+                onChange={handleAreaChange}
+                helperText="La plantilla vigente se define por area operativa."
+            />
 
             {selectedArea && (
                 <>

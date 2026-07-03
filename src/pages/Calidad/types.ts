@@ -5,6 +5,12 @@ export interface AreaOperativaOption {
     areaId: number;
     nombre: string;
     descripcion?: string;
+    responsableArea?: {
+        id?: number;
+        cedula?: number;
+        username?: string;
+        nombreCompleto?: string;
+    } | null;
 }
 
 export interface ProductoResumen {

@@ -21,9 +21,9 @@ import {
     extractApiError,
     guardarEjecucion,
     prepararEjecucion,
-    searchAreasOperativas,
     searchLotesProduccion,
 } from "./calidadApi";
+import CalidadAreaOperativaPicker from "./CalidadAreaOperativaPicker";
 import type {
     AreaOperativaOption,
     CaracteristicaResponse,
@@ -48,8 +48,6 @@ function loteLabel(lote: LoteProduccionResumen) {
 
 export default function DiligenciarControlProcesoTab() {
     const toast = useToast();
-    const [areaSearch, setAreaSearch] = useState("");
-    const [areas, setAreas] = useState<AreaOperativaOption[]>([]);
     const [selectedArea, setSelectedArea] = useState<AreaOperativaOption | null>(null);
     const [loteSearch, setLoteSearch] = useState("");
     const [lotes, setLotes] = useState<LoteProduccionResumen[]>([]);
@@ -57,26 +55,15 @@ export default function DiligenciarControlProcesoTab() {
     const [preparacion, setPreparacion] = useState<PrepararEjecucionResponse | null>(null);
     const [values, setValues] = useState<Record<string, string>>({});
     const [observaciones, setObservaciones] = useState("");
-    const [loadingAreas, setLoadingAreas] = useState(false);
     const [loadingLotes, setLoadingLotes] = useState(false);
     const [loadingPreparacion, setLoadingPreparacion] = useState(false);
     const [saving, setSaving] = useState(false);
 
-    const buscarAreas = async () => {
-        setLoadingAreas(true);
-        try {
-            setAreas(await searchAreasOperativas(areaSearch));
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: extractApiError(error, "No fue posible buscar areas operativas."),
-                status: "error",
-                duration: 4000,
-                isClosable: true,
-            });
-        } finally {
-            setLoadingAreas(false);
-        }
+    const handleAreaChange = (area: AreaOperativaOption | null) => {
+        setSelectedArea(area);
+        setPreparacion(null);
+        setValues({});
+        setObservaciones("");
     };
 
     const buscarLotes = async () => {
@@ -240,38 +227,11 @@ export default function DiligenciarControlProcesoTab() {
 
     return (
         <VStack align="stretch" spacing={5}>
-            <Box borderWidth="1px" borderRadius="md" p={4}>
-                <HStack align="end" spacing={3}>
-                    <Box flex="1">
-                        <Text fontWeight="semibold" mb={1}>Area operativa</Text>
-                        <Input
-                            value={areaSearch}
-                            onChange={(event) => setAreaSearch(event.target.value)}
-                            onKeyDown={(event) => event.key === "Enter" && buscarAreas()}
-                            placeholder="Buscar por nombre"
-                        />
-                    </Box>
-                    <Button onClick={buscarAreas} isLoading={loadingAreas}>Buscar</Button>
-                </HStack>
-                {areas.length > 0 && (
-                    <HStack mt={3} spacing={2} flexWrap="wrap">
-                        {areas.map((area) => (
-                            <Button
-                                key={area.areaId}
-                                size="sm"
-                                variant={selectedArea?.areaId === area.areaId ? "solid" : "outline"}
-                                colorScheme={selectedArea?.areaId === area.areaId ? "teal" : "gray"}
-                                onClick={() => {
-                                    setSelectedArea(area);
-                                    setPreparacion(null);
-                                }}
-                            >
-                                {area.nombre}
-                            </Button>
-                        ))}
-                    </HStack>
-                )}
-            </Box>
+            <CalidadAreaOperativaPicker
+                value={selectedArea}
+                onChange={handleAreaChange}
+                helperText="El lote seleccionado aporta el producto terminado del control."
+            />
 
             <Box borderWidth="1px" borderRadius="md" p={4}>
                 <HStack align="end" spacing={3}>
