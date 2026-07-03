@@ -27,7 +27,7 @@ import { FaUsersGear } from "react-icons/fa6";
 import { FaSitemap } from "react-icons/fa6";
 import { FaFileUpload } from "react-icons/fa";
 import { TbReportMoney } from "react-icons/tb";
-import { MdOutlineInsights } from "react-icons/md";
+import { MdOutlineFactCheck, MdOutlineInsights } from "react-icons/md";
 import { FaSteam } from "react-icons/fa";
 import { PiMicrosoftTeamsLogoFill } from "react-icons/pi";
 import { MdNotificationsActive } from "react-icons/md";
@@ -111,6 +111,7 @@ export default function Home() {
         { to: "/administracion_global", name: "Administracion Global", icon: FaCrown, notificationModulo: Modulo.ADMINISTRACION_GLOBAL, accesoValido: moduleAccessRule(Modulo.ADMINISTRACION_GLOBAL) },
         { to: "/cronograma", name: "Cronograma", icon: FaCalendarAlt, notificationModulo: Modulo.CRONOGRAMA, accesoValido: moduleAccessRule(Modulo.CRONOGRAMA) },
         { to: "/organigrama", name: "Organigrama", icon: FaSitemap, notificationModulo: Modulo.ORGANIGRAMA, accesoValido: moduleAccessRule(Modulo.ORGANIGRAMA) },
+        { to: "/calidad", name: "Calidad", icon: MdOutlineFactCheck, notificationModulo: Modulo.CALIDAD, accesoValido: moduleAccessRule(Modulo.CALIDAD) },
     ];
 
     return (

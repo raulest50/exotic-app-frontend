@@ -42,6 +42,7 @@ function MyHeader({title,}:MyHeaderProps){
             'super_master_directives': Modulo.MASTER_DIRECTIVES,
             'cronograma': Modulo.CRONOGRAMA,
             'organigrama': Modulo.ORGANIGRAMA,
+            'calidad': Modulo.CALIDAD,
             'pagos-proveedores': Modulo.PAGOS_PROVEEDORES,
 
             // Rutas sin módulo (o no definidas en enum Modulo)

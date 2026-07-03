@@ -309,6 +309,16 @@ export default class EndPointsURL{
     public area_operativa_panel_mps_semanal_actual_odps: string;
     public area_operativa_panel_ruido_muestras: string;
 
+    // calidad endpoints
+    public calidad_plantillas: string;
+    public calidad_plantilla_publicar: string;
+    public calidad_plantilla_retirar: string;
+    public calidad_plantilla_vigente: string;
+    public calidad_lotes_produccion_search: string;
+    public calidad_ejecucion_preparar: string;
+    public calidad_ejecuciones: string;
+    public calidad_ejecucion_detalle: string;
+
     // BI — informes diarios
     public informes_diarios_ping: string;
 
@@ -618,6 +628,7 @@ export default class EndPointsURL{
         const empresa_identidad_legal_res = 'api/empresa-identidad-legal';
         const empresa_logo_documental_res = 'api/empresa-logo-documental';
         const jornada_laboral_res = 'api/jornada-laboral';
+        const calidad_res = 'api/calidad';
 
         // productos endpoints
         this.search_mprima = `${domain}/${productos_res}/search_mprima`;
@@ -893,6 +904,16 @@ export default class EndPointsURL{
         this.monitoreo_area_tablero = `${domain}/api/produccion/monitoreo-areas-operativas/areas/{areaId}/tablero`;
         this.monitoreo_area_metricas = `${domain}/api/produccion/monitoreo-areas-operativas/areas/{areaId}/metricas`;
         this.monitoreo_area_alertas_inactividad = `${domain}/api/produccion/monitoreo-areas-operativas/alertas-inactividad`;
+
+        // Calidad endpoints
+        this.calidad_plantillas = `${domain}/${calidad_res}/plantillas`;
+        this.calidad_plantilla_publicar = `${domain}/${calidad_res}/plantillas/{id}/publicar`;
+        this.calidad_plantilla_retirar = `${domain}/${calidad_res}/plantillas/{id}/retirar`;
+        this.calidad_plantilla_vigente = `${domain}/${calidad_res}/plantillas/vigente`;
+        this.calidad_lotes_produccion_search = `${domain}/${calidad_res}/lotes-produccion/search`;
+        this.calidad_ejecucion_preparar = `${domain}/${calidad_res}/ejecuciones/preparar`;
+        this.calidad_ejecuciones = `${domain}/${calidad_res}/ejecuciones`;
+        this.calidad_ejecucion_detalle = `${domain}/${calidad_res}/ejecuciones/{id}`;
 
         // Planeacion de produccion endpoints
         this.planeacion_asociar_terminados = `${domain}/${planeacion_produccion_res}/asociar_terminados`;

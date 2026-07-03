@@ -37,6 +37,7 @@ import AdministracionGlobalPage from "./pages/AdministracionGlobal/Administracio
 import MasterDirectivesPage from "./pages/SuperMasterDirectives/MasterDirectivesPage.tsx";
 import CronogramaPage from "./pages/Cronograma/CronogramaPage.tsx";
 import OrganigramaPage from "./pages/Organigrama/OrganigramaPage.tsx";
+import CalidadPage from "./pages/Calidad/CalidadPage.tsx";
 import TransaccionesAlmacenPage from "./pages/TransaccionesAlmacen/TransaccionesAlmacenPage.tsx";
 import AreaOperativaPanel from "./pages/AreaOperativaPanel/AreaOperativaPanel.tsx";
 import { EnvironmentBadge } from "./components/EnvironmentBadge.tsx";
@@ -211,6 +212,15 @@ const router = createBrowserRouter(
                     element={
                         <AccessRoute accessRule={moduleAccessRule(Modulo.ORGANIGRAMA)}>
                             <OrganigramaPage/>
+                        </AccessRoute>
+                    }
+                />
+
+                <Route
+                    path="calidad"
+                    element={
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.CALIDAD)}>
+                            <CalidadPage/>
                         </AccessRoute>
                     }
                 />

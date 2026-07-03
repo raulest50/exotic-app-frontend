@@ -91,6 +91,11 @@ export const TABS_BY_MODULO: Record<Modulo, TabDefinition[]> = {
         tab("ORGANIGRAMA", "Organigrama"),
         tab("MISION_VISION", "Mision y Vision"),
     ],
+    [Modulo.CALIDAD]: [
+        tab("VERSIONADO_CONTROL_PROCESO", "Versionado Control de Proceso"),
+        tab("DILIGENCIAR_CONTROL_PROCESO", "Diligenciar Control de Proceso"),
+        tab("HISTORIAL_CONTROL_PROCESO", "Historial Control de Proceso"),
+    ],
     [Modulo.PAGOS_PROVEEDORES]: [
         tab("ASENTAR_TRANSACCIONES_ALMACEN", "Asentar Transacciones Almacen"),
         tab("FACTURAS_VENCIDAS", "Facturas Vencidas"),

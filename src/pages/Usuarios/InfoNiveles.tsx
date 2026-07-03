@@ -310,6 +310,16 @@ const canSaveFromBi = biAccessLevel >= 3;`,
       { level: 3, description: "Control total del modulo." },
     ],
   },
+  [Modulo.CALIDAD]: {
+    title: "Modulo de Calidad",
+    description: "Gestion de plantillas, diligenciamiento e historial de controles de proceso",
+    implementationDetails: false,
+    levels: [
+      { level: 1, description: "Acceso al tab asignado para consultar o registrar controles de proceso." },
+      { level: 2, description: "Gestion operativa del tab asignado, segun permisos configurados por usuario." },
+      { level: 3, description: "Control total de las operaciones habilitadas en el tab asignado." },
+    ],
+  },
   [Modulo.PAGOS_PROVEEDORES]: {
     title: "Modulo de Pagos a Proveedores",
     description: "Gestion de pagos y conciliaciones con proveedores",
