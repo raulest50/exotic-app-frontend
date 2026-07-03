@@ -86,6 +86,8 @@ interface ProgramacionEntry {
     ordenesCancelables?: number;
     lotesActivos?: number;
     lotesCancelados?: number;
+    lotesCancelables?: number;
+    lotesNoCancelables?: number;
 }
 
 const DAY_LABELS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
@@ -162,7 +164,24 @@ function isIntegerLike(value: number): boolean {
 }
 
 function getMinimumLotesForEntry(entry: ProgramacionEntry, isApprovedEditMode: boolean): number {
-    return isApprovedEditMode && entry.mpsItemId != null ? 0 : 1;
+    if (isApprovedEditMode && entry.mpsItemId != null) {
+        return Math.max(0, entry.lotesNoCancelables ?? 0);
+    }
+    return 1;
+}
+
+function canChangeEntryLotes(entry: ProgramacionEntry, isApprovedEditMode: boolean): boolean {
+    if (isEntryCanceled(entry) && !isPendingCancellation(entry)) {
+        return false;
+    }
+    if (isApprovedEditMode && entry.mpsItemId != null) {
+        return (entry.editable === true) || ((entry.lotesCancelables ?? 0) > 0);
+    }
+    return entry.editable !== false;
+}
+
+function getMaximumLotesForEntry(entry: ProgramacionEntry, isEntryEditable: boolean): number | undefined {
+    return isEntryEditable ? undefined : Math.max(0, entry.lotesActivos ?? entry.numeroLotes);
 }
 
 function buildEntryId(productoId: string, dayIndex: number): string {
@@ -276,6 +295,8 @@ function buildEntriesFromDraft(draft: MpsSemanalDraftDTO): ProgramacionEntry[] {
                 ordenesCancelables: item.ordenesCancelables,
                 lotesActivos: item.lotesActivos,
                 lotesCancelados: item.lotesCancelados,
+                lotesCancelables: item.lotesCancelables,
+                lotesNoCancelables: item.lotesNoCancelables,
             });
         });
     });
@@ -652,6 +673,7 @@ export default function ProgramacionProduccionSemanalTab() {
         setEntries((prev) => {
             const existing = prev.find((entry) => (
                 entry.dayIndex === pickerDayIndex && entry.productoId === terminado.productoId
+                && !isEntryCanceled(entry)
             ));
             if (existing) {
                 return prev;
@@ -663,12 +685,16 @@ export default function ProgramacionProduccionSemanalTab() {
     const handleEntryLotesChange = (entryId: string, valueAsString: string) => {
         const parsed = Number(valueAsString);
         setEntries((prev) => prev.map((entry) => {
-            if (entry.id !== entryId || !canEditEntry(entry)) {
+            if (entry.id !== entryId || !canChangeEntryLotes(entry, isApprovedEditMode)) {
                 return entry;
             }
             const minLotes = getMinimumLotesForEntry(entry, isApprovedEditMode);
-            const normalizedLotes = Number.isFinite(parsed)
-                ? Math.max(minLotes, parsed)
+            const maxLotes = getMaximumLotesForEntry(entry, canEditEntry(entry));
+            const clampedParsed = maxLotes == null || !Number.isFinite(parsed)
+                ? parsed
+                : Math.min(maxLotes, parsed);
+            const normalizedLotes = Number.isFinite(clampedParsed)
+                ? Math.max(minLotes, clampedParsed)
                 : minLotes;
             const canCancelApprovedEntry = isApprovedEditMode && entry.mpsItemId != null;
             return {
@@ -677,32 +703,38 @@ export default function ProgramacionProduccionSemanalTab() {
                 estadoItem: canCancelApprovedEntry ? (normalizedLotes <= 0 ? "CANCELADO" : "ACTIVO") : entry.estadoItem,
                 blockedReason: canCancelApprovedEntry && normalizedLotes <= 0
                     ? PENDING_CANCEL_REASON
-                    : null,
+                    : (entry.blockedReason === PENDING_CANCEL_REASON ? null : entry.blockedReason),
             };
         }));
     };
 
     const adjustEntryLotes = (entryId: string, direction: 1 | -1) => {
         setEntries((prev) => prev.map((entry) => {
-            if (entry.id !== entryId || !canEditEntry(entry)) {
+            if (entry.id !== entryId || !canChangeEntryLotes(entry, isApprovedEditMode)) {
                 return entry;
             }
             const nextLotes = entry.numeroLotes + direction;
             const minLotes = getMinimumLotesForEntry(entry, isApprovedEditMode);
-            const normalizedLotes = Math.max(minLotes, nextLotes);
+            const maxLotes = getMaximumLotesForEntry(entry, canEditEntry(entry));
+            const normalizedLotes = Math.max(minLotes, maxLotes == null ? nextLotes : Math.min(maxLotes, nextLotes));
             const canCancelApprovedEntry = isApprovedEditMode && entry.mpsItemId != null;
             return {
                 ...entry,
                 numeroLotes: normalizedLotes,
                 estadoItem: canCancelApprovedEntry ? (normalizedLotes <= 0 ? "CANCELADO" : "ACTIVO") : entry.estadoItem,
-                blockedReason: canCancelApprovedEntry && normalizedLotes <= 0 ? PENDING_CANCEL_REASON : null,
+                blockedReason: canCancelApprovedEntry && normalizedLotes <= 0
+                    ? PENDING_CANCEL_REASON
+                    : (entry.blockedReason === PENDING_CANCEL_REASON ? null : entry.blockedReason),
             };
         }));
     };
 
     const handleRemoveEntry = (entryId: string) => {
         setEntries((prev) => prev.flatMap((entry) => {
-            if (entry.id !== entryId || !canEditEntry(entry)) {
+            if (entry.id !== entryId) {
+                return [entry];
+            }
+            if (!canChangeEntryLotes(entry, isApprovedEditMode) || getMinimumLotesForEntry(entry, isApprovedEditMode) > 0) {
                 return [entry];
             }
             if (isApprovedEditMode && entry.mpsItemId != null) {
@@ -1083,7 +1115,9 @@ export default function ProgramacionProduccionSemanalTab() {
                                             const entryIssues = getEntryIssues(entry);
                                             const entryCanceled = isEntryCanceled(entry);
                                             const isEntryEditable = canEditEntry(entry);
+                                            const canChangeLotes = canChangeEntryLotes(entry, isApprovedEditMode);
                                             const minLotes = getMinimumLotesForEntry(entry, isApprovedEditMode);
+                                            const maxLotes = getMaximumLotesForEntry(entry, isEntryEditable);
                                             return (
                                                 <DraggableEntryCard
                                                     key={entry.id}
@@ -1109,7 +1143,7 @@ export default function ProgramacionProduccionSemanalTab() {
                                                                 size="xs"
                                                                 variant="ghost"
                                                                 colorScheme="red"
-                                                                isDisabled={!isEntryEditable}
+                                                                isDisabled={!canChangeLotes || minLotes > 0}
                                                                 onClick={() => handleRemoveEntry(entry.id)}
                                                             />
                                                         </Flex>
@@ -1122,18 +1156,19 @@ export default function ProgramacionProduccionSemanalTab() {
                                                                         icon={<MinusIcon />}
                                                                         size="sm"
                                                                         variant="outline"
-                                                                        isDisabled={!isEntryEditable || entry.numeroLotes <= minLotes}
+                                                                        isDisabled={!canChangeLotes || entry.numeroLotes <= minLotes}
                                                                         onClick={() => adjustEntryLotes(entry.id, -1)}
                                                                     />
                                                                 </Tooltip>
                                                                 <NumberInput
                                                                     size="sm"
                                                                     min={minLotes}
+                                                                    max={maxLotes}
                                                                     step={1}
                                                                     precision={0}
                                                                     value={entry.numeroLotes}
                                                                     onChange={(valueAsString) => handleEntryLotesChange(entry.id, valueAsString)}
-                                                                    isDisabled={!isEntryEditable}
+                                                                    isDisabled={!canChangeLotes}
                                                                     flex="1"
                                                                 >
                                                                     <NumberInputField />
@@ -1175,7 +1210,13 @@ export default function ProgramacionProduccionSemanalTab() {
                                                             {isApprovedEditMode && (entry.ordenesCancelables ?? 0) > 0 && !entryCanceled && (
                                                                 <Badge colorScheme="gray">{entry.ordenesCancelables} OP cancelable(s)</Badge>
                                                             )}
-                                                            {!isEntryEditable && !entryCanceled && <Badge colorScheme="gray">Solo lectura</Badge>}
+                                                            {isApprovedEditMode && (entry.lotesNoCancelables ?? 0) > 0 && !entryCanceled && (
+                                                                <Badge colorScheme="red">{entry.lotesNoCancelables} lote(s) no cancelable(s)</Badge>
+                                                            )}
+                                                            {isApprovedEditMode && (entry.lotesCancelables ?? 0) > 0 && !entryCanceled && (
+                                                                <Badge colorScheme="gray">{entry.lotesCancelables} lote(s) cancelable(s)</Badge>
+                                                            )}
+                                                            {!isEntryEditable && !canChangeLotes && !entryCanceled && <Badge colorScheme="gray">Solo lectura</Badge>}
                                                         </Flex>
                                                         {entry.blockedReason && (!isEntryEditable || isPendingCancellation(entry)) && (
                                                             <Text mt={2} fontSize="xs" color={entryCanceled ? "gray.600" : "red.600"}>

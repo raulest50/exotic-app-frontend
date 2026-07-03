@@ -55,6 +55,8 @@ export interface MpsSemanalItemDTO {
     ordenesCancelables: number;
     lotesActivos: number;
     lotesCancelados: number;
+    lotesCancelables: number;
+    lotesNoCancelables: number;
     lotesPlanificados: MpsSemanalLotePlanificadoDTO[];
 }
 

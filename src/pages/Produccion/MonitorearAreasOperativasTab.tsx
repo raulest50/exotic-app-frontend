@@ -7,10 +7,19 @@ import {
     Box,
     Button,
     Flex,
+    FormControl,
+    FormLabel,
     Heading,
     HStack,
     IconButton,
     Input,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
     Select,
     SimpleGrid,
     Spinner,
@@ -23,6 +32,7 @@ import {
     Tbody,
     Td,
     Text,
+    Textarea,
     Th,
     Thead,
     Tooltip,
@@ -34,6 +44,12 @@ import {
 import { FiArrowLeft, FiCalendar, FiEye, FiRefreshCw } from "react-icons/fi";
 
 import EndPointsURL from "../../api/EndPointsURL.tsx";
+import { useTabPermission } from "../../auth/usePermissions.ts";
+import { useMasterDirectives } from "../../context/MasterDirectivesContext.tsx";
+import {
+    AREA_OPERATIVA_ADMIN_CORRECTION_ENABLED_DEFAULT,
+    MASTER_DIRECTIVE_KEYS,
+} from "../../context/masterDirectiveConstants.ts";
 import AreaOperativaInactivityBell from "./Alertas/AreaOperativaInactivityBell.tsx";
 import { useAreaOperativaInactivityAlerts } from "./Alertas/useAreaOperativaInactivityAlerts.ts";
 import {
@@ -54,8 +70,16 @@ import type {
     SeguimientoOrdenAreaCardDTO,
 } from "./components/seguimientoBoard.types.ts";
 import MetricModeInfoModal from "./MetricModeInfoModal.tsx";
+import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
 
 const endPoints = new EndPointsURL();
+
+const CORRECTION_STATE_OPTIONS = [
+    { value: 0, label: "En cola" },
+    { value: 1, label: "En espera" },
+    { value: 4, label: "En proceso" },
+    { value: 2, label: "Completada" },
+];
 
 function getTodayIsoDate(): string {
     const now = new Date();
@@ -135,6 +159,13 @@ export default function MonitorearAreasOperativasTab() {
         onOpen: onMetricInfoOpen,
         onClose: onMetricInfoClose,
     } = useDisclosure();
+    const {
+        isOpen: isCorrectionOpen,
+        onOpen: onCorrectionOpen,
+        onClose: onCorrectionClose,
+    } = useDisclosure();
+    const { getBooleanDirective } = useMasterDirectives();
+    const { nivel: monitoringAccessLevel } = useTabPermission(Modulo.PRODUCCION, "MONITOREAR_AREAS_OPERATIVAS");
 
     const [areas, setAreas] = useState<AreaOperativaMonitoreoDTO[]>([]);
     const [loading, setLoading] = useState(true);
@@ -155,6 +186,11 @@ export default function MonitorearAreasOperativasTab() {
 
     const [detailLoading, setDetailLoading] = useState(false);
     const [detail, setDetail] = useState<OrdenProduccionSeguimientoDetalleDTO | null>(null);
+    const [correctionCard, setCorrectionCard] = useState<SeguimientoOrdenAreaCardDTO | null>(null);
+    const [correctionTarget, setCorrectionTarget] = useState("");
+    const [correctionMotivo, setCorrectionMotivo] = useState("");
+    const [correctionSaving, setCorrectionSaving] = useState(false);
+    const [correctionError, setCorrectionError] = useState<string | null>(null);
     const {
         alertsByAreaId,
         checkIntervalMinutes,
@@ -163,6 +199,13 @@ export default function MonitorearAreasOperativasTab() {
         loading: alertsLoading,
         refreshAlerts,
     } = useAreaOperativaInactivityAlerts();
+    const correctionDirectiveEnabled = getBooleanDirective(
+        MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_ADMIN_CORRECTION_ENABLED,
+        AREA_OPERATIVA_ADMIN_CORRECTION_ENABLED_DEFAULT,
+    );
+    const canCorrectStates = correctionDirectiveEnabled
+        && monitoringAccessLevel >= 3
+        && fechaConsulta === getTodayIsoDate();
 
     const fetchAreas = useCallback(async () => {
         setLoading(true);
@@ -323,6 +366,91 @@ export default function MonitorearAreasOperativasTab() {
             setDetailLoading(false);
         }
     }, [onDetailOpen, toast]);
+
+    const handleOpenCorrection = useCallback((orden: SeguimientoOrdenAreaCardDTO) => {
+        const firstTarget = CORRECTION_STATE_OPTIONS.find((option) => option.value !== orden.estado);
+        setCorrectionCard(orden);
+        setCorrectionTarget(firstTarget ? String(firstTarget.value) : "");
+        setCorrectionMotivo("");
+        setCorrectionError(null);
+        onCorrectionOpen();
+    }, [onCorrectionOpen]);
+
+    const handleCloseCorrection = useCallback(() => {
+        if (correctionSaving) {
+            return;
+        }
+        onCorrectionClose();
+        setCorrectionCard(null);
+        setCorrectionTarget("");
+        setCorrectionMotivo("");
+        setCorrectionError(null);
+    }, [correctionSaving, onCorrectionClose]);
+
+    const handleSubmitCorrection = useCallback(async () => {
+        if (!selectedArea || !correctionCard || !correctionTarget) {
+            return;
+        }
+
+        const motivo = correctionMotivo.trim();
+        if (!motivo) {
+            setCorrectionError("El motivo es obligatorio.");
+            return;
+        }
+
+        setCorrectionSaving(true);
+        setCorrectionError(null);
+        try {
+            await axios.patch<SeguimientoOrdenAreaCardDTO>(
+                endPoints.monitoreo_area_correccion_estado
+                    .replace("{areaId}", String(selectedArea.areaId))
+                    .replace("{seguimientoId}", String(correctionCard.id)),
+                {
+                    expectedEstado: correctionCard.estado,
+                    targetEstado: Number(correctionTarget),
+                    motivo,
+                },
+                { withCredentials: true },
+            );
+
+            toast({
+                title: "Estado corregido",
+                status: "success",
+                duration: 4000,
+                isClosable: true,
+            });
+
+            onCorrectionClose();
+            setCorrectionCard(null);
+            setCorrectionTarget("");
+            setCorrectionMotivo("");
+            void fetchTableroArea(selectedArea, fechaConsulta);
+            void fetchMetricasArea(selectedArea, metricMode, fechaConsulta, rangoDesde, rangoHasta);
+            void refreshAlerts();
+        } catch (err: any) {
+            setCorrectionError(
+                err.response?.data?.message ||
+                err.message ||
+                "No fue posible aplicar la correccion.",
+            );
+        } finally {
+            setCorrectionSaving(false);
+        }
+    }, [
+        correctionCard,
+        correctionMotivo,
+        correctionTarget,
+        fechaConsulta,
+        fetchMetricasArea,
+        fetchTableroArea,
+        metricMode,
+        onCorrectionClose,
+        rangoDesde,
+        rangoHasta,
+        refreshAlerts,
+        selectedArea,
+        toast,
+    ]);
 
     const selectedAreaAlert = selectedArea ? alertsByAreaId.get(selectedArea.areaId) : undefined;
 
@@ -684,6 +812,8 @@ export default function MonitorearAreasOperativasTab() {
                                 items={tablero[estadoKey]}
                                 mode="monitor"
                                 onOpenDetail={handleOpenDetail}
+                                canCorrectState={canCorrectStates}
+                                onCorrectState={handleOpenCorrection}
                             />
                         ))}
                     </SimpleGrid>
@@ -696,6 +826,83 @@ export default function MonitorearAreasOperativasTab() {
                 detail={detail}
                 loading={detailLoading}
             />
+            <Modal isOpen={isCorrectionOpen} onClose={handleCloseCorrection} isCentered>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Corregir estado</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <VStack align="stretch" spacing={4}>
+                            {correctionCard ? (
+                                <Box>
+                                    <Text fontWeight="bold">
+                                        {correctionCard.loteAsignado || `OP-${correctionCard.ordenId}`}
+                                    </Text>
+                                    <Text color="app.textMuted" fontSize="sm">
+                                        {correctionCard.productoNombre}
+                                    </Text>
+                                    <Text color="app.textMuted" fontSize="sm">
+                                        Estado actual: {correctionCard.estadoDescripcion}
+                                    </Text>
+                                </Box>
+                            ) : null}
+
+                            {correctionError ? (
+                                <Alert status="error" borderRadius="md">
+                                    <AlertIcon />
+                                    {correctionError}
+                                </Alert>
+                            ) : null}
+
+                            <FormControl>
+                                <FormLabel>Nuevo estado</FormLabel>
+                                <Select
+                                    value={correctionTarget}
+                                    onChange={(event) => setCorrectionTarget(event.target.value)}
+                                    isDisabled={correctionSaving}
+                                >
+                                    {CORRECTION_STATE_OPTIONS
+                                        .filter((option) => option.value !== correctionCard?.estado)
+                                        .map((option) => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Motivo</FormLabel>
+                                <Textarea
+                                    value={correctionMotivo}
+                                    onChange={(event) => setCorrectionMotivo(event.target.value)}
+                                    maxLength={500}
+                                    rows={4}
+                                    isDisabled={correctionSaving}
+                                />
+                                <Text fontSize="xs" color="app.textMuted" mt={1}>
+                                    {correctionMotivo.length}/500
+                                </Text>
+                            </FormControl>
+                        </VStack>
+                    </ModalBody>
+                    <ModalFooter>
+                        <HStack spacing={3}>
+                            <Button variant="ghost" onClick={handleCloseCorrection} isDisabled={correctionSaving}>
+                                Cancelar
+                            </Button>
+                            <Button
+                                colorScheme="purple"
+                                onClick={handleSubmitCorrection}
+                                isLoading={correctionSaving}
+                                isDisabled={!correctionTarget || !correctionMotivo.trim()}
+                            >
+                                Aplicar
+                            </Button>
+                        </HStack>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
             <MetricModeInfoModal
                 isOpen={isMetricInfoOpen}
                 onClose={onMetricInfoClose}

@@ -92,6 +92,7 @@ const AREA_OPERATIVA_INACTIVITY_DIRECTIVE_NAMES = new Set<string>([
 
 const AREA_OPERATIVA_PANEL_DIRECTIVE_NAMES = new Set<string>([
     MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_PANEL_HISTORICO_TOGGLE_ENABLED,
+    MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_ADMIN_CORRECTION_ENABLED,
 ]);
 
 const AREA_OPERATIVA_DIRECTIVE_NAMES = new Set<string>([
@@ -224,6 +225,9 @@ function getAreaOperativaInactivityDirectiveUnit(directive: MasterDirective) {
 function getAreaOperativaPanelDirectiveLabel(directive: MasterDirective) {
     if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_PANEL_HISTORICO_TOGGLE_ENABLED) {
         return "Selector semana actual / historico";
+    }
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_ADMIN_CORRECTION_ENABLED) {
+        return "Correccion administrativa de estados";
     }
     return directive.nombre;
 }
@@ -414,6 +418,11 @@ export default function MasterDirectivesPage() {
         [masterDirectives]
     );
 
+    const panelAdminCorrectionDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.AREA_OPERATIVA_ADMIN_CORRECTION_ENABLED),
+        [masterDirectives]
+    );
+
     const mpsDiasBloqueoDirective = useMemo(
         () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION),
         [masterDirectives]
@@ -444,9 +453,14 @@ export default function MasterDirectivesPage() {
         [dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective]
     );
 
+    const panelDirectives = useMemo(
+        () => [panelHistoricoToggleDirective, panelAdminCorrectionDirective].filter(isPresentDirective),
+        [panelHistoricoToggleDirective, panelAdminCorrectionDirective]
+    );
+
     const hasAllNoiseDirectives = Boolean(noiseEnabledDirective && noiseIntervalDirective && noiseSampleDirective);
     const hasAllInactivityDirectives = Boolean(inactivityEnabledDirective && inactivityThresholdDirective && inactivityCheckIntervalDirective);
-    const hasAllPanelDirectives = Boolean(panelHistoricoToggleDirective);
+    const hasAllPanelDirectives = Boolean(panelHistoricoToggleDirective && panelAdminCorrectionDirective);
     const hasAllProductionDirectives = Boolean(dispensacionNoBloqueaDirective && mpsDiasBloqueoDirective && mpsAgregarTerminadosAprobadoDirective);
 
     const superMasterHasChanges =
@@ -905,22 +919,27 @@ export default function MasterDirectivesPage() {
                                     </Tr>
                                 </Thead>
                                 <Tbody>
-                                    {panelHistoricoToggleDirective && (() => {
-                                        const value = directiveDrafts[panelHistoricoToggleDirective.id] ?? panelHistoricoToggleDirective.valor;
-                                        const hasRowChange = normalizeDirectiveDraftValue(panelHistoricoToggleDirective, value) !== normalizeDirectiveDraftValue(panelHistoricoToggleDirective, panelHistoricoToggleDirective.valor);
+                                    {panelDirectives.map(directive => {
+                                        const value = directiveDrafts[directive.id] ?? directive.valor;
+                                        const hasRowChange = normalizeDirectiveDraftValue(directive, value) !== normalizeDirectiveDraftValue(directive, directive.valor);
                                         return (
-                                            <Tr key={panelHistoricoToggleDirective.id}>
+                                            <Tr key={directive.id}>
                                                 <Td>
-                                                    <Text fontWeight="bold">{getAreaOperativaPanelDirectiveLabel(panelHistoricoToggleDirective)}</Text>
+                                                    <Text fontWeight="bold">{getAreaOperativaPanelDirectiveLabel(directive)}</Text>
                                                     <Text fontSize="sm" color="app.textSubtle">
-                                                        {panelHistoricoToggleDirective.resumen}
+                                                        {directive.resumen}
                                                     </Text>
+                                                    {directive.ayuda && (
+                                                        <Text fontSize="xs" color="app.textSubtle" mt={1}>
+                                                            {directive.ayuda}
+                                                        </Text>
+                                                    )}
                                                 </Td>
                                                 <Td>
                                                     <HStack>
                                                         <Switch
                                                             isChecked={isBooleanEnabled(value)}
-                                                            onChange={e => updateDirectiveDraft(panelHistoricoToggleDirective.id, String(e.target.checked))}
+                                                            onChange={e => updateDirectiveDraft(directive.id, String(e.target.checked))}
                                                         />
                                                         {hasRowChange && (
                                                             <Icon as={FaCircleExclamation} color="orange.400" />
@@ -929,7 +948,7 @@ export default function MasterDirectivesPage() {
                                                 </Td>
                                             </Tr>
                                         );
-                                    })()}
+                                    })}
                                 </Tbody>
                             </Table>
 

@@ -24,7 +24,7 @@ import {
 import { useCallback, type MutableRefObject } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { FiEye, FiPause, FiPlay, FiRefreshCw } from "react-icons/fi";
+import { FiEdit3, FiEye, FiPause, FiPlay, FiRefreshCw } from "react-icons/fi";
 import type {
     EstadoTableroKey,
     OrdenProduccionSeguimientoDetalleDTO,
@@ -174,6 +174,8 @@ interface SeguimientoOrdenCardProps {
     mode: SeguimientoBoardMode;
     onOpenDetail: (card: SeguimientoOrdenAreaCardDTO) => void;
     onAction?: (action: SeguimientoActionType, card: SeguimientoOrdenAreaCardDTO) => void;
+    onCorrectState?: (card: SeguimientoOrdenAreaCardDTO) => void;
+    canCorrectState?: boolean;
     dndEnabled?: boolean;
 }
 
@@ -182,6 +184,8 @@ function SeguimientoOrdenCard({
     mode,
     onOpenDetail,
     onAction,
+    onCorrectState,
+    canCorrectState = false,
     dndEnabled = false,
 }: SeguimientoOrdenCardProps) {
     const isAlmacenGeneral = card.areaId === -1;
@@ -194,6 +198,8 @@ function SeguimientoOrdenCard({
                 mode={mode}
                 onOpenDetail={onOpenDetail}
                 onAction={onAction}
+                onCorrectState={onCorrectState}
+                canCorrectState={canCorrectState}
                 isAlmacenGeneral={isAlmacenGeneral}
             />
         );
@@ -212,6 +218,8 @@ function SeguimientoOrdenCard({
                 mode={mode}
                 onOpenDetail={onOpenDetail}
                 onAction={onAction}
+                onCorrectState={onCorrectState}
+                canCorrectState={canCorrectState}
                 isAlmacenGeneral={isAlmacenGeneral}
             />
         </Box>
@@ -223,6 +231,8 @@ function DraggableSeguimientoOrdenCard({
     mode,
     onOpenDetail,
     onAction,
+    onCorrectState,
+    canCorrectState,
     isAlmacenGeneral,
 }: SeguimientoOrdenCardProps & { isAlmacenGeneral: boolean }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -251,6 +261,8 @@ function DraggableSeguimientoOrdenCard({
                 mode={mode}
                 onOpenDetail={onOpenDetail}
                 onAction={onAction}
+                onCorrectState={onCorrectState}
+                canCorrectState={canCorrectState}
                 isAlmacenGeneral={isAlmacenGeneral}
             />
         </Box>
@@ -262,8 +274,12 @@ function SeguimientoOrdenCardContent({
     mode,
     onOpenDetail,
     onAction,
+    onCorrectState,
+    canCorrectState = false,
     isAlmacenGeneral,
 }: SeguimientoOrdenCardProps & { isAlmacenGeneral: boolean }) {
+    const isOrdenCerrada = card.estadoOrden === -1 || card.estadoOrden === 2;
+
     return (
         <VStack align="stretch" spacing={2}>
             <VStack align="start" spacing={1}>
@@ -363,6 +379,18 @@ function SeguimientoOrdenCardContent({
                         ) : null}
                     </HStack>
                 ) : null}
+
+                {mode === "monitor" && canCorrectState && !isAlmacenGeneral && !isOrdenCerrada ? (
+                    <Button
+                        size="sm"
+                        colorScheme="purple"
+                        variant="outline"
+                        leftIcon={<FiEdit3 />}
+                        onClick={() => onCorrectState?.(card)}
+                    >
+                        Corregir
+                    </Button>
+                ) : null}
             </HStack>
         </VStack>
     );
@@ -374,6 +402,8 @@ interface SeguimientoBoardColumnProps {
     mode: SeguimientoBoardMode;
     onOpenDetail: (card: SeguimientoOrdenAreaCardDTO) => void;
     onAction?: (action: SeguimientoActionType, card: SeguimientoOrdenAreaCardDTO) => void;
+    onCorrectState?: (card: SeguimientoOrdenAreaCardDTO) => void;
+    canCorrectState?: boolean;
     dndEnabled?: boolean;
     containerRef?: MutableRefObject<HTMLDivElement | null>;
 }
@@ -384,6 +414,8 @@ export function SeguimientoBoardColumn({
     mode,
     onOpenDetail,
     onAction,
+    onCorrectState,
+    canCorrectState = false,
     dndEnabled = false,
     containerRef,
 }: SeguimientoBoardColumnProps) {
@@ -398,6 +430,8 @@ export function SeguimientoBoardColumn({
                 mode={mode}
                 onOpenDetail={onOpenDetail}
                 onAction={onAction}
+                onCorrectState={onCorrectState}
+                canCorrectState={canCorrectState}
                 columnBg={columnBg}
                 meta={meta}
                 containerRef={containerRef}
@@ -421,6 +455,8 @@ export function SeguimientoBoardColumn({
                 mode={mode}
                 onOpenDetail={onOpenDetail}
                 onAction={onAction}
+                onCorrectState={onCorrectState}
+                canCorrectState={canCorrectState}
                 dndEnabled={false}
             />
         </Box>
@@ -433,6 +469,8 @@ function DroppableSeguimientoBoardColumn({
     mode,
     onOpenDetail,
     onAction,
+    onCorrectState,
+    canCorrectState,
     columnBg,
     meta,
     containerRef,
@@ -469,6 +507,8 @@ function DroppableSeguimientoBoardColumn({
                 mode={mode}
                 onOpenDetail={onOpenDetail}
                 onAction={onAction}
+                onCorrectState={onCorrectState}
+                canCorrectState={canCorrectState}
                 dndEnabled
             />
         </Box>
@@ -481,6 +521,8 @@ function SeguimientoBoardColumnContent({
     mode,
     onOpenDetail,
     onAction,
+    onCorrectState,
+    canCorrectState,
     dndEnabled,
 }: Omit<SeguimientoBoardColumnProps, "estadoKey"> & {
     meta: (typeof BOARD_COLUMN_META)[EstadoTableroKey];
@@ -507,6 +549,8 @@ function SeguimientoBoardColumnContent({
                             mode={mode}
                             onOpenDetail={onOpenDetail}
                             onAction={onAction}
+                            onCorrectState={onCorrectState}
+                            canCorrectState={canCorrectState}
                             dndEnabled={dndEnabled}
                         />
                     ))

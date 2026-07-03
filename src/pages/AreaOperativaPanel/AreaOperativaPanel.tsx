@@ -216,7 +216,7 @@ function matchesFilter(card: SeguimientoOrdenAreaCardDTO, searchTerm: string): b
 
 export default function AreaOperativaPanel() {
     const { meProfile, logout, areaResponsable } = useAuth();
-    const { loading: directivesLoading, getBooleanDirective } = useMasterDirectives();
+    const { loading: directivesLoading, getBooleanDirective, refreshDirectives } = useMasterDirectives();
     const toast = useToast();
     const emptyTitleColor = useColorModeValue("gray.700", "gray.200");
     const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -335,6 +335,10 @@ export default function AreaOperativaPanel() {
         }
         void fetchTablero();
     }, [directivesLoading, fetchTablero]);
+
+    const handleRefreshPanel = useCallback(async () => {
+        await refreshDirectives();
+    }, [refreshDirectives]);
 
     const openDetail = useCallback(async (orden: SeguimientoOrdenAreaCardDTO) => {
         setSelectedOrden(orden);
@@ -476,7 +480,7 @@ export default function AreaOperativaPanel() {
                         <Button
                             variant="outline"
                             leftIcon={<FiRefreshCw />}
-                            onClick={() => void fetchTablero()}
+                            onClick={() => void handleRefreshPanel()}
                             isLoading={boardLoading}
                             isDisabled={directivesLoading}
                         >
@@ -502,6 +506,73 @@ export default function AreaOperativaPanel() {
                 <TabPanels>
                     <TabPanel px={0} pb={0}>
                         <VStack w="full" spacing={6} align="stretch">
+                            <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
+                                <Flex
+                                    align={{ base: "stretch", lg: "flex-end" }}
+                                    direction={{ base: "column", lg: "row" }}
+                                    gap={4}
+                                >
+                                    {tableroVistaToggleEnabled ? (
+                                        <Box minW={{ base: "100%", md: "360px" }}>
+                                            <Text fontSize="sm" fontWeight="semibold" mb={2}>
+                                                Vista de OP
+                                            </Text>
+                                            <ButtonGroup
+                                                isAttached
+                                                size="md"
+                                                variant="outline"
+                                                w={{ base: "full", md: "auto" }}
+                                            >
+                                                <Button
+                                                    flex={{ base: 1, md: "initial" }}
+                                                    leftIcon={<FiCalendar />}
+                                                    colorScheme={effectiveTableroVista === "SEMANA_ACTUAL" ? "teal" : "gray"}
+                                                    variant={effectiveTableroVista === "SEMANA_ACTUAL" ? "solid" : "outline"}
+                                                    aria-pressed={effectiveTableroVista === "SEMANA_ACTUAL"}
+                                                    onClick={() => handleTableroVistaChange("SEMANA_ACTUAL")}
+                                                >
+                                                    Semana actual
+                                                </Button>
+                                                <Button
+                                                    flex={{ base: 1, md: "initial" }}
+                                                    leftIcon={<FiArchive />}
+                                                    colorScheme={effectiveTableroVista === "HISTORICO" ? "teal" : "gray"}
+                                                    variant={effectiveTableroVista === "HISTORICO" ? "solid" : "outline"}
+                                                    aria-pressed={effectiveTableroVista === "HISTORICO"}
+                                                    onClick={() => handleTableroVistaChange("HISTORICO")}
+                                                >
+                                                    Histórico
+                                                </Button>
+                                            </ButtonGroup>
+                                        </Box>
+                                    ) : null}
+
+                                    <Box flex="1" minW={{ base: "100%", lg: "360px" }}>
+                                        <Text fontSize="sm" fontWeight="semibold" mb={2}>
+                                            Buscar
+                                        </Text>
+                                        <InputGroup>
+                                            <InputLeftElement pointerEvents="none">
+                                                <FiSearch />
+                                            </InputLeftElement>
+                                            <Input
+                                                value={searchTerm}
+                                                onChange={(event) => setSearchTerm(event.target.value)}
+                                                placeholder="Buscar por lote, OP, producto o nodo"
+                                            />
+                                        </InputGroup>
+                                    </Box>
+
+                                    <Text
+                                        alignSelf={{ base: "flex-start", lg: "center" }}
+                                        color="app.textMuted"
+                                        fontSize="sm"
+                                    >
+                                        Mostrando {totalFilteredCards} órdenes en {tableroVistaToggleEnabled ? activeVistaLabel : "el tablero filtrado"}.
+                                    </Text>
+                                </Flex>
+                            </Box>
+
                             <SeguimientoResumenCards
                                 total={tablero.resumen.total}
                                 cola={tablero.resumen.cola}
@@ -514,49 +585,6 @@ export default function AreaOperativaPanel() {
                                 onEnProcesoClick={() => scrollToColumn("enProceso")}
                                 onCompletadoClick={() => scrollToColumn("completado")}
                             />
-
-                            <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
-                                <VStack align="stretch" spacing={3}>
-                                    <Text fontWeight="semibold">Filtros y vista rápida</Text>
-                                    <HStack flexWrap="wrap" gap={3}>
-                                        <Box flex="1" minW={{ base: "100%", md: "320px" }}>
-                                            <InputGroup>
-                                                <InputLeftElement pointerEvents="none">
-                                                    <FiSearch />
-                                                </InputLeftElement>
-                                                <Input
-                                                    value={searchTerm}
-                                                    onChange={(event) => setSearchTerm(event.target.value)}
-                                                    placeholder="Buscar por lote, OP, producto o nodo"
-                                                />
-                                            </InputGroup>
-                                        </Box>
-                                        {tableroVistaToggleEnabled ? (
-                                            <ButtonGroup isAttached size="sm" variant="outline">
-                                                <Button
-                                                    leftIcon={<FiCalendar />}
-                                                    colorScheme={effectiveTableroVista === "SEMANA_ACTUAL" ? "teal" : "gray"}
-                                                    variant={effectiveTableroVista === "SEMANA_ACTUAL" ? "solid" : "outline"}
-                                                    onClick={() => handleTableroVistaChange("SEMANA_ACTUAL")}
-                                                >
-                                                    Semana actual
-                                                </Button>
-                                                <Button
-                                                    leftIcon={<FiArchive />}
-                                                    colorScheme={effectiveTableroVista === "HISTORICO" ? "teal" : "gray"}
-                                                    variant={effectiveTableroVista === "HISTORICO" ? "solid" : "outline"}
-                                                    onClick={() => handleTableroVistaChange("HISTORICO")}
-                                                >
-                                                    Histórico
-                                                </Button>
-                                            </ButtonGroup>
-                                        ) : null}
-                                        <Text fontSize="sm" color="app.textMuted">
-                                            Mostrando {totalFilteredCards} órdenes en {tableroVistaToggleEnabled ? activeVistaLabel : "el tablero filtrado"}.
-                                        </Text>
-                                    </HStack>
-                                </VStack>
-                            </Box>
 
                             {error ? (
                                 <Alert status="error" borderRadius="md">
