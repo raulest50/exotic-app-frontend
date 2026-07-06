@@ -53,6 +53,7 @@ export const TABS_BY_MODULO: Record<Modulo, TabDefinition[]> = {
     [Modulo.TRANSACCIONES_ALMACEN]: [
         tab("INGRESO_OCM", "Ingreso OCM"),
         tab("HACER_DISPENSACION", "Hacer Dispensacion"),
+        tab("DISPENSACION_V2", "Dispensacion v2"),
         tab("HISTORIAL_DISPENSACIONES", "Historial Dispensaciones"),
         tab("INGRESO_PRODUCTO_TERMINADO", "Ingreso Producto Terminado"),
         tab("GESTION_AVERIAS", "Gestion Averias"),

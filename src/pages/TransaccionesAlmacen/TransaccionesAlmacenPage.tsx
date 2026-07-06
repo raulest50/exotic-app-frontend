@@ -10,6 +10,7 @@ import EndPointsURL from "../../api/EndPointsURL";
 import { useAuth } from "../../context/AuthContext";
 import GestionAveriasTab from "./GestionAverias/GestionAveriasTab.tsx";
 import { AsistenteIngresoTerminados } from "./AsistenteIngresoTerminados/AsistenteIngresoTerminados";
+import DispensacionV2Tab from "./DispensacionV2/DispensacionV2Tab";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
 import { tabAccessRule } from "../../auth/accessHelpers.ts";
 import { useAccessSnapshot } from "../../auth/usePermissions";
@@ -58,6 +59,7 @@ export default function TransaccionesAlmacenPage() {
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
         { key: "ingreso-ocm", label: "Ingreso OCM", render: () => <AsistenteIngresoMercancia />, accesoValido: tabAccessRule(Modulo.TRANSACCIONES_ALMACEN, "INGRESO_OCM", 1) },
         { key: "hacer-dispensacion", label: "Hacer Dispensacion", render: () => <AsistenteDispensacion />, accesoValido: tabAccessRule(Modulo.TRANSACCIONES_ALMACEN, "HACER_DISPENSACION", 1) },
+        { key: "dispensacion-v2", label: "Dispensacion v2", render: () => <DispensacionV2Tab />, accesoValido: tabAccessRule(Modulo.TRANSACCIONES_ALMACEN, "DISPENSACION_V2", 1) },
         { key: "historial-dispensaciones", label: "Historial Dispensaciones", render: () => <HistorialDispensaciones />, accesoValido: tabAccessRule(Modulo.TRANSACCIONES_ALMACEN, "HISTORIAL_DISPENSACIONES", 1) },
         { key: "ingreso-pt", label: "Ingreso Producto Terminado", render: () => <AsistenteIngresoTerminados />, accesoValido: tabAccessRule(Modulo.TRANSACCIONES_ALMACEN, "INGRESO_PRODUCTO_TERMINADO", 1) },
         { key: "gestion-averias", label: "Gestion Averias", render: () => <GestionAveriasTab />, accesoValido: tabAccessRule(Modulo.TRANSACCIONES_ALMACEN, "GESTION_AVERIAS", 1) },
