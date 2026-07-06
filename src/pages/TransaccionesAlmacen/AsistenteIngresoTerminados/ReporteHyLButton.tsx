@@ -1,4 +1,4 @@
-import { Button, useToast } from "@chakra-ui/react";
+import { Button, Checkbox, VStack, useToast } from "@chakra-ui/react";
 import { DownloadIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import { useMemo, useState } from "react";
@@ -119,6 +119,7 @@ export default function ReporteHyLButton({ ingresosValidados }: ReporteHyLButton
     const toast = useToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [costosEnCero, setCostosEnCero] = useState(false);
 
     const productosProducidos = useMemo(
         () => consolidateProducedRows(ingresosValidados),
@@ -161,12 +162,19 @@ export default function ReporteHyLButton({ ingresosValidados }: ReporteHyLButton
 
         setIsGenerating(true);
         try {
-            const rows = await Promise.all(productosProducidos.map(async (ingreso) => ({
-                codigo: ingreso.productoId,
-                nombre: ingreso.productoNombre,
-                cantidad: ingreso.cantidadProducida,
-                costo: await fetchCostoTerminado(ingreso.productoId),
-            })));
+            const rows = costosEnCero
+                ? productosProducidos.map((ingreso) => ({
+                    codigo: ingreso.productoId,
+                    nombre: ingreso.productoNombre,
+                    cantidad: ingreso.cantidadProducida,
+                    costo: 0,
+                }))
+                : await Promise.all(productosProducidos.map(async (ingreso) => ({
+                    codigo: ingreso.productoId,
+                    nombre: ingreso.productoNombre,
+                    cantidad: ingreso.cantidadProducida,
+                    costo: await fetchCostoTerminado(ingreso.productoId),
+                })));
 
             const xml = buildHyLXml(rows);
             const fechaReporte = productosProducidos[0]?.fechaReporte ?? new Date().toISOString().slice(0, 10);
@@ -194,17 +202,26 @@ export default function ReporteHyLButton({ ingresosValidados }: ReporteHyLButton
     };
 
     return (
-        <Button
-            leftIcon={<DownloadIcon />}
-            colorScheme="teal"
-            size="lg"
-            minH="72px"
-            onClick={handleDownloadHyL}
-            isLoading={isGenerating}
-            loadingText="Generando..."
-            isDisabled={productosProducidos.length === 0}
-        >
-            Descargar Reporte HyL
-        </Button>
+        <VStack align="stretch" spacing={2}>
+            <Checkbox
+                isChecked={costosEnCero}
+                onChange={(event) => setCostosEnCero(event.target.checked)}
+                isDisabled={isGenerating}
+            >
+                Generar costo en ceros
+            </Checkbox>
+            <Button
+                leftIcon={<DownloadIcon />}
+                colorScheme="teal"
+                size="lg"
+                minH="72px"
+                onClick={handleDownloadHyL}
+                isLoading={isGenerating}
+                loadingText="Generando..."
+                isDisabled={productosProducidos.length === 0}
+            >
+                Descargar Reporte HyL
+            </Button>
+        </VStack>
     );
 }

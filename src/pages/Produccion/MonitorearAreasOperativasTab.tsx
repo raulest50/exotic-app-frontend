@@ -2,6 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { QuestionIcon } from "@chakra-ui/icons";
 import {
+    closestCenter,
+    DndContext,
+    type DragEndEvent,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import {
     Alert,
     AlertIcon,
     Box,
@@ -81,6 +89,28 @@ const CORRECTION_STATE_OPTIONS = [
     { value: 2, label: "Completada" },
 ];
 
+function isEstadoTableroKey(value: unknown): value is EstadoTableroKey {
+    return value === "cola"
+        || value === "espera"
+        || value === "enProceso"
+        || value === "completado";
+}
+
+function getEstadoCodeFromKey(estadoKey: EstadoTableroKey): number {
+    switch (estadoKey) {
+        case "cola":
+            return 0;
+        case "espera":
+            return 1;
+        case "enProceso":
+            return 4;
+        case "completado":
+            return 2;
+        default:
+            return 0;
+    }
+}
+
 function getTodayIsoDate(): string {
     const now = new Date();
     const offset = now.getTimezoneOffset();
@@ -149,6 +179,7 @@ function formatLastAlertUpdate(value: Date | null): string {
 
 export default function MonitorearAreasOperativasTab() {
     const toast = useToast();
+    const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
     const {
         isOpen: isDetailOpen,
         onOpen: onDetailOpen,
@@ -367,14 +398,33 @@ export default function MonitorearAreasOperativasTab() {
         }
     }, [onDetailOpen, toast]);
 
-    const handleOpenCorrection = useCallback((orden: SeguimientoOrdenAreaCardDTO) => {
+    const handleOpenCorrection = useCallback((orden: SeguimientoOrdenAreaCardDTO, targetEstado?: number) => {
         const firstTarget = CORRECTION_STATE_OPTIONS.find((option) => option.value !== orden.estado);
+        const initialTarget = targetEstado != null && targetEstado !== orden.estado
+            ? targetEstado
+            : firstTarget?.value;
         setCorrectionCard(orden);
-        setCorrectionTarget(firstTarget ? String(firstTarget.value) : "");
+        setCorrectionTarget(initialTarget != null ? String(initialTarget) : "");
         setCorrectionMotivo("");
         setCorrectionError(null);
         onCorrectionOpen();
     }, [onCorrectionOpen]);
+
+    const handleCorrectionDragEnd = useCallback((event: DragEndEvent) => {
+        const card = event.active.data.current?.card as SeguimientoOrdenAreaCardDTO | undefined;
+        const targetEstadoKey = event.over?.data.current?.estadoKey;
+
+        if (!canCorrectStates || !card || !isEstadoTableroKey(targetEstadoKey)) {
+            return;
+        }
+
+        const targetEstado = getEstadoCodeFromKey(targetEstadoKey);
+        if (card.estado === targetEstado || card.areaId === -1 || card.estadoOrden === -1 || card.estadoOrden === 2) {
+            return;
+        }
+
+        handleOpenCorrection(card, targetEstado);
+    }, [canCorrectStates, handleOpenCorrection]);
 
     const handleCloseCorrection = useCallback(() => {
         if (correctionSaving) {
@@ -804,19 +854,38 @@ export default function MonitorearAreasOperativasTab() {
                         ))}
                     </SimpleGrid>
 
-                    <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
-                        {(Object.keys(BOARD_COLUMN_META) as EstadoTableroKey[]).map((estadoKey) => (
-                            <SeguimientoBoardColumn
-                                key={estadoKey}
-                                estadoKey={estadoKey}
-                                items={tablero[estadoKey]}
-                                mode="monitor"
-                                onOpenDetail={handleOpenDetail}
-                                canCorrectState={canCorrectStates}
-                                onCorrectState={handleOpenCorrection}
-                            />
-                        ))}
-                    </SimpleGrid>
+                    {(() => {
+                        const boardColumns = (
+                            <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
+                                {(Object.keys(BOARD_COLUMN_META) as EstadoTableroKey[]).map((estadoKey) => (
+                                    <SeguimientoBoardColumn
+                                        key={estadoKey}
+                                        estadoKey={estadoKey}
+                                        items={tablero[estadoKey]}
+                                        mode="monitor"
+                                        onOpenDetail={handleOpenDetail}
+                                        canCorrectState={canCorrectStates}
+                                        onCorrectState={handleOpenCorrection}
+                                        dndEnabled={canCorrectStates}
+                                    />
+                                ))}
+                            </SimpleGrid>
+                        );
+
+                        if (!canCorrectStates) {
+                            return boardColumns;
+                        }
+
+                        return (
+                            <DndContext
+                                sensors={dndSensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleCorrectionDragEnd}
+                            >
+                                {boardColumns}
+                            </DndContext>
+                        );
+                    })()}
                 </>
             ) : null}
 

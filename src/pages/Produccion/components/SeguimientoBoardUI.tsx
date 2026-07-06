@@ -189,7 +189,9 @@ function SeguimientoOrdenCard({
     dndEnabled = false,
 }: SeguimientoOrdenCardProps) {
     const isAlmacenGeneral = card.areaId === -1;
-    const isDragEnabled = dndEnabled && mode === "leader";
+    const isOrdenCerrada = card.estadoOrden === -1 || card.estadoOrden === 2;
+    const isCorrectionDragEnabled = mode === "monitor" && canCorrectState && !isAlmacenGeneral && !isOrdenCerrada;
+    const isDragEnabled = dndEnabled && (mode === "leader" || isCorrectionDragEnabled);
 
     if (isDragEnabled) {
         return (
