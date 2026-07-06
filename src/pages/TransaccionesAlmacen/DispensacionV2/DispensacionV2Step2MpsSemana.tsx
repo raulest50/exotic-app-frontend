@@ -11,6 +11,10 @@ import {
     formatSemanaMpsDisplayDate,
     getCurrentIsoWeekMonday,
 } from "../../Produccion/ProgProdSemanalTab/semanaMps.utils";
+import DispensacionV2LotesOrdenModal, {
+    type DispensacionV2MpsItemSeleccionado,
+    type DispensacionV2OrdenSeleccionada,
+} from "./DispensacionV2LotesOrdenModal";
 import type { AreaOperativaDispensacionV2 } from "./DispensacionV2Step1SelectArea";
 
 const endpoints = new EndPointsURL();
@@ -66,6 +70,14 @@ function getAlertStatus(status: number | null): "warning" | "error" {
     return "error";
 }
 
+function formatNumber(value: number | null | undefined): string {
+    const safeValue = typeof value === "number" && Number.isFinite(value) ? value : 0;
+    return safeValue.toLocaleString("es-CO", {
+        minimumFractionDigits: safeValue % 1 === 0 ? 0 : 2,
+        maximumFractionDigits: 2,
+    });
+}
+
 export default function DispensacionV2Step2MpsSemana({
     selectedArea,
     onBack,
@@ -76,6 +88,8 @@ export default function DispensacionV2Step2MpsSemana({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [errorStatus, setErrorStatus] = useState<number | null>(null);
+    const [selectedMpsItem, setSelectedMpsItem] = useState<DispensacionV2MpsItemSeleccionado | null>(null);
+    const [selectedOrden, setSelectedOrden] = useState<DispensacionV2OrdenSeleccionada | null>(null);
     const activeRequestRef = useRef(0);
 
     const weekOptions = useMemo(() => buildWeekOptions(currentWeekStartDate), [currentWeekStartDate]);
@@ -88,6 +102,8 @@ export default function DispensacionV2Step2MpsSemana({
         setError(null);
         setErrorStatus(null);
         setMps(null);
+        setSelectedMpsItem(null);
+        setSelectedOrden(null);
     }, []);
 
     const fetchMpsForWeek = useCallback(async (weekStartDate: string) => {
@@ -229,11 +245,51 @@ export default function DispensacionV2Step2MpsSemana({
                 </Alert>
             ) : null}
 
+            {!loading && selectedOrden ? (
+                <Box borderWidth="1px" borderColor="teal.200" borderRadius="md" bg="teal.50" p={4}>
+                    <Flex justify="space-between" align="start" gap={3} wrap="wrap">
+                        <Box>
+                            <Text fontSize="sm" color="gray.600">OP seleccionada para dispensacion</Text>
+                            <Heading size="sm" mt={1}>
+                                OP {selectedOrden.ordenProduccionId} - {selectedOrden.loteAsignado ?? "Sin lote real"}
+                            </Heading>
+                            <Text fontSize="sm" color="gray.700" mt={1}>
+                                {selectedOrden.productoNombre}
+                            </Text>
+                        </Box>
+                        <Flex gap={2} wrap="wrap" justify="end">
+                            <Badge colorScheme="teal">{selectedOrden.areaNombre}</Badge>
+                            <Badge colorScheme="purple">{formatNumber(selectedOrden.cantidadPlanificada)} und</Badge>
+                            <Badge colorScheme="gray">Lote MPS {selectedOrden.mpsLoteOrdinal}</Badge>
+                        </Flex>
+                    </Flex>
+                    <Text fontSize="sm" color="gray.600" mt={2}>
+                        Semana {selectedOrden.semanaMpsCodigo ?? selectedOrden.weekStartDate} - Entrega {formatSemanaMpsDisplayDate(selectedOrden.fechaEntregaPlanificada)}
+                    </Text>
+                </Box>
+            ) : null}
+
             {!loading && mps ? (
                 <MpsReadonlyReviewPanel
                     mps={mps}
                     totalOrdenesGeneradas={mps.totalOdpsGeneradas}
-                    areGeneratedOrdersAvailable={false}
+                    areGeneratedOrdersAvailable={mps.totalOdpsGeneradas > 0}
+                    itemClickMode="card"
+                    itemActionLabel="Lotes"
+                    onItemClick={(item, context) => setSelectedMpsItem({ item, context })}
+                />
+            ) : null}
+
+            {mps ? (
+                <DispensacionV2LotesOrdenModal
+                    selectedItem={selectedMpsItem}
+                    selectedOrden={selectedOrden}
+                    selectedArea={selectedArea}
+                    weekStartDate={mps.weekStartDate}
+                    weekEndDate={mps.weekEndDate}
+                    semanaMpsCodigo={mps.semanaMpsCodigo}
+                    onSelectOrden={setSelectedOrden}
+                    onClose={() => setSelectedMpsItem(null)}
                 />
             ) : null}
         </VStack>

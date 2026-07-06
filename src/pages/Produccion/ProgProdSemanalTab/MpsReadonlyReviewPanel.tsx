@@ -10,6 +10,7 @@ import {
     Text,
     VStack,
 } from "@chakra-ui/react";
+import type { KeyboardEvent } from "react";
 import type {
     MpsSemanalDraftDTO,
     MpsSemanalItemDTO,
@@ -108,6 +109,8 @@ interface MpsItemCardProps {
     context: MpsReadonlyItemContext;
     onItemClick?: (item: MpsSemanalItemDTO, context: MpsReadonlyItemContext) => void;
     areGeneratedOrdersAvailable: boolean;
+    itemClickMode: "button" | "card";
+    itemActionLabel: string;
 }
 
 function MpsItemCard({
@@ -115,22 +118,54 @@ function MpsItemCard({
     context,
     onItemClick,
     areGeneratedOrdersAvailable,
+    itemClickMode,
+    itemActionLabel,
 }: MpsItemCardProps) {
     const generatedLots = item.lotesPlanificados.filter((lote) => lote.estado === "ODP_GENERADA").length;
     const isClickable = areGeneratedOrdersAvailable && generatedLots > 0 && Boolean(onItemClick);
+    const isCardClickable = isClickable && itemClickMode === "card";
+    const handleClick = () => {
+        if (isClickable) {
+            onItemClick?.(item, context);
+        }
+    };
+    const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+        if (!isCardClickable) {
+            return;
+        }
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleClick();
+        }
+    };
 
     return (
-        <Box borderWidth="1px" borderColor="teal.200" borderRadius="md" bg="teal.50" p={2}>
+        <Box
+            borderWidth="1px"
+            borderColor="teal.200"
+            borderRadius="md"
+            bg="teal.50"
+            p={2}
+            cursor={isCardClickable ? "pointer" : undefined}
+            role={isCardClickable ? "button" : undefined}
+            tabIndex={isCardClickable ? 0 : undefined}
+            _hover={isCardClickable ? { borderColor: "teal.400", bg: "teal.100" } : undefined}
+            onClick={isCardClickable ? handleClick : undefined}
+            onKeyDown={handleKeyDown}
+        >
             <Flex justify="space-between" gap={2} align="start">
                 <Box minW={0}>
                     <Text fontWeight="semibold" fontSize="sm" noOfLines={2}>{item.terminadoNombre}</Text>
                     <Text fontSize="xs" color="gray.600">{item.terminadoId}</Text>
                     <Text fontSize="xs" color="gray.600">{item.categoriaNombre ?? "Sin categoria"}</Text>
                 </Box>
-                {isClickable && (
+                {isClickable && itemClickMode === "button" && (
                     <Button size="xs" colorScheme="teal" variant="outline" onClick={() => onItemClick?.(item, context)}>
-                        OPs
+                        {itemActionLabel}
                     </Button>
+                )}
+                {isCardClickable && (
+                    <Badge colorScheme="teal" variant="solid">{itemActionLabel}</Badge>
                 )}
             </Flex>
 
@@ -166,6 +201,8 @@ interface MpsReadonlyReviewPanelProps {
     totalOrdenesGeneradas: number;
     onItemClick?: (item: MpsSemanalItemDTO, context: MpsReadonlyItemContext) => void;
     areGeneratedOrdersAvailable?: boolean;
+    itemClickMode?: "button" | "card";
+    itemActionLabel?: string;
 }
 
 export default function MpsReadonlyReviewPanel({
@@ -173,6 +210,8 @@ export default function MpsReadonlyReviewPanel({
     totalOrdenesGeneradas,
     onItemClick,
     areGeneratedOrdersAvailable = false,
+    itemClickMode = "button",
+    itemActionLabel = "OPs",
 }: MpsReadonlyReviewPanelProps) {
     const totalUnidades = mps.dias
         .flatMap((dia) => dia.items)
@@ -250,6 +289,8 @@ export default function MpsReadonlyReviewPanel({
                                                     context={{ date: dia.fecha, dayIndex: dia.dayIndex, dayLabel }}
                                                     onItemClick={onItemClick}
                                                     areGeneratedOrdersAvailable={areGeneratedOrdersAvailable}
+                                                    itemClickMode={itemClickMode}
+                                                    itemActionLabel={itemActionLabel}
                                                 />
                                             ))}
                                         </VStack>
