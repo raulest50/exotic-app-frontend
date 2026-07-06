@@ -232,7 +232,7 @@ export default function DispensacionV2Step1SelectArea({
 
                 <Flex justify="flex-end">
                     <Button colorScheme="teal" onClick={onNext} isDisabled={!selectedArea}>
-                        Siguiente
+                        Continuar al MPS
                     </Button>
                 </Flex>
             </VStack>

@@ -68,7 +68,7 @@ export const FirstPage = () => {
           onSizeChange={setSize}
         />
         <Text fontSize="sm" color="gray.600">
-          Botón "Anterior" deshabilitado en la primera página
+          Botón "Página anterior" deshabilitado en la primera página
         </Text>
       </VStack>
     </Box>
@@ -92,7 +92,7 @@ export const LastPage = () => {
           onSizeChange={setSize}
         />
         <Text fontSize="sm" color="gray.600">
-          Botón "Siguiente" deshabilitado en la última página
+          Botón "Página siguiente" deshabilitado en la última página
         </Text>
       </VStack>
     </Box>
@@ -146,4 +146,3 @@ export const EmptyResults = () => {
     </Box>
   );
 };
-

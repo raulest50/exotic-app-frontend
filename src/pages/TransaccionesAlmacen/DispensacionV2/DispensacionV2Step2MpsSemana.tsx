@@ -36,9 +36,9 @@ interface DispensacionV2Step2MpsSemanaProps {
 
 function buildWeekOptions(currentWeekStartDate: string): WeekOption[] {
     const options: Array<{ key: WeekKey; label: string; offsetDays: number }> = [
-        { key: "previous", label: "Anterior", offsetDays: -7 },
-        { key: "present", label: "Presente", offsetDays: 0 },
-        { key: "next", label: "Siguiente", offsetDays: 7 },
+        { key: "previous", label: "Semana anterior", offsetDays: -7 },
+        { key: "present", label: "Semana presente", offsetDays: 0 },
+        { key: "next", label: "Semana siguiente", offsetDays: 7 },
     ];
 
     return options.map(({ key, label, offsetDays }) => {
@@ -214,7 +214,7 @@ export default function DispensacionV2Step2MpsSemana({
                     </Box>
                     <Flex gap={2} wrap="wrap">
                         <Button variant="outline" onClick={onBack}>
-                            Anterior
+                            Volver al área
                         </Button>
                         <Button
                             variant="outline"

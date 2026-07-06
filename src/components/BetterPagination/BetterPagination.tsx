@@ -1,3 +1,4 @@
+import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { Flex, Button, Select, Text } from '@chakra-ui/react';
 
 interface BetterPaginationProps {
@@ -5,6 +6,8 @@ interface BetterPaginationProps {
     size: number;
     totalPages: number;
     loading?: boolean;
+    previousLabel?: string;
+    nextLabel?: string;
     onPageChange: (page: number) => void;
     onSizeChange: (size: number) => void;
 }
@@ -14,6 +17,8 @@ export default function BetterPagination({
     size,
     totalPages,
     loading = false,
+    previousLabel = 'Página anterior',
+    nextLabel = 'Página siguiente',
     onPageChange,
     onSizeChange,
 }: BetterPaginationProps) {
@@ -42,20 +47,27 @@ export default function BetterPagination({
             </Flex>
             <Flex align='center' gap={2}>
                 <Button
+                    size='sm'
+                    variant='outline'
+                    leftIcon={<ChevronLeftIcon />}
                     onClick={() => onPageChange(page - 1)}
                     isDisabled={isPrevDisabled}
+                    aria-label={previousLabel}
                 >
-                    Anterior
+                    {previousLabel}
                 </Button>
                 <Text>Pagina {totalPages === 0 ? 0 : page + 1} de {totalPages}</Text>
                 <Button
+                    size='sm'
+                    variant='outline'
+                    rightIcon={<ChevronRightIcon />}
                     onClick={() => onPageChange(page + 1)}
                     isDisabled={loading || isNextDisabled}
+                    aria-label={nextLabel}
                 >
-                    Siguiente
+                    {nextLabel}
                 </Button>
             </Flex>
         </Flex>
     );
 }
-
