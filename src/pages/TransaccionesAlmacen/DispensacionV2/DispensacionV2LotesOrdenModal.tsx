@@ -2,6 +2,7 @@ import {
     Badge,
     Box,
     Button,
+    Checkbox,
     Flex,
     Heading,
     Modal,
@@ -54,12 +55,13 @@ export interface DispensacionV2OrdenSeleccionada {
 
 interface DispensacionV2LotesOrdenModalProps {
     selectedItem: DispensacionV2MpsItemSeleccionado | null;
-    selectedOrden: DispensacionV2OrdenSeleccionada | null;
+    selectedOrdenes: DispensacionV2OrdenSeleccionada[];
     selectedArea: AreaOperativaDispensacionV2;
     weekStartDate: string;
     weekEndDate: string;
     semanaMpsCodigo: string | null;
-    onSelectOrden: (orden: DispensacionV2OrdenSeleccionada) => void;
+    onToggleOrden: (orden: DispensacionV2OrdenSeleccionada) => void;
+    onToggleOrdenes: (ordenes: DispensacionV2OrdenSeleccionada[], shouldSelect: boolean) => void;
     onClose: () => void;
 }
 
@@ -99,25 +101,27 @@ function estadoLoteColor(estado: MpsSemanalLotePlanificadoDTO["estado"]): string
 
 export default function DispensacionV2LotesOrdenModal({
     selectedItem,
-    selectedOrden,
+    selectedOrdenes,
     selectedArea,
     weekStartDate,
     weekEndDate,
     semanaMpsCodigo,
-    onSelectOrden,
+    onToggleOrden,
+    onToggleOrdenes,
     onClose,
 }: DispensacionV2LotesOrdenModalProps) {
     const isOpen = selectedItem !== null;
     const item = selectedItem?.item ?? null;
     const context = selectedItem?.context ?? null;
     const lotes = item?.lotesPlanificados ?? [];
+    const selectedOrdenIds = new Set(selectedOrdenes.map((orden) => orden.ordenProduccionId));
 
-    const handleSelect = (lote: MpsSemanalLotePlanificadoDTO) => {
+    const buildOrdenSeleccionada = (lote: MpsSemanalLotePlanificadoDTO): DispensacionV2OrdenSeleccionada | null => {
         if (!item || !lote.ordenProduccionId) {
-            return;
+            return null;
         }
 
-        onSelectOrden({
+        return {
             ordenProduccionId: lote.ordenProduccionId,
             mpsItemId: item.id,
             mpsLotePlanificadoId: lote.id,
@@ -133,8 +137,25 @@ export default function DispensacionV2LotesOrdenModal({
             areaId: selectedArea.areaId,
             areaNombre: selectedArea.nombre,
             fechaEntregaPlanificada: context?.date ?? item.fechaFinalPlanificada,
-        });
-        onClose();
+        };
+    };
+
+    const selectableOrdenes = lotes
+        .map(buildOrdenSeleccionada)
+        .filter((orden): orden is DispensacionV2OrdenSeleccionada => orden !== null);
+    const selectedOrdenesInCard = selectableOrdenes.filter((orden) => selectedOrdenIds.has(orden.ordenProduccionId));
+    const allCardOrdenesSelected = selectableOrdenes.length > 0 && selectedOrdenesInCard.length === selectableOrdenes.length;
+    const someCardOrdenesSelected = selectedOrdenesInCard.length > 0 && !allCardOrdenesSelected;
+
+    const handleToggle = (lote: MpsSemanalLotePlanificadoDTO) => {
+        const orden = buildOrdenSeleccionada(lote);
+        if (orden) {
+            onToggleOrden(orden);
+        }
+    };
+
+    const handleToggleAll = () => {
+        onToggleOrdenes(selectableOrdenes, !allCardOrdenesSelected);
     };
 
     return (
@@ -175,12 +196,21 @@ export default function DispensacionV2LotesOrdenModal({
                                                 <Th>Producto</Th>
                                                 <Th isNumeric>Cantidad</Th>
                                                 <Th>Estado</Th>
-                                                <Th textAlign="center">Accion</Th>
+                                                <Th textAlign="center">
+                                                    <Checkbox
+                                                        isChecked={allCardOrdenesSelected}
+                                                        isIndeterminate={someCardOrdenesSelected}
+                                                        isDisabled={selectableOrdenes.length === 0}
+                                                        onChange={handleToggleAll}
+                                                    >
+                                                        Seleccionar
+                                                    </Checkbox>
+                                                </Th>
                                             </Tr>
                                         </Thead>
                                         <Tbody>
                                             {lotes.map((lote) => {
-                                                const isSelected = selectedOrden?.ordenProduccionId === lote.ordenProduccionId;
+                                                const isSelected = lote.ordenProduccionId != null && selectedOrdenIds.has(lote.ordenProduccionId);
                                                 const isSelectable = Boolean(lote.ordenProduccionId);
                                                 return (
                                                     <Tr
@@ -206,15 +236,14 @@ export default function DispensacionV2LotesOrdenModal({
                                                         </Td>
                                                         <Td>
                                                             <Flex justify="center">
-                                                                <Button
-                                                                    size="sm"
-                                                                    colorScheme={isSelected ? "green" : "teal"}
-                                                                    variant={isSelected ? "solid" : "outline"}
+                                                                <Checkbox
+                                                                    colorScheme="teal"
+                                                                    isChecked={isSelected}
                                                                     isDisabled={!isSelectable}
-                                                                    onClick={() => handleSelect(lote)}
+                                                                    onChange={() => handleToggle(lote)}
                                                                 >
                                                                     {isSelected ? "Seleccionada" : "Seleccionar OP"}
-                                                                </Button>
+                                                                </Checkbox>
                                                             </Flex>
                                                         </Td>
                                                     </Tr>
@@ -228,9 +257,14 @@ export default function DispensacionV2LotesOrdenModal({
                     )}
                 </ModalBody>
                 <ModalFooter>
-                    <Button variant="outline" onClick={onClose}>
-                        Cerrar
-                    </Button>
+                    <Flex justify="space-between" align="center" w="full" gap={3} wrap="wrap">
+                        <Text fontSize="sm" color="gray.600">
+                            {selectedOrdenes.length} OPs seleccionadas
+                        </Text>
+                        <Button variant="outline" onClick={onClose}>
+                            Cerrar
+                        </Button>
+                    </Flex>
                 </ModalFooter>
             </ModalContent>
         </Modal>

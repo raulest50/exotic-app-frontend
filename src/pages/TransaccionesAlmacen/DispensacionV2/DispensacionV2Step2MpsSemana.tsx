@@ -89,7 +89,7 @@ export default function DispensacionV2Step2MpsSemana({
     const [error, setError] = useState<string | null>(null);
     const [errorStatus, setErrorStatus] = useState<number | null>(null);
     const [selectedMpsItem, setSelectedMpsItem] = useState<DispensacionV2MpsItemSeleccionado | null>(null);
-    const [selectedOrden, setSelectedOrden] = useState<DispensacionV2OrdenSeleccionada | null>(null);
+    const [selectedOrdenes, setSelectedOrdenes] = useState<DispensacionV2OrdenSeleccionada[]>([]);
     const activeRequestRef = useRef(0);
 
     const weekOptions = useMemo(() => buildWeekOptions(currentWeekStartDate), [currentWeekStartDate]);
@@ -103,7 +103,47 @@ export default function DispensacionV2Step2MpsSemana({
         setErrorStatus(null);
         setMps(null);
         setSelectedMpsItem(null);
-        setSelectedOrden(null);
+        setSelectedOrdenes([]);
+    }, []);
+
+    const selectedOrdenesOrdenadas = useMemo(
+        () => [...selectedOrdenes].sort((a, b) => a.mpsLoteOrdinal - b.mpsLoteOrdinal || a.ordenProduccionId - b.ordenProduccionId),
+        [selectedOrdenes],
+    );
+    const productosSeleccionados = useMemo(
+        () => Array.from(new Set(selectedOrdenesOrdenadas.map((orden) => orden.productoNombre).filter(Boolean))),
+        [selectedOrdenesOrdenadas],
+    );
+    const totalCantidadSeleccionada = selectedOrdenesOrdenadas.reduce(
+        (total, orden) => total + orden.cantidadPlanificada,
+        0,
+    );
+
+    const handleToggleOrden = useCallback((orden: DispensacionV2OrdenSeleccionada) => {
+        setSelectedOrdenes((current) => {
+            const exists = current.some((selected) => selected.ordenProduccionId === orden.ordenProduccionId);
+            if (exists) {
+                return current.filter((selected) => selected.ordenProduccionId !== orden.ordenProduccionId);
+            }
+            return [...current, orden];
+        });
+    }, []);
+
+    const handleToggleOrdenes = useCallback((ordenes: DispensacionV2OrdenSeleccionada[], shouldSelect: boolean) => {
+        setSelectedOrdenes((current) => {
+            const ordenIds = new Set(ordenes.map((orden) => orden.ordenProduccionId));
+            if (!shouldSelect) {
+                return current.filter((selected) => !ordenIds.has(selected.ordenProduccionId));
+            }
+
+            const currentIds = new Set(current.map((orden) => orden.ordenProduccionId));
+            const nextOrdenes = ordenes.filter((orden) => !currentIds.has(orden.ordenProduccionId));
+            return [...current, ...nextOrdenes];
+        });
+    }, []);
+
+    const handleRemoveOrden = useCallback((ordenProduccionId: number) => {
+        setSelectedOrdenes((current) => current.filter((orden) => orden.ordenProduccionId !== ordenProduccionId));
     }, []);
 
     const fetchMpsForWeek = useCallback(async (weekStartDate: string) => {
@@ -245,27 +285,57 @@ export default function DispensacionV2Step2MpsSemana({
                 </Alert>
             ) : null}
 
-            {!loading && selectedOrden ? (
+            {!loading && selectedOrdenesOrdenadas.length > 0 ? (
                 <Box borderWidth="1px" borderColor="teal.200" borderRadius="md" bg="teal.50" p={4}>
                     <Flex justify="space-between" align="start" gap={3} wrap="wrap">
                         <Box>
-                            <Text fontSize="sm" color="gray.600">OP seleccionada para dispensacion</Text>
+                            <Text fontSize="sm" color="gray.600">OPs seleccionadas para dispensacion</Text>
                             <Heading size="sm" mt={1}>
-                                OP {selectedOrden.ordenProduccionId} - {selectedOrden.loteAsignado ?? "Sin lote real"}
+                                {selectedOrdenesOrdenadas.length} OPs listas para la operacion
                             </Heading>
                             <Text fontSize="sm" color="gray.700" mt={1}>
-                                {selectedOrden.productoNombre}
+                                {productosSeleccionados.length === 1
+                                    ? productosSeleccionados[0]
+                                    : `${productosSeleccionados.length} productos seleccionados`}
                             </Text>
                         </Box>
                         <Flex gap={2} wrap="wrap" justify="end">
-                            <Badge colorScheme="teal">{selectedOrden.areaNombre}</Badge>
-                            <Badge colorScheme="purple">{formatNumber(selectedOrden.cantidadPlanificada)} und</Badge>
-                            <Badge colorScheme="gray">Lote MPS {selectedOrden.mpsLoteOrdinal}</Badge>
+                            <Badge colorScheme="teal">{selectedOrdenesOrdenadas[0]?.areaNombre}</Badge>
+                            <Badge colorScheme="purple">{formatNumber(totalCantidadSeleccionada)} und</Badge>
+                            <Badge colorScheme="gray">{selectedOrdenesOrdenadas.length} lotes MPS</Badge>
                         </Flex>
                     </Flex>
-                    <Text fontSize="sm" color="gray.600" mt={2}>
-                        Semana {selectedOrden.semanaMpsCodigo ?? selectedOrden.weekStartDate} - Entrega {formatSemanaMpsDisplayDate(selectedOrden.fechaEntregaPlanificada)}
-                    </Text>
+                    <VStack align="stretch" spacing={2} mt={3}>
+                        {selectedOrdenesOrdenadas.map((orden) => (
+                            <Flex
+                                key={orden.ordenProduccionId}
+                                justify="space-between"
+                                align="center"
+                                gap={3}
+                                wrap="wrap"
+                                bg="white"
+                                borderWidth="1px"
+                                borderColor="teal.100"
+                                borderRadius="md"
+                                p={3}
+                            >
+                                <Box>
+                                    <Text fontWeight="semibold" fontSize="sm">
+                                        OP {orden.ordenProduccionId} - {orden.loteAsignado ?? "Sin lote real"}
+                                    </Text>
+                                    <Text fontSize="xs" color="gray.600">
+                                        Lote MPS {orden.mpsLoteOrdinal} - Entrega {formatSemanaMpsDisplayDate(orden.fechaEntregaPlanificada)}
+                                    </Text>
+                                </Box>
+                                <Flex gap={2} align="center" wrap="wrap">
+                                    <Badge colorScheme="purple">{formatNumber(orden.cantidadPlanificada)} und</Badge>
+                                    <Button size="xs" variant="outline" onClick={() => handleRemoveOrden(orden.ordenProduccionId)}>
+                                        Quitar
+                                    </Button>
+                                </Flex>
+                            </Flex>
+                        ))}
+                    </VStack>
                 </Box>
             ) : null}
 
@@ -283,12 +353,13 @@ export default function DispensacionV2Step2MpsSemana({
             {mps ? (
                 <DispensacionV2LotesOrdenModal
                     selectedItem={selectedMpsItem}
-                    selectedOrden={selectedOrden}
+                    selectedOrdenes={selectedOrdenes}
                     selectedArea={selectedArea}
                     weekStartDate={mps.weekStartDate}
                     weekEndDate={mps.weekEndDate}
                     semanaMpsCodigo={mps.semanaMpsCodigo}
-                    onSelectOrden={setSelectedOrden}
+                    onToggleOrden={handleToggleOrden}
+                    onToggleOrdenes={handleToggleOrdenes}
                     onClose={() => setSelectedMpsItem(null)}
                 />
             ) : null}
