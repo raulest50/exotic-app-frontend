@@ -11,11 +11,9 @@ import {
     formatSemanaMpsDisplayDate,
     getCurrentIsoWeekMonday,
 } from "../../Produccion/ProgProdSemanalTab/semanaMps.utils";
-import DispensacionV2LotesOrdenModal, {
-    type DispensacionV2MpsItemSeleccionado,
-    type DispensacionV2OrdenSeleccionada,
-} from "./DispensacionV2LotesOrdenModal";
+import DispensacionV2LotesOrdenModal from "./DispensacionV2LotesOrdenModal";
 import type { AreaOperativaDispensacionV2 } from "./DispensacionV2Step1SelectArea";
+import type { DispensacionV2MpsItemSeleccionado, DispensacionV2OrdenSeleccionada } from "./DispensacionV2Types";
 
 const endpoints = new EndPointsURL();
 
@@ -31,7 +29,10 @@ interface WeekOption {
 
 interface DispensacionV2Step2MpsSemanaProps {
     selectedArea: AreaOperativaDispensacionV2;
+    selectedOrdenes: DispensacionV2OrdenSeleccionada[];
+    onSelectedOrdenesChange: (ordenes: DispensacionV2OrdenSeleccionada[]) => void;
     onBack: () => void;
+    onNext: () => void;
 }
 
 function buildWeekOptions(currentWeekStartDate: string): WeekOption[] {
@@ -80,7 +81,10 @@ function formatNumber(value: number | null | undefined): string {
 
 export default function DispensacionV2Step2MpsSemana({
     selectedArea,
+    selectedOrdenes,
+    onSelectedOrdenesChange,
     onBack,
+    onNext,
 }: DispensacionV2Step2MpsSemanaProps) {
     const [currentWeekStartDate] = useState(getCurrentIsoWeekMonday);
     const [selectedWeekKey, setSelectedWeekKey] = useState<WeekKey>("present");
@@ -89,7 +93,6 @@ export default function DispensacionV2Step2MpsSemana({
     const [error, setError] = useState<string | null>(null);
     const [errorStatus, setErrorStatus] = useState<number | null>(null);
     const [selectedMpsItem, setSelectedMpsItem] = useState<DispensacionV2MpsItemSeleccionado | null>(null);
-    const [selectedOrdenes, setSelectedOrdenes] = useState<DispensacionV2OrdenSeleccionada[]>([]);
     const activeRequestRef = useRef(0);
 
     const weekOptions = useMemo(() => buildWeekOptions(currentWeekStartDate), [currentWeekStartDate]);
@@ -103,8 +106,8 @@ export default function DispensacionV2Step2MpsSemana({
         setErrorStatus(null);
         setMps(null);
         setSelectedMpsItem(null);
-        setSelectedOrdenes([]);
-    }, []);
+        onSelectedOrdenesChange([]);
+    }, [onSelectedOrdenesChange]);
 
     const selectedOrdenesOrdenadas = useMemo(
         () => [...selectedOrdenes].sort((a, b) => a.mpsLoteOrdinal - b.mpsLoteOrdinal || a.ordenProduccionId - b.ordenProduccionId),
@@ -120,31 +123,30 @@ export default function DispensacionV2Step2MpsSemana({
     );
 
     const handleToggleOrden = useCallback((orden: DispensacionV2OrdenSeleccionada) => {
-        setSelectedOrdenes((current) => {
-            const exists = current.some((selected) => selected.ordenProduccionId === orden.ordenProduccionId);
-            if (exists) {
-                return current.filter((selected) => selected.ordenProduccionId !== orden.ordenProduccionId);
-            }
-            return [...current, orden];
-        });
-    }, []);
+        const exists = selectedOrdenes.some((selected) => selected.ordenProduccionId === orden.ordenProduccionId);
+        onSelectedOrdenesChange(
+            exists
+                ? selectedOrdenes.filter((selected) => selected.ordenProduccionId !== orden.ordenProduccionId)
+                : [...selectedOrdenes, orden],
+        );
+    }, [onSelectedOrdenesChange, selectedOrdenes]);
 
     const handleToggleOrdenes = useCallback((ordenes: DispensacionV2OrdenSeleccionada[], shouldSelect: boolean) => {
-        setSelectedOrdenes((current) => {
-            const ordenIds = new Set(ordenes.map((orden) => orden.ordenProduccionId));
-            if (!shouldSelect) {
-                return current.filter((selected) => !ordenIds.has(selected.ordenProduccionId));
-            }
+        const current = selectedOrdenes;
+        const ordenIds = new Set(ordenes.map((orden) => orden.ordenProduccionId));
+        if (!shouldSelect) {
+            onSelectedOrdenesChange(current.filter((selected) => !ordenIds.has(selected.ordenProduccionId)));
+            return;
+        }
 
-            const currentIds = new Set(current.map((orden) => orden.ordenProduccionId));
-            const nextOrdenes = ordenes.filter((orden) => !currentIds.has(orden.ordenProduccionId));
-            return [...current, ...nextOrdenes];
-        });
-    }, []);
+        const currentIds = new Set(current.map((orden) => orden.ordenProduccionId));
+        const nextOrdenes = ordenes.filter((orden) => !currentIds.has(orden.ordenProduccionId));
+        onSelectedOrdenesChange([...current, ...nextOrdenes]);
+    }, [onSelectedOrdenesChange, selectedOrdenes]);
 
     const handleRemoveOrden = useCallback((ordenProduccionId: number) => {
-        setSelectedOrdenes((current) => current.filter((orden) => orden.ordenProduccionId !== ordenProduccionId));
-    }, []);
+        onSelectedOrdenesChange(selectedOrdenes.filter((orden) => orden.ordenProduccionId !== ordenProduccionId));
+    }, [onSelectedOrdenesChange, selectedOrdenes]);
 
     const fetchMpsForWeek = useCallback(async (weekStartDate: string) => {
         const requestId = activeRequestRef.current + 1;
@@ -303,6 +305,9 @@ export default function DispensacionV2Step2MpsSemana({
                             <Badge colorScheme="teal">{selectedOrdenesOrdenadas[0]?.areaNombre}</Badge>
                             <Badge colorScheme="purple">{formatNumber(totalCantidadSeleccionada)} und</Badge>
                             <Badge colorScheme="gray">{selectedOrdenesOrdenadas.length} lotes MPS</Badge>
+                            <Button size="sm" colorScheme="teal" onClick={onNext}>
+                                Preparar materiales
+                            </Button>
                         </Flex>
                     </Flex>
                     <VStack align="stretch" spacing={2} mt={3}>

@@ -23,35 +23,11 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import type {
-    MpsSemanalItemDTO,
     MpsSemanalLotePlanificadoDTO,
 } from "../../Produccion/ProgProdSemanalTab/MpsSemanalService";
-import type { MpsReadonlyItemContext } from "../../Produccion/ProgProdSemanalTab/MpsReadonlyReviewPanel";
 import { formatSemanaMpsDisplayDate } from "../../Produccion/ProgProdSemanalTab/semanaMps.utils";
 import type { AreaOperativaDispensacionV2 } from "./DispensacionV2Step1SelectArea";
-
-export interface DispensacionV2MpsItemSeleccionado {
-    item: MpsSemanalItemDTO;
-    context: MpsReadonlyItemContext;
-}
-
-export interface DispensacionV2OrdenSeleccionada {
-    ordenProduccionId: number;
-    mpsItemId: number;
-    mpsLotePlanificadoId: number;
-    mpsLoteOrdinal: number;
-    loteAsignado: string | null;
-    cantidadPlanificada: number;
-    productoId: string | null;
-    productoNombre: string;
-    categoriaNombre: string | null;
-    weekStartDate: string;
-    weekEndDate: string;
-    semanaMpsCodigo: string | null;
-    areaId: number;
-    areaNombre: string;
-    fechaEntregaPlanificada: string;
-}
+import type { DispensacionV2MpsItemSeleccionado, DispensacionV2OrdenSeleccionada } from "./DispensacionV2Types";
 
 interface DispensacionV2LotesOrdenModalProps {
     selectedItem: DispensacionV2MpsItemSeleccionado | null;

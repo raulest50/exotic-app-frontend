@@ -161,6 +161,9 @@ export default class EndPointsURL{
     public dispensacion_no_planificada: string;
     public dispensacion: string;
     public dispensacion_v2_mps_semanal: string;
+    public dispensacion_v2_preparacion: string;
+    public dispensacion_v2_asignacion_lotes: string;
+    public dispensacion_v2_lotes_disponibles: string;
     public recomendar_lotes_multiple: string;
 
     public listar_lotes_de_producto:string;
@@ -773,6 +776,9 @@ export default class EndPointsURL{
         this.dispensacion_no_planificada = `${domain}/${salidas_almacen_res}/dispensacion-no-planificada`;
         this.dispensacion = `${domain}/${salidas_almacen_res}/dispensacion`;
         this.dispensacion_v2_mps_semanal = `${domain}/${salidas_almacen_res}/dispensacion-v2/mps-semanal`;
+        this.dispensacion_v2_preparacion = `${domain}/${salidas_almacen_res}/dispensacion-v2/preparacion`;
+        this.dispensacion_v2_asignacion_lotes = `${domain}/${salidas_almacen_res}/dispensacion-v2/asignacion-lotes`;
+        this.dispensacion_v2_lotes_disponibles = `${domain}/${salidas_almacen_res}/dispensacion-v2/materiales/{productoId}/lotes-disponibles`;
         this.recomendar_lotes_multiple = `${domain}/${salidas_almacen_res}/recomendar-lotes-multiple`;
 
         this.listar_lotes_de_producto = `${domain}/${salidas_almacen_res}/lotes-disponibles`;
