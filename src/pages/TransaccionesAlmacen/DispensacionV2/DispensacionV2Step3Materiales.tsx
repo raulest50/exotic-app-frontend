@@ -67,6 +67,21 @@ function buildResponseKey(response: DispensacionV2PreparacionResponseDTO | null)
     return `${response.area.areaId}:${ordenIds}`;
 }
 
+function iniciarMaterialesDesmarcados(
+    response: DispensacionV2PreparacionResponseDTO,
+): DispensacionV2PreparacionResponseDTO {
+    return {
+        ...response,
+        ordenes: response.ordenes.map((orden) => ({
+            ...orden,
+            materiales: orden.materiales.map((material) => ({
+                ...material,
+                checked: false,
+            })),
+        })),
+    };
+}
+
 export default function DispensacionV2Step3Materiales({
     selectedArea,
     selectedOrdenes,
@@ -86,6 +101,9 @@ export default function DispensacionV2Step3Materiales({
     );
     const responseKey = useMemo(() => buildResponseKey(preparacion), [preparacion]);
     const totalMateriales = preparacion?.ordenes.reduce((total, orden) => total + orden.materiales.length, 0) ?? 0;
+    const totalMaterialesSeleccionados = preparacion?.ordenes.reduce((total, orden) => (
+        total + orden.materiales.filter((material) => material.checked && material.inventareable).length
+    ), 0) ?? 0;
     const totalWarnings = preparacion?.warnings.length ?? 0;
 
     const cargarPreparacion = useCallback(async (force = false) => {
@@ -105,7 +123,7 @@ export default function DispensacionV2Step3Materiales({
         try {
             const response = await prepararDispensacionV2(selectedArea.areaId, selectedOrdenes);
             if (activeRequestRef.current === requestId) {
-                onPreparacionChange(recalcularDispensacionV2(response));
+                onPreparacionChange(recalcularDispensacionV2(iniciarMaterialesDesmarcados(response)));
             }
         } catch (err) {
             if (activeRequestRef.current === requestId) {
@@ -129,6 +147,7 @@ export default function DispensacionV2Step3Materiales({
         updater: (material: DispensacionV2PreparacionResponseDTO["ordenes"][number]["materiales"][number]) => DispensacionV2PreparacionResponseDTO["ordenes"][number]["materiales"][number],
     ) => {
         if (!preparacion) return;
+        setError(null);
         const next = {
             ...preparacion,
             ordenes: preparacion.ordenes.map((orden) => {
@@ -146,6 +165,10 @@ export default function DispensacionV2Step3Materiales({
 
     const handlePrepararResumen = async () => {
         if (!preparacion) return;
+        if (totalMaterialesSeleccionados === 0) {
+            setError("Debe chulear al menos un material inventariable para preparar el resumen.");
+            return;
+        }
         setAssigning(true);
         setError(null);
         try {
@@ -170,7 +193,7 @@ export default function DispensacionV2Step3Materiales({
                     </Box>
                     <Flex gap={2} wrap="wrap">
                         <Button variant="outline" onClick={onBack}>
-                            Volver al MPS
+                            Volver a OPs
                         </Button>
                         <Button
                             variant="outline"
@@ -187,6 +210,9 @@ export default function DispensacionV2Step3Materiales({
                     <Flex mt={4} gap={2} wrap="wrap">
                         <Badge colorScheme="teal">{preparacion.ordenes.length} OPs</Badge>
                         <Badge colorScheme="purple">{totalMateriales} materiales</Badge>
+                        <Badge colorScheme={totalMaterialesSeleccionados > 0 ? "green" : "gray"}>
+                            {totalMaterialesSeleccionados} chuleados
+                        </Badge>
                         <Badge colorScheme={totalWarnings > 0 ? "orange" : "green"}>
                             {totalWarnings} warnings
                         </Badge>

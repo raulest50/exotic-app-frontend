@@ -4,6 +4,9 @@ import type { MpsSemanalItemDTO } from "../../Produccion/ProgProdSemanalTab/MpsS
 export interface DispensacionV2MpsItemSeleccionado {
     item: MpsSemanalItemDTO;
     context: MpsReadonlyItemContext;
+    weekStartDate: string;
+    weekEndDate: string;
+    semanaMpsCodigo: string | null;
 }
 
 export interface DispensacionV2OrdenSeleccionada {
