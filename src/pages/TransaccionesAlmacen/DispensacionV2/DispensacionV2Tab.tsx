@@ -20,6 +20,7 @@ import DispensacionV2Step3Materiales from "./DispensacionV2Step3Materiales";
 import DispensacionV2Step4Resumen from "./DispensacionV2Step4Resumen";
 import DispensacionV2Step5Confirmacion from "./DispensacionV2Step5Confirmacion";
 import type {
+    DispensacionV2MaterialesRecetaResponseDTO,
     DispensacionV2MpsItemSeleccionado,
     DispensacionV2OrdenSeleccionada,
     DispensacionV2PreparacionResponseDTO,
@@ -39,7 +40,7 @@ export default function DispensacionV2Tab() {
     const [selectedArea, setSelectedArea] = useState<AreaOperativaDispensacionV2 | null>(null);
     const [selectedMpsItem, setSelectedMpsItem] = useState<DispensacionV2MpsItemSeleccionado | null>(null);
     const [selectedOrdenes, setSelectedOrdenes] = useState<DispensacionV2OrdenSeleccionada[]>([]);
-    const [preparacion, setPreparacion] = useState<DispensacionV2PreparacionResponseDTO | null>(null);
+    const [materialesReceta, setMaterialesReceta] = useState<DispensacionV2MaterialesRecetaResponseDTO | null>(null);
     const [asignacion, setAsignacion] = useState<DispensacionV2PreparacionResponseDTO | null>(null);
 
     const goToStep0 = useCallback(() => setActiveStep(0), []);
@@ -73,21 +74,21 @@ export default function DispensacionV2Tab() {
         setSelectedArea(area);
         setSelectedMpsItem(null);
         setSelectedOrdenes([]);
-        setPreparacion(null);
+        setMaterialesReceta(null);
         setAsignacion(null);
     }, []);
 
     const handleSelectMpsItem = useCallback((mpsItem: DispensacionV2MpsItemSeleccionado) => {
         setSelectedMpsItem(mpsItem);
         setSelectedOrdenes([]);
-        setPreparacion(null);
+        setMaterialesReceta(null);
         setAsignacion(null);
         setActiveStep(2);
     }, []);
 
     const handleSelectedOrdenesChange = useCallback((ordenes: DispensacionV2OrdenSeleccionada[]) => {
         setSelectedOrdenes(ordenes);
-        setPreparacion(null);
+        setMaterialesReceta(null);
         setAsignacion(null);
     }, []);
 
@@ -158,12 +159,13 @@ export default function DispensacionV2Tab() {
                     />
                 )}
 
-                {activeStep === 3 && selectedArea && (
+                {activeStep === 3 && selectedArea && selectedMpsItem && (
                     <DispensacionV2Step3Materiales
                         selectedArea={selectedArea}
+                        selectedMpsItem={selectedMpsItem}
                         selectedOrdenes={selectedOrdenes}
-                        preparacion={preparacion}
-                        onPreparacionChange={setPreparacion}
+                        materialesReceta={materialesReceta}
+                        onMaterialesRecetaChange={setMaterialesReceta}
                         onAsignacionReady={(nextAsignacion) => {
                             setAsignacion(nextAsignacion);
                             setActiveStep(4);

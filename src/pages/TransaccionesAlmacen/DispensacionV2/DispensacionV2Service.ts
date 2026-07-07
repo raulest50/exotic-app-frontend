@@ -3,6 +3,9 @@ import EndPointsURL from "../../../api/EndPointsURL";
 import type {
     DispensacionV2AsignacionLotesRequestDTO,
     DispensacionV2LotesDisponiblesResponseDTO,
+    DispensacionV2MaterialDTO,
+    DispensacionV2MaterialesRecetaRequestDTO,
+    DispensacionV2MaterialesRecetaResponseDTO,
     DispensacionV2OrdenSeleccionada,
     DispensacionV2PreparacionRequestDTO,
     DispensacionV2PreparacionResponseDTO,
@@ -31,6 +34,25 @@ export async function prepararDispensacionV2(
     return response.data;
 }
 
+export async function prepararMaterialesRecetaDispensacionV2(
+    areaId: number,
+    productoId: string,
+    cantidadBase: number,
+): Promise<DispensacionV2MaterialesRecetaResponseDTO> {
+    const payload: DispensacionV2MaterialesRecetaRequestDTO = {
+        areaId,
+        productoId,
+        cantidadBase,
+    };
+
+    const response = await axios.post<DispensacionV2MaterialesRecetaResponseDTO>(
+        endpoints.dispensacion_v2_materiales_receta,
+        payload,
+        { withCredentials: true },
+    );
+    return response.data;
+}
+
 export async function asignarLotesDispensacionV2(
     areaId: number,
     preparacion: DispensacionV2PreparacionResponseDTO,
@@ -42,6 +64,33 @@ export async function asignarLotesDispensacionV2(
             mpsLotePlanificadoId: orden.mpsLotePlanificadoId,
             mpsItemId: orden.mpsItemId,
             materiales: orden.materiales.map((material) => ({
+                productoId: material.productoId,
+                checked: material.checked,
+                cantidadADispensar: material.cantidadADispensar,
+            })),
+        })),
+    };
+
+    const response = await axios.post<DispensacionV2PreparacionResponseDTO>(
+        endpoints.dispensacion_v2_asignacion_lotes,
+        payload,
+        { withCredentials: true },
+    );
+    return response.data;
+}
+
+export async function asignarLotesDispensacionV2DesdeMateriales(
+    areaId: number,
+    ordenes: DispensacionV2OrdenSeleccionada[],
+    materiales: DispensacionV2MaterialDTO[],
+): Promise<DispensacionV2PreparacionResponseDTO> {
+    const payload: DispensacionV2AsignacionLotesRequestDTO = {
+        areaId,
+        ordenes: ordenes.map((orden) => ({
+            ordenProduccionId: orden.ordenProduccionId,
+            mpsLotePlanificadoId: orden.mpsLotePlanificadoId,
+            mpsItemId: orden.mpsItemId,
+            materiales: materiales.map((material) => ({
                 productoId: material.productoId,
                 checked: material.checked,
                 cantidadADispensar: material.cantidadADispensar,

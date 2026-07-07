@@ -36,6 +36,12 @@ export interface DispensacionV2PreparacionRequestDTO {
     }>;
 }
 
+export interface DispensacionV2MaterialesRecetaRequestDTO {
+    areaId: number;
+    productoId: string;
+    cantidadBase: number;
+}
+
 export interface DispensacionV2AsignacionLotesRequestDTO {
     areaId: number;
     ordenes: Array<{
@@ -110,6 +116,15 @@ export interface DispensacionV2PreparacionResponseDTO {
     area: DispensacionV2AreaDTO;
     ordenes: DispensacionV2OrdenDTO[];
     totalesMateriales: DispensacionV2TotalMaterialDTO[];
+    warnings: string[];
+}
+
+export interface DispensacionV2MaterialesRecetaResponseDTO {
+    area: DispensacionV2AreaDTO;
+    productoId: string;
+    productoNombre: string;
+    cantidadBase: number;
+    materiales: DispensacionV2MaterialDTO[];
     warnings: string[];
 }
 
