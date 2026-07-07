@@ -56,6 +56,24 @@ export interface DispensacionV2AsignacionLotesRequestDTO {
     }>;
 }
 
+export interface DispensacionV2FinalizacionRequestDTO {
+    areaId: number;
+    ordenes: Array<{
+        ordenProduccionId: number;
+        mpsLotePlanificadoId?: number | null;
+        mpsItemId?: number | null;
+        materiales: Array<{
+            productoId: string;
+            checked: boolean;
+            cantidadADispensar: number;
+            lotesOrigen: Array<{
+                loteId: number;
+                cantidadAsignada: number;
+            }>;
+        }>;
+    }>;
+}
+
 export interface DispensacionV2AreaDTO {
     areaId: number;
     nombre: string;
@@ -125,6 +143,18 @@ export interface DispensacionV2MaterialesRecetaResponseDTO {
     productoNombre: string;
     cantidadBase: number;
     materiales: DispensacionV2MaterialDTO[];
+    warnings: string[];
+}
+
+export interface DispensacionV2FinalizacionOrdenResponseDTO {
+    ordenProduccionId: number;
+    loteAsignado?: string | null;
+    transaccionId: number;
+}
+
+export interface DispensacionV2FinalizacionResponseDTO {
+    area: DispensacionV2AreaDTO;
+    ordenes: DispensacionV2FinalizacionOrdenResponseDTO[];
     warnings: string[];
 }
 

@@ -2,6 +2,8 @@ import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
 import type {
     DispensacionV2AsignacionLotesRequestDTO,
+    DispensacionV2FinalizacionRequestDTO,
+    DispensacionV2FinalizacionResponseDTO,
     DispensacionV2LotesDisponiblesResponseDTO,
     DispensacionV2MaterialDTO,
     DispensacionV2MaterialesRecetaRequestDTO,
@@ -100,6 +102,35 @@ export async function asignarLotesDispensacionV2DesdeMateriales(
 
     const response = await axios.post<DispensacionV2PreparacionResponseDTO>(
         endpoints.dispensacion_v2_asignacion_lotes,
+        payload,
+        { withCredentials: true },
+    );
+    return response.data;
+}
+
+export async function finalizarDispensacionV2(
+    asignacion: DispensacionV2PreparacionResponseDTO,
+): Promise<DispensacionV2FinalizacionResponseDTO> {
+    const payload: DispensacionV2FinalizacionRequestDTO = {
+        areaId: asignacion.area.areaId,
+        ordenes: asignacion.ordenes.map((orden) => ({
+            ordenProduccionId: orden.ordenProduccionId,
+            mpsLotePlanificadoId: orden.mpsLotePlanificadoId,
+            mpsItemId: orden.mpsItemId,
+            materiales: orden.materiales.map((material) => ({
+                productoId: material.productoId,
+                checked: material.checked,
+                cantidadADispensar: material.cantidadADispensar,
+                lotesOrigen: (material.lotesOrigen ?? []).map((lote) => ({
+                    loteId: lote.loteId,
+                    cantidadAsignada: lote.cantidadAsignada,
+                })),
+            })),
+        })),
+    };
+
+    const response = await axios.post<DispensacionV2FinalizacionResponseDTO>(
+        endpoints.dispensacion_v2_finalizar,
         payload,
         { withCredentials: true },
     );

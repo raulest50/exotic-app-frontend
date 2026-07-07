@@ -164,6 +164,7 @@ export default class EndPointsURL{
     public dispensacion_v2_preparacion: string;
     public dispensacion_v2_materiales_receta: string;
     public dispensacion_v2_asignacion_lotes: string;
+    public dispensacion_v2_finalizar: string;
     public dispensacion_v2_lotes_disponibles: string;
     public recomendar_lotes_multiple: string;
 
@@ -780,6 +781,7 @@ export default class EndPointsURL{
         this.dispensacion_v2_preparacion = `${domain}/${salidas_almacen_res}/dispensacion-v2/preparacion`;
         this.dispensacion_v2_materiales_receta = `${domain}/${salidas_almacen_res}/dispensacion-v2/materiales-receta`;
         this.dispensacion_v2_asignacion_lotes = `${domain}/${salidas_almacen_res}/dispensacion-v2/asignacion-lotes`;
+        this.dispensacion_v2_finalizar = `${domain}/${salidas_almacen_res}/dispensacion-v2/finalizar`;
         this.dispensacion_v2_lotes_disponibles = `${domain}/${salidas_almacen_res}/dispensacion-v2/materiales/{productoId}/lotes-disponibles`;
         this.recomendar_lotes_multiple = `${domain}/${salidas_almacen_res}/recomendar-lotes-multiple`;
 
