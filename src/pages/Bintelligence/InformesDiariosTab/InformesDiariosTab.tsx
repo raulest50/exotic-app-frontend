@@ -5,8 +5,11 @@ import {
     Card,
     CardBody,
     Flex,
+    FormControl,
+    FormLabel,
     HStack,
     IconButton,
+    Select,
     Text,
     Tooltip,
     useColorModeValue,
@@ -71,7 +74,23 @@ export default function InformesDiariosTab() {
     const mainTitle = REPORT_OPTIONS.find((r) => r.key === selectedReport)?.label ?? "";
 
     return (
-        <Flex w="full" minH="60vh" align="stretch" gap={0}>
+        <Flex w="full" minH="60vh" align="stretch" direction={{ base: "column", md: "row" }} gap={{ base: 3, md: 0 }}>
+            <Box display={{ base: "block", md: "none" }}>
+                <FormControl>
+                    <FormLabel fontSize="sm">Informe</FormLabel>
+                    <Select
+                        value={selectedReport}
+                        onChange={(event) => setSelectedReport(event.target.value as InformeDiarioKey)}
+                    >
+                        {REPORT_OPTIONS.map((opt) => (
+                            <option key={opt.key} value={opt.key}>
+                                {opt.label}
+                            </option>
+                        ))}
+                    </Select>
+                </FormControl>
+            </Box>
+
             <VStack
                 align="stretch"
                 spacing={0}
@@ -80,6 +99,7 @@ export default function InformesDiariosTab() {
                 borderColor="app.border"
                 borderRadius="md"
                 overflow="hidden"
+                display={{ base: "none", md: "flex" }}
                 w={isOpen ? "280px" : "52px"}
                 minW={isOpen ? "280px" : "52px"}
                 transition="width 0.2s ease, min-width 0.2s ease"
@@ -138,7 +158,7 @@ export default function InformesDiariosTab() {
                 </VStack>
             </VStack>
 
-            <Box flex="1" pl={4} overflow="auto">
+            <Box flex="1" pl={{ base: 0, md: 4 }} overflow="auto" minW={0}>
                 {apiReachable === true && (
                     <Text fontSize="xs" color="green.600" mb={2}>
                         Conexión con el servicio de informes diarios activa.

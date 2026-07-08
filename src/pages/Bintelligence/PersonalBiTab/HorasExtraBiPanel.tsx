@@ -21,6 +21,7 @@ import {
     StatNumber,
     Text,
     Tooltip,
+    useBreakpointValue,
     useDisclosure,
     useToast,
 } from "@chakra-ui/react";
@@ -67,6 +68,7 @@ export default function HorasExtraBiPanel() {
 
     const rangeInvalid = Boolean(fechaDesde && fechaHasta && fechaDesde > fechaHasta);
     const canQuery = Boolean(fechaDesde && fechaHasta && !rangeInvalid);
+    const chartHeight = useBreakpointValue({ base: 300, md: 420 }) ?? 420;
 
     const integranteLabel = selectedIntegrante
         ? `${selectedIntegrante.id} - ${selectedIntegrante.nombres} ${selectedIntegrante.apellidos}`
@@ -292,17 +294,23 @@ export default function HorasExtraBiPanel() {
                                 </HStack>
                             </FormControl>
                         </SimpleGrid>
-                        <HStack justify="space-between" align="center" flexWrap="wrap" gap={3}>
-                            <Badge colorScheme="blue">
+                        <Stack
+                            direction={{ base: "column", md: "row" }}
+                            justify="space-between"
+                            align={{ base: "stretch", md: "center" }}
+                            spacing={3}
+                        >
+                            <Badge colorScheme="blue" alignSelf={{ base: "flex-start", md: "center" }}>
                                 {fechaDesde} a {fechaHasta}
                             </Badge>
-                            <HStack>
+                            <Stack direction={{ base: "column", sm: "row" }} spacing={3} align="stretch">
                                 <Button
                                     leftIcon={<RepeatIcon />}
                                     colorScheme="blue"
                                     onClick={fetchData}
                                     isLoading={loading}
                                     isDisabled={!canQuery}
+                                    w={{ base: "full", sm: "auto" }}
                                 >
                                     Actualizar
                                 </Button>
@@ -313,11 +321,12 @@ export default function HorasExtraBiPanel() {
                                     onClick={handleDownload}
                                     isLoading={downloading}
                                     isDisabled={!canQuery}
+                                    w={{ base: "full", sm: "auto" }}
                                 >
                                     Descargar Excel
                                 </Button>
-                            </HStack>
-                        </HStack>
+                            </Stack>
+                        </Stack>
                     </Stack>
                 </CardBody>
             </Card>
@@ -360,7 +369,7 @@ export default function HorasExtraBiPanel() {
                         <CardBody>
                             <Text fontWeight="semibold" mb={4}>Serie temporal de horas extra</Text>
                             {(serie?.puntos.length ?? 0) > 0 ? (
-                                <ReactECharts option={chartOptions} style={{ height: "420px", width: "100%" }} />
+                                <ReactECharts option={chartOptions} style={{ height: `${chartHeight}px`, width: "100%" }} />
                             ) : (
                                 <Box py={10}>
                                     <Text color="app.textMuted" textAlign="center">

@@ -20,7 +20,7 @@ type Props = {
 
 export default function LeadTimeMetricHelpModal({ isOpen, onClose }: Props) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
+        <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "3xl" }} scrollBehavior="inside">
             <ModalOverlay />
             <ModalContent>
                 <ModalHeader>Calculo de lead time proveedor-material</ModalHeader>

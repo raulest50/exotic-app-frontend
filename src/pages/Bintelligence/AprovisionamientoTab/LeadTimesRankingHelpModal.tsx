@@ -79,7 +79,7 @@ const rankingHelpItems = [
 
 export default function LeadTimesRankingHelpModal({ isOpen, onClose }: Props) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="6xl" scrollBehavior="inside">
+        <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "6xl" }} scrollBehavior="inside">
             <ModalOverlay />
             <ModalContent>
                 <ModalHeader>Ayuda del ranking de lead times</ModalHeader>

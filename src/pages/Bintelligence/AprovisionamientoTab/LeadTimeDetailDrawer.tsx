@@ -106,12 +106,17 @@ export default function LeadTimeDetailDrawer({
 
     return (
         <>
-            <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="xl">
+            <Drawer isOpen={isOpen} placement="right" onClose={onClose} size={{ base: "full", md: "xl" }}>
                 <DrawerOverlay />
                 <DrawerContent>
                     <DrawerCloseButton />
                     <DrawerHeader pr={16}>
-                        <Flex align="center" justify="space-between" gap={3}>
+                        <Flex
+                            align={{ base: "stretch", sm: "center" }}
+                            justify="space-between"
+                            direction={{ base: "column", sm: "row" }}
+                            gap={3}
+                        >
                             <Text>Detalle de lead time</Text>
                             <Tooltip label="Explicacion de metricas y por que se usan">
                                 <IconButton

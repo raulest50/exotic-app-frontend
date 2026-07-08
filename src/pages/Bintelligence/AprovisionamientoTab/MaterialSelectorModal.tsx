@@ -3,7 +3,6 @@ import {
     Button,
     FormControl,
     FormLabel,
-    HStack,
     Input,
     Modal,
     ModalBody,
@@ -13,6 +12,7 @@ import {
     ModalHeader,
     ModalOverlay,
     Select,
+    Stack,
     Table,
     Tbody,
     Td,
@@ -99,7 +99,7 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
     }, [isOpen]);
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="4xl">
+        <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "4xl" }} scrollBehavior="inside">
             <ModalOverlay />
             <ModalContent>
                 <ModalHeader>Seleccionar material</ModalHeader>
@@ -108,7 +108,7 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
                     <VStack align="stretch" spacing={4}>
                         <FormControl>
                             <FormLabel>Buscar material</FormLabel>
-                            <HStack align="end">
+                            <Stack direction={{ base: "column", md: "row" }} align={{ base: "stretch", md: "end" }}>
                                 <Input
                                     value={searchText}
                                     onChange={(e) => setSearchText(e.target.value)}
@@ -124,7 +124,7 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
                                 <Select
                                     value={searchType}
                                     onChange={(e) => setSearchType(e.target.value as BiSearchType)}
-                                    width="150px"
+                                    width={{ base: "full", md: "150px" }}
                                     isDisabled={loading}
                                 >
                                     <option value="NOMBRE">Nombre</option>
@@ -137,10 +137,11 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
                                         fetchMateriales(0, size);
                                     }}
                                     isLoading={loading}
+                                    w={{ base: "full", md: "auto" }}
                                 >
                                     Buscar
                                 </Button>
-                            </HStack>
+                            </Stack>
                         </FormControl>
 
                         <Box w="full" overflowX="auto">
@@ -203,20 +204,24 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
                         </Box>
                     </VStack>
                 </ModalBody>
-                <ModalFooter>
+                <ModalFooter
+                    gap={3}
+                    flexDirection={{ base: "column", sm: "row" }}
+                    alignItems={{ base: "stretch", sm: "center" }}
+                >
                     <Button
                         colorScheme="blue"
-                        mr={3}
                         onClick={() => {
                             if (selectedMaterial) {
                                 onSelectMaterial(selectedMaterial);
                             }
                         }}
                         isDisabled={!selectedMaterial}
+                        w={{ base: "full", sm: "auto" }}
                     >
                         Confirmar
                     </Button>
-                    <Button variant="ghost" onClick={onClose}>
+                    <Button variant="ghost" onClick={onClose} w={{ base: "full", sm: "auto" }}>
                         Cancelar
                     </Button>
                 </ModalFooter>

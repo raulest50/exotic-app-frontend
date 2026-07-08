@@ -7,7 +7,6 @@ import {
     Flex,
     FormControl,
     FormLabel,
-    HStack,
     Input,
     Stack,
     Text,
@@ -116,14 +115,24 @@ export default function AprovisionamientoTab() {
                         </Flex>
 
                         <Flex gap={4} direction={{ base: "column", lg: "row" }} align={{ base: "stretch", lg: "flex-end" }}>
-                            <HStack spacing={2}>
-                                <Button onClick={materialPicker.onOpen} colorScheme="blue" isLoading={materialLoading}>
+                            <Stack direction={{ base: "column", sm: "row" }} spacing={2} align="stretch">
+                                <Button
+                                    onClick={materialPicker.onOpen}
+                                    colorScheme="blue"
+                                    isLoading={materialLoading}
+                                    w={{ base: "full", sm: "auto" }}
+                                >
                                     {selectedMaterial ? "Cambiar material" : "Seleccionar material"}
                                 </Button>
-                                <Button onClick={proveedorPicker.onOpen} colorScheme="blue" variant="outline">
+                                <Button
+                                    onClick={proveedorPicker.onOpen}
+                                    colorScheme="blue"
+                                    variant="outline"
+                                    w={{ base: "full", sm: "auto" }}
+                                >
                                     {selectedProveedor ? "Cambiar proveedor" : "Seleccionar proveedor"}
                                 </Button>
-                            </HStack>
+                            </Stack>
 
                             <FormControl maxW={{ base: "full", lg: "220px" }}>
                                 <FormLabel>Fecha corte</FormLabel>

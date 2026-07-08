@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-    Box,
     Button,
     Card,
     CardBody,
@@ -9,6 +8,7 @@ import {
     FormLabel,
     Input,
     Select,
+    Stack,
     Text,
     VStack,
     useToast,
@@ -117,7 +117,7 @@ export default function InformeDiarioAlmacenPanel() {
                 <Text fontWeight="semibold" mb={4}>
                     Informe diario de almacén
                 </Text>
-                <VStack align="stretch" spacing={4} maxW="md">
+                <VStack align="stretch" spacing={4} maxW={{ base: "full", md: "md" }}>
                     <FormControl>
                         <FormLabel>Tipo de reporte</FormLabel>
                         <Select
@@ -177,13 +177,13 @@ export default function InformeDiarioAlmacenPanel() {
                         value={decimalSeparator}
                         onChange={setDecimalSeparator}
                     />
-                    <Box>
+                    <Stack direction={{ base: "column", sm: "row" }} spacing={3} align="stretch">
                         <Button
                             colorScheme="blue"
                             onClick={() => handleDownload("NUMERIC")}
                             isDisabled={!canDownload}
                             isLoading={downloadingMode === "NUMERIC"}
-                            mr={3}
+                            w={{ base: "full", sm: "auto" }}
                         >
                             Descargar Excel funcional
                         </Button>
@@ -193,10 +193,11 @@ export default function InformeDiarioAlmacenPanel() {
                             onClick={() => handleDownload("TEXT_DETERMINISTIC")}
                             isDisabled={!canDownload}
                             isLoading={downloadingMode === "TEXT_DETERMINISTIC"}
+                            w={{ base: "full", sm: "auto" }}
                         >
                             Descargar Excel para copiar
                         </Button>
-                    </Box>
+                    </Stack>
                 </VStack>
             </CardBody>
         </Card>

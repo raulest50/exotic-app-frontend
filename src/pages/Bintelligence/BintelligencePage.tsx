@@ -1,10 +1,11 @@
-import { Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
+import { Box, Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader.tsx";
 import InformesDiariosTab from "./InformesDiariosTab/InformesDiariosTab.tsx";
 import { my_style_tab } from "../../styles/styles_general.tsx";
 import TimeSeriesTab from "./TimeSeriesTab.tsx";
 import AprovisionamientoTab from "./AprovisionamientoTab/AprovisionamientoTab.tsx";
 import PersonalBiTab from "./PersonalBiTab/PersonalBiTab.tsx";
+import InformesGlobalesTab from "./InformesGlobalesTab.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
 import { moduleAccessRule, tabAccessRule } from "../../auth/accessHelpers.ts";
 import { useAccessSnapshot } from "../../auth/usePermissions";
@@ -15,6 +16,7 @@ export default function BintelligencePage() {
 
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
         { key: "informes-diarios", label: "Informes Diarios", render: () => <InformesDiariosTab />, accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "INFORMES_DIARIOS", 1) },
+        { key: "informes-globales", label: "Informes Globales", render: () => <InformesGlobalesTab />, accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "INFORMES_GLOBALES", 1) },
         { key: "series-tiempo", label: "Series De Tiempo y Proyecciones", render: () => <TimeSeriesTab />, accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "SERIES_TIEMPO_PROYECCIONES", 1) },
         { key: "personal", label: "Personal", render: () => <PersonalBiTab />, accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "PERSONAL", 1) },
         {
@@ -28,17 +30,34 @@ export default function BintelligencePage() {
     const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));
 
     return (
-        <Container minW={["auto", "container.lg", "container.xl"]} w={"full"} h={"full"}>
+        <Container
+            w="full"
+            maxW={{ base: "100%", xl: "container.xl", "2xl": "container.2xl" }}
+            px={{ base: 2, md: 4, xl: 6 }}
+            mx="auto"
+            h="full"
+        >
             <MyHeader title={"BI"} />
             <Tabs>
-                <TabList>
-                    {visibleTabs.map((tab) => (
-                        <Tab key={tab.key} sx={my_style_tab}>{tab.label}</Tab>
-                    ))}
-                </TabList>
+                <Box overflowX="auto" pb={1}>
+                    <TabList minW="max-content">
+                        {visibleTabs.map((tab) => (
+                            <Tab
+                                key={tab.key}
+                                sx={my_style_tab}
+                                flexShrink={0}
+                                whiteSpace="nowrap"
+                                fontSize={{ base: "sm", md: "md" }}
+                                px={{ base: 3, md: 4 }}
+                            >
+                                {tab.label}
+                            </Tab>
+                        ))}
+                    </TabList>
+                </Box>
                 <TabPanels>
                     {visibleTabs.map((tab) => (
-                        <TabPanel key={tab.key}>{tab.render()}</TabPanel>
+                        <TabPanel key={tab.key} px={{ base: 0, md: 4 }}>{tab.render()}</TabPanel>
                     ))}
                 </TabPanels>
             </Tabs>

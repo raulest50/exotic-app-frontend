@@ -122,7 +122,13 @@ export default function LeadTimesView({ selectedMaterial, selectedProveedor, fec
                                 {selectedProveedor?.nombre} | {selectedMaterial?.nombre}
                             </Text>
                         </Box>
-                        <Button colorScheme="blue" variant="outline" onClick={fetchMetric} isLoading={loading}>
+                        <Button
+                            colorScheme="blue"
+                            variant="outline"
+                            onClick={fetchMetric}
+                            isLoading={loading}
+                            w={{ base: "full", md: "auto" }}
+                        >
                             Refrescar
                         </Button>
                     </Flex>
