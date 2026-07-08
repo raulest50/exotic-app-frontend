@@ -138,14 +138,30 @@ export default function ResetPasswordPage() {
     };
 
     return (
-        <Container minW={['auto', 'container.md', 'container.md']} w={"full"} h={"full"}>
-            <Flex direction={"column"} gap={7} border={"0.5px solid gray"} borderRadius={"2em"} p={"4em"} alignItems={"center"}>
-                <Box boxSize={'3xs'}>
+        <Container
+            w="full"
+            maxW={{ base: "100%", md: "container.md" }}
+            px={{ base: 4, md: 6 }}
+            py={{ base: 6, md: 8 }}
+            minH="100vh"
+        >
+            <Flex
+                direction="column"
+                gap={{ base: 5, md: 7 }}
+                border="0.5px solid gray"
+                borderRadius={{ base: "xl", md: "2em" }}
+                p={{ base: 6, sm: 8, md: "4em" }}
+                alignItems="center"
+                w="full"
+            >
+                <Box boxSize={{ base: "8rem", sm: "10rem", md: "3xs" }}>
                     <Image src={'/logo_exotic.svg'} />
                 </Box>
-                <Heading>Restablecer Contraseña</Heading>
+                <Heading fontSize={{ base: "2xl", md: "3xl" }} textAlign="center">
+                    Restablecer Contraseña
+                </Heading>
 
-                <FormControl isRequired>
+                <FormControl isRequired w="full">
                     <FormLabel>Nueva Contraseña</FormLabel>
                     <Input
                         placeholder="Nueva contraseña"
@@ -164,7 +180,7 @@ export default function ResetPasswordPage() {
                     </Text>
                 </FormControl>
 
-                <FormControl isRequired>
+                <FormControl isRequired w="full">
                     <FormLabel>Confirmar Contraseña</FormLabel>
                     <Input
                         placeholder="Confirmar contraseña"
@@ -186,6 +202,7 @@ export default function ResetPasswordPage() {
                     isDisabled={!passwordsMatch || isSubmitting}
                     isLoading={isSubmitting}
                     loadingText="Procesando..."
+                    w={{ base: "full", sm: "auto" }}
                 >
                     Cambiar Contraseña
                 </Button>

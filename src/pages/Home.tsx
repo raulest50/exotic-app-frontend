@@ -3,10 +3,8 @@ import {
     Flex,
     Heading,
     Button,
-    Spacer,
     Container,
     Box,
-    HStack,
     Tooltip,
     IconButton,
     useColorMode,
@@ -115,42 +113,61 @@ export default function Home() {
     ];
 
     return (
-        <Container minW={["auto", "container.lg", "container.xl"]}>
-            <Flex pb={"0.2em"} direction={"row"} mb={"1em"} borderBottom={"0.04em solid"}>
-                <Spacer flex={1} />
-                <Heading flex={2} as={"h2"} size={"xl"} fontFamily={"Comfortaa Variable"}>
+        <Container
+            w="full"
+            maxW={{ base: "100%", xl: "container.xl", "2xl": "container.2xl" }}
+            px={{ base: 3, md: 5, xl: 6 }}
+            py={{ base: 3, md: 4 }}
+            mx="auto"
+        >
+            <Flex
+                pb="0.5em"
+                direction={{ base: "column", md: "row" }}
+                align={{ base: "stretch", md: "center" }}
+                justify="space-between"
+                gap={{ base: 3, md: 4 }}
+                mb="1em"
+                borderBottom="0.04em solid"
+            >
+                <Heading as="h2" size={{ base: "lg", md: "xl" }} fontFamily="Comfortaa Variable">
                     Inicio
                 </Heading>
-                <Spacer flex={2} />
-                <HStack spacing={2}>
+                <Flex gap={2} wrap="wrap" justify={{ base: "flex-start", md: "flex-end" }} align="center">
                     <Box
-                        transform="skewX(-20deg)"
-                        pl="1em"
-                        pr="1em"
+                        transform={{ base: "none", sm: "skewX(-20deg)" }}
+                        px={{ base: 2, md: "1em" }}
+                        py={{ base: 1, md: 0 }}
                         backgroundColor={versionBgColor}
-                        alignContent={"center"}
+                        alignContent="center"
+                        borderRadius={{ base: "md", sm: 0 }}
+                        maxW="full"
+                        overflow="hidden"
                     >
-                        <Box transform="skewX(10deg)">
-                            <SplitText text="Version: 3.0" />
+                        <Box transform={{ base: "none", sm: "skewX(10deg)" }}>
+                            <SplitText text="Version: 3.0" fontSize={{ base: "sm", md: "md", lg: "xl" }} />
                         </Box>
                     </Box>
 
                     <Box
-                        transform="skewX(-20deg)"
-                        pl="1em"
-                        pr="1em"
+                        transform={{ base: "none", sm: "skewX(-20deg)" }}
+                        px={{ base: 2, md: "1em" }}
+                        py={{ base: 1, md: 0 }}
                         backgroundColor={userBgColor}
-                        alignContent={"center"}
+                        alignContent="center"
+                        borderRadius={{ base: "md", sm: 0 }}
+                        maxW={{ base: "100%", md: "18rem" }}
+                        overflow="hidden"
                     >
-                        <Box transform="skewX(10deg)">
-                            <SplitText text={"Usuario : " + user} />
+                        <Box transform={{ base: "none", sm: "skewX(10deg)" }}>
+                            <SplitText text={"Usuario : " + user} fontSize={{ base: "sm", md: "md", lg: "xl" }} />
                         </Box>
                     </Box>
                     <Tooltip label="Actualizar notificaciones">
                         <Button
-                            size={"md"}
-                            colorScheme={"blue"}
-                            variant={"ghost"}
+                            display={{ base: "none", sm: "inline-flex" }}
+                            size="md"
+                            colorScheme="blue"
+                            variant="ghost"
                             onClick={refreshNotifications}
                             leftIcon={<MdRefresh />}
                             aria-label="Actualizar notificaciones"
@@ -158,22 +175,33 @@ export default function Home() {
                             Actualizar
                         </Button>
                     </Tooltip>
+                    <Tooltip label="Actualizar notificaciones">
+                        <IconButton
+                            display={{ base: "inline-flex", sm: "none" }}
+                            size="md"
+                            colorScheme="blue"
+                            variant="ghost"
+                            onClick={refreshNotifications}
+                            icon={<MdRefresh />}
+                            aria-label="Actualizar notificaciones"
+                        />
+                    </Tooltip>
                     <Tooltip label={colorMode === "light" ? "Modo oscuro" : "Modo claro"}>
                         <IconButton
-                            size={"md"}
+                            size="md"
                             aria-label="Toggle color mode"
                             icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
                             onClick={toggleColorMode}
-                            variant={"ghost"}
+                            variant="ghost"
                         />
                     </Tooltip>
-                    <Button size={"lg"} colorScheme={"green"} variant={"ghost"} onClick={logout}>
+                    <Button size="md" colorScheme="green" variant="ghost" onClick={logout}>
                         Cerrar Sesion
                     </Button>
-                </HStack>
+                </Flex>
             </Flex>
 
-            <SimpleGrid columns={[1, 1, 2, 3, 4]} gap={"0.5em"} rowGap={"1.5em"}>
+            <SimpleGrid columns={{ base: 1, sm: 2, lg: 3, xl: 4 }} gap={{ base: 3, md: "0.5em" }} rowGap={{ base: 3, md: "1.5em" }}>
                 {cards
                     .filter((card) => card.accesoValido(access))
                     .map((card) => (

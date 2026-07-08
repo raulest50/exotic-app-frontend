@@ -54,8 +54,10 @@ const FormularioLogin: React.FC<FormularioLoginProps> = ({
                                                          }) => {
     return (
         <>
-            <Heading>Login Panel</Heading>
-            <FormControl isRequired>
+            <Heading fontSize={{ base: "2xl", md: "3xl" }} textAlign="center">
+                Login Panel
+            </Heading>
+            <FormControl isRequired w="full">
                 <FormLabel>Usuario</FormLabel>
                 <Input
                     placeholder="username"
@@ -64,7 +66,7 @@ const FormularioLogin: React.FC<FormularioLoginProps> = ({
                     isDisabled={isLoading}
                 />
             </FormControl>
-            <FormControl isRequired>
+            <FormControl isRequired w="full">
                 <FormLabel>Contraseña</FormLabel>
                 <Input
                     placeholder="password"
@@ -82,6 +84,7 @@ const FormularioLogin: React.FC<FormularioLoginProps> = ({
                 isLoading={isLoading}
                 loadingText="Iniciando sesión"
                 spinnerPlacement="start"
+                w={{ base: "full", sm: "auto" }}
             >
                 Login
             </Button>
@@ -113,8 +116,10 @@ const FormularioForgot: React.FC<FormularioForgotProps> = ({
     const [email, setEmail] = useState('');
     return (
         <>
-            <Heading>Recuperar Contraseña</Heading>
-            <FormControl isRequired>
+            <Heading fontSize={{ base: "2xl", md: "3xl" }} textAlign="center">
+                Recuperar Contraseña
+            </Heading>
+            <FormControl isRequired w="full">
                 <FormLabel>Correo Electrónico</FormLabel>
                 <Input
                     placeholder="correo@ejemplo.com"
@@ -132,6 +137,7 @@ const FormularioForgot: React.FC<FormularioForgotProps> = ({
                 isLoading={isLoading}
                 loadingText="Enviando correo"
                 spinnerPlacement="start"
+                w={{ base: "full", sm: "auto" }}
             >
                 Enviar
             </Button>
@@ -255,7 +261,8 @@ export default function LoginPanel() {
             w="100vw"
             mx="calc(50% - 50vw)"
             minH="100vh"
-            overflow="hidden"
+            overflowX="hidden"
+            overflowY="auto"
             isolation="isolate"
             bg={pageBg}
             backgroundImage={pageBackgroundImage}
@@ -266,15 +273,17 @@ export default function LoginPanel() {
             <Container
                 position="relative"
                 zIndex={1}
-                minW={['auto', 'container.md', 'container.md']}
-                w={"full"}
-                minH={"100vh"}
-                bg={"transparent"}
+                w="full"
+                maxW={{ base: "100%", md: "container.md" }}
+                px={{ base: 4, md: 6 }}
+                minH="100vh"
+                bg="transparent"
             >
                 <Flex align="flex-start" justify="center" minH="100%" pt={{ base: 8, md: 12 }} pb={8} w="full">
                     <Box
                         w="100%"
-                        minH={['70vh', '75vh', '78vh']}
+                        maxW="container.sm"
+                        minH={{ base: "auto", md: "75vh", lg: "78vh" }}
                         display="flex"
                         flexDirection="column"
                     >
@@ -291,8 +300,16 @@ export default function LoginPanel() {
                             coneSpread={25}
                             style={{ flex: 1, width: '100%', minWidth: 0 }}
                         >
-                            <Flex direction={"column"} gap={7} p={"4em"} alignItems={"center"} justifyContent="flex-start" flex={1}>
-                                <Box boxSize="16.8rem">
+                            <Flex
+                                direction="column"
+                                gap={{ base: 5, md: 7 }}
+                                p={{ base: 6, sm: 8, md: "4em" }}
+                                alignItems="center"
+                                justifyContent="flex-start"
+                                flex={1}
+                                minW={0}
+                            >
+                                <Box boxSize={{ base: "9rem", sm: "12rem", md: "16.8rem" }}>
                                     <Image src={'/logo_exotic.svg'} />
                                 </Box>
                                 {viewMode === 'login' ? (

@@ -45,19 +45,6 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
         isRedCard ? "red.400" : "blue.400"
     );
 
-    const cardStyle = {
-        p: "2em",
-        m: "1em",
-        bg: cardBg,
-        ":hover": {
-            bg: cardHoverBg,
-        },
-        ":active": {
-            bg: cardActiveBg,
-        },
-        position: "relative",
-    };
-
     const handleNotificationClick = (e: MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         e.stopPropagation();
@@ -103,7 +90,7 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
                         zIndex={1}
                     />
                 </PopoverTrigger>
-                <PopoverContent>
+                <PopoverContent maxW={{ base: "calc(100vw - 2rem)", sm: "sm" }}>
                     <PopoverArrow />
                     <PopoverBody>{notification.message}</PopoverBody>
                 </PopoverContent>
@@ -114,16 +101,32 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
     return (
         <>
             <NavLink to={to}>
-                <Card h={"full"} sx={cardStyle}>
+                <Card
+                    h="full"
+                    p={{ base: 4, md: 6, lg: "2em" }}
+                    m={{ base: 0, md: 2, lg: "1em" }}
+                    bg={cardBg}
+                    _hover={{ bg: cardHoverBg }}
+                    _active={{ bg: cardActiveBg }}
+                    position="relative"
+                    minH={{ base: "8.5rem", md: "10rem" }}
+                >
                     {notificationBell}
 
-                    <CardHeader h={"40%"} borderBottom="0.1em solid" alignContent={"center"}>
-                        <Heading as={"h2"} size={"sm"} fontFamily={"Comfortaa Variable"}>
+                    <CardHeader
+                        h={{ base: "auto", md: "40%" }}
+                        minH={{ base: "3.25rem", md: "4rem" }}
+                        borderBottom="0.1em solid"
+                        alignContent="center"
+                        px={0}
+                        pt={0}
+                    >
+                        <Heading as="h2" size={{ base: "xs", md: "sm" }} fontFamily="Comfortaa Variable" noOfLines={2}>
                             {name}
                         </Heading>
                     </CardHeader>
-                    <CardBody>
-                        <Icon boxSize={"4em"} as={icon} />
+                    <CardBody display="flex" alignItems="center" justifyContent="center" px={0} pb={0}>
+                        <Icon boxSize={{ base: "2.75em", md: "4em" }} as={icon} />
                     </CardBody>
                 </Card>
             </NavLink>
