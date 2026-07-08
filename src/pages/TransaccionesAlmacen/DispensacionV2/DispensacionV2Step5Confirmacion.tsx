@@ -23,15 +23,13 @@ import {
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { finalizarDispensacionV2 } from "./DispensacionV2Service";
-import type {
-    DispensacionV2FinalizacionResponseDTO,
-    DispensacionV2PreparacionResponseDTO,
-} from "./DispensacionV2Types";
+import type { DispensacionV2PreparacionResponseDTO } from "./DispensacionV2Types";
 import { formatDispensacionV2Number } from "./DispensacionV2Types";
 
 interface DispensacionV2Step5ConfirmacionProps {
     asignacion: DispensacionV2PreparacionResponseDTO;
     onBack: () => void;
+    onSuccess: () => void;
 }
 
 function generateToken(): string {
@@ -51,11 +49,11 @@ function getAxiosErrorMessage(error: unknown, fallback: string): string {
 export default function DispensacionV2Step5Confirmacion({
     asignacion,
     onBack,
+    onSuccess,
 }: DispensacionV2Step5ConfirmacionProps) {
     const [token, setToken] = useState(generateToken);
     const [inputToken, setInputToken] = useState("");
     const [submitting, setSubmitting] = useState(false);
-    const [resultado, setResultado] = useState<DispensacionV2FinalizacionResponseDTO | null>(null);
     const [error, setError] = useState<string | null>(null);
     const toast = useToast();
 
@@ -68,11 +66,10 @@ export default function DispensacionV2Step5Confirmacion({
         setToken(generateToken());
         setInputToken("");
         setSubmitting(false);
-        setResultado(null);
         setError(null);
     }, [asignacionKey]);
 
-    const canConfirm = inputToken === token && !resultado && !submitting;
+    const canConfirm = inputToken === token && !submitting;
 
     const handleConfirm = async () => {
         if (!canConfirm) return;
@@ -80,7 +77,6 @@ export default function DispensacionV2Step5Confirmacion({
         setError(null);
         try {
             const response = await finalizarDispensacionV2(asignacion);
-            setResultado(response);
             toast({
                 title: "Dispensación registrada",
                 description: `Se registraron ${response.ordenes.length} OPs correctamente.`,
@@ -88,9 +84,11 @@ export default function DispensacionV2Step5Confirmacion({
                 duration: 5000,
                 isClosable: true,
             });
+            onSuccess();
         } catch (err) {
             const message = getAxiosErrorMessage(err, "No fue posible registrar la dispensacion v2.");
             setError(message);
+            setSubmitting(false);
             toast({
                 title: "Error al registrar",
                 description: message,
@@ -98,8 +96,6 @@ export default function DispensacionV2Step5Confirmacion({
                 duration: 6000,
                 isClosable: true,
             });
-        } finally {
-            setSubmitting(false);
         }
     };
 
@@ -118,9 +114,6 @@ export default function DispensacionV2Step5Confirmacion({
                         <Badge colorScheme={asignacion.warnings.length > 0 ? "orange" : "green"}>
                             {asignacion.warnings.length} warnings
                         </Badge>
-                        {resultado ? (
-                            <Badge colorScheme="green">{resultado.ordenes.length} registradas</Badge>
-                        ) : null}
                     </Flex>
                 </Flex>
             </Box>
@@ -152,33 +145,40 @@ export default function DispensacionV2Step5Confirmacion({
                             </Tr>
                         </Thead>
                         <Tbody>
-                            {asignacion.totalesMateriales.map((material) => (
-                                <Tr key={material.productoId}>
-                                    <Td>
-                                        <Text fontWeight="semibold" fontSize="sm">{material.productoNombre}</Text>
-                                        <Text fontSize="xs" color="app.textMuted">{material.productoId}</Text>
-                                    </Td>
-                                    <Td isNumeric>
-                                        {formatDispensacionV2Number(material.cantidadADispensarTotal)} {material.tipoUnidades}
-                                    </Td>
-                                    <Td isNumeric>
-                                        {formatDispensacionV2Number(material.cantidadHistoricaTotal)} {material.tipoUnidades}
-                                    </Td>
-                                    <Td isNumeric>
-                                        {formatDispensacionV2Number(material.totalConHistorico)} {material.tipoUnidades}
-                                    </Td>
-                                    <Td isNumeric>
-                                        {formatDispensacionV2Number(material.cantidadRecetaTotal)} {material.tipoUnidades}
-                                    </Td>
-                                    <Td>
-                                        {material.warning ? (
-                                            <Badge colorScheme="orange" whiteSpace="normal">{material.warning}</Badge>
-                                        ) : (
-                                            <Badge colorScheme="green">OK</Badge>
-                                        )}
-                                    </Td>
-                                </Tr>
-                            ))}
+                            {asignacion.totalesMateriales.map((material) => {
+                                const seDispensa = material.cantidadADispensarTotal > 0;
+                                const rowBg = material.warning ? "orange.50" : seDispensa ? "teal.50" : undefined;
+                                return (
+                                    <Tr key={material.productoId} sx={rowBg ? { "> td": { bg: rowBg } } : undefined}>
+                                        <Td>
+                                            <Flex align="center" gap={2} wrap="wrap">
+                                                <Text fontWeight="semibold" fontSize="sm">{material.productoNombre}</Text>
+                                                {seDispensa ? <Badge colorScheme="teal">Dispensa</Badge> : null}
+                                            </Flex>
+                                            <Text fontSize="xs" color="app.textMuted">{material.productoId}</Text>
+                                        </Td>
+                                        <Td isNumeric>
+                                            {formatDispensacionV2Number(material.cantidadADispensarTotal)} {material.tipoUnidades}
+                                        </Td>
+                                        <Td isNumeric>
+                                            {formatDispensacionV2Number(material.cantidadHistoricaTotal)} {material.tipoUnidades}
+                                        </Td>
+                                        <Td isNumeric>
+                                            {formatDispensacionV2Number(material.totalConHistorico)} {material.tipoUnidades}
+                                        </Td>
+                                        <Td isNumeric>
+                                            {formatDispensacionV2Number(material.cantidadRecetaTotal)} {material.tipoUnidades}
+                                        </Td>
+                                        <Td>
+                                            {material.warning ? (
+                                                <Badge colorScheme="orange" whiteSpace="normal">{material.warning}</Badge>
+                                            ) : (
+                                                <Badge colorScheme="green">OK</Badge>
+                                            )}
+                                        </Td>
+                                    </Tr>
+                                );
+                            })}
                         </Tbody>
                     </Table>
                 </TableContainer>
@@ -193,7 +193,7 @@ export default function DispensacionV2Step5Confirmacion({
                         placeholder="Ingrese el token"
                         inputMode="numeric"
                         maxLength={4}
-                        isDisabled={submitting || Boolean(resultado)}
+                        isDisabled={submitting}
                     />
                     <Text mt={2} fontSize="sm" color="app.textMuted">
                         Token generado: <strong>{token}</strong>
@@ -211,43 +211,8 @@ export default function DispensacionV2Step5Confirmacion({
                 </Alert>
             ) : null}
 
-            {resultado ? (
-                <Alert status="success" borderRadius="md">
-                    <AlertIcon />
-                    Dispensación registrada correctamente para {resultado.ordenes.length} OPs.
-                </Alert>
-            ) : null}
-
-            {resultado ? (
-                <Box borderWidth="1px" borderRadius="md" bg="app.surface" p={4}>
-                    <Heading size="sm" mb={3}>Transacciones registradas</Heading>
-                    <TableContainer>
-                        <Table size="sm" variant="simple">
-                            <Thead>
-                                <Tr>
-                                    <Th>OP</Th>
-                                    <Th>Lote producción</Th>
-                                    <Th>Transacción</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
-                                {resultado.ordenes.map((orden) => (
-                                    <Tr key={orden.ordenProduccionId}>
-                                        <Td>{orden.ordenProduccionId}</Td>
-                                        <Td>{orden.loteAsignado ?? "-"}</Td>
-                                        <Td>
-                                            <Badge colorScheme="teal">#{orden.transaccionId}</Badge>
-                                        </Td>
-                                    </Tr>
-                                ))}
-                            </Tbody>
-                        </Table>
-                    </TableContainer>
-                </Box>
-            ) : null}
-
             <Flex justify="flex-end" gap={3}>
-                <Button variant="outline" onClick={onBack} isDisabled={submitting || Boolean(resultado)}>
+                <Button variant="outline" onClick={onBack} isDisabled={submitting}>
                     Atrás
                 </Button>
                 <Button

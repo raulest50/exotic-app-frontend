@@ -113,6 +113,15 @@ export default function DispensacionV2Tab() {
         handleSelectedOrdenesChange([...selectedOrdenes, ...nextOrdenes]);
     }, [handleSelectedOrdenesChange, selectedOrdenes]);
 
+    const handleFinalizacionSuccess = useCallback(() => {
+        setSelectedArea(null);
+        setSelectedMpsItem(null);
+        setSelectedOrdenes([]);
+        setMaterialesReceta(null);
+        setAsignacion(null);
+        setActiveStep(0);
+    }, []);
+
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <Flex direction="column" gap={4}>
@@ -187,6 +196,7 @@ export default function DispensacionV2Tab() {
                     <DispensacionV2Step5Confirmacion
                         asignacion={asignacion}
                         onBack={goToStep4}
+                        onSuccess={handleFinalizacionSuccess}
                     />
                 )}
             </Flex>
