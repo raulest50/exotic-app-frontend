@@ -196,6 +196,8 @@ export default class EndPointsURL{
     // integrantes de personal
     public save_integrante_personal: string;
     public search_integrantes_personal: string;
+    public integrante_personal_by_id: string;
+    public update_integrante_personal: string;
     public personal_horas_extra_search: string;
     public personal_horas_extra_registrar: string;
     public personal_hora_extra_aprobar: string;
@@ -810,6 +812,8 @@ export default class EndPointsURL{
         // integrantes de personal endpoints
         this.save_integrante_personal = `${domain}/${personal_res}/save`;
         this.search_integrantes_personal = `${domain}/${personal_res}/search`;
+        this.integrante_personal_by_id = `${domain}/${personal_res}/{id}`;
+        this.update_integrante_personal = `${domain}/${personal_res}/{id}`;
         this.personal_horas_extra_search = `${domain}/${personal_res}/horas-extra`;
         this.personal_horas_extra_registrar = `${domain}/${personal_res}/{integranteId}/horas-extra`;
         this.personal_hora_extra_aprobar = `${domain}/${personal_res}/horas-extra/{id}/aprobar`;

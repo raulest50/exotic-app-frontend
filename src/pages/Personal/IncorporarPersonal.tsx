@@ -13,7 +13,14 @@ import {
     Container
 } from '@chakra-ui/react';
 import axios, { AxiosError } from 'axios';
-import { EstadoIntegrante, IntegrantePersonal } from './types';
+import {
+    DepartamentoIntegrante,
+    EstadoCivil,
+    EstadoIntegrante,
+    getEstadoCivilText,
+    IntegrantePersonalDetalle,
+    IntegrantePersonalRequest,
+} from './types';
 import EndPointsURL from "../../api/EndPointsURL.tsx";
 
 export function IncorporarPersonal() {
@@ -24,13 +31,20 @@ export function IncorporarPersonal() {
     const [celular, setCelular] = useState('');
     const [direccion, setDireccion] = useState('');
     const [email, setEmail] = useState('');
+    const [nombreContactoEmergencia, setNombreContactoEmergencia] = useState('');
+    const [celularContactoEmergencia, setCelularContactoEmergencia] = useState('');
+    const [estadoCivil, setEstadoCivil] = useState<EstadoCivil | ''>('');
+    const [numeroHijos, setNumeroHijos] = useState('');
 
     // Work information
     const [cargo, setCargo] = useState('');
-    const [departamento, setDepartamento] = useState<'PRODUCCION' | 'ADMINISTRATIVO' | ''>('');
+    const [departamento, setDepartamento] = useState<DepartamentoIntegrante | ''>('');
     const [centroDeCosto, setCentroDeCosto] = useState('');
     const [centroDeProduccion, setCentroDeProduccion] = useState('');
     const [salario, setSalario] = useState('');
+    const [fechaIngreso, setFechaIngreso] = useState('');
+    const [numeroCuentaBancaria, setNumeroCuentaBancaria] = useState('');
+    const [banco, setBanco] = useState('');
 
     const toast = useToast();
 
@@ -45,16 +59,31 @@ export function IncorporarPersonal() {
             !nombres.trim() ||
             !apellidos.trim() ||
             !celular.trim() ||
-            !direccion.trim()
+            !direccion.trim() ||
+            !fechaIngreso
         ) {
             toast({
                 title: 'Campos obligatorios faltantes',
-                description: 'Complete Cédula, Nombres, Apellidos, Celular y Dirección.',
+                description: 'Complete Cédula, Nombres, Apellidos, Celular, Dirección y Fecha de ingreso.',
                 status: 'warning',
                 duration: 5000,
                 isClosable: true,
             });
             return false;
+        }
+
+        if (numeroHijos.trim()) {
+            const hijos = Number(numeroHijos);
+            if (!Number.isInteger(hijos) || hijos < 0) {
+                toast({
+                    title: 'Número de hijos inválido',
+                    description: 'El número de hijos debe ser un entero mayor o igual a cero.',
+                    status: 'error',
+                    duration: 5000,
+                    isClosable: true,
+                });
+                return false;
+            }
         }
 
         // Validate ID (cédula): only digits
@@ -76,6 +105,17 @@ export function IncorporarPersonal() {
             toast({
                 title: 'Celular inválido',
                 description: 'El celular debe ser válido (mínimo 7 dígitos, opcionalmente con +).',
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+            return false;
+        }
+
+        if (celularContactoEmergencia.trim() && !phoneRegex.test(celularContactoEmergencia.trim())) {
+            toast({
+                title: 'Celular de emergencia inválido',
+                description: 'El celular de emergencia debe ser válido (mínimo 7 dígitos, opcionalmente con +).',
                 status: 'error',
                 duration: 5000,
                 isClosable: true,
@@ -123,13 +163,20 @@ export function IncorporarPersonal() {
         const endpoints = new EndPointsURL();
 
         // Construir el payload
-        const nuevo: IntegrantePersonal = {
+        const nuevo: IntegrantePersonalRequest = {
             id: Number(id),
             nombres: nombres.trim(),
             apellidos: apellidos.trim(),
             celular: celular.trim(),
             direccion: direccion.trim(),
             email: email.trim() || undefined,
+            nombreContactoEmergencia: nombreContactoEmergencia.trim() || undefined,
+            celularContactoEmergencia: celularContactoEmergencia.trim() || undefined,
+            estadoCivil: estadoCivil || undefined,
+            numeroHijos: numeroHijos ? Number(numeroHijos) : undefined,
+            fechaIngreso,
+            numeroCuentaBancaria: numeroCuentaBancaria.trim() || undefined,
+            banco: banco.trim() || undefined,
             cargo: cargo.trim() || undefined,
             departamento: departamento || undefined,
             centroDeCosto: centroDeCosto.trim() || undefined,
@@ -147,7 +194,7 @@ export function IncorporarPersonal() {
                 headers: { 'Content-Type': 'application/json' }
             });
 
-            const creado: IntegrantePersonal = response.data;
+            const creado: IntegrantePersonalDetalle = response.data;
             toast({
                 title: 'Registro exitoso',
                 description: `Integrante ${creado.nombres} ${creado.apellidos} registrado con ID ${creado.id}.`,
@@ -195,11 +242,18 @@ export function IncorporarPersonal() {
         setCelular('');
         setDireccion('');
         setEmail('');
+        setNombreContactoEmergencia('');
+        setCelularContactoEmergencia('');
+        setEstadoCivil('');
+        setNumeroHijos('');
         setCargo('');
         setDepartamento('');
         setCentroDeCosto('');
         setCentroDeProduccion('');
         setSalario('');
+        setFechaIngreso('');
+        setNumeroCuentaBancaria('');
+        setBanco('');
     }
 
     return (
@@ -278,6 +332,56 @@ export function IncorporarPersonal() {
                                 />
                             </FormControl>
                         </GridItem>
+
+                        <GridItem>
+                            <FormControl>
+                                <FormLabel>Contacto de emergencia</FormLabel>
+                                <Input
+                                    value={nombreContactoEmergencia}
+                                    onChange={(e) => setNombreContactoEmergencia(e.target.value)}
+                                    placeholder="Nombre del contacto"
+                                />
+                            </FormControl>
+                        </GridItem>
+
+                        <GridItem>
+                            <FormControl>
+                                <FormLabel>Celular de emergencia</FormLabel>
+                                <Input
+                                    value={celularContactoEmergencia}
+                                    onChange={(e) => setCelularContactoEmergencia(e.target.value)}
+                                    placeholder="Celular del contacto"
+                                />
+                            </FormControl>
+                        </GridItem>
+
+                        <GridItem>
+                            <FormControl>
+                                <FormLabel>Estado civil</FormLabel>
+                                <Select
+                                    placeholder="Seleccione estado civil"
+                                    value={estadoCivil}
+                                    onChange={(e) => setEstadoCivil(e.target.value as EstadoCivil | '')}
+                                >
+                                    {Object.values(EstadoCivil).map((item) => (
+                                        <option key={item} value={item}>{getEstadoCivilText(item)}</option>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </GridItem>
+
+                        <GridItem>
+                            <FormControl>
+                                <FormLabel>Número de hijos</FormLabel>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    value={numeroHijos}
+                                    onChange={(e) => setNumeroHijos(e.target.value)}
+                                    placeholder="Sin informar"
+                                />
+                            </FormControl>
+                        </GridItem>
                     </Grid>
 
                     {/* Work Information Section */}
@@ -303,11 +407,22 @@ export function IncorporarPersonal() {
                                 <Select
                                     placeholder="Seleccione departamento"
                                     value={departamento}
-                                    onChange={(e) => setDepartamento(e.target.value as 'PRODUCCION' | 'ADMINISTRATIVO' | '')}
+                                    onChange={(e) => setDepartamento(e.target.value as DepartamentoIntegrante | '')}
                                 >
                                     <option value="PRODUCCION">Producción</option>
                                     <option value="ADMINISTRATIVO">Administrativo</option>
                                 </Select>
+                            </FormControl>
+                        </GridItem>
+
+                        <GridItem>
+                            <FormControl isRequired>
+                                <FormLabel>Fecha de ingreso</FormLabel>
+                                <Input
+                                    type="date"
+                                    value={fechaIngreso}
+                                    onChange={(e) => setFechaIngreso(e.target.value)}
+                                />
                             </FormControl>
                         </GridItem>
 
@@ -345,6 +460,34 @@ export function IncorporarPersonal() {
                             </FormControl>
                         </GridItem>
 
+                    </Grid>
+
+                    <Grid templateColumns={['1fr', 'repeat(2, 1fr)']} gap={4} p="1em" boxShadow="base">
+                        <GridItem colSpan={[1, 2]}>
+                            <FormLabel fontSize="lg" fontWeight="bold">Información Bancaria</FormLabel>
+                        </GridItem>
+
+                        <GridItem>
+                            <FormControl>
+                                <FormLabel>Número de cuenta</FormLabel>
+                                <Input
+                                    value={numeroCuentaBancaria}
+                                    onChange={(e) => setNumeroCuentaBancaria(e.target.value)}
+                                    placeholder="Número de cuenta bancaria"
+                                />
+                            </FormControl>
+                        </GridItem>
+
+                        <GridItem>
+                            <FormControl>
+                                <FormLabel>Banco</FormLabel>
+                                <Input
+                                    value={banco}
+                                    onChange={(e) => setBanco(e.target.value)}
+                                    placeholder="Entidad bancaria"
+                                />
+                            </FormControl>
+                        </GridItem>
                     </Grid>
 
                     {/* Buttons Section */}

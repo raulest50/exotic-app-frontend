@@ -28,44 +28,85 @@ export enum TipoDocTran {
     OTRO = 'OTRO'
 }
 
-export interface IntegrantePersonal {
-    // ID (cédula)
-    id: number;
+export type DepartamentoIntegrante = 'PRODUCCION' | 'ADMINISTRATIVO';
 
-    // Información personal
+export interface IntegrantePersonalResumen {
+    id: number;
+    nombres: string;
+    apellidos: string;
+    cargo?: string;
+    departamento?: DepartamentoIntegrante;
+    centroDeCosto?: string;
+    centroDeProduccion?: string;
+    salario?: number;
+    estado?: EstadoIntegrante;
+    fechaIngreso?: string;
+}
+
+export interface IntegrantePersonalDetalle extends IntegrantePersonalResumen {
+    celular: string;
+    direccion: string;
+    email?: string;
+    nombreContactoEmergencia?: string;
+    celularContactoEmergencia?: string;
+    estadoCivil?: EstadoCivil;
+    numeroHijos?: number;
+    numeroCuentaBancaria?: string;
+    banco?: string;
+    fechaRegistro?: string;
+}
+
+export interface IntegrantePersonalRequest {
+    id?: number;
     nombres: string;
     apellidos: string;
     celular: string;
     direccion: string;
     email?: string;
-
-    // Información laboral
+    nombreContactoEmergencia?: string;
+    celularContactoEmergencia?: string;
+    estadoCivil?: EstadoCivil;
+    numeroHijos?: number;
+    fechaIngreso: string;
+    numeroCuentaBancaria?: string;
+    banco?: string;
     cargo?: string;
-    departamento?: 'PRODUCCION' | 'ADMINISTRATIVO';
+    departamento?: DepartamentoIntegrante;
     centroDeCosto?: string;
     centroDeProduccion?: string;
-
-    // Salario en COP
     salario?: number;
-
-    // Estado del integrante
     estado?: EstadoIntegrante;
-
-    // Documentos asociados
-    documentos?: DocTranDePersonal[];
-
-    // Referencia a otro integrante
-    idIntegrante?: IntegrantePersonal;
 }
+
+export type IntegrantePersonal = IntegrantePersonalResumen;
 
 export enum EstadoIntegrante {
     ACTIVO = 'ACTIVO',
     INACTIVO = 'INACTIVO'
 }
 
+export enum EstadoCivil {
+    SOLTERO = 'SOLTERO',
+    CASADO = 'CASADO',
+    UNION_LIBRE = 'UNION_LIBRE',
+    SEPARADO = 'SEPARADO',
+    DIVORCIADO = 'DIVORCIADO',
+    VIUDO = 'VIUDO'
+}
+
 export function getEstadoIntegranteText(estado?: EstadoIntegrante) {
     if (estado === EstadoIntegrante.ACTIVO) return 'Activo';
     if (estado === EstadoIntegrante.INACTIVO) return 'Inactivo';
+    return '';
+}
+
+export function getEstadoCivilText(estado?: EstadoCivil) {
+    if (estado === EstadoCivil.SOLTERO) return 'Soltero';
+    if (estado === EstadoCivil.CASADO) return 'Casado';
+    if (estado === EstadoCivil.UNION_LIBRE) return 'Unión libre';
+    if (estado === EstadoCivil.SEPARADO) return 'Separado';
+    if (estado === EstadoCivil.DIVORCIADO) return 'Divorciado';
+    if (estado === EstadoCivil.VIUDO) return 'Viudo';
     return '';
 }
 
