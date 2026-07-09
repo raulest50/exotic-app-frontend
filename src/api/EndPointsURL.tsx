@@ -106,6 +106,7 @@ export default class EndPointsURL{
     public ingreso_terminados_plantilla: string;
     public ingreso_terminados_validar: string;
     public ingreso_terminados_registrar_masivo: string;
+    public ingreso_terminados_reporte_hyl: string;
 
     // recursos de produccion
     public save_recurso_produccion:string;
@@ -749,6 +750,7 @@ export default class EndPointsURL{
         this.ingreso_terminados_plantilla = `${domain}/${ingresos_terminados_res}/plantilla`;
         this.ingreso_terminados_validar = `${domain}/${ingresos_terminados_res}/validar`;
         this.ingreso_terminados_registrar_masivo = `${domain}/${ingresos_terminados_res}/registrar-masivo`;
+        this.ingreso_terminados_reporte_hyl = `${domain}/${ingresos_terminados_res}/reporte-hyl`;
 
         // recursos de produccion endpoints
         this.save_recurso_produccion = `${domain}/${recursos_produccion_res}`;
