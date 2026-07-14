@@ -7,12 +7,13 @@ import {
     Button,
     Card,
     CardBody,
+    Divider,
     FormControl,
     FormHelperText,
     FormLabel,
+    Heading,
     HStack,
     Input,
-    Progress,
     Select,
     SimpleGrid,
     Spinner,
@@ -22,15 +23,8 @@ import {
     StatHelpText,
     StatLabel,
     StatNumber,
-    Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
     Tooltip,
-    Tr,
     useBreakpointValue,
     useToast,
 } from "@chakra-ui/react";
@@ -41,11 +35,14 @@ import EndPointsURL from "../../api/EndPointsURL.tsx";
 
 type ModoFechaInformeGlobal = "fecha_unica" | "rango";
 
-interface InformeGlobalProduccion {
+interface InformePeriodo {
     fechaDesde: string;
     fechaHasta: string;
     modoFecha: "FECHA_UNICA" | "RANGO";
     diasRango: number;
+}
+
+interface InformeGlobalProduccion extends InformePeriodo {
     mpsIds: number[];
     resumen: InformeGlobalResumen;
     consolidadoCategorias: ConsolidadoCategoria[];
@@ -99,10 +96,74 @@ interface DetalleReferencia {
     noPlaneado: boolean;
 }
 
+interface InformeGlobalAlmacen extends InformePeriodo {
+    resumen: ResumenAlmacen;
+    cantidadesPorUnidad: CantidadPorUnidad[];
+    serieDiaria: SerieDiariaAlmacen[];
+    consolidadoTipoMaterial: ConsolidadoTipoMaterial[];
+    topMateriales: TopMaterial[];
+    notas: NotaInforme[];
+}
+
+interface ResumenAlmacen {
+    valorIngresosEstimado: number;
+    valorDispensacionesEstimado: number;
+    balanceValorEstimado: number;
+    movimientosIngreso: number;
+    movimientosDispensacion: number;
+    materialesIngresados: number;
+    materialesDispensados: number;
+    materialesConCosto: number;
+    materialesSinCosto: number;
+    coberturaCostosPct?: number | null;
+}
+
+interface CantidadPorUnidad {
+    unidadMedida: string;
+    cantidadIngresada: number;
+    cantidadDispensada: number;
+    balanceNeto: number;
+}
+
+interface SerieDiariaAlmacen {
+    fecha: string;
+    valorIngresosEstimado: number;
+    valorDispensacionesEstimado: number;
+    movimientosIngreso: number;
+    movimientosDispensacion: number;
+}
+
+interface ConsolidadoTipoMaterial {
+    tipoMaterial: string;
+    valorIngresosEstimado: number;
+    valorDispensacionesEstimado: number;
+    movimientos: number;
+    cantidadesPorUnidad: CantidadPorUnidad[];
+}
+
+interface TopMaterial {
+    productoId: string;
+    productoNombre: string;
+    tipoMaterial: string;
+    unidadMedida: string;
+    cantidadIngresada: number;
+    cantidadDispensada: number;
+    valorIngresosEstimado: number;
+    valorDispensacionesEstimado: number;
+    impactoValorEstimado: number;
+    costoDisponible: boolean;
+}
+
 interface NotaInforme {
     tipo: "INFO" | "WARNING" | string;
     mensaje: string;
 }
+
+type InformeGlobalParams = {
+    fecha?: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
+};
 
 const endPoints = new EndPointsURL();
 const MAX_RANGE_DAYS = 31;
@@ -125,17 +186,23 @@ export default function InformesGlobalesTab() {
     const [fecha, setFecha] = useState(getTodayIsoDate());
     const [fechaDesde, setFechaDesde] = useState(getCurrentMonthStartIsoDate());
     const [fechaHasta, setFechaHasta] = useState(getTodayIsoDate());
-    const [reporte, setReporte] = useState<InformeGlobalProduccion | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [reporteProduccion, setReporteProduccion] = useState<InformeGlobalProduccion | null>(null);
+    const [reporteAlmacen, setReporteAlmacen] = useState<InformeGlobalAlmacen | null>(null);
+    const [loadingProduccion, setLoadingProduccion] = useState(false);
+    const [loadingAlmacen, setLoadingAlmacen] = useState(false);
+    const [errorProduccion, setErrorProduccion] = useState<string | null>(null);
+    const [errorAlmacen, setErrorAlmacen] = useState<string | null>(null);
 
     const isMobile = useBreakpointValue({ base: true, lg: false }) ?? false;
-    const chartHeight = useBreakpointValue({ base: 340, md: 420 }) ?? 420;
+    const productionChartHeight = useBreakpointValue({ base: 310, md: 420 }) ?? 420;
+    const warehouseChartHeight = useBreakpointValue({ base: 290, md: 360 }) ?? 360;
     const rangeDays = modoFecha === "rango" ? getRangeDaysInclusive(fechaDesde, fechaHasta) : 1;
     const rangeInvalid = modoFecha === "rango" && Boolean(fechaDesde && fechaHasta && fechaDesde > fechaHasta);
     const rangeTooLong = modoFecha === "rango" && rangeDays > MAX_RANGE_DAYS;
     const canQuery = modoFecha === "fecha_unica"
         ? Boolean(fecha)
         : Boolean(fechaDesde && fechaHasta && !rangeInvalid && !rangeTooLong);
+    const isLoading = loadingProduccion || loadingAlmacen;
 
     const fetchData = async () => {
         if (!canQuery) {
@@ -149,28 +216,46 @@ export default function InformesGlobalesTab() {
             return;
         }
 
-        setLoading(true);
-        try {
-            const params = modoFecha === "fecha_unica"
-                ? { fecha }
-                : { fechaDesde, fechaHasta };
-            const response = await axios.get<InformeGlobalProduccion>(
-                endPoints.biInformesGlobalesProduccion(params)
-            );
-            setReporte(response.data);
-        } catch (error) {
-            console.error("Error loading informes globales produccion:", error);
+        const params: InformeGlobalParams = modoFecha === "fecha_unica"
+            ? { fecha }
+            : { fechaDesde, fechaHasta };
+        setLoadingProduccion(true);
+        setLoadingAlmacen(true);
+        setErrorProduccion(null);
+        setErrorAlmacen(null);
+
+        const [produccionResult, almacenResult] = await Promise.allSettled([
+            axios.get<InformeGlobalProduccion>(endPoints.biInformesGlobalesProduccion(params)),
+            axios.get<InformeGlobalAlmacen>(endPoints.biInformesGlobalesAlmacen(params)),
+        ]);
+
+        if (produccionResult.status === "fulfilled") {
+            setReporteProduccion(produccionResult.value.data);
+        } else {
+            setReporteProduccion(null);
+            setErrorProduccion(getRequestErrorMessage(produccionResult.reason));
+        }
+        setLoadingProduccion(false);
+
+        if (almacenResult.status === "fulfilled") {
+            setReporteAlmacen(almacenResult.value.data);
+        } else {
+            setReporteAlmacen(null);
+            setErrorAlmacen(getRequestErrorMessage(almacenResult.reason));
+        }
+        setLoadingAlmacen(false);
+
+        if (produccionResult.status === "rejected" || almacenResult.status === "rejected") {
+            const bothFailed = produccionResult.status === "rejected" && almacenResult.status === "rejected";
             toast({
-                title: "No se pudo cargar el informe",
-                description: axios.isAxiosError(error)
-                    ? error.response?.data?.error ?? "Revise las fechas e intente nuevamente."
-                    : "Compruebe la conexion e intente nuevamente.",
-                status: "error",
+                title: bothFailed ? "No se pudo cargar el informe" : "Informe parcialmente disponible",
+                description: bothFailed
+                    ? "Compruebe la conexion y las fechas antes de intentar nuevamente."
+                    : "Una de las secciones no respondio. La otra se mantiene disponible.",
+                status: bothFailed ? "error" : "warning",
                 duration: 6000,
                 isClosable: true,
             });
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -179,15 +264,30 @@ export default function InformesGlobalesTab() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const chartData = useMemo(() => buildChartData(reporte, isMobile), [isMobile, reporte]);
-    const chartOptions = useMemo(() => buildChartOptions(chartData, isMobile), [chartData, isMobile]);
-    const hasChartData = chartData.series.some((serie) => serie.data.some((value) => value > 0));
-    const detalles = reporte?.detalleReferencias ?? [];
+    const productionChartData = useMemo(
+        () => buildProductionChartData(reporteProduccion, isMobile),
+        [isMobile, reporteProduccion]
+    );
+    const productionChartOptions = useMemo(
+        () => buildProductionChartOptions(productionChartData, isMobile),
+        [productionChartData, isMobile]
+    );
+    const warehouseChartOptions = useMemo(
+        () => buildWarehouseChartOptions(reporteAlmacen?.serieDiaria ?? [], isMobile),
+        [isMobile, reporteAlmacen]
+    );
+    const hasProductionChartData = productionChartData.series.some(
+        (serie) => serie.data.some((value) => value > 0)
+    );
+    const hasWarehouseChartData = (reporteAlmacen?.serieDiaria ?? []).some(
+        (dia) => dia.valorIngresosEstimado > 0 || dia.valorDispensacionesEstimado > 0
+    );
+    const periodReport = reporteProduccion ?? reporteAlmacen;
 
     return (
-        <Stack spacing={4}>
+        <Stack spacing={{ base: 4, md: 5 }}>
             <Card variant="outline">
-                <CardBody>
+                <CardBody p={{ base: 4, md: 5 }}>
                     <Stack spacing={4}>
                         <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
                             <FormControl>
@@ -230,7 +330,7 @@ export default function InformesGlobalesTab() {
                                         ) : null}
                                         {rangeTooLong ? (
                                             <FormHelperText color="red.500">
-                                                El rango maximo inicial es de {MAX_RANGE_DAYS} dias.
+                                                El rango maximo es de {MAX_RANGE_DAYS} dias.
                                             </FormHelperText>
                                         ) : null}
                                     </FormControl>
@@ -245,14 +345,14 @@ export default function InformesGlobalesTab() {
                             spacing={3}
                         >
                             <Badge colorScheme="green" alignSelf={{ base: "flex-start", md: "center" }}>
-                                {reporte ? buildPeriodLabel(reporte) : "Sin consulta"}
+                                {periodReport ? buildPeriodLabel(periodReport) : "Sin consulta"}
                             </Badge>
                             <Stack direction={{ base: "column", sm: "row" }} spacing={3}>
                                 <Button
                                     leftIcon={<RepeatIcon />}
                                     colorScheme="green"
                                     onClick={fetchData}
-                                    isLoading={loading}
+                                    isLoading={isLoading}
                                     isDisabled={!canQuery}
                                     w={{ base: "full", sm: "auto" }}
                                 >
@@ -277,160 +377,300 @@ export default function InformesGlobalesTab() {
                 </CardBody>
             </Card>
 
-            {loading ? (
+            <Stack as="section" spacing={4} aria-labelledby="global-production-title">
+                <Box>
+                    <Heading id="global-production-title" as="h2" size="sm">
+                        Informe global de produccion
+                    </Heading>
+                    <Text fontSize="sm" color="app.textMuted" mt={1}>
+                        Cumplimiento, capacidad y composicion de la produccion del periodo.
+                    </Text>
+                </Box>
+
+                {loadingProduccion ? (
+                    <LoadingPanel label="Cargando informe de produccion..." />
+                ) : errorProduccion ? (
+                    <ErrorPanel message={errorProduccion} />
+                ) : reporteProduccion ? (
+                    <>
+                        <SimpleGrid columns={{ base: 2, xl: 4 }} spacing={{ base: 3, md: 4 }}>
+                            <KpiCard
+                                label="Produccion"
+                                value={formatInteger(reporteProduccion.resumen.unidadesProducidas)}
+                                help={`${formatInteger(reporteProduccion.resumen.unidadesPlaneadas)} planeadas`}
+                                trend={reporteProduccion.resumen.tendenciaProduccionPct}
+                            />
+                            <KpiCard
+                                label="Rendimiento"
+                                value={formatPercent(reporteProduccion.resumen.rendimientoPlaneacionPct)}
+                                help="Producido vs planeado"
+                            />
+                            <KpiCard
+                                label="Capacidad utilizada"
+                                value={formatPercent(reporteProduccion.resumen.capacidadUtilizadaPct)}
+                                help={`${formatInteger(reporteProduccion.resumen.capacidadProductivaPeriodo)} de capacidad`}
+                            />
+                            <KpiCard
+                                label="Cumplimiento refs."
+                                value={formatPercent(reporteProduccion.resumen.cumplimientoReferenciasPct)}
+                                help={`${formatInteger(reporteProduccion.resumen.referenciasPlaneadasProducidas)} de ${formatInteger(reporteProduccion.resumen.referenciasPlaneadas)}`}
+                            />
+                        </SimpleGrid>
+
+                        <ReportNotes notes={reporteProduccion.notas} />
+
+                        <Card variant="outline">
+                            <CardBody p={{ base: 4, md: 5 }}>
+                                <Stack spacing={4}>
+                                    <Stack
+                                        direction={{ base: "column", md: "row" }}
+                                        justify="space-between"
+                                        align={{ base: "flex-start", md: "center" }}
+                                        spacing={2}
+                                    >
+                                        <Box>
+                                            <Heading as="h3" size="sm">
+                                                Produccion consolidada por categoria
+                                            </Heading>
+                                            <Text fontSize="sm" color="app.textMuted" mt={1}>
+                                                Composicion por referencias; las de menor participacion se agrupan.
+                                            </Text>
+                                        </Box>
+                                        <Badge colorScheme="blue">
+                                            {formatInteger(reporteProduccion.resumen.movimientosProduccion)} movimientos
+                                        </Badge>
+                                    </Stack>
+
+                                    {hasProductionChartData ? (
+                                        <ReactECharts
+                                            option={productionChartOptions}
+                                            style={{ height: `${productionChartHeight}px`, width: "100%" }}
+                                        />
+                                    ) : (
+                                        <EmptyChart message="No hay produccion registrada para la ventana seleccionada." />
+                                    )}
+                                </Stack>
+                            </CardBody>
+                        </Card>
+                    </>
+                ) : (
+                    <EmptyPanel message="Seleccione una fecha y actualice el informe de produccion." />
+                )}
+            </Stack>
+
+            <Divider borderColor="app.border" />
+
+            <Stack as="section" spacing={4} aria-labelledby="global-warehouse-title">
+                <Box>
+                    <Heading id="global-warehouse-title" as="h2" size="sm">
+                        Movimientos de almacen
+                    </Heading>
+                    <Text fontSize="sm" color="app.textMuted" mt={1}>
+                        Entradas, dispensaciones e impacto estimado de materiales en el periodo.
+                    </Text>
+                </Box>
+
+                {loadingAlmacen ? (
+                    <LoadingPanel label="Cargando informe de almacen..." />
+                ) : errorAlmacen ? (
+                    <ErrorPanel message={errorAlmacen} />
+                ) : reporteAlmacen ? (
+                    <WarehouseReport
+                        report={reporteAlmacen}
+                        chartOptions={warehouseChartOptions}
+                        chartHeight={warehouseChartHeight}
+                        hasChartData={hasWarehouseChartData}
+                    />
+                ) : (
+                    <EmptyPanel message="Seleccione una fecha y actualice el informe de almacen." />
+                )}
+            </Stack>
+        </Stack>
+    );
+}
+
+function WarehouseReport({ report, chartOptions, chartHeight, hasChartData }: {
+    report: InformeGlobalAlmacen;
+    chartOptions: Record<string, unknown>;
+    chartHeight: number;
+    hasChartData: boolean;
+}) {
+    const totalMovements = report.resumen.movimientosIngreso + report.resumen.movimientosDispensacion;
+    const hasCostBasis = report.resumen.materialesConCosto > 0 || totalMovements === 0;
+
+    return (
+        <>
+            <SimpleGrid columns={{ base: 2, xl: 4 }} spacing={{ base: 3, md: 4 }}>
+                <KpiCard
+                    label="Valor ingresado"
+                    value={hasCostBasis ? formatCurrency(report.resumen.valorIngresosEstimado) : "Sin base"}
+                    help={`${formatInteger(report.resumen.movimientosIngreso)} movimientos`}
+                />
+                <KpiCard
+                    label="Valor dispensado"
+                    value={hasCostBasis ? formatCurrency(report.resumen.valorDispensacionesEstimado) : "Sin base"}
+                    help={`${formatInteger(report.resumen.movimientosDispensacion)} movimientos`}
+                />
+                <KpiCard
+                    label="Balance estimado"
+                    value={hasCostBasis ? formatCurrency(report.resumen.balanceValorEstimado) : "Sin base"}
+                    help="Ingresos menos dispensaciones"
+                />
+                <KpiCard
+                    label="Cobertura de costos"
+                    value={formatPercent(report.resumen.coberturaCostosPct)}
+                    help={`${formatInteger(report.resumen.materialesConCosto)} con costo | ${formatInteger(report.resumen.materialesSinCosto)} sin costo`}
+                />
+            </SimpleGrid>
+
+            <ReportNotes notes={report.notas} />
+
+            <Card variant="outline">
+                <CardBody p={{ base: 4, md: 5 }}>
+                    <Stack spacing={4}>
+                        <Box>
+                            <Heading as="h3" size="sm">Cantidades por unidad de medida</Heading>
+                            <Text fontSize="sm" color="app.textMuted" mt={1}>
+                                Balance fisico separado para evitar sumar magnitudes incompatibles.
+                            </Text>
+                        </Box>
+                        {report.cantidadesPorUnidad.length > 0 ? (
+                            <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={0}>
+                                {report.cantidadesPorUnidad.map((cantidad, index) => (
+                                    <Box
+                                        key={cantidad.unidadMedida}
+                                        py={3}
+                                        px={{ base: 0, md: 4 }}
+                                        borderTopWidth={{ base: index === 0 ? 0 : "1px", md: 0 }}
+                                        borderLeftWidth={{ base: 0, md: index === 0 ? 0 : "1px" }}
+                                        borderColor="app.border"
+                                    >
+                                        <Badge colorScheme="gray" mb={2}>{cantidad.unidadMedida}</Badge>
+                                        <SimpleGrid columns={3} spacing={2}>
+                                            <QuantityMetric label="Ingreso" value={cantidad.cantidadIngresada} />
+                                            <QuantityMetric label="Dispensado" value={cantidad.cantidadDispensada} />
+                                            <QuantityMetric label="Balance" value={cantidad.balanceNeto} />
+                                        </SimpleGrid>
+                                    </Box>
+                                ))}
+                            </SimpleGrid>
+                        ) : (
+                            <Text color="app.textMuted">No hay cantidades de materiales para mostrar.</Text>
+                        )}
+                    </Stack>
+                </CardBody>
+            </Card>
+
+            <Card variant="outline">
+                <CardBody p={{ base: 4, md: 5 }}>
+                    <Stack spacing={4}>
+                        <Stack
+                            direction={{ base: "column", md: "row" }}
+                            justify="space-between"
+                            align={{ base: "flex-start", md: "center" }}
+                            spacing={2}
+                        >
+                            <Box>
+                                <Heading as="h3" size="sm">Evolucion diaria del valor estimado</Heading>
+                                <Text fontSize="sm" color="app.textMuted" mt={1}>
+                                    Costo actual por cantidad movilizada, sin IVA.
+                                </Text>
+                            </Box>
+                            <Badge colorScheme="teal">{formatInteger(totalMovements)} movimientos</Badge>
+                        </Stack>
+                        {hasChartData ? (
+                            <ReactECharts
+                                option={chartOptions}
+                                style={{ height: `${chartHeight}px`, width: "100%" }}
+                            />
+                        ) : (
+                            <EmptyChart message={totalMovements > 0
+                                ? "Los movimientos del periodo no tienen costos suficientes para construir la serie monetaria."
+                                : "No hay movimientos de materiales en la ventana seleccionada."}
+                            />
+                        )}
+                    </Stack>
+                </CardBody>
+            </Card>
+
+            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4}>
                 <Card variant="outline">
-                    <CardBody>
-                        <Stack align="center" py={8}>
-                            <Spinner />
-                            <Text color="app.textMuted">Cargando informe global...</Text>
+                    <CardBody p={{ base: 4, md: 5 }}>
+                        <Stack spacing={4}>
+                            <Heading as="h3" size="sm">Composicion por tipo de material</Heading>
+                            {report.consolidadoTipoMaterial.length > 0 ? (
+                                <Stack spacing={0} divider={<Divider borderColor="app.border" />}>
+                                    {report.consolidadoTipoMaterial.map((tipo) => (
+                                        <Box key={tipo.tipoMaterial} py={3}>
+                                            <HStack justify="space-between" align="flex-start" spacing={3}>
+                                                <Box minW={0}>
+                                                    <Text fontWeight="semibold">{tipo.tipoMaterial}</Text>
+                                                    <Text fontSize="sm" color="app.textMuted">
+                                                        {formatInteger(tipo.movimientos)} movimientos
+                                                    </Text>
+                                                </Box>
+                                                <Box textAlign="right" flexShrink={0}>
+                                                    <Text fontSize="sm">+ {formatCurrency(tipo.valorIngresosEstimado)}</Text>
+                                                    <Text fontSize="sm" color="app.textMuted">
+                                                        - {formatCurrency(tipo.valorDispensacionesEstimado)}
+                                                    </Text>
+                                                </Box>
+                                            </HStack>
+                                        </Box>
+                                    ))}
+                                </Stack>
+                            ) : (
+                                <Text color="app.textMuted">No hay tipos de material para mostrar.</Text>
+                            )}
                         </Stack>
                     </CardBody>
                 </Card>
-            ) : (
-                <>
-                    {reporte ? (
-                        <>
-                            <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
-                                <KpiCard
-                                    label="Produccion"
-                                    value={formatInteger(reporte.resumen.unidadesProducidas)}
-                                    help={`${formatInteger(reporte.resumen.unidadesPlaneadas)} planeadas`}
-                                    trend={reporte.resumen.tendenciaProduccionPct}
-                                />
-                                <KpiCard
-                                    label="Rendimiento"
-                                    value={formatPercent(reporte.resumen.rendimientoPlaneacionPct)}
-                                    help="Producido vs planeado"
-                                />
-                                <KpiCard
-                                    label="Capacidad utilizada"
-                                    value={formatPercent(reporte.resumen.capacidadUtilizadaPct)}
-                                    help={`${formatInteger(reporte.resumen.capacidadProductivaPeriodo)} unidades capacidad`}
-                                />
-                                <KpiCard
-                                    label="Cumplimiento refs."
-                                    value={formatPercent(reporte.resumen.cumplimientoReferenciasPct)}
-                                    help={`${formatInteger(reporte.resumen.referenciasPlaneadasProducidas)} de ${formatInteger(reporte.resumen.referenciasPlaneadas)}`}
-                                />
-                            </SimpleGrid>
 
-                            {reporte.notas.map((nota) => (
-                                <Alert
-                                    key={`${nota.tipo}-${nota.mensaje}`}
-                                    status={nota.tipo === "WARNING" ? "warning" : "info"}
-                                    borderRadius="md"
-                                >
-                                    <AlertIcon />
-                                    <Text fontSize="sm">{nota.mensaje}</Text>
-                                </Alert>
-                            ))}
-
-                            <Card variant="outline">
-                                <CardBody>
-                                    <Stack spacing={4}>
-                                        <Stack
-                                            direction={{ base: "column", md: "row" }}
-                                            justify="space-between"
-                                            align={{ base: "flex-start", md: "center" }}
-                                            spacing={2}
-                                        >
-                                            <Box>
-                                                <Text fontWeight="semibold">
-                                                    Produccion por categoria y referencia
-                                                </Text>
-                                                <Text fontSize="sm" color="app.textMuted">
-                                                    Barras apiladas por referencias producidas.
-                                                </Text>
-                                            </Box>
-                                            <Badge colorScheme="blue">
-                                                {formatInteger(reporte.resumen.movimientosProduccion)} movimientos
-                                            </Badge>
-                                        </Stack>
-
-                                        {hasChartData ? (
-                                            <ReactECharts
-                                                option={chartOptions}
-                                                style={{ height: `${chartHeight}px`, width: "100%" }}
-                                            />
-                                        ) : (
-                                            <Box py={10}>
-                                                <Text color="app.textMuted" textAlign="center">
-                                                    No hay produccion registrada para la ventana seleccionada.
-                                                </Text>
-                                            </Box>
-                                        )}
-                                    </Stack>
-                                </CardBody>
-                            </Card>
-
-                            <Card variant="outline" display={{ base: "none", lg: "block" }}>
-                                <CardBody>
-                                    <Text fontWeight="semibold" mb={4}>
-                                        Detalle por referencia
-                                    </Text>
-                                    {detalles.length > 0 ? (
-                                        <TableContainer>
-                                            <Table size="sm" variant="simple">
-                                                <Thead>
-                                                    <Tr>
-                                                        <Th>Categoria</Th>
-                                                        <Th>Referencia</Th>
-                                                        <Th isNumeric>Planeado</Th>
-                                                        <Th isNumeric>Producido</Th>
-                                                        <Th>Rendimiento</Th>
-                                                        <Th>Estado</Th>
-                                                    </Tr>
-                                                </Thead>
-                                                <Tbody>
-                                                    {detalles.map((detalle) => (
-                                                        <DetalleReferenciaRow
-                                                            key={`${detalle.productoId ?? detalle.productoNombre}-${detalle.categoriaNombre}`}
-                                                            detalle={detalle}
-                                                        />
-                                                    ))}
-                                                </Tbody>
-                                            </Table>
-                                        </TableContainer>
-                                    ) : (
-                                        <Text color="app.textMuted" textAlign="center" py={8}>
-                                            No hay referencias para mostrar.
-                                        </Text>
-                                    )}
-                                </CardBody>
-                            </Card>
-
-                            <Box display={{ base: "block", lg: "none" }}>
-                                <Text fontWeight="semibold" mb={3}>
-                                    Detalle por referencia
+                <Card variant="outline">
+                    <CardBody p={{ base: 4, md: 5 }}>
+                        <Stack spacing={4}>
+                            <Box>
+                                <Heading as="h3" size="sm">Materiales de mayor impacto</Heading>
+                                <Text fontSize="sm" color="app.textMuted" mt={1}>
+                                    Maximo cinco materiales; no corresponde al detalle de movimientos.
                                 </Text>
-                                {detalles.length > 0 ? (
-                                    <Stack spacing={3}>
-                                        {detalles.map((detalle) => (
-                                            <DetalleReferenciaCard
-                                                key={`${detalle.productoId ?? detalle.productoNombre}-${detalle.categoriaNombre}`}
-                                                detalle={detalle}
-                                            />
-                                        ))}
-                                    </Stack>
-                                ) : (
-                                    <Text color="app.textMuted" textAlign="center" py={8}>
-                                        No hay referencias para mostrar.
-                                    </Text>
-                                )}
                             </Box>
-                        </>
-                    ) : (
-                        <Card variant="outline">
-                            <CardBody>
-                                <Text color="app.textMuted" textAlign="center" py={8}>
-                                    Seleccione una fecha y actualice el informe.
-                                </Text>
-                            </CardBody>
-                        </Card>
-                    )}
-                </>
-            )}
-        </Stack>
+                            {report.topMateriales.length > 0 ? (
+                                <Stack spacing={0} divider={<Divider borderColor="app.border" />}>
+                                    {report.topMateriales.map((material) => (
+                                        <Box key={material.productoId} py={3}>
+                                            <Stack direction="row" justify="space-between" align="flex-start" spacing={3}>
+                                                <Box minW={0}>
+                                                    <Text fontWeight="semibold" noOfLines={2}>{material.productoNombre}</Text>
+                                                    <Text fontSize="xs" color="app.textMuted" noOfLines={1}>
+                                                        {material.tipoMaterial} | {material.productoId}
+                                                    </Text>
+                                                    <Text fontSize="sm" color="app.textMuted" mt={1}>
+                                                        Ingreso {formatMeasure(material.cantidadIngresada, material.unidadMedida)} | Dispensado {formatMeasure(material.cantidadDispensada, material.unidadMedida)}
+                                                    </Text>
+                                                </Box>
+                                                <Box textAlign="right" flexShrink={0}>
+                                                    <Badge colorScheme={material.costoDisponible ? "green" : "orange"}>
+                                                        {material.unidadMedida}
+                                                    </Badge>
+                                                    <Text fontSize="sm" fontWeight="semibold" mt={2}>
+                                                        {material.costoDisponible
+                                                            ? formatCurrency(material.impactoValorEstimado)
+                                                            : "Sin costo"}
+                                                    </Text>
+                                                </Box>
+                                            </Stack>
+                                        </Box>
+                                    ))}
+                                </Stack>
+                            ) : (
+                                <Text color="app.textMuted">No hay materiales para mostrar.</Text>
+                            )}
+                        </Stack>
+                    </CardBody>
+                </Card>
+            </SimpleGrid>
+        </>
     );
 }
 
@@ -441,23 +681,32 @@ function KpiCard({ label, value, help, trend }: {
     trend?: number | null;
 }) {
     return (
-        <Card variant="outline">
-            <CardBody>
-                <Stat>
-                    <StatLabel>{label}</StatLabel>
-                    <StatNumber>{value}</StatNumber>
-                    <StatHelpText mb={0}>
+        <Card variant="outline" minW={0} minH={{ base: "132px", md: "148px" }}>
+            <CardBody p={{ base: 3, sm: 4, md: 5 }}>
+                <Stat minW={0}>
+                    <StatLabel fontSize={{ base: "xs", md: "sm" }} noOfLines={2} minH={{ base: "32px", md: "auto" }}>
+                        {label}
+                    </StatLabel>
+                    <StatNumber
+                        fontSize={{ base: "lg", sm: "xl", md: "2xl" }}
+                        lineHeight="shorter"
+                        overflowWrap="anywhere"
+                        mt={1}
+                    >
+                        {value}
+                    </StatNumber>
+                    <StatHelpText fontSize={{ base: "xs", md: "sm" }} mb={0} mt={2} noOfLines={2}>
                         {trend === undefined || trend === null ? (
                             help
                         ) : (
-                            <HStack spacing={1}>
+                            <HStack spacing={1} align="center">
                                 <StatArrow type={trend >= 0 ? "increase" : "decrease"} />
                                 <Text as="span">{formatSignedPercent(trend)}</Text>
                             </HStack>
                         )}
                     </StatHelpText>
                     {trend !== undefined && trend !== null ? (
-                        <Text fontSize="xs" color="app.textMuted">{help}</Text>
+                        <Text fontSize="xs" color="app.textMuted" noOfLines={1}>{help}</Text>
                     ) : null}
                 </Stat>
             </CardBody>
@@ -465,82 +714,77 @@ function KpiCard({ label, value, help, trend }: {
     );
 }
 
-function DetalleReferenciaRow({ detalle }: { detalle: DetalleReferencia }) {
-    const status = getReferenceStatus(detalle);
+function QuantityMetric({ label, value }: { label: string; value: number }) {
     return (
-        <Tr>
-            <Td>{detalle.categoriaNombre}</Td>
-            <Td maxW="280px">
-                <Text fontWeight="medium" noOfLines={1}>{detalle.productoNombre}</Text>
-                <Text fontSize="xs" color="app.textMuted">{detalle.productoId}</Text>
-            </Td>
-            <Td isNumeric>{formatInteger(detalle.cantidadPlaneada)}</Td>
-            <Td isNumeric>{formatInteger(detalle.cantidadProducida)}</Td>
-            <Td minW="180px">
-                <Stack spacing={1}>
-                    <Text fontSize="sm">{formatPercent(detalle.rendimientoPlaneacionPct)}</Text>
-                    <Progress
-                        value={clampPercent(detalle.rendimientoPlaneacionPct)}
-                        colorScheme={status.colorScheme}
-                        size="sm"
-                        borderRadius="full"
-                    />
-                </Stack>
-            </Td>
-            <Td>
-                <Badge colorScheme={status.colorScheme}>{status.label}</Badge>
-            </Td>
-        </Tr>
+        <Box minW={0}>
+            <Text fontSize="xs" color="app.textMuted" noOfLines={1}>{label}</Text>
+            <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold" overflowWrap="anywhere">
+                {formatQuantity(value)}
+            </Text>
+        </Box>
     );
 }
 
-function DetalleReferenciaCard({ detalle }: { detalle: DetalleReferencia }) {
-    const status = getReferenceStatus(detalle);
+function ReportNotes({ notes }: { notes: NotaInforme[] }) {
+    if (notes.length === 0) return null;
+    return (
+        <Stack spacing={2}>
+            {notes.map((nota) => (
+                <Alert
+                    key={`${nota.tipo}-${nota.mensaje}`}
+                    status={nota.tipo === "WARNING" ? "warning" : "info"}
+                    borderRadius="md"
+                    alignItems="flex-start"
+                >
+                    <AlertIcon mt={0.5} />
+                    <Text fontSize="sm">{nota.mensaje}</Text>
+                </Alert>
+            ))}
+        </Stack>
+    );
+}
+
+function LoadingPanel({ label }: { label: string }) {
     return (
         <Card variant="outline">
             <CardBody>
-                <Stack spacing={3}>
-                    <Stack direction="row" justify="space-between" spacing={3} align="flex-start">
-                        <Box minW={0}>
-                            <Badge colorScheme="gray" mb={2}>{detalle.categoriaNombre}</Badge>
-                            <Text fontWeight="semibold" noOfLines={2}>{detalle.productoNombre}</Text>
-                            <Text fontSize="xs" color="app.textMuted">{detalle.productoId}</Text>
-                        </Box>
-                        <Badge colorScheme={status.colorScheme} flexShrink={0}>{status.label}</Badge>
-                    </Stack>
-                    <SimpleGrid columns={2} spacing={3}>
-                        <MetricMini label="Planeado" value={formatInteger(detalle.cantidadPlaneada)} />
-                        <MetricMini label="Producido" value={formatInteger(detalle.cantidadProducida)} />
-                    </SimpleGrid>
-                    <Box>
-                        <HStack justify="space-between" mb={1}>
-                            <Text fontSize="sm" color="app.textMuted">Rendimiento</Text>
-                            <Text fontSize="sm" fontWeight="semibold">
-                                {formatPercent(detalle.rendimientoPlaneacionPct)}
-                            </Text>
-                        </HStack>
-                        <Progress
-                            value={clampPercent(detalle.rendimientoPlaneacionPct)}
-                            colorScheme={status.colorScheme}
-                            borderRadius="full"
-                        />
-                    </Box>
+                <Stack align="center" py={8}>
+                    <Spinner />
+                    <Text color="app.textMuted">{label}</Text>
                 </Stack>
             </CardBody>
         </Card>
     );
 }
 
-function MetricMini({ label, value }: { label: string; value: string }) {
+function ErrorPanel({ message }: { message: string }) {
     return (
-        <Box borderWidth="1px" borderColor="app.border" borderRadius="md" p={3}>
-            <Text fontSize="xs" color="app.textMuted">{label}</Text>
-            <Text fontWeight="semibold">{value}</Text>
+        <Alert status="error" borderRadius="md">
+            <AlertIcon />
+            <Text fontSize="sm">{message}</Text>
+        </Alert>
+    );
+}
+
+function EmptyPanel({ message }: { message: string }) {
+    return (
+        <Card variant="outline">
+            <CardBody>
+                <Text color="app.textMuted" textAlign="center" py={8}>{message}</Text>
+            </CardBody>
+        </Card>
+    );
+}
+
+function EmptyChart({ message }: { message: string }) {
+    return (
+        <Box py={10}>
+            <Text color="app.textMuted" textAlign="center">{message}</Text>
         </Box>
     );
 }
 
-function buildChartData(reporte: InformeGlobalProduccion | null, isMobile: boolean) {
+function buildProductionChartData(reporte: InformeGlobalProduccion | null, isMobile: boolean) {
     const categorias = reporte?.consolidadoCategorias ?? [];
     const detalles = (reporte?.detalleReferencias ?? []).filter((detalle) => detalle.cantidadProducida > 0);
     const categoryKeys = categorias.map((categoria) => categoryKey(categoria.categoriaId, categoria.categoriaNombre));
@@ -578,8 +822,8 @@ function buildChartData(reporte: InformeGlobalProduccion | null, isMobile: boole
     return { categories: categoryLabels, series };
 }
 
-function buildChartOptions(
-    chartData: ReturnType<typeof buildChartData>,
+function buildProductionChartOptions(
+    chartData: ReturnType<typeof buildProductionChartData>,
     isMobile: boolean
 ) {
     const needsZoom = chartData.categories.length > (isMobile ? 2 : 5);
@@ -594,7 +838,7 @@ function buildChartOptions(
             top: 0,
         },
         grid: {
-            left: 56,
+            left: isMobile ? 48 : 56,
             right: 16,
             top: 64,
             bottom: needsZoom ? 72 : 44,
@@ -628,20 +872,60 @@ function buildChartOptions(
     };
 }
 
-function getReferenceStatus(detalle: DetalleReferencia) {
-    if (detalle.noPlaneado) {
-        return { label: "No planeado", colorScheme: "orange" };
-    }
-    if (!detalle.producido && detalle.planeado) {
-        return { label: "Pendiente", colorScheme: "red" };
-    }
-    if ((detalle.rendimientoPlaneacionPct ?? 0) >= 100) {
-        return { label: "Cumplido", colorScheme: "green" };
-    }
-    if (detalle.producido) {
-        return { label: "Parcial", colorScheme: "yellow" };
-    }
-    return { label: "Sin datos", colorScheme: "gray" };
+function buildWarehouseChartOptions(serieDiaria: SerieDiariaAlmacen[], isMobile: boolean) {
+    const needsZoom = serieDiaria.length > (isMobile ? 7 : 16);
+    return {
+        tooltip: {
+            trigger: "axis",
+            axisPointer: { type: "shadow" },
+            valueFormatter: (value: number) => formatCurrency(value),
+        },
+        legend: {
+            top: 0,
+            data: ["Ingresos", "Dispensaciones"],
+        },
+        grid: {
+            left: isMobile ? 58 : 72,
+            right: 16,
+            top: 48,
+            bottom: needsZoom ? 70 : 44,
+        },
+        dataZoom: needsZoom
+            ? [
+                { type: "inside", xAxisIndex: 0 },
+                { type: "slider", xAxisIndex: 0, bottom: 14, height: 22 },
+            ]
+            : [],
+        xAxis: {
+            type: "category",
+            data: serieDiaria.map((dia) => formatChartDate(dia.fecha)),
+            axisLabel: {
+                interval: 0,
+                rotate: isMobile && serieDiaria.length > 4 ? 35 : 0,
+            },
+        },
+        yAxis: {
+            type: "value",
+            name: "COP",
+            axisLabel: {
+                formatter: (value: number) => formatCompactCurrency(value),
+            },
+        },
+        series: [
+            {
+                name: "Ingresos",
+                type: "bar",
+                data: serieDiaria.map((dia) => dia.valorIngresosEstimado),
+                itemStyle: { color: "#2f855a" },
+            },
+            {
+                name: "Dispensaciones",
+                type: "bar",
+                data: serieDiaria.map((dia) => dia.valorDispensacionesEstimado),
+                itemStyle: { color: "#3182ce" },
+            },
+        ],
+    };
 }
 
 function categoryKey(categoriaId: number | null | undefined, categoriaNombre: string) {
@@ -652,22 +936,35 @@ function referenceKey(detalle: DetalleReferencia) {
     return detalle.productoId ?? detalle.productoNombre;
 }
 
-function buildPeriodLabel(reporte: InformeGlobalProduccion) {
+function buildPeriodLabel(reporte: InformePeriodo) {
     if (reporte.modoFecha === "FECHA_UNICA") {
         return reporte.fechaDesde;
     }
     return `${reporte.fechaDesde} a ${reporte.fechaHasta} (${reporte.diasRango} dias)`;
 }
 
-function clampPercent(value?: number | null) {
-    if (value === undefined || value === null || Number.isNaN(value)) return 0;
-    return Math.max(0, Math.min(100, value));
+function getRequestErrorMessage(error: unknown) {
+    if (axios.isAxiosError(error)) {
+        return error.response?.data?.error ?? "Revise las fechas e intente nuevamente.";
+    }
+    return "Compruebe la conexion e intente nuevamente.";
 }
 
 function formatInteger(value?: number | null) {
     return Number(value ?? 0).toLocaleString("es-CO", {
         maximumFractionDigits: 0,
     });
+}
+
+function formatQuantity(value?: number | null) {
+    return Number(value ?? 0).toLocaleString("es-CO", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+    });
+}
+
+function formatMeasure(value: number, unit: string) {
+    return `${formatQuantity(value)} ${unit}`;
 }
 
 function formatPercent(value?: number | null) {
@@ -681,6 +978,27 @@ function formatPercent(value?: number | null) {
 function formatSignedPercent(value: number) {
     const sign = value > 0 ? "+" : "";
     return `${sign}${formatPercent(value)}`;
+}
+
+function formatCurrency(value?: number | null) {
+    return Number(value ?? 0).toLocaleString("es-CO", {
+        style: "currency",
+        currency: "COP",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    });
+}
+
+function formatCompactCurrency(value: number) {
+    const absolute = Math.abs(value);
+    if (absolute >= 1_000_000_000) return `$${formatQuantity(value / 1_000_000_000)} mil M`;
+    if (absolute >= 1_000_000) return `$${formatQuantity(value / 1_000_000)} M`;
+    if (absolute >= 1_000) return `$${formatQuantity(value / 1_000)} mil`;
+    return `$${formatQuantity(value)}`;
+}
+
+function formatChartDate(value: string) {
+    return value.length >= 10 ? value.slice(5) : value;
 }
 
 function getTodayIsoDate() {

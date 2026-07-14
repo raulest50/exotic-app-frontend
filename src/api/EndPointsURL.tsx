@@ -529,6 +529,21 @@ export default class EndPointsURL{
         return `${this.domain}/bi/informes-globales/produccion?${q.toString()}`;
     }
 
+    public biInformesGlobalesAlmacen(params: {
+        fecha?: string;
+        fechaDesde?: string;
+        fechaHasta?: string;
+    }): string {
+        const q = new URLSearchParams();
+        if (params.fecha) {
+            q.set("fecha", params.fecha);
+        } else {
+            if (params.fechaDesde) q.set("fechaDesde", params.fechaDesde);
+            if (params.fechaHasta) q.set("fechaHasta", params.fechaHasta);
+        }
+        return `${this.domain}/bi/informes-globales/almacen?${q.toString()}`;
+    }
+
     /** GET Excel informe diario de compras OCM (BI). @param fecha ISO date YYYY-MM-DD */
     public informesDiariosComprasExcel(fecha: string, options?: ExcelExportOptions | ExcelDecimalSeparator): string {
         const q = this.informesDiariosExcelQuery(fecha, options);
