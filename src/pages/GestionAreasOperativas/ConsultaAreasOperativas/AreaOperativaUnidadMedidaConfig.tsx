@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Alert,
     AlertIcon,
+    Badge,
     Box,
     Button,
     Flex,
     FormControl,
     FormLabel,
+    Heading,
     HStack,
     Input,
     Select,
@@ -208,18 +210,48 @@ export default function AreaOperativaUnidadMedidaConfig({
     }
 
     return (
-        <VStack align="stretch" spacing={4}>
+        <VStack align="stretch" spacing={5}>
+            <Flex
+                direction={{ base: 'column', sm: 'row' }}
+                justify="space-between"
+                align={{ base: 'stretch', sm: 'flex-start' }}
+                gap={3}
+            >
+                <Box>
+                    <Heading as="h3" size="sm">Unidades de medida</Heading>
+                    <Text color="app.textSubtle" fontSize="sm" mt={1}>
+                        Configure las equivalencias utilizadas por esta área operativa.
+                    </Text>
+                </Box>
+                {!isReadOnly && (
+                    <Badge colorScheme="blue" alignSelf={{ base: 'flex-start', sm: 'center' }}>
+                        Guardado individual
+                    </Badge>
+                )}
+            </Flex>
+
             {error && (
-                <Alert status="error" borderRadius="md">
+                <Alert status="error" borderRadius="lg">
                     <AlertIcon />
                     {error}
                 </Alert>
             )}
 
-            <Box borderWidth="1px" borderRadius="md" p={3}>
-                <Text fontWeight="bold" mb={3}>Unidades del área</Text>
-                {!isReadOnly && (
-                    <SimpleGrid columns={[1, 1, 4]} spacing={3} mb={4}>
+            {!isReadOnly && (
+                <Box
+                    borderWidth="1px"
+                    borderColor="app.border"
+                    borderRadius="xl"
+                    bg="app.surface"
+                    p={{ base: 4, md: 5 }}
+                >
+                    <Box mb={4}>
+                        <Heading as="h4" size="sm">Crear una unidad</Heading>
+                        <Text color="app.textSubtle" fontSize="sm" mt={1}>
+                            Registre el nombre y su relación con una unidad estándar.
+                        </Text>
+                    </Box>
+                    <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={4}>
                         <FormControl>
                             <FormLabel>Nombre</FormLabel>
                             <Input
@@ -269,12 +301,53 @@ export default function AreaOperativaUnidadMedidaConfig({
                             </Button>
                         </Flex>
                     </SimpleGrid>
-                )}
+                </Box>
+            )}
+
+            <Box
+                borderWidth="1px"
+                borderColor="app.border"
+                borderRadius="xl"
+                bg="app.surface"
+                overflow="hidden"
+            >
+                <Flex
+                    px={{ base: 4, md: 5 }}
+                    py={4}
+                    justify="space-between"
+                    align="center"
+                    borderBottomWidth={unidades.length > 0 ? '1px' : 0}
+                    borderColor="app.border"
+                >
+                    <Box>
+                        <Heading as="h4" size="sm">Unidades registradas</Heading>
+                        <Text color="app.textSubtle" fontSize="sm" mt={1}>
+                            {isReadOnly
+                                ? 'Listado de unidades configuradas para esta área.'
+                                : 'Edite y guarde cada unidad de manera independiente.'}
+                        </Text>
+                    </Box>
+                    <Badge colorScheme="teal">{unidades.length}</Badge>
+                </Flex>
 
                 {unidades.length === 0 ? (
-                    <Text color="app.textSubtle" fontSize="sm">Sin unidades configuradas.</Text>
+                    <Flex
+                        minH="180px"
+                        align="center"
+                        justify="center"
+                        direction="column"
+                        textAlign="center"
+                        px={6}
+                        py={10}
+                    >
+                        <Text fontWeight="semibold">Sin unidades configuradas</Text>
+                        <Text color="app.textSubtle" fontSize="sm" mt={1}>
+                            Las unidades creadas para el área aparecerán en esta sección.
+                        </Text>
+                    </Flex>
                 ) : (
-                    <TableContainer>
+                    <>
+                    <TableContainer display={{ base: 'none', md: 'block' }}>
                         <Table size="sm">
                             <Thead>
                                 <Tr>
@@ -295,6 +368,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                                                     value={draft.nombre}
                                                     isReadOnly={isReadOnly}
                                                     onChange={(event) => setUnidadDraftField(unidad.id, 'nombre', event.target.value)}
+                                                    bg={isReadOnly ? 'app.inputReadonly' : undefined}
                                                 />
                                             </Td>
                                             <Td>
@@ -310,6 +384,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                                                         'relacionEstandar',
                                                         parseNumber(event.target.value, 1),
                                                     )}
+                                                    bg={isReadOnly ? 'app.inputReadonly' : undefined}
                                                 />
                                             </Td>
                                             <Td>
@@ -317,6 +392,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                                                     size="sm"
                                                     value={draft.unidadRelacion}
                                                     isDisabled={isReadOnly}
+                                                    bg={isReadOnly ? 'app.inputReadonly' : undefined}
                                                     onChange={(event) => setUnidadDraftField(
                                                         unidad.id,
                                                         'unidadRelacion',
@@ -333,7 +409,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                                                     <HStack>
                                                         <Button
                                                             size="sm"
-                                                            colorScheme="green"
+                                                            colorScheme="teal"
                                                             onClick={() => handleSaveUnidad(unidad)}
                                                             isLoading={savingKey === `unidad-${unidad.id}`}
                                                         >
@@ -357,6 +433,104 @@ export default function AreaOperativaUnidadMedidaConfig({
                             </Tbody>
                         </Table>
                     </TableContainer>
+                        <VStack
+                            display={{ base: 'flex', md: 'none' }}
+                            align="stretch"
+                            spacing={0}
+                            divider={<Box borderBottomWidth="1px" borderColor="app.border" />}
+                        >
+                            {unidades.map((unidad) => {
+                                const draft = unidadDrafts[unidad.id] ?? buildUnidadDraft(unidad);
+                                return (
+                                    <Box key={unidad.id} p={4}>
+                                        <Flex justify="space-between" align="center" mb={4}>
+                                            <Text fontWeight="semibold">Unidad #{unidad.id}</Text>
+                                            <Badge colorScheme="gray">{draft.unidadRelacion}</Badge>
+                                        </Flex>
+
+                                        <VStack align="stretch" spacing={4}>
+                                            <FormControl>
+                                                <FormLabel fontSize="sm">Nombre</FormLabel>
+                                                <Input
+                                                    size="sm"
+                                                    value={draft.nombre}
+                                                    isReadOnly={isReadOnly}
+                                                    bg={isReadOnly ? 'app.inputReadonly' : undefined}
+                                                    onChange={(event) => setUnidadDraftField(
+                                                        unidad.id,
+                                                        'nombre',
+                                                        event.target.value,
+                                                    )}
+                                                />
+                                            </FormControl>
+
+                                            <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
+                                                <FormControl>
+                                                    <FormLabel fontSize="sm">Relación estándar</FormLabel>
+                                                    <Input
+                                                        size="sm"
+                                                        type="number"
+                                                        min={0.000001}
+                                                        step="0.000001"
+                                                        value={draft.relacionEstandar}
+                                                        isReadOnly={isReadOnly}
+                                                        bg={isReadOnly ? 'app.inputReadonly' : undefined}
+                                                        onChange={(event) => setUnidadDraftField(
+                                                            unidad.id,
+                                                            'relacionEstandar',
+                                                            parseNumber(event.target.value, 1),
+                                                        )}
+                                                    />
+                                                </FormControl>
+                                                <FormControl>
+                                                    <FormLabel fontSize="sm">Unidad relación</FormLabel>
+                                                    <Select
+                                                        size="sm"
+                                                        value={draft.unidadRelacion}
+                                                        isDisabled={isReadOnly}
+                                                        bg={isReadOnly ? 'app.inputReadonly' : undefined}
+                                                        onChange={(event) => setUnidadDraftField(
+                                                            unidad.id,
+                                                            'unidadRelacion',
+                                                            event.target.value as UnidadRelacionAreaOperativa,
+                                                        )}
+                                                    >
+                                                        {UNIDADES_RELACION.map((unidadRelacion) => (
+                                                            <option key={unidadRelacion} value={unidadRelacion}>
+                                                                {unidadRelacion}
+                                                            </option>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
+                                            </SimpleGrid>
+
+                                            {!isReadOnly && (
+                                                <HStack justify="flex-end">
+                                                    <Button
+                                                        size="sm"
+                                                        colorScheme="teal"
+                                                        onClick={() => handleSaveUnidad(unidad)}
+                                                        isLoading={savingKey === `unidad-${unidad.id}`}
+                                                    >
+                                                        Guardar
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        colorScheme="red"
+                                                        onClick={() => handleDeleteUnidad(unidad)}
+                                                        isLoading={savingKey === `unidad-delete-${unidad.id}`}
+                                                    >
+                                                        Eliminar
+                                                    </Button>
+                                                </HStack>
+                                            )}
+                                        </VStack>
+                                    </Box>
+                                );
+                            })}
+                        </VStack>
+                    </>
                 )}
             </Box>
         </VStack>

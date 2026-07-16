@@ -33,7 +33,7 @@ import {
     Tabs,
     useColorModeValue,
 } from "@chakra-ui/react";
-import { Background, BackgroundVariant, Edge, Handle, MiniMap, Node, NodeProps, Position, ReactFlow } from "@xyflow/react";
+import { Background, BackgroundVariant, Edge, Handle, MiniMap, Node, NodeProps, NodeTypes, Position, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
     AreaOperativaOrdenDetalleDTO,
@@ -57,6 +57,7 @@ interface Props {
 }
 
 type RouteNodeData = {
+    [key: string]: unknown;
     label: string;
     areaNombre: string;
     estadoDescripcion: string;
@@ -66,6 +67,8 @@ type RouteNodeData = {
     requiereJornadaLaboral: boolean;
     currentAreaId?: number | null;
 };
+
+type RouteFlowNode = Node<RouteNodeData, "routeNode">;
 
 function getEstadoColor(estado: number | null | undefined): string {
     switch (estado) {
@@ -128,7 +131,7 @@ function formatDurationMinutes(value: number | null | undefined): string {
     return `${hours} h ${minutes} min`;
 }
 
-function RouteNode({ data }: NodeProps<RouteNodeData>) {
+function RouteNode({ data }: NodeProps<RouteFlowNode>) {
     const isCurrentAreaNode = data.currentAreaId != null && data.currentLeaderArea;
     const accentColor = getEstadoColor(data.estadoActual);
     const nodeBorderColor = useColorModeValue("gray.200", "gray.600");
@@ -177,9 +180,9 @@ function RouteNode({ data }: NodeProps<RouteNodeData>) {
 
 const nodeTypes = {
     routeNode: RouteNode,
-};
+} satisfies NodeTypes;
 
-function buildRouteNodes(detail: AreaOperativaOrdenDetalleDTO | null, currentAreaId?: number | null): Node<RouteNodeData>[] {
+function buildRouteNodes(detail: AreaOperativaOrdenDetalleDTO | null, currentAreaId?: number | null): RouteFlowNode[] {
     if (!detail) {
         return [];
     }

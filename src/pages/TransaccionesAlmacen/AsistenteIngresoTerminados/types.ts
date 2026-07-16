@@ -1,170 +1,72 @@
-// Types for the AsistenteIngresoTerminados wizard
-
-export interface CategoriaBE {
-    categoriaId: number;
-    categoriaNombre: string;
-    categoriaDescripcion?: string;
-    loteSize?: number;
-    tiempoDiasFabricacion?: number;
+export interface FechaPendienteProduccion {
+    fechaProduccion: string;
+    cantidadReportes: number;
+    totalUnidades: number;
+    vencida: boolean;
 }
 
-export interface TerminadoBE {
-    productoId: string;
-    nombre: string;
-    tipoUnidades?: string;
-    cantidadUnidad?: number;
-    fotoUrl?: string;
-    categoria?: CategoriaBE;
-    status?: number;
-    prefijoLote?: string;
-    tipo_producto?: string;
-    costo?: number;
-    ivaPercentual?: number;
-    observaciones?: string;
+export interface ResumenPendientesProduccion {
+    fechaHoy: string;
+    pendientesHoy: number;
+    pendientesVencidos: number;
+    fechas: FechaPendienteProduccion[];
 }
 
-export interface OrdenProduccionBE {
-    ordenId: number;
-    loteAsignado: string;
-    estadoOrden: number;
-    politicaDispensacionInicio?: string | null;
-    fechaAplicacionPoliticaDispensacion?: string | null;
-    estadoDispensacionMateriales?: string | null;
-    cantidadProducir: number;
-    observaciones?: string;
-    fechaCreacion?: string;
-    fechaLanzamiento?: string;
-    fechaFinalPlanificada?: string;
-    fechaInicio?: string;
-    fechaFinal?: string;
-    areaOperativa?: string;
-    departamentoOperativo?: string;
-    numeroPedidoComercial?: string;
-    producto?: TerminadoBE;
-}
-
-export interface IngresoTerminadoConsultaResponse {
-    ordenProduccion: OrdenProduccionBE;
-    terminado: TerminadoBE;
-    loteSizeEsperado: number;
-}
-
-export interface IngresoTerminadoDatos {
-    /** Unidades reales que ingresan al almacén (entero >= 1) */
-    cantidadIngresada: number;
-    /** Fecha de vencimiento en formato ISO YYYY-MM-DD */
-    fechaVencimiento: string;
-}
-
-// ============================================================================
-// Tipos para el flujo temporal de reporte diario consolidado de terminados.
-// El flujo por lote/OP y RegistroMasivoPayload queda temporalmente en desuso,
-// pero se conserva por posible reintegracion futura al workflow de cierre de OP.
-// ============================================================================
-
-/** Datos validados del Excel subido - representa una fila consolidada por terminado */
-export interface IngresoTerminadoValidado {
+export interface ReporteProduccionPendiente {
+    reporteId: number;
+    version: number;
+    ordenProduccionId: number;
+    lote: string;
     productoId: string;
     productoNombre: string;
-    categoriaNombre: string;
-    cantidadProducida: number;
-    fechaReporte: string; // YYYY-MM-DD
-    loteFicticio: string;
-}
-
-/** Temporalmente en desuso: payload para registro masivo por lote/OP. */
-export interface RegistroMasivoPayload {
-    username: string;
-    ingresos: {
-        ordenProduccionId: number;
-        cantidadIngresada: number;
-        fechaVencimiento: string;
-    }[];
-}
-
-/** Error de validación individual */
-export interface ValidationError {
-    rowNumber: number;
-    productoId: string;
-    message: string;
-}
-
-/** Respuesta de validación del Excel */
-export interface ValidacionExcelResponse {
-    valid: boolean;
-    errors: ValidationError[];
-    rowCount: number;
-}
-
-export interface IngresoTerminadosReporteResumen {
-    unidadesPlaneadas: number;
-    unidadesProducidas: number;
-    unidadesProducidasDiaAnterior: number;
-    capacidadProductivaDia: number;
-    rendimientoPlaneacionPct: number | null;
-    cumplimientoReferenciasPct: number | null;
-    rendimientoOperativoPct: number | null;
-    tendenciaVsDiaAnteriorPct: number | null;
-    referenciasPlaneadas: number;
-    referenciasProducidas: number;
-    referenciasPlaneadasProducidas: number;
-    referenciasNoPlaneadas: number;
-    categoriasConCapacidad: number;
-    categoriasSinCapacidad: number;
-}
-
-export interface IngresoTerminadosReporteCategoria {
-    categoriaId: number | null;
-    categoriaNombre: string;
-    unidadesPlaneadas: number;
-    unidadesProducidas: number;
-    capacidadProductivaDia: number;
-    rendimientoPlaneacionPct: number | null;
-    rendimientoOperativoPct: number | null;
-    referenciasPlaneadas: number;
-    referenciasProducidas: number;
-    referenciasPlaneadasProducidas: number;
-}
-
-export interface IngresoTerminadosReporteReferencia {
-    productoId: string;
-    productoNombre: string;
-    categoriaId: number | null;
-    categoriaNombre: string;
+    tipoUnidades: string | null;
     cantidadPlaneada: number;
-    cantidadProducida: number;
-    diferencia: number;
-    rendimientoPlaneacionPct: number | null;
-    planeado: boolean;
-    producido: boolean;
-    noPlaneado: boolean;
+    cantidadReportada: number;
+    reportadoEn: string;
+    reportadoPor: string;
 }
 
-export interface IngresoTerminadosReporteMovimiento {
-    movimientoId: number;
-    fechaMovimiento: string;
-    transaccionId: number | null;
-    ordenProduccionId: number | null;
-    productoId: string | null;
-    productoNombre: string | null;
-    categoriaId: number | null;
-    categoriaNombre: string;
-    cantidad: number;
-    unidad: string | null;
-    almacen: string | null;
-    loteBatchNumber: string | null;
-    fechaVencimiento: string | null;
-    observaciones: string | null;
+export interface PendientesProduccionFecha {
+    fechaProduccion: string;
+    reportes: ReporteProduccionPendiente[];
 }
 
-export interface IngresoTerminadosReporteDiario {
-    fecha: string;
-    mpsId: number | null;
-    mpsEstado: string | null;
-    weekStartDate: string | null;
-    weekEndDate: string | null;
-    resumen: IngresoTerminadosReporteResumen;
-    consolidadoCategorias: IngresoTerminadosReporteCategoria[];
-    detalleReferencias: IngresoTerminadosReporteReferencia[];
-    movimientos: IngresoTerminadosReporteMovimiento[];
+export interface EdicionReporteProduccion {
+    cantidadConfirmada: number;
+    motivoCorreccion: string;
+}
+
+export interface CierreProduccionRequest {
+    fechaProduccion: string;
+    idempotencyKey: string;
+    reportes: Array<{
+        reporteId: number;
+        version: number;
+        cantidadConfirmada: number;
+        motivoCorreccion: string | null;
+    }>;
+}
+
+export interface CierreProduccionResponse {
+    cierreId: number;
+    fechaProduccion: string;
+    cerradoEn: string;
+    cantidadReportes: number;
+    totalUnidades: number;
+    reportes: Array<{
+        reporteId: number;
+        ordenProduccionId: number;
+        lote: string;
+        cantidadConfirmada: number;
+        transaccionAlmacenId: number;
+    }>;
+}
+
+export interface ConsolidadoProductoProduccion {
+    productoId: string;
+    productoNombre: string;
+    tipoUnidades: string | null;
+    cantidadReportada: number;
+    cantidadConfirmada: number;
+    lotes: number;
 }

@@ -56,6 +56,9 @@ export function validateRuta(nodes: RutaNode[], edges: RutaEdge[]): RutaValidati
     if (almacenCount !== 1) {
         errors.push("La ruta debe incluir exactamente un nodo de Almacen General.");
     }
+    if (nodes.length < 2) {
+        errors.push("La ruta debe incluir al menos un área productiva además de Almacen General.");
+    }
 
     const edgePairs = new Set<string>();
     for (const edge of edges) {
@@ -78,6 +81,16 @@ export function validateRuta(nodes: RutaNode[], edges: RutaEdge[]): RutaValidati
 
         adjacency.get(edge.source)?.add(edge.target);
         indegree.set(edge.target, (indegree.get(edge.target) ?? 0) + 1);
+    }
+
+    const terminalIds = Array.from(adjacency.entries())
+        .filter(([, targets]) => targets.size === 0)
+        .map(([nodeId]) => nodeId);
+
+    if (terminalIds.length !== 1) {
+        errors.push("La ruta debe terminar en exactamente una única área operativa.");
+    } else if (nodeMap.get(terminalIds[0])?.data.areaOperativaId === ALMACEN_GENERAL_ID) {
+        errors.push("Almacen General no puede ser el nodo terminal de la ruta.");
     }
 
     const rootIds = Array.from(indegree.entries())

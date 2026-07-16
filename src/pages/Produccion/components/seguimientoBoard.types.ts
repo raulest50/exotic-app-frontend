@@ -4,6 +4,7 @@ export interface SeguimientoOrdenAreaCardDTO {
     loteAsignado: string | null;
     productoId: string;
     productoNombre: string;
+    tipoUnidades: string | null;
     cantidadProducir: number;
     estadoOrden: number;
     politicaDispensacionInicio: string | null;
@@ -13,6 +14,7 @@ export interface SeguimientoOrdenAreaCardDTO {
     fechaFinalPlanificada: string | null;
     nodeId: number;
     nodeLabel: string;
+    esNodoFinal: boolean;
     areaId: number;
     areaNombre: string;
     estado: number;
@@ -38,12 +40,12 @@ export interface EstadoResumenDTO {
     completado: number;
 }
 
-export type TableroVista = "HISTORICO" | "SEMANA_ACTUAL";
+export type TableroVista = "HOY" | "SEMANA_ACTUAL" | "HISTORICO";
 
 export interface TableroOperativoDTO {
     vista?: TableroVista | null;
-    weekStartDate?: string | null;
-    weekEndDate?: string | null;
+    periodStartDate?: string | null;
+    periodEndDate?: string | null;
     resumen: EstadoResumenDTO;
     cola: SeguimientoOrdenAreaCardDTO[];
     espera: SeguimientoOrdenAreaCardDTO[];

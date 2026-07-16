@@ -167,7 +167,6 @@ type InformeGlobalParams = {
 
 const endPoints = new EndPointsURL();
 const MAX_RANGE_DAYS = 31;
-const CHART_REFERENCE_LIMIT = 8;
 const chartPalette = [
     "#2f855a",
     "#3182ce",
@@ -265,8 +264,8 @@ export default function InformesGlobalesTab() {
     }, []);
 
     const productionChartData = useMemo(
-        () => buildProductionChartData(reporteProduccion, isMobile),
-        [isMobile, reporteProduccion]
+        () => buildProductionChartData(reporteProduccion),
+        [reporteProduccion]
     );
     const productionChartOptions = useMemo(
         () => buildProductionChartOptions(productionChartData, isMobile),
@@ -784,43 +783,44 @@ function EmptyChart({ message }: { message: string }) {
     );
 }
 
-function buildProductionChartData(reporte: InformeGlobalProduccion | null, isMobile: boolean) {
+function buildProductionChartData(reporte: InformeGlobalProduccion | null) {
     const categorias = reporte?.consolidadoCategorias ?? [];
     const detalles = (reporte?.detalleReferencias ?? []).filter((detalle) => detalle.cantidadProducida > 0);
     const categoryKeys = categorias.map((categoria) => categoryKey(categoria.categoriaId, categoria.categoriaNombre));
     const categoryLabels = categorias.map((categoria) => categoria.categoriaNombre);
-    const topLimit = isMobile ? 5 : CHART_REFERENCE_LIMIT;
-    const topReferenceIds = new Set(
-        [...detalles]
-            .sort((a, b) => b.cantidadProducida - a.cantidadProducida)
-            .slice(0, topLimit)
-            .map(referenceKey)
-    );
-    const seriesByName = new Map<string, number[]>();
+    const seriesByReference = new Map<string, { name: string; data: number[] }>();
 
-    const ensureSeries = (name: string) => {
-        if (!seriesByName.has(name)) {
-            seriesByName.set(name, Array(categoryLabels.length).fill(0));
+    const ensureSeries = (detalle: DetalleReferencia) => {
+        const key = referenceKey(detalle);
+        if (!seriesByReference.has(key)) {
+            seriesByReference.set(key, {
+                name: detalle.productoNombre,
+                data: Array(categoryLabels.length).fill(0),
+            });
         }
-        return seriesByName.get(name) as number[];
+        return seriesByReference.get(key) as { name: string; data: number[] };
     };
 
     detalles.forEach((detalle) => {
         const index = categoryKeys.indexOf(categoryKey(detalle.categoriaId, detalle.categoriaNombre));
         if (index < 0) return;
-        const name = topReferenceIds.has(referenceKey(detalle))
-            ? detalle.productoNombre
-            : "Otras referencias";
-        ensureSeries(name)[index] += detalle.cantidadProducida;
+        ensureSeries(detalle).data[index] += detalle.cantidadProducida;
     });
 
-    const series = Array.from(seriesByName.entries()).map(([name, data], index) => ({
-        name,
-        data,
-        color: chartPalette[index % chartPalette.length],
-    }));
+    const series = Array.from(seriesByReference.entries())
+        .map(([id, serie]) => ({ id, ...serie }))
+        .sort((a, b) => sumValues(b.data) - sumValues(a.data))
+        .map((serie, index) => ({
+            ...serie,
+            color: chartPalette[index % chartPalette.length],
+        }));
     return { categories: categoryLabels, series };
 }
+
+type ProductionTooltipParams = {
+    seriesName?: string;
+    value?: number | string | Array<number | string>;
+};
 
 function buildProductionChartOptions(
     chartData: ReturnType<typeof buildProductionChartData>,
@@ -829,9 +829,18 @@ function buildProductionChartOptions(
     const needsZoom = chartData.categories.length > (isMobile ? 2 : 5);
     return {
         tooltip: {
-            trigger: "axis",
-            axisPointer: { type: "shadow" },
-            valueFormatter: (value: number) => formatInteger(value),
+            trigger: "item",
+            confine: true,
+            padding: [8, 10],
+            textStyle: { fontSize: 12 },
+            extraCssText: "max-width: 240px; white-space: normal;",
+            formatter: (params: ProductionTooltipParams) => {
+                const rawValue = Array.isArray(params.value)
+                    ? params.value[params.value.length - 1]
+                    : params.value;
+                const value = Number(rawValue ?? 0);
+                return `<div>${escapeHtml(params.seriesName ?? "Terminado")}</div><strong>${formatInteger(value)}</strong> unidades`;
+            },
         },
         legend: {
             type: "scroll",
@@ -862,6 +871,7 @@ function buildProductionChartOptions(
             name: "Unidades",
         },
         series: chartData.series.map((serie) => ({
+            id: serie.id,
             name: serie.name,
             type: "bar",
             stack: "produccion",
@@ -934,6 +944,21 @@ function categoryKey(categoriaId: number | null | undefined, categoriaNombre: st
 
 function referenceKey(detalle: DetalleReferencia) {
     return detalle.productoId ?? detalle.productoNombre;
+}
+
+function sumValues(values: number[]) {
+    return values.reduce((total, value) => total + value, 0);
+}
+
+function escapeHtml(value: string) {
+    const entities: Record<string, string> = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+    };
+    return value.replace(/[&<>"']/g, (character) => entities[character]);
 }
 
 function buildPeriodLabel(reporte: InformePeriodo) {

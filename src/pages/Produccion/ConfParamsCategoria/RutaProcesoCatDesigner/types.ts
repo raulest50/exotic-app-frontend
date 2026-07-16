@@ -5,6 +5,7 @@ export interface AreaOperativa {
 }
 
 export interface RutaProcesoNodeData {
+    [key: string]: unknown;
     label: string;
     areaOperativaId: number | null;
     areaOperativaNombre: string | null;

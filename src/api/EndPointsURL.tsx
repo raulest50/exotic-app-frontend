@@ -101,12 +101,10 @@ export default class EndPointsURL{
     public averias_almacen_registrar: string;
 
     // ingreso terminados almacen
-    public buscar_op_por_lote_terminados: string;
-    public registrar_ingreso_terminado: string;
-    public ingreso_terminados_plantilla: string;
-    public ingreso_terminados_validar: string;
-    public ingreso_terminados_registrar_masivo: string;
     public ingreso_terminados_reporte_hyl: string;
+    public ingreso_terminados_pendientes_resumen: string;
+    public ingreso_terminados_pendientes: string;
+    public ingreso_terminados_cierres: string;
 
     // recursos de produccion
     public save_recurso_produccion:string;
@@ -149,7 +147,6 @@ export default class EndPointsURL{
 
     public save_doc_ingreso_oc: string;
     public preview_lotes_ingreso_ocm: string;
-    public backflush_no_planificado: string;
     public historial_transacciones_filter: string;
 
     // ingresos almacen resource
@@ -760,12 +757,10 @@ export default class EndPointsURL{
         this.averias_almacen_registrar = `${domain}/${averias_res}/almacen/registrar`;
 
         // ingreso terminados almacen endpoints
-        this.buscar_op_por_lote_terminados = `${domain}/${ingresos_terminados_res}/buscar-op-por-lote`;
-        this.registrar_ingreso_terminado = `${domain}/${ingresos_terminados_res}/registrar`;
-        this.ingreso_terminados_plantilla = `${domain}/${ingresos_terminados_res}/plantilla`;
-        this.ingreso_terminados_validar = `${domain}/${ingresos_terminados_res}/validar`;
-        this.ingreso_terminados_registrar_masivo = `${domain}/${ingresos_terminados_res}/registrar-masivo`;
         this.ingreso_terminados_reporte_hyl = `${domain}/${ingresos_terminados_res}/reporte-hyl`;
+        this.ingreso_terminados_pendientes_resumen = `${domain}/${ingresos_terminados_res}/pendientes/resumen`;
+        this.ingreso_terminados_pendientes = `${domain}/${ingresos_terminados_res}/pendientes`;
+        this.ingreso_terminados_cierres = `${domain}/${ingresos_terminados_res}/cierres`;
 
         // recursos de produccion endpoints
         this.save_recurso_produccion = `${domain}/${recursos_produccion_res}`;
@@ -797,7 +792,6 @@ export default class EndPointsURL{
 
         this.save_doc_ingreso_oc = `${domain}/${movimientos_res}/save_doc_ingreso_oc`;
         this.preview_lotes_ingreso_ocm = `${domain}/${movimientos_res}/ocm/{ordenCompraId}/lotes-preview`;
-        this.backflush_no_planificado = `${domain}/${movimientos_res}/backflush_no_planificado`;
         this.historial_transacciones_filter = `${domain}/${movimientos_res}/historial_transacciones_filter`;
 
 

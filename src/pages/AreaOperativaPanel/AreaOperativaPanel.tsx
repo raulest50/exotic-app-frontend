@@ -14,6 +14,9 @@ import {
     Button,
     ButtonGroup,
     Flex,
+    FormControl,
+    FormHelperText,
+    FormLabel,
     HStack,
     Heading,
     Input,
@@ -26,6 +29,8 @@ import {
     ModalFooter,
     ModalHeader,
     ModalOverlay,
+    NumberInput,
+    NumberInputField,
     SimpleGrid,
     Spinner,
     Tab,
@@ -40,7 +45,7 @@ import {
     useColorModeValue,
     useToast,
 } from "@chakra-ui/react";
-import { FiArchive, FiCalendar, FiLogOut, FiRefreshCw, FiSearch, FiUser } from "react-icons/fi";
+import { FiArchive, FiCalendar, FiClock, FiLogOut, FiRefreshCw, FiSearch, FiUser } from "react-icons/fi";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL.tsx";
 import { useAuth } from "../../context/AuthContext.tsx";
@@ -68,12 +73,12 @@ import { useAreaOperativaNoiseSampler } from "./Analitica/Noise/useAreaOperativa
 import { formatSemanaMpsDisplayDate } from "../Produccion/ProgProdSemanalTab/semanaMps.utils.ts";
 
 const endpoints = new EndPointsURL();
-const TABLERO_VISTA_STORAGE_KEY = "areaOperativaPanel.tableroVista";
+const TABLERO_VISTA_STORAGE_KEY = "areaOperativaPanel.tableroVista.v2";
 
 const EMPTY_BOARD: TableroOperativoDTO = {
-    vista: "HISTORICO",
-    weekStartDate: null,
-    weekEndDate: null,
+    vista: "HOY",
+    periodStartDate: null,
+    periodEndDate: null,
     resumen: {
         total: 0,
         cola: 0,
@@ -88,19 +93,19 @@ const EMPTY_BOARD: TableroOperativoDTO = {
 };
 
 function isTableroVista(value: unknown): value is TableroVista {
-    return value === "HISTORICO" || value === "SEMANA_ACTUAL";
+    return value === "HOY" || value === "SEMANA_ACTUAL" || value === "HISTORICO";
 }
 
 function getStoredTableroVista(): TableroVista {
     if (typeof window === "undefined") {
-        return "SEMANA_ACTUAL";
+        return "HOY";
     }
 
     try {
         const stored = window.localStorage.getItem(TABLERO_VISTA_STORAGE_KEY);
-        return isTableroVista(stored) ? stored : "SEMANA_ACTUAL";
+        return isTableroVista(stored) ? stored : "HOY";
     } catch {
-        return "SEMANA_ACTUAL";
+        return "HOY";
     }
 }
 
@@ -247,6 +252,7 @@ export default function AreaOperativaPanel() {
     const [selectedOrden, setSelectedOrden] = useState<SeguimientoOrdenAreaCardDTO | null>(null);
     const [selectedAction, setSelectedAction] = useState<SeguimientoActionType | null>(null);
     const [observaciones, setObservaciones] = useState("");
+    const [cantidadProducida, setCantidadProducida] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
     const [detailLoading, setDetailLoading] = useState(false);
@@ -338,7 +344,8 @@ export default function AreaOperativaPanel() {
 
     const handleRefreshPanel = useCallback(async () => {
         await refreshDirectives();
-    }, [refreshDirectives]);
+        await fetchTablero();
+    }, [fetchTablero, refreshDirectives]);
 
     const openDetail = useCallback(async (orden: SeguimientoOrdenAreaCardDTO) => {
         setSelectedOrden(orden);
@@ -369,6 +376,7 @@ export default function AreaOperativaPanel() {
         setSelectedAction(action);
         setSelectedOrden(orden);
         setObservaciones("");
+        setCantidadProducida("");
         onActionOpen();
     };
 
@@ -404,6 +412,18 @@ export default function AreaOperativaPanel() {
         }
 
         const actionMeta = getActionMeta(selectedAction);
+        const isFinalCompletion = selectedAction === "completar" && selectedOrden.esNodoFinal;
+        const parsedCantidad = Number(cantidadProducida);
+        if (isFinalCompletion && (!Number.isFinite(parsedCantidad) || parsedCantidad <= 0)) {
+            toast({
+                title: "Cantidad requerida",
+                description: "Ingrese una cantidad producida mayor que cero.",
+                status: "warning",
+                duration: 3500,
+                isClosable: true,
+            });
+            return;
+        }
         setSubmitting(true);
 
         try {
@@ -413,6 +433,7 @@ export default function AreaOperativaPanel() {
                     ordenId: selectedOrden.ordenId,
                     areaId: selectedOrden.areaId,
                     observaciones: observaciones.trim() || null,
+                    cantidadProducida: isFinalCompletion ? parsedCantidad : null,
                 },
                 { withCredentials: true },
             );
@@ -441,6 +462,9 @@ export default function AreaOperativaPanel() {
     };
 
     const filteredBoard = useMemo<TableroOperativoDTO>(() => ({
+        vista: tablero.vista,
+        periodStartDate: tablero.periodStartDate,
+        periodEndDate: tablero.periodEndDate,
         resumen: tablero.resumen,
         cola: tablero.cola.filter((card) => matchesFilter(card, searchTerm)),
         espera: tablero.espera.filter((card) => matchesFilter(card, searchTerm)),
@@ -454,12 +478,14 @@ export default function AreaOperativaPanel() {
         filteredBoard.espera.length +
         filteredBoard.enProceso.length +
         filteredBoard.completado.length;
-    const weekRangeLabel = tablero.weekStartDate && tablero.weekEndDate
-        ? `${formatSemanaMpsDisplayDate(tablero.weekStartDate)} a ${formatSemanaMpsDisplayDate(tablero.weekEndDate)}`
+    const periodRangeLabel = tablero.periodStartDate && tablero.periodEndDate
+        ? `${formatSemanaMpsDisplayDate(tablero.periodStartDate)} a ${formatSemanaMpsDisplayDate(tablero.periodEndDate)}`
         : "semana actual";
-    const activeVistaLabel = effectiveTableroVista === "SEMANA_ACTUAL"
-        ? `la semana actual (${weekRangeLabel})`
-        : "el histórico";
+    const activeVistaLabel = effectiveTableroVista === "HOY"
+        ? "hoy"
+        : effectiveTableroVista === "SEMANA_ACTUAL"
+            ? `esta semana (${periodRangeLabel})`
+            : "todo el histórico";
     const boardLoading = loading || directivesLoading;
 
     return (
@@ -513,9 +539,9 @@ export default function AreaOperativaPanel() {
                                     gap={4}
                                 >
                                     {tableroVistaToggleEnabled ? (
-                                        <Box minW={{ base: "100%", md: "360px" }}>
+                                        <Box minW={{ base: "100%", md: "430px" }}>
                                             <Text fontSize="sm" fontWeight="semibold" mb={2}>
-                                                Vista de OP
+                                                Periodo de completadas
                                             </Text>
                                             <ButtonGroup
                                                 isAttached
@@ -525,7 +551,25 @@ export default function AreaOperativaPanel() {
                                             >
                                                 <Button
                                                     flex={{ base: 1, md: "initial" }}
-                                                    leftIcon={<FiCalendar />}
+                                                    leftIcon={(
+                                                        <Box display={{ base: "none", sm: "inline-flex" }}>
+                                                            <FiClock />
+                                                        </Box>
+                                                    )}
+                                                    colorScheme={effectiveTableroVista === "HOY" ? "teal" : "gray"}
+                                                    variant={effectiveTableroVista === "HOY" ? "solid" : "outline"}
+                                                    aria-pressed={effectiveTableroVista === "HOY"}
+                                                    onClick={() => handleTableroVistaChange("HOY")}
+                                                >
+                                                    Hoy
+                                                </Button>
+                                                <Button
+                                                    flex={{ base: 1, md: "initial" }}
+                                                    leftIcon={(
+                                                        <Box display={{ base: "none", sm: "inline-flex" }}>
+                                                            <FiCalendar />
+                                                        </Box>
+                                                    )}
                                                     colorScheme={effectiveTableroVista === "SEMANA_ACTUAL" ? "teal" : "gray"}
                                                     variant={effectiveTableroVista === "SEMANA_ACTUAL" ? "solid" : "outline"}
                                                     aria-pressed={effectiveTableroVista === "SEMANA_ACTUAL"}
@@ -535,7 +579,11 @@ export default function AreaOperativaPanel() {
                                                 </Button>
                                                 <Button
                                                     flex={{ base: 1, md: "initial" }}
-                                                    leftIcon={<FiArchive />}
+                                                    leftIcon={(
+                                                        <Box display={{ base: "none", sm: "inline-flex" }}>
+                                                            <FiArchive />
+                                                        </Box>
+                                                    )}
                                                     colorScheme={effectiveTableroVista === "HISTORICO" ? "teal" : "gray"}
                                                     variant={effectiveTableroVista === "HISTORICO" ? "solid" : "outline"}
                                                     aria-pressed={effectiveTableroVista === "HISTORICO"}
@@ -568,7 +616,9 @@ export default function AreaOperativaPanel() {
                                         color="app.textMuted"
                                         fontSize="sm"
                                     >
-                                        Mostrando {totalFilteredCards} órdenes en {tableroVistaToggleEnabled ? activeVistaLabel : "el tablero filtrado"}.
+                                        {tableroVistaToggleEnabled
+                                            ? `Mostrando ${totalFilteredCards} órdenes; completadas: ${activeVistaLabel}.`
+                                            : `Mostrando ${totalFilteredCards} órdenes en el tablero.`}
                                     </Text>
                                 </Flex>
                             </Box>
@@ -603,8 +653,8 @@ export default function AreaOperativaPanel() {
                                 <Box borderWidth="1px" borderRadius="xl" bg="app.surfaceSubtle" p={10} textAlign="center">
                                     <Heading size="md" color={emptyTitleColor} mb={2}>No hay órdenes en seguimiento</Heading>
                                     <Text color="app.textSubtle">
-                                        {effectiveTableroVista === "SEMANA_ACTUAL"
-                                            ? "Las órdenes aparecerán aquí cuando tengan fecha planificada de entrega en la semana actual."
+                                        {tableroVistaToggleEnabled
+                                            ? "No hay órdenes activas ni completadas en el periodo seleccionado."
                                             : "Las órdenes aparecerán aquí cuando una ruta productiva involucre tus áreas asignadas."}
                                     </Text>
                                 </Box>
@@ -662,6 +712,28 @@ export default function AreaOperativaPanel() {
                                     <Text fontWeight="bold" mb={1}>Estado actual</Text>
                                     <Text>{selectedOrden.estadoDescripcion}</Text>
                                 </Box>
+                                {selectedAction === "completar" && selectedOrden.esNodoFinal ? (
+                                    <FormControl isRequired>
+                                        <FormLabel>Cantidad producida</FormLabel>
+                                        <NumberInput
+                                            value={cantidadProducida}
+                                            onChange={(value) => setCantidadProducida(value)}
+                                            min={0.0001}
+                                            precision={4}
+                                            clampValueOnBlur={false}
+                                        >
+                                            <NumberInputField
+                                                inputMode="decimal"
+                                                placeholder="0"
+                                                aria-label="Cantidad de producto terminado fabricado"
+                                            />
+                                        </NumberInput>
+                                        <FormHelperText>
+                                            Planeado: {selectedOrden.cantidadProducir.toLocaleString("es-CO")}{" "}
+                                            {selectedOrden.tipoUnidades || "unidades"}. Este reporte deja la OP pendiente de cierre.
+                                        </FormHelperText>
+                                    </FormControl>
+                                ) : null}
                                 <Box>
                                     <Text fontWeight="bold" mb={1}>Observaciones (opcionales)</Text>
                                     <Textarea
@@ -686,6 +758,11 @@ export default function AreaOperativaPanel() {
                             colorScheme={actionMeta.colorScheme}
                             onClick={() => void handleSubmitAction()}
                             isLoading={submitting}
+                            isDisabled={
+                                selectedAction === "completar"
+                                && Boolean(selectedOrden?.esNodoFinal)
+                                && (!Number.isFinite(Number(cantidadProducida)) || Number(cantidadProducida) <= 0)
+                            }
                         >
                             {actionMeta.submitLabel}
                         </Button>

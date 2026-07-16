@@ -3,14 +3,22 @@ import { DownloadIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import { useMemo, useState } from "react";
 import EndPointsURL from "../../../api/EndPointsURL";
-import { IngresoTerminadoValidado } from "./types";
 
-interface ReporteHyLButtonProps {
-    ingresosValidados: IngresoTerminadoValidado[];
+export interface ReporteHyLItem {
+    productoId: string;
+    productoNombre: string;
+    cantidadProducida: number;
 }
 
-function consolidateProducedRows(ingresos: IngresoTerminadoValidado[]): IngresoTerminadoValidado[] {
-    const byProductoId = new Map<string, IngresoTerminadoValidado>();
+interface ReporteHyLButtonProps {
+    fechaReporte: string;
+    ingresos: ReporteHyLItem[];
+    onGenerated?: () => void;
+    onInvalidated?: () => void;
+}
+
+function consolidateProducedRows(ingresos: ReporteHyLItem[]): ReporteHyLItem[] {
+    const byProductoId = new Map<string, ReporteHyLItem>();
 
     for (const ingreso of ingresos) {
         if (ingreso.cantidadProducida <= 0) continue;
@@ -67,15 +75,20 @@ async function getArrayBufferErrorMessage(error: unknown): Promise<string> {
     return error.message;
 }
 
-export default function ReporteHyLButton({ ingresosValidados }: ReporteHyLButtonProps) {
+export default function ReporteHyLButton({
+    fechaReporte,
+    ingresos,
+    onGenerated,
+    onInvalidated,
+}: ReporteHyLButtonProps) {
     const toast = useToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const [isGenerating, setIsGenerating] = useState(false);
     const [costosEnCero, setCostosEnCero] = useState(false);
 
     const productosProducidos = useMemo(
-        () => consolidateProducedRows(ingresosValidados),
-        [ingresosValidados]
+        () => consolidateProducedRows(ingresos),
+        [ingresos]
     );
 
     const handleDownloadHyL = async () => {
@@ -92,13 +105,12 @@ export default function ReporteHyLButton({ ingresosValidados }: ReporteHyLButton
 
         setIsGenerating(true);
         try {
-            const fechaReporte = productosProducidos[0]?.fechaReporte ?? new Date().toISOString().slice(0, 10);
             const response = await axios.post<ArrayBuffer>(
                 endpoints.ingreso_terminados_reporte_hyl,
                 {
                     fechaReporte,
                     costosEnCero,
-                    ingresos: ingresosValidados.map((ingreso) => ({
+                    ingresos: productosProducidos.map((ingreso) => ({
                         productoId: ingreso.productoId,
                         productoNombre: ingreso.productoNombre,
                         cantidadProducida: ingreso.cantidadProducida,
@@ -111,6 +123,7 @@ export default function ReporteHyLButton({ ingresosValidados }: ReporteHyLButton
             );
 
             triggerFileDownload(response.data, `reporte_hyl_${fechaReporte.replace(/-/g, "")}.xls`);
+            onGenerated?.();
 
             toast({
                 title: "Reporte HyL generado",
@@ -137,7 +150,10 @@ export default function ReporteHyLButton({ ingresosValidados }: ReporteHyLButton
         <VStack align="stretch" spacing={2}>
             <Checkbox
                 isChecked={costosEnCero}
-                onChange={(event) => setCostosEnCero(event.target.checked)}
+                onChange={(event) => {
+                    setCostosEnCero(event.target.checked);
+                    onInvalidated?.();
+                }}
                 isDisabled={isGenerating}
             >
                 Generar costo en ceros
@@ -146,7 +162,7 @@ export default function ReporteHyLButton({ ingresosValidados }: ReporteHyLButton
                 leftIcon={<DownloadIcon />}
                 colorScheme="teal"
                 size="lg"
-                minH="72px"
+                minH="48px"
                 onClick={handleDownloadHyL}
                 isLoading={isGenerating}
                 loadingText="Generando..."
