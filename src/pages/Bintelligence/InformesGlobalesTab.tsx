@@ -32,6 +32,8 @@ import { DownloadIcon, RepeatIcon } from "@chakra-ui/icons";
 import ReactECharts from "echarts-for-react";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL.tsx";
+import InformeGlobalAlmacenPanel from "./InformeGlobalAlmacenPanel";
+import type { InformeGlobalAlmacen } from "./informeGlobalAlmacen.types";
 
 type ModoFechaInformeGlobal = "fecha_unica" | "rango";
 
@@ -96,64 +98,6 @@ interface DetalleReferencia {
     noPlaneado: boolean;
 }
 
-interface InformeGlobalAlmacen extends InformePeriodo {
-    resumen: ResumenAlmacen;
-    cantidadesPorUnidad: CantidadPorUnidad[];
-    serieDiaria: SerieDiariaAlmacen[];
-    consolidadoTipoMaterial: ConsolidadoTipoMaterial[];
-    topMateriales: TopMaterial[];
-    notas: NotaInforme[];
-}
-
-interface ResumenAlmacen {
-    valorIngresosEstimado: number;
-    valorDispensacionesEstimado: number;
-    balanceValorEstimado: number;
-    movimientosIngreso: number;
-    movimientosDispensacion: number;
-    materialesIngresados: number;
-    materialesDispensados: number;
-    materialesConCosto: number;
-    materialesSinCosto: number;
-    coberturaCostosPct?: number | null;
-}
-
-interface CantidadPorUnidad {
-    unidadMedida: string;
-    cantidadIngresada: number;
-    cantidadDispensada: number;
-    balanceNeto: number;
-}
-
-interface SerieDiariaAlmacen {
-    fecha: string;
-    valorIngresosEstimado: number;
-    valorDispensacionesEstimado: number;
-    movimientosIngreso: number;
-    movimientosDispensacion: number;
-}
-
-interface ConsolidadoTipoMaterial {
-    tipoMaterial: string;
-    valorIngresosEstimado: number;
-    valorDispensacionesEstimado: number;
-    movimientos: number;
-    cantidadesPorUnidad: CantidadPorUnidad[];
-}
-
-interface TopMaterial {
-    productoId: string;
-    productoNombre: string;
-    tipoMaterial: string;
-    unidadMedida: string;
-    cantidadIngresada: number;
-    cantidadDispensada: number;
-    valorIngresosEstimado: number;
-    valorDispensacionesEstimado: number;
-    impactoValorEstimado: number;
-    costoDisponible: boolean;
-}
-
 interface NotaInforme {
     tipo: "INFO" | "WARNING" | string;
     mensaje: string;
@@ -194,7 +138,6 @@ export default function InformesGlobalesTab() {
 
     const isMobile = useBreakpointValue({ base: true, lg: false }) ?? false;
     const productionChartHeight = useBreakpointValue({ base: 310, md: 420 }) ?? 420;
-    const warehouseChartHeight = useBreakpointValue({ base: 290, md: 360 }) ?? 360;
     const rangeDays = modoFecha === "rango" ? getRangeDaysInclusive(fechaDesde, fechaHasta) : 1;
     const rangeInvalid = modoFecha === "rango" && Boolean(fechaDesde && fechaHasta && fechaDesde > fechaHasta);
     const rangeTooLong = modoFecha === "rango" && rangeDays > MAX_RANGE_DAYS;
@@ -237,7 +180,14 @@ export default function InformesGlobalesTab() {
         setLoadingProduccion(false);
 
         if (almacenResult.status === "fulfilled") {
-            setReporteAlmacen(almacenResult.value.data);
+            if (isInformeGlobalAlmacenActual(almacenResult.value.data)) {
+                setReporteAlmacen(almacenResult.value.data);
+            } else {
+                setReporteAlmacen(null);
+                setErrorAlmacen(
+                    "El backend local esta usando una version anterior del informe de almacen. Reinicie el backend y actualice esta pagina."
+                );
+            }
         } else {
             setReporteAlmacen(null);
             setErrorAlmacen(getRequestErrorMessage(almacenResult.reason));
@@ -271,15 +221,8 @@ export default function InformesGlobalesTab() {
         () => buildProductionChartOptions(productionChartData, isMobile),
         [productionChartData, isMobile]
     );
-    const warehouseChartOptions = useMemo(
-        () => buildWarehouseChartOptions(reporteAlmacen?.serieDiaria ?? [], isMobile),
-        [isMobile, reporteAlmacen]
-    );
     const hasProductionChartData = productionChartData.series.some(
         (serie) => serie.data.some((value) => value > 0)
-    );
-    const hasWarehouseChartData = (reporteAlmacen?.serieDiaria ?? []).some(
-        (dia) => dia.valorIngresosEstimado > 0 || dia.valorDispensacionesEstimado > 0
     );
     const periodReport = reporteProduccion ?? reporteAlmacen;
 
@@ -465,7 +408,7 @@ export default function InformesGlobalesTab() {
                         Movimientos de almacen
                     </Heading>
                     <Text fontSize="sm" color="app.textMuted" mt={1}>
-                        Entradas, dispensaciones e impacto estimado de materiales en el periodo.
+                        Cantidades dispensadas, recepciones de compra y otros ingresos por unidad de medida.
                     </Text>
                 </Box>
 
@@ -474,202 +417,12 @@ export default function InformesGlobalesTab() {
                 ) : errorAlmacen ? (
                     <ErrorPanel message={errorAlmacen} />
                 ) : reporteAlmacen ? (
-                    <WarehouseReport
-                        report={reporteAlmacen}
-                        chartOptions={warehouseChartOptions}
-                        chartHeight={warehouseChartHeight}
-                        hasChartData={hasWarehouseChartData}
-                    />
+                    <InformeGlobalAlmacenPanel report={reporteAlmacen} />
                 ) : (
                     <EmptyPanel message="Seleccione una fecha y actualice el informe de almacen." />
                 )}
             </Stack>
         </Stack>
-    );
-}
-
-function WarehouseReport({ report, chartOptions, chartHeight, hasChartData }: {
-    report: InformeGlobalAlmacen;
-    chartOptions: Record<string, unknown>;
-    chartHeight: number;
-    hasChartData: boolean;
-}) {
-    const totalMovements = report.resumen.movimientosIngreso + report.resumen.movimientosDispensacion;
-    const hasCostBasis = report.resumen.materialesConCosto > 0 || totalMovements === 0;
-
-    return (
-        <>
-            <SimpleGrid columns={{ base: 2, xl: 4 }} spacing={{ base: 3, md: 4 }}>
-                <KpiCard
-                    label="Valor ingresado"
-                    value={hasCostBasis ? formatCurrency(report.resumen.valorIngresosEstimado) : "Sin base"}
-                    help={`${formatInteger(report.resumen.movimientosIngreso)} movimientos`}
-                />
-                <KpiCard
-                    label="Valor dispensado"
-                    value={hasCostBasis ? formatCurrency(report.resumen.valorDispensacionesEstimado) : "Sin base"}
-                    help={`${formatInteger(report.resumen.movimientosDispensacion)} movimientos`}
-                />
-                <KpiCard
-                    label="Balance estimado"
-                    value={hasCostBasis ? formatCurrency(report.resumen.balanceValorEstimado) : "Sin base"}
-                    help="Ingresos menos dispensaciones"
-                />
-                <KpiCard
-                    label="Cobertura de costos"
-                    value={formatPercent(report.resumen.coberturaCostosPct)}
-                    help={`${formatInteger(report.resumen.materialesConCosto)} con costo | ${formatInteger(report.resumen.materialesSinCosto)} sin costo`}
-                />
-            </SimpleGrid>
-
-            <ReportNotes notes={report.notas} />
-
-            <Card variant="outline">
-                <CardBody p={{ base: 4, md: 5 }}>
-                    <Stack spacing={4}>
-                        <Box>
-                            <Heading as="h3" size="sm">Cantidades por unidad de medida</Heading>
-                            <Text fontSize="sm" color="app.textMuted" mt={1}>
-                                Balance fisico separado para evitar sumar magnitudes incompatibles.
-                            </Text>
-                        </Box>
-                        {report.cantidadesPorUnidad.length > 0 ? (
-                            <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={0}>
-                                {report.cantidadesPorUnidad.map((cantidad, index) => (
-                                    <Box
-                                        key={cantidad.unidadMedida}
-                                        py={3}
-                                        px={{ base: 0, md: 4 }}
-                                        borderTopWidth={{ base: index === 0 ? 0 : "1px", md: 0 }}
-                                        borderLeftWidth={{ base: 0, md: index === 0 ? 0 : "1px" }}
-                                        borderColor="app.border"
-                                    >
-                                        <Badge colorScheme="gray" mb={2}>{cantidad.unidadMedida}</Badge>
-                                        <SimpleGrid columns={3} spacing={2}>
-                                            <QuantityMetric label="Ingreso" value={cantidad.cantidadIngresada} />
-                                            <QuantityMetric label="Dispensado" value={cantidad.cantidadDispensada} />
-                                            <QuantityMetric label="Balance" value={cantidad.balanceNeto} />
-                                        </SimpleGrid>
-                                    </Box>
-                                ))}
-                            </SimpleGrid>
-                        ) : (
-                            <Text color="app.textMuted">No hay cantidades de materiales para mostrar.</Text>
-                        )}
-                    </Stack>
-                </CardBody>
-            </Card>
-
-            <Card variant="outline">
-                <CardBody p={{ base: 4, md: 5 }}>
-                    <Stack spacing={4}>
-                        <Stack
-                            direction={{ base: "column", md: "row" }}
-                            justify="space-between"
-                            align={{ base: "flex-start", md: "center" }}
-                            spacing={2}
-                        >
-                            <Box>
-                                <Heading as="h3" size="sm">Evolucion diaria del valor estimado</Heading>
-                                <Text fontSize="sm" color="app.textMuted" mt={1}>
-                                    Costo actual por cantidad movilizada, sin IVA.
-                                </Text>
-                            </Box>
-                            <Badge colorScheme="teal">{formatInteger(totalMovements)} movimientos</Badge>
-                        </Stack>
-                        {hasChartData ? (
-                            <ReactECharts
-                                option={chartOptions}
-                                style={{ height: `${chartHeight}px`, width: "100%" }}
-                            />
-                        ) : (
-                            <EmptyChart message={totalMovements > 0
-                                ? "Los movimientos del periodo no tienen costos suficientes para construir la serie monetaria."
-                                : "No hay movimientos de materiales en la ventana seleccionada."}
-                            />
-                        )}
-                    </Stack>
-                </CardBody>
-            </Card>
-
-            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4}>
-                <Card variant="outline">
-                    <CardBody p={{ base: 4, md: 5 }}>
-                        <Stack spacing={4}>
-                            <Heading as="h3" size="sm">Composicion por tipo de material</Heading>
-                            {report.consolidadoTipoMaterial.length > 0 ? (
-                                <Stack spacing={0} divider={<Divider borderColor="app.border" />}>
-                                    {report.consolidadoTipoMaterial.map((tipo) => (
-                                        <Box key={tipo.tipoMaterial} py={3}>
-                                            <HStack justify="space-between" align="flex-start" spacing={3}>
-                                                <Box minW={0}>
-                                                    <Text fontWeight="semibold">{tipo.tipoMaterial}</Text>
-                                                    <Text fontSize="sm" color="app.textMuted">
-                                                        {formatInteger(tipo.movimientos)} movimientos
-                                                    </Text>
-                                                </Box>
-                                                <Box textAlign="right" flexShrink={0}>
-                                                    <Text fontSize="sm">+ {formatCurrency(tipo.valorIngresosEstimado)}</Text>
-                                                    <Text fontSize="sm" color="app.textMuted">
-                                                        - {formatCurrency(tipo.valorDispensacionesEstimado)}
-                                                    </Text>
-                                                </Box>
-                                            </HStack>
-                                        </Box>
-                                    ))}
-                                </Stack>
-                            ) : (
-                                <Text color="app.textMuted">No hay tipos de material para mostrar.</Text>
-                            )}
-                        </Stack>
-                    </CardBody>
-                </Card>
-
-                <Card variant="outline">
-                    <CardBody p={{ base: 4, md: 5 }}>
-                        <Stack spacing={4}>
-                            <Box>
-                                <Heading as="h3" size="sm">Materiales de mayor impacto</Heading>
-                                <Text fontSize="sm" color="app.textMuted" mt={1}>
-                                    Maximo cinco materiales; no corresponde al detalle de movimientos.
-                                </Text>
-                            </Box>
-                            {report.topMateriales.length > 0 ? (
-                                <Stack spacing={0} divider={<Divider borderColor="app.border" />}>
-                                    {report.topMateriales.map((material) => (
-                                        <Box key={material.productoId} py={3}>
-                                            <Stack direction="row" justify="space-between" align="flex-start" spacing={3}>
-                                                <Box minW={0}>
-                                                    <Text fontWeight="semibold" noOfLines={2}>{material.productoNombre}</Text>
-                                                    <Text fontSize="xs" color="app.textMuted" noOfLines={1}>
-                                                        {material.tipoMaterial} | {material.productoId}
-                                                    </Text>
-                                                    <Text fontSize="sm" color="app.textMuted" mt={1}>
-                                                        Ingreso {formatMeasure(material.cantidadIngresada, material.unidadMedida)} | Dispensado {formatMeasure(material.cantidadDispensada, material.unidadMedida)}
-                                                    </Text>
-                                                </Box>
-                                                <Box textAlign="right" flexShrink={0}>
-                                                    <Badge colorScheme={material.costoDisponible ? "green" : "orange"}>
-                                                        {material.unidadMedida}
-                                                    </Badge>
-                                                    <Text fontSize="sm" fontWeight="semibold" mt={2}>
-                                                        {material.costoDisponible
-                                                            ? formatCurrency(material.impactoValorEstimado)
-                                                            : "Sin costo"}
-                                                    </Text>
-                                                </Box>
-                                            </Stack>
-                                        </Box>
-                                    ))}
-                                </Stack>
-                            ) : (
-                                <Text color="app.textMuted">No hay materiales para mostrar.</Text>
-                            )}
-                        </Stack>
-                    </CardBody>
-                </Card>
-            </SimpleGrid>
-        </>
     );
 }
 
@@ -710,17 +463,6 @@ function KpiCard({ label, value, help, trend }: {
                 </Stat>
             </CardBody>
         </Card>
-    );
-}
-
-function QuantityMetric({ label, value }: { label: string; value: number }) {
-    return (
-        <Box minW={0}>
-            <Text fontSize="xs" color="app.textMuted" noOfLines={1}>{label}</Text>
-            <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold" overflowWrap="anywhere">
-                {formatQuantity(value)}
-            </Text>
-        </Box>
     );
 }
 
@@ -882,62 +624,6 @@ function buildProductionChartOptions(
     };
 }
 
-function buildWarehouseChartOptions(serieDiaria: SerieDiariaAlmacen[], isMobile: boolean) {
-    const needsZoom = serieDiaria.length > (isMobile ? 7 : 16);
-    return {
-        tooltip: {
-            trigger: "axis",
-            axisPointer: { type: "shadow" },
-            valueFormatter: (value: number) => formatCurrency(value),
-        },
-        legend: {
-            top: 0,
-            data: ["Ingresos", "Dispensaciones"],
-        },
-        grid: {
-            left: isMobile ? 58 : 72,
-            right: 16,
-            top: 48,
-            bottom: needsZoom ? 70 : 44,
-        },
-        dataZoom: needsZoom
-            ? [
-                { type: "inside", xAxisIndex: 0 },
-                { type: "slider", xAxisIndex: 0, bottom: 14, height: 22 },
-            ]
-            : [],
-        xAxis: {
-            type: "category",
-            data: serieDiaria.map((dia) => formatChartDate(dia.fecha)),
-            axisLabel: {
-                interval: 0,
-                rotate: isMobile && serieDiaria.length > 4 ? 35 : 0,
-            },
-        },
-        yAxis: {
-            type: "value",
-            name: "COP",
-            axisLabel: {
-                formatter: (value: number) => formatCompactCurrency(value),
-            },
-        },
-        series: [
-            {
-                name: "Ingresos",
-                type: "bar",
-                data: serieDiaria.map((dia) => dia.valorIngresosEstimado),
-                itemStyle: { color: "#2f855a" },
-            },
-            {
-                name: "Dispensaciones",
-                type: "bar",
-                data: serieDiaria.map((dia) => dia.valorDispensacionesEstimado),
-                itemStyle: { color: "#3182ce" },
-            },
-        ],
-    };
-}
-
 function categoryKey(categoriaId: number | null | undefined, categoriaNombre: string) {
     return `${categoriaId ?? "SIN"}-${categoriaNombre}`;
 }
@@ -975,21 +661,20 @@ function getRequestErrorMessage(error: unknown) {
     return "Compruebe la conexion e intente nuevamente.";
 }
 
+function isInformeGlobalAlmacenActual(value: unknown): value is InformeGlobalAlmacen {
+    if (!value || typeof value !== "object") return false;
+    const report = value as Partial<InformeGlobalAlmacen>;
+    return Boolean(report.resumen)
+        && Array.isArray(report.resumenPorUnidad)
+        && Array.isArray(report.rankingDispensacion)
+        && Array.isArray(report.serieFisicaDiaria)
+        && Array.isArray(report.notas);
+}
+
 function formatInteger(value?: number | null) {
     return Number(value ?? 0).toLocaleString("es-CO", {
         maximumFractionDigits: 0,
     });
-}
-
-function formatQuantity(value?: number | null) {
-    return Number(value ?? 0).toLocaleString("es-CO", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-    });
-}
-
-function formatMeasure(value: number, unit: string) {
-    return `${formatQuantity(value)} ${unit}`;
 }
 
 function formatPercent(value?: number | null) {
@@ -1003,27 +688,6 @@ function formatPercent(value?: number | null) {
 function formatSignedPercent(value: number) {
     const sign = value > 0 ? "+" : "";
     return `${sign}${formatPercent(value)}`;
-}
-
-function formatCurrency(value?: number | null) {
-    return Number(value ?? 0).toLocaleString("es-CO", {
-        style: "currency",
-        currency: "COP",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    });
-}
-
-function formatCompactCurrency(value: number) {
-    const absolute = Math.abs(value);
-    if (absolute >= 1_000_000_000) return `$${formatQuantity(value / 1_000_000_000)} mil M`;
-    if (absolute >= 1_000_000) return `$${formatQuantity(value / 1_000_000)} M`;
-    if (absolute >= 1_000) return `$${formatQuantity(value / 1_000)} mil`;
-    return `$${formatQuantity(value)}`;
-}
-
-function formatChartDate(value: string) {
-    return value.length >= 10 ? value.slice(5) : value;
 }
 
 function getTodayIsoDate() {

@@ -295,7 +295,7 @@ export default function AreaOperativaOrderDetailDrawer({
     return (
         <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="xl">
             <DrawerOverlay />
-            <DrawerContent>
+            <DrawerContent maxW={{ base: "100vw", md: "36rem" }}>
                 <DrawerCloseButton />
                 <DrawerHeader>Detalle operativo de la orden</DrawerHeader>
 
@@ -309,9 +309,9 @@ export default function AreaOperativaOrderDetailDrawer({
                     {!loading && detail ? (
                         <Tabs variant="enclosed" colorScheme="teal" isLazy>
                             <TabList>
-                                <Tab>Resumen</Tab>
-                                <Tab>Ruta</Tab>
-                                <Tab>BOM</Tab>
+                                <Tab minH={12}>Resumen</Tab>
+                                <Tab minH={12}>Ruta</Tab>
+                                <Tab minH={12}>BOM</Tab>
                             </TabList>
 
                             <TabPanels>

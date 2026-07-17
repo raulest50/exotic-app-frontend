@@ -21,7 +21,7 @@ import {
     useColorModeValue,
     VStack,
 } from "@chakra-ui/react";
-import { useCallback, type MutableRefObject } from "react";
+import { useCallback, type MutableRefObject, type ReactNode } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { FiEdit3, FiEye, FiPause, FiPlay, FiRefreshCw } from "react-icons/fi";
@@ -177,6 +177,7 @@ interface SeguimientoOrdenCardProps {
     onCorrectState?: (card: SeguimientoOrdenAreaCardDTO) => void;
     canCorrectState?: boolean;
     dndEnabled?: boolean;
+    touchOptimized?: boolean;
 }
 
 function SeguimientoOrdenCard({
@@ -187,6 +188,7 @@ function SeguimientoOrdenCard({
     onCorrectState,
     canCorrectState = false,
     dndEnabled = false,
+    touchOptimized = false,
 }: SeguimientoOrdenCardProps) {
     const isAlmacenGeneral = card.areaId === -1;
     const isOrdenCerrada = card.estadoOrden === -1 || card.estadoOrden === 2;
@@ -203,6 +205,7 @@ function SeguimientoOrdenCard({
                 onCorrectState={onCorrectState}
                 canCorrectState={canCorrectState}
                 isAlmacenGeneral={isAlmacenGeneral}
+                touchOptimized={touchOptimized}
             />
         );
     }
@@ -223,6 +226,7 @@ function SeguimientoOrdenCard({
                 onCorrectState={onCorrectState}
                 canCorrectState={canCorrectState}
                 isAlmacenGeneral={isAlmacenGeneral}
+                touchOptimized={touchOptimized}
             />
         </Box>
     );
@@ -236,6 +240,7 @@ function DraggableSeguimientoOrdenCard({
     onCorrectState,
     canCorrectState,
     isAlmacenGeneral,
+    touchOptimized,
 }: SeguimientoOrdenCardProps & { isAlmacenGeneral: boolean }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: getSeguimientoCardDraggableId(card),
@@ -266,6 +271,7 @@ function DraggableSeguimientoOrdenCard({
                 onCorrectState={onCorrectState}
                 canCorrectState={canCorrectState}
                 isAlmacenGeneral={isAlmacenGeneral}
+                touchOptimized={touchOptimized}
             />
         </Box>
     );
@@ -279,6 +285,7 @@ function SeguimientoOrdenCardContent({
     onCorrectState,
     canCorrectState = false,
     isAlmacenGeneral,
+    touchOptimized = false,
 }: SeguimientoOrdenCardProps & { isAlmacenGeneral: boolean }) {
     const isOrdenCerrada = card.estadoOrden === -1 || card.estadoOrden === 2;
 
@@ -335,6 +342,7 @@ function SeguimientoOrdenCardContent({
             <HStack justify="space-between" align="center" pt={1} flexWrap="wrap" gap={2}>
                 <Button
                     size="sm"
+                    minH={touchOptimized ? 12 : undefined}
                     variant="outline"
                     leftIcon={<FiEye />}
                     onClick={() => onOpenDetail(card)}
@@ -347,6 +355,7 @@ function SeguimientoOrdenCardContent({
                         {card.estado === 1 && !isAlmacenGeneral ? (
                             <Button
                                 size="sm"
+                                minH={touchOptimized ? 12 : undefined}
                                 colorScheme="blue"
                                 leftIcon={<FiPlay />}
                                 onClick={() => onAction?.("iniciar", card)}
@@ -359,6 +368,7 @@ function SeguimientoOrdenCardContent({
                             <>
                                 <Button
                                     size="sm"
+                                    minH={touchOptimized ? 12 : undefined}
                                     variant="outline"
                                     leftIcon={<FiPause />}
                                     onClick={() => onAction?.("pausar", card)}
@@ -367,6 +377,7 @@ function SeguimientoOrdenCardContent({
                                 </Button>
                                 <Button
                                     size="sm"
+                                    minH={touchOptimized ? 12 : undefined}
                                     colorScheme="green"
                                     leftIcon={<FiRefreshCw />}
                                     onClick={() => onAction?.("completar", card)}
@@ -385,6 +396,7 @@ function SeguimientoOrdenCardContent({
                 {mode === "monitor" && canCorrectState && !isAlmacenGeneral && !isOrdenCerrada ? (
                     <Button
                         size="sm"
+                        minH={touchOptimized ? 12 : undefined}
                         colorScheme="purple"
                         variant="outline"
                         leftIcon={<FiEdit3 />}
@@ -408,6 +420,10 @@ interface SeguimientoBoardColumnProps {
     canCorrectState?: boolean;
     dndEnabled?: boolean;
     containerRef?: MutableRefObject<HTMLDivElement | null>;
+    totalItems?: number;
+    footer?: ReactNode;
+    isLoading?: boolean;
+    touchOptimized?: boolean;
 }
 
 export function SeguimientoBoardColumn({
@@ -420,6 +436,10 @@ export function SeguimientoBoardColumn({
     canCorrectState = false,
     dndEnabled = false,
     containerRef,
+    totalItems,
+    footer,
+    isLoading = false,
+    touchOptimized = false,
 }: SeguimientoBoardColumnProps) {
     const meta = BOARD_COLUMN_META[estadoKey];
     const columnBg = useColorModeValue("whiteAlpha.900", "whiteAlpha.100");
@@ -437,6 +457,10 @@ export function SeguimientoBoardColumn({
                 columnBg={columnBg}
                 meta={meta}
                 containerRef={containerRef}
+                totalItems={totalItems}
+                footer={footer}
+                isLoading={isLoading}
+                touchOptimized={touchOptimized}
             />
         );
     }
@@ -460,6 +484,10 @@ export function SeguimientoBoardColumn({
                 onCorrectState={onCorrectState}
                 canCorrectState={canCorrectState}
                 dndEnabled={false}
+                totalItems={totalItems}
+                footer={footer}
+                isLoading={isLoading}
+                touchOptimized={touchOptimized}
             />
         </Box>
     );
@@ -476,6 +504,10 @@ function DroppableSeguimientoBoardColumn({
     columnBg,
     meta,
     containerRef,
+    totalItems,
+    footer,
+    isLoading,
+    touchOptimized,
 }: SeguimientoBoardColumnProps & {
     columnBg: string;
     meta: (typeof BOARD_COLUMN_META)[EstadoTableroKey];
@@ -512,6 +544,10 @@ function DroppableSeguimientoBoardColumn({
                 onCorrectState={onCorrectState}
                 canCorrectState={canCorrectState}
                 dndEnabled
+                totalItems={totalItems}
+                footer={footer}
+                isLoading={isLoading}
+                touchOptimized={touchOptimized}
             />
         </Box>
     );
@@ -526,6 +562,10 @@ function SeguimientoBoardColumnContent({
     onCorrectState,
     canCorrectState,
     dndEnabled,
+    totalItems,
+    footer,
+    isLoading = false,
+    touchOptimized = false,
 }: Omit<SeguimientoBoardColumnProps, "estadoKey"> & {
     meta: (typeof BOARD_COLUMN_META)[EstadoTableroKey];
 }) {
@@ -534,16 +574,29 @@ function SeguimientoBoardColumnContent({
             <Box borderTop="4px solid" borderTopColor={meta.accentColor} px={4} py={3} bg="app.surfaceSubtle">
                 <HStack justify="space-between">
                     <Text fontWeight="bold">{meta.title}</Text>
-                    <Badge colorScheme="gray">{items.length}</Badge>
+                    <Badge colorScheme="gray">{totalItems ?? items.length}</Badge>
                 </HStack>
             </Box>
 
-            <VStack align="stretch" spacing={3} p={4} maxH="70vh" overflowY="auto">
-                {items.length === 0 ? (
+            <VStack
+                align="stretch"
+                spacing={3}
+                p={4}
+                minH={touchOptimized ? "240px" : undefined}
+                maxH={touchOptimized ? { base: "none", md: "calc(100dvh - 24rem)" } : "70vh"}
+                overflowY={touchOptimized ? { base: "visible", md: "auto" } : "auto"}
+            >
+                {isLoading ? (
+                    <Flex justify="center" align="center" minH="180px" aria-live="polite">
+                        <Spinner color="teal.500" />
+                    </Flex>
+                ) : null}
+                {!isLoading && items.length === 0 ? (
                     <Text fontSize="sm" color="app.textSubtle">
                         {meta.emptyLabel}
                     </Text>
-                ) : (
+                ) : null}
+                {!isLoading && items.length > 0 ? (
                     items.map((item) => (
                         <SeguimientoOrdenCard
                             key={item.id}
@@ -554,10 +607,16 @@ function SeguimientoBoardColumnContent({
                             onCorrectState={onCorrectState}
                             canCorrectState={canCorrectState}
                             dndEnabled={dndEnabled}
+                            touchOptimized={touchOptimized}
                         />
                     ))
-                )}
+                ) : null}
             </VStack>
+            {footer ? (
+                <Box borderTopWidth="1px" px={3} py={3} bg="app.surfaceSubtle">
+                    {footer}
+                </Box>
+            ) : null}
         </>
     );
 }
@@ -573,6 +632,7 @@ interface SeguimientoResumenCardsProps {
     onEsperaClick?: () => void;
     onEnProcesoClick?: () => void;
     onCompletadoClick?: () => void;
+    tabletOptimized?: boolean;
 }
 
 export function SeguimientoResumenCards({
@@ -586,6 +646,7 @@ export function SeguimientoResumenCards({
     onEsperaClick,
     onEnProcesoClick,
     onCompletadoClick,
+    tabletOptimized = false,
 }: SeguimientoResumenCardsProps) {
     const stats = [
         { label: "Total", value: total, color: "teal.500", onClick: onTotalClick, ariaLabel: "Ir al tablero operativo" },
@@ -596,7 +657,10 @@ export function SeguimientoResumenCards({
     ];
 
     return (
-        <SimpleGrid columns={{ base: 2, md: 3, xl: 5 }} spacing={4}>
+        <SimpleGrid
+            columns={tabletOptimized ? { base: 2, md: 3, lg: 5 } : { base: 2, md: 3, xl: 5 }}
+            spacing={{ base: 3, md: 4 }}
+        >
             {stats.map((item) => {
                 const content = (
                     <Stat>
@@ -614,7 +678,8 @@ export function SeguimientoResumenCards({
                             borderWidth="1px"
                             borderRadius="lg"
                             bg="app.surface"
-                            p={4}
+                            p={tabletOptimized ? { base: 3, md: 4 } : 4}
+                            minH={tabletOptimized ? 24 : undefined}
                             w="full"
                             textAlign="left"
                             fontFamily="inherit"
@@ -632,7 +697,14 @@ export function SeguimientoResumenCards({
                 }
 
                 return (
-                    <Box key={item.label} borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
+                    <Box
+                        key={item.label}
+                        borderWidth="1px"
+                        borderRadius="lg"
+                        bg="app.surface"
+                        p={tabletOptimized ? { base: 3, md: 4 } : 4}
+                        minH={tabletOptimized ? 24 : undefined}
+                    >
                         {content}
                     </Box>
                 );

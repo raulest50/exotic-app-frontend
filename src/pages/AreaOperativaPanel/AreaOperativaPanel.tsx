@@ -3,7 +3,8 @@ import {
     closestCenter,
     DndContext,
     type DragEndEvent,
-    PointerSensor,
+    MouseSensor,
+    TouchSensor,
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
@@ -17,6 +18,7 @@ import {
     FormControl,
     FormHelperText,
     FormLabel,
+    Grid,
     HStack,
     Heading,
     Input,
@@ -45,7 +47,17 @@ import {
     useColorModeValue,
     useToast,
 } from "@chakra-ui/react";
-import { FiArchive, FiCalendar, FiClock, FiLogOut, FiRefreshCw, FiSearch, FiUser } from "react-icons/fi";
+import {
+    FiArchive,
+    FiCalendar,
+    FiChevronLeft,
+    FiChevronRight,
+    FiClock,
+    FiLogOut,
+    FiRefreshCw,
+    FiSearch,
+    FiUser,
+} from "react-icons/fi";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL.tsx";
 import { useAuth } from "../../context/AuthContext.tsx";
@@ -61,6 +73,7 @@ import {
 } from "../Produccion/components/SeguimientoBoardUI.tsx";
 import type {
     EstadoTableroKey,
+    PaginacionCompletadasDTO,
     SeguimientoOrdenAreaCardDTO,
     TableroOperativoDTO,
     TableroVista,
@@ -74,11 +87,14 @@ import { formatSemanaMpsDisplayDate } from "../Produccion/ProgProdSemanalTab/sem
 
 const endpoints = new EndPointsURL();
 const TABLERO_VISTA_STORAGE_KEY = "areaOperativaPanel.tableroVista.v2";
+const COMPLETED_PAGE_SIZE = 20;
+const HISTORICAL_SEARCH_DEBOUNCE_MS = 300;
 
 const EMPTY_BOARD: TableroOperativoDTO = {
     vista: "HOY",
     periodStartDate: null,
     periodEndDate: null,
+    paginacionCompletadas: null,
     resumen: {
         total: 0,
         cola: 0,
@@ -219,17 +235,73 @@ function matchesFilter(card: SeguimientoOrdenAreaCardDTO, searchTerm: string): b
     ].some((value) => value.toLowerCase().includes(normalized));
 }
 
+interface CompletedPaginationControlsProps {
+    pagination: PaginacionCompletadasDTO;
+    loading: boolean;
+    onPageChange: (page: number) => void;
+}
+
+function CompletedPaginationControls({
+    pagination,
+    loading,
+    onPageChange,
+}: CompletedPaginationControlsProps) {
+    if (pagination.totalPages <= 1) {
+        return null;
+    }
+
+    return (
+        <HStack justify="space-between" spacing={2} aria-label="Paginación de órdenes completadas">
+            <Button
+                size="sm"
+                minH={12}
+                variant="outline"
+                leftIcon={<FiChevronLeft />}
+                isDisabled={loading || pagination.first}
+                onClick={() => onPageChange(pagination.page - 1)}
+            >
+                Anterior
+            </Button>
+            <Text
+                minW="92px"
+                textAlign="center"
+                fontSize="sm"
+                fontWeight="semibold"
+                aria-live="polite"
+            >
+                Página {pagination.page + 1} de {pagination.totalPages}
+            </Text>
+            <Button
+                size="sm"
+                minH={12}
+                variant="outline"
+                rightIcon={<FiChevronRight />}
+                isDisabled={loading || pagination.last}
+                onClick={() => onPageChange(pagination.page + 1)}
+            >
+                Siguiente
+            </Button>
+        </HStack>
+    );
+}
+
 export default function AreaOperativaPanel() {
     const { meProfile, logout, areaResponsable } = useAuth();
     const { loading: directivesLoading, getBooleanDirective, refreshDirectives } = useMasterDirectives();
     const toast = useToast();
     const emptyTitleColor = useColorModeValue("gray.700", "gray.200");
-    const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+    const dndSensors = useSensors(
+        useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+        useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+    );
     const boardColumnsStartRef = useRef<HTMLDivElement | null>(null);
     const colaColumnRef = useRef<HTMLDivElement | null>(null);
     const esperaColumnRef = useRef<HTMLDivElement | null>(null);
     const enProcesoColumnRef = useRef<HTMLDivElement | null>(null);
     const completadoColumnRef = useRef<HTMLDivElement | null>(null);
+    const boardAbortControllerRef = useRef<AbortController | null>(null);
+    const boardRequestIdRef = useRef(0);
+    const hasLoadedBoardRef = useRef(false);
     useAreaOperativaNoiseSampler();
 
     const {
@@ -245,9 +317,12 @@ export default function AreaOperativaPanel() {
 
     const [tablero, setTablero] = useState<TableroOperativoDTO>(EMPTY_BOARD);
     const [loading, setLoading] = useState(false);
+    const [completedLoading, setCompletedLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
     const [tableroVista, setTableroVista] = useState<TableroVista>(getStoredTableroVista);
+    const [completedPage, setCompletedPage] = useState(0);
 
     const [selectedOrden, setSelectedOrden] = useState<SeguimientoOrdenAreaCardDTO | null>(null);
     const [selectedAction, setSelectedAction] = useState<SeguimientoActionType | null>(null);
@@ -304,48 +379,157 @@ export default function AreaOperativaPanel() {
         AREA_OPERATIVA_PANEL_HISTORICO_TOGGLE_ENABLED_DEFAULT,
     );
     const effectiveTableroVista: TableroVista = tableroVistaToggleEnabled ? tableroVista : "HISTORICO";
+    const completedPageRef = useRef(completedPage);
+    const historicalSearchRef = useRef(debouncedSearchTerm.trim());
+    completedPageRef.current = completedPage;
+    historicalSearchRef.current = debouncedSearchTerm.trim();
 
     const handleTableroVistaChange = useCallback((nextVista: TableroVista) => {
+        setCompletedPage(0);
         setTableroVista(nextVista);
         storeTableroVista(nextVista);
     }, []);
 
-    const fetchTablero = useCallback(async () => {
-        setLoading(true);
+    useEffect(() => {
+        const timeoutId = window.setTimeout(() => {
+            setCompletedPage(0);
+            setDebouncedSearchTerm(searchTerm);
+        }, HISTORICAL_SEARCH_DEBOUNCE_MS);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [searchTerm]);
+
+    const fetchTablero = useCallback(async ({
+        vista,
+        page,
+        search,
+        completedOnly,
+    }: {
+        vista: TableroVista;
+        page: number;
+        search: string;
+        completedOnly: boolean;
+    }) => {
+        const requestId = boardRequestIdRef.current + 1;
+        boardRequestIdRef.current = requestId;
+        boardAbortControllerRef.current?.abort();
+        const abortController = new AbortController();
+        boardAbortControllerRef.current = abortController;
+
+        if (completedOnly) {
+            setCompletedLoading(true);
+        } else {
+            hasLoadedBoardRef.current = false;
+            setCompletedLoading(false);
+            setLoading(true);
+        }
         setError(null);
 
         try {
             const response = await axios.get<TableroOperativoDTO>(
                 endpoints.seguimiento_mis_ordenes_tablero,
                 {
-                    params: { vista: effectiveTableroVista },
+                    params: {
+                        vista,
+                        paginaCompletadas: page,
+                        tamanoCompletadas: COMPLETED_PAGE_SIZE,
+                        buscar: vista === "HISTORICO" && search ? search : undefined,
+                    },
                     withCredentials: true,
+                    signal: abortController.signal,
                 },
             );
-            setTablero(response.data ?? EMPTY_BOARD);
+
+            if (requestId !== boardRequestIdRef.current) {
+                return;
+            }
+
+            const nextBoard = response.data ?? EMPTY_BOARD;
+            const pagination = nextBoard.paginacionCompletadas;
+            const lastValidPage = pagination && pagination.totalPages > 0
+                ? pagination.totalPages - 1
+                : 0;
+            if (vista === "HISTORICO" && page > lastValidPage) {
+                if (!completedOnly) {
+                    setTablero(nextBoard);
+                }
+                hasLoadedBoardRef.current = true;
+                setCompletedPage(lastValidPage);
+                return;
+            }
+
+            setTablero(nextBoard);
+            if (!completedOnly) {
+                hasLoadedBoardRef.current = true;
+            }
         } catch (err: any) {
+            if (axios.isCancel(err) || err.code === "ERR_CANCELED") {
+                return;
+            }
             setError(
                 err.response?.data?.message ||
                 err.message ||
                 "No fue posible cargar el tablero operativo.",
             );
-            setTablero(EMPTY_BOARD);
+            if (!completedOnly) {
+                setTablero(EMPTY_BOARD);
+                hasLoadedBoardRef.current = false;
+            }
         } finally {
-            setLoading(false);
+            if (requestId === boardRequestIdRef.current) {
+                if (completedOnly) {
+                    setCompletedLoading(false);
+                } else {
+                    setLoading(false);
+                }
+            }
         }
-    }, [effectiveTableroVista]);
+    }, []);
 
     useEffect(() => {
         if (directivesLoading) {
             return;
         }
-        void fetchTablero();
-    }, [directivesLoading, fetchTablero]);
+
+        hasLoadedBoardRef.current = false;
+        void fetchTablero({
+            vista: effectiveTableroVista,
+            page: completedPageRef.current,
+            search: historicalSearchRef.current,
+            completedOnly: false,
+        });
+    }, [directivesLoading, effectiveTableroVista, fetchTablero]);
+
+    useEffect(() => {
+        if (
+            directivesLoading
+            || effectiveTableroVista !== "HISTORICO"
+            || !hasLoadedBoardRef.current
+        ) {
+            return;
+        }
+
+        void fetchTablero({
+            vista: effectiveTableroVista,
+            page: completedPage,
+            search: debouncedSearchTerm.trim(),
+            completedOnly: true,
+        });
+    }, [completedPage, debouncedSearchTerm, directivesLoading, effectiveTableroVista, fetchTablero]);
+
+    useEffect(() => () => {
+        boardAbortControllerRef.current?.abort();
+    }, []);
 
     const handleRefreshPanel = useCallback(async () => {
         await refreshDirectives();
-        await fetchTablero();
-    }, [fetchTablero, refreshDirectives]);
+        await fetchTablero({
+            vista: effectiveTableroVista,
+            page: completedPageRef.current,
+            search: historicalSearchRef.current,
+            completedOnly: false,
+        });
+    }, [effectiveTableroVista, fetchTablero, refreshDirectives]);
 
     const openDetail = useCallback(async (orden: SeguimientoOrdenAreaCardDTO) => {
         setSelectedOrden(orden);
@@ -447,7 +631,13 @@ export default function AreaOperativaPanel() {
             });
 
             onActionClose();
-            await fetchTablero();
+            setCompletedPage(0);
+            await fetchTablero({
+                vista: effectiveTableroVista,
+                page: 0,
+                search: historicalSearchRef.current,
+                completedOnly: false,
+            });
         } catch (err: any) {
             toast({
                 title: "Error",
@@ -465,19 +655,24 @@ export default function AreaOperativaPanel() {
         vista: tablero.vista,
         periodStartDate: tablero.periodStartDate,
         periodEndDate: tablero.periodEndDate,
+        paginacionCompletadas: tablero.paginacionCompletadas,
         resumen: tablero.resumen,
         cola: tablero.cola.filter((card) => matchesFilter(card, searchTerm)),
         espera: tablero.espera.filter((card) => matchesFilter(card, searchTerm)),
         enProceso: tablero.enProceso.filter((card) => matchesFilter(card, searchTerm)),
-        completado: tablero.completado.filter((card) => matchesFilter(card, searchTerm)),
-    }), [searchTerm, tablero]);
+        completado: effectiveTableroVista === "HISTORICO"
+            ? tablero.completado
+            : tablero.completado.filter((card) => matchesFilter(card, searchTerm)),
+    }), [effectiveTableroVista, searchTerm, tablero]);
 
     const actionMeta = getActionMeta(selectedAction);
-    const totalFilteredCards =
+    const visibleActiveCards =
         filteredBoard.cola.length +
         filteredBoard.espera.length +
-        filteredBoard.enProceso.length +
-        filteredBoard.completado.length;
+        filteredBoard.enProceso.length;
+    const visibleCompletedCards = filteredBoard.completado.length;
+    const matchedHistoricalCompleted = tablero.paginacionCompletadas?.totalElements
+        ?? visibleCompletedCards;
     const periodRangeLabel = tablero.periodStartDate && tablero.periodEndDate
         ? `${formatSemanaMpsDisplayDate(tablero.periodStartDate)} a ${formatSemanaMpsDisplayDate(tablero.periodEndDate)}`
         : "semana actual";
@@ -487,9 +682,27 @@ export default function AreaOperativaPanel() {
             ? `esta semana (${periodRangeLabel})`
             : "todo el histórico";
     const boardLoading = loading || directivesLoading;
+    const resultSummary = effectiveTableroVista === "HISTORICO"
+        ? `${visibleActiveCards} activas visibles; ${visibleCompletedCards} de ${matchedHistoricalCompleted} completadas.`
+        : `Mostrando ${visibleActiveCards + visibleCompletedCards} órdenes; completadas: ${activeVistaLabel}.`;
+    const handleCompletedPageChange = (page: number) => {
+        if (page < 0 || page === completedPage) {
+            return;
+        }
+        setCompletedPage(page);
+        window.requestAnimationFrame(() => scrollToElement(completadoColumnRef.current));
+    };
+    const completedPaginationFooter = effectiveTableroVista === "HISTORICO"
+        && tablero.paginacionCompletadas ? (
+            <CompletedPaginationControls
+                pagination={tablero.paginacionCompletadas}
+                loading={completedLoading}
+                onPageChange={handleCompletedPageChange}
+            />
+        ) : null;
 
     return (
-        <VStack w="full" spacing={6} align="stretch" p={4}>
+        <VStack w="full" spacing={{ base: 4, md: 6 }} align="stretch" p={{ base: 2, md: 3, lg: 4 }}>
             <Box>
                 <HStack justify="space-between" align="start" flexWrap="wrap" gap={4}>
                     <Box>
@@ -502,8 +715,10 @@ export default function AreaOperativaPanel() {
                         ) : null}
                     </Box>
 
-                    <HStack spacing={3}>
+                    <HStack spacing={3} w={{ base: "full", sm: "auto" }}>
                         <Button
+                            minH={12}
+                            flex={{ base: 1, sm: "initial" }}
                             variant="outline"
                             leftIcon={<FiRefreshCw />}
                             onClick={() => void handleRefreshPanel()}
@@ -513,6 +728,8 @@ export default function AreaOperativaPanel() {
                             Refrescar
                         </Button>
                         <Button
+                            minH={12}
+                            flex={{ base: 1, sm: "initial" }}
                             colorScheme="red"
                             variant="outline"
                             leftIcon={<FiLogOut />}
@@ -526,20 +743,21 @@ export default function AreaOperativaPanel() {
 
             <Tabs variant="enclosed" colorScheme="teal" isLazy>
                 <TabList>
-                    <Tab>Tablero operativo</Tab>
-                    <Tab>MPS semanal</Tab>
+                    <Tab minH={12}>Tablero operativo</Tab>
+                    <Tab minH={12}>MPS semanal</Tab>
                 </TabList>
                 <TabPanels>
                     <TabPanel px={0} pb={0}>
                         <VStack w="full" spacing={6} align="stretch">
                             <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
-                                <Flex
-                                    align={{ base: "stretch", lg: "flex-end" }}
-                                    direction={{ base: "column", lg: "row" }}
-                                    gap={4}
-                                >
-                                    {tableroVistaToggleEnabled ? (
-                                        <Box minW={{ base: "100%", md: "430px" }}>
+                                <VStack align="stretch" spacing={3}>
+                                    <SimpleGrid
+                                        columns={{ base: 1, lg: tableroVistaToggleEnabled ? 2 : 1 }}
+                                        spacing={4}
+                                        alignItems="end"
+                                    >
+                                        {tableroVistaToggleEnabled ? (
+                                            <Box minW={0}>
                                             <Text fontSize="sm" fontWeight="semibold" mb={2}>
                                                 Periodo de completadas
                                             </Text>
@@ -547,10 +765,11 @@ export default function AreaOperativaPanel() {
                                                 isAttached
                                                 size="md"
                                                 variant="outline"
-                                                w={{ base: "full", md: "auto" }}
+                                                w="full"
                                             >
                                                 <Button
-                                                    flex={{ base: 1, md: "initial" }}
+                                                    flex={1}
+                                                    minH={12}
                                                     leftIcon={(
                                                         <Box display={{ base: "none", sm: "inline-flex" }}>
                                                             <FiClock />
@@ -564,7 +783,8 @@ export default function AreaOperativaPanel() {
                                                     Hoy
                                                 </Button>
                                                 <Button
-                                                    flex={{ base: 1, md: "initial" }}
+                                                    flex={1}
+                                                    minH={12}
                                                     leftIcon={(
                                                         <Box display={{ base: "none", sm: "inline-flex" }}>
                                                             <FiCalendar />
@@ -578,7 +798,8 @@ export default function AreaOperativaPanel() {
                                                     Semana actual
                                                 </Button>
                                                 <Button
-                                                    flex={{ base: 1, md: "initial" }}
+                                                    flex={1}
+                                                    minH={12}
                                                     leftIcon={(
                                                         <Box display={{ base: "none", sm: "inline-flex" }}>
                                                             <FiArchive />
@@ -592,14 +813,14 @@ export default function AreaOperativaPanel() {
                                                     Histórico
                                                 </Button>
                                             </ButtonGroup>
-                                        </Box>
-                                    ) : null}
+                                            </Box>
+                                        ) : null}
 
-                                    <Box flex="1" minW={{ base: "100%", lg: "360px" }}>
+                                        <Box minW={0}>
                                         <Text fontSize="sm" fontWeight="semibold" mb={2}>
                                             Buscar
                                         </Text>
-                                        <InputGroup>
+                                        <InputGroup size="lg">
                                             <InputLeftElement pointerEvents="none">
                                                 <FiSearch />
                                             </InputLeftElement>
@@ -609,18 +830,18 @@ export default function AreaOperativaPanel() {
                                                 placeholder="Buscar por lote, OP, producto o nodo"
                                             />
                                         </InputGroup>
-                                    </Box>
+                                        </Box>
+                                    </SimpleGrid>
 
                                     <Text
-                                        alignSelf={{ base: "flex-start", lg: "center" }}
+                                        alignSelf="flex-start"
                                         color="app.textMuted"
                                         fontSize="sm"
+                                        aria-live="polite"
                                     >
-                                        {tableroVistaToggleEnabled
-                                            ? `Mostrando ${totalFilteredCards} órdenes; completadas: ${activeVistaLabel}.`
-                                            : `Mostrando ${totalFilteredCards} órdenes en el tablero.`}
+                                        {resultSummary}
                                     </Text>
-                                </Flex>
+                                </VStack>
                             </Box>
 
                             <SeguimientoResumenCards
@@ -634,6 +855,7 @@ export default function AreaOperativaPanel() {
                                 onEsperaClick={() => scrollToColumn("espera")}
                                 onEnProcesoClick={() => scrollToColumn("enProceso")}
                                 onCompletadoClick={() => scrollToColumn("completado")}
+                                tabletOptimized
                             />
 
                             {error ? (
@@ -667,20 +889,45 @@ export default function AreaOperativaPanel() {
                                         collisionDetection={closestCenter}
                                         onDragEnd={handleDragEnd}
                                     >
-                                        <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
-                                            {(Object.keys(BOARD_COLUMN_META) as EstadoTableroKey[]).map((estadoKey) => (
-                                                <SeguimientoBoardColumn
-                                                    key={estadoKey}
-                                                    estadoKey={estadoKey}
-                                                    items={filteredBoard[estadoKey]}
-                                                    mode="leader"
-                                                    onOpenDetail={openDetail}
-                                                    onAction={openActionModal}
-                                                    dndEnabled
-                                                    containerRef={getColumnContainerRef(estadoKey)}
-                                                />
-                                            ))}
-                                        </SimpleGrid>
+                                        <Box
+                                            overflowX={{ base: "visible", md: "auto" }}
+                                            overscrollBehaviorX="contain"
+                                            pb={{ base: 0, md: 2 }}
+                                            sx={{ WebkitOverflowScrolling: "touch" }}
+                                        >
+                                            <Grid
+                                                templateColumns={{
+                                                    base: "minmax(0, 1fr)",
+                                                    md: "repeat(4, minmax(280px, 320px))",
+                                                    xl: "repeat(4, minmax(0, 1fr))",
+                                                }}
+                                                minW={{ base: 0, md: "max-content", xl: 0 }}
+                                                gap={4}
+                                                alignItems="start"
+                                            >
+                                                {(Object.keys(BOARD_COLUMN_META) as EstadoTableroKey[]).map((estadoKey) => (
+                                                    <SeguimientoBoardColumn
+                                                        key={estadoKey}
+                                                        estadoKey={estadoKey}
+                                                        items={filteredBoard[estadoKey]}
+                                                        mode="leader"
+                                                        onOpenDetail={openDetail}
+                                                        onAction={openActionModal}
+                                                        dndEnabled
+                                                        containerRef={getColumnContainerRef(estadoKey)}
+                                                        totalItems={
+                                                            estadoKey === "completado"
+                                                            && effectiveTableroVista === "HISTORICO"
+                                                                ? matchedHistoricalCompleted
+                                                                : undefined
+                                                        }
+                                                        isLoading={estadoKey === "completado" && completedLoading}
+                                                        footer={estadoKey === "completado" ? completedPaginationFooter : null}
+                                                        touchOptimized
+                                                    />
+                                                ))}
+                                            </Grid>
+                                        </Box>
                                     </DndContext>
                                 </Box>
                             ) : null}
@@ -692,9 +939,9 @@ export default function AreaOperativaPanel() {
                 </TabPanels>
             </Tabs>
 
-            <Modal isOpen={isActionOpen} onClose={onActionClose} size="md">
+            <Modal isOpen={isActionOpen} onClose={onActionClose} size="lg" scrollBehavior="inside" isCentered>
                 <ModalOverlay />
-                <ModalContent>
+                <ModalContent mx={{ base: 2, md: 4 }} maxH="calc(100dvh - 2rem)">
                     <ModalHeader>{actionMeta.title}</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
@@ -723,6 +970,7 @@ export default function AreaOperativaPanel() {
                                             clampValueOnBlur={false}
                                         >
                                             <NumberInputField
+                                                minH={12}
                                                 inputMode="decimal"
                                                 placeholder="0"
                                                 aria-label="Cantidad de producto terminado fabricado"
@@ -750,11 +998,19 @@ export default function AreaOperativaPanel() {
                             </VStack>
                         ) : null}
                     </ModalBody>
-                    <ModalFooter>
-                        <Button variant="ghost" mr={3} onClick={onActionClose} isDisabled={submitting}>
+                    <ModalFooter gap={3} flexWrap="wrap">
+                        <Button
+                            minH={12}
+                            flex={{ base: "1 1 45%", sm: "initial" }}
+                            variant="ghost"
+                            onClick={onActionClose}
+                            isDisabled={submitting}
+                        >
                             Cancelar
                         </Button>
                         <Button
+                            minH={12}
+                            flex={{ base: "1 1 45%", sm: "initial" }}
                             colorScheme={actionMeta.colorScheme}
                             onClick={() => void handleSubmitAction()}
                             isLoading={submitting}

@@ -42,10 +42,20 @@ export interface EstadoResumenDTO {
 
 export type TableroVista = "HOY" | "SEMANA_ACTUAL" | "HISTORICO";
 
+export interface PaginacionCompletadasDTO {
+    page: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    first: boolean;
+    last: boolean;
+}
+
 export interface TableroOperativoDTO {
     vista?: TableroVista | null;
     periodStartDate?: string | null;
     periodEndDate?: string | null;
+    paginacionCompletadas?: PaginacionCompletadasDTO | null;
     resumen: EstadoResumenDTO;
     cola: SeguimientoOrdenAreaCardDTO[];
     espera: SeguimientoOrdenAreaCardDTO[];
