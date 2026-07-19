@@ -2,15 +2,16 @@ import { Button, Container, Flex, SimpleGrid } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import { IconType } from "react-icons";
 import { FaArrowLeft, FaDatabase, FaKey } from "react-icons/fa";
-import { FaBoxesStacked, FaCube, FaWarehouse } from "react-icons/fa6";
+import { FaBoxesStacked, FaCube, FaMoneyBillTransfer, FaWarehouse } from "react-icons/fa6";
 import CargaMasivaAlmacenTab from "./CargaMasivaAlmacenTab";
 import CargaMasivaMaterialesTab from "../CargaMasivaMateriales/CargaMasivaMaterialesTab";
 import CargaMasivaTerminadosTab from "../CargaMasivaTerminados/CargaMasivaTerminadosTab";
 import CargaMasivaImportacionTotalBDTab from "../CargaMasivaImportacionTotalBD/CargaMasivaImportacionTotalBDTab";
 import OperacionSelectCard from "../shared/OperacionSelectCard";
 import ResetPasswordsNoProductivoTab from "./ResetPasswordsNoProductivoTab";
+import CargaMasivaCostosTab from "../CargaMasivaCostos/CargaMasivaCostosTab";
 
-type MassiveLoadView = "selector" | "almacen" | "materiales" | "terminados" | "importacion-total-bd" | "reset-passwords-staging";
+type MassiveLoadView = "selector" | "almacen" | "materiales" | "terminados" | "costos" | "importacion-total-bd" | "reset-passwords-staging";
 
 interface MassiveLoadOption {
     key: Exclude<MassiveLoadView, "selector">;
@@ -42,6 +43,12 @@ const BASE_LOAD_OPTIONS: MassiveLoadOption[] = [
         titulo: "Carga Masiva Terminados",
         descripcion: "Entrar al selector actual de terminados y continuar con sus opciones internas sin cambios.",
         icono: FaBoxesStacked,
+    },
+    {
+        key: "costos",
+        titulo: "Actualizacion masiva de costos",
+        descripcion: "Validar un informe de compras, previsualizar y confirmar exclusivamente nuevos costos de materiales.",
+        icono: FaMoneyBillTransfer,
     },
 ];
 
@@ -85,6 +92,9 @@ export default function CargasMasivasTab({
         if (activeView === "terminados") {
             return <CargaMasivaTerminadosTab />;
         }
+        if (activeView === "costos") {
+            return <CargaMasivaCostosTab onBackToSelector={() => setActiveView("selector")} />;
+        }
         if (activeView === "importacion-total-bd") {
             return <CargaMasivaImportacionTotalBDTab onBackToSelector={() => setActiveView("selector")} />;
         }
@@ -112,7 +122,7 @@ export default function CargasMasivasTab({
         );
     }
 
-    if (activeView === "importacion-total-bd") {
+    if (activeView === "importacion-total-bd" || activeView === "costos") {
         return (
             <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
                 {activeContent}

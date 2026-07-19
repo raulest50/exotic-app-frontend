@@ -214,6 +214,11 @@ export default class EndPointsURL{
     public carga_masiva_terminados_ejecutar_sin_insumos: string;
     public carga_masiva_terminados_validar_json_con_insumos: string;
     public carga_masiva_terminados_ejecutar_json_con_insumos: string;
+    public carga_masiva_costos_preparaciones: string;
+    public carga_masiva_costos_items: (loteId: string, page: number, size: number) => string;
+    public carga_masiva_costos_token: (loteId: string) => string;
+    public carga_masiva_costos_confirmacion: (loteId: string) => string;
+    public carga_masiva_costos_cancelar: (loteId: string) => string;
 
     // eliminaciones forzadas (operaciones criticas BD)
     public estudiar_eliminacion_orden_compra: string;
@@ -858,6 +863,15 @@ export default class EndPointsURL{
         this.carga_masiva_terminados_ejecutar_sin_insumos = `${domain}/api/carga-masiva-terminados/ejecutar-sin-insumos`;
         this.carga_masiva_terminados_validar_json_con_insumos = `${domain}/api/carga-masiva-terminados/validar-json-con-insumos`;
         this.carga_masiva_terminados_ejecutar_json_con_insumos = `${domain}/api/carga-masiva-terminados/ejecutar-json-con-insumos`;
+        this.carga_masiva_costos_preparaciones = `${domain}/api/carga-masiva-costos/preparaciones`;
+        this.carga_masiva_costos_items = (loteId: string, page: number, size: number) =>
+            `${domain}/api/carga-masiva-costos/preparaciones/${loteId}/items?page=${page}&size=${size}`;
+        this.carga_masiva_costos_token = (loteId: string) =>
+            `${domain}/api/carga-masiva-costos/preparaciones/${loteId}/token`;
+        this.carga_masiva_costos_confirmacion = (loteId: string) =>
+            `${domain}/api/carga-masiva-costos/preparaciones/${loteId}/confirmacion`;
+        this.carga_masiva_costos_cancelar = (loteId: string) =>
+            `${domain}/api/carga-masiva-costos/preparaciones/${loteId}`;
 
         // eliminaciones forzadas (operaciones criticas BD)
         this.estudiar_eliminacion_orden_compra = `${domain}/api/eliminaciones-forzadas/estudiar/orden-compra`;
