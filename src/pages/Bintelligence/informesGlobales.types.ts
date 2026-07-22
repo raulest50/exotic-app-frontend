@@ -135,7 +135,7 @@ export interface OcmPendientes {
     referencias: number;
     cantidadesPorUnidad: CantidadUnidad[];
     valorPendienteSinIva: number;
-    items: OcmPendiente[];
+    items?: OcmPendiente[];
 }
 
 export interface OcmPendiente {
@@ -165,16 +165,27 @@ export interface MaterialDirectoOp {
     referencias: number;
     cantidadesPorUnidad: CantidadUnidad[];
     valorEstimado: number;
-    items: OpMaterial[];
+    items?: OpMaterial[];
 }
 
 export interface OpMaterial {
     opId: number;
     lote?: string | null;
     estado: number;
+    fechaReferencia?: string | null;
     referencias: number;
     cantidadesPorUnidad: CantidadUnidad[];
     valorEstimado: number;
+}
+
+export interface PaginaInformeInventario<T> {
+    items: T[];
+    page: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    first: boolean;
+    last: boolean;
 }
 
 export interface BusquedaStockMaterial {

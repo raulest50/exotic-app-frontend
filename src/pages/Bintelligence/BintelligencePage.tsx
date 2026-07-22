@@ -1,15 +1,25 @@
-import { Box, Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
+import { lazy, Suspense } from "react";
+import { Box, Center, Container, Spinner, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader.tsx";
-import InformesDiariosTab from "./InformesDiariosTab/InformesDiariosTab.tsx";
 import { my_style_tab } from "../../styles/styles_general.tsx";
-import TimeSeriesTab from "./TimeSeriesTab.tsx";
-import AprovisionamientoTab from "./AprovisionamientoTab/AprovisionamientoTab.tsx";
-import PersonalBiTab from "./PersonalBiTab/PersonalBiTab.tsx";
-import InformesGlobalesTab from "./InformesGlobalesTab.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
 import { moduleAccessRule, tabAccessRule } from "../../auth/accessHelpers.ts";
 import { useAccessSnapshot } from "../../auth/usePermissions";
 import type { AccessRule } from "../../auth/accessModel.ts";
+
+const InformesDiariosTab = lazy(() => import("./InformesDiariosTab/InformesDiariosTab.tsx"));
+const InformesGlobalesTab = lazy(() => import("./InformesGlobalesTab.tsx"));
+const TimeSeriesTab = lazy(() => import("./TimeSeriesTab.tsx"));
+const PersonalBiTab = lazy(() => import("./PersonalBiTab/PersonalBiTab.tsx"));
+const AprovisionamientoTab = lazy(() => import("./AprovisionamientoTab/AprovisionamientoTab.tsx"));
+
+function TabLoadingFallback() {
+    return (
+        <Center minH="180px" w="full">
+            <Spinner size="md" thickness="3px" color="blue.500" />
+        </Center>
+    );
+}
 
 export default function BintelligencePage() {
     const access = useAccessSnapshot();
@@ -38,7 +48,7 @@ export default function BintelligencePage() {
             h="full"
         >
             <MyHeader title={"BI"} />
-            <Tabs>
+            <Tabs isLazy lazyBehavior="keepMounted">
                 <Box overflowX="auto" pb={1}>
                     <TabList minW="max-content">
                         {visibleTabs.map((tab) => (
@@ -57,7 +67,11 @@ export default function BintelligencePage() {
                 </Box>
                 <TabPanels>
                     {visibleTabs.map((tab) => (
-                        <TabPanel key={tab.key} px={{ base: 0, md: 4 }}>{tab.render()}</TabPanel>
+                        <TabPanel key={tab.key} px={{ base: 0, md: 4 }}>
+                            <Suspense fallback={<TabLoadingFallback />}>
+                                {tab.render()}
+                            </Suspense>
+                        </TabPanel>
                     ))}
                 </TabPanels>
             </Tabs>

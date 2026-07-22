@@ -1,11 +1,11 @@
 import { Badge, Divider, Stack } from "@chakra-ui/react";
 import BuscadorStockMaterialCard from "./BuscadorStockMaterialCard";
 import CoberturaMaterialesCard from "./CoberturaMaterialesCard";
+import { MovementsSection } from "./InformeAlmacenFlowSections";
 import {
-    MovementsSection,
     OpenProductionOrdersSection,
     PendingPurchaseOrdersSection,
-} from "./InformeAlmacenFlowSections";
+} from "./InformeAlmacenPendingSections";
 import {
     InventoryAnalyticsSection,
     StockOverviewSection,
@@ -18,20 +18,12 @@ import {
 } from "./InformeGlobalUi";
 import type { InformeInventario } from "./informesGlobales.types";
 
-type TrendWindow = 7 | 30 | 90;
-
 interface InformeAlmacenPageProps {
     report: InformeInventario;
-    trendWindowDays: TrendWindow;
-    onTrendWindowChange: (days: TrendWindow) => void;
-    refreshing: boolean;
 }
 
 export default function InformeAlmacenPage({
     report,
-    trendWindowDays,
-    onTrendWindowChange,
-    refreshing,
 }: InformeAlmacenPageProps) {
     return (
         <Stack spacing={{ base: 5, md: 6 }}>
@@ -64,17 +56,20 @@ export default function InformeAlmacenPage({
                 <MovementsSection
                     movements={report.movimientos}
                     singleDate={report.periodo.modoFecha === "FECHA_UNICA"}
-                    trendWindowDays={trendWindowDays}
-                    onTrendWindowChange={onTrendWindowChange}
-                    refreshing={refreshing}
                 />
             </Stack>
 
             <Divider borderColor="app.border" />
-            <PendingPurchaseOrdersSection report={report.ocmPendientes} />
-            {report.materialDirectoOp.items.length > 0 ? (
-                <OpenProductionOrdersSection report={report.materialDirectoOp} />
-            ) : null}
+            <PendingPurchaseOrdersSection
+                report={report.ocmPendientes}
+                contractVersion={report.versionContrato}
+                cutoff={report.fechaHoraCorteStock}
+            />
+            <OpenProductionOrdersSection
+                report={report.materialDirectoOp}
+                contractVersion={report.versionContrato}
+                cutoff={report.fechaHoraCorteStock}
+            />
 
             <Divider borderColor="app.border" />
             <CoberturaMaterialesCard />

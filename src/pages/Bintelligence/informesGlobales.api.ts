@@ -6,23 +6,47 @@ import type {
     InformeInventario,
     InformeProduccion,
     InformeQuery,
+    OcmPendiente,
+    OpMaterial,
+    PaginaInformeInventario,
 } from "./informesGlobales.types";
 
 const endpoints = new EndPointsURL();
 
 export async function fetchInventoryReport(
     query: InformeQuery,
-    trendWindowDays: 7 | 30 | 90,
 ): Promise<InformeInventario> {
-    const baseUrl = endpoints.biInformesGlobalesAlmacen(query);
-    const separator = baseUrl.includes("?") ? "&" : "?";
     const response = await axios.get<InformeInventario>(
-        `${baseUrl}${separator}ventanaTendenciaDias=${trendWindowDays}`,
+        endpoints.biInformesGlobalesAlmacen(query),
     );
-    if (response.data?.versionContrato !== 2) {
+    if (![2, 3].includes(response.data?.versionContrato)) {
         throw new Error("El backend no expone la versión actual del informe de almacén.");
     }
     return normalizeInventoryReport(response.data);
+}
+
+export async function fetchPendingPurchaseOrdersPage(
+    page: number,
+    size: number,
+    signal?: AbortSignal,
+): Promise<PaginaInformeInventario<OcmPendiente>> {
+    const response = await axios.get<PaginaInformeInventario<OcmPendiente>>(
+        `${endpoints.domain}/bi/informes-globales/almacen/ocm-pendientes`,
+        { params: { page, size }, signal },
+    );
+    return normalizePage(response.data);
+}
+
+export async function fetchOpenProductionOrdersPage(
+    page: number,
+    size: number,
+    signal?: AbortSignal,
+): Promise<PaginaInformeInventario<OpMaterial>> {
+    const response = await axios.get<PaginaInformeInventario<OpMaterial>>(
+        `${endpoints.domain}/bi/informes-globales/almacen/op-material-directo`,
+        { params: { page, size }, signal },
+    );
+    return normalizePage(response.data);
 }
 
 export async function fetchProductionReport(
@@ -111,5 +135,18 @@ function normalizeInventoryReport(report: InformeInventario): InformeInventario 
             cantidadesPorUnidad: report.materialDirectoOp.cantidadesPorUnidad ?? [],
             items: report.materialDirectoOp.items ?? [],
         },
+    };
+}
+
+function normalizePage<T>(page: PaginaInformeInventario<T>): PaginaInformeInventario<T> {
+    return {
+        ...page,
+        items: page.items ?? [],
+        page: page.page ?? 0,
+        size: page.size ?? 10,
+        totalElements: page.totalElements ?? 0,
+        totalPages: page.totalPages ?? 0,
+        first: page.first ?? true,
+        last: page.last ?? true,
     };
 }

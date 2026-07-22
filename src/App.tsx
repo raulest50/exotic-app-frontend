@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
+import { Center, Spinner } from '@chakra-ui/react'
 
 import './App.css'
 import EndPointsURL from './api/EndPointsURL'
@@ -31,7 +32,6 @@ import OperacionesCriticasBDPage from "./pages/OperacionesCriticasBD/Operaciones
 import ActivosFijosPage from "./pages/ActivosFijos/ActivosFijosPage.tsx";
 import ContabilidadPage from "./pages/Contabilidad/ContabilidadPage.tsx";
 import PersonalPage from "./pages/Personal/PersonalPage.tsx";
-import BintelligencePage from "./pages/Bintelligence/BintelligencePage.tsx";
 import AdministracionAlertasPage from "./pages/AdministracionAlertas/AdministracionAlertasPage.tsx";
 import AdministracionGlobalPage from "./pages/AdministracionGlobal/AdministracionGlobalPage.tsx";
 import MasterDirectivesPage from "./pages/SuperMasterDirectives/MasterDirectivesPage.tsx";
@@ -42,6 +42,14 @@ import TransaccionesAlmacenPage from "./pages/TransaccionesAlmacen/Transacciones
 import AreaOperativaPanel from "./pages/AreaOperativaPanel/AreaOperativaPanel.tsx";
 import { EnvironmentBadge } from "./components/EnvironmentBadge.tsx";
 import { moduleAccessRule } from "./auth/accessHelpers.ts";
+
+const BintelligencePage = lazy(() => import("./pages/Bintelligence/BintelligencePage.tsx"));
+
+const biRouteFallback = (
+    <Center minH="240px" w="full">
+        <Spinner size="lg" thickness="3px" color="blue.500" />
+    </Center>
+);
 
 const router = createBrowserRouter(
     createRoutesFromElements(
@@ -256,7 +264,9 @@ const router = createBrowserRouter(
                     path="bintelligence"
                     element={
                         <AccessRoute accessRule={moduleAccessRule(Modulo.BINTELLIGENCE)}>
-                            <BintelligencePage/>
+                            <Suspense fallback={biRouteFallback}>
+                                <BintelligencePage/>
+                            </Suspense>
                         </AccessRoute>
                     }
                 />

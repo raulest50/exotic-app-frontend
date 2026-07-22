@@ -1,5 +1,6 @@
 import { RepeatIcon } from "@chakra-ui/icons";
 import {
+    Badge,
     Button,
     ButtonGroup,
     Card,
@@ -7,6 +8,7 @@ import {
     FormControl,
     FormErrorMessage,
     FormLabel,
+    HStack,
     Input,
     Progress,
     Select,
@@ -20,6 +22,7 @@ import InformeAlmacenPage from "./InformeAlmacenPage";
 import InformeProduccionPage from "./InformeProduccionPage";
 import {
     ErrorPanel,
+    formatDate,
     LoadingPanel,
 } from "./InformeGlobalUi";
 import {
@@ -35,16 +38,16 @@ import type {
 
 type ReportPage = "almacen" | "produccion";
 type DateMode = "fecha_unica" | "rango";
-type TrendWindow = 7 | 30 | 90;
 
 interface ReportState<T> {
     data: T | null;
+    dataQueryKey: string | null;
+    requestQueryKey: string | null;
     loading: boolean;
     error: string | null;
 }
 
 const MAX_RANGE_DAYS = 31;
-const INITIAL_TREND_WINDOW: TrendWindow = 30;
 
 export default function InformesGlobalesTab() {
     const toast = useToast();
@@ -55,19 +58,17 @@ export default function InformesGlobalesTab() {
     const [date, setDate] = useState(today);
     const [startDate, setStartDate] = useState(monthStart);
     const [endDate, setEndDate] = useState(today);
-    const [trendWindowDays, setTrendWindowDays] = useState<TrendWindow>(
-        INITIAL_TREND_WINDOW,
-    );
+    const [appliedQuery, setAppliedQuery] = useState<InformeQuery>(() => ({ fecha: today }));
     const [inventory, setInventory] = useState<ReportState<InformeInventario>>(
         () => emptyReportState<InformeInventario>(),
     );
     const [production, setProduction] = useState<ReportState<InformeProduccion>>(
         () => emptyReportState<InformeProduccion>(),
     );
-    const initialRequestStarted = useRef(false);
-    const appliedInventoryQuery = useRef<InformeQuery | null>(null);
     const inventoryRequestId = useRef(0);
     const productionRequestId = useRef(0);
+    const inventoryRequestQueryKey = useRef<string | null>(null);
+    const productionRequestQueryKey = useRef<string | null>(null);
 
     const rangeDays = getRangeDaysInclusive(startDate, endDate);
     const rangeInverted = dateMode === "rango"
@@ -78,22 +79,35 @@ export default function InformesGlobalesTab() {
         [dateMode, date, startDate, endDate],
     );
     const datesAreValid = currentQuery !== null && !rangeInverted && !rangeTooLong;
+    const appliedQueryKey = queryKey(appliedQuery);
+    const draftQueryKey = currentQuery ? queryKey(currentQuery) : null;
+    const hasUnappliedChanges = draftQueryKey !== appliedQueryKey;
 
-    const loadInventory = useCallback(async (
-        query: InformeQuery,
-        windowDays: TrendWindow,
-    ) => {
+    const loadInventory = useCallback(async (query: InformeQuery) => {
+        const requestQueryKey = queryKey(query);
+        inventoryRequestQueryKey.current = requestQueryKey;
         const requestId = ++inventoryRequestId.current;
-        setInventory((current) => ({ ...current, loading: true, error: null }));
+        setInventory((current) => ({
+            ...current,
+            requestQueryKey,
+            loading: true,
+            error: null,
+        }));
         try {
-            const report = await fetchInventoryReport(query, windowDays);
+            const report = await fetchInventoryReport(query);
             if (requestId !== inventoryRequestId.current) return;
-            appliedInventoryQuery.current = query;
-            setInventory({ data: report, loading: false, error: null });
+            setInventory({
+                data: report,
+                dataQueryKey: requestQueryKey,
+                requestQueryKey,
+                loading: false,
+                error: null,
+            });
         } catch (error) {
             if (requestId !== inventoryRequestId.current) return;
             setInventory((current) => ({
                 ...current,
+                requestQueryKey,
                 loading: false,
                 error: requestErrorMessage(error),
             }));
@@ -101,16 +115,30 @@ export default function InformesGlobalesTab() {
     }, []);
 
     const loadProduction = useCallback(async (query: InformeQuery) => {
+        const requestQueryKey = queryKey(query);
+        productionRequestQueryKey.current = requestQueryKey;
         const requestId = ++productionRequestId.current;
-        setProduction((current) => ({ ...current, loading: true, error: null }));
+        setProduction((current) => ({
+            ...current,
+            requestQueryKey,
+            loading: true,
+            error: null,
+        }));
         try {
             const report = await fetchProductionReport(query);
             if (requestId !== productionRequestId.current) return;
-            setProduction({ data: report, loading: false, error: null });
+            setProduction({
+                data: report,
+                dataQueryKey: requestQueryKey,
+                requestQueryKey,
+                loading: false,
+                error: null,
+            });
         } catch (error) {
             if (requestId !== productionRequestId.current) return;
             setProduction((current) => ({
                 ...current,
+                requestQueryKey,
                 loading: false,
                 error: requestErrorMessage(error),
             }));
@@ -118,10 +146,20 @@ export default function InformesGlobalesTab() {
     }, []);
 
     useEffect(() => {
-        if (initialRequestStarted.current) return;
-        initialRequestStarted.current = true;
-        void loadInventory({ fecha: today }, INITIAL_TREND_WINDOW);
-    }, [loadInventory, today]);
+        if (activePage === "almacen") {
+            if (inventoryRequestQueryKey.current === appliedQueryKey) return;
+            void loadInventory(appliedQuery);
+        } else {
+            if (productionRequestQueryKey.current === appliedQueryKey) return;
+            void loadProduction(appliedQuery);
+        }
+    }, [
+        activePage,
+        appliedQuery,
+        appliedQueryKey,
+        loadInventory,
+        loadProduction,
+    ]);
 
     const showInvalidDatesToast = () => {
         toast({
@@ -133,38 +171,31 @@ export default function InformesGlobalesTab() {
         });
     };
 
-    const updateActivePage = () => {
+    const applyPeriod = () => {
         if (!datesAreValid || !currentQuery) {
             showInvalidDatesToast();
             return;
         }
-        if (activePage === "almacen") {
-            void loadInventory(currentQuery, trendWindowDays);
-        } else {
-            void loadProduction(currentQuery);
-        }
-    };
+        const nextQueryKey = queryKey(currentQuery);
+        setAppliedQuery(currentQuery);
 
-    const selectPage = (page: ReportPage) => {
-        setActivePage(page);
-        if (page === "produccion"
-            && !production.data
-            && !production.loading) {
-            if (!datesAreValid || !currentQuery) {
-                showInvalidDatesToast();
-                return;
+        if (nextQueryKey === appliedQueryKey) {
+            if (activePage === "almacen") {
+                void loadInventory(currentQuery);
+            } else {
+                void loadProduction(currentQuery);
             }
-            void loadProduction(currentQuery);
         }
-    };
-
-    const changeTrendWindow = (windowDays: TrendWindow) => {
-        setTrendWindowDays(windowDays);
-        const query = appliedInventoryQuery.current ?? currentQuery;
-        if (query) void loadInventory(query, windowDays);
     };
 
     const activeState = activePage === "almacen" ? inventory : production;
+    const activeHasCurrentData = activeState.data !== null
+        && activeState.dataQueryKey === appliedQueryKey;
+    const activeIsLoading = activeState.loading
+        && activeState.requestQueryKey === appliedQueryKey;
+    const activeError = activeState.requestQueryKey === appliedQueryKey
+        ? activeState.error
+        : null;
 
     return (
         <Stack spacing={{ base: 4, md: 5 }}>
@@ -178,7 +209,7 @@ export default function InformesGlobalesTab() {
                     minH="44px"
                     colorScheme={activePage === "almacen" ? "green" : undefined}
                     variant={activePage === "almacen" ? "solid" : "outline"}
-                    onClick={() => selectPage("almacen")}
+                    onClick={() => setActivePage("almacen")}
                     aria-pressed={activePage === "almacen"}
                 >
                     Almacén e inventario
@@ -188,7 +219,7 @@ export default function InformesGlobalesTab() {
                     minH="44px"
                     colorScheme={activePage === "produccion" ? "green" : undefined}
                     variant={activePage === "produccion" ? "solid" : "outline"}
-                    onClick={() => selectPage("produccion")}
+                    onClick={() => setActivePage("produccion")}
                     aria-pressed={activePage === "produccion"}
                 >
                     Producción
@@ -198,6 +229,23 @@ export default function InformesGlobalesTab() {
             <Card variant="outline">
                 <CardBody p={{ base: 3, md: 5 }}>
                     <Stack spacing={4}>
+                        <Stack
+                            direction={{ base: "column", md: "row" }}
+                            align={{ base: "flex-start", md: "center" }}
+                            justify="space-between"
+                            spacing={2}
+                        >
+                            <Stack spacing={1}>
+                                <Text fontWeight="semibold">Periodo de movimientos y producción</Text>
+                                <Text color="app.textMuted" fontSize="sm">
+                                    El stock, las OCM pendientes, las OP abiertas y la cobertura representan el estado actual.
+                                </Text>
+                            </Stack>
+                            <Badge colorScheme="blue">
+                                Periodo aplicado: {queryPeriodLabel(appliedQuery)}
+                            </Badge>
+                        </Stack>
+
                         <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
                             <FormControl>
                                 <FormLabel>Tipo de consulta</FormLabel>
@@ -261,45 +309,47 @@ export default function InformesGlobalesTab() {
                             justify="space-between"
                             spacing={3}
                         >
-                            <Text color="app.textMuted" fontSize="sm">
-                                Los cambios de fecha se aplican al pulsar actualizar y solo afectan la página activa.
-                            </Text>
+                            <HStack spacing={2} flexWrap="wrap">
+                                <Text color="app.textMuted" fontSize="sm">
+                                    El periodo se comparte entre Almacén y Producción.
+                                </Text>
+                                {hasUnappliedChanges ? (
+                                    <Badge colorScheme="yellow">Cambios sin aplicar</Badge>
+                                ) : null}
+                            </HStack>
                             <Button
                                 leftIcon={<RepeatIcon />}
                                 colorScheme="green"
-                                onClick={updateActivePage}
-                                isLoading={activeState.loading}
+                                onClick={applyPeriod}
+                                isLoading={activeIsLoading}
                                 isDisabled={!datesAreValid}
                                 minH="44px"
                                 w={{ base: "full", md: "auto" }}
                             >
-                                Actualizar {activePage === "almacen" ? "almacén" : "producción"}
+                                Aplicar periodo
                             </Button>
                         </Stack>
                     </Stack>
                 </CardBody>
             </Card>
 
-            {activeState.loading && activeState.data ? (
+            {activeIsLoading && activeHasCurrentData ? (
                 <Progress size="xs" isIndeterminate colorScheme="green" borderRadius="full" />
             ) : null}
 
-            {activeState.error ? <ErrorPanel message={activeState.error} /> : null}
+            {activeError ? <ErrorPanel message={activeError} /> : null}
 
             {activePage === "almacen" ? (
-                inventory.data ? (
+                activeHasCurrentData && inventory.data ? (
                     <InformeAlmacenPage
                         report={inventory.data}
-                        trendWindowDays={trendWindowDays}
-                        onTrendWindowChange={changeTrendWindow}
-                        refreshing={inventory.loading}
                     />
-                ) : inventory.loading ? (
+                ) : activeIsLoading ? (
                     <LoadingPanel label="Cargando inventario y movimientos…" />
                 ) : null
-            ) : production.data ? (
+            ) : activeHasCurrentData && production.data ? (
                 <InformeProduccionPage report={production.data} />
-            ) : production.loading ? (
+            ) : activeIsLoading ? (
                 <LoadingPanel label="Cargando informe de producción…" />
             ) : null}
         </Stack>
@@ -307,7 +357,26 @@ export default function InformesGlobalesTab() {
 }
 
 function emptyReportState<T>(): ReportState<T> {
-    return { data: null, loading: false, error: null };
+    return {
+        data: null,
+        dataQueryKey: null,
+        requestQueryKey: null,
+        loading: false,
+        error: null,
+    };
+}
+
+function queryKey(query: InformeQuery) {
+    if (query.fecha) return `fecha:${query.fecha}`;
+    return `rango:${query.fechaDesde}:${query.fechaHasta}`;
+}
+
+function queryPeriodLabel(query: InformeQuery) {
+    if (query.fecha) return formatDate(query.fecha);
+    if (query.fechaDesde && query.fechaHasta) {
+        return `${formatDate(query.fechaDesde)} – ${formatDate(query.fechaHasta)}`;
+    }
+    return "Sin periodo";
 }
 
 function buildQuery(

@@ -2,7 +2,6 @@ import type {
     CategoriaProduccion,
     ClaseAbc,
     ComposicionInventario,
-    ReferenciaProduccion,
     SerieMovimiento,
 } from "./informesGlobales.types";
 
@@ -19,43 +18,20 @@ const PALETTE = [
 
 export function buildProductionChart(
     categories: CategoriaProduccion[],
-    references: ReferenciaProduccion[],
     compact: boolean,
 ) {
-    const categoryKeys = categories.map((category) => productionCategoryKey(
-        category.categoriaId,
-        category.categoriaNombre,
-    ));
-    const seriesByReference = new Map<string, { name: string; data: number[] }>();
-
-    for (const reference of references) {
-        if (reference.cantidadProducida <= 0) continue;
-        const categoryIndex = categoryKeys.indexOf(productionCategoryKey(
-            reference.categoriaId,
-            reference.categoriaNombre,
-        ));
-        if (categoryIndex < 0) continue;
-
-        const referenceKey = reference.productoId ?? reference.productoNombre;
-        const chartSeries = seriesByReference.get(referenceKey) ?? {
-            name: reference.productoNombre,
-            data: Array(categories.length).fill(0),
-        };
-        chartSeries.data[categoryIndex] += reference.cantidadProducida;
-        seriesByReference.set(referenceKey, chartSeries);
-    }
-
-    const chartSeries = Array.from(seriesByReference.entries())
-        .sort((left, right) => sum(right[1].data) - sum(left[1].data));
-
     return {
         aria: {
             enabled: true,
-            description: "Composición de unidades producidas por referencia y categoría.",
+            description: "Comparación de unidades planeadas y producidas por categoría.",
         },
-        color: PALETTE,
-        tooltip: { trigger: "item", confine: true },
-        legend: { type: "scroll", top: 0 },
+        color: ["#718096", "#2F855A"],
+        tooltip: {
+            trigger: "axis",
+            axisPointer: { type: "shadow" },
+            confine: true,
+        },
+        legend: { top: 0 },
         grid: {
             left: compact ? 42 : 62,
             right: 20,
@@ -76,24 +52,23 @@ export function buildProductionChart(
             },
         },
         yAxis: { type: "value", minInterval: 1 },
-        series: chartSeries.map(([id, item], index) => ({
-            id,
-            name: item.name,
-            type: "bar",
-            stack: "produccion",
-            data: item.data,
-            itemStyle: { color: PALETTE[index % PALETTE.length] },
-            emphasis: { focus: "series" },
-        })),
+        series: [
+            {
+                id: "planeado",
+                name: "Planeado",
+                type: "bar",
+                data: categories.map((category) => category.unidadesPlaneadas),
+                barMaxWidth: 44,
+            },
+            {
+                id: "producido",
+                name: "Producido",
+                type: "bar",
+                data: categories.map((category) => category.unidadesProducidas),
+                barMaxWidth: 44,
+            },
+        ],
     };
-}
-
-function productionCategoryKey(id: number | null | undefined, name: string) {
-    return `${id ?? "SIN"}-${name}`;
-}
-
-function sum(values: number[]) {
-    return values.reduce((total, value) => total + value, 0);
 }
 
 export function buildCompositionChart(composition: ComposicionInventario[]) {
@@ -258,6 +233,6 @@ function formatCurrency(value: number) {
 function humanize(value: string) {
     return value
         .toLocaleLowerCase("es-CO")
-        .replaceAll("_", " ")
+        .replace(/_/g, " ")
         .replace(/^./, (firstLetter) => firstLetter.toLocaleUpperCase("es-CO"));
 }
