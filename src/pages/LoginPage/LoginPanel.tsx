@@ -23,6 +23,11 @@ import EndPointsURL from '../../api/EndPointsURL.tsx';
 import BorderGlow from '../../components/BorderGlow/BorderGlow.tsx';
 import FloatingLines from '../../components/FloatingLines/FloatingLines.tsx';
 import { loginFloatingLinesPreset } from '../../components/FloatingLines/presets.ts';
+import {
+    consumeReturnTo,
+    consumeSessionNotice,
+    type SessionEndReason,
+} from '../../auth/sessionLifecycle.ts';
 
 // TypeScript interfaces for component props
 interface FormularioLoginProps {
@@ -195,6 +200,26 @@ export default function LoginPanel() {
         };
     }, []);
 
+    useEffect(() => {
+        const reason = consumeSessionNotice();
+        if (!reason || reason === "MANUAL_LOGOUT") return;
+
+        const descriptions: Record<Exclude<SessionEndReason, "MANUAL_LOGOUT">, string> = {
+            TOKEN_EXPIRED: "Tu sesiÛn expirÛ. Inicia sesiÛn nuevamente.",
+            INVALID_TOKEN: "Tu sesiÛn ya no es v·lida. Inicia sesiÛn nuevamente.",
+            AUTHENTICATION_REQUIRED: "Debes iniciar sesiÛn nuevamente para continuar.",
+            SESSION_VALIDATION_FAILED: "No fue posible validar tu sesiÛn. Inicia sesiÛn nuevamente.",
+        };
+
+        toast({
+            title: "SesiÛn finalizada",
+            description: descriptions[reason],
+            status: "warning",
+            duration: 6000,
+            isClosable: true,
+        });
+    }, [toast]);
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         // Activar estado de carga
@@ -202,7 +227,8 @@ export default function LoginPanel() {
         try {
             await login(username, password);
             //console.log(response);
-            navigate('/');
+            const returnTo = consumeReturnTo();
+            navigate(returnTo ?? '/', { replace: true });
             // after successful login, go to home or wherever you want
             // No necesitamos desactivar el estado de carga aqu√≠ porque la p√°gina se redirigir√°
         } catch (error) {
