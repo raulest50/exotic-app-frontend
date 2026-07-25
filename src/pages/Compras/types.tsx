@@ -110,6 +110,9 @@ export interface OrdenCompraMateriales {
     // The backend generates this id
     ordenCompraId?: number;
     fechaEmision?: string;
+    usuarioCreadorUsername?: string | null;
+    usuarioLiberadorUsername?: string | null;
+    fechaLiberacion?: string | null;
     empresaIdentidadLegalVersion?: EmpresaIdentidadLegalVersion | null;
     empresaLogoDocumentalVersion?: EmpresaLogoDocumentalVersion | null;
     fechaVencimiento: string;

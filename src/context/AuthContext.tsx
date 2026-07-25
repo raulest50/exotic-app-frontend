@@ -23,6 +23,8 @@ import {
     beginSessionTermination,
     clearStoredSessionContext,
     getTokenExpirationMillis,
+    isPublicAuthPath,
+    isResetPasswordPath,
     parseSessionEvent,
     publishSessionEnd,
     rememberAutomaticSessionEnd,
@@ -127,7 +129,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!beginSessionTermination()) return;
 
         const { broadcast = true, redirect = true } = options;
-        if (reason === "MANUAL_LOGOUT") {
+        const currentPathname = window.location.pathname;
+        const isPasswordResetPage = isResetPasswordPath(currentPathname);
+
+        if (reason === "MANUAL_LOGOUT" || isPasswordResetPage) {
             clearStoredSessionContext();
         } else {
             rememberAutomaticSessionEnd(reason);
@@ -139,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         clearAuthenticationState();
 
-        if (redirect && window.location.pathname !== "/login") {
+        if (redirect && !isPublicAuthPath(currentPathname)) {
             window.location.replace("/login");
         }
     }, [clearAuthenticationState]);

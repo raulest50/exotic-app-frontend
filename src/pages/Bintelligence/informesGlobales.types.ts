@@ -46,7 +46,26 @@ export interface ResumenStock {
     referenciasConStock: number;
     referenciasValorizadas: number;
     coberturaCostosPct?: number | null;
+    valorizacion: ValorizacionInventario;
+    coberturaCostosDetalle: CoberturaCostosDetalle;
     referenciasNegativas: number;
+}
+
+export interface ValorizacionInventario {
+    materiales: ValorizacionMateriales;
+    terminados: number;
+}
+
+export interface ValorizacionMateriales {
+    total: number;
+    materiaPrima: number;
+    empaque: number;
+}
+
+export interface CoberturaCostosDetalle {
+    globalPct?: number | null;
+    materialesPct?: number | null;
+    terminadosPct?: number | null;
 }
 
 export interface StockPorUnidad {

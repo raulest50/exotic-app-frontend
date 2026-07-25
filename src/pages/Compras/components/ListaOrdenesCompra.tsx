@@ -15,7 +15,7 @@ import OrdenCompraDetails from './OrdenCompraDetails';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
 import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
-import { useModuleAccessLevel } from '../../../auth/usePermissions';
+import { useModuleAccessLevel, useTabPermission } from '../../../auth/usePermissions';
 import { formatCOP } from '../../../utils/formatters';
 
 import CancelarOrdenDialog from './CancelarOrdenDialog';
@@ -64,6 +64,10 @@ const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClos
     const [ordenToActualizar, setOrdenToActualizar] = useState<OrdenCompraMateriales | null>(null);
 
     const { nivel: comprasAccessLevel } = useModuleAccessLevel(Modulo.COMPRAS);
+    const { nivel: reportesOrdenesAccessLevel } = useTabPermission(
+        Modulo.COMPRAS,
+        "REPORTES_ORDENES_COMPRA"
+    );
     const endPoints = new EndPointsURL();
 
     const contextMenuRef = React.useRef<HTMLDivElement>(null);
@@ -206,8 +210,10 @@ const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClos
                             Cancelar Orden
                         </Box>
                     )}
-                    {/* Solo mostrar la opción de actualizar estado si el usuario es master o tiene nivel de acceso 2 o superior */}
-                    {comprasAccessLevel >= 2 && (
+                    {/* Para liberar (estado 0), el nivel debe provenir específicamente del tab de reportes. */}
+                    {(contextMenu.orden.estado === 0
+                        ? reportesOrdenesAccessLevel >= 2
+                        : comprasAccessLevel >= 2) && (
                         <Box
                             p={1}
                             _hover={{ bg: 'app.rowHoverStrong', cursor: 'pointer' }}

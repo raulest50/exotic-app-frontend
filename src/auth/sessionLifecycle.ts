@@ -24,6 +24,23 @@ type JwtPayload = {
 
 let sessionTerminationStarted = false;
 
+const normalizePathname = (pathname: string): string => {
+    const normalized = pathname.trim().toLowerCase();
+    if (!normalized) return "/";
+    return normalized.length > 1
+        ? normalized.replace(/\/+$/, "")
+        : normalized;
+};
+
+export const isLoginPath = (pathname: string): boolean =>
+    normalizePathname(pathname) === "/login";
+
+export const isResetPasswordPath = (pathname: string): boolean =>
+    normalizePathname(pathname) === "/reset-password";
+
+export const isPublicAuthPath = (pathname: string): boolean =>
+    isLoginPath(pathname) || isResetPasswordPath(pathname);
+
 const isSessionEndReason = (value: unknown): value is SessionEndReason =>
     value === "TOKEN_EXPIRED"
     || value === "INVALID_TOKEN"
@@ -60,7 +77,7 @@ export const sanitizeInternalReturnTo = (candidate: string | null): string | nul
     try {
         const parsed = new URL(candidate, window.location.origin);
         if (parsed.origin !== window.location.origin) return null;
-        if (parsed.pathname === "/login" || parsed.pathname === "/reset-password") return null;
+        if (isPublicAuthPath(parsed.pathname)) return null;
         return `${parsed.pathname}${parsed.search}${parsed.hash}`;
     } catch {
         return null;

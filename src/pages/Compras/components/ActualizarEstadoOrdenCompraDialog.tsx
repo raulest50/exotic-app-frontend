@@ -170,9 +170,21 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
             });
             if (onEstadoUpdated) onEstadoUpdated(response.data);
         } catch (error) {
+            const isForbidden = axios.isAxiosError(error) && error.response?.status === 403;
+            const responseData = axios.isAxiosError(error) ? error.response?.data : undefined;
+            const backendMessage =
+                typeof responseData === 'string'
+                    ? responseData
+                    : responseData && typeof responseData === 'object'
+                        ? [responseData.detail, responseData.error, responseData.message]
+                            .find((value): value is string => typeof value === 'string' && value.length > 0)
+                        : undefined;
+
             toast({
-                title: "Error",
-                description: "No se pudo actualizar el estado de la orden.",
+                title: isForbidden ? "Acceso denegado" : "Error",
+                description: isForbidden
+                    ? backendMessage ?? "Se requiere nivel 2 o superior en Reportes Ordenes de Compra para liberar la orden."
+                    : backendMessage ?? "No se pudo actualizar el estado de la orden.",
                 status: "error",
                 duration: 5000,
                 isClosable: true,

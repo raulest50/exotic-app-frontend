@@ -28,6 +28,22 @@ interface OrdenCompraDetailsProps {
 }
 
 const OrdenCompraDetails: React.FC<OrdenCompraDetailsProps> = ({ isOpen, onClose, orden }) => {
+    const historicalValue = 'No registrado (OCM histórica)';
+    const creatorUsername = orden.usuarioCreadorUsername?.trim();
+    const releaserUsername = orden.usuarioLiberadorUsername?.trim();
+    const creatorLabel = creatorUsername || historicalValue;
+    const releasePending = orden.estado === 0;
+    const canceledBeforeRelease = orden.estado === -1 && Boolean(creatorUsername) && !releaserUsername;
+    const releaseFallback = releasePending
+        ? 'Pendiente de liberación'
+        : canceledBeforeRelease
+            ? 'No aplica (OCM cancelada sin liberar)'
+            : historicalValue;
+    const releaserLabel = releaserUsername || releaseFallback;
+    const releaseDateLabel = orden.fechaLiberacion
+        ? new Date(orden.fechaLiberacion).toLocaleString()
+        : releaseFallback;
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
             <ModalOverlay />
@@ -41,6 +57,9 @@ const OrdenCompraDetails: React.FC<OrdenCompraDetailsProps> = ({ isOpen, onClose
                             <strong>Fecha Emisión:</strong>{' '}
                             {orden.fechaEmision ? new Date(orden.fechaEmision).toLocaleString() : '-'}
                         </Text>
+                        <Text><strong>Creada por:</strong> {creatorLabel}</Text>
+                        <Text><strong>Liberada por:</strong> {releaserLabel}</Text>
+                        <Text><strong>Fecha de liberación:</strong> {releaseDateLabel}</Text>
                         <Text>
                             <strong>Fecha Vencimiento:</strong>{' '}
                             {orden.fechaVencimiento ? new Date(orden.fechaVencimiento).toLocaleDateString() : '-'}

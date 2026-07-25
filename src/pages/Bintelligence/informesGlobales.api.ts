@@ -102,13 +102,37 @@ export function requestErrorMessage(error: unknown): string {
 }
 
 function normalizeInventoryReport(report: InformeInventario): InformeInventario {
+    const composition = report.stock.composicion ?? [];
+    const rawMaterialValue = compositionValue(composition, "MATERIA_PRIMA");
+    const packagingValue = compositionValue(composition, "EMPAQUE");
+
     return {
         ...report,
         notas: report.notas ?? [],
         stock: {
             ...report.stock,
+            resumen: {
+                ...report.stock.resumen,
+                valorizacion: report.stock.resumen.valorizacion ?? {
+                    materiales: {
+                        total: rawMaterialValue + packagingValue,
+                        materiaPrima: rawMaterialValue,
+                        empaque: packagingValue,
+                    },
+                    terminados: compositionValue(composition, "TERMINADO"),
+                },
+                coberturaCostosDetalle: {
+                    globalPct:
+                        report.stock.resumen.coberturaCostosDetalle?.globalPct
+                        ?? report.stock.resumen.coberturaCostosPct,
+                    materialesPct:
+                        report.stock.resumen.coberturaCostosDetalle?.materialesPct,
+                    terminadosPct:
+                        report.stock.resumen.coberturaCostosDetalle?.terminadosPct,
+                },
+            },
             porUnidad: report.stock.porUnidad ?? [],
-            composicion: report.stock.composicion ?? [],
+            composicion: composition,
             abc: {
                 ...report.stock.abc,
                 clases: report.stock.abc.clases ?? [],
@@ -136,6 +160,13 @@ function normalizeInventoryReport(report: InformeInventario): InformeInventario 
             items: report.materialDirectoOp.items ?? [],
         },
     };
+}
+
+function compositionValue(
+    composition: InformeInventario["stock"]["composicion"],
+    type: string,
+) {
+    return composition.find((item) => item.tipo === type)?.valorEstimado ?? 0;
 }
 
 function normalizePage<T>(page: PaginaInformeInventario<T>): PaginaInformeInventario<T> {
