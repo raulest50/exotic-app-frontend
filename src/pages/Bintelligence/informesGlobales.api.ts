@@ -132,6 +132,10 @@ function normalizeInventoryReport(report: InformeInventario): InformeInventario 
                 },
             },
             porUnidad: report.stock.porUnidad ?? [],
+            materialesPorTipo: {
+                materiaPrima: report.stock.materialesPorTipo?.materiaPrima ?? [],
+                empaque: report.stock.materialesPorTipo?.empaque ?? [],
+            },
             composicion: composition,
             abc: {
                 ...report.stock.abc,

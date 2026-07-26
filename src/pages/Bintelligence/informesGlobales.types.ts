@@ -36,9 +36,15 @@ export interface InformeInventario {
 export interface StockInventario {
     resumen: ResumenStock;
     porUnidad: StockPorUnidad[];
+    materialesPorTipo: MaterialesPorTipo;
     composicion: ComposicionInventario[];
     abc: ClasificacionAbc;
     alertas: ResumenAlertasStock;
+}
+
+export interface MaterialesPorTipo {
+    materiaPrima: StockPorUnidad[];
+    empaque: StockPorUnidad[];
 }
 
 export interface ResumenStock {

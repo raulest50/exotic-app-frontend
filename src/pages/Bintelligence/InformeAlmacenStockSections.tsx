@@ -39,7 +39,11 @@ import {
     buildAbcChart,
     buildCompositionChart,
 } from "./informesGlobales.charts";
-import type { StockInventario } from "./informesGlobales.types";
+import type {
+    MaterialesPorTipo,
+    StockInventario,
+    StockPorUnidad,
+} from "./informesGlobales.types";
 
 export function StockOverviewSection({ stock }: { stock: StockInventario }) {
     const coverageHelp = useDisclosure();
@@ -78,43 +82,13 @@ export function StockOverviewSection({ stock }: { stock: StockInventario }) {
                         onOpenHelp={coverageHelp.onOpen}
                     />
                     <KpiCard
-                        label="Alertas activas"
+                        label="Alertas de materiales"
                         value={formatInteger(stock.alertas.total)}
-                        help={`${formatInteger(stock.resumen.referenciasNegativas)} referencias negativas`}
+                        help={`${formatInteger(stock.alertas.negativas)} con stock negativo`}
                     />
                 </SimpleGrid>
 
-                <Card variant="outline">
-                    <CardBody p={{ base: 3, md: 5 }}>
-                        <Stack spacing={4}>
-                            <SectionHeading
-                                title="Stock por unidad de medida"
-                                description="Las unidades no se suman entre sí; cada tarjeta conserva su magnitud física."
-                            />
-                            <SimpleGrid columns={{ base: 1, sm: 2, xl: 3 }} spacing={3}>
-                                {stock.porUnidad.map((unit) => (
-                                    <Box
-                                        key={unit.unidadMedida}
-                                        borderWidth="1px"
-                                        borderColor="app.border"
-                                        borderRadius="md"
-                                        p={3}
-                                    >
-                                        <Text color="app.textMuted" fontSize="sm">
-                                            {unit.unidadMedida}
-                                        </Text>
-                                        <Text fontSize="xl" fontWeight="bold">
-                                            {formatQuantity(unit.cantidadNeta)}
-                                        </Text>
-                                        <Text color="app.textMuted" fontSize="sm">
-                                            {formatInteger(unit.referenciasConStock)} refs. positivas · {formatQuantity(unit.cantidadNegativa)} negativas
-                                        </Text>
-                                    </Box>
-                                ))}
-                            </SimpleGrid>
-                        </Stack>
-                    </CardBody>
-                </Card>
+                <MaterialsStockSection materials={stock.materialesPorTipo} />
             </Stack>
 
             <CoberturaCostosHelpModal
@@ -123,6 +97,194 @@ export function StockOverviewSection({ stock }: { stock: StockInventario }) {
             />
         </>
     );
+}
+
+function MaterialsStockSection({ materials }: { materials: MaterialesPorTipo }) {
+    return (
+        <Card variant="outline">
+            <CardBody p={{ base: 3, md: 5 }}>
+                <Stack spacing={4}>
+                    <SectionHeading
+                        title="Stock de materiales"
+                        description="Materia prima y empaque se presentan por separado; las unidades no se suman entre sí."
+                    />
+                    <SimpleGrid columns={{ base: 1, xl: 2 }} spacing={4}>
+                        <MaterialStockCard
+                            title="Materia prima"
+                            primaryUnit="KG"
+                            units={materials.materiaPrima}
+                        />
+                        <MaterialStockCard
+                            title="Material de empaque"
+                            primaryUnit="U"
+                            units={materials.empaque}
+                        />
+                    </SimpleGrid>
+                </Stack>
+            </CardBody>
+        </Card>
+    );
+}
+
+function MaterialStockCard({
+    title,
+    primaryUnit,
+    units,
+}: {
+    title: string;
+    primaryUnit: string;
+    units: StockPorUnidad[];
+}) {
+    const primary = units.find((unit) => unit.unidadMedida === primaryUnit)
+        ?? emptyStockUnit(primaryUnit);
+    const secondary = units
+        .filter((unit) => unit.unidadMedida !== primaryUnit)
+        .sort((left, right) => {
+            const referenceOrder = right.referenciasConStock - left.referenciasConStock;
+            return referenceOrder !== 0
+                ? referenceOrder
+                : left.unidadMedida.localeCompare(right.unidadMedida);
+        });
+
+    return (
+        <Card variant="outline" minW={0}>
+            <CardBody p={{ base: 3, md: 4 }}>
+                <Stack spacing={4}>
+                    <HStack justify="space-between" align="flex-start" spacing={3}>
+                        <Box minW={0}>
+                            <Text fontWeight="semibold">{title}</Text>
+                            <Text color="app.textMuted" fontSize="xs">
+                                Unidad principal
+                            </Text>
+                        </Box>
+                        <Badge colorScheme="green" fontSize="sm">
+                            {primaryUnit}
+                        </Badge>
+                    </HStack>
+
+                    <Box minW={0}>
+                        <Text color="app.textMuted" fontSize="xs">
+                            Stock neto
+                        </Text>
+                        <Text
+                            color={primary.cantidadNeta < 0 ? "red.500" : undefined}
+                            fontSize={{ base: "xl", md: "2xl" }}
+                            fontWeight="bold"
+                            lineHeight="shorter"
+                            overflowWrap="anywhere"
+                        >
+                            {formatQuantity(primary.cantidadNeta)} {primaryUnit}
+                        </Text>
+                    </Box>
+
+                    <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={3}>
+                        <StockMetric
+                            label="Stock positivo"
+                            value={`${formatQuantity(primary.cantidadPositiva)} ${primaryUnit}`}
+                        />
+                        <StockMetric
+                            label="Stock negativo"
+                            value={`${formatQuantity(primary.cantidadNegativa)} ${primaryUnit}`}
+                            warning={primary.cantidadNegativa < 0}
+                        />
+                        <StockMetric
+                            label="Referencias positivas"
+                            value={formatInteger(primary.referenciasConStock)}
+                        />
+                    </SimpleGrid>
+
+                    <Divider borderColor="app.border" />
+
+                    <Stack spacing={2}>
+                        <Text fontSize="sm" fontWeight="semibold">
+                            Otras unidades
+                        </Text>
+                        {secondary.length > 0 ? (
+                            secondary.map((unit) => (
+                                <SecondaryUnitRow key={unit.unidadMedida} unit={unit} />
+                            ))
+                        ) : (
+                            <Text color="app.textMuted" fontSize="sm">
+                                Sin otras unidades con stock.
+                            </Text>
+                        )}
+                    </Stack>
+                </Stack>
+            </CardBody>
+        </Card>
+    );
+}
+
+function StockMetric({
+    label,
+    value,
+    warning = false,
+}: {
+    label: string;
+    value: string;
+    warning?: boolean;
+}) {
+    return (
+        <Box minW={0}>
+            <Text color="app.textMuted" fontSize="xs">
+                {label}
+            </Text>
+            <Text
+                color={warning ? "red.500" : undefined}
+                fontSize="sm"
+                fontWeight="semibold"
+                overflowWrap="anywhere"
+            >
+                {value}
+            </Text>
+        </Box>
+    );
+}
+
+function SecondaryUnitRow({ unit }: { unit: StockPorUnidad }) {
+    return (
+        <Box
+            borderWidth="1px"
+            borderColor="app.border"
+            borderRadius="md"
+            p={3}
+        >
+            <Stack
+                direction={{ base: "column", sm: "row" }}
+                justify="space-between"
+                align={{ base: "flex-start", sm: "center" }}
+                spacing={1}
+            >
+                <Text fontWeight="semibold">{unit.unidadMedida}</Text>
+                <Text
+                    color={unit.cantidadNeta < 0 ? "red.500" : undefined}
+                    fontWeight="semibold"
+                >
+                    {formatQuantity(unit.cantidadNeta)} {unit.unidadMedida} netos
+                </Text>
+            </Stack>
+            <Text color="app.textMuted" fontSize="xs" mt={1}>
+                Positivo: {formatQuantity(unit.cantidadPositiva)} ·{" "}
+                <Text
+                    as="span"
+                    color={unit.cantidadNegativa < 0 ? "red.500" : undefined}
+                >
+                    Negativo: {formatQuantity(unit.cantidadNegativa)}
+                </Text>
+                {" "}· {formatInteger(unit.referenciasConStock)} refs. positivas
+            </Text>
+        </Box>
+    );
+}
+
+function emptyStockUnit(unit: string): StockPorUnidad {
+    return {
+        unidadMedida: unit,
+        cantidadNeta: 0,
+        cantidadPositiva: 0,
+        cantidadNegativa: 0,
+        referenciasConStock: 0,
+    };
 }
 
 function MaterialsValuationCard({
@@ -298,8 +460,8 @@ export function InventoryAnalyticsSection({ stock }: { stock: StockInventario })
                             spacing={2}
                         >
                             <SectionHeading
-                                title="Alertas prioritarias de stock"
-                                description="Máximo 10 referencias, ordenadas por criticidad y nivel de stock."
+                                title="Alertas prioritarias de materiales"
+                                description="Máximo 10 materiales, ordenados por criticidad y nivel de stock."
                             />
                             <Stack direction="row" spacing={2} flexWrap="wrap">
                                 <Badge colorScheme="red">{stock.alertas.negativas} negativas</Badge>
@@ -347,7 +509,7 @@ export function InventoryAnalyticsSection({ stock }: { stock: StockInventario })
                             </TableContainer>
                         ) : (
                             <Text color="app.textMuted" fontSize="sm">
-                                No se detectaron alertas de stock.
+                                No se detectaron alertas de materiales.
                             </Text>
                         )}
                     </Stack>
