@@ -62,6 +62,8 @@ export interface Producto{
 export interface Material extends Producto{
     fichaTecnicaUrl?: string;
     tipoMaterial?: number; // 1: materia prima, 2: material de empaque
+    inventareable?: boolean;
+    consumoDirecto?: boolean;
 }
 
 export interface ItemOrdenCompra {
@@ -334,10 +336,10 @@ export interface InsumoDesglosado {
     tipo_producto?: string;
     /**
      * Indica si el producto es inventariable (true) o no (false, como el agua).
-     * Los productos no inventariables se muestran en la tabla pero no requieren lotes
-     * y no se incluyen en la dispensación final.
      */
     inventareable?: boolean;
+    /** Registra consumo contra la OP sin descontar stock ni exigir lote. */
+    consumoDirecto?: boolean;
 }
 
 export interface TransaccionAlmacenDetalle {
@@ -385,6 +387,7 @@ export interface MovimientoDetalle {
     productionDate?: string;
     expirationDate?: string;
     tipoMovimiento: string;
+    afectaInventario: boolean;
     almacen: string;
     fechaMovimiento: string;
 }

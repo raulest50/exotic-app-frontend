@@ -27,6 +27,7 @@ export interface Material extends Producto {
     fichaTecnicaUrl?: string;
     tipoMaterial?: number;
     puntoReorden?: number;
+    consumoDirecto?: boolean;
 }
 
 export interface Insumo {
@@ -183,6 +184,7 @@ export interface ProductoBasicUpdatePayload {
 
 export interface ProductoInventareableUpdatePayload {
     inventareable: boolean;
+    consumoDirecto?: boolean;
 }
 
 export interface ProductoManufacturingInsumoDTO {

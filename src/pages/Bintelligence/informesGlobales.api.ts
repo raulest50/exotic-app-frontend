@@ -3,12 +3,16 @@ import EndPointsURL from "../../api/EndPointsURL";
 import type {
     BusquedaStockMaterial,
     CoberturaMateriales,
+    GrupoMaterialAjuste,
     InformeInventario,
     InformeProduccion,
     InformeQuery,
+    MaterialImpactoAjuste,
     OcmPendiente,
     OpMaterial,
+    OrdenAjusteMaterial,
     PaginaInformeInventario,
+    TipoFiltroAjuste,
 } from "./informesGlobales.types";
 
 const endpoints = new EndPointsURL();
@@ -19,10 +23,47 @@ export async function fetchInventoryReport(
     const response = await axios.get<InformeInventario>(
         endpoints.biInformesGlobalesAlmacen(query),
     );
-    if (![2, 3].includes(response.data?.versionContrato)) {
+    if (![2, 3, 4].includes(response.data?.versionContrato)) {
         throw new Error("El backend no expone la versión actual del informe de almacén.");
     }
     return normalizeInventoryReport(response.data);
+}
+
+export async function fetchAdjustmentMaterialsPage({
+    query,
+    group,
+    type,
+    order,
+    search,
+    page,
+    size,
+    signal,
+}: {
+    query: InformeQuery;
+    group: GrupoMaterialAjuste;
+    type: TipoFiltroAjuste;
+    order: OrdenAjusteMaterial;
+    search: string;
+    page: number;
+    size: 5 | 10;
+    signal?: AbortSignal;
+}): Promise<PaginaInformeInventario<MaterialImpactoAjuste>> {
+    const response = await axios.get<PaginaInformeInventario<MaterialImpactoAjuste>>(
+        `${endpoints.domain}/bi/informes-globales/almacen/ajustes-materiales`,
+        {
+            params: {
+                ...query,
+                grupo: group,
+                tipo: type,
+                orden: order,
+                ...(search.trim() ? { buscar: search.trim() } : {}),
+                page,
+                size,
+            },
+            signal,
+        },
+    );
+    return normalizePage(response.data);
 }
 
 export async function fetchPendingPurchaseOrdersPage(
@@ -60,6 +101,18 @@ export async function fetchProductionReport(
         mpsIds: response.data.mpsIds ?? [],
         consolidadoCategorias: response.data.consolidadoCategorias ?? [],
         detalleReferencias: response.data.detalleReferencias ?? [],
+        analiticaAreas: response.data.analiticaAreas
+            ? {
+                ...response.data.analiticaAreas,
+                areas: (response.data.analiticaAreas.areas ?? []).map((area) => ({
+                    ...area,
+                    motivos: area.motivos ?? [],
+                    produccion: area.produccion ?? [],
+                    serieActual: area.serieActual ?? [],
+                    serieAnterior: area.serieAnterior ?? [],
+                })),
+            }
+            : undefined,
         notas: response.data.notas ?? [],
     };
 }
@@ -153,6 +206,19 @@ function normalizeInventoryReport(report: InformeInventario): InformeInventario 
             porUnidad: report.movimientos.porUnidad ?? [],
             serieDiaria: report.movimientos.serieDiaria ?? [],
         },
+        ajustesInventario: report.ajustesInventario
+            ? {
+                ...report.ajustesInventario,
+                serieDiaria: report.ajustesInventario.serieDiaria ?? [],
+                mayorImpacto: {
+                    ...report.ajustesInventario.mayorImpacto,
+                    materiaPrima:
+                        report.ajustesInventario.mayorImpacto?.materiaPrima ?? [],
+                    empaque:
+                        report.ajustesInventario.mayorImpacto?.empaque ?? [],
+                },
+            }
+            : undefined,
         ocmPendientes: {
             ...report.ocmPendientes,
             cantidadesPorUnidad: report.ocmPendientes.cantidadesPorUnidad ?? [],

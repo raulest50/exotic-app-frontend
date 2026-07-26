@@ -24,6 +24,11 @@ export interface CargaCostosPreparacion {
     totalActualizadas: number;
     totalSinCambio: number;
     totalOmitidas: number;
+    totalDependencias: number;
+    totalSemiterminados: number;
+    totalTerminados: number;
+    totalDependenciasActualizadas: number;
+    totalDependenciasSinCambio: number;
     advertencias: string[];
 }
 
@@ -48,6 +53,26 @@ export interface CargaCostosItemsPage {
     totalPages: number;
 }
 
+export interface CargaCostosDependenciaPreview {
+    productoId: string;
+    nombreProducto: string | null;
+    tipoProducto: "S" | "T";
+    nivel: number;
+    costoActual: number;
+    costoNuevo: number;
+    diferencia: number;
+    porcentajeCambio: number | null;
+    cambia: boolean;
+}
+
+export interface CargaCostosDependenciasPage {
+    items: CargaCostosDependenciaPreview[];
+    page: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+}
+
 export interface CargaCostosToken {
     token: string;
     expiraEn: string;
@@ -63,4 +88,6 @@ export interface CargaCostosConfirmacion {
     ejecutadoEn: string | null;
     totalActualizadas: number;
     totalSinCambio: number;
+    totalDependenciasActualizadas: number;
+    totalDependenciasSinCambio: number;
 }

@@ -5,7 +5,10 @@ import {
     Box,
     Card,
     CardBody,
+    FormControl,
+    FormLabel,
     HStack,
+    Select,
     SimpleGrid,
     Stack,
     StackDivider,
@@ -13,7 +16,7 @@ import {
     useBreakpointValue,
 } from "@chakra-ui/react";
 import ReactECharts from "echarts-for-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
     EmptyPanel,
     formatDate,
@@ -23,7 +26,11 @@ import {
     ReportNotes,
     SectionHeading,
 } from "./InformeGlobalUi";
-import { buildProductionChart } from "./informesGlobales.charts";
+import {
+    buildProductionChart,
+    type ProductionReferenceMode,
+} from "./informesGlobales.charts";
+import InformeProduccionAreasSection from "./InformeProduccionAreasSection";
 import type {
     InformeProduccion,
     ReferenciaProduccion,
@@ -47,10 +54,22 @@ interface ProductionException {
 export default function InformeProduccionPage({ report }: { report: InformeProduccion }) {
     const compactChart = useBreakpointValue({ base: true, md: false }) ?? false;
     const chartHeight = useBreakpointValue({ base: 330, md: 420 }) ?? 420;
+    const [referenceMode, setReferenceMode] =
+        useState<ProductionReferenceMode>("TOP_8");
     const summary = report.resumen;
-    const chartOptions = buildProductionChart(
-        report.consolidadoCategorias,
-        compactChart,
+    const chartOptions = useMemo(
+        () => buildProductionChart(
+            report.consolidadoCategorias,
+            report.detalleReferencias,
+            compactChart,
+            referenceMode,
+        ),
+        [
+            compactChart,
+            referenceMode,
+            report.consolidadoCategorias,
+            report.detalleReferencias,
+        ],
     );
     const hasCategoryData = report.consolidadoCategorias.some(
         (category) => category.unidadesPlaneadas > 0 || category.unidadesProducidas > 0,
@@ -116,15 +135,51 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
                         >
                             <SectionHeading
                                 title="Producción consolidada por categoría"
-                                description="Comparación de unidades planeadas y producidas por categoría."
+                                description="Comparación entre planeado y producido, con composición por referencia."
                             />
-                            <Badge colorScheme="green">
-                                {formatInteger(summary.movimientosProduccion)} movimientos
-                            </Badge>
+                            <Stack
+                                direction={{ base: "column", sm: "row" }}
+                                align={{ base: "stretch", sm: "flex-end" }}
+                                spacing={3}
+                                w={{ base: "full", md: "auto" }}
+                            >
+                                <FormControl
+                                    maxW={{ base: "full", sm: "240px" }}
+                                    minW={{ sm: "220px" }}
+                                >
+                                    <FormLabel
+                                        fontSize="xs"
+                                        color="app.textMuted"
+                                        mb={1}
+                                    >
+                                        Detalle de referencias
+                                    </FormLabel>
+                                    <Select
+                                        size="sm"
+                                        minH="40px"
+                                        value={referenceMode}
+                                        onChange={(event) => setReferenceMode(
+                                            event.target.value as ProductionReferenceMode,
+                                        )}
+                                    >
+                                        <option value="TOP_8">Top 8 + Otras</option>
+                                        <option value="PARETO_80">Pareto 80% + Otras</option>
+                                        <option value="ALL">Todas las referencias</option>
+                                    </Select>
+                                </FormControl>
+                                <Badge
+                                    colorScheme="green"
+                                    alignSelf={{ base: "flex-start", sm: "center" }}
+                                    mb={{ sm: 2 }}
+                                >
+                                    {formatInteger(summary.movimientosProduccion)} movimientos
+                                </Badge>
+                            </Stack>
                         </Stack>
                         {hasCategoryData ? (
                             <ReactECharts
                                 option={chartOptions}
+                                notMerge={true}
                                 style={{ height: `${chartHeight}px`, width: "100%" }}
                             />
                         ) : (
@@ -133,6 +188,8 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
                     </Stack>
                 </CardBody>
             </Card>
+
+            <InformeProduccionAreasSection analytics={report.analiticaAreas} />
 
             <Stack spacing={4}>
                 <Stack

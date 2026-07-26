@@ -27,6 +27,7 @@ interface CargaCostosStep3ConfirmacionProps {
     intentosRestantes: number | null;
     tokenSecondsRemaining: number;
     blocked: boolean;
+    invalidated: boolean;
     result: CargaCostosConfirmacion | null;
     busy: boolean;
     onTokenChange: (value: string) => void;
@@ -50,6 +51,7 @@ export default function CargaCostosStep3Confirmacion({
     intentosRestantes,
     tokenSecondsRemaining,
     blocked,
+    invalidated,
     result,
     busy,
     onTokenChange,
@@ -67,7 +69,10 @@ export default function CargaCostosStep3Confirmacion({
                     <Box>
                         <AlertTitle>Carga completada</AlertTitle>
                         <AlertDescription>
-                            {result.totalActualizadas} costos actualizados y {result.totalSinCambio} sin cambio.
+                            {result.totalActualizadas} materiales actualizados y{" "}
+                            {result.totalSinCambio} sin cambio. La propagacion actualizo{" "}
+                            {result.totalDependenciasActualizadas} dependencias y dejo{" "}
+                            {result.totalDependenciasSinCambio} sin cambio.{" "}
                             El lote fue {result.loteId}.
                         </AlertDescription>
                     </Box>
@@ -82,14 +87,22 @@ export default function CargaCostosStep3Confirmacion({
 
     return (
         <VStack align="stretch" spacing={5}>
-            <Alert status={blocked ? "error" : "warning"}>
+            <Alert status={blocked || invalidated ? "error" : "warning"}>
                 <AlertIcon />
                 <Box>
-                    <AlertTitle>{blocked ? "Preparacion bloqueada" : "Confirmacion final"}</AlertTitle>
+                    <AlertTitle>
+                        {invalidated
+                            ? "Preparacion desactualizada"
+                            : blocked
+                                ? "Preparacion bloqueada"
+                                : "Confirmacion final"}
+                    </AlertTitle>
                     <AlertDescription>
-                        {blocked
-                            ? "Se agotaron los intentos de confirmacion. Debe iniciar una nueva carga."
-                            : `Se actualizaran ${preparacion.totalActualizadas} costos y cada cambio quedara en el historial.`}
+                        {invalidated
+                            ? "Una receta o costo relacionado cambio. Debe preparar nuevamente el archivo."
+                            : blocked
+                                ? "Se agotaron los intentos de confirmacion. Debe iniciar una nueva carga."
+                                : `Se actualizaran ${preparacion.totalActualizadas} materiales y ${preparacion.totalDependenciasActualizadas} dependencias. Cada cambio quedara en el historial.`}
                     </AlertDescription>
                 </Box>
             </Alert>
@@ -119,7 +132,7 @@ export default function CargaCostosStep3Confirmacion({
                 </Box>
             )}
 
-            {!blocked && expired && (
+            {!blocked && !invalidated && expired && (
                 <Button
                     alignSelf="flex-start"
                     colorScheme="orange"
@@ -131,7 +144,7 @@ export default function CargaCostosStep3Confirmacion({
                 </Button>
             )}
 
-            {!blocked && (
+            {!blocked && !invalidated && (
                 <FormControl isRequired isDisabled={expired || busy}>
                     <FormLabel htmlFor="carga-costos-token">Ingrese el token de cuatro digitos</FormLabel>
                     <Input
@@ -147,10 +160,14 @@ export default function CargaCostosStep3Confirmacion({
             )}
 
             <Flex justify="space-between" gap={3} flexWrap="wrap">
-                <Button variant="outline" onClick={blocked ? onCancel : onBack} isDisabled={busy}>
-                    {blocked ? "Nueva carga" : "Volver a revisar"}
+                <Button
+                    variant="outline"
+                    onClick={blocked || invalidated ? onCancel : onBack}
+                    isDisabled={busy}
+                >
+                    {blocked || invalidated ? "Nueva carga" : "Volver a revisar"}
                 </Button>
-                {!blocked && (
+                {!blocked && !invalidated && (
                     <Button
                         colorScheme="red"
                         onClick={onConfirm}

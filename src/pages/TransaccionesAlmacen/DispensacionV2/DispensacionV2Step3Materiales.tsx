@@ -81,8 +81,8 @@ function buildResponseKey(response: DispensacionV2MaterialesRecetaResponseDTO | 
 
 function buildMaterialWarning(material: DispensacionV2MaterialDTO, excedeReceta: boolean): string | null {
     const warnings: string[] = [];
-    if (!material.inventareable) {
-        warnings.push("Material no inventariable; no requiere salida de lote.");
+    if (!material.inventareable && !material.consumoDirecto) {
+        warnings.push("Material no inventariable sin consumo directo; no participa en la dispensación.");
     }
     if (excedeReceta) {
         warnings.push("La cantidad actual excede la receta por OP.");
@@ -91,7 +91,9 @@ function buildMaterialWarning(material: DispensacionV2MaterialDTO, excedeReceta:
 }
 
 function recalcularMaterial(material: DispensacionV2MaterialDTO): DispensacionV2MaterialDTO {
-    const cantidadActual = material.checked && material.inventareable ? material.cantidadADispensar : 0;
+    const cantidadActual = material.checked && (material.inventareable || material.consumoDirecto)
+        ? material.cantidadADispensar
+        : 0;
     const totalConHistorico = cantidadActual;
     const excedeReceta = totalConHistorico - material.cantidadReceta > TOLERANCE;
     return {
@@ -116,14 +118,14 @@ function recalcularMaterialesReceta(
     };
 }
 
-function iniciarMaterialesDesmarcados(
+function iniciarSeleccionMateriales(
     response: DispensacionV2MaterialesRecetaResponseDTO,
 ): DispensacionV2MaterialesRecetaResponseDTO {
     return {
         ...response,
         materiales: response.materiales.map((material) => ({
             ...material,
-            checked: false,
+            checked: material.consumoDirecto,
         })),
     };
 }
@@ -154,7 +156,7 @@ export default function DispensacionV2Step3Materiales({
     const responseKey = useMemo(() => buildResponseKey(materialesReceta), [materialesReceta]);
     const totalMateriales = materialesReceta?.materiales.length ?? 0;
     const totalMaterialesSeleccionados = materialesReceta?.materiales.filter(
-        (material) => material.checked && material.inventareable,
+        (material) => material.checked && (material.inventareable || material.consumoDirecto),
     ).length ?? 0;
     const totalWarnings = materialesReceta?.warnings.length ?? 0;
     const cantidadesPlanificadasDiferentes = selectedOrdenes.some(
@@ -183,7 +185,7 @@ export default function DispensacionV2Step3Materiales({
         try {
             const response = await prepararMaterialesRecetaDispensacionV2(selectedArea.areaId, productoId, cantidadBase);
             if (activeRequestRef.current === requestId) {
-                onMaterialesRecetaChange(recalcularMaterialesReceta(iniciarMaterialesDesmarcados(response)));
+                onMaterialesRecetaChange(recalcularMaterialesReceta(iniciarSeleccionMateriales(response)));
             }
         } catch (err) {
             if (activeRequestRef.current === requestId) {
@@ -228,7 +230,7 @@ export default function DispensacionV2Step3Materiales({
     const handlePrepararResumen = async () => {
         if (!materialesReceta) return;
         if (totalMaterialesSeleccionados === 0) {
-            setError("Debe chulear al menos un material inventariable para preparar el resumen.");
+            setError("Debe seleccionar al menos un material físico o de consumo directo para preparar el resumen.");
             return;
         }
         setAssigning(true);
@@ -339,7 +341,7 @@ export default function DispensacionV2Step3Materiales({
                                                 <Checkbox
                                                     colorScheme="teal"
                                                     isChecked={material.checked}
-                                                    isDisabled={!material.inventareable}
+                                                    isDisabled={!material.inventareable && !material.consumoDirecto}
                                                     onChange={(event) => updateMaterial(
                                                         material.productoId,
                                                         (current) => ({ ...current, checked: event.target.checked }),
@@ -351,6 +353,9 @@ export default function DispensacionV2Step3Materiales({
                                                 <Text fontSize="xs" color="app.textMuted">
                                                     {material.productoId} · {material.tipoProducto}
                                                 </Text>
+                                                {material.consumoDirecto ? (
+                                                    <Badge mt={1} colorScheme="purple">Consumo directo</Badge>
+                                                ) : null}
                                             </Td>
                                             <Td isNumeric>
                                                 {formatDispensacionV2Number(material.cantidadReceta)} {material.tipoUnidades}
@@ -367,12 +372,17 @@ export default function DispensacionV2Step3Materiales({
                                                         size="sm"
                                                         width="110px"
                                                         maxDecimals={4}
-                                                        isDisabled={!material.checked || !material.inventareable}
+                                                        isDisabled={
+                                                            !material.checked
+                                                            || (!material.inventareable && !material.consumoDirecto)
+                                                        }
                                                     />
                                                 </Flex>
                                             </Td>
                                             <Td>
-                                                {material.warning ? (
+                                                {material.consumoDirecto && material.checked ? (
+                                                    <Badge colorScheme="purple">Consumo directo</Badge>
+                                                ) : material.warning ? (
                                                     <Badge colorScheme={material.excedeReceta ? "orange" : "gray"} whiteSpace="normal">
                                                         {material.warning}
                                                     </Badge>

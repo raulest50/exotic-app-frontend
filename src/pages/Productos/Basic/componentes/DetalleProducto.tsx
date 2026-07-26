@@ -17,6 +17,7 @@ import {
     FormControl, FormHelperText, Select, Input, Textarea,
     useToast, useDisclosure, Badge, Modal, ModalOverlay,
     ModalContent, ModalHeader, ModalBody, ModalCloseButton, ModalFooter,
+    Switch,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import {Material, Producto, ProductoBasicUpdatePayload, ProductoInventareableUpdatePayload} from "../../types.tsx";
@@ -58,15 +59,26 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
         onClose: onInventareableClose,
     } = useDisclosure();
     const [isUpdatingInventareable, setIsUpdatingInventareable] = useState(false);
+    const [inventareableDraft, setInventareableDraft] = useState(producto.inventareable !== false);
+    const [consumoDirectoDraft, setConsumoDirectoDraft] = useState(
+        producto.tipo_producto === 'M' && (producto as Material).consumoDirecto === true
+    );
 
     useEffect(() => {
         setProductoData({ ...producto });
         setEditMode(false);
         if (producto.tipo_producto === 'M') {
-            setMaterialPuntoReordenInput(String((producto as Material).puntoReorden ?? 0));
+            setConsumoDirectoDraft((producto as Material).consumoDirecto === true);
+            setMaterialPuntoReordenInput(
+                producto.inventareable !== false
+                    ? String((producto as Material).puntoReorden ?? 0)
+                    : ''
+            );
         } else {
             setMaterialPuntoReordenInput('');
+            setConsumoDirectoDraft(false);
         }
+        setInventareableDraft(producto.inventareable !== false);
     }, [producto.productoId]);
 
     const handleDeleteProduct = async () => {
@@ -175,7 +187,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
             return false;
         }
 
-        if (producto.tipo_producto === 'M') {
+        if (producto.tipo_producto === 'M' && productoData.inventareable !== false) {
             const pr = Number(materialPuntoReordenInput.trim());
             if (materialPuntoReordenInput.trim() === '' || !isValidPuntoReorden(pr)) {
                 if (showToast) {
@@ -226,7 +238,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
             return true;
         }
 
-        if (producto.tipo_producto === 'M') {
+        if (producto.tipo_producto === 'M' && productoData.inventareable !== false) {
             const orig = (producto as Material).puntoReorden ?? 0;
             const t = materialPuntoReordenInput.trim();
             if (t === '') return true;
@@ -272,9 +284,11 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
 
             if (productoData.tipo_producto === 'M') {
                 payload.tipoMaterial = (productoData as Material).tipoMaterial;
-                payload.puntoReorden = puntoReorden;
+                payload.puntoReorden = productoData.inventareable !== false ? puntoReorden : -1;
                 const prefijoLote = ((productoData as Material).prefijoLote ?? '').trim();
-                payload.prefijoLote = prefijoLote ? prefijoLote.toUpperCase() : '';
+                payload.prefijoLote = productoData.inventareable !== false && prefijoLote
+                    ? prefijoLote.toUpperCase()
+                    : '';
             }
 
             const response = await axios.put(url, payload);
@@ -316,14 +330,20 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
         }
     };
 
+    const openInventoryConfiguration = () => {
+        setInventareableDraft(productoData.inventareable !== false);
+        setConsumoDirectoDraft((productoData as Material).consumoDirecto === true);
+        onInventareableOpen();
+    };
+
     const handleUpdateInventareable = async () => {
         if (productoData.tipo_producto !== 'M') {
             return;
         }
 
-        const nextInventareableValue = productoData.inventareable === false;
         const payload: ProductoInventareableUpdatePayload = {
-            inventareable: nextInventareableValue,
+            inventareable: inventareableDraft,
+            consumoDirecto: inventareableDraft ? false : consumoDirectoDraft,
         };
 
         setIsUpdatingInventareable(true);
@@ -332,15 +352,18 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
             const response = await axios.patch<Material>(url, payload);
 
             setProductoData(response.data);
+            setMaterialPuntoReordenInput(String(response.data.puntoReorden ?? -1));
             if (typeof setProductoSeleccionado === 'function') {
                 setProductoSeleccionado(response.data);
             }
 
             toast({
-                title: 'Estado actualizado',
-                description: nextInventareableValue
-                    ? 'El material ahora es inventariable.'
-                    : 'El material ahora no es inventariable.',
+                title: 'Configuración actualizada',
+                description: inventareableDraft
+                    ? 'El material mantiene existencias y usa dispensación física.'
+                    : consumoDirectoDraft
+                        ? 'El material se registrará como consumo directo en producción.'
+                        : 'El material no mantiene existencias ni participa en la dispensación.',
                 status: 'success',
                 duration: 5000,
                 isClosable: true,
@@ -370,7 +393,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
     // Determinar si es un material (tipo_producto === 'M')
     const isMaterial = producto.tipo_producto === 'M';
     const isInventareable = productoData.inventareable !== false;
-    const nextInventareable = !isInventareable;
+    const isConsumoDirecto = isMaterial && (productoData as Material).consumoDirecto === true;
 
     // Mapear tipo de producto a texto legible
     const getTipoProductoText = (tipo: string): string => {
@@ -477,21 +500,26 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                     <Text>{getTipoProductoText(producto.tipo_producto)}</Text>
                                 </Box>
                                 <Box>
-                                    <Text fontWeight="bold">Inventariable:</Text>
+                                    <Text fontWeight="bold">Mantiene existencias:</Text>
                                     <HStack mt={1} spacing={2}>
                                         <Badge colorScheme={isInventareable ? "blue" : "gray"}>
                                             {isInventareable ? "Sí" : "No"}
                                         </Badge>
+                                        {isMaterial && !isInventareable && (
+                                            <Badge colorScheme={isConsumoDirecto ? "purple" : "gray"}>
+                                                {isConsumoDirecto ? "Consumo directo" : "Sin dispensación"}
+                                            </Badge>
+                                        )}
                                         {canEdit && isMaterial && editMode && (
                                             <Button
                                                 size="xs"
                                                 variant="outline"
-                                                colorScheme={isInventareable ? "gray" : "blue"}
-                                                onClick={onInventareableOpen}
+                                                colorScheme="blue"
+                                                onClick={openInventoryConfiguration}
                                                 isDisabled={hasChanges || isUpdatingInventareable}
                                                 isLoading={isUpdatingInventareable}
                                             >
-                                                Cambiar estado
+                                                Configurar
                                             </Button>
                                         )}
                                     </HStack>
@@ -522,9 +550,12 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                                 <Input
                                                     value={(productoData as Material).prefijoLote ?? ''}
                                                     onChange={(e) => handleInputChange('prefijoLote', e.target.value.toUpperCase())}
+                                                    isDisabled={!isInventareable}
                                                 />
                                                 <FormHelperText fontSize="xs">
-                                                    Opcional para lotes internos de ingreso.
+                                                    {isInventareable
+                                                        ? 'Opcional para lotes internos de ingreso.'
+                                                        : 'No aplica para materiales sin existencias.'}
                                                 </FormHelperText>
                                             </FormControl>
                                         ) : (
@@ -544,6 +575,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                                     onChange={(e) =>
                                                         setMaterialPuntoReordenInput(e.target.value)
                                                     }
+                                                    isDisabled={!isInventareable}
                                                 />
                                                 <FormHelperText fontSize="xs">
                                                     -1 sin alertas; 0 sin umbral definido; mayor a 0 alerta si
@@ -642,19 +674,53 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
             <Modal isOpen={isInventareableOpen} onClose={onInventareableClose} isCentered>
                 <ModalOverlay />
                 <ModalContent>
-                    <ModalHeader>Cambiar estado inventariable</ModalHeader>
+                    <ModalHeader>Configurar inventario y consumo</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        <Text>
-                            El material {productoData.productoId} cambiará a{' '}
-                            <strong>{nextInventareable ? 'Inventariable' : 'No inventariable'}</strong>.
-                        </Text>
-                        {!nextInventareable && (
-                            <Text mt={3}>
-                                Al pasar a No inventariable, el backend validará que el stock por almacén/lote sea cero
-                                y que no existan órdenes de compra abiertas asociadas.
-                            </Text>
-                        )}
+                        <VStack align="stretch" spacing={4}>
+                            <FormControl>
+                                <HStack justify="space-between">
+                                    <Box>
+                                        <Text fontWeight="semibold">Mantiene existencias</Text>
+                                        <Text fontSize="sm" color="app.textMuted">
+                                            Usa almacén, stock y lotes en la dispensación.
+                                        </Text>
+                                    </Box>
+                                    <Switch
+                                        isChecked={inventareableDraft}
+                                        onChange={(event) => {
+                                            const nextValue = event.target.checked;
+                                            setInventareableDraft(nextValue);
+                                            if (nextValue) {
+                                                setConsumoDirectoDraft(false);
+                                            }
+                                        }}
+                                    />
+                                </HStack>
+                            </FormControl>
+                            {!inventareableDraft && (
+                                <FormControl>
+                                    <HStack justify="space-between">
+                                        <Box>
+                                            <Text fontWeight="semibold">Registrar consumo directo</Text>
+                                            <Text fontSize="sm" color="app.textMuted">
+                                                Registra cantidad contra la OP sin modificar stock ni exigir lote.
+                                            </Text>
+                                        </Box>
+                                        <Switch
+                                            isChecked={consumoDirectoDraft}
+                                            onChange={(event) => setConsumoDirectoDraft(event.target.checked)}
+                                        />
+                                    </HStack>
+                                </FormControl>
+                            )}
+                            {!inventareableDraft && (
+                                <Text fontSize="sm">
+                                    Al dejar de mantener existencias, el backend validará que el stock por
+                                    almacén/lote sea cero y que no existan órdenes de compra abiertas.
+                                </Text>
+                            )}
+                        </VStack>
                     </ModalBody>
                     <ModalFooter>
                         <Button
@@ -666,7 +732,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                             Cancelar
                         </Button>
                         <Button
-                            colorScheme={nextInventareable ? "blue" : "orange"}
+                            colorScheme={inventareableDraft ? "blue" : "orange"}
                             onClick={handleUpdateInventareable}
                             isLoading={isUpdatingInventareable}
                         >

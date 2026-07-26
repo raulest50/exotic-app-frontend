@@ -6,6 +6,7 @@ import {
     Box,
     Button,
     Flex,
+    Heading,
     HStack,
     SimpleGrid,
     Spinner,
@@ -22,14 +23,21 @@ import {
     Tr,
     VStack,
 } from "@chakra-ui/react";
-import { CargaCostosItemsPage, CargaCostosPreparacion } from "../types";
+import {
+    CargaCostosDependenciasPage,
+    CargaCostosItemsPage,
+    CargaCostosPreparacion,
+} from "../types";
 
 interface CargaCostosStep2PreviewProps {
     preparacion: CargaCostosPreparacion;
     itemsPage: CargaCostosItemsPage | null;
+    dependenciasPage: CargaCostosDependenciasPage | null;
     loadingItems: boolean;
+    loadingDependencias: boolean;
     busy: boolean;
     onPageChange: (page: number) => void;
+    onDependenciasPageChange: (page: number) => void;
     onCancel: () => void;
     onContinue: () => void;
 }
@@ -44,21 +52,30 @@ function money(value: number): string {
 export default function CargaCostosStep2Preview({
     preparacion,
     itemsPage,
+    dependenciasPage,
     loadingItems,
+    loadingDependencias,
     busy,
     onPageChange,
+    onDependenciasPageChange,
     onCancel,
     onContinue,
 }: CargaCostosStep2PreviewProps) {
     const page = itemsPage?.page ?? 0;
     const totalPages = Math.max(1, itemsPage?.totalPages ?? 1);
+    const dependenciasPageNumber = dependenciasPage?.page ?? 0;
+    const dependenciasTotalPages = Math.max(1, dependenciasPage?.totalPages ?? 1);
 
     return (
         <VStack align="stretch" spacing={5}>
-            <SimpleGrid columns={{ base: 2, md: 5 }} spacing={3}>
+            <SimpleGrid columns={{ base: 2, md: 3, xl: 5 }} spacing={3}>
                 <Stat><StatLabel>Candidatos</StatLabel><StatNumber>{preparacion.totalCandidatas}</StatNumber></Stat>
-                <Stat><StatLabel>Cambiaran</StatLabel><StatNumber>{preparacion.totalActualizadas}</StatNumber></Stat>
-                <Stat><StatLabel>Sin cambio</StatLabel><StatNumber>{preparacion.totalSinCambio}</StatNumber></Stat>
+                <Stat><StatLabel>Materiales a cambiar</StatLabel><StatNumber>{preparacion.totalActualizadas}</StatNumber></Stat>
+                <Stat><StatLabel>Materiales sin cambio</StatLabel><StatNumber>{preparacion.totalSinCambio}</StatNumber></Stat>
+                <Stat><StatLabel>Semiterminados</StatLabel><StatNumber>{preparacion.totalSemiterminados}</StatNumber></Stat>
+                <Stat><StatLabel>Terminados</StatLabel><StatNumber>{preparacion.totalTerminados}</StatNumber></Stat>
+                <Stat><StatLabel>Dependencias a cambiar</StatLabel><StatNumber>{preparacion.totalDependenciasActualizadas}</StatNumber></Stat>
+                <Stat><StatLabel>Dependencias sin cambio</StatLabel><StatNumber>{preparacion.totalDependenciasSinCambio}</StatNumber></Stat>
                 <Stat><StatLabel>Omitidos</StatLabel><StatNumber>{preparacion.totalOmitidas}</StatNumber></Stat>
                 <Stat>
                     <StatLabel>Vigencia</StatLabel>
@@ -88,6 +105,8 @@ export default function CargaCostosStep2Preview({
                     </Flex>
                 </Alert>
             )}
+
+            <Heading as="h3" size="sm">Materiales incluidos en el Excel</Heading>
 
             <Box position="relative" minH="160px">
                 {loadingItems && (
@@ -159,13 +178,137 @@ export default function CargaCostosStep2Preview({
                 </Button>
             </HStack>
 
+            {!dependenciasPage && !loadingDependencias && (
+                <Alert status="error">
+                    <AlertIcon />
+                    <Flex w="full" align="center" justify="space-between" gap={3} flexWrap="wrap">
+                        <AlertDescription>
+                            No fue posible cargar el detalle de la propagacion.
+                        </AlertDescription>
+                        <Button size="sm" onClick={() => onDependenciasPageChange(0)}>
+                            Reintentar
+                        </Button>
+                    </Flex>
+                </Alert>
+            )}
+
+            <Heading as="h3" size="sm">Propagacion a semiterminados y terminados</Heading>
+
+            {preparacion.totalDependencias === 0 && dependenciasPage && (
+                <Alert status="info">
+                    <AlertIcon />
+                    <AlertDescription>
+                        Los materiales modificados no tienen dependencias de receta.
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            {preparacion.totalDependencias > 0 && (
+                <>
+                    <Box position="relative" minH="160px">
+                        {loadingDependencias && (
+                            <Flex
+                                position="absolute"
+                                inset={0}
+                                bg="blackAlpha.50"
+                                zIndex={1}
+                                align="center"
+                                justify="center"
+                            >
+                                <Spinner size="lg" />
+                            </Flex>
+                        )}
+                        <TableContainer borderWidth="1px" borderRadius="md" overflowX="auto">
+                            <Table size="sm">
+                                <Thead>
+                                    <Tr>
+                                        <Th>Nivel</Th>
+                                        <Th>Tipo</Th>
+                                        <Th>Codigo</Th>
+                                        <Th>Nombre</Th>
+                                        <Th isNumeric>Actual</Th>
+                                        <Th isNumeric>Proyectado</Th>
+                                        <Th isNumeric>Diferencia</Th>
+                                        <Th isNumeric>%</Th>
+                                        <Th>Accion</Th>
+                                    </Tr>
+                                </Thead>
+                                <Tbody>
+                                    {(dependenciasPage?.items ?? []).map((item) => (
+                                        <Tr key={item.productoId}>
+                                            <Td>{item.nivel}</Td>
+                                            <Td>
+                                                <Badge colorScheme={item.tipoProducto === "S" ? "purple" : "blue"}>
+                                                    {item.tipoProducto === "S" ? "Semiterminado" : "Terminado"}
+                                                </Badge>
+                                            </Td>
+                                            <Td>{item.productoId}</Td>
+                                            <Td>{item.nombreProducto ?? "-"}</Td>
+                                            <Td isNumeric>{money(item.costoActual)}</Td>
+                                            <Td isNumeric>{money(item.costoNuevo)}</Td>
+                                            <Td isNumeric>{money(item.diferencia)}</Td>
+                                            <Td isNumeric>
+                                                {item.porcentajeCambio === null
+                                                    ? "N/A"
+                                                    : `${money(item.porcentajeCambio)}%`}
+                                            </Td>
+                                            <Td>
+                                                <Badge colorScheme={item.cambia ? "orange" : "gray"}>
+                                                    {item.cambia ? "Cambiar" : "Sin cambio"}
+                                                </Badge>
+                                            </Td>
+                                        </Tr>
+                                    ))}
+                                </Tbody>
+                            </Table>
+                        </TableContainer>
+                    </Box>
+
+                    <HStack justify="space-between" flexWrap="wrap">
+                        <Button
+                            variant="outline"
+                            onClick={() => onDependenciasPageChange(
+                                Math.max(0, dependenciasPageNumber - 1),
+                            )}
+                            isDisabled={loadingDependencias || dependenciasPageNumber === 0}
+                        >
+                            Anterior
+                        </Button>
+                        <Text>
+                            Pagina {dependenciasPageNumber + 1} de {dependenciasTotalPages}
+                        </Text>
+                        <Button
+                            variant="outline"
+                            onClick={() => onDependenciasPageChange(
+                                Math.min(
+                                    dependenciasTotalPages - 1,
+                                    dependenciasPageNumber + 1,
+                                ),
+                            )}
+                            isDisabled={
+                                loadingDependencias
+                                || dependenciasPageNumber + 1 >= dependenciasTotalPages
+                            }
+                        >
+                            Siguiente
+                        </Button>
+                    </HStack>
+                </>
+            )}
+
             <Flex justify="space-between" gap={3} flexWrap="wrap">
                 <Button variant="outline" onClick={onCancel} isLoading={busy}>Cancelar carga</Button>
                 <Button
                     colorScheme="orange"
                     onClick={onContinue}
                     isLoading={busy}
-                    isDisabled={!itemsPage || preparacion.totalActualizadas === 0 || loadingItems}
+                    isDisabled={
+                        !itemsPage
+                        || !dependenciasPage
+                        || preparacion.totalActualizadas === 0
+                        || loadingItems
+                        || loadingDependencias
+                    }
                 >
                     Ir a confirmacion
                 </Button>

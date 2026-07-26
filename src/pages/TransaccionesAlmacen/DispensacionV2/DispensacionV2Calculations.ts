@@ -8,8 +8,8 @@ const TOLERANCE = 0.01;
 
 function buildMaterialWarning(material: DispensacionV2MaterialDTO, excedeReceta: boolean): string | null {
     const warnings: string[] = [];
-    if (!material.inventareable) {
-        warnings.push("Material no inventariable; no requiere salida de lote.");
+    if (!material.inventareable && !material.consumoDirecto) {
+        warnings.push("Material no inventariable sin consumo directo; no participa en la dispensación.");
     }
     if (excedeReceta) {
         warnings.push("La suma de historico y dispensacion actual excede la receta.");
@@ -21,7 +21,9 @@ function buildMaterialWarning(material: DispensacionV2MaterialDTO, excedeReceta:
 }
 
 export function getCantidadActualEfectiva(material: DispensacionV2MaterialDTO): number {
-    return material.checked && material.inventareable ? material.cantidadADispensar : 0;
+    return material.checked && (material.inventareable || material.consumoDirecto)
+        ? material.cantidadADispensar
+        : 0;
 }
 
 export function recalcularDispensacionV2(

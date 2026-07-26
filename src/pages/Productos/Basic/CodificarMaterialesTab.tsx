@@ -36,6 +36,7 @@ function CodificarMaterialesTab() {
     const [url_ftecnica, setUrl_ftecnica] = useState('');
     const [tipoMaterial, setTipoMaterial] = useState(TIPOS_MATERIALES.materiaPrima);
     const [inventareable, setInventareable] = useState(true);
+    const [consumoDirecto, setConsumoDirecto] = useState(false);
     const [puntoReordenStr, setPuntoReordenStr] = useState('-1');
 
     const [ivaPercentage, setIvaPercentage] = useState(0);
@@ -57,6 +58,7 @@ function CodificarMaterialesTab() {
         setTipoMaterial(TIPOS_MATERIALES.materiaPrima);
         setTipo_unidad(UNIDADES.KG);
         setInventareable(true);
+        setConsumoDirecto(false);
         setPuntoReordenStr('-1');
     };
 
@@ -102,7 +104,7 @@ function CodificarMaterialesTab() {
             });
             return false;
         }
-        if (prefijoLote.trim() && !/^[A-Za-z0-9]+$/.test(prefijoLote.trim())) {
+        if (inventareable && prefijoLote.trim() && !/^[A-Za-z0-9]+$/.test(prefijoLote.trim())) {
             toast({
                 title: "Validation Error",
                 description: "El prefijo de lote solo puede contener letras y numeros.",
@@ -137,7 +139,8 @@ function CodificarMaterialesTab() {
             return false;
         }
         const pr = Number(puntoReordenStr);
-        if (puntoReordenStr.trim() === '' || !Number.isFinite(pr) || (pr !== -1 && pr < 0)) {
+        if (inventareable
+            && (puntoReordenStr.trim() === '' || !Number.isFinite(pr) || (pr !== -1 && pr < 0))) {
             toast({
                 title: "Validation Error",
                 description: "Punto de reorden: -1 (sin alertas), 0 (sin umbral definido) o un numero mayor o igual a 0.",
@@ -203,9 +206,12 @@ function CodificarMaterialesTab() {
             tipo_producto: TIPOS_PRODUCTOS.materiaPrima,
             tipoMaterial: tipoMaterial,
             inventareable,
+            consumoDirecto: !inventareable && consumoDirecto,
             ivaPercentual: ivaPercentage,
-            puntoReorden,
-            prefijoLote: prefijoLote.trim() ? prefijoLote.trim().toUpperCase() : undefined,
+            puntoReorden: inventareable ? puntoReorden : -1,
+            prefijoLote: inventareable && prefijoLote.trim()
+                ? prefijoLote.trim().toUpperCase()
+                : undefined,
         };
 
         // Log the payload being sent to the backend
@@ -283,10 +289,13 @@ function CodificarMaterialesTab() {
                             <Input
                                 value={prefijoLote}
                                 onChange={(e) => setPrefijoLote(e.target.value.toUpperCase())}
+                                isDisabled={!inventareable}
                                 sx={input_style}
                             />
                             <FormHelperText fontSize="xs">
-                                Opcional para lotes internos de ingreso.
+                                {inventareable
+                                    ? 'Opcional para lotes internos de ingreso.'
+                                    : 'No aplica para materiales sin existencias.'}
                             </FormHelperText>
                         </FormControl>
                     </GridItem>
@@ -382,11 +391,45 @@ function CodificarMaterialesTab() {
                     </GridItem>
 
                     <GridItem colSpan={1}>
-                        <FormControl display="flex" alignItems="center">
-                            <FormLabel mb="0">Inventareable</FormLabel>
-                            <Switch isChecked={inventareable} onChange={(e) => setInventareable(e.target.checked)} />
+                        <FormControl>
+                            <Flex align="center">
+                                <FormLabel mb="0">Mantiene existencias</FormLabel>
+                                <Switch
+                                    isChecked={inventareable}
+                                    onChange={(e) => {
+                                        const nextInventareable = e.target.checked;
+                                        setInventareable(nextInventareable);
+                                        if (nextInventareable) {
+                                            setConsumoDirecto(false);
+                                        } else {
+                                            setPuntoReordenStr('-1');
+                                            setPrefijoLote('');
+                                        }
+                                    }}
+                                />
+                            </Flex>
+                            <FormHelperText fontSize="xs">
+                                Requiere stock, almacén y lotes durante la dispensación.
+                            </FormHelperText>
                         </FormControl>
                     </GridItem>
+
+                    {!inventareable && (
+                        <GridItem colSpan={1}>
+                            <FormControl>
+                                <Flex align="center">
+                                    <FormLabel mb="0">Registrar consumo directo</FormLabel>
+                                    <Switch
+                                        isChecked={consumoDirecto}
+                                        onChange={(e) => setConsumoDirecto(e.target.checked)}
+                                    />
+                                </Flex>
+                                <FormHelperText fontSize="xs">
+                                    Registra el consumo contra la OP sin modificar stock ni exigir lote.
+                                </FormHelperText>
+                            </FormControl>
+                        </GridItem>
+                    )}
 
                     <GridItem colSpan={1}>
                         <FormControl>
@@ -396,6 +439,7 @@ function CodificarMaterialesTab() {
                                 step="any"
                                 value={puntoReordenStr}
                                 onChange={(e) => setPuntoReordenStr(e.target.value)}
+                                isDisabled={!inventareable}
                                 sx={input_style}
                             />
                             <FormHelperText fontSize="xs">

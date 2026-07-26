@@ -1,6 +1,7 @@
 import { Badge, Divider, Stack } from "@chakra-ui/react";
 import BuscadorStockMaterialCard from "./BuscadorStockMaterialCard";
 import CoberturaMaterialesCard from "./CoberturaMaterialesCard";
+import InformeAlmacenAdjustmentsSection from "./InformeAlmacenAdjustmentsSection";
 import { MovementsSection } from "./InformeAlmacenFlowSections";
 import {
     OpenProductionOrdersSection,
@@ -60,6 +61,15 @@ export default function InformeAlmacenPage({
             </Stack>
 
             <Divider borderColor="app.border" />
+            {report.ajustesInventario ? (
+                <>
+                    <InformeAlmacenAdjustmentsSection
+                        adjustments={report.ajustesInventario}
+                        period={report.periodo}
+                    />
+                    <Divider borderColor="app.border" />
+                </>
+            ) : null}
             <PendingPurchaseOrdersSection
                 report={report.ocmPendientes}
                 contractVersion={report.versionContrato}

@@ -148,6 +148,9 @@ export default function DispensacionStep2EditItems({
                 const flatData = flatMap.get(String(insumo.productoId));
                 // Obtener inventareable del insumo anidado (si tiene) o del plano, con default true
                 const inventareable = flatData?.inventareable ?? (insumo as any).inventareable ?? true;
+                const consumoDirecto = flatData?.consumoDirecto
+                    ?? (insumo as any).consumoDirecto
+                    ?? false;
                 const merged: InsumoDesglosado = {
                     productoId: String(insumo.productoId),
                     productoNombre: insumo.productoNombre,
@@ -157,6 +160,7 @@ export default function DispensacionStep2EditItems({
                     tipo_producto: insumo.tipo_producto,
                     lotesSeleccionados: flatData?.lotesSeleccionados,
                     inventareable: inventareable,
+                    consumoDirecto,
                     subInsumos: insumo.subInsumos && insumo.subInsumos.length > 0 
                         ? mergeRecursive(insumo.subInsumos) 
                         : undefined

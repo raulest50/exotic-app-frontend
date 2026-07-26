@@ -95,6 +95,7 @@ export interface DispensacionV2MaterialDTO {
     tipoUnidades: string;
     tipoProducto: string;
     inventareable: boolean;
+    consumoDirecto: boolean;
     checked: boolean;
     cantidadReceta: number;
     cantidadADispensar: number;

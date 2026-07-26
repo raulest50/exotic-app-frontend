@@ -78,6 +78,11 @@ export default function TablaDispensacionInsumos({
                             Semiterminado
                         </Tag>
                     )}
+                    {esMaterial && insumo.consumoDirecto === true && (
+                        <Tag ml={2} size="sm" colorScheme="purple">
+                            Consumo directo
+                        </Tag>
+                    )}
                 </Td>
                 <Td>{insumo.cantidadTotalRequerida.toFixed(2)}</Td>
                 <Td>{insumo.tipoUnidades}</Td>
@@ -95,7 +100,7 @@ export default function TablaDispensacionInsumos({
                         </Button>
                     ) : esMaterial && !esInvent ? (
                         <Text fontSize='xs' color='app.textSubtle' fontStyle='italic'>
-                            No requiere lote
+                            {insumo.consumoDirecto ? 'Sin lote; se registra contra la OP' : 'No participa'}
                         </Text>
                     ) : (
                         esSemi && tieneSubInsumos && (
@@ -226,4 +231,3 @@ export default function TablaDispensacionInsumos({
         </Box>
     );
 }
-

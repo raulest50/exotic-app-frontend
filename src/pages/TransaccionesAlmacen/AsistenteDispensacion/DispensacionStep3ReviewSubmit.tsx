@@ -156,10 +156,6 @@ export default function DispensacionStep3ReviewSubmit({
         setUsuariosRealizadores(usuariosRealizadores.filter(u => u.id !== userId));
     };
 
-    const canGeneratePDF = usuariosRealizadores.length > 0 &&
-        ((lotesPorMaterial && lotesPorMaterial.size > 0) ||
-         (lotesPorMaterialEmpaque && lotesPorMaterialEmpaque.size > 0) ||
-         (lotesPorReposicionAveria && lotesPorReposicionAveria.size > 0));
     const requiereAreaDestino = areasDestinoDisponibles.length > 0;
     const canRegister = usuariosRealizadores.length > 0
         && inputToken === token
@@ -209,6 +205,49 @@ export default function DispensacionStep3ReviewSubmit({
         return findInsumoByProductoId(insumosDesglosados, insumoKey);
     };
 
+    const collectConsumosDirectos = () => {
+        const byProducto = new Map<string, {
+            productoId: string;
+            productoNombre: string;
+            cantidad: number;
+            unidad: string;
+            esEmpaque: boolean;
+        }>();
+
+        const add = (insumo: InsumoDesglosado, cantidad: number, esEmpaque: boolean) => {
+            if (!insumo.consumoDirecto || cantidad <= 0) return;
+            const current = byProducto.get(insumo.productoId);
+            byProducto.set(insumo.productoId, {
+                productoId: insumo.productoId,
+                productoNombre: insumo.productoNombre,
+                cantidad: (current?.cantidad ?? 0) + cantidad,
+                unidad: insumo.tipoUnidades,
+                esEmpaque: current?.esEmpaque ?? esEmpaque,
+            });
+        };
+
+        const collectRecipe = (insumos: InsumoDesglosado[] | undefined) => {
+            (insumos ?? []).forEach((insumo) => {
+                if (insumo.subInsumos && insumo.subInsumos.length > 0) {
+                    collectRecipe(insumo.subInsumos);
+                    return;
+                }
+                add(insumo, insumo.cantidadTotalRequerida, false);
+            });
+        };
+
+        collectRecipe(insumosDesglosados);
+        (insumosEmpaque ?? []).forEach((insumo) =>
+            add(insumo, insumo.cantidadTotalRequerida, true)
+        );
+        return Array.from(byProducto.values());
+    };
+    const canGeneratePDF = usuariosRealizadores.length > 0 &&
+        ((lotesPorMaterial && lotesPorMaterial.size > 0) ||
+         (lotesPorMaterialEmpaque && lotesPorMaterialEmpaque.size > 0) ||
+         (lotesPorReposicionAveria && lotesPorReposicionAveria.size > 0) ||
+         collectConsumosDirectos().length > 0);
+
     // Construir items para el DTO desde lotesPorMaterial e insumosDesglosados
     const buildDispensacionItems = (): Array<{
         productoId: string;
@@ -221,11 +260,7 @@ export default function DispensacionStep3ReviewSubmit({
             loteId: number | null;
         }> = [];
 
-        if (!lotesPorMaterial || !insumosDesglosados) {
-            return items;
-        }
-
-        lotesPorMaterial.forEach((lotes, insumoKey) => {
+        lotesPorMaterial?.forEach((lotes, insumoKey) => {
             const insumo = findInsumoByKey(insumoKey);
             const productoId = insumo?.productoId ?? (insumoKey.startsWith('producto-') ? insumoKey.replace('producto-', '') : insumoKey);
 
@@ -260,11 +295,22 @@ export default function DispensacionStep3ReviewSubmit({
             });
         }
 
+        collectConsumosDirectos().forEach((consumo) => {
+            items.push({
+                productoId: consumo.productoId,
+                cantidad: consumo.cantidad,
+                loteId: null,
+            });
+        });
+
         return items;
     };
 
     const handleGeneratePDF = async () => {
-        if (!ordenProduccionId || !lotesPorMaterial || lotesPorMaterial.size === 0 || !insumosDesglosados) {
+        const consumosDirectos = collectConsumosDirectos();
+        if (!ordenProduccionId
+            || ((!lotesPorMaterial || lotesPorMaterial.size === 0) && consumosDirectos.length === 0)
+            || !insumosDesglosados) {
             toast({
                 title: 'Error',
                 description: 'No hay información suficiente para generar el PDF',
@@ -329,6 +375,16 @@ export default function DispensacionStep3ReviewSubmit({
                     }
                 });
             }
+
+            consumosDirectos.forEach((consumo) => {
+                items.push({
+                    productoId: consumo.productoId,
+                    productoNombre: consumo.productoNombre,
+                    loteBatch: 'Consumo directo',
+                    cantidad: consumo.cantidad,
+                    unidad: consumo.unidad,
+                });
+            });
 
             await DispensacionPDF_Generator.downloadPDF_Dispensacion(
                 ordenProduccionId,
@@ -566,6 +622,17 @@ export default function DispensacionStep3ReviewSubmit({
             }
         });
     }
+
+    collectConsumosDirectos().forEach((consumo) => {
+        summaryItems.push({
+            productoId: consumo.productoId,
+            productoNombre: consumo.productoNombre,
+            loteBatch: 'Consumo directo',
+            cantidad: consumo.cantidad,
+            unidad: consumo.unidad,
+            esEmpaque: consumo.esEmpaque,
+        });
+    });
 
     // Construir resumen de items de reposición por avería
     const reposicionItems = Array<{

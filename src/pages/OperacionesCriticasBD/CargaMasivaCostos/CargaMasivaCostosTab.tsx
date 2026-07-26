@@ -93,9 +93,12 @@ export default function CargaMasivaCostosTab({ onBackToSelector }: CargaMasivaCo
                     <CargaCostosStep2Preview
                         preparacion={flow.preparacion}
                         itemsPage={flow.itemsPage}
+                        dependenciasPage={flow.dependenciasPage}
                         loadingItems={flow.loadingItems}
+                        loadingDependencias={flow.loadingDependencias}
                         busy={flow.busy}
                         onPageChange={flow.cambiarPagina}
+                        onDependenciasPageChange={flow.cambiarPaginaDependencias}
                         onCancel={flow.cancelarYNuevaCarga}
                         onContinue={flow.irAConfirmacion}
                     />
@@ -109,6 +112,7 @@ export default function CargaMasivaCostosTab({ onBackToSelector }: CargaMasivaCo
                         intentosRestantes={flow.intentosRestantes}
                         tokenSecondsRemaining={flow.tokenSecondsRemaining}
                         blocked={flow.blocked}
+                        invalidated={flow.invalidated}
                         result={flow.result}
                         busy={flow.busy}
                         onTokenChange={flow.setTypedToken}

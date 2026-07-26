@@ -101,8 +101,15 @@ export default function DispensacionV2Step4Resumen({
                                 {formatDispensacionV2Number(orden.cantidadProducir)} und
                             </Badge>
                             <Badge colorScheme="teal">{orden.area.nombre}</Badge>
-                            <Button size="sm" variant="outline" onClick={() => setDetalleOrden(orden)}>
-                                Detalle lotes
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setDetalleOrden(orden)}
+                                isDisabled={!orden.materiales.some(
+                                    (material) => material.checked && material.inventareable,
+                                )}
+                            >
+                                Lotes físicos
                             </Button>
                         </Flex>
                     </Flex>
@@ -145,7 +152,9 @@ export default function DispensacionV2Step4Resumen({
                                                     {formatDispensacionV2Number(material.cantidadReceta)} {material.tipoUnidades}
                                                 </Td>
                                                 <Td>
-                                                    {material.inventareable && material.checked ? (
+                                                    {material.consumoDirecto && material.checked ? (
+                                                        <Badge colorScheme="purple">Consumo directo</Badge>
+                                                    ) : material.inventareable && material.checked ? (
                                                         <Badge colorScheme={lotesCount > 0 ? "teal" : "orange"}>
                                                             {lotesCount} lotes
                                                         </Badge>
@@ -154,7 +163,9 @@ export default function DispensacionV2Step4Resumen({
                                                     )}
                                                 </Td>
                                                 <Td>
-                                                    {material.warning ? (
+                                                    {material.consumoDirecto && material.checked ? (
+                                                        <Badge colorScheme="purple">Sin efecto en stock</Badge>
+                                                    ) : material.warning ? (
                                                         <Badge colorScheme={material.excedeReceta ? "orange" : "gray"} whiteSpace="normal">
                                                             {material.warning}
                                                         </Badge>

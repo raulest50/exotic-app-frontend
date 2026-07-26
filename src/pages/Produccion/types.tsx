@@ -65,6 +65,8 @@ export interface InsumoWithStock {
     stockActual: number;
     tipo_producto: string;
     tipoUnidades?: string; // KG, L, U, etc.
+    inventareable?: boolean;
+    consumoDirecto?: boolean;
     subInsumos?: InsumoWithStock[];
 }
 

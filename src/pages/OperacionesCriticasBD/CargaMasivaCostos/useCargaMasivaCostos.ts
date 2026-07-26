@@ -8,6 +8,7 @@ import {
 } from "./cargaMasivaCostosApi";
 import {
     CargaCostosConfirmacion,
+    CargaCostosDependenciasPage,
     CargaCostosErrorFila,
     CargaCostosItemsPage,
     CargaCostosPreparacion,
@@ -26,14 +27,18 @@ export function useCargaMasivaCostos(onBackToSelector: () => void) {
     const [motivo, setMotivo] = useState("");
     const [preparacion, setPreparacion] = useState<CargaCostosPreparacion | null>(null);
     const [itemsPage, setItemsPage] = useState<CargaCostosItemsPage | null>(null);
+    const [dependenciasPage, setDependenciasPage] =
+        useState<CargaCostosDependenciasPage | null>(null);
     const [validationErrors, setValidationErrors] = useState<CargaCostosErrorFila[]>([]);
     const [tokenData, setTokenData] = useState<CargaCostosToken | null>(null);
     const [typedToken, setTypedToken] = useState("");
     const [intentosRestantes, setIntentosRestantes] = useState<number | null>(null);
     const [blocked, setBlocked] = useState(false);
+    const [invalidated, setInvalidated] = useState(false);
     const [result, setResult] = useState<CargaCostosConfirmacion | null>(null);
     const [busy, setBusy] = useState(false);
     const [loadingItems, setLoadingItems] = useState(false);
+    const [loadingDependencias, setLoadingDependencias] = useState(false);
     const [now, setNow] = useState(Date.now());
 
     const resetLocal = useCallback(() => {
@@ -43,11 +48,13 @@ export function useCargaMasivaCostos(onBackToSelector: () => void) {
         setMotivo("");
         setPreparacion(null);
         setItemsPage(null);
+        setDependenciasPage(null);
         setValidationErrors([]);
         setTokenData(null);
         setTypedToken("");
         setIntentosRestantes(null);
         setBlocked(false);
+        setInvalidated(false);
         setResult(null);
     }, []);
 
@@ -111,6 +118,25 @@ export function useCargaMasivaCostos(onBackToSelector: () => void) {
         }
     }, [api, toast]);
 
+    const cargarPaginaDependencias = useCallback(async (loteId: string, page: number) => {
+        setLoadingDependencias(true);
+        try {
+            setDependenciasPage(
+                await api.listarDependencias(loteId, page, CARGA_COSTOS_PAGE_SIZE),
+            );
+        } catch (error) {
+            toast({
+                title: "No fue posible consultar la propagacion",
+                description: cargaCostosErrorMessage(error),
+                status: "error",
+                duration: 7_000,
+                isClosable: true,
+            });
+        } finally {
+            setLoadingDependencias(false);
+        }
+    }, [api, toast]);
+
     const preparar = async () => {
         const motivoLimpio = motivo.trim();
         if (!file || !motivoLimpio) return;
@@ -120,7 +146,10 @@ export function useCargaMasivaCostos(onBackToSelector: () => void) {
             const nuevaPreparacion = await api.preparar(file, motivoLimpio);
             setPreparacion(nuevaPreparacion);
             setActiveStep(1);
-            await cargarPagina(nuevaPreparacion.loteId, 0);
+            await Promise.all([
+                cargarPagina(nuevaPreparacion.loteId, 0),
+                cargarPaginaDependencias(nuevaPreparacion.loteId, 0),
+            ]);
             toast({
                 title: "Archivo validado",
                 description: `${nuevaPreparacion.totalCandidatas} materiales preparados.`,
@@ -174,7 +203,7 @@ export function useCargaMasivaCostos(onBackToSelector: () => void) {
     };
 
     const confirmar = async () => {
-        if (!preparacion || !tokenData || typedToken.length !== 4 || blocked) return;
+        if (!preparacion || !tokenData || typedToken.length !== 4 || blocked || invalidated) return;
         setBusy(true);
         try {
             const confirmation = await api.confirmar(preparacion.loteId, typedToken);
@@ -196,6 +225,11 @@ export function useCargaMasivaCostos(onBackToSelector: () => void) {
             }
             if (response?.codigo === "PREPARACION_BLOQUEADA") {
                 setBlocked(true);
+                setTokenData(null);
+                setTypedToken("");
+            }
+            if (response?.codigo === "PREPARACION_DESACTUALIZADA") {
+                setInvalidated(true);
                 setTokenData(null);
                 setTypedToken("");
             }
@@ -246,6 +280,10 @@ export function useCargaMasivaCostos(onBackToSelector: () => void) {
         if (preparacion) await cargarPagina(preparacion.loteId, page);
     };
 
+    const cambiarPaginaDependencias = async (page: number) => {
+        if (preparacion) await cargarPaginaDependencias(preparacion.loteId, page);
+    };
+
     const volverAlSelector = async () => {
         if (preparacion && !result
             && !window.confirm("La preparacion actual sera cancelada. Desea volver?")) {
@@ -267,20 +305,24 @@ export function useCargaMasivaCostos(onBackToSelector: () => void) {
         motivo,
         preparacion,
         itemsPage,
+        dependenciasPage,
         validationErrors,
         tokenData,
         typedToken,
         intentosRestantes,
         blocked,
+        invalidated,
         result,
         busy,
         loadingItems,
+        loadingDependencias,
         tokenSecondsRemaining,
         seleccionarArchivo,
         setMotivo,
         setTypedToken,
         preparar,
         cambiarPagina,
+        cambiarPaginaDependencias,
         irAConfirmacion,
         generarToken,
         confirmar,

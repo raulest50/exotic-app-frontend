@@ -216,6 +216,7 @@ export default class EndPointsURL{
     public carga_masiva_terminados_ejecutar_json_con_insumos: string;
     public carga_masiva_costos_preparaciones: string;
     public carga_masiva_costos_items: (loteId: string, page: number, size: number) => string;
+    public carga_masiva_costos_dependencias: (loteId: string, page: number, size: number) => string;
     public carga_masiva_costos_token: (loteId: string) => string;
     public carga_masiva_costos_confirmacion: (loteId: string) => string;
     public carga_masiva_costos_cancelar: (loteId: string) => string;
@@ -866,6 +867,8 @@ export default class EndPointsURL{
         this.carga_masiva_costos_preparaciones = `${domain}/api/carga-masiva-costos/preparaciones`;
         this.carga_masiva_costos_items = (loteId: string, page: number, size: number) =>
             `${domain}/api/carga-masiva-costos/preparaciones/${loteId}/items?page=${page}&size=${size}`;
+        this.carga_masiva_costos_dependencias = (loteId: string, page: number, size: number) =>
+            `${domain}/api/carga-masiva-costos/preparaciones/${loteId}/dependencias?page=${page}&size=${size}`;
         this.carga_masiva_costos_token = (loteId: string) =>
             `${domain}/api/carga-masiva-costos/preparaciones/${loteId}/token`;
         this.carga_masiva_costos_confirmacion = (loteId: string) =>

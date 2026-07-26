@@ -2,6 +2,7 @@ import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
 import {
     CargaCostosConfirmacion,
+    CargaCostosDependenciasPage,
     CargaCostosErrorResponse,
     CargaCostosItemsPage,
     CargaCostosPreparacion,
@@ -25,6 +26,17 @@ export class CargaMasivaCostosApi {
     async listarItems(loteId: string, page: number, size: number): Promise<CargaCostosItemsPage> {
         const response = await axios.get<CargaCostosItemsPage>(
             this.endpoints.carga_masiva_costos_items(loteId, page, size),
+        );
+        return response.data;
+    }
+
+    async listarDependencias(
+        loteId: string,
+        page: number,
+        size: number,
+    ): Promise<CargaCostosDependenciasPage> {
+        const response = await axios.get<CargaCostosDependenciasPage>(
+            this.endpoints.carga_masiva_costos_dependencias(loteId, page, size),
         );
         return response.data;
     }

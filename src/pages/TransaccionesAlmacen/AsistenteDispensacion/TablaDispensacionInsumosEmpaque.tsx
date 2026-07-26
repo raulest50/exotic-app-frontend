@@ -48,6 +48,11 @@ export default function TablaDispensacionInsumosEmpaque({
                         <Tag ml={2} size="sm" colorScheme="blue" variant="outline">
                             Empaque
                         </Tag>
+                        {insumo.consumoDirecto === true && (
+                            <Tag ml={2} size="sm" colorScheme="purple">
+                                Consumo directo
+                            </Tag>
+                        )}
                     </Td>
                     <Td>{cantidadEmpaque.toFixed(2)}</Td>
                     <Td>{insumo.tipoUnidades}</Td>
@@ -65,7 +70,7 @@ export default function TablaDispensacionInsumosEmpaque({
                             </Button>
                         ) : (
                             <Text fontSize='xs' color='app.textSubtle' fontStyle='italic'>
-                                No requiere lote
+                                {insumo.consumoDirecto ? 'Sin lote; se registra contra la OP' : 'No participa'}
                             </Text>
                         )}
                     </Td>
@@ -135,4 +140,3 @@ export default function TablaDispensacionInsumosEmpaque({
         </Box>
     );
 }
-

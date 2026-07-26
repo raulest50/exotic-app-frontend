@@ -28,6 +28,7 @@ export interface InformeInventario {
     fechaHoraCorteStock: string;
     stock: StockInventario;
     movimientos: MovimientosInventario;
+    ajustesInventario?: AjustesInventario;
     ocmPendientes: OcmPendientes;
     materialDirectoOp: MaterialDirectoOp;
     notas: NotaInforme[];
@@ -155,6 +156,81 @@ export interface SerieMovimiento extends FlujoPorUnidad {
     valorOtrosIngresos: number;
 }
 
+export type GrupoAjusteInventario = "MATERIA_PRIMA" | "EMPAQUE" | "OTROS";
+export type GrupoMaterialAjuste = Exclude<GrupoAjusteInventario, "OTROS">;
+export type TipoFiltroAjuste = "TODOS" | "POSITIVO" | "NEGATIVO";
+export type OrdenAjusteMaterial =
+    | "IMPACTO"
+    | "MOVIMIENTOS"
+    | "RECIENTES"
+    | "NOMBRE";
+
+export interface AjustesInventario {
+    resumen: ResumenAjustesInventario;
+    comparativo: ComparativoAjustesInventario;
+    serieDiaria: SerieAjusteInventario[];
+    mayorImpacto: MayorImpactoAjustes;
+}
+
+export interface ResumenAjustesInventario {
+    positivos: FlujoResumen;
+    negativos: FlujoResumen;
+    balanceNeto: number;
+    transacciones: number;
+    movimientos: number;
+    referencias: number;
+}
+
+export interface ComparativoAjustesInventario {
+    materiaPrima: GrupoAjustesInventario;
+    empaque: GrupoAjustesInventario;
+    otros: GrupoAjustesInventario;
+}
+
+export interface GrupoAjustesInventario {
+    grupo: GrupoAjusteInventario;
+    positivos: FlujoResumen;
+    negativos: FlujoResumen;
+    balanceNeto: number;
+    transacciones: number;
+    movimientos: number;
+    referencias: number;
+    participacionValorAjustadoPct: number;
+}
+
+export interface SerieAjusteInventario {
+    fecha: string;
+    grupo: GrupoAjusteInventario;
+    unidadMedida: string;
+    cantidadPositiva: number;
+    cantidadNegativa: number;
+    valorPositivo: number;
+    valorNegativo: number;
+}
+
+export interface MayorImpactoAjustes {
+    limite: number;
+    materiaPrima: MaterialImpactoAjuste[];
+    empaque: MaterialImpactoAjuste[];
+}
+
+export interface MaterialImpactoAjuste {
+    productoId: string;
+    productoNombre: string;
+    unidadMedida: string;
+    cantidadPositiva: number;
+    cantidadNegativa: number;
+    balanceCantidad: number;
+    valorPositivo: number;
+    valorNegativo: number;
+    balanceValor: number;
+    impactoEstimado: number;
+    movimientos: number;
+    transacciones: number;
+    ultimoAjuste?: string | null;
+    costoVigente: boolean;
+}
+
 export interface OcmPendientes {
     ordenes: number;
     referencias: number;
@@ -270,6 +346,7 @@ export interface InformeProduccion {
     resumen: ResumenProduccion;
     consolidadoCategorias: CategoriaProduccion[];
     detalleReferencias: ReferenciaProduccion[];
+    analiticaAreas?: AnaliticaAreasProduccion | null;
     notas: NotaInforme[];
 }
 
@@ -317,4 +394,68 @@ export interface ReferenciaProduccion {
     planeado: boolean;
     producido: boolean;
     noPlaneado: boolean;
+}
+
+export type EstadoAreaProduccion =
+    | "ESTABLE"
+    | "OBSERVACION"
+    | "POSIBLE_CUELLO"
+    | "SIN_DATOS";
+
+export type ConfiabilidadAreaProduccion = "SUFICIENTE" | "LIMITADA";
+
+export type FuenteProduccionArea = "REPORTADA" | "ESTANDAR" | "LOTES";
+
+export interface AnaliticaAreasProduccion {
+    disponible: boolean;
+    mensaje?: string | null;
+    fechaDesdePeriodoAnterior: string;
+    fechaHastaPeriodoAnterior: string;
+    areas: AnaliticaAreaProduccion[];
+}
+
+export interface AnaliticaAreaProduccion {
+    areaId: number;
+    areaNombre: string;
+    estado: EstadoAreaProduccion;
+    confiabilidad: ConfiabilidadAreaProduccion;
+    motivos: string[];
+    comparacionDisponible: boolean;
+    coberturaUnidadPct?: number | null;
+    produccion: ProduccionUnidadArea[];
+    actual: MetricasFlujoArea;
+    anterior: MetricasFlujoArea;
+    serieActual: SerieFlujoArea[];
+    serieAnterior: SerieFlujoArea[];
+}
+
+export interface ProduccionUnidadArea {
+    fuente: FuenteProduccionArea;
+    unidad: string;
+    cantidadActual: number;
+    cantidadAnterior: number;
+    variacionPct?: number | null;
+    cantidadEquivalenteActual?: number | null;
+    cantidadEquivalenteAnterior?: number | null;
+    unidadEquivalente?: string | null;
+}
+
+export interface MetricasFlujoArea {
+    entradas: number;
+    salidas: number;
+    trabajoListo: number;
+    ritmoSalidaDiario: number;
+    diasBacklog?: number | null;
+    medianaMinutosEspera?: number | null;
+    medianaMinutosProceso?: number | null;
+    muestrasEspera: number;
+    muestrasProceso: number;
+}
+
+export interface SerieFlujoArea {
+    fecha: string;
+    indiceDia: number;
+    entradas: number;
+    salidas: number;
+    backlogCierre: number;
 }

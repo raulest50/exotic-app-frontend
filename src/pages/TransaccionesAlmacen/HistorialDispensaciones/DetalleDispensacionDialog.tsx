@@ -20,6 +20,7 @@ import {
     Spinner,
     Flex,
     useToast,
+    Badge,
 } from '@chakra-ui/react';
 import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
@@ -189,6 +190,7 @@ export default function DetalleDispensacionDialog({
                                                 <Th>Área destino</Th>
                                                 <Th>Cantidad</Th>
                                                 <Th>Unidad</Th>
+                                                <Th>Modalidad</Th>
                                                 <Th>Lote (Batch)</Th>
                                                 <Th>Fecha Vencimiento</Th>
                                             </Tr>
@@ -201,6 +203,13 @@ export default function DetalleDispensacionDialog({
                                                     <Td>{mov.areaOperativaNombre || '-'}</Td>
                                                     <Td>{mov.cantidad.toFixed(2)}</Td>
                                                     <Td>{mov.tipoUnidades || 'N/A'}</Td>
+                                                    <Td>
+                                                        {mov.afectaInventario === false || mov.tipoMovimiento === 'CONSUMO' ? (
+                                                            <Badge colorScheme="purple">Consumo directo</Badge>
+                                                        ) : (
+                                                            <Badge colorScheme="blue">Salida física</Badge>
+                                                        )}
+                                                    </Td>
                                                     <Td>{mov.batchNumber || '-'}</Td>
                                                     <Td>
                                                         {mov.expirationDate
