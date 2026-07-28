@@ -1,8 +1,12 @@
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
 import type {
+    AlertaStock,
     BusquedaStockMaterial,
     CoberturaMateriales,
+    ExploracionAlertasMateriales,
+    FiltroGrupoAlertaInventario,
+    FiltroTipoAlertaInventario,
     FuenteDemandaCobertura,
     GrupoMaterialAjuste,
     InformeInventario,
@@ -10,6 +14,7 @@ import type {
     InformeQuery,
     MaterialImpactoAjuste,
     OcmPendiente,
+    OrdenAlertaInventario,
     OpMaterial,
     OrdenAjusteMaterial,
     PaginaInformeInventario,
@@ -132,6 +137,63 @@ export async function searchMaterialStock(
     };
 }
 
+export async function fetchInventoryAlerts({
+    type,
+    group,
+    unit,
+    order,
+    search,
+    page,
+    size,
+    signal,
+}: {
+    type: FiltroTipoAlertaInventario;
+    group: FiltroGrupoAlertaInventario;
+    unit: string;
+    order: OrdenAlertaInventario;
+    search: string;
+    page: number;
+    size: 10 | 20;
+    signal?: AbortSignal;
+}): Promise<ExploracionAlertasMateriales> {
+    const response = await axios.get<ExploracionAlertasMateriales>(
+        `${endpoints.domain}/bi/informes-globales/almacen/alertas-materiales`,
+        {
+            params: {
+                tipo: type,
+                grupo: group,
+                ...(unit ? { unidad: unit } : {}),
+                orden: order,
+                ...(search.trim() ? { buscar: search.trim() } : {}),
+                page,
+                size,
+            },
+            signal,
+        },
+    );
+    return {
+        ...response.data,
+        resumen: {
+            total: response.data.resumen?.total ?? 0,
+            negativas: response.data.resumen?.negativas ?? 0,
+            agotadas: response.data.resumen?.agotadas ?? 0,
+            bajoUmbral: response.data.resumen?.bajoUmbral ?? 0,
+            sinCosto: response.data.resumen?.sinCosto ?? 0,
+        },
+        prioritarios: (response.data.prioritarios ?? []).map(normalizeAlert),
+        facetas: {
+            gruposDisponibles:
+                response.data.facetas?.gruposDisponibles ?? [],
+            unidadesDisponibles:
+                response.data.facetas?.unidadesDisponibles ?? [],
+        },
+        pagina: {
+            ...normalizePage(response.data.pagina),
+            items: (response.data.pagina?.items ?? []).map(normalizeAlert),
+        },
+    };
+}
+
 export async function fetchMaterialCoverage(
     windowDays: 7 | 30 | 90,
     demandSource: FuenteDemandaCobertura = "SOLO_DISPENSACIONES",
@@ -223,7 +285,8 @@ function normalizeInventoryReport(report: InformeInventario): InformeInventario 
             },
             alertas: {
                 ...report.stock.alertas,
-                items: report.stock.alertas.items ?? [],
+                agotadas: report.stock.alertas.agotadas ?? 0,
+                items: (report.stock.alertas.items ?? []).map(normalizeAlert),
             },
         },
         movimientos: {
@@ -254,6 +317,19 @@ function normalizeInventoryReport(report: InformeInventario): InformeInventario 
             cantidadesPorUnidad: report.materialDirectoOp.cantidadesPorUnidad ?? [],
             items: report.materialDirectoOp.items ?? [],
         },
+    };
+}
+
+function normalizeAlert(alert: AlertaStock): AlertaStock {
+    return {
+        ...alert,
+        grupo: alert.grupo ?? "OTROS",
+        stockMinimo: alert.stockMinimo ?? 0,
+        puntoReorden: alert.puntoReorden ?? 0,
+        brechaUmbral: alert.brechaUmbral ?? null,
+        brechaPct: alert.brechaPct ?? null,
+        costoVigente: alert.costoVigente ?? false,
+        umbralesIncumplidos: alert.umbralesIncumplidos ?? [],
     };
 }
 

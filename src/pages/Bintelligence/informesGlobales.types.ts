@@ -105,20 +105,61 @@ export interface ClaseAbc {
 export interface ResumenAlertasStock {
     total: number;
     negativas: number;
+    agotadas: number;
     bajoUmbral: number;
     sinCosto: number;
     items: AlertaStock[];
 }
 
 export interface AlertaStock {
-    tipo: string;
+    tipo: TipoAlertaInventario;
     prioridad: number;
     productoId: string;
     productoNombre: string;
+    grupo: GrupoAlertaInventario;
     unidadMedida: string;
     stock: number;
     umbral?: number | null;
+    stockMinimo: number;
+    puntoReorden: number;
+    brechaUmbral?: number | null;
+    brechaPct?: number | null;
+    costoVigente: boolean;
     umbralesIncumplidos: string[];
+}
+
+export type TipoAlertaInventario =
+    | "STOCK_NEGATIVO"
+    | "AGOTADO"
+    | "BAJO_UMBRAL"
+    | "SIN_COSTO";
+
+export type FiltroTipoAlertaInventario = "TODAS" | TipoAlertaInventario;
+
+export type GrupoAlertaInventario =
+    | "MATERIA_PRIMA"
+    | "EMPAQUE"
+    | "OTROS";
+
+export type FiltroGrupoAlertaInventario =
+    | "TODOS"
+    | GrupoAlertaInventario;
+
+export type OrdenAlertaInventario =
+    | "PRIORIDAD"
+    | "MAYOR_BRECHA_RELATIVA"
+    | "STOCK_ASC"
+    | "NOMBRE";
+
+export interface ExploracionAlertasMateriales {
+    fechaHoraCorteStock: string;
+    resumen: Omit<ResumenAlertasStock, "items">;
+    prioritarios: AlertaStock[];
+    facetas: {
+        gruposDisponibles: GrupoAlertaInventario[];
+        unidadesDisponibles: string[];
+    };
+    pagina: PaginaInformeInventario<AlertaStock>;
 }
 
 export interface MovimientosInventario {

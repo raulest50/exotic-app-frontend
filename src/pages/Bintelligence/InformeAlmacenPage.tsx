@@ -46,7 +46,10 @@ export default function InformeAlmacenPage({
             <BuscadorStockMaterialCard />
 
             <Divider borderColor="app.border" />
-            <InventoryAnalyticsSection stock={report.stock} />
+            <InventoryAnalyticsSection
+                stock={report.stock}
+                cutoff={report.fechaHoraCorteStock}
+            />
 
             <Divider borderColor="app.border" />
             <Stack spacing={4}>

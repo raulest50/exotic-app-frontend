@@ -13,20 +13,14 @@ import {
     StatHelpText,
     StatLabel,
     StatNumber,
-    Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
     Tooltip,
-    Tr,
     useBreakpointValue,
     useDisclosure,
 } from "@chakra-ui/react";
 import ReactECharts from "echarts-for-react";
 import CoberturaCostosHelpModal from "./CoberturaCostosHelpModal";
+import InventarioAlertasSection from "./InventarioAlertasSection";
 import {
     formatCurrency,
     formatInteger,
@@ -408,7 +402,13 @@ function CoverageDetail({
     );
 }
 
-export function InventoryAnalyticsSection({ stock }: { stock: StockInventario }) {
+export function InventoryAnalyticsSection({
+    stock,
+    cutoff,
+}: {
+    stock: StockInventario;
+    cutoff: string;
+}) {
     const chartHeight = useBreakpointValue({ base: 300, md: 350 }) ?? 350;
 
     return (
@@ -450,87 +450,10 @@ export function InventoryAnalyticsSection({ stock }: { stock: StockInventario })
                 </Card>
             </SimpleGrid>
 
-            <Card variant="outline">
-                <CardBody p={{ base: 3, md: 5 }}>
-                    <Stack spacing={4}>
-                        <Stack
-                            direction={{ base: "column", md: "row" }}
-                            justify="space-between"
-                            align={{ base: "flex-start", md: "center" }}
-                            spacing={2}
-                        >
-                            <SectionHeading
-                                title="Alertas prioritarias de materiales"
-                                description="Máximo 10 materiales, ordenados por criticidad y nivel de stock."
-                            />
-                            <Stack direction="row" spacing={2} flexWrap="wrap">
-                                <Badge colorScheme="red">{stock.alertas.negativas} negativas</Badge>
-                                <Badge colorScheme="orange">{stock.alertas.bajoUmbral} bajo umbral</Badge>
-                                <Badge colorScheme="yellow">{stock.alertas.sinCosto} sin costo</Badge>
-                            </Stack>
-                        </Stack>
-                        {stock.alertas.items.length > 0 ? (
-                            <TableContainer>
-                                <Table size="sm">
-                                    <Thead>
-                                        <Tr>
-                                            <Th>Prioridad</Th>
-                                            <Th>Referencia</Th>
-                                            <Th isNumeric>Stock</Th>
-                                            <Th isNumeric>Umbral</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
-                                        {stock.alertas.items.map((alert) => (
-                                            <Tr key={`${alert.tipo}-${alert.productoId}`}>
-                                                <Td>
-                                                    <Badge colorScheme={alertColor(alert.prioridad)}>
-                                                        {alertLabel(alert.tipo)}
-                                                    </Badge>
-                                                </Td>
-                                                <Td>
-                                                    <Text fontWeight="semibold">{alert.productoNombre}</Text>
-                                                    <Text color="app.textMuted" fontSize="xs">
-                                                        {alert.productoId}
-                                                    </Text>
-                                                </Td>
-                                                <Td isNumeric>
-                                                    {formatQuantity(alert.stock)} {alert.unidadMedida}
-                                                </Td>
-                                                <Td isNumeric>
-                                                    {alert.umbral === null || alert.umbral === undefined
-                                                        ? "—"
-                                                        : formatQuantity(alert.umbral)}
-                                                </Td>
-                                            </Tr>
-                                        ))}
-                                    </Tbody>
-                                </Table>
-                            </TableContainer>
-                        ) : (
-                            <Text color="app.textMuted" fontSize="sm">
-                                No se detectaron alertas de materiales.
-                            </Text>
-                        )}
-                    </Stack>
-                </CardBody>
-            </Card>
+            <InventarioAlertasSection
+                initialAlerts={stock.alertas}
+                initialCutoff={cutoff}
+            />
         </Stack>
     );
-}
-
-function alertColor(priority: number) {
-    if (priority === 1) return "red";
-    if (priority === 2) return "orange";
-    return "yellow";
-}
-
-function alertLabel(type: string) {
-    const labels: Record<string, string> = {
-        STOCK_NEGATIVO: "Stock negativo",
-        AGOTADO: "Agotado",
-        BAJO_UMBRAL: "Bajo umbral",
-        SIN_COSTO: "Sin costo",
-    };
-    return labels[type] ?? type;
 }
