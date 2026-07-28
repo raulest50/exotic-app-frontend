@@ -344,6 +344,7 @@ export default class EndPointsURL{
     // administracion global endpoints
     public empresa_identidad_legal_vigente: string;
     public empresa_identidad_legal_versiones: string;
+    public empresa_identidad_documental_vigente: string;
     public empresa_logo_documental_vigente: string;
     public empresa_logo_documental_vigente_imagen: string;
     public empresa_logo_documental_versiones: string;
@@ -669,6 +670,7 @@ export default class EndPointsURL{
         const ingresos_terminados_res = 'ingresos_terminados_almacen';
         const informes_diarios_res = 'bi/informes-diarios';
         const empresa_identidad_legal_res = 'api/empresa-identidad-legal';
+        const empresa_identidad_documental_res = 'api/empresa-identidad-documental';
         const empresa_logo_documental_res = 'api/empresa-logo-documental';
         const jornada_laboral_res = 'api/jornada-laboral';
         const calidad_res = 'api/calidad';
@@ -910,6 +912,7 @@ export default class EndPointsURL{
         // administracion global endpoints
         this.empresa_identidad_legal_vigente = `${domain}/${empresa_identidad_legal_res}/vigente`;
         this.empresa_identidad_legal_versiones = `${domain}/${empresa_identidad_legal_res}/versiones`;
+        this.empresa_identidad_documental_vigente = `${domain}/${empresa_identidad_documental_res}/vigente`;
         this.empresa_logo_documental_vigente = `${domain}/${empresa_logo_documental_res}/vigente`;
         this.empresa_logo_documental_vigente_imagen = `${domain}/${empresa_logo_documental_res}/vigente/imagen`;
         this.empresa_logo_documental_versiones = `${domain}/${empresa_logo_documental_res}/versiones`;

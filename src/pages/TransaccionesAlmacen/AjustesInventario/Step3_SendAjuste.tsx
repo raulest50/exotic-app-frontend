@@ -22,9 +22,14 @@ import { keyframes } from "@emotion/react";
 import { ImCheckboxChecked } from "react-icons/im";
 import { RiSave3Fill } from "react-icons/ri";
 import type { AjusteInventarioItemNormalizado } from "./types";
+import {
+    causaAjusteLabel,
+    type CausaAjusteInventario,
+} from "./causasAjuste";
 
 interface Step3SendAjusteProps {
     normalizedItems: AjusteInventarioItemNormalizado[];
+    causaAjuste: CausaAjusteInventario | "";
     observaciones?: string;
     currentUserName?: string;
     onBack: () => void;
@@ -37,6 +42,7 @@ interface Step3SendAjusteProps {
 
 export default function AjustesInventarioStep2ReviewSubmit({
     normalizedItems,
+    causaAjuste,
     observaciones,
     currentUserName,
     onBack,
@@ -100,6 +106,15 @@ export default function AjustesInventarioStep2ReviewSubmit({
                     <Flex alignItems="center" justifyContent="space-between">
                         <Text fontWeight="semibold">Usuario</Text>
                         <Text>{currentUserName ?? "No disponible"}</Text>
+                    </Flex>
+                    <Divider />
+                    <Flex alignItems="center" justifyContent="space-between" gap={4}>
+                        <Text fontWeight="semibold">Causa del ajuste</Text>
+                        <Text textAlign="right">
+                            {causaAjuste
+                                ? causaAjusteLabel(causaAjuste)
+                                : "Sin clasificar"}
+                        </Text>
                     </Flex>
                     <Divider />
                     <Box>

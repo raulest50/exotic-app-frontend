@@ -1,5 +1,10 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+    formatEmpresaIdentificacion,
+    getEmpresaBrandingDocumentalVigente,
+} from "../../../../api/EmpresaIdentidadDocumentalApi";
+import { addContainedPng } from "../../../../utils/pdfBranding";
 
 // Extend jsPDF with properties added by jsPDF-AutoTable
 interface AutoTableProperties {
@@ -44,21 +49,14 @@ export default class DispensacionPDF_Generator {
         observaciones?: string,
         esBorrador?: boolean
     ): Promise<jsPDFWithAutoTable> {
+        const branding = await getEmpresaBrandingDocumentalVigente();
         // Create a new jsPDF instance (A4 size, mm units)
         const doc = new jsPDF({ unit: "mm", format: "a4" }) as jsPDFWithAutoTable;
         const margin = 10;
         let currentY = margin;
 
         // --- Logo Section ---
-        let logoBase64: string | null = null;
-        try {
-            logoBase64 = await this.getImageBase64("/logo_exotic.png");
-        } catch (error) {
-            console.error("Error fetching logo image", error);
-        }
-        if (logoBase64) {
-            doc.addImage(logoBase64, "PNG", margin, currentY, 25, 20);
-        }
+        addContainedPng(doc, branding.logoDataUrl, margin, currentY, 25, 20);
 
         // --- Header Title ---
         doc.setFont("helvetica", "bold");
@@ -79,13 +77,13 @@ export default class DispensacionPDF_Generator {
         // --- Company Info ---
         doc.setFont("helvetica", "normal");
         doc.setFontSize(7);
-        doc.text("Napolitana J.P S.A.S.", margin, currentY);
+        doc.text(branding.identidadLegal.razonSocial, margin, currentY);
         currentY += 4;
-        doc.text("Nit: 901751897-1", margin, currentY);
+        doc.text(formatEmpresaIdentificacion(branding.identidadLegal), margin, currentY);
         currentY += 4;
-        doc.text("Tel: 301 711 51 81", margin, currentY);
+        doc.text(`Tel: ${branding.identidadLegal.telefonoPrincipal}`, margin, currentY);
         currentY += 4;
-        doc.text("produccion.exotic@gmail.com", margin, currentY);
+        doc.text(branding.identidadLegal.emailPrincipal, margin, currentY);
         currentY += 8;
 
         // --- Order Information ---
@@ -272,27 +270,5 @@ export default class DispensacionPDF_Generator {
         const fecha = new Date().toISOString().split('T')[0];
         const suffix = esBorrador === true ? '-borrador' : '';
         doc.save(`dispensacion-op-${ordenProduccionId}-${fecha}${suffix}.pdf`);
-    }
-
-    /**
-     * Helper method to fetch an image from a URL and convert it to a base64 string.
-     * @param url the URL of the image.
-     * @returns a Promise that resolves with the base64 string.
-     */
-    private async getImageBase64(url: string): Promise<string> {
-        const response = await fetch(url);
-        const blob = await response.blob();
-        return new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                if (typeof reader.result === "string") {
-                    resolve(reader.result);
-                } else {
-                    reject("Error converting image to base64.");
-                }
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
     }
 }

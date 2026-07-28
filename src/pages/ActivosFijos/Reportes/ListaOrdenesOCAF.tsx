@@ -12,26 +12,53 @@ import {
     MenuList,
     MenuItem,
     IconButton,
-    useColorModeValue
+    useColorModeValue,
+    useToast
 } from '@chakra-ui/react';
-import { FiMoreVertical, FiEye, FiXCircle, FiEdit } from 'react-icons/fi';
+import { FiMoreVertical, FiEye, FiXCircle, FiEdit, FiDownload } from 'react-icons/fi';
 import { OrdenCompraActivo, getEstadoOCAFText } from '../types';
 import { formatCOP } from '../../../utils/formatters';
 import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
 import { useModuleAccessLevel } from '../../../auth/usePermissions';
 import DialogCancelarOCAF from './Dialogs/DialogCancelarOCAF';
 import DialogLiberarEnviarOCAF from './Dialogs/DialogLiberarEnviarOCAF';
+import OCAF_PDF_Generator from '../OCAF_PDF_Generator';
 
 interface Props {
     ordenes: OrdenCompraActivo[];
     onEditarOrden?: (orden: OrdenCompraActivo) => void;
+    onEstadoActualizado?: (orden: OrdenCompraActivo) => void;
 }
 
-const ListaOrdenesOCAF: React.FC<Props> = ({ ordenes, onEditarOrden }) => {
+const ListaOrdenesOCAF: React.FC<Props> = ({ ordenes, onEditarOrden, onEstadoActualizado }) => {
     const hoverBg = useColorModeValue('gray.100', 'gray.700');
     const [ordenToCancel, setOrdenToCancel] = useState<OrdenCompraActivo | null>(null);
     const [ordenToUpdate, setOrdenToUpdate] = useState<OrdenCompraActivo | null>(null);
+    const [downloadingId, setDownloadingId] = useState<number | null>(null);
     const { nivel: accessLevel } = useModuleAccessLevel(Modulo.ACTIVOS);
+    const toast = useToast();
+
+    const handleDownloadPdf = async (orden: OrdenCompraActivo) => {
+        if (!orden.ordenCompraActivoId || orden.estado === -1) return;
+
+        setDownloadingId(orden.ordenCompraActivoId);
+        try {
+            const generator = new OCAF_PDF_Generator();
+            await generator.downloadPDF_OCAF(orden);
+        } catch (error) {
+            toast({
+                title: 'No se pudo generar la OCA',
+                description: error instanceof Error
+                    ? error.message
+                    : 'No fue posible obtener la identidad documental.',
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setDownloadingId(null);
+        }
+    };
 
     return (
         <>
@@ -81,6 +108,17 @@ const ListaOrdenesOCAF: React.FC<Props> = ({ ordenes, onEditarOrden }) => {
                                         <MenuItem icon={<FiEye />} onClick={() => onEditarOrden && onEditarOrden(orden)}>
                                             Ver detalle
                                         </MenuItem>
+                                        {orden.estado !== -1 && (
+                                            <MenuItem
+                                                icon={<FiDownload />}
+                                                isDisabled={downloadingId !== null}
+                                                onClick={() => handleDownloadPdf(orden)}
+                                            >
+                                                {downloadingId === orden.ordenCompraActivoId
+                                                    ? 'Generando PDF...'
+                                                    : 'Descargar PDF'}
+                                            </MenuItem>
+                                        )}
                                         {accessLevel >= 2 && (
                                             <MenuItem icon={<FiEdit />} onClick={() => setOrdenToUpdate(orden)}>
                                                 Liberar / Enviar
@@ -114,7 +152,10 @@ const ListaOrdenesOCAF: React.FC<Props> = ({ ordenes, onEditarOrden }) => {
                 isOpen={!!ordenToUpdate}
                 onClose={() => setOrdenToUpdate(null)}
                 orden={ordenToUpdate}
-                onEstadoActualizado={() => setOrdenToUpdate(null)}
+                onEstadoActualizado={(ordenActualizada) => {
+                    onEstadoActualizado?.(ordenActualizada);
+                    setOrdenToUpdate(null);
+                }}
             />
         )}
         </>

@@ -3,6 +3,7 @@ import EndPointsURL from "../../api/EndPointsURL";
 import type {
     BusquedaStockMaterial,
     CoberturaMateriales,
+    FuenteDemandaCobertura,
     GrupoMaterialAjuste,
     InformeInventario,
     InformeProduccion,
@@ -133,15 +134,39 @@ export async function searchMaterialStock(
 
 export async function fetchMaterialCoverage(
     windowDays: 7 | 30 | 90,
+    demandSource: FuenteDemandaCobertura = "SOLO_DISPENSACIONES",
 ): Promise<CoberturaMateriales> {
     const response = await axios.get<CoberturaMateriales>(
         `${endpoints.domain}/bi/informes-globales/almacen/cobertura`,
-        { params: { ventanaDias: windowDays } },
+        { params: { ventanaDias: windowDays, fuenteDemanda: demandSource } },
     );
     return {
         ...response.data,
+        fuenteDemanda: response.data.fuenteDemanda ?? demandSource,
+        escenarioExploratorio: response.data.escenarioExploratorio ?? false,
         motivosConfianzaBaja: response.data.motivosConfianzaBaja ?? [],
-        estimaciones: response.data.estimaciones ?? [],
+        diasConDemanda: response.data.diasConDemanda
+            ?? response.data.diasConDispensacion
+            ?? 0,
+        resumenFuentesDemanda: response.data.resumenFuentesDemanda ?? {
+            movimientosDispensacionIncluidos: 0,
+            ajustesContingenciaDisponibles: 0,
+            ajustesContingenciaIncluidos: 0,
+            ajustesNegativosSinClasificarExcluidos: 0,
+        },
+        estimaciones: (response.data.estimaciones ?? []).map((estimate) => ({
+            ...estimate,
+            demandaMediaDiariaOperativa: estimate.demandaMediaDiariaOperativa
+                ?? estimate.demandaMediaDiaria
+                ?? 0,
+            demandaMediaDiariaContingencia:
+                estimate.demandaMediaDiariaContingencia ?? 0,
+            diasConDemanda: estimate.diasConDemanda
+                ?? estimate.diasConDispensacion
+                ?? 0,
+            ajustesContingenciaIncluidos:
+                estimate.ajustesContingenciaIncluidos ?? 0,
+        })),
     };
 }
 

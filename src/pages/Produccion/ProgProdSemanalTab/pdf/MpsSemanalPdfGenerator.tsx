@@ -1,5 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { getEmpresaBrandingDocumentalVigente } from "../../../../api/EmpresaIdentidadDocumentalApi";
+import { addContainedPng } from "../../../../utils/pdfBranding";
 import type { MpsSemanalDraftDTO } from "../MpsSemanalService";
 import {
     buildMpsSemanalPdfRows,
@@ -31,17 +33,15 @@ class MpsSemanalPdfGenerator {
     }
 
     private async generatePdf(mps: MpsSemanalDraftDTO): Promise<JsPdfWithAutoTable> {
+        const branding = await getEmpresaBrandingDocumentalVigente();
         const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape" }) as JsPdfWithAutoTable;
         const margin = 12;
         const pageWidth = doc.internal.pageSize.getWidth();
         let currentY = margin;
 
-        const logoBase64 = await this.getImageBase64("/logo_exotic.png");
-        if (logoBase64) {
-            doc.addImage(logoBase64, "PNG", margin, currentY, 25, 20);
-        }
+        addContainedPng(doc, branding.logoDataUrl, margin, currentY, 25, 20);
 
-        const titleX = logoBase64 ? margin + 32 : margin;
+        const titleX = margin + 32;
         doc.setFont("helvetica", "bold");
         doc.setFontSize(15);
         doc.text("Programacion Produccion (Semanal) - MPS", titleX, currentY + 6);
@@ -96,24 +96,6 @@ class MpsSemanalPdfGenerator {
         });
 
         return doc;
-    }
-
-    private async getImageBase64(url: string): Promise<string | null> {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                return null;
-            }
-            const blob = await response.blob();
-            return await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : null);
-                reader.onerror = () => resolve(null);
-                reader.readAsDataURL(blob);
-            });
-        } catch {
-            return null;
-        }
     }
 }
 

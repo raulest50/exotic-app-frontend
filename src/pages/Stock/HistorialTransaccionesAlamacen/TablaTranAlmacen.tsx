@@ -13,6 +13,7 @@ import {
     Flex,
 } from '@chakra-ui/react';
 import { TransaccionAlmacen } from '../../TransaccionesAlmacen/HistorialDispensaciones/types';
+import { causaAjusteLabel } from '../../TransaccionesAlmacen/AjustesInventario/causasAjuste';
 
 interface TablaTranAlmacenProps {
     transacciones: TransaccionAlmacen[];
@@ -104,6 +105,7 @@ export default function TablaTranAlmacen({
                             <Th>Tipo</Th>
                             <Th>Fecha</Th>
                             <Th>Estado Contable</Th>
+                            {tipoEntidadCausante === 'OAA' && <Th>Causa del ajuste</Th>}
                             <Th>Observaciones</Th>
                             <Th textAlign='center'>Acciones</Th>
                         </Tr>
@@ -116,6 +118,9 @@ export default function TablaTranAlmacen({
                                 <Td>{formatTipoEntidad(t.tipoEntidadCausante)}</Td>
                                 <Td>{formatFecha(t.fechaTransaccion)}</Td>
                                 <Td>{formatEstadoContable(t.estadoContable)}</Td>
+                                {tipoEntidadCausante === 'OAA' && (
+                                    <Td>{causaAjusteLabel(t.causaAjuste)}</Td>
+                                )}
                                 <Td>
                                     <Text fontSize="sm">
                                         {truncarTexto(t.observaciones)}
@@ -136,7 +141,7 @@ export default function TablaTranAlmacen({
                         ))}
                         {transacciones.length === 0 && (
                             <Tr>
-                                <Td colSpan={7}>
+                                <Td colSpan={tipoEntidadCausante === 'OAA' ? 8 : 7}>
                                     <Text textAlign='center' py={4}>
                                         No hay transacciones disponibles.
                                     </Text>

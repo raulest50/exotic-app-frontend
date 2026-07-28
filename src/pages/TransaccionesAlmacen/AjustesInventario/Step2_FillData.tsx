@@ -1,7 +1,17 @@
 import {
+    Accordion,
+    AccordionButton,
+    AccordionIcon,
+    AccordionItem,
+    AccordionPanel,
     Box,
     Button,
+    FormControl,
+    FormErrorMessage,
+    FormHelperText,
+    FormLabel,
     Input,
+    Select,
     Stack,
     Table,
     Tbody,
@@ -14,6 +24,11 @@ import {
 } from "@chakra-ui/react";
 import type { Producto } from "../../Productos/types.tsx";
 import type { AjusteLoteAsignado } from "./types";
+import {
+    CAUSAS_AJUSTE,
+    getCausaAjuste,
+    type CausaAjusteInventario,
+} from "./causasAjuste";
 
 interface Step2FillDataProps {
     selectedProducts: Producto[];
@@ -23,6 +38,8 @@ interface Step2FillDataProps {
     onChangeQuantity: (productoId: string, value: number | "") => void;
     onOpenPositivePicker: (producto: Producto) => void;
     onOpenNegativePicker: (producto: Producto) => void;
+    causaAjuste: CausaAjusteInventario | "";
+    onChangeCausaAjuste: (value: CausaAjusteInventario | "") => void;
     observaciones: string;
     onChangeObservaciones: (value: string) => void;
 }
@@ -37,9 +54,26 @@ export default function AjustesInventarioStep1SpecifyQuantities({
     onChangeQuantity,
     onOpenPositivePicker,
     onOpenNegativePicker,
+    causaAjuste,
+    onChangeCausaAjuste,
     observaciones,
     onChangeObservaciones,
 }: Step2FillDataProps) {
+    const selectedCause = causaAjuste
+        ? getCausaAjuste(causaAjuste)
+        : undefined;
+    const hasPositiveQuantity = Object.values(quantities).some(
+        (quantity) => typeof quantity === "number" && quantity > 0,
+    );
+    const causeIsIncompatible = Boolean(
+        selectedCause?.onlyNegative && hasPositiveQuantity,
+    );
+    const observationsAreRequired = Boolean(
+        selectedCause?.requiresObservations,
+    );
+    const observationsAreMissing =
+        observationsAreRequired && !observaciones.trim();
+
     const renderAssignmentSummary = (productoId: string, quantity: number | "") => {
         if (quantity === "" || typeof quantity !== "number" || Number.isNaN(quantity) || quantity === 0) {
             return <Text color="app.textSubtle">Define primero la cantidad del ajuste.</Text>;
@@ -171,14 +205,91 @@ export default function AjustesInventarioStep1SpecifyQuantities({
             </Box>
 
             <Box p={4} borderWidth="1px" borderRadius="md" borderColor="app.border" w="full">
-                <Text fontSize="md" fontWeight="semibold" mb={2}>
-                    Observaciones
-                </Text>
-                <Textarea
-                    placeholder="Escribe cualquier detalle relevante para este ajuste"
-                    value={observaciones}
-                    onChange={(e) => onChangeObservaciones(e.target.value)}
-                />
+                <Stack spacing={4}>
+                    <FormControl
+                        isRequired
+                        isInvalid={!causaAjuste || causeIsIncompatible}
+                    >
+                        <FormLabel>Causa del ajuste</FormLabel>
+                        <Select
+                            placeholder="Seleccione una causa"
+                            value={causaAjuste}
+                            onChange={(event) => onChangeCausaAjuste(
+                                event.target.value as CausaAjusteInventario | "",
+                            )}
+                        >
+                            {CAUSAS_AJUSTE.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={option.value}
+                                    disabled={option.onlyNegative && hasPositiveQuantity}
+                                >
+                                    {option.label}
+                                </option>
+                            ))}
+                        </Select>
+                        {selectedCause && !causeIsIncompatible ? (
+                            <FormHelperText>{selectedCause.description}</FormHelperText>
+                        ) : null}
+                        {!causaAjuste ? (
+                            <FormErrorMessage>
+                                Seleccione la causa común a toda la transacción.
+                            </FormErrorMessage>
+                        ) : causeIsIncompatible ? (
+                            <FormErrorMessage>
+                                Esta causa solo permite cantidades negativas.
+                            </FormErrorMessage>
+                        ) : null}
+                    </FormControl>
+
+                    <Accordion allowToggle>
+                        <AccordionItem border="0">
+                            <AccordionButton
+                                px={0}
+                                minH="40px"
+                                color="app.textMuted"
+                            >
+                                <Box flex="1" textAlign="left" fontWeight="semibold">
+                                    Ver significado de cada opción
+                                </Box>
+                                <AccordionIcon />
+                            </AccordionButton>
+                            <AccordionPanel px={0} pb={0}>
+                                <Stack spacing={3}>
+                                    {CAUSAS_AJUSTE.map((option) => (
+                                        <Box key={option.value}>
+                                            <Text fontWeight="semibold" fontSize="sm">
+                                                {option.label}
+                                            </Text>
+                                            <Text color="app.textMuted" fontSize="sm">
+                                                {option.description}
+                                            </Text>
+                                        </Box>
+                                    ))}
+                                </Stack>
+                            </AccordionPanel>
+                        </AccordionItem>
+                    </Accordion>
+
+                    <FormControl
+                        isRequired={observationsAreRequired}
+                        isInvalid={observationsAreMissing}
+                    >
+                        <FormLabel>Observaciones</FormLabel>
+                        <Textarea
+                            placeholder={causaAjuste === "PRODUCCION_CONTINGENCIA"
+                                ? "Indique la orden de producción o el motivo de la contingencia"
+                                : "Escribe cualquier detalle relevante para este ajuste"}
+                            value={observaciones}
+                            onChange={(e) => onChangeObservaciones(e.target.value)}
+                        />
+                        {observationsAreMissing ? (
+                            <FormErrorMessage>
+                                Las observaciones son obligatorias para esta causa.
+                            </FormErrorMessage>
+                        ) : null}
+                    </FormControl>
+                </Stack>
             </Box>
         </Stack>
     );

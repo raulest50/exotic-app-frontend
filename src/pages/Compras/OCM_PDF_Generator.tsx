@@ -8,15 +8,13 @@ import {
     DIVISAS,
 } from "./types";
 import { formatCOP, formatCurrency } from "../../utils/formatters";
-import { OrdenCompraActivo, ItemOrdenCompraActivo } from "../ActivosFijos/types";
+import { addContainedPng } from "../../utils/pdfBranding";
 import {
-    getEmpresaIdentidadLegalVigente,
-    type EmpresaIdentidadLegalVersion,
-} from "../../api/EmpresaIdentidadLegalApi";
-import {
-    getEmpresaLogoDocumentalImagenVersion,
-    getEmpresaLogoDocumentalImagenVigente,
-} from "../../api/EmpresaLogoDocumentalApi";
+    formatEmpresaIdentificacion,
+    getEmpresaBrandingDocumentalVigente,
+    getEmpresaLogoVersionDataUrl,
+    type EmpresaIdentidadDocumento,
+} from "../../api/EmpresaIdentidadDocumentalApi";
 
 // Extend jsPDF with properties added by jsPDF-AutoTable
 interface AutoTableProperties {
@@ -40,25 +38,18 @@ export default class OCM_PDF_Generator {
      */
     private async generatePDF_OCM(
         orden: OrdenCompraMateriales,
-        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion,
+        empresaIdentidadLegal?: EmpresaIdentidadDocumento,
         options: OcmPdfOptions = {}
     ): Promise<jsPDFWithAutoTable> {
-        const identidadLegal = await this.resolveEmpresaIdentidadLegal(orden, empresaIdentidadLegal);
+        const branding = await this.resolveOcmBranding(orden, empresaIdentidadLegal, options);
+        const identidadLegal = branding.identidadLegal;
         // Create a new jsPDF instance (A4 size, mm units) and cast to our extended interface
         const doc = new jsPDF({ unit: "mm", format: "a4" }) as jsPDFWithAutoTable;
         const margin = 10;
         let currentY = margin;
 
         // --- Logo Section ---
-        let logoDataUrl: string | null = null;
-        try {
-            logoDataUrl = await this.resolveOcmLogoDataUrl(orden, options);
-        } catch (error) {
-            console.error("Error fetching logo image", error);
-        }
-        if (logoDataUrl) {
-            await this.addContainedPng(doc, logoDataUrl, margin, currentY, 25, 20);
-        }
+        addContainedPng(doc, branding.logoDataUrl, margin, currentY, 25, 20);
 
         // --- Header Title ---
         // Place "ORDEN DE COMPRA" in a prominent position
@@ -69,14 +60,14 @@ export default class OCM_PDF_Generator {
         doc.text(orden.ordenCompraId ? orden.ordenCompraId.toString() : "", 130, currentY + 6);
 
 
-        // --- Napolitana Company Info ---
+        // --- Company Info ---
         // Reduce vertical spacing and font sizes in this section
         currentY += 25; // reduced spacing below the logo
         doc.setFont("helvetica", "normal");
         doc.setFontSize(7); // smaller font size
         doc.text(identidadLegal.razonSocial, margin, currentY);
         currentY += 4;
-        doc.text(this.formatIdentificacion(identidadLegal), margin, currentY);
+        doc.text(formatEmpresaIdentificacion(identidadLegal), margin, currentY);
         currentY += 4;
         doc.text(`Tel: ${identidadLegal.telefonoPrincipal}`, margin, currentY);
         currentY += 4;
@@ -138,7 +129,7 @@ export default class OCM_PDF_Generator {
 
 
         // --- Proveedor Information ---
-        let proveedorY = currentY + 10 - 32; // start a bit lower than the Napolitana info
+        let proveedorY = currentY + 10 - 32; // start a bit lower than the company info
         const proveedorX = margin + 50;
         doc.setFont("helvetica", "bold");
         doc.text("INFORMACION PROVEEDOR", proveedorX, proveedorY);
@@ -257,7 +248,7 @@ export default class OCM_PDF_Generator {
      */
     public async downloadPDF_OCM(
         orden:OrdenCompraMateriales,
-        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion,
+        empresaIdentidadLegal?: EmpresaIdentidadDocumento,
         options: OcmPdfOptions = {}
     ):Promise<void>{
         const doc = await this.generatePDF_OCM(orden, empresaIdentidadLegal, options);
@@ -271,324 +262,54 @@ export default class OCM_PDF_Generator {
      */
     public async getOCMpdf_Blob(
         orden:OrdenCompraMateriales,
-        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion,
+        empresaIdentidadLegal?: EmpresaIdentidadDocumento,
         options: OcmPdfOptions = {}
     ):Promise<Blob>{
         const doc = await this.generatePDF_OCM(orden, empresaIdentidadLegal, options);
         return doc.output("blob");
     }
 
-    private async resolveEmpresaIdentidadLegal(
+    private async resolveOcmBranding(
         orden: OrdenCompraMateriales,
-        empresaIdentidadLegal?: EmpresaIdentidadLegalVersion
-    ): Promise<EmpresaIdentidadLegalVersion> {
-        if (empresaIdentidadLegal) {
-            return empresaIdentidadLegal;
-        }
-        if (orden.empresaIdentidadLegalVersion) {
-            return orden.empresaIdentidadLegalVersion;
-        }
-        return getEmpresaIdentidadLegalVigente();
-    }
-
-    private formatIdentificacion(identidadLegal: EmpresaIdentidadLegalVersion): string {
-        const digitoVerificacion = identidadLegal.digitoVerificacion?.trim();
-        const numero = digitoVerificacion
-            ? `${identidadLegal.numeroIdentificacion}-${digitoVerificacion}`
-            : identidadLegal.numeroIdentificacion;
-        return `${identidadLegal.tipoIdentificacion}: ${numero}`;
-    }
-
-    private async resolveOcmLogoDataUrl(
-        orden: OrdenCompraMateriales,
+        empresaIdentidadLegal: EmpresaIdentidadDocumento | undefined,
         options: OcmPdfOptions
-    ): Promise<string> {
+    ): Promise<{ identidadLegal: EmpresaIdentidadDocumento; logoDataUrl: string }> {
         if (options.logoDataUrl) {
-            return options.logoDataUrl;
-        }
-
-        try {
-            if (options.logoVersionId) {
-                return await getEmpresaLogoDocumentalImagenVersion(options.logoVersionId);
+            const identidadLegal = empresaIdentidadLegal ?? orden.empresaIdentidadLegalVersion;
+            if (!identidadLegal) {
+                throw new Error("No se definio la identidad legal para la vista previa de la OCM.");
             }
-            if (orden.empresaLogoDocumentalVersion?.id) {
-                return await getEmpresaLogoDocumentalImagenVersion(orden.empresaLogoDocumentalVersion.id);
+            return { identidadLegal, logoDataUrl: options.logoDataUrl };
+        }
+
+        if (options.logoVersionId) {
+            const identidadLegal = empresaIdentidadLegal ?? orden.empresaIdentidadLegalVersion;
+            if (!identidadLegal) {
+                throw new Error("No se definio la identidad legal asociada a la OCM.");
             }
-            return await getEmpresaLogoDocumentalImagenVigente();
-        } catch (error) {
-            console.error("Error fetching versioned OCM logo, falling back to static logo", error);
-            return this.getImageBase64("/logo_exotic.png");
-        }
-    }
-
-    private async addContainedPng(
-        doc: jsPDFWithAutoTable,
-        logoDataUrl: string,
-        x: number,
-        y: number,
-        boxWidth: number,
-        boxHeight: number
-    ): Promise<void> {
-        let renderWidth = boxWidth;
-        let renderHeight = boxHeight;
-
-        try {
-            const dimensions = await this.getImageDimensions(logoDataUrl);
-            const imageRatio = dimensions.width / dimensions.height;
-            const boxRatio = boxWidth / boxHeight;
-
-            if (imageRatio > boxRatio) {
-                renderWidth = boxWidth;
-                renderHeight = boxWidth / imageRatio;
-            } else {
-                renderHeight = boxHeight;
-                renderWidth = boxHeight * imageRatio;
-            }
-        } catch (error) {
-            console.error("Error reading logo dimensions", error);
-        }
-
-        const renderX = x + (boxWidth - renderWidth) / 2;
-        const renderY = y + (boxHeight - renderHeight) / 2;
-        doc.addImage(logoDataUrl, "PNG", renderX, renderY, renderWidth, renderHeight);
-    }
-
-    private getImageDimensions(source: string): Promise<{ width: number; height: number }> {
-        return new Promise((resolve, reject) => {
-            const image = new Image();
-            image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
-            image.onerror = reject;
-            image.src = source;
-        });
-    }
-
-    /**
-     * Genera un PDF para una orden de compra de activos fijos
-     * @param orden La orden de compra de activos fijos
-     */
-    public async generatePDF_OCA(orden: OrdenCompraActivo): Promise<void> {
-        // Create a new jsPDF instance (A4 size, mm units) and cast to our extended interface
-        const doc = new jsPDF({ unit: "mm", format: "a4" }) as jsPDFWithAutoTable;
-        const margin = 10;
-        let currentY = margin;
-
-        // --- Logo Section ---
-        // Fetch logo image as base64 and add it at top-left
-        let logoBase64: string | null = null;
-        try {
-            logoBase64 = await this.getImageBase64("/logo_exotic.png");
-        } catch (error) {
-            console.error("Error fetching logo image", error);
-        }
-        if (logoBase64) {
-            // Reduce the size of the logo; here it is set to half the original size (25mm x 20mm)
-            doc.addImage(logoBase64, "PNG", margin, currentY, 25, 20);
-        }
-
-        // --- Header Title ---
-        // Place "ORDEN DE COMPRA" in a prominent position
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(14); // Reduced font size
-        // Center the title (adjust x and y as needed)
-        doc.text("ORDEN DE COMPRA NUMERO: ", 90, currentY + 6, { align: "center" });
-        doc.text(orden.ordenCompraActivoId ? orden.ordenCompraActivoId.toString() : "", 130, currentY + 6);
-
-
-        // --- Napolitana Company Info ---
-        // Reduce vertical spacing and font sizes in this section
-        currentY += 25; // reduced spacing below the logo
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(7); // smaller font size
-        doc.text("Napolitana J.P S.A.S.", margin, currentY);
-        currentY += 4;
-        doc.text("Nit: 901751897-1", margin, currentY);
-        currentY += 4;
-        doc.text("Tel: 301 711 51 81", margin, currentY);
-        currentY += 4;
-        doc.text("produccion.exotic@gmail.com", margin, currentY);
-
-        // --- Order Details ---
-        const detailX = 140; // starting x for details on the right side
-        let detailY = margin + 5 ; // starting y for details; reduced spacing
-        doc.setFontSize(6);
-        doc.text("FECHA EMISION:", detailX, detailY-10);
-        doc.text(
-            orden.fechaEmision ? orden.fechaEmision.toString().split("T")[0] : "",
-            detailX + 30,
-            detailY - 10
-        );
-        detailY += 3;
-        doc.text("FECHA DE VENCIMIENTO:", detailX, detailY-10);
-        doc.text(
-            orden.fechaVencimiento ? orden.fechaVencimiento.toString().split("T")[0] : "",
-            detailX + 30,
-            detailY - 10
-        );
-
-        // detailY += 3;
-        // doc.text("NUMERO DE ORDEN DE COMPRA:", detailX, detailY);
-        // doc.text(
-        //     orden.ordenCompraId ? orden.ordenCompraId.toString() : "",
-        //     detailX + 40,
-        //     detailY
-        // );
-
-        // --- Lugar de Entrega y Condiciones de Pago ---
-        let entregaY = detailY + 7;
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(8);
-        doc.text("LUGAR DE ENTREGA Y CONDICIONES DE PAGO", detailX, entregaY);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(7);
-        entregaY += 4;
-        doc.text("Empresa: Napolitana JP S.A.S - EXOTIC EXPERT", detailX, entregaY);
-        entregaY += 3;
-        doc.text("Direccion: vía 11, Juan Mina #4 100", detailX, entregaY);
-        entregaY += 3;
-        doc.text("Barranquilla, Atlántico", detailX, entregaY);
-        entregaY += 3;
-        doc.text(`CONDICION PAGO: ${getCondicionPagoText(orden.condicionPago)}`, detailX, entregaY);
-        entregaY += 3;
-        doc.text(`PLAZO PAGO: ${orden.plazoPago} DIAS`, detailX, entregaY);
-        entregaY += 3;
-        doc.text(`PLAZO ENTREGA: ${orden.tiempoEntrega} DIAS`, detailX, entregaY);
-        entregaY += 3;
-        doc.text(`DIVISA: ${orden.divisa}${orden.divisa === 'USD' ? ` - TRM: ${formatCOP(orden.trm, 2)}` : ''}`, detailX, entregaY);
-        entregaY += 3;
-        doc.text("CONDICION ENTREGA: PUESTA EN PLANTA", detailX, entregaY);
-
-
-
-        // --- Proveedor Information ---
-        let proveedorY = currentY + 10 - 32; // start a bit lower than the Napolitana info
-        const proveedorX = margin + 50;
-        doc.setFont("helvetica", "bold");
-        doc.text("INFORMACION PROVEEDOR", proveedorX, proveedorY);
-        doc.setFont("helvetica", "normal");
-        proveedorY += 3;
-        doc.text(orden.proveedor.nombre, proveedorX, proveedorY);
-        proveedorY += 3;
-        doc.text(`NIT: ${orden.proveedor.id}`, proveedorX, proveedorY);
-        proveedorY += 3;
-        doc.text(orden.proveedor.departamento, proveedorX, proveedorY);
-        proveedorY += 3;
-        doc.text(orden.proveedor.direccion, proveedorX, proveedorY);
-        proveedorY += 3;
-        doc.text(orden.proveedor.ciudad, proveedorX, proveedorY);
-        proveedorY += 3;
-        doc.text(getRegimenTributario(orden.proveedor.regimenTributario) ?? "", proveedorX, proveedorY);
-
-        // --- Items Table ---
-        // Determine the starting y-coordinate for the table
-        //const tableStartY = Math.max(detailY, entregaY, proveedorY) + 5;
-        let topNotesStartY = Math.max(detailY, entregaY, proveedorY) + 10;
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(7);
-        doc.text("INFORMACION IMPORTANTE:", 10, topNotesStartY);
-        doc.setFont("helvetica", "normal");
-        topNotesStartY += 4;
-        doc.text("- los materiales entregados estarán sujetos a inspección y verificación por parte del Personal designado de la empresa antes de ser aceptados.", 10, topNotesStartY);
-        topNotesStartY += 4;
-        doc.text("- los matriales deben ser entregados en la direcccion vía 11, Juan Mina #4 100", 10, topNotesStartY);
-        topNotesStartY += 4;
-        doc.text("- Horario de entrega: lunes a viernes de 9:00 a 11:00. y de 14:00 a 15:30", 10, topNotesStartY);
-        topNotesStartY += 4;
-        doc.text("- Cualquier material que no cumpla con las especificaciones será rechazado.", 10, topNotesStartY);
-        topNotesStartY += 4;
-        doc.text("- El proveedor será responsablede los costos de devolucion", 10, topNotesStartY);
-        topNotesStartY += 4;
-        doc.text("- No se aceptarán entregas parciales", 10, topNotesStartY);
-        topNotesStartY += 4;
-        doc.text("- El proveedor debe notificar el horario de entrega de los materiales solicitados  y enviar la guía de despacho correspondiente", 10, topNotesStartY);
-
-
-        const tableStartY = topNotesStartY + 10;
-
-        // const topNote = "los materiales entregados estarán sujetos a inspección y verificación por parte del Personal designado de la empresa antes de ser aceptados.";
-        // let topNotesTotalsY = 5;
-        // const topNoteLines = doc.splitTextToSize(topNote, 190);
-        // doc.text(topNoteLines, margin, topNotesTotalsY);
-        // topNotesTotalsY += topNoteLines.length * 4;
-
-
-
-        const tableColumns = ["CODIGO", "DESCRIPCION", "CANTIDAD", "PRECIO UNITARIO", "SUBTOTAL"];
-        const tableRows = orden.itemsOrdenCompra.map((item: ItemOrdenCompraActivo) => [
-            item.itemOrdenId?.toString() || "",
-            item.nombre,
-            item.cantidad,
-            formatCOP(item.precioUnitario, 2),
-            formatCOP(item.subTotal)
-        ]);
-        autoTable(doc, {
-            head: [tableColumns],
-            body: tableRows,
-            startY: tableStartY,
-            styles: {
-                fontSize: 9,
-                halign: 'center',
-                valign: 'middle',
-            },
-            headStyles: { fillColor: [255, 192, 203] }, // Soft pink header fill
-            theme: "grid",
-        });
-
-        // --- Totals ---
-        const finalY = doc.lastAutoTable?.finalY ?? tableStartY;
-        let totalsY = finalY + 5;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.text(`Sub Total: ${formatCOP(orden.subTotal)}`, margin, totalsY);
-        totalsY += 5;
-        doc.text(`IVA: ${formatCOP(orden.iva)}`, margin, totalsY);
-        totalsY += 5;
-        doc.text(`Total Pagar: ${formatCOP(orden.totalPagar)}`, margin, totalsY);
-
-
-        // --- Leyenda ---
-        const leyenda =
-            "SEÑOR PROVEEDOR CUANDO ENTREGUE LOS MATERIALES SOLICITADOS ESTOS DEBEN IR ACOMPAÑADOS DE UN DOCUMENTO QUE INDIQUE EL NUMERO DE ESTA ORDEN. LAS CANTIDADES SOLICITDAS Y PRECIOS SON LOS QUE HAN SIDO APROBADOS Y DESCRITOS EN ESE DOCUMENTO.";
-        totalsY += 5;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        const leyendaLines = doc.splitTextToSize(leyenda, 190);
-        doc.text(leyendaLines, margin, totalsY);
-        totalsY += leyendaLines.length * 4;
-
-        // --- Observaciones ---
-        doc.setFont("helvetica", "bold");
-        doc.text("OBSERVACIONES", margin, totalsY);
-        totalsY += 5;
-        doc.setFont("helvetica", "normal");
-        const obs = orden.observaciones ? orden.observaciones : "";
-        const obsLines = doc.splitTextToSize(obs, 190);
-        doc.text(obsLines, margin, totalsY);
-        totalsY += obsLines.length * 4;
-
-        // --- Trigger Download ---
-        doc.save(`orden-compra-${orden.ordenCompraActivoId}.pdf`);
-    }
-
-    /**
-     * Helper method to fetch an image from a URL and convert it to a base64 string.
-     * @param url the URL of the image.
-     * @returns a Promise that resolves with the base64 string.
-     */
-    private async getImageBase64(url: string): Promise<string> {
-        const response = await fetch(url);
-        const blob = await response.blob();
-        return new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                if (typeof reader.result === "string") {
-                    resolve(reader.result);
-                } else {
-                    reject("Error converting image to base64.");
-                }
+            return {
+                identidadLegal,
+                logoDataUrl: await getEmpresaLogoVersionDataUrl(options.logoVersionId),
             };
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
+        }
+
+        const identidadHistorica = orden.empresaIdentidadLegalVersion;
+        const logoHistorico = orden.empresaLogoDocumentalVersion;
+        if (identidadHistorica || logoHistorico) {
+            if (!identidadHistorica || !logoHistorico?.id) {
+                throw new Error("La OCM tiene una asociacion documental historica incompleta.");
+            }
+            return {
+                identidadLegal: identidadHistorica,
+                logoDataUrl: await getEmpresaLogoVersionDataUrl(logoHistorico.id),
+            };
+        }
+
+        const vigente = await getEmpresaBrandingDocumentalVigente();
+        return {
+            identidadLegal: vigente.identidadLegal,
+            logoDataUrl: vigente.logoDataUrl,
+        };
     }
+
 }

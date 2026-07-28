@@ -27,6 +27,7 @@ import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
 import { TransaccionAlmacen } from '../../TransaccionesAlmacen/HistorialDispensaciones/types';
 import { MovimientoDetalle } from '../../TransaccionesAlmacen/types';
+import { causaAjusteLabel } from '../../TransaccionesAlmacen/AjustesInventario/causasAjuste';
 
 interface DetalleTransaccionDialogProps {
     isOpen: boolean;
@@ -145,6 +146,14 @@ export default function DetalleTransaccionDialog({
                                     <Text fontSize="sm" color="app.textMuted">Estado Contable:</Text>
                                     <Text fontSize="md" fontWeight="semibold">{formatEstadoContable(transaccion.estadoContable)}</Text>
                                 </Box>
+                                {transaccion.tipoEntidadCausante === 'OAA' && (
+                                    <Box>
+                                        <Text fontSize="sm" color="app.textMuted">Causa del ajuste:</Text>
+                                        <Text fontSize="md" fontWeight="semibold">
+                                            {causaAjusteLabel(transaccion.causaAjuste)}
+                                        </Text>
+                                    </Box>
+                                )}
                             </HStack>
                             {transaccion.observaciones && (
                                 <Box mt={2}>

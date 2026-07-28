@@ -1,9 +1,12 @@
+import type { CausaAjusteInventario } from "../AjustesInventario/causasAjuste";
+
 export interface TransaccionAlmacen {
     transaccionId: number;
     fechaTransaccion: string;
     idEntidadCausante: number;
     tipoEntidadCausante: string; // 'OD' | 'OP' | 'OCM' | 'OTA' | 'OAA' - viene como string del backend
     observaciones?: string;
+    causaAjuste?: CausaAjusteInventario | null;
     estadoContable: string; // 'PENDIENTE' | 'CONTABILIZADA' | 'NO_APLICA' - viene como string del backend
     loteAsignado?: string;
     usuarioAprobador?: {

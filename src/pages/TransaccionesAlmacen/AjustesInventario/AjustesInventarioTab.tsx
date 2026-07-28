@@ -33,6 +33,10 @@ import type {
     AjusteLoteOption,
     AjusteLotePageResponse,
 } from "./types";
+import {
+    getCausaAjuste,
+    type CausaAjusteInventario,
+} from "./causasAjuste";
 
 const steps = [
     { title: "AjusteInvStep_Zero", label: "Seleccionar", description: "Selección de productos" },
@@ -55,6 +59,7 @@ export default function AjustesInventarioTab() {
     const [stockByProduct, setStockByProduct] = useState<Record<string, number | null>>({});
     const [lotAssignments, setLotAssignments] = useState<Record<string, AjusteLoteAsignado[]>>({});
     const [activeStep, setActiveStep] = useState(0);
+    const [causaAjuste, setCausaAjuste] = useState<CausaAjusteInventario | "">("");
     const [observaciones, setObservaciones] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionError, setSubmissionError] = useState<string | null>(null);
@@ -287,6 +292,7 @@ export default function AjustesInventarioTab() {
                     loteId: item.loteId,
                 })),
                 username: user ?? "",
+                causaAjuste,
                 ...(observaciones.trim() ? { observaciones: observaciones.trim() } : {}),
             };
 
@@ -328,6 +334,7 @@ export default function AjustesInventarioTab() {
         setQuantities({});
         setLotAssignments({});
         setStockByProduct({});
+        setCausaAjuste("");
         setObservaciones("");
         setSubmissionError(null);
         setSubmissionSuccess(false);
@@ -335,6 +342,19 @@ export default function AjustesInventarioTab() {
         setNegativePickerProduct(null);
         setActiveStep(0);
     };
+
+    const selectedCause = causaAjuste
+        ? getCausaAjuste(causaAjuste)
+        : undefined;
+    const causeIsCompatible = Boolean(
+        selectedCause
+        && (!selectedCause.onlyNegative
+            || selectedProducts.every(({ productoId }) => {
+                const quantity = quantities[productoId];
+                return typeof quantity === "number" && quantity < 0;
+            }))
+        && (!selectedCause.requiresObservations || observaciones.trim()),
+    );
 
     const areQuantitiesValid =
         selectedProducts.length > 0 &&
@@ -347,7 +367,8 @@ export default function AjustesInventarioTab() {
                 quantity !== 0 &&
                 isAssignmentValid(productoId)
             );
-        });
+        })
+        && causeIsCompatible;
 
     const renderStepContent = () => {
         if (activeStep === 0) {
@@ -380,6 +401,8 @@ export default function AjustesInventarioTab() {
                     onChangeQuantity={handleChangeQuantity}
                     onOpenPositivePicker={setPositivePickerProduct}
                     onOpenNegativePicker={setNegativePickerProduct}
+                    causaAjuste={causaAjuste}
+                    onChangeCausaAjuste={setCausaAjuste}
                     observaciones={observaciones}
                     onChangeObservaciones={setObservaciones}
                 />
@@ -389,6 +412,7 @@ export default function AjustesInventarioTab() {
         return (
             <AjustesInventarioStep2ReviewSubmit
                 normalizedItems={normalizedItems}
+                causaAjuste={causaAjuste}
                 observaciones={observaciones}
                 currentUserName={user ?? ""}
                 onBack={goToPrevious}

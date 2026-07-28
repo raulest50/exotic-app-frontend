@@ -1,14 +1,20 @@
 import { ChevronDownIcon, ChevronUpIcon, WarningTwoIcon } from "@chakra-ui/icons";
 import {
     Alert,
+    AlertDescription,
     AlertIcon,
     Badge,
+    Box,
     Button,
     ButtonGroup,
     Card,
     CardBody,
     Collapse,
+    FormControl,
+    FormLabel,
     HStack,
+    Radio,
+    RadioGroup,
     SimpleGrid,
     Spinner,
     Stack,
@@ -24,13 +30,18 @@ import {
 import { useEffect, useState } from "react";
 import { fetchMaterialCoverage, requestErrorMessage } from "./informesGlobales.api";
 import { formatDate, formatQuantity, KpiCard } from "./InformeGlobalUi";
-import type { CoberturaMateriales } from "./informesGlobales.types";
+import type {
+    CoberturaMateriales,
+    FuenteDemandaCobertura,
+} from "./informesGlobales.types";
 
 type CoverageWindow = 7 | 30 | 90;
 
 export default function CoberturaMaterialesCard() {
     const [expanded, setExpanded] = useState(false);
     const [windowDays, setWindowDays] = useState<CoverageWindow>(90);
+    const [demandSource, setDemandSource] =
+        useState<FuenteDemandaCobertura>("SOLO_DISPENSACIONES");
     const [report, setReport] = useState<CoberturaMateriales | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -42,7 +53,7 @@ export default function CoberturaMaterialesCard() {
         setLoading(true);
         setError(null);
 
-        fetchMaterialCoverage(windowDays)
+        fetchMaterialCoverage(windowDays, demandSource)
             .then((response) => {
                 if (!cancelled) setReport(response);
             })
@@ -59,7 +70,7 @@ export default function CoberturaMaterialesCard() {
         return () => {
             cancelled = true;
         };
-    }, [expanded, windowDays]);
+    }, [expanded, windowDays, demandSource]);
 
     return (
         <Card variant="outline">
@@ -82,29 +93,81 @@ export default function CoberturaMaterialesCard() {
                             {report?.confianzaBaja ? (
                                 <Badge colorScheme="yellow">Confianza baja</Badge>
                             ) : null}
+                            {report?.escenarioExploratorio ? (
+                                <Badge colorScheme="purple">Escenario ampliado</Badge>
+                            ) : null}
                         </HStack>
                     </Button>
 
                     <Collapse in={expanded} animateOpacity>
                         <Stack spacing={4} pt={1}>
                             <Text color="app.textMuted" fontSize="sm">
-                                Estima cuándo se agotaría el primer material si se repitiera el ritmo reciente de dispensación y no ingresaran materiales. No debe usarse como compromiso de abastecimiento.
+                                Estima cuándo se agotaría el primer material si se repitiera el ritmo reciente de la fuente de demanda seleccionada y no ingresaran materiales. No debe usarse como compromiso de abastecimiento.
                             </Text>
-                            <ButtonGroup isAttached size="sm" alignSelf={{ base: "stretch", md: "flex-end" }}>
-                                {([7, 30, 90] as CoverageWindow[]).map((days) => (
-                                    <Button
-                                        key={days}
-                                        minH="44px"
-                                        flex={{ base: 1, md: "initial" }}
-                                        colorScheme={windowDays === days ? "green" : undefined}
-                                        variant={windowDays === days ? "solid" : "outline"}
-                                        onClick={() => setWindowDays(days)}
-                                        aria-pressed={windowDays === days}
+                            <Stack
+                                direction={{ base: "column", lg: "row" }}
+                                align={{ base: "stretch", lg: "flex-end" }}
+                                justify="space-between"
+                                spacing={4}
+                            >
+                                <FormControl>
+                                    <FormLabel fontSize="sm">Fuente de demanda</FormLabel>
+                                    <RadioGroup
+                                        value={demandSource}
+                                        onChange={(value) => setDemandSource(
+                                            value as FuenteDemandaCobertura,
+                                        )}
                                     >
-                                        {days} días
-                                    </Button>
-                                ))}
-                            </ButtonGroup>
+                                        <Stack spacing={3}>
+                                            <Box>
+                                                <Radio value="SOLO_DISPENSACIONES">
+                                                    Consumo operativo
+                                                </Radio>
+                                                <Text
+                                                    ml={6}
+                                                    color="app.textMuted"
+                                                    fontSize="xs"
+                                                >
+                                                    Solo dispensaciones formales.
+                                                </Text>
+                                            </Box>
+                                            <Box>
+                                                <Radio value="DISPENSACIONES_MAS_CONTINGENCIAS">
+                                                    Consumo operativo + contingencias de producción
+                                                </Radio>
+                                                <Text
+                                                    ml={6}
+                                                    color="app.textMuted"
+                                                    fontSize="xs"
+                                                >
+                                                    Escenario ampliado con ajustes negativos
+                                                    clasificados como producción por contingencia.
+                                                </Text>
+                                            </Box>
+                                        </Stack>
+                                    </RadioGroup>
+                                </FormControl>
+
+                                <ButtonGroup
+                                    isAttached
+                                    size="sm"
+                                    alignSelf={{ base: "stretch", lg: "flex-end" }}
+                                >
+                                    {([7, 30, 90] as CoverageWindow[]).map((days) => (
+                                        <Button
+                                            key={days}
+                                            minH="44px"
+                                            flex={{ base: 1, md: "initial" }}
+                                            colorScheme={windowDays === days ? "green" : undefined}
+                                            variant={windowDays === days ? "solid" : "outline"}
+                                            onClick={() => setWindowDays(days)}
+                                            aria-pressed={windowDays === days}
+                                        >
+                                            {days} días
+                                        </Button>
+                                    ))}
+                                </ButtonGroup>
+                            </Stack>
 
                             {loading ? (
                                 <HStack minH="120px" justify="center">
@@ -130,15 +193,20 @@ export default function CoberturaMaterialesCard() {
 function CoverageResult({ report }: { report: CoberturaMateriales }) {
     if (report.estado === "SIN_CONSUMO") {
         return (
-            <Alert status="info" borderRadius="md">
-                <AlertIcon />
-                No hubo consumo suficiente para estimar agotamientos en esta ventana.
-            </Alert>
+            <Stack spacing={3}>
+                <CoverageSourceNotices report={report} />
+                <Alert status="info" borderRadius="md">
+                    <AlertIcon />
+                    No hubo consumo suficiente para estimar agotamientos en esta ventana.
+                </Alert>
+            </Stack>
         );
     }
 
     return (
         <Stack spacing={4}>
+            <CoverageSourceNotices report={report} />
+
             {report.confianzaBaja ? (
                 <Alert status="warning" alignItems="flex-start" borderRadius="md">
                     <AlertIcon mt={0.5} />
@@ -171,8 +239,8 @@ function CoverageResult({ report }: { report: CoberturaMateriales }) {
                 />
                 <KpiCard
                     label="Días activos"
-                    value={report.diasConDispensacion.toLocaleString("es-CO")}
-                    help={`${report.diasObservados.toLocaleString("es-CO")} días observados`}
+                    value={report.diasConDemanda.toLocaleString("es-CO")}
+                    help={`${report.diasConDispensacion.toLocaleString("es-CO")} con dispensación · ${report.diasObservados.toLocaleString("es-CO")} observados`}
                 />
             </SimpleGrid>
 
@@ -204,7 +272,23 @@ function CoverageResult({ report }: { report: CoberturaMateriales }) {
                                 <Td isNumeric>
                                     {formatQuantity(estimate.stockActual)} {estimate.unidadMedida}
                                 </Td>
-                                <Td isNumeric>{formatQuantity(estimate.demandaMediaDiaria)}</Td>
+                                <Td isNumeric>
+                                    <Stack spacing={0} align="flex-end">
+                                        <Text>
+                                            {formatQuantity(estimate.demandaMediaDiaria)}
+                                        </Text>
+                                        {estimate.demandaMediaDiariaContingencia > 0 ? (
+                                            <Text color="app.textMuted" fontSize="xs">
+                                                {formatQuantity(
+                                                    estimate.demandaMediaDiariaOperativa,
+                                                )} operativa +{" "}
+                                                {formatQuantity(
+                                                    estimate.demandaMediaDiariaContingencia,
+                                                )} contingencia
+                                            </Text>
+                                        ) : null}
+                                    </Stack>
+                                </Td>
                                 <Td isNumeric>
                                     {estimate.diasHastaAgotamiento === null
                                     || estimate.diasHastaAgotamiento === undefined
@@ -219,6 +303,46 @@ function CoverageResult({ report }: { report: CoberturaMateriales }) {
                     </Tbody>
                 </Table>
             </TableContainer>
+        </Stack>
+    );
+}
+
+function CoverageSourceNotices({ report }: { report: CoberturaMateriales }) {
+    const sources = report.resumenFuentesDemanda;
+
+    return (
+        <Stack spacing={3}>
+            {report.escenarioExploratorio
+            && sources.ajustesContingenciaIncluidos > 0 ? (
+                <Alert status="info" alignItems="flex-start" borderRadius="md">
+                    <AlertIcon mt={0.5} />
+                    <AlertDescription>
+                        Esta estimación incluyó{" "}
+                        {sources.ajustesContingenciaIncluidos.toLocaleString("es-CO")}{" "}
+                        movimiento(s) de producción por contingencia.
+                    </AlertDescription>
+                </Alert>
+            ) : null}
+
+            {sources.ajustesNegativosSinClasificarExcluidos > 0 ? (
+                <Alert status="warning" alignItems="flex-start" borderRadius="md">
+                    <AlertIcon mt={0.5} />
+                    <AlertDescription>
+                        Se excluyeron{" "}
+                        {sources.ajustesNegativosSinClasificarExcluidos.toLocaleString("es-CO")}{" "}
+                        ajuste(s) negativo(s) histórico(s) sin causa estructurada.
+                    </AlertDescription>
+                </Alert>
+            ) : null}
+
+            {report.fuenteDemanda === "DISPENSACIONES_MAS_CONTINGENCIAS"
+            && sources.ajustesContingenciaDisponibles === 0 ? (
+                <Alert status="info" borderRadius="md">
+                    <AlertIcon />
+                    No hubo contingencias de producción clasificadas en esta ventana;
+                    el resultado coincide con el consumo operativo.
+                </Alert>
+            ) : null}
         </Stack>
     );
 }

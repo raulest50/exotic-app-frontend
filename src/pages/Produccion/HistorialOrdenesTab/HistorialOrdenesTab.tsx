@@ -16,7 +16,8 @@ import {
     Thead,
     Tr,
     Box,
-    useOutsideClick
+    useOutsideClick,
+    useToast,
 } from "@chakra-ui/react";
 import DateRangePicker from "../../../components/DateRangePicker.tsx";
 import MyPagination from "../../../components/MyPagination.tsx";
@@ -146,6 +147,7 @@ interface ContextMenuState {
 }
 
 export default function HistorialOrdenesTab() {
+    const toast = useToast();
     const [date1, setDate1] = useState(format(new Date(), "yyyy-MM-dd"));
     const [date2, setDate2] = useState(format(new Date(), "yyyy-MM-dd"));
 
@@ -256,8 +258,21 @@ export default function HistorialOrdenesTab() {
 
     const handleGenerarPDF = async () => {
         if (contextMenu) {
-            const generator = new ODP_PDF_Generator();
-            await generator.downloadPDF(contextMenu.orden);
+            try {
+                const generator = new ODP_PDF_Generator();
+                await generator.downloadPDF(contextMenu.orden);
+            } catch (error) {
+                console.error("Error generando PDF ODP", error);
+                toast({
+                    title: "No se pudo generar la ODP",
+                    description: error instanceof Error
+                        ? error.message
+                        : "No fue posible obtener la identidad documental.",
+                    status: "error",
+                    duration: 5000,
+                    isClosable: true,
+                });
+            }
         }
         setContextMenu(null);
     };

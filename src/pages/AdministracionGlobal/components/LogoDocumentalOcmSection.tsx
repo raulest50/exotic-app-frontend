@@ -23,7 +23,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
 import {
     createEmpresaLogoDocumentalVersion,
-    getEmpresaLogoDocumentalImagenVigente,
+    getEmpresaLogoDocumentalImagenVersion,
     getEmpresaLogoDocumentalVersiones,
     getEmpresaLogoDocumentalVigente,
     type EmpresaLogoDocumentalVersion,
@@ -88,7 +88,7 @@ export default function LogoDocumentalOcmSection({
             setVigente(vigenteResponse);
             setVersiones(versionesResponse);
             try {
-                setVigenteDataUrl(await getEmpresaLogoDocumentalImagenVigente());
+                setVigenteDataUrl(await getEmpresaLogoDocumentalImagenVersion(vigenteResponse.id));
             } catch (imageError) {
                 console.error("Error cargando imagen vigente del logo documental", imageError);
                 setVigenteDataUrl(null);
@@ -170,7 +170,34 @@ export default function LogoDocumentalOcmSection({
 
         setSaving(true);
         try {
-            await createEmpresaLogoDocumentalVersion(selectedFile, motivoCambio.trim());
+            const created = await createEmpresaLogoDocumentalVersion(selectedFile, motivoCambio.trim());
+            setVigente(created);
+            setVersiones((current) => [
+                created,
+                ...current
+                    .filter((item) => item.id !== created.id)
+                    .map((item) => item.estado === "VIGENTE"
+                        ? { ...item, estado: "RETIRADA" as const, vigenteHasta: created.vigenteDesde }
+                        : item),
+            ]);
+            try {
+                const [versionesActualizadas, createdDataUrl] = await Promise.all([
+                    getEmpresaLogoDocumentalVersiones(),
+                    getEmpresaLogoDocumentalImagenVersion(created.id),
+                ]);
+                setVersiones(versionesActualizadas);
+                setVigenteDataUrl(createdDataUrl);
+            } catch (refreshError) {
+                console.error("El logo se guardo pero no se pudo refrescar su vista", refreshError);
+                setVigenteDataUrl(null);
+                toast({
+                    title: "Logo guardado; no se pudo refrescar la vista",
+                    description: "Recargue la pantalla para visualizar la nueva imagen.",
+                    status: "warning",
+                    duration: 5000,
+                    isClosable: true,
+                });
+            }
             toast({
                 title: "Logo documental actualizado",
                 status: "success",
@@ -182,7 +209,6 @@ export default function LogoDocumentalOcmSection({
             setSelectedDimensions(null);
             setPreviewedFileKey(null);
             setMotivoCambio("");
-            await loadLogoData();
         } catch (error) {
             console.error("Error guardando logo documental", error);
             toast({
@@ -209,7 +235,7 @@ export default function LogoDocumentalOcmSection({
             <Box borderWidth="1px" borderRadius="md" p={4}>
                 <HStack justify="space-between" align="flex-start" mb={4}>
                     <Box>
-                        <Text fontWeight="bold">Logo documental OCM</Text>
+                        <Text fontWeight="bold">Logo documental corporativo</Text>
                         <Text fontSize="sm" color="app.textMuted">
                             {vigente
                                 ? `Version ${vigente.version} - ${vigente.anchoPx} x ${vigente.altoPx} px`
@@ -404,13 +430,13 @@ function buildPreviewIdentidadLegal(
         id: vigente?.id ?? 0,
         version: vigente?.version ?? 1,
         estado: "VIGENTE",
-        razonSocial: valueOrFallback(payload.razonSocial, vigente?.razonSocial, "Napolitana J.P S.A.S."),
-        nombreComercial: valueOrFallback(payload.nombreComercial, vigente?.nombreComercial, "EXOTIC EXPERT"),
+        razonSocial: valueOrFallback(payload.razonSocial, vigente?.razonSocial, "Razon social de prueba"),
+        nombreComercial: valueOrFallback(payload.nombreComercial, vigente?.nombreComercial, "Nombre comercial"),
         tipoIdentificacion: valueOrFallback(payload.tipoIdentificacion, vigente?.tipoIdentificacion, "NIT"),
-        numeroIdentificacion: valueOrFallback(payload.numeroIdentificacion, vigente?.numeroIdentificacion, "901751897"),
-        digitoVerificacion: valueOrFallback(payload.digitoVerificacion, vigente?.digitoVerificacion, "1"),
-        telefonoPrincipal: valueOrFallback(payload.telefonoPrincipal, vigente?.telefonoPrincipal, "301 711 51 81"),
-        emailPrincipal: valueOrFallback(payload.emailPrincipal, vigente?.emailPrincipal, "produccion.exotic@gmail.com"),
+        numeroIdentificacion: valueOrFallback(payload.numeroIdentificacion, vigente?.numeroIdentificacion, "900000000"),
+        digitoVerificacion: valueOrFallback(payload.digitoVerificacion, vigente?.digitoVerificacion, "0"),
+        telefonoPrincipal: valueOrFallback(payload.telefonoPrincipal, vigente?.telefonoPrincipal, "000 000 00 00"),
+        emailPrincipal: valueOrFallback(payload.emailPrincipal, vigente?.emailPrincipal, "documental@example.com"),
         vigenteDesde: vigente?.vigenteDesde ?? now,
         vigenteHasta: vigente?.vigenteHasta,
         creadoEn: vigente?.creadoEn ?? now,

@@ -57,6 +57,14 @@ export function ReportesTabAf() {
         setOrdenToEdit(orden);
     };
 
+    const handleEstadoActualizado = (ordenActualizada: OrdenCompraActivo) => {
+        setListaOrdenes((ordenesActuales) => ordenesActuales.map((orden) =>
+            orden.ordenCompraActivoId === ordenActualizada.ordenCompraActivoId
+                ? ordenActualizada
+                : orden
+        ));
+    };
+
     // Nuevo handler para volver al panel de búsqueda
     const handleVolverABusqueda = () => {
         setOrdenToEdit(null);
@@ -105,6 +113,7 @@ export function ReportesTabAf() {
                             <ListaOrdenesOCAF 
                                 ordenes={listaOrdenes} 
                                 onEditarOrden={handleEditarOrden}
+                                onEstadoActualizado={handleEstadoActualizado}
                             />
                             <MyPagination
                                 page={currentPage}

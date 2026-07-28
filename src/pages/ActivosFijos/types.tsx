@@ -2,6 +2,8 @@
 // Used in: src/pages/ActivosFijos/OC/*; src/pages/ActivosFijos/Incorporacion/*; src/pages/ActivosFijos/Reportes/*; src/pages/Productos/DefProcesses/RecursosProduccion/*; src/pages/Compras/pdfGenerator.tsx
 // Summary: Tipos para activos fijos, órdenes de compra de activos y parametrización de depreciación usados en flujos de incorporación y reporting.
 import {Proveedor} from "../Compras/types.tsx";
+import type { EmpresaIdentidadLegalVersion } from "../../api/EmpresaIdentidadLegalApi";
+import type { EmpresaLogoDocumentalVersion } from "../../api/EmpresaLogoDocumentalApi";
 
 export const TIPO_INCORPORACION = {
         CON_OC:'CON_OC', SIN_OC:'SIN_OC', AF_EXISTENTE:'AF_EXISTENTE'
@@ -137,6 +139,8 @@ export interface OrdenCompraActivo {
      *  3: cerrada con éxito
      */
     estado: number;
+    empresaIdentidadLegalVersion?: EmpresaIdentidadLegalVersion | null;
+    empresaLogoDocumentalVersion?: EmpresaLogoDocumentalVersion | null;
     divisa: DIVISAS;
     trm: number;
     facturaCompraActivoId?: number;

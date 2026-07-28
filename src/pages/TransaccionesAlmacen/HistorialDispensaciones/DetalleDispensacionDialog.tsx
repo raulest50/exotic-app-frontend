@@ -27,6 +27,7 @@ import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
 import { TransaccionAlmacen } from './types';
 import { MovimientoDetalle } from '../types';
+import { causaAjusteLabel } from '../AjustesInventario/causasAjuste';
 
 interface DetalleDispensacionDialogProps {
     isOpen: boolean;
@@ -117,7 +118,9 @@ export default function DetalleDispensacionDialog({
             <ModalOverlay />
             <ModalContent>
                 <ModalHeader fontFamily="Comfortaa Variable">
-                    Detalle de Dispensación
+                    {transaccion.tipoEntidadCausante === 'OAA'
+                        ? 'Detalle de ajuste de inventario'
+                        : 'Detalle de Dispensación'}
                 </ModalHeader>
                 <ModalCloseButton />
                 <ModalBody>
@@ -150,6 +153,14 @@ export default function DetalleDispensacionDialog({
                                     <Text fontSize="sm" color="app.textMuted">Estado Contable:</Text>
                                     <Text fontSize="md" fontWeight="semibold">{formatEstadoContable(transaccion.estadoContable)}</Text>
                                 </Box>
+                                {transaccion.tipoEntidadCausante === 'OAA' && (
+                                    <Box>
+                                        <Text fontSize="sm" color="app.textMuted">Causa del ajuste:</Text>
+                                        <Text fontSize="md" fontWeight="semibold">
+                                            {causaAjusteLabel(transaccion.causaAjuste)}
+                                        </Text>
+                                    </Box>
+                                )}
                             </HStack>
                             {transaccion.observaciones && (
                                 <Box mt={2}>
@@ -167,7 +178,11 @@ export default function DetalleDispensacionDialog({
 
                         {/* Tabla de movimientos */}
                         <Box>
-                            <Text fontWeight="bold" mb={2} fontSize="md">Materiales Dispensados</Text>
+                            <Text fontWeight="bold" mb={2} fontSize="md">
+                                {transaccion.tipoEntidadCausante === 'OAA'
+                                    ? 'Movimientos del ajuste'
+                                    : 'Materiales Dispensados'}
+                            </Text>
                             {loading ? (
                                 <Flex justify="center" py={6}>
                                     <Spinner />

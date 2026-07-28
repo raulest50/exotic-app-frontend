@@ -197,7 +197,7 @@ export function HistorialDispensaciones() {
             console.error('Error al generar PDF:', error);
             toast({
                 title: 'Error',
-                description: error.response?.data?.message || 'No se pudo generar el PDF',
+                description: error.response?.data?.message || error.message || 'No se pudo generar el PDF',
                 status: 'error',
                 duration: 5000,
                 isClosable: true,

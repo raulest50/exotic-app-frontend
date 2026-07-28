@@ -24,6 +24,12 @@ import {
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL';
+import {
+    getEmpresaIdentidadDocumentalVigente,
+    getEmpresaLogoVersionDataUrl,
+    type EmpresaIdentidadDocumento,
+} from '../../../../api/EmpresaIdentidadDocumentalApi';
+import OCAF_PDF_Generator from '../../OCAF_PDF_Generator';
 import { OrdenCompraActivo, getEstadoOCAFText } from '../../types';
 
 interface Props {
@@ -35,8 +41,7 @@ interface Props {
 
 enum TipoEnvio {
     MANUAL = 'MANUAL',
-    EMAIL = 'EMAIL',
-    WHATSAPP = 'WHATSAPP'
+    EMAIL = 'EMAIL'
 }
 
 const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEstadoActualizado }) => {
@@ -53,8 +58,6 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
             setInputCode('');
             if (hasEmail()) {
                 setTipoEnvio(TipoEnvio.EMAIL);
-            } else if (hasPhone()) {
-                setTipoEnvio(TipoEnvio.WHATSAPP);
             } else {
                 setTipoEnvio(TipoEnvio.MANUAL);
             }
@@ -65,15 +68,60 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
         return orden.proveedor?.contactos?.some(c => c.email && c.email.trim() !== '') ?? false;
     };
 
-    const hasPhone = () => {
-        return orden.proveedor?.contactos?.some(c => c.cel && c.cel.trim() !== '') ?? false;
-    };
-
-    const updateEstado = async (newEstado: number) => {
+    const updateEstado = async (newEstado: number): Promise<boolean> => {
         const formData = new FormData();
-        const requestData = newEstado === 2 ? { newEstado, tipoEnvio } : { newEstado };
-        formData.append('request', new Blob([JSON.stringify(requestData)], { type: 'application/json' }), 'request');
         try {
+            let identidadLegal: EmpresaIdentidadDocumento | null = null;
+            let logoVersionId: number | null = null;
+
+            if (newEstado === 2) {
+                const identidadHistorica = orden.empresaIdentidadLegalVersion;
+                const logoHistorico = orden.empresaLogoDocumentalVersion;
+                if (identidadHistorica || logoHistorico) {
+                    if (!identidadHistorica || !logoHistorico?.id) {
+                        throw new Error('La OCA tiene una asociación documental histórica incompleta.');
+                    }
+                    identidadLegal = identidadHistorica;
+                    logoVersionId = logoHistorico.id;
+                } else {
+                    const vigente = await getEmpresaIdentidadDocumentalVigente();
+                    identidadLegal = vigente.identidadLegal;
+                    logoVersionId = vigente.logo.id;
+                }
+            }
+
+            const requestData = newEstado === 2
+                ? {
+                    newEstado,
+                    tipoEnvio,
+                    empresaIdentidadLegalVersionId: identidadLegal?.id,
+                    empresaLogoDocumentalVersionId: logoVersionId,
+                }
+                : { newEstado };
+            formData.append(
+                'request',
+                new Blob([JSON.stringify(requestData)], { type: 'application/json' }),
+                'request'
+            );
+
+            if (newEstado === 2 && tipoEnvio === TipoEnvio.EMAIL) {
+                if (!identidadLegal || !logoVersionId) {
+                    throw new Error('No se definió la identidad documental para generar la OCA.');
+                }
+                const logoDataUrl = await getEmpresaLogoVersionDataUrl(logoVersionId);
+                const generator = new OCAF_PDF_Generator();
+                const pdf = await generator.getOCAFpdf_Blob(
+                    orden,
+                    identidadLegal,
+                    { logoDataUrl, logoVersionId }
+                );
+                formData.append(
+                    'OCAFpdf',
+                    pdf,
+                    `orden-compra-activo-${orden.ordenCompraActivoId}.pdf`
+                );
+            }
+
             const response = await axios.put(
                 `${EndPointsURL.getDomain()}/api/activos-fijos/ocaf/${orden.ordenCompraActivoId}/updateEstado`,
                 formData
@@ -85,21 +133,34 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
                 duration: 5000,
                 isClosable: true,
             });
-        } catch (e) {
+            return true;
+        } catch (error) {
+            const responseData = axios.isAxiosError(error) ? error.response?.data : undefined;
+            const backendMessage =
+                typeof responseData === 'string'
+                    ? responseData
+                    : responseData && typeof responseData === 'object'
+                        ? [responseData.detail, responseData.error, responseData.message]
+                            .find((value): value is string => typeof value === 'string' && value.length > 0)
+                        : undefined;
             toast({
                 title: 'Error',
-                description: 'No se pudo actualizar el estado de la orden.',
+                description:
+                    backendMessage
+                    ?? (error instanceof Error ? error.message : undefined)
+                    ?? 'No se pudo actualizar el estado de la orden.',
                 status: 'error',
                 duration: 5000,
                 isClosable: true,
             });
+            return false;
         }
     };
 
     const handleLiberar = async () => {
         if (inputCode === randomCode) {
-            await updateEstado(1);
-            onClose();
+            const updated = await updateEstado(1);
+            if (updated) onClose();
         } else {
             toast({
                 title: 'Código incorrecto',
@@ -113,9 +174,12 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
     const handleEnviar = async () => {
         if (inputCode === randomCode) {
             setIsLoading(true);
-            await updateEstado(2);
-            setIsLoading(false);
-            onClose();
+            try {
+                const updated = await updateEstado(2);
+                if (updated) onClose();
+            } finally {
+                setIsLoading(false);
+            }
         } else {
             toast({
                 title: 'Código incorrecto',
@@ -196,7 +260,6 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
                             <Select value={tipoEnvio} onChange={e=>setTipoEnvio(e.target.value as TipoEnvio)}>
                                 <option value={TipoEnvio.MANUAL}>{TipoEnvio.MANUAL}</option>
                                 {hasEmail() && <option value={TipoEnvio.EMAIL}>CORREO ELECTRÓNICO</option>}
-                                {hasPhone() && <option value={TipoEnvio.WHATSAPP}>WHATSAPP</option>}
                             </Select>
                             <Input maxW='200px' value={inputCode} onChange={e=>setInputCode(e.target.value)} placeholder='Digite código'/>
                             <Button colorScheme='green' onClick={handleEnviar} isLoading={isLoading} loadingText='Enviando'>Enviar a Proveedor</Button>

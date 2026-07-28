@@ -2,6 +2,11 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
+import {
+    formatEmpresaIdentificacion,
+    getEmpresaBrandingDocumentalVigente,
+} from "../../../api/EmpresaIdentidadDocumentalApi";
+import { addContainedPng } from "../../../utils/pdfBranding";
 import { InsumoWithStock, OrdenProduccionDTO } from "../types.tsx";
 
 interface AutoTableProperties {
@@ -120,20 +125,6 @@ export default class ODP_PDF_Generator {
 
     private formatNullableNumber(value: number | null): string {
         return value !== null && value !== undefined ? value.toString() : "No especificado";
-    }
-
-    private async getImageBase64(url: string): Promise<string> {
-        const response = await fetch(url);
-        const blob = await response.blob();
-        return new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                if (typeof reader.result === "string") resolve(reader.result);
-                else reject("Error converting image to base64.");
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
     }
 
     // ---------------------- Nueva lógica: construir árbol limpio ----------------------
@@ -359,6 +350,7 @@ export default class ODP_PDF_Generator {
     // ---------------------- PDF generation (cabezote y tabla 2 intactos) ----------------------
     private async generatePDF(orden: OrdenProduccionDTO): Promise<jsPDFWithAutoTable> {
         console.log("Orden completa:", orden);
+        const branding = await getEmpresaBrandingDocumentalVigente();
 
         const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape" }) as jsPDFWithAutoTable;
         const margin = 15;
@@ -366,15 +358,7 @@ export default class ODP_PDF_Generator {
         let currentY = margin;
 
         // Logo
-        let logoBase64: string | null = null;
-        try {
-            logoBase64 = await this.getImageBase64("/logo_exotic.png");
-        } catch (error) {
-            console.error("Error fetching logo image", error);
-        }
-        if (logoBase64) {
-            doc.addImage(logoBase64, "PNG", margin, currentY, 30, 24);
-        }
+        addContainedPng(doc, branding.logoDataUrl, margin, currentY, 30, 24);
 
         // Título y estado (IDENTICO)
         doc.setFont("helvetica", "bold");
@@ -391,13 +375,13 @@ export default class ODP_PDF_Generator {
         // Datos empresa (IDENTICO)
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
-        doc.text("Napolitana J.P S.A.S.", margin, currentY);
+        doc.text(branding.identidadLegal.razonSocial, margin, currentY);
         currentY += 4;
-        doc.text("Nit: 901751897-1", margin, currentY);
+        doc.text(formatEmpresaIdentificacion(branding.identidadLegal), margin, currentY);
         currentY += 4;
-        doc.text("Tel: 301 711 51 81", margin, currentY);
+        doc.text(`Tel: ${branding.identidadLegal.telefonoPrincipal}`, margin, currentY);
         currentY += 4;
-        doc.text("produccion.exotic@gmail.com", margin, currentY);
+        doc.text(branding.identidadLegal.emailPrincipal, margin, currentY);
 
         // Fechas (IDENTICO)
         let detailY = margin + 20;

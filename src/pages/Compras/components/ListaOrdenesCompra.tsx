@@ -8,7 +8,8 @@ import {
     Th,
     Td,
     Box,
-    useOutsideClick
+    useOutsideClick,
+    useToast,
 } from '@chakra-ui/react';
 import {getEstadoText, OrdenCompraMateriales} from '../types';
 import OrdenCompraDetails from './OrdenCompraDetails';
@@ -55,6 +56,7 @@ interface ContextMenuState {
 }
 
 const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClose4Dialogs, page, onEditarOrden }) => {
+    const toast = useToast();
     const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
     const [selectedOrden, setSelectedOrden] = useState<OrdenCompraMateriales | null>(null);
     const [ordenToCancel, setOrdenToCancel] = useState<OrdenCompraMateriales | null>(null);
@@ -87,10 +89,21 @@ const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClos
 
     const handleGenerarExcel = async () => {
         if (contextMenu) {
-            // const generator = new ExcelOCGenerator();
-            // await generator.downloadExcel(contextMenu.orden as OrdenCompra);
-            const generator = new OCM_PDF_Generator();
-            await generator.downloadPDF_OCM(contextMenu.orden as OrdenCompraMateriales);
+            try {
+                const generator = new OCM_PDF_Generator();
+                await generator.downloadPDF_OCM(contextMenu.orden as OrdenCompraMateriales);
+            } catch (error) {
+                console.error("Error generando PDF OCM", error);
+                toast({
+                    title: "No se pudo generar la OCM",
+                    description: error instanceof Error
+                        ? error.message
+                        : "No fue posible obtener la identidad documental.",
+                    status: "error",
+                    duration: 5000,
+                    isClosable: true,
+                });
+            }
         }
         setContextMenu(null);
     };

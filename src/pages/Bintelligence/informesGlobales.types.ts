@@ -309,6 +309,8 @@ export interface CoberturaMateriales {
     fechaDesde: string;
     fechaHasta: string;
     fechaHoraCorteStock: string;
+    fuenteDemanda: FuenteDemandaCobertura;
+    escenarioExploratorio: boolean;
     estado: "ESTIMADO" | "SIN_CONSUMO";
     fechaPrimerAgotamiento?: string | null;
     materialCriticoId?: string | null;
@@ -319,9 +321,22 @@ export interface CoberturaMateriales {
     motivosConfianzaBaja: string[];
     diasObservados: number;
     diasConDispensacion: number;
+    diasConDemanda: number;
     materialesAnalizados: number;
     materialesConDemanda: number;
+    resumenFuentesDemanda: ResumenFuentesDemandaCobertura;
     estimaciones: EstimacionCoberturaMaterial[];
+}
+
+export type FuenteDemandaCobertura =
+    | "SOLO_DISPENSACIONES"
+    | "DISPENSACIONES_MAS_CONTINGENCIAS";
+
+export interface ResumenFuentesDemandaCobertura {
+    movimientosDispensacionIncluidos: number;
+    ajustesContingenciaDisponibles: number;
+    ajustesContingenciaIncluidos: number;
+    ajustesNegativosSinClasificarExcluidos: number;
 }
 
 export interface EstimacionCoberturaMaterial {
@@ -330,7 +345,11 @@ export interface EstimacionCoberturaMaterial {
     unidadMedida: string;
     stockActual: number;
     demandaMediaDiaria: number;
+    demandaMediaDiariaOperativa: number;
+    demandaMediaDiariaContingencia: number;
     diasConDispensacion: number;
+    diasConDemanda: number;
+    ajustesContingenciaIncluidos: number;
     diasHastaAgotamiento?: number | null;
     fechaAgotamiento?: string | null;
     intervaloFechaMin?: string | null;

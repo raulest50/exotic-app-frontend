@@ -26,13 +26,10 @@ import EndPointsURL from '../../../api/EndPointsURL';
 import { OrdenCompraMateriales, getEstadoText, getCondicionPagoText, getCantidadCorrectaText, TipoEnvio } from '../types';
 import OCM_PDF_Generator from "../OCM_PDF_Generator.tsx";
 import {
-    getEmpresaIdentidadLegalVigente,
-    type EmpresaIdentidadLegalVersion,
-} from "../../../api/EmpresaIdentidadLegalApi";
-import {
-    getEmpresaLogoDocumentalVigente,
-    type EmpresaLogoDocumentalVersion,
-} from "../../../api/EmpresaLogoDocumentalApi";
+    getEmpresaIdentidadDocumentalVigente,
+    getEmpresaLogoVersionDataUrl,
+    type EmpresaIdentidadDocumento,
+} from "../../../api/EmpresaIdentidadDocumentalApi";
 
 interface ActualizarEstadoOrdenCompraDialogProps {
     isOpen: boolean;
@@ -118,12 +115,25 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
         try {
             // const requestBody:EstadoUpdate = { newEstado: newEstado };
             const formData = new FormData();
-            let identidadLegal: EmpresaIdentidadLegalVersion | null = null;
-            let logoDocumental: EmpresaLogoDocumentalVersion | null = null;
+            let identidadLegal: EmpresaIdentidadDocumento | null = null;
+            let logoVersionId: number | null = null;
+            let logoDataUrl: string | null = null;
 
             if(newEstado === 2){
-                identidadLegal = orden.empresaIdentidadLegalVersion ?? await getEmpresaIdentidadLegalVigente();
-                logoDocumental = orden.empresaLogoDocumentalVersion ?? await getEmpresaLogoDocumentalVigente();
+                const identidadHistorica = orden.empresaIdentidadLegalVersion;
+                const logoHistorico = orden.empresaLogoDocumentalVersion;
+
+                if (identidadHistorica || logoHistorico) {
+                    if (!identidadHistorica || !logoHistorico?.id) {
+                        throw new Error("La OCM tiene una asociacion documental historica incompleta.");
+                    }
+                    identidadLegal = identidadHistorica;
+                    logoVersionId = logoHistorico.id;
+                } else {
+                    const brandingVigente = await getEmpresaIdentidadDocumentalVigente();
+                    identidadLegal = brandingVigente.identidadLegal;
+                    logoVersionId = brandingVigente.logo.id;
+                }
             }
 
             // Include tipoEnvio in the request when updating to estado 2
@@ -132,7 +142,7 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                     newEstado,
                     tipoEnvio,
                     empresaIdentidadLegalVersionId: identidadLegal?.id,
-                    empresaLogoDocumentalVersionId: logoDocumental?.id,
+                    empresaLogoDocumentalVersionId: logoVersionId,
                 }
                 : { newEstado };
 
@@ -143,12 +153,19 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
             );
 
             let OCMpdf: Blob|null = null;
-            if(newEstado === 2){ // se adjunta OCM en pdf format para enviar como adjunto a proveedor
+            if(newEstado === 2 && tipoEnvio === TipoEnvio.EMAIL){
+                if (!logoVersionId) {
+                    throw new Error("No se definio la version de logo documental para la OCM.");
+                }
+                logoDataUrl = await getEmpresaLogoVersionDataUrl(logoVersionId);
                 const generator = new OCM_PDF_Generator();
                 OCMpdf = await generator.getOCMpdf_Blob(
                     orden,
                     identidadLegal ?? undefined,
-                    { logoVersionId: logoDocumental?.id }
+                    {
+                        logoDataUrl: logoDataUrl ?? undefined,
+                        logoVersionId: logoVersionId ?? undefined,
+                    }
                 );
                 formData.append(
                     'OCMpdf',
@@ -179,12 +196,13 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                         ? [responseData.detail, responseData.error, responseData.message]
                             .find((value): value is string => typeof value === 'string' && value.length > 0)
                         : undefined;
+            const clientMessage = error instanceof Error ? error.message : undefined;
 
             toast({
                 title: isForbidden ? "Acceso denegado" : "Error",
                 description: isForbidden
                     ? backendMessage ?? "Se requiere nivel 2 o superior en Reportes Ordenes de Compra para liberar la orden."
-                    : backendMessage ?? "No se pudo actualizar el estado de la orden.",
+                    : backendMessage ?? clientMessage ?? "No se pudo actualizar el estado de la orden.",
                 status: "error",
                 duration: 5000,
                 isClosable: true,

@@ -410,7 +410,7 @@ export default function DispensacionStep3ReviewSubmit({
             console.error('Error al generar PDF:', error);
             toast({
                 title: 'Error',
-                description: 'No se pudo generar el PDF',
+                description: error instanceof Error ? error.message : 'No se pudo generar el PDF',
                 status: 'error',
                 duration: 3000,
                 isClosable: true
