@@ -208,6 +208,9 @@ export default class EndPointsURL{
     public carga_masiva_materiales_template: string;
     public carga_masiva_materiales_validar: string;
     public carga_masiva_materiales_ejecutar: string;
+    public carga_masiva_puntos_reorden_template: string;
+    public carga_masiva_puntos_reorden_validar: string;
+    public carga_masiva_puntos_reorden_ejecutar: string;
     public carga_masiva_terminados_template: string;
     public carga_masiva_terminados_template_sin_insumos: string;
     public carga_masiva_terminados_validar_sin_insumos: string;
@@ -860,6 +863,9 @@ export default class EndPointsURL{
         this.carga_masiva_materiales_template = `${domain}/api/carga-masiva-materiales/template`;
         this.carga_masiva_materiales_validar = `${domain}/api/carga-masiva-materiales/validar`;
         this.carga_masiva_materiales_ejecutar = `${domain}/api/carga-masiva-materiales/ejecutar`;
+        this.carga_masiva_puntos_reorden_template = `${domain}/api/carga-masiva-puntos-reorden/template`;
+        this.carga_masiva_puntos_reorden_validar = `${domain}/api/carga-masiva-puntos-reorden/validar`;
+        this.carga_masiva_puntos_reorden_ejecutar = `${domain}/api/carga-masiva-puntos-reorden/ejecutar`;
         this.carga_masiva_terminados_template = `${domain}/api/carga-masiva-terminados/template`;
         this.carga_masiva_terminados_template_sin_insumos = `${domain}/api/carga-masiva-terminados/template-sin-insumos`;
         this.carga_masiva_terminados_validar_sin_insumos = `${domain}/api/carga-masiva-terminados/validar-sin-insumos`;

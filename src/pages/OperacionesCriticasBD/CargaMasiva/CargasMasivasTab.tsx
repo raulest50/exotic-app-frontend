@@ -1,7 +1,7 @@
 import { Button, Container, Flex, SimpleGrid } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import { IconType } from "react-icons";
-import { FaArrowLeft, FaDatabase, FaKey } from "react-icons/fa";
+import { FaArrowLeft, FaBell, FaDatabase, FaKey } from "react-icons/fa";
 import { FaBoxesStacked, FaCube, FaMoneyBillTransfer, FaWarehouse } from "react-icons/fa6";
 import CargaMasivaAlmacenTab from "./CargaMasivaAlmacenTab";
 import CargaMasivaMaterialesTab from "../CargaMasivaMateriales/CargaMasivaMaterialesTab";
@@ -10,8 +10,9 @@ import CargaMasivaImportacionTotalBDTab from "../CargaMasivaImportacionTotalBD/C
 import OperacionSelectCard from "../shared/OperacionSelectCard";
 import ResetPasswordsNoProductivoTab from "./ResetPasswordsNoProductivoTab";
 import CargaMasivaCostosTab from "../CargaMasivaCostos/CargaMasivaCostosTab";
+import CargaMasivaPuntosReordenTab from "../CargaMasivaPuntosReorden/CargaMasivaPuntosReordenTab";
 
-type MassiveLoadView = "selector" | "almacen" | "materiales" | "terminados" | "costos" | "importacion-total-bd" | "reset-passwords-staging";
+type MassiveLoadView = "selector" | "almacen" | "materiales" | "terminados" | "costos" | "puntos-reorden" | "importacion-total-bd" | "reset-passwords-staging";
 
 interface MassiveLoadOption {
     key: Exclude<MassiveLoadView, "selector">;
@@ -49,6 +50,12 @@ const BASE_LOAD_OPTIONS: MassiveLoadOption[] = [
         titulo: "Actualizacion masiva de costos",
         descripcion: "Validar un informe de compras, previsualizar y confirmar exclusivamente nuevos costos de materiales.",
         icono: FaMoneyBillTransfer,
+    },
+    {
+        key: "puntos-reorden",
+        titulo: "Actualizacion masiva de puntos de reorden",
+        descripcion: "Descargar una plantilla, validar y actualizar los puntos de reorden de materiales inventariables.",
+        icono: FaBell,
     },
 ];
 
@@ -95,6 +102,9 @@ export default function CargasMasivasTab({
         if (activeView === "costos") {
             return <CargaMasivaCostosTab onBackToSelector={() => setActiveView("selector")} />;
         }
+        if (activeView === "puntos-reorden") {
+            return <CargaMasivaPuntosReordenTab onBackToSelector={() => setActiveView("selector")} />;
+        }
         if (activeView === "importacion-total-bd") {
             return <CargaMasivaImportacionTotalBDTab onBackToSelector={() => setActiveView("selector")} />;
         }
@@ -122,7 +132,7 @@ export default function CargasMasivasTab({
         );
     }
 
-    if (activeView === "importacion-total-bd" || activeView === "costos") {
+    if (activeView === "importacion-total-bd" || activeView === "costos" || activeView === "puntos-reorden") {
         return (
             <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
                 {activeContent}
