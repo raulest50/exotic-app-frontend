@@ -6,6 +6,7 @@ import type {
     CoberturaMateriales,
     ExploracionAlertasMateriales,
     FiltroGrupoAlertaInventario,
+    FiltroGrupoCoberturaMaterial,
     FiltroTipoAlertaInventario,
     FuenteDemandaCobertura,
     GrupoMaterialAjuste,
@@ -16,6 +17,8 @@ import type {
     OcmPendiente,
     OrdenAlertaInventario,
     OpMaterial,
+    HorizonteCoberturaMaterial,
+    OrdenCoberturaMaterial,
     OrdenAjusteMaterial,
     PaginaInformeInventario,
     TipoFiltroAjuste,
@@ -194,14 +197,65 @@ export async function fetchInventoryAlerts({
     };
 }
 
-export async function fetchMaterialCoverage(
-    windowDays: 7 | 30 | 90,
-    demandSource: FuenteDemandaCobertura = "SOLO_DISPENSACIONES",
-): Promise<CoberturaMateriales> {
+export async function fetchMaterialCoverage({
+    windowDays,
+    demandSource,
+    horizon,
+    group,
+    unit,
+    order,
+    search,
+    page,
+    size,
+    signal,
+}: {
+    windowDays: 7 | 30 | 90;
+    demandSource: FuenteDemandaCobertura;
+    horizon: HorizonteCoberturaMaterial;
+    group: FiltroGrupoCoberturaMaterial;
+    unit: string;
+    order: OrdenCoberturaMaterial;
+    search: string;
+    page: number;
+    size: 10 | 20;
+    signal?: AbortSignal;
+}): Promise<CoberturaMateriales> {
     const response = await axios.get<CoberturaMateriales>(
         `${endpoints.domain}/bi/informes-globales/almacen/cobertura`,
-        { params: { ventanaDias: windowDays, fuenteDemanda: demandSource } },
+        {
+            params: {
+                ventanaDias: windowDays,
+                fuenteDemanda: demandSource,
+                horizonte: horizon,
+                grupo: group,
+                ...(unit ? { unidad: unit } : {}),
+                orden: order,
+                ...(search.trim() ? { buscar: search.trim() } : {}),
+                page,
+                size,
+            },
+            signal,
+        },
     );
+    const estimates = (response.data.estimaciones ?? [])
+        .map(normalizeCoverageEstimate);
+    const fallbackGroups = Array.from(new Set(
+        estimates.map((estimate) => estimate.grupo),
+    ));
+    const fallbackUnits = Array.from(new Set(
+        estimates.map((estimate) => estimate.unidadMedida),
+    ));
+    const responsePage = response.data.pagina
+        ? normalizePage(response.data.pagina)
+        : {
+            items: estimates,
+            page: 0,
+            size: 10,
+            totalElements: estimates.length,
+            totalPages: estimates.length > 0 ? 1 : 0,
+            first: true,
+            last: true,
+        };
     return {
         ...response.data,
         fuenteDemanda: response.data.fuenteDemanda ?? demandSource,
@@ -216,19 +270,17 @@ export async function fetchMaterialCoverage(
             ajustesContingenciaIncluidos: 0,
             ajustesNegativosSinClasificarExcluidos: 0,
         },
-        estimaciones: (response.data.estimaciones ?? []).map((estimate) => ({
-            ...estimate,
-            demandaMediaDiariaOperativa: estimate.demandaMediaDiariaOperativa
-                ?? estimate.demandaMediaDiaria
-                ?? 0,
-            demandaMediaDiariaContingencia:
-                estimate.demandaMediaDiariaContingencia ?? 0,
-            diasConDemanda: estimate.diasConDemanda
-                ?? estimate.diasConDispensacion
-                ?? 0,
-            ajustesContingenciaIncluidos:
-                estimate.ajustesContingenciaIncluidos ?? 0,
-        })),
+        estimaciones: estimates,
+        facetas: {
+            gruposDisponibles:
+                response.data.facetas?.gruposDisponibles ?? fallbackGroups,
+            unidadesDisponibles:
+                response.data.facetas?.unidadesDisponibles ?? fallbackUnits,
+        },
+        pagina: {
+            ...responsePage,
+            items: (responsePage.items ?? []).map(normalizeCoverageEstimate),
+        },
     };
 }
 
@@ -330,6 +382,27 @@ function normalizeAlert(alert: AlertaStock): AlertaStock {
         brechaPct: alert.brechaPct ?? null,
         costoVigente: alert.costoVigente ?? false,
         umbralesIncumplidos: alert.umbralesIncumplidos ?? [],
+    };
+}
+
+function normalizeCoverageEstimate(
+    estimate: CoberturaMateriales["estimaciones"][number],
+): CoberturaMateriales["estimaciones"][number] {
+    return {
+        ...estimate,
+        grupo: estimate.grupo ?? "OTROS",
+        demandaMediaDiariaOperativa: estimate.demandaMediaDiariaOperativa
+            ?? estimate.demandaMediaDiaria
+            ?? 0,
+        demandaMediaDiariaContingencia:
+            estimate.demandaMediaDiariaContingencia ?? 0,
+        diasConDemanda: estimate.diasConDemanda
+            ?? estimate.diasConDispensacion
+            ?? 0,
+        ajustesContingenciaIncluidos:
+            estimate.ajustesContingenciaIncluidos ?? 0,
+        confianzaBaja: estimate.confianzaBaja ?? false,
+        motivosConfianzaBaja: estimate.motivosConfianzaBaja ?? [],
     };
 }
 

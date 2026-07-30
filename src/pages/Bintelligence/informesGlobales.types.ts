@@ -367,11 +367,39 @@ export interface CoberturaMateriales {
     materialesConDemanda: number;
     resumenFuentesDemanda: ResumenFuentesDemandaCobertura;
     estimaciones: EstimacionCoberturaMaterial[];
+    facetas: FacetasCoberturaMateriales;
+    pagina: PaginaInformeInventario<EstimacionCoberturaMaterial>;
 }
 
 export type FuenteDemandaCobertura =
     | "SOLO_DISPENSACIONES"
     | "DISPENSACIONES_MAS_CONTINGENCIAS";
+
+export type GrupoCoberturaMaterial =
+    | "MATERIA_PRIMA"
+    | "EMPAQUE"
+    | "OTROS";
+
+export type FiltroGrupoCoberturaMaterial =
+    | "TODOS"
+    | GrupoCoberturaMaterial;
+
+export type HorizonteCoberturaMaterial =
+    | "TODOS"
+    | "AGOTADO"
+    | "HASTA_7_DIAS"
+    | "DE_8_A_30_DIAS"
+    | "MAS_DE_30_DIAS";
+
+export type OrdenCoberturaMaterial =
+    | "AGOTAMIENTO"
+    | "MAYOR_DEMANDA"
+    | "NOMBRE";
+
+export interface FacetasCoberturaMateriales {
+    gruposDisponibles: GrupoCoberturaMaterial[];
+    unidadesDisponibles: string[];
+}
 
 export interface ResumenFuentesDemandaCobertura {
     movimientosDispensacionIncluidos: number;
@@ -383,6 +411,7 @@ export interface ResumenFuentesDemandaCobertura {
 export interface EstimacionCoberturaMaterial {
     productoId: string;
     nombre: string;
+    grupo: GrupoCoberturaMaterial;
     unidadMedida: string;
     stockActual: number;
     demandaMediaDiaria: number;
@@ -395,6 +424,8 @@ export interface EstimacionCoberturaMaterial {
     fechaAgotamiento?: string | null;
     intervaloFechaMin?: string | null;
     intervaloFechaMax?: string | null;
+    confianzaBaja: boolean;
+    motivosConfianzaBaja: string[];
 }
 
 export interface InformeProduccion {
