@@ -2,6 +2,7 @@ import {
     ChevronDownIcon,
     ChevronRightIcon,
     ChevronUpIcon,
+    DownloadIcon,
     SearchIcon,
     WarningTwoIcon,
 } from "@chakra-ui/icons";
@@ -35,7 +36,9 @@ import {
     Th,
     Thead,
     Tr,
+    useBreakpointValue,
     useDisclosure,
+    useToast,
 } from "@chakra-ui/react";
 import {
     type KeyboardEvent,
@@ -45,6 +48,7 @@ import {
 } from "react";
 import CoberturaMaterialDetailDrawer from "./CoberturaMaterialDetailDrawer";
 import {
+    downloadMaterialCoverageExcel,
     fetchMaterialCoverage,
     requestErrorMessage,
 } from "./informesGlobales.api";
@@ -69,6 +73,7 @@ type PageSize = 10 | 20;
 
 export default function CoberturaMaterialesCard() {
     const detail = useDisclosure();
+    const toast = useToast();
     const [expanded, setExpanded] = useState(false);
     const [mode, setMode] = useState<CoverageMode>("PRIORIDAD");
     const [windowDays, setWindowDays] = useState<CoverageWindow>(90);
@@ -89,6 +94,7 @@ export default function CoberturaMaterialesCard() {
     const [selectedEstimate, setSelectedEstimate] =
         useState<EstimacionCoberturaMaterial | null>(null);
     const [loading, setLoading] = useState(false);
+    const [downloading, setDownloading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [retryKey, setRetryKey] = useState(0);
 
@@ -177,6 +183,34 @@ export default function CoberturaMaterialesCard() {
 
     const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter") applySearch();
+    };
+
+    const downloadExcel = async () => {
+        if (!report || report.pagina.totalElements === 0 || downloading) return;
+        setDownloading(true);
+        try {
+            const data = await downloadMaterialCoverageExcel({
+                windowDays,
+                demandSource,
+                horizon,
+                group,
+                unit,
+                order,
+                search: appliedSearch,
+            });
+            triggerExcelDownload(data, coverageExcelFilename(new Date()));
+        } catch {
+            toast({
+                title: "No se pudo descargar el Excel de cobertura",
+                description:
+                    "Compruebe la selección y la conexión antes de intentar nuevamente.",
+                status: "error",
+                duration: 6000,
+                isClosable: true,
+            });
+        } finally {
+            setDownloading(false);
+        }
     };
 
     const clearFilters = () => {
@@ -296,6 +330,7 @@ export default function CoberturaMaterialesCard() {
                                         draftSearch={draftSearch}
                                         appliedSearch={appliedSearch}
                                         size={size}
+                                        downloading={downloading}
                                         onHorizonChange={(value) => {
                                             setHorizon(value);
                                             setPage(0);
@@ -326,6 +361,7 @@ export default function CoberturaMaterialesCard() {
                                         onPageChange={setPage}
                                         onClear={clearFilters}
                                         onSelect={openDetail}
+                                        onDownload={downloadExcel}
                                     />
                                 ) : null}
                             </Stack>
@@ -344,6 +380,39 @@ export default function CoberturaMaterialesCard() {
             />
         </>
     );
+}
+
+function triggerExcelDownload(data: ArrayBuffer, filename: string) {
+    const blob = new Blob([data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(objectUrl);
+}
+
+function coverageExcelFilename(date: Date) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Bogota",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+    }).formatToParts(date);
+    const value = (type: string) =>
+        parts.find((part) => part.type === type)?.value ?? "00";
+    return [
+        "cobertura_materiales_",
+        `${value("year")}-${value("month")}-${value("day")}`,
+        `_${value("hour")}${value("minute")}.xlsx`,
+    ].join("");
 }
 
 function CoverageContextControls({
@@ -428,6 +497,7 @@ function CoverageResult({
     draftSearch,
     appliedSearch,
     size,
+    downloading,
     onHorizonChange,
     onGroupChange,
     onUnitChange,
@@ -439,6 +509,7 @@ function CoverageResult({
     onPageChange,
     onClear,
     onSelect,
+    onDownload,
 }: {
     report: CoberturaMateriales;
     mode: CoverageMode;
@@ -450,6 +521,7 @@ function CoverageResult({
     draftSearch: string;
     appliedSearch: string;
     size: PageSize;
+    downloading: boolean;
     onHorizonChange: (value: HorizonteCoberturaMaterial) => void;
     onGroupChange: (value: FiltroGrupoCoberturaMaterial) => void;
     onUnitChange: (value: string) => void;
@@ -461,6 +533,7 @@ function CoverageResult({
     onPageChange: (page: number) => void;
     onClear: () => void;
     onSelect: (estimate: EstimacionCoberturaMaterial) => void;
+    onDownload: () => void;
 }) {
     if (report.estado === "SIN_CONSUMO") {
         return (
@@ -566,6 +639,7 @@ function CoverageResult({
                     draftSearch={draftSearch}
                     appliedSearch={appliedSearch}
                     size={size}
+                    downloading={downloading}
                     onHorizonChange={onHorizonChange}
                     onGroupChange={onGroupChange}
                     onUnitChange={onUnitChange}
@@ -577,6 +651,7 @@ function CoverageResult({
                     onPageChange={onPageChange}
                     onClear={onClear}
                     onSelect={onSelect}
+                    onDownload={onDownload}
                     onBack={() => setMode("PRIORIDAD")}
                 />
             )}
@@ -623,6 +698,7 @@ function CoverageExplorationView({
     draftSearch,
     appliedSearch,
     size,
+    downloading,
     onHorizonChange,
     onGroupChange,
     onUnitChange,
@@ -634,6 +710,7 @@ function CoverageExplorationView({
     onPageChange,
     onClear,
     onSelect,
+    onDownload,
     onBack,
 }: {
     report: CoberturaMateriales;
@@ -644,6 +721,7 @@ function CoverageExplorationView({
     draftSearch: string;
     appliedSearch: string;
     size: PageSize;
+    downloading: boolean;
     onHorizonChange: (value: HorizonteCoberturaMaterial) => void;
     onGroupChange: (value: FiltroGrupoCoberturaMaterial) => void;
     onUnitChange: (value: string) => void;
@@ -655,6 +733,7 @@ function CoverageExplorationView({
     onPageChange: (page: number) => void;
     onClear: () => void;
     onSelect: (estimate: EstimacionCoberturaMaterial) => void;
+    onDownload: () => void;
     onBack: () => void;
 }) {
     const pageData = report.pagina;
@@ -825,11 +904,26 @@ function CoverageExplorationView({
                         encontradas
                     </Text>
                 </Stack>
-                {hasActiveFilters ? (
-                    <Button size="sm" variant="ghost" onClick={onClear}>
-                        Limpiar filtros
+                <HStack spacing={2} flexWrap="wrap">
+                    {hasActiveFilters ? (
+                        <Button size="sm" variant="ghost" onClick={onClear}>
+                            Limpiar filtros
+                        </Button>
+                    ) : null}
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        colorScheme="green"
+                        leftIcon={<DownloadIcon />}
+                        isLoading={downloading}
+                        loadingText="Generando Excel…"
+                        isDisabled={pageData.totalElements === 0}
+                        title={`Exporta las ${pageData.totalElements} referencias encontradas`}
+                        onClick={onDownload}
+                    >
+                        Descargar Excel
                     </Button>
-                ) : null}
+                </HStack>
             </HStack>
 
             {pageData.items.length > 0 ? (
@@ -855,9 +949,15 @@ function CoverageExplorationView({
                     Mostrando {firstItem}–{lastItem} de{" "}
                     {pageData.totalElements}
                 </Text>
-                <HStack justify={{ base: "space-between", md: "flex-end" }}>
+                <Stack
+                    direction={{ base: "column", sm: "row" }}
+                    align="center"
+                    justify={{ base: "stretch", md: "flex-end" }}
+                >
                     <Button
                         size="sm"
+                        minH="44px"
+                        w={{ base: "full", sm: "auto" }}
                         variant="outline"
                         isDisabled={pageData.first}
                         onClick={() => onPageChange(
@@ -873,13 +973,15 @@ function CoverageExplorationView({
                     </Text>
                     <Button
                         size="sm"
+                        minH="44px"
+                        w={{ base: "full", sm: "auto" }}
                         variant="outline"
                         isDisabled={pageData.last}
                         onClick={() => onPageChange(pageData.page + 1)}
                     >
                         Siguiente ›
                     </Button>
-                </HStack>
+                </Stack>
             </Stack>
 
             <Button alignSelf="center" variant="outline" onClick={onBack}>
@@ -900,6 +1002,109 @@ function CoverageTable({
     showGroup: boolean;
     onSelect: (estimate: EstimacionCoberturaMaterial) => void;
 }) {
+    const compact = useBreakpointValue({ base: true, lg: false }) ?? true;
+
+    if (compact) {
+        return (
+            <Stack spacing={3}>
+                {items.map((estimate, index) => (
+                    <Card key={estimate.productoId} variant="outline">
+                        <CardBody p={3}>
+                            <Stack spacing={3}>
+                                <HStack
+                                    justify="space-between"
+                                    align="flex-start"
+                                    flexWrap="wrap"
+                                >
+                                    <Box minW={0}>
+                                        <Text fontWeight="semibold">
+                                            {estimate.nombre}
+                                        </Text>
+                                        <Text
+                                            color="app.textMuted"
+                                            fontSize="xs"
+                                        >
+                                            {estimate.productoId}
+                                        </Text>
+                                    </Box>
+                                    <HStack flexWrap="wrap">
+                                        {priority && index === 0 ? (
+                                            <Badge colorScheme="red">
+                                                Crítico
+                                            </Badge>
+                                        ) : null}
+                                        {showGroup ? (
+                                            <Badge
+                                                colorScheme={horizonColor(
+                                                    estimate,
+                                                )}
+                                            >
+                                                {horizonLabel(estimate)}
+                                            </Badge>
+                                        ) : null}
+                                    </HStack>
+                                </HStack>
+                                <HStack flexWrap="wrap">
+                                    {showGroup ? (
+                                        <Badge variant="outline">
+                                            {groupLabel(estimate.grupo)}
+                                        </Badge>
+                                    ) : null}
+                                    {estimate.confianzaBaja ? (
+                                        <Badge colorScheme="yellow">
+                                            Confianza baja
+                                        </Badge>
+                                    ) : null}
+                                </HStack>
+                                <SimpleGrid columns={2} spacing={3}>
+                                    <CoverageMetric
+                                        label="Stock"
+                                        value={`${formatQuantity(estimate.stockActual)} ${estimate.unidadMedida}`}
+                                    />
+                                    <CoverageMetric
+                                        label="Demanda diaria"
+                                        value={`${formatQuantity(estimate.demandaMediaDiaria)} ${estimate.unidadMedida}/día`}
+                                    />
+                                    <CoverageMetric
+                                        label="Días restantes"
+                                        value={
+                                            estimate.diasHastaAgotamiento
+                                                === null
+                                            || estimate.diasHastaAgotamiento
+                                                === undefined
+                                                ? "—"
+                                                : formatQuantity(
+                                                    estimate
+                                                        .diasHastaAgotamiento,
+                                                )
+                                        }
+                                    />
+                                    <CoverageMetric
+                                        label="Fecha estimada"
+                                        value={estimate.fechaAgotamiento
+                                            ? formatDate(
+                                                estimate.fechaAgotamiento,
+                                            )
+                                            : "—"}
+                                    />
+                                </SimpleGrid>
+                                <Button
+                                    minH="44px"
+                                    variant="outline"
+                                    colorScheme="blue"
+                                    rightIcon={<ChevronRightIcon />}
+                                    onClick={() => onSelect(estimate)}
+                                >
+                                    Ver detalle
+                                </Button>
+                            </Stack>
+                        </CardBody>
+                    </Card>
+                ))}
+            </Stack>
+        );
+    }
+
     return (
         <TableContainer>
             <Table size="sm">
@@ -1015,6 +1220,17 @@ function CoverageTable({
                 </Tbody>
             </Table>
         </TableContainer>
+    );
+}
+
+function CoverageMetric({ label, value }: { label: string; value: string }) {
+    return (
+        <Box minW={0}>
+            <Text color="app.textMuted" fontSize="xs">{label}</Text>
+            <Text fontWeight="semibold" fontSize="sm" overflowWrap="anywhere">
+                {value}
+            </Text>
+        </Box>
     );
 }
 

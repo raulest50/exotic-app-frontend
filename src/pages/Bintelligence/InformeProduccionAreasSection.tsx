@@ -193,7 +193,10 @@ export default function InformeProduccionAreasSection({
                             </HStack>
                         </Stack>
 
-                        <SimpleGrid columns={{ base: 2, xl: 4 }} spacing={3}>
+                        <SimpleGrid
+                            columns={{ base: 1, sm: 2, xl: 4 }}
+                            spacing={3}
+                        >
                             <KpiCard
                                 label="Mediana de espera"
                                 value={formatMinutes(selectedArea.actual.medianaMinutosEspera)}

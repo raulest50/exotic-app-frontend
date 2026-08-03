@@ -1,9 +1,12 @@
+import { DownloadIcon, QuestionIcon } from "@chakra-ui/icons";
 import {
     Accordion,
     AccordionButton,
     AccordionIcon,
     AccordionItem,
     AccordionPanel,
+    Alert,
+    AlertIcon,
     Badge,
     Box,
     Button,
@@ -11,6 +14,8 @@ import {
     Card,
     CardBody,
     Center,
+    HStack,
+    IconButton,
     SimpleGrid,
     Spinner,
     Stack,
@@ -21,14 +26,23 @@ import {
     Text,
     Th,
     Thead,
+    Tooltip,
     Tr,
+    useBreakpointValue,
+    useDisclosure,
+    useToast,
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+    downloadOpenProductionOrdersMaterialExcel,
+    downloadPendingPurchaseOrdersExcel,
+    downloadWipMaterialEstimateExcel,
     fetchOpenProductionOrdersPage,
     fetchPendingPurchaseOrdersPage,
+    fetchWipMaterialEstimatePage,
     requestErrorMessage,
 } from "./informesGlobales.api";
+import MaterialOpHelpModal from "./MaterialOpHelpModal";
 import {
     formatCurrency,
     formatDateTime,
@@ -39,14 +53,19 @@ import {
     SectionHeading,
 } from "./InformeGlobalUi";
 import type {
+    LineaOcmPendiente,
     MaterialDirectoOp,
     OcmPendiente,
     OcmPendientes,
     OpMaterial,
+    OpWipMaterial,
     PaginaInformeInventario,
+    WipMaterialEstimado,
 } from "./informesGlobales.types";
 
 const PAGE_SIZE = 10;
+const EXCEL_MIME =
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 type PageFetcher<T> = (
     page: number,
@@ -155,6 +174,7 @@ function DetailToggle({
         <Button
             variant="outline"
             minH="44px"
+            w={{ base: "full", sm: "auto" }}
             alignSelf="flex-start"
             onClick={onClick}
             isDisabled={disabled}
@@ -174,9 +194,16 @@ function PageNavigation({
 }) {
     if (!result || result.totalPages <= 1) return null;
     return (
-        <ButtonGroup size="sm" alignSelf="center" alignItems="center">
+        <Stack
+            direction={{ base: "column", sm: "row" }}
+            w={{ base: "full", sm: "auto" }}
+            alignSelf="center"
+            alignItems="center"
+            spacing={2}
+        >
             <Button
                 minH="44px"
+                w={{ base: "full", sm: "auto" }}
                 variant="outline"
                 isDisabled={result.first}
                 onClick={() => onPageChange(result.page - 1)}
@@ -188,13 +215,14 @@ function PageNavigation({
             </Text>
             <Button
                 minH="44px"
+                w={{ base: "full", sm: "auto" }}
                 variant="outline"
                 isDisabled={result.last}
                 onClick={() => onPageChange(result.page + 1)}
             >
                 Siguiente
             </Button>
-        </ButtonGroup>
+        </Stack>
     );
 }
 
@@ -226,6 +254,30 @@ export function PendingPurchaseOrdersSection({
         embeddedItems: report.items ?? [],
         fetchPage: fetchPendingPurchaseOrdersPage,
     });
+    const [downloading, setDownloading] = useState(false);
+    const toast = useToast();
+
+    const downloadExcel = async () => {
+        if (report.ordenes === 0 || downloading) return;
+        setDownloading(true);
+        try {
+            const data = await downloadPendingPurchaseOrdersExcel();
+            triggerExcelDownload(
+                data,
+                pendingPurchaseOrdersExcelFilename(new Date()),
+            );
+        } catch (error: unknown) {
+            toast({
+                title: "No se pudo descargar el Excel de OCM pendientes",
+                description: requestErrorMessage(error),
+                status: "error",
+                duration: 6000,
+                isClosable: true,
+            });
+        } finally {
+            setDownloading(false);
+        }
+    };
 
     return (
         <Card variant="outline">
@@ -240,11 +292,31 @@ export function PendingPurchaseOrdersSection({
                         <KpiCard label="Valor pendiente sin IVA" value={formatCurrency(report.valorPendienteSinIva)} help="Sobre las cantidades pendientes" />
                         <KpiCard label="Cantidades pendientes" value={formatQuantities(report.cantidadesPorUnidad)} help="Separadas por unidad de medida" />
                     </SimpleGrid>
-                    <DetailToggle
-                        expanded={detail.expanded}
-                        disabled={report.ordenes === 0}
-                        onClick={() => detail.setExpanded(!detail.expanded)}
-                    />
+                    <Stack
+                        direction={{ base: "column", sm: "row" }}
+                        spacing={2}
+                        align={{ base: "stretch", sm: "center" }}
+                    >
+                        <DetailToggle
+                            expanded={detail.expanded}
+                            disabled={report.ordenes === 0}
+                            onClick={() => detail.setExpanded(!detail.expanded)}
+                        />
+                        <Button
+                            variant="outline"
+                            colorScheme="green"
+                            minH="44px"
+                            leftIcon={<DownloadIcon />}
+                            isLoading={downloading}
+                            loadingText="Generando Excel…"
+                            isDisabled={report.ordenes === 0}
+                            w={{ base: "full", sm: "auto" }}
+                            title={`Exporta las líneas pendientes de ${formatInteger(report.ordenes)} OCM`}
+                            onClick={downloadExcel}
+                        >
+                            Descargar Excel
+                        </Button>
+                    </Stack>
                     {detail.expanded ? (
                         <Stack spacing={3}>
                             <DetailState loading={detail.loading} error={detail.error} />
@@ -265,22 +337,9 @@ export function PendingPurchaseOrdersSection({
                                                     </AccordionButton>
                                                 </h4>
                                                 <AccordionPanel px={{ base: 0, md: 4 }}>
-                                                    <TableContainer>
-                                                        <Table size="sm">
-                                                            <Thead><Tr><Th>Material</Th><Th isNumeric>Ordenado</Th><Th isNumeric>Recibido</Th><Th isNumeric>Pendiente</Th><Th isNumeric>Valor pendiente</Th></Tr></Thead>
-                                                            <Tbody>
-                                                                {order.lineas.map((line) => (
-                                                                    <Tr key={line.itemId}>
-                                                                        <Td><Text fontWeight="semibold">{line.productoNombre}</Text><Text color="app.textMuted" fontSize="xs">{line.productoId}</Text></Td>
-                                                                        <Td isNumeric>{formatQuantity(line.ordenado)}</Td>
-                                                                        <Td isNumeric>{formatQuantity(line.recibidoAplicado)}</Td>
-                                                                        <Td isNumeric>{formatQuantity(line.pendiente)} {line.unidadMedida}</Td>
-                                                                        <Td isNumeric>{formatCurrency(line.valorPendienteSinIva)}</Td>
-                                                                    </Tr>
-                                                                ))}
-                                                            </Tbody>
-                                                        </Table>
-                                                    </TableContainer>
+                                                    <PendingOrderLines
+                                                        lines={order.lineas}
+                                                    />
                                                 </AccordionPanel>
                                             </AccordionItem>
                                         ))}
@@ -296,64 +355,566 @@ export function PendingPurchaseOrdersSection({
     );
 }
 
+function PendingOrderLines({ lines }: { lines: LineaOcmPendiente[] }) {
+    const compact = useBreakpointValue({ base: true, lg: false }) ?? true;
+
+    if (compact) {
+        return (
+            <Stack spacing={3}>
+                {lines.map((line) => (
+                    <Card key={line.itemId} variant="outline">
+                        <CardBody p={3}>
+                            <Stack spacing={3}>
+                                <Box minW={0}>
+                                    <Text fontWeight="semibold">
+                                        {line.productoNombre}
+                                    </Text>
+                                    <Text color="app.textMuted" fontSize="xs">
+                                        {line.productoId}
+                                    </Text>
+                                </Box>
+                                <SimpleGrid columns={2} spacing={3}>
+                                    <CompactMetric
+                                        label="Ordenado"
+                                        value={formatQuantity(line.ordenado)}
+                                    />
+                                    <CompactMetric
+                                        label="Recibido"
+                                        value={formatQuantity(line.recibidoAplicado)}
+                                    />
+                                    <CompactMetric
+                                        label="Pendiente"
+                                        value={`${formatQuantity(line.pendiente)} ${line.unidadMedida}`}
+                                    />
+                                    <CompactMetric
+                                        label="Valor pendiente"
+                                        value={formatCurrency(
+                                            line.valorPendienteSinIva,
+                                        )}
+                                    />
+                                </SimpleGrid>
+                            </Stack>
+                        </CardBody>
+                    </Card>
+                ))}
+            </Stack>
+        );
+    }
+
+    return (
+        <TableContainer>
+            <Table size="sm">
+                <Thead>
+                    <Tr>
+                        <Th>Material</Th>
+                        <Th isNumeric>Ordenado</Th>
+                        <Th isNumeric>Recibido</Th>
+                        <Th isNumeric>Pendiente</Th>
+                        <Th isNumeric>Valor pendiente</Th>
+                    </Tr>
+                </Thead>
+                <Tbody>
+                    {lines.map((line) => (
+                        <Tr key={line.itemId}>
+                            <Td>
+                                <Text fontWeight="semibold">
+                                    {line.productoNombre}
+                                </Text>
+                                <Text color="app.textMuted" fontSize="xs">
+                                    {line.productoId}
+                                </Text>
+                            </Td>
+                            <Td isNumeric>{formatQuantity(line.ordenado)}</Td>
+                            <Td isNumeric>
+                                {formatQuantity(line.recibidoAplicado)}
+                            </Td>
+                            <Td isNumeric>
+                                {formatQuantity(line.pendiente)}{" "}
+                                {line.unidadMedida}
+                            </Td>
+                            <Td isNumeric>
+                                {formatCurrency(line.valorPendienteSinIva)}
+                            </Td>
+                        </Tr>
+                    ))}
+                </Tbody>
+            </Table>
+        </TableContainer>
+    );
+}
+
+function triggerExcelDownload(data: ArrayBuffer, filename: string) {
+    const blob = new Blob([data], { type: EXCEL_MIME });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(objectUrl);
+}
+
+function pendingPurchaseOrdersExcelFilename(date: Date) {
+    return reportExcelFilename("ocm_pendientes", date);
+}
+
+function reportExcelFilename(prefix: string, date: Date) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Bogota",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+    }).formatToParts(date);
+    const value = (type: string) =>
+        parts.find((part) => part.type === type)?.value ?? "00";
+    return [
+        `${prefix}_`,
+        `${value("year")}-${value("month")}-${value("day")}`,
+        `_${value("hour")}${value("minute")}.xlsx`,
+    ].join("");
+}
+
 export function OpenProductionOrdersSection({
     report,
+    wipReport,
     contractVersion,
     cutoff,
-}: PendingSectionProps & { report: MaterialDirectoOp }) {
-    const detail = usePagedDetail<OpMaterial>({
+}: PendingSectionProps & {
+    report: MaterialDirectoOp;
+    wipReport?: WipMaterialEstimado;
+}) {
+    const [mode, setMode] = useState<"DISPENSADO" | "WIP">("DISPENSADO");
+    const [downloading, setDownloading] = useState<
+        "DISPENSADO" | "WIP" | null
+    >(null);
+    const help = useDisclosure();
+    const toast = useToast();
+    const materialDetail = usePagedDetail<OpMaterial>({
         contractVersion,
         cutoff,
         embeddedItems: report.items ?? [],
         fetchPage: fetchOpenProductionOrdersPage,
     });
+    const wipDetail = usePagedDetail<OpWipMaterial>({
+        contractVersion,
+        cutoff,
+        embeddedItems: wipReport?.items ?? [],
+        fetchPage: fetchWipMaterialEstimatePage,
+    });
+    const wipAvailable = contractVersion >= 5 && Boolean(wipReport);
+
+    useEffect(() => {
+        if (!wipAvailable && mode === "WIP") {
+            setMode("DISPENSADO");
+        }
+    }, [mode, wipAvailable]);
+
+    const downloadExcel = async (target: "DISPENSADO" | "WIP") => {
+        const total = target === "DISPENSADO"
+            ? report.ordenes
+            : wipReport?.ordenes ?? 0;
+        if (total === 0 || downloading) return;
+        setDownloading(target);
+        try {
+            const data = target === "DISPENSADO"
+                ? await downloadOpenProductionOrdersMaterialExcel()
+                : await downloadWipMaterialEstimateExcel();
+            triggerExcelDownload(
+                data,
+                reportExcelFilename(
+                    target === "DISPENSADO"
+                        ? "material_dispensado_op_abiertas"
+                        : "wip_material_estimado",
+                    new Date(),
+                ),
+            );
+        } catch (error: unknown) {
+            toast({
+                title: target === "DISPENSADO"
+                    ? "No se pudo descargar el Excel de material dispensado"
+                    : "No se pudo descargar el Excel de WIP",
+                description: requestErrorMessage(error),
+                status: "error",
+                duration: 6000,
+                isClosable: true,
+            });
+        } finally {
+            setDownloading(null);
+        }
+    };
 
     return (
-        <Card variant="outline">
-            <CardBody p={{ base: 3, md: 5 }}>
-                <Stack spacing={4}>
-                    <SectionHeading title="Estimación de material directo en OP abiertas" description="Dispensaciones directas y reposiciones de averías asociadas a órdenes aún abiertas." />
-                    <Text color="app.textMuted" fontSize="sm">No es WIP contable: no incluye mano de obra, capacidad, indirectos, pérdidas ni asientos.</Text>
-                    <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={3}>
-                        <KpiCard label="Órdenes abiertas" value={formatInteger(report.ordenes)} help={`${formatInteger(report.referencias)} referencias dispensadas`} />
-                        <KpiCard label="Valor estimado" value={formatCurrency(report.valorEstimado)} help="Según costo maestro vigente" />
-                        <KpiCard label="Cantidades dispensadas" value={formatQuantities(report.cantidadesPorUnidad)} help="Separadas por unidad de medida" />
-                    </SimpleGrid>
-                    <DetailToggle
-                        expanded={detail.expanded}
-                        disabled={report.ordenes === 0}
-                        onClick={() => detail.setExpanded(!detail.expanded)}
-                    />
-                    {detail.expanded ? (
-                        <Stack spacing={3}>
-                            <DetailState loading={detail.loading} error={detail.error} />
-                            {!detail.loading && !detail.error && detail.result ? (
-                                <>
-                                    <TableContainer>
-                                        <Table size="sm">
-                                            <Thead><Tr><Th>OP</Th><Th>Lote</Th><Th>Fecha de referencia</Th><Th>Estado</Th><Th isNumeric>Referencias</Th><Th>Cantidades</Th><Th isNumeric>Valor estimado</Th></Tr></Thead>
-                                            <Tbody>
-                                                {detail.result.items.map((order) => (
-                                                    <Tr key={order.opId}>
-                                                        <Td fontWeight="semibold">{order.opId}</Td>
-                                                        <Td>{order.lote || "—"}</Td>
-                                                        <Td>{order.fechaReferencia ? formatDateTime(order.fechaReferencia) : "—"}</Td>
-                                                        <Td><Badge colorScheme="blue">{order.estado}</Badge></Td>
-                                                        <Td isNumeric>{formatInteger(order.referencias)}</Td>
-                                                        <Td>{formatQuantities(order.cantidadesPorUnidad)}</Td>
-                                                        <Td isNumeric>{formatCurrency(order.valorEstimado)}</Td>
-                                                    </Tr>
-                                                ))}
-                                            </Tbody>
-                                        </Table>
-                                    </TableContainer>
-                                    <PageNavigation result={detail.result} onPageChange={detail.setPage} />
-                                </>
-                            ) : null}
-                        </Stack>
+        <>
+            <Card variant="outline">
+                <CardBody p={{ base: 3, md: 5 }}>
+                    <Stack spacing={4}>
+                        <HStack align="flex-start" spacing={2}>
+                            <Box flex={1} minW={0}>
+                                <SectionHeading
+                                    title="Material asociado a OP abiertas"
+                                    description="Salidas formales hacia producción y estimación del componente material en proceso."
+                                />
+                            </Box>
+                            <Tooltip
+                                label="Cómo se calculan Material dispensado y WIP"
+                                hasArrow
+                            >
+                                <IconButton
+                                    aria-label="Cómo se calculan Material dispensado y WIP"
+                                    icon={<QuestionIcon />}
+                                    variant="ghost"
+                                    minW="44px"
+                                    minH="44px"
+                                    onClick={help.onOpen}
+                                />
+                            </Tooltip>
+                        </HStack>
+
+                        <ButtonGroup
+                            isAttached
+                            size="sm"
+                            w={{ base: "full", md: "fit-content" }}
+                            aria-label="Vista de materiales asociados a OP"
+                        >
+                            <Button
+                                flex={{ base: 1, md: "initial" }}
+                                minH="44px"
+                                h="auto"
+                                py={2}
+                                whiteSpace="normal"
+                                colorScheme={
+                                    mode === "DISPENSADO" ? "green" : undefined
+                                }
+                                variant={
+                                    mode === "DISPENSADO" ? "solid" : "outline"
+                                }
+                                onClick={() => setMode("DISPENSADO")}
+                            >
+                                Material dispensado
+                            </Button>
+                            <Button
+                                flex={{ base: 1, md: "initial" }}
+                                minH="44px"
+                                h="auto"
+                                py={2}
+                                whiteSpace="normal"
+                                colorScheme={mode === "WIP" ? "purple" : undefined}
+                                variant={mode === "WIP" ? "solid" : "outline"}
+                                isDisabled={!wipAvailable}
+                                title={!wipAvailable
+                                    ? "WIP requiere la versión 5 del informe"
+                                    : undefined}
+                                onClick={() => setMode("WIP")}
+                            >
+                                WIP
+                            </Button>
+                        </ButtonGroup>
+
+                        {mode === "DISPENSADO" ? (
+                            <ProductionMaterialView
+                                report={report}
+                                detail={materialDetail}
+                                dateLabel="Fecha de referencia"
+                                getDate={(order) => order.fechaReferencia}
+                                orderLabel="Órdenes abiertas"
+                                referencesHelp="referencias dispensadas"
+                                quantitiesLabel="Cantidades dispensadas"
+                                valueHelp="Según costo maestro vigente"
+                                note="Salidas físicas inventariables desde GENERAL. Incluye dispensaciones normales y reposiciones por avería."
+                                downloading={downloading === "DISPENSADO"}
+                                onDownload={() => downloadExcel("DISPENSADO")}
+                            />
+                        ) : wipReport ? (
+                            <ProductionMaterialView
+                                report={wipReport}
+                                detail={wipDetail}
+                                dateLabel="Inicio WIP"
+                                getDate={(order) => order.fechaInicioWip}
+                                orderLabel="Órdenes con WIP"
+                                referencesHelp="referencias cargadas"
+                                quantitiesLabel="Cantidades cargadas"
+                                valueHelp="Costo material bruto estimado"
+                                note="Incluye material dispensado, reposiciones y consumos directos. No descuenta averías y no representa WIP contable."
+                                downloading={downloading === "WIP"}
+                                onDownload={() => downloadExcel("WIP")}
+                            />
+                        ) : (
+                            <Alert status="info" borderRadius="md">
+                                <AlertIcon />
+                                La vista WIP estará disponible con la versión 5
+                                del informe de almacén.
+                            </Alert>
+                        )}
+                    </Stack>
+                </CardBody>
+            </Card>
+
+            <MaterialOpHelpModal
+                isOpen={help.isOpen}
+                onClose={help.onClose}
+            />
+        </>
+    );
+}
+
+interface ProductionOrderRow {
+    opId: number;
+    lote?: string | null;
+    estado: number;
+    referencias: number;
+    cantidadesPorUnidad: Array<{
+        unidadMedida: string;
+        cantidad: number;
+    }>;
+    valorEstimado: number;
+}
+
+interface DetailController<T> {
+    expanded: boolean;
+    setExpanded: (expanded: boolean) => void;
+    setPage: (page: number) => void;
+    result?: PaginaInformeInventario<T>;
+    loading: boolean;
+    error: string;
+}
+
+function ProductionMaterialView<T extends ProductionOrderRow>({
+    report,
+    detail,
+    dateLabel,
+    getDate,
+    orderLabel,
+    referencesHelp,
+    quantitiesLabel,
+    valueHelp,
+    note,
+    downloading,
+    onDownload,
+}: {
+    report: MaterialDirectoOp | WipMaterialEstimado;
+    detail: DetailController<T>;
+    dateLabel: string;
+    getDate: (order: T) => string | null | undefined;
+    orderLabel: string;
+    referencesHelp: string;
+    quantitiesLabel: string;
+    valueHelp: string;
+    note: string;
+    downloading: boolean;
+    onDownload: () => void;
+}) {
+    return (
+        <Stack spacing={4}>
+            <Text color="app.textMuted" fontSize="sm">{note}</Text>
+            <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={3}>
+                <KpiCard
+                    label={orderLabel}
+                    value={formatInteger(report.ordenes)}
+                    help={`${formatInteger(report.referencias)} ${referencesHelp}`}
+                />
+                <KpiCard
+                    label="Valor estimado"
+                    value={formatCurrency(report.valorEstimado)}
+                    help={valueHelp}
+                />
+                <KpiCard
+                    label={quantitiesLabel}
+                    value={formatQuantities(report.cantidadesPorUnidad)}
+                    help="Separadas por unidad de medida"
+                />
+            </SimpleGrid>
+
+            <Stack
+                direction={{ base: "column", sm: "row" }}
+                spacing={2}
+                align={{ base: "stretch", sm: "center" }}
+            >
+                <DetailToggle
+                    expanded={detail.expanded}
+                    disabled={report.ordenes === 0}
+                    onClick={() => detail.setExpanded(!detail.expanded)}
+                />
+                <Button
+                    variant="outline"
+                    colorScheme="green"
+                    minH="44px"
+                    w={{ base: "full", sm: "auto" }}
+                    leftIcon={<DownloadIcon />}
+                    isLoading={downloading}
+                    loadingText="Generando Excel…"
+                    isDisabled={report.ordenes === 0}
+                    onClick={onDownload}
+                >
+                    Descargar Excel
+                </Button>
+            </Stack>
+
+            {detail.expanded ? (
+                <Stack spacing={3}>
+                    <DetailState loading={detail.loading} error={detail.error} />
+                    {!detail.loading && !detail.error && detail.result ? (
+                        <>
+                            <ProductionOrdersDataView
+                                items={detail.result.items}
+                                dateLabel={dateLabel}
+                                getDate={getDate}
+                            />
+                            <PageNavigation
+                                result={detail.result}
+                                onPageChange={detail.setPage}
+                            />
+                        </>
                     ) : null}
                 </Stack>
-            </CardBody>
-        </Card>
+            ) : null}
+        </Stack>
     );
+}
+
+function ProductionOrdersDataView<T extends ProductionOrderRow>({
+    items,
+    dateLabel,
+    getDate,
+}: {
+    items: T[];
+    dateLabel: string;
+    getDate: (order: T) => string | null | undefined;
+}) {
+    const compact = useBreakpointValue({ base: true, lg: false }) ?? true;
+
+    if (compact) {
+        return (
+            <Stack spacing={3}>
+                {items.map((order) => {
+                    const date = getDate(order);
+                    return (
+                        <Card key={order.opId} variant="outline">
+                            <CardBody p={3}>
+                                <Stack spacing={3}>
+                                    <HStack
+                                        justify="space-between"
+                                        align="flex-start"
+                                        flexWrap="wrap"
+                                    >
+                                        <Box minW={0}>
+                                            <Text fontWeight="semibold">
+                                                OP {order.opId}
+                                            </Text>
+                                            <Text
+                                                color="app.textMuted"
+                                                fontSize="sm"
+                                            >
+                                                Lote {order.lote || "—"}
+                                            </Text>
+                                        </Box>
+                                        <Badge colorScheme="blue">
+                                            {productionOrderState(order.estado)}
+                                        </Badge>
+                                    </HStack>
+                                    <SimpleGrid columns={2} spacing={3}>
+                                        <CompactMetric
+                                            label={dateLabel}
+                                            value={date
+                                                ? formatDateTime(date)
+                                                : "—"}
+                                        />
+                                        <CompactMetric
+                                            label="Referencias"
+                                            value={formatInteger(
+                                                order.referencias,
+                                            )}
+                                        />
+                                        <CompactMetric
+                                            label="Cantidades"
+                                            value={formatQuantities(
+                                                order.cantidadesPorUnidad,
+                                            )}
+                                        />
+                                        <CompactMetric
+                                            label="Valor estimado"
+                                            value={formatCurrency(
+                                                order.valorEstimado,
+                                            )}
+                                        />
+                                    </SimpleGrid>
+                                </Stack>
+                            </CardBody>
+                        </Card>
+                    );
+                })}
+            </Stack>
+        );
+    }
+
+    return (
+        <TableContainer>
+            <Table size="sm">
+                <Thead>
+                    <Tr>
+                        <Th>OP</Th>
+                        <Th>Lote</Th>
+                        <Th>{dateLabel}</Th>
+                        <Th>Estado</Th>
+                        <Th isNumeric>Referencias</Th>
+                        <Th>Cantidades</Th>
+                        <Th isNumeric>Valor estimado</Th>
+                    </Tr>
+                </Thead>
+                <Tbody>
+                    {items.map((order) => {
+                        const date = getDate(order);
+                        return (
+                            <Tr key={order.opId}>
+                                <Td fontWeight="semibold">{order.opId}</Td>
+                                <Td>{order.lote || "—"}</Td>
+                                <Td>{date ? formatDateTime(date) : "—"}</Td>
+                                <Td>
+                                    <Badge colorScheme="blue">
+                                        {productionOrderState(order.estado)}
+                                    </Badge>
+                                </Td>
+                                <Td isNumeric>
+                                    {formatInteger(order.referencias)}
+                                </Td>
+                                <Td>
+                                    {formatQuantities(
+                                        order.cantidadesPorUnidad,
+                                    )}
+                                </Td>
+                                <Td isNumeric>
+                                    {formatCurrency(order.valorEstimado)}
+                                </Td>
+                            </Tr>
+                        );
+                    })}
+                </Tbody>
+            </Table>
+        </TableContainer>
+    );
+}
+
+function CompactMetric({ label, value }: { label: string; value: string }) {
+    return (
+        <Box minW={0}>
+            <Text color="app.textMuted" fontSize="xs">{label}</Text>
+            <Text
+                fontWeight="semibold"
+                fontSize="sm"
+                overflowWrap="anywhere"
+            >
+                {value}
+            </Text>
+        </Box>
+    );
+}
+
+function productionOrderState(status: number) {
+    if (status === 3) return "Fabricación completada";
+    if (status === 0) return "Abierta";
+    if (status >= 11) return "Con dispensaciones";
+    return `Estado ${status}`;
 }

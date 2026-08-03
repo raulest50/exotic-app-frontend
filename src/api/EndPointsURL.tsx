@@ -118,6 +118,8 @@ export default class EndPointsURL{
     public update_proceso_produccion:string;
     public is_deletable_proceso_produccion:string;
     public delete_proceso_produccion:string;
+    public proceso_produccion_documentos_versiones:string;
+    public proceso_produccion_documento_archivo:string;
 
 
     // compras resource
@@ -139,6 +141,7 @@ export default class EndPointsURL{
     public get_movimientos_by_producto:string;
     public exportar_movimientos_excel: string;
     public exportar_inventario_excel: string;
+    public inventario_consolidado: string;
     public save_ajuste_inventario: string;
     public ajustes_lotes_disponibles: string;
     public ajustes_lotes_existentes: string;
@@ -785,6 +788,8 @@ export default class EndPointsURL{
         this.update_proceso_produccion = `${domain}/${procesos_produccion_res}/update_proc_produccion/{id}`;
         this.is_deletable_proceso_produccion = `${domain}/${procesos_produccion_res}/is-deletable/{id}`;
         this.delete_proceso_produccion = `${domain}/${procesos_produccion_res}/delete/{id}`;
+        this.proceso_produccion_documentos_versiones = `${domain}/${procesos_produccion_res}/{id}/documentos/versiones`;
+        this.proceso_produccion_documento_archivo = `${domain}/${procesos_produccion_res}/{id}/documentos/versiones/{versionId}/archivo`;
 
         // ventas endpoints
         this.create_vendedor = `${domain}/${vendedor_res}/crear_vendedor`;
@@ -795,6 +800,7 @@ export default class EndPointsURL{
         this.get_movimientos_by_producto = `${domain}/${movimientos_res}/get_movimientos_by_producto`;
         this.exportar_movimientos_excel = `${domain}/${movimientos_res}/exportar-movimientos-excel`;
         this.exportar_inventario_excel = `${domain}/inventario/exportar-excel`;
+        this.inventario_consolidado = `${domain}/inventario/consolidado`;
         this.save_ajuste_inventario = `${domain}/${movimientos_res}/ajustes`;
         this.ajustes_lotes_disponibles = `${domain}/${movimientos_res}/ajustes/lotes-disponibles`;
         this.ajustes_lotes_existentes = `${domain}/${movimientos_res}/ajustes/lotes-existentes`;

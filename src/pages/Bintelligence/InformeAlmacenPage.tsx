@@ -80,6 +80,7 @@ export default function InformeAlmacenPage({
             />
             <OpenProductionOrdersSection
                 report={report.materialDirectoOp}
+                wipReport={report.wipMaterialEstimado}
                 contractVersion={report.versionContrato}
                 cutoff={report.fechaHoraCorteStock}
             />

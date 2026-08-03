@@ -28,6 +28,7 @@ import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
 import { ProcesoProduccionEntity, TimeModelType, RecursoProduccion } from '../../types.tsx';
 import CustomDecimalInput from '../../../../components/CustomDecimalInput/CustomDecimalInput.tsx';
+import ProcesoDocumentosSection from './ProcesoDocumentosSection.tsx';
 
 interface EditarProcesoModalProps {
   isOpen: boolean;
@@ -331,6 +332,18 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
                 </Button>
               </Flex>
             </Box>
+
+            <Divider />
+            {procesoEditado.procesoId ? (
+              <ProcesoDocumentosSection
+                procesoId={procesoEditado.procesoId}
+                isOpen={isOpen}
+                onDocumentVersionCreated={() => {
+                  setIsDeletable(false);
+                  setShowDeleteSection(false);
+                }}
+              />
+            ) : null}
 
             {/* Sección: Eliminar Proceso (solo visible si es eliminable) */}
             {isDeletable && (

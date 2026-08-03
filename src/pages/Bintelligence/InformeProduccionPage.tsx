@@ -96,7 +96,7 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
                 </Badge>
             </Stack>
 
-            <SimpleGrid columns={{ base: 2, xl: 4 }} spacing={3}>
+            <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} spacing={3}>
                 <KpiCard
                     label="Unidades producidas"
                     value={formatInteger(summary.unidadesProducidas)}
@@ -212,7 +212,7 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
                     ) : null}
                 </Stack>
 
-                <SimpleGrid columns={{ base: 2, xl: 4 }} spacing={3}>
+                <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} spacing={3}>
                     <KpiCard
                         label="Sin producción"
                         value={formatInteger(exceptionAnalysis.counts.SIN_PRODUCCION)}

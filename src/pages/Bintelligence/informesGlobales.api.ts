@@ -17,6 +17,7 @@ import type {
     OcmPendiente,
     OrdenAlertaInventario,
     OpMaterial,
+    OpWipMaterial,
     HorizonteCoberturaMaterial,
     OrdenCoberturaMaterial,
     OrdenAjusteMaterial,
@@ -32,7 +33,7 @@ export async function fetchInventoryReport(
     const response = await axios.get<InformeInventario>(
         endpoints.biInformesGlobalesAlmacen(query),
     );
-    if (![2, 3, 4].includes(response.data?.versionContrato)) {
+    if (![2, 3, 4, 5].includes(response.data?.versionContrato)) {
         throw new Error("El backend no expone la versión actual del informe de almacén.");
     }
     return normalizeInventoryReport(response.data);
@@ -87,6 +88,14 @@ export async function fetchPendingPurchaseOrdersPage(
     return normalizePage(response.data);
 }
 
+export async function downloadPendingPurchaseOrdersExcel(): Promise<ArrayBuffer> {
+    const response = await axios.get<ArrayBuffer>(
+        `${endpoints.domain}/bi/informes-globales/almacen/ocm-pendientes/excel`,
+        { responseType: "arraybuffer" },
+    );
+    return response.data;
+}
+
 export async function fetchOpenProductionOrdersPage(
     page: number,
     size: number,
@@ -97,6 +106,34 @@ export async function fetchOpenProductionOrdersPage(
         { params: { page, size }, signal },
     );
     return normalizePage(response.data);
+}
+
+export async function downloadOpenProductionOrdersMaterialExcel(): Promise<ArrayBuffer> {
+    const response = await axios.get<ArrayBuffer>(
+        `${endpoints.domain}/bi/informes-globales/almacen/op-material-directo/excel`,
+        { responseType: "arraybuffer" },
+    );
+    return response.data;
+}
+
+export async function fetchWipMaterialEstimatePage(
+    page: number,
+    size: number,
+    signal?: AbortSignal,
+): Promise<PaginaInformeInventario<OpWipMaterial>> {
+    const response = await axios.get<PaginaInformeInventario<OpWipMaterial>>(
+        `${endpoints.domain}/bi/informes-globales/almacen/wip-material-estimado`,
+        { params: { page, size }, signal },
+    );
+    return normalizePage(response.data);
+}
+
+export async function downloadWipMaterialEstimateExcel(): Promise<ArrayBuffer> {
+    const response = await axios.get<ArrayBuffer>(
+        `${endpoints.domain}/bi/informes-globales/almacen/wip-material-estimado/excel`,
+        { responseType: "arraybuffer" },
+    );
+    return response.data;
 }
 
 export async function fetchProductionReport(
@@ -197,18 +234,7 @@ export async function fetchInventoryAlerts({
     };
 }
 
-export async function fetchMaterialCoverage({
-    windowDays,
-    demandSource,
-    horizon,
-    group,
-    unit,
-    order,
-    search,
-    page,
-    size,
-    signal,
-}: {
+export interface MaterialCoverageSelection {
     windowDays: 7 | 30 | 90;
     demandSource: FuenteDemandaCobertura;
     horizon: HorizonteCoberturaMaterial;
@@ -216,6 +242,34 @@ export async function fetchMaterialCoverage({
     unit: string;
     order: OrdenCoberturaMaterial;
     search: string;
+}
+
+function materialCoverageParams({
+    windowDays,
+    demandSource,
+    horizon,
+    group,
+    unit,
+    order,
+    search,
+}: MaterialCoverageSelection) {
+    return {
+        ventanaDias: windowDays,
+        fuenteDemanda: demandSource,
+        horizonte: horizon,
+        grupo: group,
+        ...(unit ? { unidad: unit } : {}),
+        orden: order,
+        ...(search.trim() ? { buscar: search.trim() } : {}),
+    };
+}
+
+export async function fetchMaterialCoverage({
+    page,
+    size,
+    signal,
+    ...selection
+}: MaterialCoverageSelection & {
     page: number;
     size: 10 | 20;
     signal?: AbortSignal;
@@ -224,13 +278,7 @@ export async function fetchMaterialCoverage({
         `${endpoints.domain}/bi/informes-globales/almacen/cobertura`,
         {
             params: {
-                ventanaDias: windowDays,
-                fuenteDemanda: demandSource,
-                horizonte: horizon,
-                grupo: group,
-                ...(unit ? { unidad: unit } : {}),
-                orden: order,
-                ...(search.trim() ? { buscar: search.trim() } : {}),
+                ...materialCoverageParams(selection),
                 page,
                 size,
             },
@@ -258,7 +306,8 @@ export async function fetchMaterialCoverage({
         };
     return {
         ...response.data,
-        fuenteDemanda: response.data.fuenteDemanda ?? demandSource,
+        fuenteDemanda:
+            response.data.fuenteDemanda ?? selection.demandSource,
         escenarioExploratorio: response.data.escenarioExploratorio ?? false,
         motivosConfianzaBaja: response.data.motivosConfianzaBaja ?? [],
         diasConDemanda: response.data.diasConDemanda
@@ -282,6 +331,19 @@ export async function fetchMaterialCoverage({
             items: (responsePage.items ?? []).map(normalizeCoverageEstimate),
         },
     };
+}
+
+export async function downloadMaterialCoverageExcel(
+    selection: MaterialCoverageSelection,
+): Promise<ArrayBuffer> {
+    const response = await axios.get<ArrayBuffer>(
+        `${endpoints.domain}/bi/informes-globales/almacen/cobertura/excel`,
+        {
+            params: materialCoverageParams(selection),
+            responseType: "arraybuffer",
+        },
+    );
+    return response.data;
 }
 
 export function requestErrorMessage(error: unknown): string {
@@ -369,6 +431,14 @@ function normalizeInventoryReport(report: InformeInventario): InformeInventario 
             cantidadesPorUnidad: report.materialDirectoOp.cantidadesPorUnidad ?? [],
             items: report.materialDirectoOp.items ?? [],
         },
+        wipMaterialEstimado: report.wipMaterialEstimado
+            ? {
+                ...report.wipMaterialEstimado,
+                cantidadesPorUnidad:
+                    report.wipMaterialEstimado.cantidadesPorUnidad ?? [],
+                items: report.wipMaterialEstimado.items ?? [],
+            }
+            : undefined,
     };
 }
 

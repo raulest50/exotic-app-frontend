@@ -31,6 +31,7 @@ export interface InformeInventario {
     ajustesInventario?: AjustesInventario;
     ocmPendientes: OcmPendientes;
     materialDirectoOp: MaterialDirectoOp;
+    wipMaterialEstimado?: WipMaterialEstimado;
     notas: NotaInforme[];
 }
 
@@ -315,6 +316,24 @@ export interface OpMaterial {
     lote?: string | null;
     estado: number;
     fechaReferencia?: string | null;
+    referencias: number;
+    cantidadesPorUnidad: CantidadUnidad[];
+    valorEstimado: number;
+}
+
+export interface WipMaterialEstimado {
+    ordenes: number;
+    referencias: number;
+    cantidadesPorUnidad: CantidadUnidad[];
+    valorEstimado: number;
+    items?: OpWipMaterial[];
+}
+
+export interface OpWipMaterial {
+    opId: number;
+    lote?: string | null;
+    estado: number;
+    fechaInicioWip?: string | null;
     referencias: number;
     cantidadesPorUnidad: CantidadUnidad[];
     valorEstimado: number;

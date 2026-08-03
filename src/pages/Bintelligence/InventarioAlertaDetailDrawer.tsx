@@ -28,7 +28,12 @@ export default function InventarioAlertaDetailDrawer({
     if (!alert) return null;
 
     return (
-        <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="md">
+        <Drawer
+            isOpen={isOpen}
+            placement="right"
+            onClose={onClose}
+            size={{ base: "full", md: "md" }}
+        >
             <DrawerOverlay />
             <DrawerContent>
                 <DrawerCloseButton />

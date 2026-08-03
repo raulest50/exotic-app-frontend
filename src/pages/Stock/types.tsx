@@ -18,6 +18,25 @@ export interface ProductStockDTO {
     stock: number;
 }
 
+export type AlmacenStock = 'GENERAL' | 'AVERIAS' | 'CALIDAD' | 'DEVOLUCIONES';
+
+export type AlcanceStock =
+    | 'FISICO_TOTAL'
+    | 'DISPONIBLE_OPERATIVO'
+    | 'RESTRINGIDO'
+    | 'PERSONALIZADO';
+
+export interface InventarioConsolidadoPageDTO {
+    content: ProductStockDTO[];
+    number: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    alcance: AlcanceStock;
+    almacenesIncluidos: AlmacenStock[];
+    fechaHoraCorte: string;
+}
+
 export interface Movimiento {
     movimientoId: number;
     cantidad: number;
@@ -26,4 +45,3 @@ export interface Movimiento {
     observaciones: string;
     fechaMovimiento: string;
 }
-

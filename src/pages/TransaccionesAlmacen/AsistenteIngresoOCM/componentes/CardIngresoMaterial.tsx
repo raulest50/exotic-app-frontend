@@ -116,6 +116,7 @@ export function CardIngresoMaterial({
                 <Td>
                     <Flex align="center" gap={2}>
                         <Checkbox
+                            aria-label={`Excluir material ${item.material.productoId}`}
                             isChecked={excluded}
                             onChange={handleExcludedChange}
                             colorScheme="red"
@@ -159,7 +160,7 @@ export function CardIngresoMaterial({
                 <Td textAlign="center">
                     {!excluded && (
                         <IconButton
-                            aria-label={isExpanded ? "Ocultar lotes" : "Mostrar lotes"}
+                            aria-label={`${isExpanded ? "Ocultar" : "Mostrar"} lotes de ${item.material.productoId}`}
                             icon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
                             size="sm"
                             onClick={() => setIsExpanded(!isExpanded)}
@@ -175,6 +176,7 @@ export function CardIngresoMaterial({
                                 <Flex justifyContent="space-between" alignItems="center" mb={4}>
                                     <Text fontWeight="semibold">Lotes del Material</Text>
                                     <Button
+                                        aria-label={`Agregar lote a ${item.material.productoId}`}
                                         leftIcon={<AddIcon />}
                                         colorScheme="teal"
                                         size="sm"
@@ -211,6 +213,7 @@ export function CardIngresoMaterial({
                                                     </Td>
                                                     <Td>
                                                         <Input
+                                                            aria-label={`Fecha de fabricacion lote ${index + 1} de ${item.material.productoId}`}
                                                             type="date"
                                                             size="sm"
                                                             value={lote.productionDate}
@@ -219,6 +222,7 @@ export function CardIngresoMaterial({
                                                     </Td>
                                                     <Td>
                                                         <Input
+                                                            aria-label={`Fecha de vencimiento lote ${index + 1} de ${item.material.productoId}`}
                                                             type="date"
                                                             size="sm"
                                                             value={lote.expirationDate}
@@ -228,6 +232,7 @@ export function CardIngresoMaterial({
                                                     </Td>
                                                     <Td>
                                                         <Input
+                                                            aria-label={`Cantidad lote ${index + 1} de ${item.material.productoId}`}
                                                             type="number"
                                                             size="sm"
                                                             value={lote.cantidad}
@@ -239,7 +244,7 @@ export function CardIngresoMaterial({
                                                     </Td>
                                                     <Td textAlign="center">
                                                         <IconButton
-                                                            aria-label="Eliminar lote"
+                                                            aria-label={`Eliminar lote ${index + 1} de ${item.material.productoId}`}
                                                             icon={<MinusIcon />}
                                                             size="sm"
                                                             colorScheme="red"

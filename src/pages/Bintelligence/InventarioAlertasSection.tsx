@@ -22,6 +22,7 @@ import {
     IconButton,
     Input,
     Select,
+    SimpleGrid,
     Spinner,
     Stack,
     Table,
@@ -33,6 +34,7 @@ import {
     Thead,
     Tooltip,
     Tr,
+    useBreakpointValue,
     useDisclosure,
 } from "@chakra-ui/react";
 import { type KeyboardEvent, useEffect, useMemo, useState } from "react";
@@ -716,9 +718,15 @@ function ExplorationView({
                     Mostrando {firstItem}–{lastItem} de{" "}
                     {pageData?.totalElements ?? 0}
                 </Text>
-                <HStack justify={{ base: "space-between", md: "flex-end" }}>
+                <Stack
+                    direction={{ base: "column", sm: "row" }}
+                    align="center"
+                    justify={{ base: "stretch", md: "flex-end" }}
+                >
                     <Button
                         size="sm"
+                        minH="44px"
+                        w={{ base: "full", sm: "auto" }}
                         variant="outline"
                         isDisabled={!pageData || pageData.first || loading}
                         onClick={() => onPageChange(
@@ -734,13 +742,15 @@ function ExplorationView({
                     </Text>
                     <Button
                         size="sm"
+                        minH="44px"
+                        w={{ base: "full", sm: "auto" }}
                         variant="outline"
                         isDisabled={!pageData || pageData.last || loading}
                         onClick={() => onPageChange((pageData?.page ?? 0) + 1)}
                     >
                         Siguiente ›
                     </Button>
-                </HStack>
+                </Stack>
             </Stack>
 
             <Button alignSelf="center" variant="outline" onClick={onBack}>
@@ -757,6 +767,81 @@ function AlertsTable({
     items: AlertaStock[];
     onSelect: (alert: AlertaStock) => void;
 }) {
+    const compact = useBreakpointValue({ base: true, lg: false }) ?? true;
+
+    if (compact) {
+        return (
+            <Stack spacing={3}>
+                {items.map((alert) => (
+                    <Card
+                        key={`${alert.tipo}-${alert.productoId}`}
+                        variant="outline"
+                    >
+                        <CardBody p={3}>
+                            <Stack spacing={3}>
+                                <HStack
+                                    justify="space-between"
+                                    align="flex-start"
+                                    flexWrap="wrap"
+                                >
+                                    <Box minW={0}>
+                                        <Text fontWeight="semibold">
+                                            {alert.productoNombre}
+                                        </Text>
+                                        <Text
+                                            color="app.textMuted"
+                                            fontSize="xs"
+                                        >
+                                            {alert.productoId}
+                                        </Text>
+                                    </Box>
+                                    <Badge colorScheme={alertColor(alert.tipo)}>
+                                        {alertLabel(alert.tipo)}
+                                    </Badge>
+                                </HStack>
+                                <Badge
+                                    variant="outline"
+                                    alignSelf="flex-start"
+                                >
+                                    {groupLabel(alert.grupo)}
+                                </Badge>
+                                <SimpleGrid columns={2} spacing={3}>
+                                    <AlertMetric
+                                        label="Stock"
+                                        value={`${formatQuantity(alert.stock)} ${alert.unidadMedida}`}
+                                    />
+                                    <AlertMetric
+                                        label="Umbral"
+                                        value={quantityOrDash(
+                                            alert.umbral,
+                                            alert.unidadMedida,
+                                        )}
+                                    />
+                                    <AlertMetric
+                                        label="Brecha"
+                                        value={quantityOrDash(
+                                            alert.brechaUmbral,
+                                            alert.unidadMedida,
+                                        )}
+                                    />
+                                </SimpleGrid>
+                                <Button
+                                    minH="44px"
+                                    variant="outline"
+                                    colorScheme="blue"
+                                    rightIcon={<ChevronRightIcon />}
+                                    onClick={() => onSelect(alert)}
+                                >
+                                    Ver detalle
+                                </Button>
+                            </Stack>
+                        </CardBody>
+                    </Card>
+                ))}
+            </Stack>
+        );
+    }
+
     return (
         <TableContainer>
             <Table size="sm">
@@ -815,6 +900,17 @@ function AlertsTable({
                 </Tbody>
             </Table>
         </TableContainer>
+    );
+}
+
+function AlertMetric({ label, value }: { label: string; value: string }) {
+    return (
+        <Box minW={0}>
+            <Text color="app.textMuted" fontSize="xs">{label}</Text>
+            <Text fontWeight="semibold" fontSize="sm" overflowWrap="anywhere">
+                {value}
+            </Text>
+        </Box>
     );
 }
 

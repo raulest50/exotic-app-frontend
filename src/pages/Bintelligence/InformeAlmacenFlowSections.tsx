@@ -1,4 +1,5 @@
 import {
+    Box,
     Button,
     ButtonGroup,
     Card,
@@ -60,7 +61,7 @@ export function MovementsSection({
 
     return (
         <Stack spacing={4}>
-            <SimpleGrid columns={{ base: 2, xl: 4 }} spacing={3}>
+            <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} spacing={3}>
                 {summaries.map(([label, summary]) => (
                     <KpiCard
                         key={label}
@@ -157,33 +158,81 @@ export function MovementsSection({
                             title="Flujos físicos por unidad"
                             description="Cantidades del periodo consultado, separadas para evitar sumar magnitudes incompatibles."
                         />
-                        <TableContainer>
-                            <Table size="sm">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Unidad</Th>
-                                        <Th isNumeric>Recepciones</Th>
-                                        <Th isNumeric>Dispensaciones</Th>
-                                        <Th isNumeric>Prod. terminado</Th>
-                                        <Th isNumeric>Otros ingresos</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
-                                    {movements.porUnidad.map((unit) => (
-                                        <Tr key={unit.unidadMedida}>
-                                            <Td fontWeight="semibold">{unit.unidadMedida}</Td>
-                                            <Td isNumeric>{formatQuantity(unit.recepcionesOcm)}</Td>
-                                            <Td isNumeric>{formatQuantity(unit.dispensaciones)}</Td>
-                                            <Td isNumeric>{formatQuantity(unit.productoTerminado)}</Td>
-                                            <Td isNumeric>{formatQuantity(unit.otrosIngresos)}</Td>
+                        {compactChart ? (
+                            <Stack spacing={3}>
+                                {movements.porUnidad.map((unit) => (
+                                    <Box
+                                        key={unit.unidadMedida}
+                                        borderWidth="1px"
+                                        borderRadius="md"
+                                        p={3}
+                                    >
+                                        <Stack spacing={3}>
+                                            <Text fontWeight="semibold">
+                                                Unidad {unit.unidadMedida}
+                                            </Text>
+                                            <SimpleGrid columns={2} spacing={3}>
+                                                <FlowMetric
+                                                    label="Recepciones"
+                                                    value={unit.recepcionesOcm}
+                                                />
+                                                <FlowMetric
+                                                    label="Dispensaciones"
+                                                    value={unit.dispensaciones}
+                                                />
+                                                <FlowMetric
+                                                    label="Prod. terminado"
+                                                    value={unit.productoTerminado}
+                                                />
+                                                <FlowMetric
+                                                    label="Otros ingresos"
+                                                    value={unit.otrosIngresos}
+                                                />
+                                            </SimpleGrid>
+                                        </Stack>
+                                    </Box>
+                                ))}
+                            </Stack>
+                        ) : (
+                            <TableContainer>
+                                <Table size="sm">
+                                    <Thead>
+                                        <Tr>
+                                            <Th>Unidad</Th>
+                                            <Th isNumeric>Recepciones</Th>
+                                            <Th isNumeric>Dispensaciones</Th>
+                                            <Th isNumeric>Prod. terminado</Th>
+                                            <Th isNumeric>Otros ingresos</Th>
                                         </Tr>
-                                    ))}
-                                </Tbody>
-                            </Table>
-                        </TableContainer>
+                                    </Thead>
+                                    <Tbody>
+                                        {movements.porUnidad.map((unit) => (
+                                            <Tr key={unit.unidadMedida}>
+                                                <Td fontWeight="semibold">{unit.unidadMedida}</Td>
+                                                <Td isNumeric>{formatQuantity(unit.recepcionesOcm)}</Td>
+                                                <Td isNumeric>{formatQuantity(unit.dispensaciones)}</Td>
+                                                <Td isNumeric>{formatQuantity(unit.productoTerminado)}</Td>
+                                                <Td isNumeric>{formatQuantity(unit.otrosIngresos)}</Td>
+                                            </Tr>
+                                        ))}
+                                    </Tbody>
+                                </Table>
+                            </TableContainer>
+                        )}
                     </Stack>
                 </CardBody>
             </Card>
         </Stack>
+    );
+}
+
+function FlowMetric({ label, value }: { label: string; value: number }) {
+    return (
+        <Box minW={0}>
+            <Text color="app.textMuted" fontSize="xs">{label}</Text>
+            <Text fontWeight="semibold" overflowWrap="anywhere">
+                {formatQuantity(value)}
+            </Text>
+        </Box>
     );
 }

@@ -207,6 +207,9 @@ export default function InformesGlobalesTab() {
                 <Button
                     flex={{ base: 1, md: "initial" }}
                     minH="44px"
+                    h="auto"
+                    py={2}
+                    whiteSpace="normal"
                     colorScheme={activePage === "almacen" ? "green" : undefined}
                     variant={activePage === "almacen" ? "solid" : "outline"}
                     onClick={() => setActivePage("almacen")}
@@ -217,6 +220,9 @@ export default function InformesGlobalesTab() {
                 <Button
                     flex={{ base: 1, md: "initial" }}
                     minH="44px"
+                    h="auto"
+                    py={2}
+                    whiteSpace="normal"
                     colorScheme={activePage === "produccion" ? "green" : undefined}
                     variant={activePage === "produccion" ? "solid" : "outline"}
                     onClick={() => setActivePage("produccion")}
@@ -241,7 +247,11 @@ export default function InformesGlobalesTab() {
                                     El stock, las OCM pendientes, las OP abiertas y la cobertura representan el estado actual.
                                 </Text>
                             </Stack>
-                            <Badge colorScheme="blue">
+                            <Badge
+                                colorScheme="blue"
+                                whiteSpace="normal"
+                                textAlign="center"
+                            >
                                 Periodo aplicado: {queryPeriodLabel(appliedQuery)}
                             </Badge>
                         </Stack>
