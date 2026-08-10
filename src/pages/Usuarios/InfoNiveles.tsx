@@ -303,12 +303,12 @@ const canSaveFromBi = biAccessLevel >= 3;`,
   },
   [Modulo.ORGANIGRAMA]: {
     title: "Modulo de Organigrama",
-    description: "Gestion de estructura organizacional y cargos",
+    description: "Gestion de estructura organizacional e identidad corporativa por tab",
     implementationDetails: false,
     levels: [
-      { level: 1, description: "Consulta de la estructura organizacional." },
-      { level: 2, description: "Edicion de cargos y relaciones." },
-      { level: 3, description: "Control total del modulo." },
+      { level: 1, description: "Consulta del tab asignado y, para Mision y Vision, acceso al historial." },
+      { level: 2, description: "Edicion del tab asignado: cargos y relaciones, o nuevas versiones de Mision, Vision y Valores." },
+      { level: 3, description: "Mantiene las capacidades de edicion sobre el tab asignado." },
     ],
   },
   [Modulo.CALIDAD]: {

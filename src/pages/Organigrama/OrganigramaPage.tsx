@@ -23,20 +23,18 @@ import { MisionVision } from "./MisionVision";
 import { AccessLevel } from "./types";
 import { useAuth } from "../../context/AuthContext";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
-import { tabAccessRule } from "../../auth/accessHelpers";
-import { useAccessSnapshot, useModuleAccessLevel } from "../../auth/usePermissions";
-import type { AccessRule } from "../../auth/accessModel.ts";
+import { useTabPermission } from "../../auth/usePermissions";
 
 export default function OrganigramaPage() {
-  const { accesosReady } = useAuth();
-  const access = useAccessSnapshot();
-  const { nivel: organigramaNivel, isMaster } = useModuleAccessLevel(Modulo.ORGANIGRAMA);
+  const { accesosReady, isMasterLike } = useAuth();
+  const organigramaPermission = useTabPermission(Modulo.ORGANIGRAMA, "ORGANIGRAMA");
+  const misionVisionPermission = useTabPermission(Modulo.ORGANIGRAMA, "MISION_VISION");
 
   const accessLevel = useMemo((): AccessLevel => {
-    if (isMaster || organigramaNivel >= AccessLevel.EDIT) return AccessLevel.EDIT;
-    if (organigramaNivel >= AccessLevel.VIEW) return AccessLevel.VIEW;
+    if (organigramaPermission.nivel >= AccessLevel.EDIT) return AccessLevel.EDIT;
+    if (organigramaPermission.nivel >= AccessLevel.VIEW) return AccessLevel.VIEW;
     return AccessLevel.VIEW;
-  }, [isMaster, organigramaNivel]);
+  }, [organigramaPermission.nivel]);
 
   const isLoading = !accesosReady;
   const organizationChartId = "org-1";
@@ -47,28 +45,28 @@ export default function OrganigramaPage() {
   const tabSelectedBg = useColorModeValue("blue.100", "blue.800");
   const tabSelectedColor = useColorModeValue("blue.700", "blue.200");
 
-  const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
+  const tabs: Array<{ key: string; label: string; render: () => JSX.Element; canSee: boolean }> = [
     {
       key: "organigrama",
       label: "Organigrama",
       render: () => (
         <OrganizationChart
           accessLevel={accessLevel}
-          isMaster={isMaster}
+          isMaster={isMasterLike}
           organizationChartId={organizationChartId}
         />
       ),
-      accesoValido: tabAccessRule(Modulo.ORGANIGRAMA, "ORGANIGRAMA", 1),
+      canSee: organigramaPermission.canSee,
     },
     {
       key: "mision-vision",
       label: "Mision y Vision",
-      render: () => <MisionVision />,
-      accesoValido: tabAccessRule(Modulo.ORGANIGRAMA, "MISION_VISION", 1),
+      render: () => <MisionVision canEdit={misionVisionPermission.nivel >= AccessLevel.EDIT} />,
+      canSee: misionVisionPermission.canSee,
     },
   ];
 
-  const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));
+  const visibleTabs = tabs.filter((tab) => tab.canSee);
   const safeTabIndex = Math.min(tabIndex, Math.max(visibleTabs.length - 1, 0));
 
   return (
