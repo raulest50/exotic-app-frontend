@@ -247,9 +247,9 @@ export default class EndPointsURL{
     public reset_non_production_passwords: string;
 
     // organigrama endpoints
-    public get_all_cargos: string;
-    public save_cargo_with_manual: string;
-    public save_changes_organigrama: string;
+    public organigrama_snapshot: string;
+    public organigrama_manual: (cargoId: string) => string;
+    public organigrama_manual_url: (cargoId: string) => string;
     public mision_vision_vigente: string;
     public mision_vision_versiones: string;
 
@@ -950,9 +950,11 @@ export default class EndPointsURL{
 
         // organigrama endpoints
         const organigrama_res = 'organigrama';
-        this.get_all_cargos = `${domain}/${organigrama_res}`;
-        this.save_cargo_with_manual = `${domain}/${organigrama_res}/save_mfunciones`;
-        this.save_changes_organigrama = `${domain}/${organigrama_res}/save_changes_organigrama`;
+        this.organigrama_snapshot = `${domain}/api/${organigrama_res}`;
+        this.organigrama_manual = (cargoId: string) =>
+            `${this.organigrama_snapshot}/cargos/${encodeURIComponent(cargoId)}/manual-funciones`;
+        this.organigrama_manual_url = (cargoId: string) =>
+            `${this.organigrama_snapshot}/cargos/${encodeURIComponent(cargoId)}/manual-funciones-url`;
         this.mision_vision_vigente = `${domain}/api/${organigrama_res}/mision-vision/vigente`;
         this.mision_vision_versiones = `${domain}/api/${organigrama_res}/mision-vision/versiones`;
 

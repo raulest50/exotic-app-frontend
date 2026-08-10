@@ -1,76 +1,47 @@
-import { Handle, NodeProps, Position, Node } from "@xyflow/react";
-import { 
-  Box, 
-  Flex, 
-  Text, 
-  VStack, 
-  HStack, 
-  Icon, 
-  Menu, 
-  MenuButton, 
-  MenuList,
-  MenuItem,
+import { useCallback, type CSSProperties } from "react";
+import { Handle, type NodeProps, Position } from "@xyflow/react";
+import {
+  Box,
+  Flex,
+  HStack,
+  Icon,
   IconButton,
-  useColorModeValue
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Text,
+  useColorModeValue,
+  VStack,
 } from "@chakra-ui/react";
 import { FaUserTie } from "react-icons/fa";
-import { MdBusinessCenter, MdEdit, MdFileDownload } from "react-icons/md";
 import { LuMousePointerClick } from "react-icons/lu";
-import { Cargo, AccessLevel } from "../types";
-import { useCallback, type CSSProperties } from "react";
+import { MdBusinessCenter, MdEdit, MdInfoOutline } from "react-icons/md";
+import { AccessLevel, type OrganigramaNode } from "../types";
 
-const handleStyle: CSSProperties = {
-  width: "0.8em",
-  height: "0.8em",
-};
+const handleStyle: CSSProperties = { width: "0.8em", height: "0.8em" };
 
-interface PositionNodeData extends Cargo, Record<string, unknown> {
-  accessLevel?: AccessLevel;
-  isMaster?: boolean;
-  onEdit?: (nodeId: string) => void;
-  onViewManual?: (nodeId: string) => void;
-}
-
-type CargoNodeType = Node<PositionNodeData>;
-
-interface CargoNodeProps extends NodeProps<CargoNodeType> {
-  accessLevel: AccessLevel;
-  isMaster: boolean;
-}
-
-export default function CargoNode(props: CargoNodeProps) {
+export default function CargoNode(props: NodeProps<OrganigramaNode>) {
   const cargo = props.data;
+  const canEdit = cargo.accessLevel === AccessLevel.EDIT || cargo.isMaster;
   const actionHoverBg = useColorModeValue("blue.50", "blue.900");
   const assignedUserColor = useColorModeValue("blue.600", "blue.200");
-  // Get accessLevel and isMaster from props.data instead of props
-  const accessLevel = cargo.accessLevel || props.accessLevel;
-  const isMaster = cargo.isMaster || props.isMaster;
 
-  // Callback para editar el cargo
-  const handleEdit = useCallback((event: React.MouseEvent) => {
-    // Detener la propagación para evitar que el evento llegue al nodo
-    event.stopPropagation();
+  const handleEdit = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      cargo.onEdit(props.id);
+    },
+    [cargo, props.id],
+  );
 
-    // Aquí se implementaría la lógica para abrir el diálogo de edición
-    // Esta función sería proporcionada por el componente padre
-    if (props.data.onEdit) {
-      props.data.onEdit(props.id);
-    }
-  }, [props.id, props.data]);
-
-  // Callback para ver el manual de funciones
-  const handleViewManual = useCallback((event: React.MouseEvent) => {
-    event.stopPropagation();
-
-    // Si hay una función para ver el manual, usarla
-    if (props.data.onViewManual) {
-      props.data.onViewManual(props.id);
-    }
-    // Si no, abrir el manual de funciones en una nueva pestaña
-    else if (cargo.urlDocManualFunciones) {
-      window.open(cargo.urlDocManualFunciones, '_blank');
-    }
-  }, [props.id, props.data, cargo.urlDocManualFunciones]);
+  const handleViewDetails = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      cargo.onViewDetails(props.id);
+    },
+    [cargo, props.id],
+  );
 
   return (
     <Box
@@ -79,14 +50,14 @@ export default function CargoNode(props: CargoNodeProps) {
       borderRadius="md"
       boxShadow={props.selected ? "0 0 10px gold" : ""}
       transition="box-shadow 0.1s ease"
-      _hover={props.selected ? { boxShadow: "0 0 10px gold" } : { boxShadow: "0 0 10px blue" }}
+      _hover={{ boxShadow: props.selected ? "0 0 10px gold" : "0 0 10px blue" }}
       w="220px"
       bg="app.surface"
     >
       <Flex direction="column" align="center">
         <Box w="full" p="0.5em" bg="blue.500" color="white">
           <Text fontWeight="bold" textAlign="center">
-            {cargo.tituloCargo}
+            {cargo.tituloCargo || "Cargo sin título"}
           </Text>
         </Box>
 
@@ -96,12 +67,12 @@ export default function CargoNode(props: CargoNodeProps) {
           <HStack w="full">
             <Icon as={MdBusinessCenter} color="blue.500" />
             <Text fontSize="sm" fontWeight="medium">
-              {cargo.departamento}
+              {cargo.departamento || "Sin departamento"}
             </Text>
           </HStack>
 
-          <Text fontSize="xs" color="app.textMuted" noOfLines={2}>
-            {cargo.descripcionCargo}
+          <Text fontSize="xs" color="app.textMuted" noOfLines={2} minH="2.4em">
+            {cargo.descripcionCargo || "Sin descripción"}
           </Text>
 
           {cargo.usuario && (
@@ -110,31 +81,27 @@ export default function CargoNode(props: CargoNodeProps) {
             </Text>
           )}
 
-          {/* Menú de acciones */}
-          <Box position="absolute" bottom="2px" right="2px">
+          <Box position="absolute" bottom="2px" right="2px" className="nodrag">
             <Menu>
               <MenuButton
                 as={IconButton}
-                aria-label="Opciones"
+                aria-label="Opciones del cargo"
                 icon={<LuMousePointerClick />}
                 variant="ghost"
                 size="lg"
                 color="blue.500"
                 _hover={{ bg: actionHoverBg }}
-                onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
+                onClick={(event: React.MouseEvent<HTMLButtonElement>) => event.stopPropagation()}
               />
               <MenuList>
-                {(accessLevel === AccessLevel.EDIT || isMaster) && (
+                {canEdit && (
                   <MenuItem icon={<MdEdit />} onClick={handleEdit}>
-                    Editar
+                    Editar cargo
                   </MenuItem>
                 )}
-
-                {cargo.urlDocManualFunciones && (
-                  <MenuItem icon={<MdFileDownload />} onClick={handleViewManual}>
-                    Ver Manual de Funciones
-                  </MenuItem>
-                )}
+                <MenuItem icon={<MdInfoOutline />} onClick={handleViewDetails}>
+                  Detalles y manual
+                </MenuItem>
               </MenuList>
             </Menu>
           </Box>
@@ -145,15 +112,14 @@ export default function CargoNode(props: CargoNodeProps) {
           position={Position.Top}
           id="target"
           style={handleStyle}
-          isConnectable={accessLevel === AccessLevel.EDIT || isMaster}
+          isConnectable={canEdit}
         />
-
         <Handle
           type="source"
           position={Position.Bottom}
           id="source"
           style={handleStyle}
-          isConnectable={accessLevel === AccessLevel.EDIT || isMaster}
+          isConnectable={canEdit}
         />
       </Flex>
     </Box>

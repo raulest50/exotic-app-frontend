@@ -40,6 +40,7 @@ export default function OrganigramaPage() {
   const organizationChartId = "org-1";
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
   const [tabIndex, setTabIndex] = useState(0);
+  const [organigramaDirty, setOrganigramaDirty] = useState(false);
   const tabHoverBg = useColorModeValue("blue.50", "blue.900");
   const tabHoverColor = useColorModeValue("blue.600", "blue.200");
   const tabSelectedBg = useColorModeValue("blue.100", "blue.800");
@@ -54,6 +55,7 @@ export default function OrganigramaPage() {
           accessLevel={accessLevel}
           isMaster={isMasterLike}
           organizationChartId={organizationChartId}
+          onDirtyChange={setOrganigramaDirty}
         />
       ),
       canSee: organigramaPermission.canSee,
@@ -68,6 +70,19 @@ export default function OrganigramaPage() {
 
   const visibleTabs = tabs.filter((tab) => tab.canSee);
   const safeTabIndex = Math.min(tabIndex, Math.max(visibleTabs.length - 1, 0));
+  const handleTabChange = (nextIndex: number) => {
+    const currentTab = visibleTabs[safeTabIndex];
+    const nextTab = visibleTabs[nextIndex];
+    if (
+      currentTab?.key === "organigrama" &&
+      nextTab?.key !== "organigrama" &&
+      organigramaDirty &&
+      !window.confirm("Hay cambios sin guardar en el organigrama. ¿Cambiar de pestaña y descartarlos?")
+    ) {
+      return;
+    }
+    setTabIndex(nextIndex);
+  };
 
   return (
     <Container minW={["auto", "container.lg", "container.xl"]} minH={"100vh"} w={"full"} h={"full"}>
@@ -104,7 +119,7 @@ export default function OrganigramaPage() {
 
             <Collapse in={isOpen} animateOpacity>
               <Box w="250px" p={4}>
-                <Tabs variant="unstyled" colorScheme="blue" orientation="vertical" index={safeTabIndex} onChange={(index) => setTabIndex(index)}>
+                <Tabs variant="unstyled" colorScheme="blue" orientation="vertical" index={safeTabIndex} onChange={handleTabChange}>
                   <TabList mb="1em" spacing={3}>
                     {visibleTabs.map((tab) => (
                       <Tab
@@ -132,7 +147,7 @@ export default function OrganigramaPage() {
           </Flex>
 
           <Box flex="1" ml={isOpen ? 4 : 0}>
-            <Tabs variant="enclosed" colorScheme="blue" isLazy index={safeTabIndex} onChange={(index) => setTabIndex(index)}>
+            <Tabs variant="enclosed" colorScheme="blue" isLazy index={safeTabIndex} onChange={handleTabChange}>
               <TabList display="none">
                 {visibleTabs.map((tab) => (
                   <Tab key={tab.key}>{tab.label}</Tab>

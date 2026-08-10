@@ -1,32 +1,32 @@
-// Path: src/pages/Organigrama/types.tsx
-// Used in: src/pages/Organigrama/OrganigramaPage.tsx; src/pages/Organigrama/components/EditCargoDialog.tsx; src/pages/Organigrama/components/CargoNode.tsx; src/pages/Organigrama/components/OrganizationChart.tsx
-// Summary: Tipos para cargos y niveles de acceso utilizados en la visualización y edición del organigrama.
-// Nivel de acceso del usuario
+import type { Node } from "@xyflow/react";
+
 export enum AccessLevel {
-  VIEW = 1,  // Solo visualización
-  EDIT = 2   // Edición completa
+  VIEW = 1,
+  EDIT = 2,
 }
 
-// Interfaz unificada para el cargo en el organigrama
+/** Datos editables del cargo. La posición vive únicamente en Node.position. */
 export interface Cargo {
   idCargo: string;
-  tituloCargo: string;        // Título del cargo (será el mismo que el título del nodo)
-  descripcionCargo: string;   // Descripción breve
-  departamento: string;       // Departamento
-  urlDocManualFunciones?: string; // url del pdf con el manual de funciones aprovado
-  manualFuncionesFile?: File;  // Archivo del manual de funciones (solo en frontend)
-  usuario?: string;           // Id Usuario asignado al cargo
-
-  // Propiedades del nodo (anteriormente en CargoNodeData)
-  posicionX: number;          // Posición X en el diagrama
-  posicionY: number;          // Posición Y en el diagrama
-  nivel: number;              // Nivel jerárquico
-  jefeInmediato?: string;     // ID Nodo al que reporta
+  tituloCargo: string;
+  descripcionCargo: string;
+  departamento: string;
+  usuario?: string;
+  nivel: number;
+  urlDocManualFunciones?: string;
 }
 
-// Estructura completa del organigrama
-export interface OrganizationChart {
-  id: string;
-  name: string;
-  cargos: Cargo[];
+export interface OrganigramaNodeData extends Cargo, Record<string, unknown> {
+  accessLevel: AccessLevel;
+  isMaster: boolean;
+  onEdit: (nodeId: string) => void;
+  onViewDetails: (nodeId: string) => void;
+}
+
+export type OrganigramaNode = Node<OrganigramaNodeData, "positionNode">;
+
+export interface OrganigramaUser {
+  id: number;
+  username: string;
+  nombreCompleto?: string;
 }
