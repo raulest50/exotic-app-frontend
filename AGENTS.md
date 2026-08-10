@@ -16,7 +16,7 @@ Estas instrucciones aplican a todo el repositorio `exotic-app-frontend`.
 ## Gestor de paquetes
 
 - Usar Bun exclusivamente.
-- `bun.lockb` es el lockfile autoritativo.
+- `bun.lock` es el lockfile autoritativo.
 - No ejecutar `npm install`, `npm ci`, `npm run`, `npx`, Yarn ni pnpm.
 - No crear `package-lock.json`, `yarn.lock` ni `pnpm-lock.yaml`.
 - Instalar dependencias con `bun install --frozen-lockfile` solamente cuando sea
@@ -101,4 +101,3 @@ Antes de entregar un cambio de código:
 - deben preservarse los cambios locales ajenos a la tarea;
 - el informe final debe enumerar los comandos ejecutados, sus resultados y
   cualquier verificación que no haya sido posible completar.
-
