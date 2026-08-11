@@ -32,7 +32,6 @@ import PersonalPage from "./pages/Personal/PersonalPage.tsx";
 import AdministracionAlertasPage from "./pages/AdministracionAlertas/AdministracionAlertasPage.tsx";
 import AdministracionGlobalPage from "./pages/AdministracionGlobal/AdministracionGlobalPage.tsx";
 import MasterDirectivesPage from "./pages/SuperMasterDirectives/MasterDirectivesPage.tsx";
-import CronogramaPage from "./pages/Cronograma/CronogramaPage.tsx";
 import OrganigramaPage from "./pages/Organigrama/OrganigramaPage.tsx";
 import CalidadPage from "./pages/Calidad/CalidadPage.tsx";
 import TransaccionesAlmacenPage from "./pages/TransaccionesAlmacen/TransaccionesAlmacenPage.tsx";
@@ -199,15 +198,6 @@ const router = createBrowserRouter(
                             <SuperMasterDirectivesProtectedRoute>
                                 <MasterDirectivesPage/>
                             </SuperMasterDirectivesProtectedRoute>
-                        </AccessRoute>
-                    }
-                />
-
-                <Route
-                    path="cronograma"
-                    element={
-                        <AccessRoute accessRule={moduleAccessRule(Modulo.CRONOGRAMA)}>
-                            <CronogramaPage/>
                         </AccessRoute>
                     }
                 />

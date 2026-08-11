@@ -88,7 +88,6 @@ export const TABS_BY_MODULO: Record<Modulo, TabDefinition[]> = {
         tab("JORNADA_LABORAL", "Jornada Laboral"),
     ],
     [Modulo.MASTER_DIRECTIVES]: [tab("MAIN", "General")],
-    [Modulo.CRONOGRAMA]: [tab("MAIN", "General")],
     [Modulo.ORGANIGRAMA]: [
         tab("ORGANIGRAMA", "Organigrama"),
         tab("MISION_VISION", "Mision y Vision"),

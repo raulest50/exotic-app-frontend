@@ -28,6 +28,7 @@ v2 to v3 migration.
 - `backup/pre-chakra-v3-2026-08-11` points to the baseline commit.
 - React, React Router, Vite, `wx-react-gantt`, backend contracts, routes, and
   permissions are held constant.
+- Historical note: `Cronograma` and `wx-react-gantt` were removed after this
+  baseline was captured; they are no longer part of the frontend runtime.
 - `framer-motion` remains installed because the application imports it directly.
 - Chakra UI v2 and v3 will not coexist in the runtime bundle.
-

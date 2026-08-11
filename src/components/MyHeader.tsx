@@ -40,7 +40,6 @@ function MyHeader({title,}:MyHeaderProps){
             'administracion_alertas': Modulo.ADMINISTRACION_ALERTAS,
             'administracion_global': Modulo.ADMINISTRACION_GLOBAL,
             'super_master_directives': Modulo.MASTER_DIRECTIVES,
-            'cronograma': Modulo.CRONOGRAMA,
             'organigrama': Modulo.ORGANIGRAMA,
             'calidad': Modulo.CALIDAD,
             'pagos-proveedores': Modulo.PAGOS_PROVEEDORES,

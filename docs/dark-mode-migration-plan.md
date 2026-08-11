@@ -93,7 +93,7 @@ The theme lives in `src/theme.ts` and is consumed by `src/main.tsx`. The origina
 | 13 | `Personal` | ✅ Migrado | Audited; no source changes required because route uses Chakra defaults and shared styles already migrated. Build and browser verification pending by user. |
 | 14 | `Organigrama` | ✅ Migrado | Sidebar, tab states, organization nodes, cargo dialog, and mission/vision secondary text migrated. Build and browser verification pending by user. |
 | 15 | `Contabilidad` | ✅ Migrado | Account catalog hover and account-detail summary panel migrated. Build and browser verification pending by user. |
-| 16 | `Cronograma` | ✅ Migrado | Gantt theme class now follows Chakra color mode. Build and browser verification pending by user. |
+| 16 | `Cronograma` | 🗑️ Retirado | Feature removed on 2026-08-11 because it was not part of the client requirements. |
 | 17 | `AdministracionAlertas` | ✅ Migrado | Audited; no source changes required because route has no problematic light literals. Build and browser verification pending by user. |
 | 18 | `MasterDirectives` | ✅ Migrado | Directive helper text and explanatory warning contrast migrated. Build and browser verification pending by user. |
 | 19 | `LoginPage` | ✅ Migrado | Login panel loading text and login background/panel dark-mode colors migrated. Build and browser verification pending by user. |
@@ -130,7 +130,7 @@ Use this template when closing a module migration:
 
 - The base migration has introduced the semantic token vocabulary but has not migrated route-specific page files.
 - Shared tabs using `my_style_tab` and shared inputs using `input_style` now resolve through tokens, preserving light-mode values.
-- `Usuarios`, `Stock`, `OperacionesCriticasBD`, `TransaccionesAlmacen`, `Productos`, `Compras`, `Proveedores`, `ActivosFijos`, `GestionAreasOperativas`, `AreaOperativaPanel`, `Bintelligence`, `Personal`, `Organigrama`, `Contabilidad`, `Cronograma`, `AdministracionAlertas`, `MasterDirectives`, `LoginPage`, `Ventas`, `Clientes`, and `PagosProveedores` have been migrated or audited at the source level. Build and browser verification remain pending because the user will run them personally.
+- `Usuarios`, `Stock`, `OperacionesCriticasBD`, `TransaccionesAlmacen`, `Productos`, `Compras`, `Proveedores`, `ActivosFijos`, `GestionAreasOperativas`, `AreaOperativaPanel`, `Bintelligence`, `Personal`, `Organigrama`, `Contabilidad`, `AdministracionAlertas`, `MasterDirectives`, `LoginPage`, `Ventas`, `Clientes`, and `PagosProveedores` have been migrated or audited at the source level. Build and browser verification remain pending because the user will run them personally.
 - Future prompts can continue with `Produccion` or choose a lower-conflict module if the current `Produccion` renames are still active.
 
 ## Module Migration Log
@@ -513,25 +513,10 @@ Use this template when closing a module migration:
 
 ### Module: `Cronograma`
 
-- Status: ✅ Migrado
-- Files changed:
-  - `src/pages/Cronograma/GanttDemo.tsx`
-- Light-mode compatibility:
-  - Preserved the existing Willow Gantt theme through `useColorModeValue("wx-willow-theme", "wx-willow-dark-theme")`.
-- Dark-mode checks:
-  - Panels/cards corrected: not applicable
-  - Tables and headers corrected: Gantt package theme variables selected for dark mode
-  - Read-only inputs corrected: not applicable
-  - Row hover/selected states corrected: covered by the package dark theme
-  - Muted text contrast reviewed: covered by the package dark theme
-- Verification:
-  - Targeted literal search: pass
-  - `git diff --check`: pass
-  - `npm run build`: pending by user
-  - Browser route check: pending by user
-- Notes:
-  - Changes are limited to selecting the visual Gantt theme class from Chakra color mode.
-  - Demo tasks, scales, dates, task types, component height, and Gantt behavior were not modified.
+- Status: 🗑️ Retirado on 2026-08-11.
+- The page, route, Home card, permission metadata, and Gantt dependency were
+  removed because this feature was not part of the client requirements.
+- The previous dark-mode migration notes no longer apply to the runtime.
 
 ### Module: `AdministracionAlertas`
 

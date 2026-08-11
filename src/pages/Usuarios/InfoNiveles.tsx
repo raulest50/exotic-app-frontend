@@ -285,16 +285,6 @@ const canSaveFromBi = biAccessLevel >= 3;`,
       { level: 3, description: "Control total de parametrizaciones globales." },
     ],
   },
-  [Modulo.CRONOGRAMA]: {
-    title: "Modulo de Cronograma",
-    description: "Gestion de planificacion y cronogramas",
-    implementationDetails: false,
-    levels: [
-      { level: 1, description: "Visualizacion de cronogramas." },
-      { level: 2, description: "Creacion y modificacion de eventos en cronogramas." },
-      { level: 3, description: "Control total de la planificacion." },
-    ],
-  },
   [Modulo.ORGANIGRAMA]: {
     title: "Modulo de Organigrama",
     description: "Gestion de estructura organizacional e identidad corporativa por tab",
