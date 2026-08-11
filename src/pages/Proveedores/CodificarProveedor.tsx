@@ -1,17 +1,14 @@
 import React, { useState, useRef } from 'react';
 import {
+    Steps,
     Container,
-    FormControl,
-    FormLabel,
     Input,
     Button,
     Textarea,
     useToast,
-    Select,
+    NativeSelect,
     Box,
     Card,
-    CardBody,
-    CardHeader,
     Grid,
     GridItem,
     Heading,
@@ -19,7 +16,7 @@ import {
     VStack,
     Checkbox,
     CheckboxGroup,
-    FormHelperText,
+    Field,
 } from "@chakra-ui/react";
 import axios, { AxiosError } from 'axios';
 import EndPointsURL from "../../api/EndPointsURL.tsx";
@@ -473,107 +470,114 @@ function CodificarProveedor() {
                 {/* Basic Data Grid with additional fields and categories */}
                 <Grid templateColumns={['1fr', 'repeat(2, 1fr)']} gap={4} p="1em" boxShadow="base">
                     <GridItem>
-                        <FormControl isRequired>
-                            <FormLabel>Identificacion</FormLabel>
+                        <Field.Root required>
+                            <Field.Label>Identificacion</Field.Label>
                             <Input
                                 value={id}
-                                onChange={(e) => setId(e.target.value)}
+                                onValueChange={(e) => setId(e.target.value)}
                                 placeholder="Nit o identificación del proveedor"
                             />
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
-                    <FormControl>
-                        <FormLabel>Tipo Identificacion</FormLabel>
-                        <Select
-                            value={tipoIdentificacion}
-                            onChange={(e) => setTipoIdentificacion(Number(e.target.value))}
-                        >
-                            <option value={TIPOS_ID.cc}>Cedula de ciudadania</option>
-                            <option value={TIPOS_ID.nit}>Nit</option>
-                        </Select>
-                    </FormControl>
+                    <Field.Root>
+                        <Field.Label>Tipo Identificacion</Field.Label>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                value={tipoIdentificacion}
+                                onValueChange={(e) => setTipoIdentificacion(Number(e.target.value))}>
+                                <option value={TIPOS_ID.cc}>Cedula de ciudadania</option>
+                                <option value={TIPOS_ID.nit}>Nit</option>
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                    </Field.Root>
                     <GridItem>
-                        <FormControl isRequired>
-                            <FormLabel>Nombre</FormLabel>
+                        <Field.Root required>
+                            <Field.Label>Nombre</Field.Label>
                             <Input
                                 value={nombre}
-                                onChange={(e) => setNombre(e.target.value)}
+                                onValueChange={(e) => setNombre(e.target.value)}
                                 placeholder="Nombre del proveedor"
                             />
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
                     <GridItem colSpan={[1, 2]}>
-                        <FormControl isRequired>
-                            <FormLabel>Dirección</FormLabel>
+                        <Field.Root required>
+                            <Field.Label>Dirección</Field.Label>
                             <Input
                                 value={direccion}
-                                onChange={(e) => setDireccion(e.target.value)}
+                                onValueChange={(e) => setDireccion(e.target.value)}
                                 placeholder="Dirección del proveedor"
                             />
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl isRequired>
-                            <FormLabel>Departamento</FormLabel>
-                            <Select
-                                placeholder="Seleccione un departamento"
-                                value={departamento}
-                                onChange={handleDepartamentoChange}
-                            >
-                                {departamentosColombia.map((depto) => (
-                                    <option key={depto.codigo} value={depto.nombre}>
-                                        {depto.nombre}
-                                    </option>
-                                ))}
-                            </Select>
-                        </FormControl>
+                        <Field.Root required>
+                            <Field.Label>Departamento</Field.Label>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    placeholder="Seleccione un departamento"
+                                    value={departamento}
+                                    onValueChange={handleDepartamentoChange}>
+                                    {departamentosColombia.map((depto) => (
+                                        <option key={depto.codigo} value={depto.nombre}>
+                                            {depto.nombre}
+                                        </option>
+                                    ))}
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl isRequired>
-                            <FormLabel>Ciudad</FormLabel>
-                            <Select
-                                placeholder="Seleccione una ciudad"
-                                value={ciudad}
-                                onChange={handleCiudadChange}
-                                isDisabled={!departamento} // Disable if no department is selected
-                            >
-                                {ciudadesDisponibles.map((ciudad) => (
-                                    <option key={ciudad.codigo} value={ciudad.nombre}>
-                                        {ciudad.nombre}
-                                    </option>
-                                ))}
-                                <option value="otro">Otro</option>
-                            </Select>
+                        <Field.Root required>
+                            <Field.Label>Ciudad</Field.Label>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    placeholder="Seleccione una ciudad"
+                                    value={ciudad}
+                                    onValueChange={handleCiudadChange}
+                                    // Disable if no department is selected
+                                    disabled={!departamento}>
+                                    {ciudadesDisponibles.map((ciudad) => (
+                                        <option key={ciudad.codigo} value={ciudad.nombre}>
+                                            {ciudad.nombre}
+                                        </option>
+                                    ))}
+                                    <option value="otro">Otro</option>
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
 
                             {/* Additional input for "Other city" */}
                             {mostrarInputOtraCiudad && (
                                 <Input
                                     mt={2}
                                     value={otraCiudad}
-                                    onChange={handleOtraCiudadChange}
+                                    onValueChange={handleOtraCiudadChange}
                                     placeholder="Ingrese el nombre de la ciudad"
                                 />
                             )}
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl>
-                            <FormLabel>URL</FormLabel>
+                        <Field.Root>
+                            <Field.Label>URL</Field.Label>
                             <Input
                                 type="url"
                                 value={url}
-                                onChange={(e) => setUrl(e.target.value)}
+                                onValueChange={(e) => setUrl(e.target.value)}
                                 placeholder="Página web (opcional)"
                             />
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
                     <GridItem colSpan={[1, 2]}>
-                        <FormControl >
-                            <FormLabel>Categorías</FormLabel>
+                        <Field.Root >
+                            <Field.Label>Categorías</Field.Label>
                             <CheckboxGroup
-                                colorScheme="green"
+                                colorPalette="green"
                                 value={categorias.map(String)}
-                                onChange={
+                                onValueChange={
                                     (vals: string[]) => {
                                         setCategorias(vals.map(Number));
                                         // only for debuging:
@@ -585,68 +589,68 @@ function CodificarProveedor() {
                                 }
                             >
                                 <VStack align="start">
-                                    <Checkbox value="0">Servicios Operativos</Checkbox>
-                                    <Checkbox value="1">Materias Primas</Checkbox>
-                                    <Checkbox value="2">Materiales de empaque</Checkbox>
-                                    <Checkbox value="3">Servicios administrativos</Checkbox>
-                                    <Checkbox value="4">Equipos y otros servicios</Checkbox>
+                                    <Checkbox.Root value="0"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Servicios Operativos</Checkbox.Label></Checkbox.Root>
+                                    <Checkbox.Root value="1"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Materias Primas</Checkbox.Label></Checkbox.Root>
+                                    <Checkbox.Root value="2"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Materiales de empaque</Checkbox.Label></Checkbox.Root>
+                                    <Checkbox.Root value="3"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Servicios administrativos</Checkbox.Label></Checkbox.Root>
+                                    <Checkbox.Root value="4"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Equipos y otros servicios</Checkbox.Label></Checkbox.Root>
                                 </VStack>
                             </CheckboxGroup>
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
                 </Grid>
 
                 {/* Contactos Grid */}
                 <Box mt={6}>
-                    <FormLabel>Contactos</FormLabel>
+                    <Field.Label>Contactos</Field.Label>
                     <Grid templateColumns={['1fr', 'repeat(3, 1fr)']} gap={4}>
                         {contactos.map((contacto, index) => (
                             <GridItem key={index} borderWidth="1px" borderRadius="md" p={4}>
-                                <FormControl>
-                                    <FormLabel>Nombre Completo</FormLabel>
+                                <Field.Root>
+                                    <Field.Label>Nombre Completo</Field.Label>
                                     <Input
                                         value={contacto.fullName}
-                                        onChange={(e) =>
+                                        onValueChange={(e) =>
                                             handleContactoChange(index, 'fullName', e.target.value)
                                         }
                                         placeholder="Nombre Completo"
                                     />
-                                </FormControl>
-                                <FormControl mt={2}>
-                                    <FormLabel>Cargo</FormLabel>
+                                </Field.Root>
+                                <Field.Root mt={2}>
+                                    <Field.Label>Cargo</Field.Label>
                                     <Input
                                         value={contacto.cargo}
-                                        onChange={(e) =>
+                                        onValueChange={(e) =>
                                             handleContactoChange(index, 'cargo', e.target.value)
                                         }
                                         placeholder="Cargo"
                                     />
-                                </FormControl>
-                                <FormControl mt={2}>
-                                    <FormLabel>Celular</FormLabel>
+                                </Field.Root>
+                                <Field.Root mt={2}>
+                                    <Field.Label>Celular</Field.Label>
                                     <Input
                                         value={contacto.cel}
-                                        onChange={(e) =>
+                                        onValueChange={(e) =>
                                             handleContactoChange(index, 'cel', e.target.value)
                                         }
                                         placeholder="Celular"
                                     />
-                                </FormControl>
-                                <FormControl mt={2}>
-                                    <FormLabel>Correo Electrónico</FormLabel>
+                                </Field.Root>
+                                <Field.Root mt={2}>
+                                    <Field.Label>Correo Electrónico</Field.Label>
                                     <Input
                                         value={contacto.email}
-                                        onChange={(e) =>
+                                        onValueChange={(e) =>
                                             handleContactoChange(index, 'email', e.target.value)
                                         }
                                         placeholder="Correo Electrónico"
                                     />
-                                </FormControl>
+                                </Field.Root>
                                 <Button
                                     mt={"1em"}
                                     variant={"ghost"}
-                                    colorScheme="red"
-                                    isDisabled={ !(
+                                    colorPalette="red"
+                                    disabled={ !(
                                         !contacto.fullName.trim() &&
                                         !contacto.cel.trim() &&
                                         !contacto.cargo.trim() &&
@@ -669,50 +673,54 @@ function CodificarProveedor() {
                 {/* Remaining Proveedor Data Grid */}
                 <Grid templateColumns={['1fr', 'repeat(2, 1fr)']} gap={4} mt={6} p="1em" boxShadow="base">
                     <GridItem>
-                        <FormControl>
-                            <FormLabel>Regimen Tributario</FormLabel>
-                            <Select
-                                value={regimenTributario}
-                                onChange={(e) => setRegimenTributario(Number(e.target.value))}
-                            >
-                                <option value={0}>Regimen Comun</option>
-                                <option value={1}>Regimen Simplificado</option>
-                                <option value={2}>Regimen Especial</option>
-                            </Select>
-                        </FormControl>
+                        <Field.Root>
+                            <Field.Label>Regimen Tributario</Field.Label>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    value={regimenTributario}
+                                    onValueChange={(e) => setRegimenTributario(Number(e.target.value))}>
+                                    <option value={0}>Regimen Comun</option>
+                                    <option value={1}>Regimen Simplificado</option>
+                                    <option value={2}>Regimen Especial</option>
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl isRequired>
-                            <FormLabel>Condición de Pago</FormLabel>
-                            <Select
-                                placeholder="Seleccione..."
-                                value={condicionPago}
-                                onChange={(e) => setCondicionPago(e.target.value)}
-                            >
-                                <option value="credito">Crédito</option>
-                                <option value="contado">Contado</option>
-                            </Select>
-                        </FormControl>
+                        <Field.Root required>
+                            <Field.Label>Condición de Pago</Field.Label>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    placeholder="Seleccione..."
+                                    value={condicionPago}
+                                    onValueChange={(e) => setCondicionPago(e.target.value)}>
+                                    <option value="credito">Crédito</option>
+                                    <option value="contado">Contado</option>
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
+                        </Field.Root>
                     </GridItem>
                     <GridItem colSpan={[1, 2]}>
-                        <FormControl>
-                            <FormLabel>Observaciones</FormLabel>
+                        <Field.Root>
+                            <Field.Label>Observaciones</Field.Label>
                             <Textarea
                                 value={observacion}
-                                onChange={(e) => setObservacion(e.target.value)}
+                                onValueChange={(e) => setObservacion(e.target.value)}
                                 placeholder="Notas adicionales"
                             />
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
                 </Grid>
 
-                <Card mt={6} variant="outline" boxShadow="base">
-                    <CardHeader>
+                <Card.Root mt={6} variant="outline" boxShadow="base">
+                    <Card.Header>
                         <Heading size="sm">Recepciones parciales OCM</Heading>
-                    </CardHeader>
-                    <CardBody>
-                        <FormControl isRequired>
-                            <FormLabel>Limite recepciones parciales permitidas</FormLabel>
+                    </Card.Header>
+                    <Card.Body>
+                        <Field.Root required>
+                            <Field.Label>Limite recepciones parciales permitidas</Field.Label>
                             <Input
                                 type="number"
                                 inputMode="numeric"
@@ -720,23 +728,23 @@ function CodificarProveedor() {
                                 max={limiteRecepcionesParcialesOcmMax}
                                 step={1}
                                 value={limiteRecepcionesParcialesOcm}
-                                onChange={handleLimiteRecepcionesParcialesOcmChange}
+                                onValueChange={handleLimiteRecepcionesParcialesOcmChange}
                                 onKeyDown={blockInvalidLimiteRecepcionesKeys}
                                 placeholder={`Maximo configurable: ${limiteRecepcionesParcialesOcmMax}`}
                             />
-                            <FormHelperText>
+                            <Field.HelperText>
                                 Maximo permitido al configurar proveedor: {limiteRecepcionesParcialesOcmMax}.
-                            </FormHelperText>
-                        </FormControl>
-                    </CardBody>
-                </Card>
+                            </Field.HelperText>
+                        </Field.Root>
+                    </Card.Body>
+                </Card.Root>
 
                 {/* New Grid for File Uploads */}
                 <Grid templateColumns={['1fr', 'repeat(2, 1fr)']} gap={4} mt={6} p="1em" boxShadow="base">
                     <GridItem>
-                        <FormControl>
-                            <VStack spacing={4} align="stretch" alignItems="center">
-                                <FormLabel>RUT</FormLabel>
+                        <Field.Root>
+                            <VStack gap={4} align="stretch" alignItems="center">
+                                <Field.Label>RUT</Field.Label>
                                 <Icon
                                     as={rutFile ? FaFileCircleCheck : FaFileCircleQuestion}
                                     boxSize="4em"
@@ -748,15 +756,15 @@ function CodificarProveedor() {
                                     ref={rutInputRef}
                                     style={{ display: 'none' }}
                                     accept="application/pdf"
-                                    onChange={handleRutChange}
+                                    onValueChange={handleRutChange}
                                 />
                             </VStack>
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl>
-                            <VStack spacing={4} align="stretch" alignItems="center">
-                                <FormLabel>Cámara y Comercio</FormLabel>
+                        <Field.Root>
+                            <VStack gap={4} align="stretch" alignItems="center">
+                                <Field.Label>Cámara y Comercio</Field.Label>
                                 <Icon
                                     as={camaraFile ? FaFileCircleCheck : FaFileCircleQuestion}
                                     boxSize="4em"
@@ -768,14 +776,14 @@ function CodificarProveedor() {
                                     ref={camaraInputRef}
                                     style={{ display: 'none' }}
                                     accept="application/pdf"
-                                    onChange={handleCamaraChange}
+                                    onValueChange={handleCamaraChange}
                                 />
                             </VStack>
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
                 </Grid>
 
-                <Button type="submit" colorScheme="blue" mt={6}>
+                <Button type="submit" colorPalette="blue" mt={6}>
                     Registrar Proveedor
                 </Button>
             </Box>

@@ -1,14 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import {
+  Steps,
   Alert,
-  AlertDescription,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogOverlay,
-  AlertIcon,
   Badge,
   Box,
   Button,
@@ -16,6 +9,8 @@ import {
   Spinner,
   Text,
   useToast,
+  Dialog,
+  Portal,
 } from "@chakra-ui/react";
 import {
   Background,
@@ -136,29 +131,29 @@ export default function OrganizationChart({
       <Flex mb={3} gap={3} align="center" wrap="wrap">
         {editor.canEdit && (
           <>
-            <Button colorScheme="blue" onClick={editor.addCargo}>
+            <Button colorPalette="blue" onClick={editor.addCargo}>
               Agregar cargo
             </Button>
             <Button
-              colorScheme="green"
+              colorPalette="green"
               onClick={() => void save()}
-              isDisabled={!editor.isDirty}
-              isLoading={editor.isSaving}
+              disabled={!editor.isDirty}
+              loading={editor.isSaving}
               loadingText="Guardando"
             >
               Guardar organigrama
             </Button>
           </>
         )}
-        <Button variant="outline" onClick={() => void reload()} isDisabled={editor.isSaving}>
+        <Button variant="outline" onClick={() => void reload()} disabled={editor.isSaving}>
           Recargar
         </Button>
         {editor.isDirty ? (
-          <Badge colorScheme="orange" fontSize="sm" px={2} py={1}>
+          <Badge colorPalette="orange" fontSize="sm" px={2} py={1}>
             Cambios sin guardar
           </Badge>
         ) : (
-          <Badge colorScheme="green" fontSize="sm" px={2} py={1}>
+          <Badge colorPalette="green" fontSize="sm" px={2} py={1}>
             Sincronizado
           </Badge>
         )}
@@ -166,9 +161,9 @@ export default function OrganizationChart({
       </Flex>
 
       {editor.error && (
-        <Alert status={editor.hasConflict ? "warning" : "error"} mb={3} borderRadius="md">
-          <AlertIcon />
-          <AlertDescription flex="1">{editor.error}</AlertDescription>
+        <Alert.Root status={editor.hasConflict ? "warning" : "error"} mb={3} borderRadius="md">
+          <Alert.Indicator />
+          <Alert.Description flex="1">{editor.error}</Alert.Description>
           {editor.hasConflict && (
             <Button size="sm" mr={2} onClick={() => void reload()}>
               Descartar y recargar
@@ -177,7 +172,7 @@ export default function OrganizationChart({
           <Button size="sm" variant="ghost" onClick={editor.clearError}>
             Cerrar
           </Button>
-        </Alert>
+        </Alert.Root>
       )}
 
       <Box h="72vh" minH="520px" border="1px solid" borderColor="app.border" borderRadius="md">
@@ -230,41 +225,49 @@ export default function OrganizationChart({
         />
       )}
 
-      <AlertDialog
-        isOpen={blocker.state === "blocked"}
-        leastDestructiveRef={leaveCancelRef}
-        onClose={() => {
-          if (blocker.state === "blocked") blocker.reset();
-        }}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader>Cambios sin guardar</AlertDialogHeader>
-            <AlertDialogBody>
-              Si sales de esta página se descartará el borrador del organigrama.
-            </AlertDialogBody>
-            <AlertDialogFooter>
-              <Button
-                ref={leaveCancelRef}
-                onClick={() => {
-                  if (blocker.state === "blocked") blocker.reset();
-                }}
-              >
-                Permanecer
-              </Button>
-              <Button
-                colorScheme="red"
-                ml={3}
-                onClick={() => {
-                  if (blocker.state === "blocked") blocker.proceed();
-                }}
-              >
-                Salir y descartar
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
+      <Dialog.Root
+        open={blocker.state === "blocked"}
+        initialFocusEl={() => leaveCancelRef.current}
+        role='alertdialog'
+        onOpenChange={e => {
+          if (!e.open) {
+            if (blocker.state === "blocked") blocker.reset();
+          }
+        }}>
+        <Portal>
+
+          <Dialog.Backdrop>
+            <Dialog.Positioner>
+              <Dialog.Content>
+                <Dialog.Header>Cambios sin guardar</Dialog.Header>
+                <Dialog.Body>
+                  Si sales de esta página se descartará el borrador del organigrama.
+                </Dialog.Body>
+                <Dialog.Footer>
+                  <Button
+                    ref={leaveCancelRef}
+                    onClick={() => {
+                      if (blocker.state === "blocked") blocker.reset();
+                    }}
+                  >
+                    Permanecer
+                  </Button>
+                  <Button
+                    colorPalette="red"
+                    ml={3}
+                    onClick={() => {
+                      if (blocker.state === "blocked") blocker.proceed();
+                    }}
+                  >
+                    Salir y descartar
+                  </Button>
+                </Dialog.Footer>
+              </Dialog.Content>
+            </Dialog.Positioner>
+          </Dialog.Backdrop>
+
+        </Portal>
+</Dialog.Root>
     </Box>
   );
 }

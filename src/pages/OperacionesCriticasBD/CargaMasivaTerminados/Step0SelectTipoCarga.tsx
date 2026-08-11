@@ -1,14 +1,5 @@
-import {
-    Card,
-    CardBody,
-    CardHeader,
-    Flex,
-    Heading,
-    Icon,
-    SimpleGrid,
-    Text,
-    useColorModeValue,
-} from "@chakra-ui/react";
+import { Steps, Card, Flex, Heading, Icon, SimpleGrid, Text } from "@chakra-ui/react";
+import { useColorModeValue } from "../../../components/ui/color-mode";
 import { FaPlus, FaListUl } from "react-icons/fa";
 import { AiFillProduct } from "react-icons/ai";
 import { LiaProjectDiagramSolid } from "react-icons/lia";
@@ -33,8 +24,8 @@ export default function Step0SelectTipoCarga({ onSelect }: Step0SelectTipoCargaP
                 Seleccione el tipo de carga masiva
             </Heading>
 
-            <SimpleGrid columns={3} spacing={8} w="full">
-                <Card
+            <SimpleGrid columns={3} gap={8} w="full">
+                <Card.Root
                     h="250px"
                     cursor="pointer"
                     bg={sinInsumosBg}
@@ -47,18 +38,18 @@ export default function Step0SelectTipoCarga({ onSelect }: Step0SelectTipoCargaP
                     transition="all 0.3s ease"
                     onClick={() => onSelect("sin_insumos")}
                 >
-                    <CardHeader borderBottom="0.1em solid" p={4}>
+                    <Card.Header borderBottom="0.1em solid" p={4}>
                         <Heading as="h3" size="md" fontFamily="Comfortaa Variable">
                             Terminado sin insumos
                         </Heading>
-                    </CardHeader>
-                    <CardBody display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
-                        <Icon as={AiFillProduct} boxSize="5em" mb={4} />
+                    </Card.Header>
+                    <Card.Body display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
+                        <Icon boxSize="5em" mb={4} asChild><AiFillProduct /></Icon>
                         <Text textAlign="center">Registrar terminados solo con datos básicos (sin receta ni proceso)</Text>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
 
-                <Card
+                <Card.Root
                     h="250px"
                     cursor="pointer"
                     bg={soloInsumosBg}
@@ -71,22 +62,22 @@ export default function Step0SelectTipoCarga({ onSelect }: Step0SelectTipoCargaP
                     transition="all 0.3s ease"
                     onClick={() => onSelect("solo_insumos")}
                 >
-                    <CardHeader borderBottom="0.1em solid" p={4}>
+                    <Card.Header borderBottom="0.1em solid" p={4}>
                         <Heading as="h3" size="md" fontFamily="Comfortaa Variable">
                             Terminado solo con insumos
                         </Heading>
-                    </CardHeader>
-                    <CardBody display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
+                    </Card.Header>
+                    <Card.Body display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
                         <Flex gap={3} mb={4} alignItems="center">
-                            <Icon as={AiFillProduct} boxSize="3.5em" />
-                            <Icon as={FaPlus} boxSize="2em" />
-                            <Icon as={FaListUl} boxSize="3.5em" />
+                            <Icon boxSize="3.5em" asChild><AiFillProduct /></Icon>
+                            <Icon boxSize="2em" asChild><FaPlus /></Icon>
+                            <Icon boxSize="3.5em" asChild><FaListUl /></Icon>
                         </Flex>
                         <Text textAlign="center">Carga masiva con lista de insumos usando el JSON exportado por el sistema</Text>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
 
-                <Card
+                <Card.Root
                     h="250px"
                     cursor="pointer"
                     bg={procesoCompletoBg}
@@ -99,22 +90,22 @@ export default function Step0SelectTipoCarga({ onSelect }: Step0SelectTipoCargaP
                     transition="all 0.3s ease"
                     onClick={() => onSelect("con_proceso_completo")}
                 >
-                    <CardHeader borderBottom="0.1em solid" p={4}>
+                    <Card.Header borderBottom="0.1em solid" p={4}>
                         <Heading as="h3" size="md" fontFamily="Comfortaa Variable">
                             Terminado con proceso completo
                         </Heading>
-                    </CardHeader>
-                    <CardBody display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
+                    </Card.Header>
+                    <Card.Body display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
                         <Flex gap={3} mb={4} alignItems="center">
-                            <Icon as={AiFillProduct} boxSize="3.5em" />
-                            <Icon as={FaPlus} boxSize="2em" />
-                            <Icon as={FaListUl} boxSize="3.5em" />
-                            <Icon as={FaPlus} boxSize="2em" />
-                            <Icon as={LiaProjectDiagramSolid} boxSize="3.5em" />
+                            <Icon boxSize="3.5em" asChild><AiFillProduct /></Icon>
+                            <Icon boxSize="2em" asChild><FaPlus /></Icon>
+                            <Icon boxSize="3.5em" asChild><FaListUl /></Icon>
+                            <Icon boxSize="2em" asChild><FaPlus /></Icon>
+                            <Icon boxSize="3.5em" asChild><LiaProjectDiagramSolid /></Icon>
                         </Flex>
                         <Text textAlign="center">Carga masiva con proceso de producción (próximamente)</Text>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
             </SimpleGrid>
         </Flex>
     );

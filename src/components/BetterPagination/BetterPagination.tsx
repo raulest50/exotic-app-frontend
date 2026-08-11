@@ -1,5 +1,5 @@
-import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
-import { Flex, Button, Select, Text } from '@chakra-ui/react';
+import { Steps, Flex, Button, NativeSelect, Text } from '@chakra-ui/react';
+import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 
 interface BetterPaginationProps {
     page: number;
@@ -34,39 +34,33 @@ export default function BetterPagination({
         <Flex justify='space-between' align='center' gap={4}>
             <Flex align='center' gap={2}>
                 <Text>Tamaño de página:</Text>
-                <Select
-                    value={size}
-                    onChange={(e) => handleSizeChange(parseInt(e.target.value))}
-                    width='80px'
-                    isDisabled={loading}
-                >
-                    {[5, 10, 20, 50].map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                </Select>
+                <NativeSelect.Root>
+                    <NativeSelect.Field
+                        value={size}
+                        onValueChange={(e) => handleSizeChange(parseInt(e.target.value))}
+                        width='80px'
+                        disabled={loading}>
+                        {[5, 10, 20, 50].map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                    </NativeSelect.Field>
+                    <NativeSelect.Indicator />
+                </NativeSelect.Root>
             </Flex>
             <Flex align='center' gap={2}>
                 <Button
                     size='sm'
                     variant='outline'
-                    leftIcon={<ChevronLeftIcon />}
                     onClick={() => onPageChange(page - 1)}
-                    isDisabled={isPrevDisabled}
-                    aria-label={previousLabel}
-                >
-                    {previousLabel}
-                </Button>
+                    disabled={isPrevDisabled}
+                    aria-label={previousLabel}><LuChevronLeft />{previousLabel}</Button>
                 <Text>Pagina {totalPages === 0 ? 0 : page + 1} de {totalPages}</Text>
                 <Button
                     size='sm'
                     variant='outline'
-                    rightIcon={<ChevronRightIcon />}
                     onClick={() => onPageChange(page + 1)}
-                    isDisabled={loading || isNextDisabled}
-                    aria-label={nextLabel}
-                >
-                    {nextLabel}
-                </Button>
+                    disabled={loading || isNextDisabled}
+                    aria-label={nextLabel}>{nextLabel}<LuChevronRight /></Button>
             </Flex>
         </Flex>
     );

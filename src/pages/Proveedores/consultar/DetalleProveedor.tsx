@@ -1,12 +1,23 @@
 import {
-    Flex, Box, Heading, Text, Button, VStack, HStack, 
-    Grid, GridItem, Card, CardHeader, CardBody, 
-    FormControl, FormLabel, Select, Input, Icon,
-    useToast, FormHelperText
+    Steps,
+    Flex,
+    Box,
+    Heading,
+    Text,
+    Button,
+    VStack,
+    HStack,
+    Grid,
+    GridItem,
+    Card,
+    NativeSelect,
+    Input,
+    Icon,
+    useToast,
+    Field,
 } from '@chakra-ui/react';
 import { useState, useEffect, useRef } from 'react';
 import { Proveedor, Contacto } from "../types.tsx";
-import { ArrowBackIcon, EditIcon } from '@chakra-ui/icons';
 import { FaFileCircleQuestion, FaFileCircleCheck } from "react-icons/fa6";
 import axios from 'axios';
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
@@ -18,6 +29,7 @@ import {
     MASTER_DIRECTIVE_KEYS,
     TOPE_GLOBAL_RECEPCIONES_OCM_DEFAULT,
 } from '../../../context/masterDirectiveConstants';
+import { LuArrowLeft, LuPencil } from 'react-icons/lu';
 
 type Props = {
     proveedor: Proveedor;
@@ -466,28 +478,17 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
     return (
         <Box p={5} bg="app.surface" borderRadius="md" boxShadow="base">
             <Flex justifyContent="space-between" alignItems="center" mb={5}>
-                <Button 
-                    leftIcon={<ArrowBackIcon />} 
-                    colorScheme="blue" 
-                    variant="outline"
-                    onClick={handleBack}
-                >
-                    Regresar
-                </Button>
+                <Button colorPalette="blue" variant="outline" onClick={handleBack}><LuArrowLeft />Regresar
+                                    </Button>
                 <Heading size="lg">Detalle del Proveedor</Heading>
                 {canEdit && !editMode && (
-                    <Button 
-                        leftIcon={<EditIcon />} 
-                        colorScheme="green" 
-                        onClick={() => setEditMode(true)}
-                    >
-                        Editar
-                    </Button>
+                    <Button colorPalette="green" onClick={() => setEditMode(true)}><LuPencil />Editar
+                                            </Button>
                 )}
                 {editMode && (
                     <HStack>
                         <Button 
-                            colorScheme="red" 
+                            colorPalette="red" 
                             variant="outline"
                             onClick={() => {
                                 setEditMode(false);
@@ -502,9 +503,9 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                             Cancelar
                         </Button>
                         <Button 
-                            colorScheme="green" 
+                            colorPalette="green" 
                             onClick={handleSaveChanges}
-                            isDisabled={!isFormValid || !hasChanges}
+                            disabled={!isFormValid || !hasChanges}
                         >
                             Guardar
                         </Button>
@@ -512,15 +513,15 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                 )}
             </Flex>
 
-            <Card mb={5} variant="outline" boxShadow="md">
-                <CardHeader bg="app.stepperBlue">
+            <Card.Root mb={5} variant="outline" boxShadow="md">
+                <Card.Header bg="app.stepperBlue">
                     <Heading size="md">{proveedor.nombre}</Heading>
                     <Text color="app.textMuted">ID: {proveedor.id}</Text>
-                </CardHeader>
-                <CardBody>
+                </Card.Header>
+                <Card.Body>
                     <Grid templateColumns="repeat(2, 1fr)" gap={6}>
                         <GridItem>
-                            <VStack align="start" spacing={3}>
+                            <VStack align="start" gap={3}>
                                 <Box>
                                     <Text fontWeight="bold">Dirección:</Text>
                                     <Text>{proveedor.direccion || 'No especificada'}</Text>
@@ -532,17 +533,19 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                 <Box>
                                     <Text fontWeight="bold">Régimen Tributario:</Text>
                                     {editMode ? (
-                                        <FormControl mt={2}>
-                                            <Select
-                                                value={proveedorData.regimenTributario}
-                                                onChange={(e) => handleInputChange('regimenTributario', Number(e.target.value))}
-                                            >
-                                                <option value={0}>Régimen Simplificado</option>
-                                                <option value={1}>Régimen Común</option>
-                                                <option value={2}>Gran Contribuyente</option>
-                                                <option value={3}>Régimen Especial</option>
-                                            </Select>
-                                        </FormControl>
+                                        <Field.Root mt={2}>
+                                            <NativeSelect.Root>
+                                                <NativeSelect.Field
+                                                    value={proveedorData.regimenTributario}
+                                                    onValueChange={(e) => handleInputChange('regimenTributario', Number(e.target.value))}>
+                                                    <option value={0}>Régimen Simplificado</option>
+                                                    <option value={1}>Régimen Común</option>
+                                                    <option value={2}>Gran Contribuyente</option>
+                                                    <option value={3}>Régimen Especial</option>
+                                                </NativeSelect.Field>
+                                                <NativeSelect.Indicator />
+                                            </NativeSelect.Root>
+                                        </Field.Root>
                                     ) : (
                                         <Text>{getRegimenText(proveedor.regimenTributario)}</Text>
                                     )}
@@ -550,15 +553,17 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                 <Box>
                                     <Text fontWeight="bold">Condición de Pago:</Text>
                                     {editMode ? (
-                                        <FormControl mt={2}>
-                                            <Select
-                                                value={proveedorData.condicionPago}
-                                                onChange={(e) => handleInputChange('condicionPago', e.target.value)}
-                                            >
-                                                <option value="credito">Crédito</option>
-                                                <option value="contado">Contado</option>
-                                            </Select>
-                                        </FormControl>
+                                        <Field.Root mt={2}>
+                                            <NativeSelect.Root>
+                                                <NativeSelect.Field
+                                                    value={proveedorData.condicionPago}
+                                                    onValueChange={(e) => handleInputChange('condicionPago', e.target.value)}>
+                                                    <option value="credito">Crédito</option>
+                                                    <option value="contado">Contado</option>
+                                                </NativeSelect.Field>
+                                                <NativeSelect.Indicator />
+                                            </NativeSelect.Root>
+                                        </Field.Root>
                                     ) : (
                                         <Text>{proveedor.condicionPago}</Text>
                                     )}
@@ -566,20 +571,20 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                 <Box>
                                     <Text fontWeight="bold">Limite recepciones parciales OCM:</Text>
                                     {editMode ? (
-                                        <FormControl mt={2} isRequired>
+                                        <Field.Root mt={2} required>
                                             <Input
                                                 type="number"
                                                 min={1}
                                                 max={limiteRecepcionesParcialesOcmMax}
                                                 step={1}
                                                 value={limiteRecepcionesParcialesOcmInput}
-                                                onChange={(e) => setLimiteRecepcionesParcialesOcmInput(e.target.value)}
+                                                onValueChange={(e) => setLimiteRecepcionesParcialesOcmInput(e.target.value)}
                                                 placeholder={`Maximo configurable: ${limiteRecepcionesParcialesOcmMax}`}
                                             />
-                                            <FormHelperText>
+                                            <Field.HelperText>
                                                 Maximo permitido al cambiar este limite: {limiteRecepcionesParcialesOcmMax}.
-                                            </FormHelperText>
-                                        </FormControl>
+                                            </Field.HelperText>
+                                        </Field.Root>
                                     ) : (
                                         <Text>
                                             Limite propio: {proveedor.limiteRecepcionesParcialesOcm ?? LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT}
@@ -589,7 +594,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                             </VStack>
                         </GridItem>
                         <GridItem>
-                            <VStack align="start" spacing={3}>
+                            <VStack align="start" gap={3}>
                                 <Box>
                                     <Text fontWeight="bold">Categorías:</Text>
                                     <Text>{getCategoriesText(proveedor.categorias)}</Text>
@@ -605,20 +610,20 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                             </VStack>
                         </GridItem>
                     </Grid>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
 
             {/* Sección de archivos (RUT y Cámara de Comercio) */}
             {editMode && (
-                <Card mb={5} variant="outline" boxShadow="md">
-                    <CardHeader bg="app.stepperBlue">
+                <Card.Root mb={5} variant="outline" boxShadow="md">
+                    <Card.Header bg="app.stepperBlue">
                         <Heading size="md">Documentos</Heading>
-                    </CardHeader>
-                    <CardBody>
+                    </Card.Header>
+                    <Card.Body>
                         <Grid templateColumns="repeat(2, 1fr)" gap={6}>
                             <GridItem>
-                                <VStack spacing={4} align="stretch" alignItems="center">
-                                    <FormLabel>RUT</FormLabel>
+                                <VStack gap={4} align="stretch" alignItems="center">
+                                    <Field.Label>RUT</Field.Label>
                                     <Icon
                                         as={rutFile ? FaFileCircleCheck : FaFileCircleQuestion}
                                         boxSize="4em"
@@ -630,14 +635,14 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                         ref={rutInputRef}
                                         style={{ display: 'none' }}
                                         accept="application/pdf"
-                                        onChange={handleRutChange}
+                                        onValueChange={handleRutChange}
                                     />
                                     {rutFile && <Text>{rutFile.name}</Text>}
                                 </VStack>
                             </GridItem>
                             <GridItem>
-                                <VStack spacing={4} align="stretch" alignItems="center">
-                                    <FormLabel>Cámara y Comercio</FormLabel>
+                                <VStack gap={4} align="stretch" alignItems="center">
+                                    <Field.Label>Cámara y Comercio</Field.Label>
                                     <Icon
                                         as={camaraFile ? FaFileCircleCheck : FaFileCircleQuestion}
                                         boxSize="4em"
@@ -649,68 +654,68 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                         ref={camaraInputRef}
                                         style={{ display: 'none' }}
                                         accept="application/pdf"
-                                        onChange={handleCamaraChange}
+                                        onValueChange={handleCamaraChange}
                                     />
                                     {camaraFile && <Text>{camaraFile.name}</Text>}
                                 </VStack>
                             </GridItem>
                         </Grid>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
             )}
 
             {/* Sección de contactos */}
-            <Card variant="outline" boxShadow="md">
-                <CardHeader bg="app.stepperBlue">
+            <Card.Root variant="outline" boxShadow="md">
+                <Card.Header bg="app.stepperBlue">
                     <Heading size="md">Contactos</Heading>
-                </CardHeader>
-                <CardBody>
-                    <VStack spacing={4} align="stretch">
+                </Card.Header>
+                <Card.Body>
+                    <VStack gap={4} align="stretch">
                         {(editMode ? proveedorData.contactos : proveedor.contactos).map((contacto, index) => (
                             <Box key={index} p={3} borderWidth="1px" borderRadius="md" bg="app.surfaceSubtle">
                                 {editMode ? (
                                     <>
                                         <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                                             <GridItem>
-                                                <FormControl>
-                                                    <FormLabel>Nombre Completo</FormLabel>
+                                                <Field.Root>
+                                                    <Field.Label>Nombre Completo</Field.Label>
                                                     <Input
                                                         value={contacto.fullName}
-                                                        onChange={(e) => handleContactChange(index, 'fullName', e.target.value)}
+                                                        onValueChange={(e) => handleContactChange(index, 'fullName', e.target.value)}
                                                     />
-                                                </FormControl>
-                                                <FormControl mt={2}>
-                                                    <FormLabel>Cargo</FormLabel>
+                                                </Field.Root>
+                                                <Field.Root mt={2}>
+                                                    <Field.Label>Cargo</Field.Label>
                                                     <Input
                                                         value={contacto.cargo}
-                                                        onChange={(e) => handleContactChange(index, 'cargo', e.target.value)}
+                                                        onValueChange={(e) => handleContactChange(index, 'cargo', e.target.value)}
                                                     />
-                                                </FormControl>
+                                                </Field.Root>
                                             </GridItem>
                                             <GridItem>
-                                                <FormControl>
-                                                    <FormLabel>Celular</FormLabel>
+                                                <Field.Root>
+                                                    <Field.Label>Celular</Field.Label>
                                                     <Input
                                                         value={contacto.cel}
-                                                        onChange={(e) => handleContactChange(index, 'cel', e.target.value)}
+                                                        onValueChange={(e) => handleContactChange(index, 'cel', e.target.value)}
                                                     />
-                                                </FormControl>
-                                                <FormControl mt={2}>
-                                                    <FormLabel>Correo Electrónico</FormLabel>
+                                                </Field.Root>
+                                                <Field.Root mt={2}>
+                                                    <Field.Label>Correo Electrónico</Field.Label>
                                                     <Input
                                                         value={contacto.email}
-                                                        onChange={(e) => handleContactChange(index, 'email', e.target.value)}
+                                                        onValueChange={(e) => handleContactChange(index, 'email', e.target.value)}
                                                     />
-                                                </FormControl>
+                                                </Field.Root>
                                             </GridItem>
                                         </Grid>
                                         <Button
                                             mt={3}
-                                            colorScheme="red"
+                                            colorPalette="red"
                                             variant="outline"
                                             size="sm"
                                             onClick={() => removeContacto(index)}
-                                            isDisabled={proveedorData.contactos.length <= 1}
+                                            disabled={proveedorData.contactos.length <= 1}
                                         >
                                             Eliminar Contacto
                                         </Button>
@@ -737,16 +742,16 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                         ))}
                         {editMode && (
                             <Button 
-                                colorScheme="blue" 
+                                colorPalette="blue" 
                                 onClick={addContacto}
-                                isDisabled={proveedorData.contactos.length >= 3}
+                                disabled={proveedorData.contactos.length >= 3}
                             >
                                 Agregar Contacto
                             </Button>
                         )}
                     </VStack>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
         </Box>
     );
 }

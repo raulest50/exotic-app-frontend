@@ -1,10 +1,10 @@
 import { useState } from 'react';
+import { useColorModeValue } from "../../../../../components/ui/color-mode";
 import {
+    Steps,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     HStack,
     Input,
     Table,
@@ -15,8 +15,8 @@ import {
     Td,
     Text,
     VStack,
-    useColorModeValue,
     useToast,
+    Field,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL.tsx';
@@ -103,56 +103,56 @@ export default function AveriaProduccionStep0SelectArea({
                 Paso 1: Selección de Área Operativa
             </Text>
 
-            <VStack spacing={4} align="stretch">
+            <VStack gap={4} align="stretch">
                 {/* Search section */}
-                <FormControl>
-                    <FormLabel>Buscar Área de Producción</FormLabel>
+                <Field.Root>
+                    <Field.Label>Buscar Área de Producción</Field.Label>
                     <HStack>
                         <Input
                             value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
+                            onValueChange={(e) => setSearchText(e.target.value)}
                             onKeyDown={onKeyDown_InputBuscar}
                             placeholder="Ingrese nombre del área"
-                            isDisabled={isLoading}
+                            disabled={isLoading}
                         />
                         <Button
-                            colorScheme="blue"
+                            colorPalette="blue"
                             onClick={handleSearch}
-                            isLoading={isLoading}
+                            loading={isLoading}
                             loadingText="Buscando"
                         >
                             Buscar
                         </Button>
                     </HStack>
-                </FormControl>
+                </Field.Root>
 
                 {/* Results table */}
                 <Box w="full" overflowX="auto">
                     {areas.length > 0 ? (
                         <>
-                            <Table variant="simple" size="sm">
-                                <Thead>
-                                    <Tr>
-                                        <Th>ID</Th>
-                                        <Th>Nombre</Th>
-                                        <Th>Descripción</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                            <Table.Root variant="simple" size="sm">
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Descripción</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {currentAreas.map((area) => (
-                                        <Tr
+                                        <Table.Row
                                             key={area.areaId}
                                             onClick={() => handleRowClick(area)}
                                             bg={selectedAreaId === area.areaId ? selectedRowBg : 'transparent'}
                                             _hover={{ bg: selectedAreaId === area.areaId ? selectedRowHoverBg : 'app.rowHoverStrong', cursor: 'pointer' }}
                                         >
-                                            <Td>{area.areaId}</Td>
-                                            <Td>{area.nombre}</Td>
-                                            <Td>{area.descripcion}</Td>
-                                        </Tr>
+                                            <Table.Cell>{area.areaId}</Table.Cell>
+                                            <Table.Cell>{area.nombre}</Table.Cell>
+                                            <Table.Cell>{area.descripcion}</Table.Cell>
+                                        </Table.Row>
                                     ))}
-                                </Tbody>
-                            </Table>
+                                </Table.Body>
+                            </Table.Root>
 
                             <BetterPagination
                                 page={currentPage}
@@ -185,9 +185,9 @@ export default function AveriaProduccionStep0SelectArea({
                 {/* Navigation */}
                 <Flex gap={4} pt={2}>
                     <Button
-                        colorScheme="blue"
+                        colorPalette="blue"
                         onClick={handleSiguiente}
-                        isDisabled={!selectedArea}
+                        disabled={!selectedArea}
                     >
                         Siguiente
                     </Button>

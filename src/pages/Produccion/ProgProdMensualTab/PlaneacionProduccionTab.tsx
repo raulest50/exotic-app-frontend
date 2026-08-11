@@ -1,18 +1,6 @@
 import {useState} from "react";
-import {
-    Box,
-    Flex,
-    StepDescription,
-    Step,
-    StepIcon,
-    StepIndicator,
-    StepNumber,
-    StepSeparator,
-    StepStatus,
-    Stepper,
-    StepTitle,
-    useSteps,
-} from "@chakra-ui/react";
+import { LuCheck } from 'react-icons/lu';
+import { Steps, Box, Flex, useSteps } from "@chakra-ui/react";
 import Step0CargarValidarExcel from "./Step0CargarValidarExcel/Step0CargarValidarExcel.tsx";
 import Step1CalcularDistribucion from "./Step1CalcularDistribucion/Step1CalcularDistribucion.tsx";
 import {
@@ -26,9 +14,9 @@ const steps = [
 
 export const PlaneacionProduccionTab = () => {
 
-    const { activeStep, setActiveStep } = useSteps({
-        index: 0,
-        count: steps.length,
+    const stepsApi = useSteps({
+        defaultStep: 0,
+        count: steps.length
     });
 
     const [excelFile, setExcelFile] = useState<File | null>(null);
@@ -38,26 +26,26 @@ export const PlaneacionProduccionTab = () => {
     return (
         <Box w={'full'} h={'full'} minW={0}>
             <Flex direction={"column"} gap={4} w="full" minW={0}>
-                <Stepper index={activeStep} p={'1em'} backgroundColor={"teal.50"} w={'full'} >
+                <Steps.RootProvider p={'1em'} backgroundColor={"teal.50"} w={'full'} value={stepsApi} >
                     {steps.map((step, index) => (
-                        <Step key={index}>
-                            <StepIndicator>
-                                <StepStatus
-                                    complete={<StepIcon />}
-                                    incomplete={<StepNumber />}
-                                    active={<StepNumber />}
+                        <Steps.Item key={index}>
+                            <Steps.Indicator>
+                                <Steps.Status
+                                    complete={<LuCheck />}
+                                    incomplete={<Steps.Number />}
+                                    current={<Steps.Number />}
                                 />
-                            </StepIndicator>
+                            </Steps.Indicator>
 
                             <Box flexShrink='0'>
-                                <StepTitle>{step.title}</StepTitle>
-                                <StepDescription>{step.description}</StepDescription>
+                                <Steps.Title>{step.title}</Steps.Title>
+                                <Steps.Description>{step.description}</Steps.Description>
                             </Box>
 
-                            <StepSeparator />
-                        </Step>
+                            <Steps.Separator />
+                        </Steps.Item>
                     ))}
-                </Stepper>
+                </Steps.RootProvider>
                 {activeStep === 0 && (
                     <Step0CargarValidarExcel setActiveStep={setActiveStep} setExcelFile={setExcelFile} />
                 )}

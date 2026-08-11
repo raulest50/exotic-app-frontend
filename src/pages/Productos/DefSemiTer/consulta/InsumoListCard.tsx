@@ -1,8 +1,21 @@
-import {ChevronDownIcon, ChevronRightIcon} from '@chakra-ui/icons';
-import {Badge, Box, Heading, IconButton, Table, Tbody, Td, Text, Th, Thead, Tr} from '@chakra-ui/react';
+import {
+    Steps,
+    Badge,
+    Box,
+    Heading,
+    IconButton,
+    Table,
+    Tbody,
+    Td,
+    Text,
+    Th,
+    Thead,
+    Tr,
+} from '@chakra-ui/react';
 import {useState} from 'react';
 import type {ReactNode} from 'react';
 import type {Insumo} from '../../types.tsx';
+import { LuChevronDown, LuChevronRight } from 'react-icons/lu';
 
 type Props = {
     insumos?: Insumo[] | null;
@@ -50,53 +63,51 @@ function InsumoRow({
 
     return (
         <>
-            <Tr>
-                <Td>
+            <Table.Row>
+                <Table.Cell>
                     <Box pl={nivelActual * 4} display="flex" alignItems="center" gap={2}>
                         {hasSubInsumos && !isMaterial && (
                             <IconButton
                                 aria-label={isExpanded ? 'Ocultar insumos' : 'Ver insumos'}
-                                icon={isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => setIsExpanded(!isExpanded)}
-                            />
+                                onClick={() => setIsExpanded(!isExpanded)}>{isExpanded ? <LuChevronDown /> : <LuChevronRight />}</IconButton>
                         )}
                         <Box>
                             <Heading size="sm">{producto?.nombre ?? 'Producto sin nombre'}</Heading>
                             <Text fontSize="sm" color="app.textMuted">ID: {producto?.productoId ?? 'N/D'}</Text>
                         </Box>
                     </Box>
-                </Td>
-                <Td>{producto?.productoId ?? 'N/D'}</Td>
-                <Td>
-                    <Badge colorScheme={badge.colorScheme}>{badge.label}</Badge>
-                </Td>
-                <Td fontWeight="semibold">
+                </Table.Cell>
+                <Table.Cell>{producto?.productoId ?? 'N/D'}</Table.Cell>
+                <Table.Cell>
+                    <Badge colorPalette={badge.colorScheme}>{badge.label}</Badge>
+                </Table.Cell>
+                <Table.Cell fontWeight="semibold">
                     {formatCantidad(insumo.cantidadRequerida)} {producto?.tipoUnidades ?? ''}
-                </Td>
-            </Tr>
+                </Table.Cell>
+            </Table.Row>
 
             {hasSubInsumos && !isMaterial && isExpanded && (
-                <Tr>
-                    <Td colSpan={4} p={0}>
+                <Table.Row>
+                    <Table.Cell colSpan={4} p={0}>
                         <Box pl={(nivelActual + 1) * 4} py={2}>
-                            <Table size="sm" variant="simple">
-                                <Tbody>{renderSubRows(subInsumos ?? [], nivelActual + 1)}</Tbody>
-                            </Table>
+                            <Table.Root size="sm" variant="simple">
+                                <Table.Body>{renderSubRows(subInsumos ?? [], nivelActual + 1)}</Table.Body>
+                            </Table.Root>
                         </Box>
-                    </Td>
-                </Tr>
+                    </Table.Cell>
+                </Table.Row>
             )}
 
             {!hasSubInsumos && !isMaterial && (
-                <Tr>
-                    <Td colSpan={4} p={0}>
+                <Table.Row>
+                    <Table.Cell colSpan={4} p={0}>
                         <Text color="app.textSubtle" pl={nivelActual * 4} py={2}>
                             Sin insumos definidos para este producto.
                         </Text>
-                    </Td>
-                </Tr>
+                    </Table.Cell>
+                </Table.Row>
             )}
         </>
     );
@@ -128,17 +139,17 @@ export default function InsumoListCard({ insumos, nivel = 0, titulo }: Props) {
                     Sin insumos para mostrar.
                 </Text>
             ) : (
-                <Table variant="simple">
-                    <Thead>
-                        <Tr>
-                            <Th>Producto</Th>
-                            <Th>ID</Th>
-                            <Th>Tipo</Th>
-                            <Th>Cantidad requerida</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>{renderRows(lista, nivel)}</Tbody>
-                </Table>
+                <Table.Root variant="simple">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Producto</Table.ColumnHeader>
+                            <Table.ColumnHeader>ID</Table.ColumnHeader>
+                            <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                            <Table.ColumnHeader>Cantidad requerida</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>{renderRows(lista, nivel)}</Table.Body>
+                </Table.Root>
             )}
         </Box>
     );

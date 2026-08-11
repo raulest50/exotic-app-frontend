@@ -1,15 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-    Box, Button, Flex, Heading, Text, VStack, Grid, GridItem,
-    FormControl, FormLabel, Input, Icon, HStack, useToast
+    Steps,
+    Box,
+    Button,
+    Flex,
+    Heading,
+    Text,
+    VStack,
+    Grid,
+    GridItem,
+    Input,
+    Icon,
+    HStack,
+    useToast,
 } from '@chakra-ui/react';
-import { ArrowBackIcon, EditIcon } from '@chakra-ui/icons';
 import { FaFileCircleQuestion, FaFileCircleCheck } from 'react-icons/fa6';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import { Cliente } from '../types.tsx';
 import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
 import { useModuleAccessLevel } from '../../../auth/usePermissions';
+import { LuArrowLeft, LuPencil } from 'react-icons/lu';
 
 interface Props{
     cliente: Cliente;
@@ -106,48 +117,48 @@ export function DetalleCliente({cliente,setEstado,setClienteSeleccionado,refresh
     return (
         <Box p={5} bg='app.surface' borderRadius='md' boxShadow='base'>
             <Flex justifyContent='space-between' alignItems='center' mb={5}>
-                <Button leftIcon={<ArrowBackIcon />} colorScheme='blue' variant='outline' onClick={handleBack}>Regresar</Button>
+                <Button colorPalette='blue' variant='outline' onClick={handleBack}><LuArrowLeft />Regresar</Button>
                 <Heading size='lg'>Detalle del Cliente</Heading>
                 {canEdit && !editMode && (
-                    <Button leftIcon={<EditIcon />} colorScheme='green' onClick={()=>setEditMode(true)}>Editar</Button>
+                    <Button colorPalette='green' onClick={()=>setEditMode(true)}><LuPencil />Editar</Button>
                 )}
                 {editMode && (
                     <HStack>
-                        <Button colorScheme='red' variant='outline' onClick={()=>{setEditMode(false);setClienteData({...cliente});setRutFile(null);setCamaraFile(null);}}>Cancelar</Button>
-                        <Button colorScheme='green' onClick={handleSaveChanges}>Guardar</Button>
+                        <Button colorPalette='red' variant='outline' onClick={()=>{setEditMode(false);setClienteData({...cliente});setRutFile(null);setCamaraFile(null);}}>Cancelar</Button>
+                        <Button colorPalette='green' onClick={handleSaveChanges}>Guardar</Button>
                     </HStack>
                 )}
             </Flex>
             <Grid templateColumns='repeat(2,1fr)' gap={6}>
                 <GridItem>
-                    <VStack align='start' spacing={3}>
+                    <VStack align='start' gap={3}>
                         <Box>
                             <Text fontWeight='bold'>Nombre:</Text>
-                            {editMode ? <Input value={clienteData.nombre} onChange={e=>handleInputChange('nombre',e.target.value)} /> : <Text>{cliente.nombre}</Text>}
+                            {editMode ? <Input value={clienteData.nombre} onValueChange={e=>handleInputChange('nombre',e.target.value)} /> : <Text>{cliente.nombre}</Text>}
                         </Box>
                         <Box>
                             <Text fontWeight='bold'>Correo Electrónico:</Text>
-                            {editMode ? <Input value={clienteData.email} onChange={e=>handleInputChange('email',e.target.value)} /> : <Text>{cliente.email}</Text>}
+                            {editMode ? <Input value={clienteData.email} onValueChange={e=>handleInputChange('email',e.target.value)} /> : <Text>{cliente.email}</Text>}
                         </Box>
                         <Box>
                             <Text fontWeight='bold'>Teléfono:</Text>
-                            {editMode ? <Input value={clienteData.telefono} onChange={e=>handleInputChange('telefono',e.target.value)} /> : <Text>{cliente.telefono}</Text>}
+                            {editMode ? <Input value={clienteData.telefono} onValueChange={e=>handleInputChange('telefono',e.target.value)} /> : <Text>{cliente.telefono}</Text>}
                         </Box>
                         <Box>
                             <Text fontWeight='bold'>Dirección:</Text>
-                            {editMode ? <Input value={clienteData.direccion} onChange={e=>handleInputChange('direccion',e.target.value)} /> : <Text>{cliente.direccion}</Text>}
+                            {editMode ? <Input value={clienteData.direccion} onValueChange={e=>handleInputChange('direccion',e.target.value)} /> : <Text>{cliente.direccion}</Text>}
                         </Box>
                     </VStack>
                 </GridItem>
                 <GridItem>
-                    <VStack align='start' spacing={3}>
+                    <VStack align='start' gap={3}>
                         <Box>
                             <Text fontWeight='bold'>Condiciones de Pago:</Text>
-                            {editMode ? <Input value={clienteData.condicionesPago||''} onChange={e=>handleInputChange('condicionesPago',e.target.value)} /> : <Text>{cliente.condicionesPago||'-'}</Text>}
+                            {editMode ? <Input value={clienteData.condicionesPago||''} onValueChange={e=>handleInputChange('condicionesPago',e.target.value)} /> : <Text>{cliente.condicionesPago||'-'}</Text>}
                         </Box>
                         <Box>
                             <Text fontWeight='bold'>Límite de Crédito:</Text>
-                            {editMode ? <Input type='number' value={clienteData.limiteCredito||''} onChange={e=>handleInputChange('limiteCredito',Number(e.target.value))} /> : <Text>{cliente.limiteCredito||'-'}</Text>}
+                            {editMode ? <Input type='number' value={clienteData.limiteCredito||''} onValueChange={e=>handleInputChange('limiteCredito',Number(e.target.value))} /> : <Text>{cliente.limiteCredito||'-'}</Text>}
                         </Box>
                     </VStack>
                 </GridItem>
@@ -155,20 +166,20 @@ export function DetalleCliente({cliente,setEstado,setClienteSeleccionado,refresh
             {editMode && (
                 <Grid templateColumns='repeat(2,1fr)' gap={6} mt={6}>
                     <GridItem>
-                        <VStack spacing={4} align='center'>
-                            <FormLabel>RUT</FormLabel>
+                        <VStack gap={4} align='center'>
+                            <Field.Label>RUT</Field.Label>
                             <Icon as={rutFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize='4em' color={rutFile ? 'green' : 'orange.500'} />
                             <Button onClick={()=>rutInputRef.current?.click()}>Seleccionar archivo</Button>
-                            <Input type='file' ref={rutInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleRutChange}/>
+                            <Input type='file' ref={rutInputRef} style={{display:'none'}} accept='application/pdf' onValueChange={handleRutChange}/>
                             {rutFile && <Text>{rutFile.name}</Text>}
                         </VStack>
                     </GridItem>
                     <GridItem>
-                        <VStack spacing={4} align='center'>
-                            <FormLabel>Cámara y Comercio</FormLabel>
+                        <VStack gap={4} align='center'>
+                            <Field.Label>Cámara y Comercio</Field.Label>
                             <Icon as={camaraFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize='4em' color={camaraFile ? 'green' : 'orange.500'} />
                             <Button onClick={()=>camaraInputRef.current?.click()}>Seleccionar archivo</Button>
-                            <Input type='file' ref={camaraInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleCamaraChange}/>
+                            <Input type='file' ref={camaraInputRef} style={{display:'none'}} accept='application/pdf' onValueChange={handleCamaraChange}/>
                             {camaraFile && <Text>{camaraFile.name}</Text>}
                         </VStack>
                     </GridItem>

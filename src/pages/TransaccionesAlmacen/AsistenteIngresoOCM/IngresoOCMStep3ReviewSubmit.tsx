@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import {
+    Steps,
     Badge,
     Box,
     Button,
-    Divider,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
     Image,
     Text,
     Textarea,
-    useToast
+    useToast,
+    Separator,
+    Field,
 } from "@chakra-ui/react";
 
 import { IngresoOCM_DTA } from "../types";
@@ -116,7 +116,7 @@ export default function IngresoOCMStep3ReviewSubmit({
                 Si el formato esta bien, continue con el envio del mismo para finalizar el procedimiento y dar ingreso de los items a el almacen.
             </Text>
 
-            <Divider/>
+            <Separator/>
 
             <Box w="full" overflowX="auto">
                 <Heading size="md" mb={4}>Materiales y Lotes</Heading>
@@ -127,9 +127,9 @@ export default function IngresoOCMStep3ReviewSubmit({
                                 <Text fontWeight="bold">{movimiento.producto.nombre}</Text>
                                 <Text>ID: {movimiento.producto.productoId}</Text>
                             </Box>
-                            <Badge colorScheme="green">{movimiento.cantidad} {movimiento.producto.tipoUnidades}</Badge>
+                            <Badge colorPalette="green">{movimiento.cantidad} {movimiento.producto.tipoUnidades}</Badge>
                         </Flex>
-                        <Divider my={2} />
+                        <Separator my={2} />
                         <Text fontWeight="bold">Informacion del Lote:</Text>
                         <Text>
                             Lote interno: {movimiento.lote.batchNumber || "se confirma al registrar"}
@@ -166,22 +166,22 @@ export default function IngresoOCMStep3ReviewSubmit({
                 )}
             </Box>
 
-            <FormControl>
-                <FormLabel>Observaciones (Opcional)</FormLabel>
+            <Field.Root>
+                <Field.Label>Observaciones (Opcional)</Field.Label>
                 <Textarea
                     placeholder="Escriba aqui sus observaciones si lo considera pertinente"
                     value={observaciones}
-                    onChange={(e) => setObservaciones(e.target.value)}
+                    onValueChange={(e) => setObservaciones(e.target.value)}
                 />
-            </FormControl>
+            </Field.Root>
 
-            <Divider/>
+            <Separator/>
 
             <Button
                 variant="solid"
-                colorScheme="teal"
+                colorPalette="teal"
                 onClick={onClickEnviar}
-                isLoading={isLoading}
+                loading={isLoading}
                 loadingText="Enviando..."
             >
                 Enviar Formato De Ingreso

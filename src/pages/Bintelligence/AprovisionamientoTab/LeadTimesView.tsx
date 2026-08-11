@@ -1,10 +1,9 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Box,
     Button,
     Card,
-    CardBody,
     Flex,
     HStack,
     IconButton,
@@ -12,14 +11,11 @@ import {
     Spinner,
     Stack,
     Stat,
-    StatLabel,
-    StatNumber,
     Text,
-    Tooltip,
     useDisclosure,
     useToast,
 } from "@chakra-ui/react";
-import { QuestionIcon } from "@chakra-ui/icons";
+import { Tooltip } from '@/components/ui/tooltip';
 import { useEffect, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
@@ -28,6 +24,7 @@ import type { Proveedor } from "../../Compras/types.tsx";
 import type { ProveedorMaterialLeadTimeMetricDTO } from "./types.ts";
 import { formatNumber } from "./utils.ts";
 import LeadTimeMetricHelpModal from "./LeadTimeMetricHelpModal.tsx";
+import { LuHelpCircle } from 'react-icons/lu';
 
 type Props = {
     selectedMaterial: Material | null;
@@ -40,7 +37,7 @@ const endPoints = new EndPointsURL();
 
 export default function LeadTimesView({ selectedMaterial, selectedProveedor, fechaCorte, ventanaDias }: Props) {
     const toast = useToast();
-    const { isOpen: isHelpOpen, onOpen: onHelpOpen, onClose: onHelpClose } = useDisclosure();
+    const { open: isHelpOpen, onOpen: onHelpOpen, onClose: onHelpClose } = useDisclosure();
     const [metric, setMetric] = useState<ProveedorMaterialLeadTimeMetricDTO | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -89,33 +86,31 @@ export default function LeadTimesView({ selectedMaterial, selectedProveedor, fec
 
     if (!canLoad) {
         return (
-            <Card variant="outline">
-                <CardBody>
+            <Card.Root variant="outline">
+                <Card.Body>
                     <Text color="app.textMuted">
                         Seleccione un material y un proveedor para calcular el lead time informativo.
                     </Text>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
         );
     }
 
     return (
-        <Stack spacing={4}>
-            <Card variant="outline">
-                <CardBody>
+        <Stack gap={4}>
+            <Card.Root variant="outline">
+                <Card.Body>
                     <Flex justify="space-between" align={{ base: "stretch", md: "center" }} gap={4} direction={{ base: "column", md: "row" }}>
                         <Box>
-                            <HStack spacing={2} align="center">
+                            <HStack gap={2} align="center">
                                 <Text fontWeight="semibold">Lead time proveedor-material</Text>
-                                <Tooltip label="Formula y algoritmo de calculo">
+                                <Tooltip content="Formula y algoritmo de calculo">
                                     <IconButton
                                         aria-label="Ayuda del calculo de lead time"
-                                        icon={<QuestionIcon />}
                                         size="sm"
                                         variant="outline"
-                                        colorScheme="blue"
-                                        onClick={onHelpOpen}
-                                    />
+                                        colorPalette="blue"
+                                        onClick={onHelpOpen}><LuHelpCircle /></IconButton>
                                 </Tooltip>
                             </HStack>
                             <Text fontSize="sm" color="app.textMuted">
@@ -123,20 +118,20 @@ export default function LeadTimesView({ selectedMaterial, selectedProveedor, fec
                             </Text>
                         </Box>
                         <Button
-                            colorScheme="blue"
+                            colorPalette="blue"
                             variant="outline"
                             onClick={fetchMetric}
-                            isLoading={loading}
+                            loading={loading}
                             w={{ base: "full", md: "auto" }}
                         >
                             Refrescar
                         </Button>
                     </Flex>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
 
-            <Card variant="outline">
-                <CardBody>
+            <Card.Root variant="outline">
+                <Card.Body>
                     {loading ? (
                         <Stack align="center" py={10}>
                             <Spinner />
@@ -145,52 +140,52 @@ export default function LeadTimesView({ selectedMaterial, selectedProveedor, fec
                     ) : !metric ? (
                         <Text color="app.textMuted">No hay resultado disponible.</Text>
                     ) : !metric.calculable ? (
-                        <Stack spacing={3}>
+                        <Stack gap={3}>
                             <Text color="app.textMuted">{metric.reason || "No hay observaciones calculables."}</Text>
-                            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                                <Stat>
-                                    <StatLabel>Ordenes consideradas</StatLabel>
-                                    <StatNumber>{formatNumber(metric.ordenesConsideradas, 0)}</StatNumber>
-                                </Stat>
-                                <Stat>
-                                    <StatLabel>Fecha corte</StatLabel>
-                                    <StatNumber fontSize="xl">{metric.fechaCorte}</StatNumber>
-                                </Stat>
+                            <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                                <Stat.Root>
+                                    <Stat.Label>Ordenes consideradas</Stat.Label>
+                                    <Stat.ValueText>{formatNumber(metric.ordenesConsideradas, 0)}</Stat.ValueText>
+                                </Stat.Root>
+                                <Stat.Root>
+                                    <Stat.Label>Fecha corte</Stat.Label>
+                                    <Stat.ValueText fontSize="xl">{metric.fechaCorte}</Stat.ValueText>
+                                </Stat.Root>
                             </SimpleGrid>
                         </Stack>
                     ) : (
-                        <Stack spacing={4}>
-                            <SimpleGrid columns={{ base: 1, md: 4 }} spacing={4}>
-                                <Stat>
-                                    <StatLabel>Lead time mediano</StatLabel>
-                                    <StatNumber>{formatNumber(metric.leadTimeMedianoDias, 2)} dias</StatNumber>
-                                </Stat>
-                                <Stat>
-                                    <StatLabel>Observaciones validas</StatLabel>
-                                    <StatNumber>{formatNumber(metric.observaciones, 0)}</StatNumber>
-                                </Stat>
-                                <Stat>
-                                    <StatLabel>Ordenes consideradas</StatLabel>
-                                    <StatNumber>{formatNumber(metric.ordenesConsideradas, 0)}</StatNumber>
-                                </Stat>
-                                <Stat>
-                                    <StatLabel>Fecha corte</StatLabel>
-                                    <StatNumber fontSize="xl">{metric.fechaCorte}</StatNumber>
-                                </Stat>
+                        <Stack gap={4}>
+                            <SimpleGrid columns={{ base: 1, md: 4 }} gap={4}>
+                                <Stat.Root>
+                                    <Stat.Label>Lead time mediano</Stat.Label>
+                                    <Stat.ValueText>{formatNumber(metric.leadTimeMedianoDias, 2)} dias</Stat.ValueText>
+                                </Stat.Root>
+                                <Stat.Root>
+                                    <Stat.Label>Observaciones validas</Stat.Label>
+                                    <Stat.ValueText>{formatNumber(metric.observaciones, 0)}</Stat.ValueText>
+                                </Stat.Root>
+                                <Stat.Root>
+                                    <Stat.Label>Ordenes consideradas</Stat.Label>
+                                    <Stat.ValueText>{formatNumber(metric.ordenesConsideradas, 0)}</Stat.ValueText>
+                                </Stat.Root>
+                                <Stat.Root>
+                                    <Stat.Label>Fecha corte</Stat.Label>
+                                    <Stat.ValueText fontSize="xl">{metric.fechaCorte}</Stat.ValueText>
+                                </Stat.Root>
                             </SimpleGrid>
 
                             {fallbackCount > 0 && (
-                                <Alert status="info" borderRadius="md">
-                                    <AlertIcon />
+                                <Alert.Root status="info" borderRadius="md">
+                                    <Alert.Indicator />
                                     <Text fontSize="sm">
                                         {fallbackCount} observacion(es) usaron fecha de emision porque la OCM no tenia fecha de envio al proveedor.
                                     </Text>
-                                </Alert>
+                                </Alert.Root>
                             )}
                         </Stack>
                     )}
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
 
             <LeadTimeMetricHelpModal isOpen={isHelpOpen} onClose={onHelpClose} />
         </Stack>

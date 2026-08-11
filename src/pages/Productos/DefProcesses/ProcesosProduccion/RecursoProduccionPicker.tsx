@@ -1,4 +1,18 @@
-import {Box, Button, Flex, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Table, Tbody, Td, Th, Thead, Tr} from '@chakra-ui/react';
+import {
+  Steps,
+  Box,
+  Button,
+  Flex,
+  Input,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  Dialog,
+  Portal,
+} from '@chakra-ui/react';
 import {useEffect, useState} from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
@@ -62,71 +76,81 @@ export default function RecursoProduccionPicker({isOpen, onClose, onConfirm, alr
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="6xl">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Seleccionar Recursos de Producción</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <Flex gap={4}>
-            <Box flex={1}>
-              <Flex mb={2} gap={2}>
-                <Input
-                  placeholder='Buscar'
-                  value={searchText}
-                  onChange={(e)=>setSearchText(e.target.value)}
-                  onKeyDown={(e)=>{
-                    if(e.key==='Enter'){
-                      fetchAvailable(0);
-                    }
-                  }}
-                />
-                <Button
-                  onClick={()=>fetchAvailable(0)}
-                  isLoading={loading}
-                  loadingText="Buscando..."
-                >
-                  Buscar
-                </Button>
+    <Dialog.Root open={isOpen} size='xl' onOpenChange={e => {
+      if (!e.open) {
+        onClose();
+      }
+    }}>
+      <Portal>
+
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>Seleccionar Recursos de Producción</Dialog.Header>
+            <Dialog.CloseTrigger />
+            <Dialog.Body>
+              <Flex gap={4}>
+                <Box flex={1}>
+                  <Flex mb={2} gap={2}>
+                    <Input
+                      placeholder='Buscar'
+                      value={searchText}
+                      onValueChange={(e)=>setSearchText(e.target.value)}
+                      onKeyDown={(e)=>{
+                        if(e.key==='Enter'){
+                          fetchAvailable(0);
+                        }
+                      }}
+                    />
+                    <Button
+                      onClick={()=>fetchAvailable(0)}
+                      loading={loading}
+                      loadingText="Buscando..."
+                    >
+                      Buscar
+                    </Button>
+                  </Flex>
+                  <Table.Root size='sm'>
+                    <Table.Header><Table.Row><Table.ColumnHeader>ID</Table.ColumnHeader><Table.ColumnHeader>Nombre</Table.ColumnHeader><Table.ColumnHeader></Table.ColumnHeader></Table.Row></Table.Header>
+                    <Table.Body>
+                      {available.map(r=> (
+                        <Table.Row key={r.id}>
+                          <Table.Cell>{r.id}</Table.Cell>
+                          <Table.Cell>{r.nombre}</Table.Cell>
+                          <Table.Cell><Button size='xs' onClick={()=>handleAdd(r)}>+</Button></Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
+                  </Table.Root>
+                  {totalPages>1 && (
+                    <MyPagination page={page} totalPages={totalPages} loading={loading} handlePageChange={fetchAvailable} />
+                  )}
+                </Box>
+                <Box flex={1}>
+                  <Table.Root size='sm'>
+                    <Table.Header><Table.Row><Table.ColumnHeader>ID</Table.ColumnHeader><Table.ColumnHeader>Nombre</Table.ColumnHeader><Table.ColumnHeader></Table.ColumnHeader></Table.Row></Table.Header>
+                    <Table.Body>
+                      {selected.map(r=> (
+                        <Table.Row key={r.id}>
+                          <Table.Cell>{r.id}</Table.Cell>
+                          <Table.Cell>{r.nombre}</Table.Cell>
+                          <Table.Cell><Button size='xs' colorPalette='red' onClick={()=>handleRemove(r)}>-</Button></Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
+                  </Table.Root>
+                </Box>
               </Flex>
-              <Table size='sm'>
-                <Thead><Tr><Th>ID</Th><Th>Nombre</Th><Th></Th></Tr></Thead>
-                <Tbody>
-                  {available.map(r=> (
-                    <Tr key={r.id}>
-                      <Td>{r.id}</Td>
-                      <Td>{r.nombre}</Td>
-                      <Td><Button size='xs' onClick={()=>handleAdd(r)}>+</Button></Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-              {totalPages>1 && (
-                <MyPagination page={page} totalPages={totalPages} loading={loading} handlePageChange={fetchAvailable} />
-              )}
-            </Box>
-            <Box flex={1}>
-              <Table size='sm'>
-                <Thead><Tr><Th>ID</Th><Th>Nombre</Th><Th></Th></Tr></Thead>
-                <Tbody>
-                  {selected.map(r=> (
-                    <Tr key={r.id}>
-                      <Td>{r.id}</Td>
-                      <Td>{r.nombre}</Td>
-                      <Td><Button size='xs' colorScheme='red' onClick={()=>handleRemove(r)}>-</Button></Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            </Box>
-          </Flex>
-        </ModalBody>
-        <ModalFooter>
-          <Button mr={3} onClick={onClose}>Cancelar</Button>
-          <Button colorScheme='teal' onClick={handleAccept}>Aceptar</Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Button mr={3} onClick={onClose}>Cancelar</Button>
+              <Button colorPalette='teal' onClick={handleAccept}>Aceptar</Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+
+      </Portal>
+    </Dialog.Root>
   );
 }
 

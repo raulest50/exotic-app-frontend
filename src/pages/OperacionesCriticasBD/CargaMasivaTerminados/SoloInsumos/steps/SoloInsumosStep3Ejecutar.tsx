@@ -1,18 +1,5 @@
-import {
-    Alert,
-    AlertDescription,
-    AlertIcon,
-    AlertTitle,
-    Box,
-    Button,
-    Flex,
-    Heading,
-    Spinner,
-    Text,
-    useColorModeValue,
-    useToast,
-    VStack,
-} from "@chakra-ui/react";
+import { Steps, Alert, Box, Button, Flex, Heading, Spinner, Text, useToast, VStack } from "@chakra-ui/react";
+import { useColorModeValue } from "../../../../../components/ui/color-mode";
 import { useMemo, useState } from "react";
 import axios, { AxiosError } from "axios";
 import { ImCheckboxChecked } from "react-icons/im";
@@ -156,7 +143,7 @@ export default function SoloInsumosStep3Ejecutar({
                 />
                 <Button
                     variant="solid"
-                    colorScheme="blue"
+                    colorPalette="blue"
                     onClick={() => {
                         setExecutionSuccess(false);
                         setActiveStep(0);
@@ -171,7 +158,7 @@ export default function SoloInsumosStep3Ejecutar({
 
     return (
         <Box p={4}>
-            <VStack align="stretch" spacing={6}>
+            <VStack align="stretch" gap={6}>
                 <Text fontSize="lg" fontWeight="semibold">
                     Ejecutar carga masiva
                 </Text>
@@ -183,12 +170,12 @@ export default function SoloInsumosStep3Ejecutar({
                     </Text>
 
                     {executionError && (
-                        <Alert status="error" mb={4}>
-                            <AlertIcon />
+                        <Alert.Root status="error" mb={4}>
+                            <Alert.Indicator />
                             <Box>
-                                <AlertTitle>Error</AlertTitle>
-                                <AlertDescription>
-                                    <VStack align="stretch" spacing={1} mt={2}>
+                                <Alert.Title>Error</Alert.Title>
+                                <Alert.Description>
+                                    <VStack align="stretch" gap={1} mt={2}>
                                         <Text>{executionError}</Text>
                                         {executionErrors.slice(0, 10).map((e, idx) => (
                                             <Text key={idx} fontSize="sm">
@@ -201,9 +188,9 @@ export default function SoloInsumosStep3Ejecutar({
                                             </Text>
                                         )}
                                     </VStack>
-                                </AlertDescription>
+                                </Alert.Description>
                             </Box>
-                        </Alert>
+                        </Alert.Root>
                     )}
 
                     {isExecuting && (
@@ -214,15 +201,15 @@ export default function SoloInsumosStep3Ejecutar({
                     )}
 
                     <Flex gap={4} justify="flex-end" mt={4}>
-                        <Button variant="outline" onClick={() => setActiveStep(0)} isDisabled={isExecuting}>
+                        <Button variant="outline" onClick={() => setActiveStep(0)} disabled={isExecuting}>
                             Atrás
                         </Button>
                         <Button
-                            colorScheme="blue"
+                            colorPalette="blue"
                             onClick={handleExecute}
-                            isLoading={isExecuting}
+                            loading={isExecuting}
                             loadingText="Ejecutando..."
-                            isDisabled={isExecuting || !jsonFile}
+                            disabled={isExecuting || !jsonFile}
                         >
                             Ejecutar carga masiva
                         </Button>

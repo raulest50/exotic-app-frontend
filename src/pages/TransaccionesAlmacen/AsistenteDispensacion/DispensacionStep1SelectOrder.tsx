@@ -1,11 +1,12 @@
 import {useEffect, useMemo, useState} from 'react';
 import {
+    Steps,
     Badge,
     Box,
     Button,
     Flex,
     Heading,
-    Select,
+    NativeSelect,
     Table,
     Tbody,
     Td,
@@ -13,7 +14,7 @@ import {
     Th,
     Thead,
     Tr,
-    useToast
+    useToast,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
@@ -212,67 +213,73 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
                 />
             </Flex>
             <Box bg='app.surface' borderRadius='md' boxShadow='sm' overflowX='auto'>
-                <Table size='sm'>
-                    <Thead>
-                        <Tr>
-                            <Th>Lote</Th>
-                            <Th>Producto</Th>
-                            <Th>Fecha</Th>
-                            <Th>Materiales</Th>
-                            <Th>Ultima area dispensada</Th>
-                            <Th textAlign='center'>Acciones</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+                <Table.Root size='sm'>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                            <Table.ColumnHeader>Producto</Table.ColumnHeader>
+                            <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                            <Table.ColumnHeader>Materiales</Table.ColumnHeader>
+                            <Table.ColumnHeader>Ultima area dispensada</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='center'>Acciones</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {ordenes.map((orden, index) => {
                             const ordenId = orden.ordenProduccionId ?? orden.ordenId;
                             return (
-                                <Tr key={ordenId ?? `orden-${index}`}>
-                                    <Td>{orden.loteAsignado ?? 'N/A'}</Td>
-                                    <Td>{orden.productoNombre ?? orden.producto?.nombre ?? 'Sin nombre'}</Td>
-                                    <Td>{formatFecha(orden.fechaInicio ?? orden.fechaCreacion)}</Td>
-                                    <Td>
+                                <Table.Row key={ordenId ?? `orden-${index}`}>
+                                    <Table.Cell>{orden.loteAsignado ?? 'N/A'}</Table.Cell>
+                                    <Table.Cell>{orden.productoNombre ?? orden.producto?.nombre ?? 'Sin nombre'}</Table.Cell>
+                                    <Table.Cell>{formatFecha(orden.fechaInicio ?? orden.fechaCreacion)}</Table.Cell>
+                                    <Table.Cell>
                                         <Flex gap={2} wrap='wrap'>
-                                            <Badge colorScheme={getEstadoDispensacionMaterialesColor(orden.estadoDispensacionMateriales)}>
+                                            <Badge colorPalette={getEstadoDispensacionMaterialesColor(orden.estadoDispensacionMateriales)}>
                                                 {getEstadoDispensacionMaterialesLabel(orden.estadoDispensacionMateriales)}
                                             </Badge>
-                                            <Badge colorScheme={getPoliticaDispensacionInicioColor(orden.politicaDispensacionInicio)}>
+                                            <Badge colorPalette={getPoliticaDispensacionInicioColor(orden.politicaDispensacionInicio)}>
                                                 {getPoliticaDispensacionInicioLabel(orden.politicaDispensacionInicio)}
                                             </Badge>
                                         </Flex>
-                                    </Td>
-                                    <Td>{orden.ultimaAreaDispensada ?? 'Sin dispensacion'}</Td>
-                                    <Td>
+                                    </Table.Cell>
+                                    <Table.Cell>{orden.ultimaAreaDispensada ?? 'Sin dispensacion'}</Table.Cell>
+                                    <Table.Cell>
                                         <Flex justify='center'>
-                                            <Button colorScheme='teal' size='sm' onClick={() => handleDispensacion(orden)} isLoading={loadingOrden === ordenId}>
+                                            <Button colorPalette='teal' size='sm' onClick={() => handleDispensacion(orden)} loading={loadingOrden === ordenId}>
                                                 Hacer dispensación
                                             </Button>
                                         </Flex>
-                                    </Td>
-                                </Tr>
+                                    </Table.Cell>
+                                </Table.Row>
                             );
                         })}
                         {ordenes.length === 0 && (
-                            <Tr>
-                                <Td colSpan={6}>
+                            <Table.Row>
+                                <Table.Cell colSpan={6}>
                                     <Text textAlign='center' py={4}>{loading ? 'Cargando órdenes...' : 'No hay órdenes disponibles.'}</Text>
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         )}
-                    </Tbody>
-                </Table>
+                    </Table.Body>
+                </Table.Root>
             </Box>
             <Flex mt={4} justify='space-between' align='center' gap={4}>
                 <Flex align='center' gap={2}>
                     <Text>Tamaño de página:</Text>
-                    <Select value={size} onChange={(e) => {setPage(0); setSize(parseInt(e.target.value));}} width='80px'>
-                        {[5,10,20,50].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </Select>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            value={size}
+                            onValueChange={(e) => {setPage(0); setSize(parseInt(e.target.value));}}
+                            width='80px'>
+                            {[5,10,20,50].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
                 </Flex>
                 <Flex align='center' gap={2}>
-                    <Button onClick={() => setPage((p) => Math.max(p - 1, 0))} isDisabled={page === 0 || loading}>Anterior</Button>
+                    <Button onClick={() => setPage((p) => Math.max(p - 1, 0))} disabled={page === 0 || loading}>Anterior</Button>
                     <Text>Pagina {totalPages === 0 ? 0 : page + 1} de {totalPages}</Text>
-                    <Button onClick={() => setPage((p) => p + 1)} isDisabled={loading || isNextDisabled}>Siguiente</Button>
+                    <Button onClick={() => setPage((p) => p + 1)} disabled={loading || isNextDisabled}>Siguiente</Button>
                 </Flex>
             </Flex>
         </Box>

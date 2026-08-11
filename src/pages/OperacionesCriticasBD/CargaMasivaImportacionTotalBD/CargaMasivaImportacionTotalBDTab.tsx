@@ -1,20 +1,6 @@
-import {
-    Box,
-    Button,
-    Container,
-    Flex,
-    Step,
-    StepDescription,
-    StepIcon,
-    StepIndicator,
-    StepNumber,
-    StepSeparator,
-    StepStatus,
-    Stepper,
-    StepTitle,
-    useColorModeValue,
-    useSteps,
-} from "@chakra-ui/react";
+import { Steps, Box, Button, Container, Flex, useSteps } from "@chakra-ui/react";
+import { LuCheck } from 'react-icons/lu';
+import { useColorModeValue } from "../../../components/ui/color-mode";
 import { useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import ImportacionTotalBDStep0Informacion from "./steps/ImportacionTotalBDStep0Informacion";
@@ -32,9 +18,9 @@ interface CargaMasivaImportacionTotalBDTabProps {
 }
 
 export default function CargaMasivaImportacionTotalBDTab({ onBackToSelector }: CargaMasivaImportacionTotalBDTabProps) {
-    const { activeStep, setActiveStep } = useSteps({
-        index: 0,
-        count: steps.length,
+    const stepsApi = useSteps({
+        defaultStep: 0,
+        count: steps.length
     });
     const stepperBg = useColorModeValue("orange.50", "orange.900");
 
@@ -77,32 +63,29 @@ export default function CargaMasivaImportacionTotalBDTab({ onBackToSelector }: C
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <Flex direction="column" gap={4}>
                 <Button
-                    leftIcon={<FaArrowLeft />}
                     w="fit-content"
                     variant="outline"
                     onClick={onBackToSelector}
-                    isDisabled={navigationLocked}
-                >
-                    Volver
-                </Button>
-                <Stepper index={activeStep} p="1em" backgroundColor={stepperBg} w="full">
+                    disabled={navigationLocked}><FaArrowLeft />Volver
+                                    </Button>
+                <Steps.RootProvider p="1em" backgroundColor={stepperBg} w="full" value={stepsApi}>
                     {steps.map((step, index) => (
-                        <Step key={index}>
-                            <StepIndicator>
-                                <StepStatus
-                                    complete={<StepIcon />}
-                                    incomplete={<StepNumber />}
-                                    active={<StepNumber />}
+                        <Steps.Item key={index}>
+                            <Steps.Indicator>
+                                <Steps.Status
+                                    complete={<LuCheck />}
+                                    incomplete={<Steps.Number />}
+                                    current={<Steps.Number />}
                                 />
-                            </StepIndicator>
+                            </Steps.Indicator>
                             <Box flexShrink="0">
-                                <StepTitle>{step.title}</StepTitle>
-                                <StepDescription>{step.description}</StepDescription>
+                                <Steps.Title>{step.title}</Steps.Title>
+                                <Steps.Description>{step.description}</Steps.Description>
                             </Box>
-                            <StepSeparator />
-                        </Step>
+                            <Steps.Separator />
+                        </Steps.Item>
                     ))}
-                </Stepper>
+                </Steps.RootProvider>
                 {ConditionalRenderStep()}
             </Flex>
         </Container>

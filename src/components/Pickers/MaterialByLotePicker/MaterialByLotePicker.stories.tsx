@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import MaterialByLotePicker, { MaterialByLoteItem } from './MaterialByLotePicker.tsx';
-import { Button, Box, Text, VStack } from '@chakra-ui/react';
+import { Steps, Button, Box, Text, VStack } from '@chakra-ui/react';
 
 export const Default = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -15,8 +15,8 @@ export const Default = () => {
     };
 
     return (
-        <VStack spacing={4} align="start" p={5}>
-            <Button colorScheme="blue" onClick={handleOpen}>
+        <VStack gap={4} align="start" p={5}>
+            <Button colorPalette="blue" onClick={handleOpen}>
                 Buscar Material por Lote
             </Button>
 

@@ -1,11 +1,20 @@
+/*
+ MIGRATION NOTE: The following Chakra UI hooks have been removed.
+ Please replace them with the suggested alternatives:
+
+//   - useOutsideClick: Use react-use: useClickAway
+
+ See: https://chakra-ui.com/docs/get-started/migration#hooks
+*/
 // src/components/HistorialOrdenesSeguimiento.tsx
 
 import { useState, useRef } from "react";
 import {
+    Steps,
     Badge,
     Button,
     Flex,
-    Select,
+    NativeSelect,
     Spinner,
     Text,
     Table,
@@ -16,7 +25,6 @@ import {
     Thead,
     Tr,
     Box,
-    useOutsideClick,
     useToast,
 } from "@chakra-ui/react";
 import DateRangePicker from "../../../components/DateRangePicker.tsx";
@@ -287,16 +295,18 @@ export default function HistorialOrdenesTab() {
                     setDate2={setDate2}
                     flex_direction={"column"}
                 />
-                <Select
-                    value={searchParamState}
-                    onChange={(e) => setSearchParamState(e.target.value)}
-                    ml={4}
-                    width="200px"
-                >
-                    <option value="0">Solo Ordenes Activas</option>
-                    <option value="1">Solo Ordenes Cerradas</option>
-                    <option value="2">Todas</option>
-                </Select>
+                <NativeSelect.Root>
+                    <NativeSelect.Field
+                        value={searchParamState}
+                        onValueChange={(e) => setSearchParamState(e.target.value)}
+                        ml={4}
+                        width="200px">
+                        <option value="0">Solo Ordenes Activas</option>
+                        <option value="1">Solo Ordenes Cerradas</option>
+                        <option value="2">Todas</option>
+                    </NativeSelect.Field>
+                    <NativeSelect.Indicator />
+                </NativeSelect.Root>
                 <Flex ml={4} flex={1}>
                     <ProductoFilterCard
                         selectedProducto={selectedProducto}
@@ -306,9 +316,9 @@ export default function HistorialOrdenesTab() {
                 </Flex>
                 <Button
                     onClick={handleClickSearch}
-                    colorScheme={"blue"}
+                    colorPalette={"blue"}
                     ml={4}
-                    isLoading={loading}
+                    loading={loading}
                 >
                     Buscar
                 </Button>
@@ -329,59 +339,59 @@ export default function HistorialOrdenesTab() {
             )}
 
             {/* Display List of Ordenes ProduccionPage */}
-            <TableContainer>
-                <Table variant="simple">
-                    <Thead>
-                        <Tr>
-                            <Th>Lote</Th>
-                            <Th>Producto</Th>
-                            <Th>Origen</Th>
-                            <Th>Fechas</Th>
-                            <Th>Estado</Th>
-                            <Th>Cantidad</Th>
-                            <Th>Pedido</Th>
+            <Table.ScrollArea>
+                <Table.Root variant="simple">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                            <Table.ColumnHeader>Producto</Table.ColumnHeader>
+                            <Table.ColumnHeader>Origen</Table.ColumnHeader>
+                            <Table.ColumnHeader>Fechas</Table.ColumnHeader>
+                            <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                            <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                            <Table.ColumnHeader>Pedido</Table.ColumnHeader>
 
-                            <Th textAlign="right">Acciones</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+                            <Table.ColumnHeader textAlign="right">Acciones</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {ordenes.map((orden) => (
-                            <Tr 
+                            <Table.Row 
                                 key={orden.ordenId}
                                 onContextMenu={(e) => handleContextMenu(e, orden)}
                                 _hover={{ bg: 'blue.100', cursor: 'pointer' }}
                             >
-                                <Td>{orden.loteAsignado ?? "-"}</Td>
-                                <Td>
+                                <Table.Cell>{orden.loteAsignado ?? "-"}</Table.Cell>
+                                <Table.Cell>
                                     <Text fontWeight="medium">{orden.productoNombre || "-"}</Text>
                                     {orden.productoId && (
                                         <Text fontSize="sm" color="gray.500">
                                             ID: {orden.productoId}
                                         </Text>
                                     )}
-                                </Td>
-                                <Td>
-                                    <Badge colorScheme={getOrigenOrdenColorScheme(orden.origenOrden)}>
+                                </Table.Cell>
+                                <Table.Cell>
+                                    <Badge colorPalette={getOrigenOrdenColorScheme(orden.origenOrden)}>
                                         {orden.origenOrden === "MPS" ? "MPS" : "Manual"}
                                     </Badge>
-                                </Td>
-                                <Td>
+                                </Table.Cell>
+                                <Table.Cell>
                                     <Text fontSize="sm">Inicio: {orden.fechaInicio ?? "-"}</Text>
                                     <Text fontSize="sm">Lanzamiento: {orden.fechaLanzamiento ?? "-"}</Text>
                                     <Text fontSize="sm">Fin planificada: {orden.fechaFinalPlanificada ?? "-"}</Text>
-                                </Td>
-                                <Td>
-                                    <Badge colorScheme={getEstadoOrdenColorScheme(orden.estadoOrden)}>
+                                </Table.Cell>
+                                <Table.Cell>
+                                    <Badge colorPalette={getEstadoOrdenColorScheme(orden.estadoOrden)}>
                                         {getEstadoOrdenLabel(orden.estadoOrden)}
                                     </Badge>
-                                </Td>
-                                <Td>{orden.cantidadProducir ?? "-"}</Td>
-                                <Td>{orden.numeroPedidoComercial ?? "-"}</Td>
+                                </Table.Cell>
+                                <Table.Cell>{orden.cantidadProducir ?? "-"}</Table.Cell>
+                                <Table.Cell>{orden.numeroPedidoComercial ?? "-"}</Table.Cell>
 
-                                <Td textAlign="right">
+                                <Table.Cell textAlign="right">
                                     <Button
                                         size="sm"
-                                        colorScheme="blue"
+                                        colorPalette="blue"
                                         variant="outline"
                                         onClick={() => {
                                             setSelectedOrden(orden);
@@ -390,12 +400,12 @@ export default function HistorialOrdenesTab() {
                                     >
                                         Ver detalles
                                     </Button>
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         ))}
-                    </Tbody>
-                </Table>
-            </TableContainer>
+                    </Table.Body>
+                </Table.Root>
+            </Table.ScrollArea>
 
             {/* Pagination Component */}
             <MyPagination

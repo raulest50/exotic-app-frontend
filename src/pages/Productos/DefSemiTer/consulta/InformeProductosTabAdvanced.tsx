@@ -15,12 +15,11 @@
  */
 
 import {
+    Steps,
     Flex,
     Stack,
     Checkbox,
     CheckboxGroup,
-    FormControl,
-    FormLabel,
     Input,
     Button,
     Table,
@@ -31,7 +30,8 @@ import {
     Td,
     TableContainer,
     Badge,
-    Select,
+    NativeSelect,
+    Field,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import axios from "axios";
@@ -128,109 +128,109 @@ export default function InformeProductosTabAdvanced() {
     return (
         <Flex direction="column" p={4}>
             <Flex direction="row" align="center" gap={10} w="full" mb={4}>
-                <FormControl>
-                    <FormLabel>Buscar:</FormLabel>
+                <Field.Root>
+                    <Field.Label>Buscar:</Field.Label>
                     <Input
                         value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
+                        onValueChange={(e) => setSearchText(e.target.value)}
                         placeholder="Nombre del producto"
-                        isDisabled={chkbox.length === 0}
+                        disabled={chkbox.length === 0}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
                                 handleSearch();
                             }
                         }}
                     />
-                </FormControl>
+                </Field.Root>
 
-                <FormControl>
-                    <FormLabel>Categorías:</FormLabel>
+                <Field.Root>
+                    <Field.Label>Categorías:</Field.Label>
                     <CheckboxGroup
-                        colorScheme="green"
+                        colorPalette="green"
                         value={chkbox}
-                        onChange={(values) => setChkbox(values as string[])}
+                        onValueChange={(values) => setChkbox(values as string[])}
                     >
                         <Stack
-                            spacing={[2, 5]}
+                            gap={[2, 5]}
                             direction="column"
                             border="1px solid gray"
                             borderRadius="10px"
                             p="1em"
                             w="fit-content"
                         >
-                            <Checkbox value="semiterminado">SemiTerminado</Checkbox>
-                            <Checkbox value="terminado">Producto Terminado</Checkbox>
+                            <Checkbox.Root value="semiterminado"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>SemiTerminado</Checkbox.Label></Checkbox.Root>
+                            <Checkbox.Root value="terminado"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Producto Terminado</Checkbox.Label></Checkbox.Root>
                         </Stack>
                     </CheckboxGroup>
-                </FormControl>
+                </Field.Root>
 
-                <Button onClick={handleSearch} colorScheme="blue" isLoading={loading}>
+                <Button onClick={handleSearch} colorPalette="blue" loading={loading}>
                     Buscar
                 </Button>
             </Flex>
 
             {/* Opciones avanzadas - Nuevas características */}
             <Flex direction="row" align="center" gap={10} w="full" mb={4}>
-                <FormControl maxW="200px">
-                    <FormLabel>Ordenar por:</FormLabel>
-                    <Select 
-                        value={sortBy} 
-                        onChange={(e) => setSortBy(e.target.value)}
-                    >
-                        <option value="nombre">Nombre</option>
-                        <option value="fechaCreacion">Fecha de creación</option>
-                        <option value="costo">Costo</option>
-                    </Select>
-                </FormControl>
+                <Field.Root maxW="200px">
+                    <Field.Label>Ordenar por:</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field value={sortBy} onValueChange={(e) => setSortBy(e.target.value)}>
+                            <option value="nombre">Nombre</option>
+                            <option value="fechaCreacion">Fecha de creación</option>
+                            <option value="costo">Costo</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
 
-                <FormControl maxW="200px">
-                    <FormLabel>Filtrar por fecha:</FormLabel>
+                <Field.Root maxW="200px">
+                    <Field.Label>Filtrar por fecha:</Field.Label>
                     <Input
                         type="date"
                         value={filterByDate}
-                        onChange={(e) => setFilterByDate(e.target.value)}
+                        onValueChange={(e) => setFilterByDate(e.target.value)}
                     />
-                </FormControl>
+                </Field.Root>
             </Flex>
 
-            <TableContainer>
-                <Table variant="striped" colorScheme="blue">
-                    <Thead>
-                        <Tr>
-                            <Th>ID</Th>
-                            <Th>Nombre</Th>
-                            <Th>Costo</Th>
-                            <Th>Tipo</Th>
-                            <Th>Fecha Creación</Th>
-                            <Th>Acciones</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+            <Table.ScrollArea>
+                <Table.Root variant="striped" colorPalette="blue">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>ID</Table.ColumnHeader>
+                            <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                            <Table.ColumnHeader>Costo</Table.ColumnHeader>
+                            <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                            <Table.ColumnHeader>Fecha Creación</Table.ColumnHeader>
+                            <Table.ColumnHeader>Acciones</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {productos.map((producto) => (
-                            <Tr key={producto.productoId}>
-                                <Td>{producto.productoId}</Td>
-                                <Td>{producto.nombre}</Td>
-                                <Td>{producto.costo}</Td>
-                                <Td>
-                                    <Badge colorScheme={producto.tipo_producto === 'T' ? 'green' : 'purple'}>
+                            <Table.Row key={producto.productoId}>
+                                <Table.Cell>{producto.productoId}</Table.Cell>
+                                <Table.Cell>{producto.nombre}</Table.Cell>
+                                <Table.Cell>{producto.costo}</Table.Cell>
+                                <Table.Cell>
+                                    <Badge colorPalette={producto.tipo_producto === 'T' ? 'green' : 'purple'}>
                                         {producto.tipo_producto === 'T' ? 'Terminado' : 'Semiterminado'}
                                     </Badge>
-                                </Td>
-                                <Td>{producto.fechaCreacion}</Td>
-                                <Td>
+                                </Table.Cell>
+                                <Table.Cell>{producto.fechaCreacion}</Table.Cell>
+                                <Table.Cell>
                                     <Button
                                         size="sm"
-                                        colorScheme="blue"
+                                        colorPalette="blue"
                                         onClick={() => verDetalleProducto(producto)}
                                     >
                                         Ver Detalle
                                     </Button>
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         ))}
-                    </Tbody>
-                </Table>
-            </TableContainer>
+                    </Table.Body>
+                </Table.Root>
+            </Table.ScrollArea>
 
             <MyPagination
                 page={page}

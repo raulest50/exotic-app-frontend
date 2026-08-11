@@ -1,4 +1,4 @@
-import { Badge, Divider, Stack } from "@chakra-ui/react";
+import { Steps, Badge, Stack, Separator } from "@chakra-ui/react";
 import BuscadorStockMaterialCard from "./BuscadorStockMaterialCard";
 import CoberturaMaterialesCard from "./CoberturaMaterialesCard";
 import InformeAlmacenAdjustmentsSection from "./InformeAlmacenAdjustmentsSection";
@@ -27,32 +27,32 @@ export default function InformeAlmacenPage({
     report,
 }: InformeAlmacenPageProps) {
     return (
-        <Stack spacing={{ base: 5, md: 6 }}>
+        <Stack gap={{ base: 5, md: 6 }}>
             <Stack
                 direction={{ base: "column", md: "row" }}
                 align={{ base: "flex-start", md: "center" }}
                 justify="space-between"
-                spacing={2}
+                gap={2}
             >
                 <SectionHeading
                     title="Informe global de almacén"
                     description={`Stock del almacén General al ${formatDateTime(report.fechaHoraCorteStock)}.`}
                 />
-                <Badge colorScheme="green">{formatPeriod(report.periodo)}</Badge>
+                <Badge colorPalette="green">{formatPeriod(report.periodo)}</Badge>
             </Stack>
 
             <ReportNotes notes={report.notas} />
             <StockOverviewSection stock={report.stock} />
             <BuscadorStockMaterialCard />
 
-            <Divider borderColor="app.border" />
+            <Separator borderColor="app.border" />
             <InventoryAnalyticsSection
                 stock={report.stock}
                 cutoff={report.fechaHoraCorteStock}
             />
 
-            <Divider borderColor="app.border" />
-            <Stack spacing={4}>
+            <Separator borderColor="app.border" />
+            <Stack gap={4}>
                 <SectionHeading
                     title="Movimientos del periodo"
                     description="Entradas y salidas clasificadas por su origen operativo."
@@ -63,14 +63,14 @@ export default function InformeAlmacenPage({
                 />
             </Stack>
 
-            <Divider borderColor="app.border" />
+            <Separator borderColor="app.border" />
             {report.ajustesInventario ? (
                 <>
                     <InformeAlmacenAdjustmentsSection
                         adjustments={report.ajustesInventario}
                         period={report.periodo}
                     />
-                    <Divider borderColor="app.border" />
+                    <Separator borderColor="app.border" />
                 </>
             ) : null}
             <PendingPurchaseOrdersSection
@@ -85,7 +85,7 @@ export default function InformeAlmacenPage({
                 cutoff={report.fechaHoraCorteStock}
             />
 
-            <Divider borderColor="app.border" />
+            <Separator borderColor="app.border" />
             <CoberturaMaterialesCard />
         </Stack>
     );

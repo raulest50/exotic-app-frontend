@@ -1,16 +1,4 @@
-import {
-    Badge,
-    Box,
-    HStack,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-} from "@chakra-ui/react";
+import { Steps, Badge, Box, HStack, Table, Tbody, Td, Text, Th, Thead, Tr, VStack } from "@chakra-ui/react";
 import type { ReporteProduccionPendiente } from "./types";
 import { consolidarProductos, formatCantidad } from "./produccionCierreUtils";
 
@@ -22,7 +10,7 @@ export default function IngresoTerminadosStep1Lectura({ reportes }: Props) {
     const consolidados = consolidarProductos(reportes);
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             {consolidados.map((producto) => {
                 const lotes = reportes.filter((reporte) => reporte.productoId === producto.productoId);
                 return (
@@ -39,37 +27,37 @@ export default function IngresoTerminadosStep1Lectura({ reportes }: Props) {
                                 <Text fontWeight="semibold">{producto.productoNombre}</Text>
                                 <Text fontSize="sm" color="app.textSubtle">{producto.productoId}</Text>
                             </Box>
-                            <Badge colorScheme="teal" fontSize="sm" px={2} py={1}>
+                            <Badge colorPalette="teal" fontSize="sm" px={2} py={1}>
                                 {formatCantidad(producto.cantidadReportada)} {producto.tipoUnidades || "unidades"}
                             </Badge>
                         </HStack>
 
                         <Box display={{ base: "none", md: "block" }} overflowX="auto">
-                            <Table size="sm">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Lote</Th>
-                                        <Th>OP</Th>
-                                        <Th isNumeric>Planeado</Th>
-                                        <Th isNumeric>Reportado</Th>
-                                        <Th>Responsable</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                            <Table.Root size="sm">
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                                        <Table.ColumnHeader>OP</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Planeado</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Reportado</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Responsable</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {lotes.map((reporte) => (
-                                        <Tr key={reporte.reporteId}>
-                                            <Td fontWeight="medium">{reporte.lote}</Td>
-                                            <Td>{reporte.ordenProduccionId}</Td>
-                                            <Td isNumeric>{formatCantidad(reporte.cantidadPlaneada)}</Td>
-                                            <Td isNumeric fontWeight="semibold">{formatCantidad(reporte.cantidadReportada)}</Td>
-                                            <Td>{reporte.reportadoPor}</Td>
-                                        </Tr>
+                                        <Table.Row key={reporte.reporteId}>
+                                            <Table.Cell fontWeight="medium">{reporte.lote}</Table.Cell>
+                                            <Table.Cell>{reporte.ordenProduccionId}</Table.Cell>
+                                            <Table.Cell textAlign='end'>{formatCantidad(reporte.cantidadPlaneada)}</Table.Cell>
+                                            <Table.Cell fontWeight="semibold" textAlign='end'>{formatCantidad(reporte.cantidadReportada)}</Table.Cell>
+                                            <Table.Cell>{reporte.reportadoPor}</Table.Cell>
+                                        </Table.Row>
                                     ))}
-                                </Tbody>
-                            </Table>
+                                </Table.Body>
+                            </Table.Root>
                         </Box>
 
-                        <VStack display={{ base: "flex", md: "none" }} align="stretch" spacing={0}>
+                        <VStack display={{ base: "flex", md: "none" }} align="stretch" gap={0}>
                             {lotes.map((reporte) => (
                                 <Box key={reporte.reporteId} px={4} py={3} borderTopWidth="1px">
                                     <HStack justify="space-between" align="start">

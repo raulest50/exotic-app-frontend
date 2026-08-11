@@ -1,6 +1,7 @@
 // src/components/OrdenCompraItems.tsx
 import React from 'react';
 import {
+    Steps,
     Table,
     Thead,
     Tbody,
@@ -52,40 +53,40 @@ const ListaItemsOCM: React.FC<OrdenCompraItemsProps> = ({
 
     return (
         <Box overflowX="auto" mt={4}>
-            <Table variant="simple">
-                <Thead>
-                    <Tr>
-                        <Th>ID Materia Prima</Th>
-                        <Th>Nombre</Th>
-                        <Th isNumeric>Cantidad</Th>
-                        <Th isNumeric>Precio Unitario ({currency})</Th>
-                        <Th isNumeric>IVA %</Th>
-                        <Th isNumeric>
+            <Table.Root variant="simple">
+                <Table.Header>
+                    <Table.Row>
+                        <Table.ColumnHeader>ID Materia Prima</Table.ColumnHeader>
+                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Cantidad</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Precio Unitario ({currency})</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>IVA %</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>
                             <Flex alignItems="center" justifyContent="flex-end">
                                 <Text mr={2}>IVA ({currency})</Text>
                                 <Switch 
-                                    isChecked={ivaEnabled} 
-                                    onChange={(e) => onToggleIva(e.target.checked)}
-                                    colorScheme="teal"
+                                    checked={ivaEnabled} 
+                                    onValueChange={(e) => onToggleIva(e.target.checked)}
+                                    colorPalette="teal"
                                 />
                             </Flex>
-                        </Th>
-                        <Th isNumeric>Subtotal ({currency})</Th>
-                        <Th>Acciones</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
+                        </Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Subtotal ({currency})</Table.ColumnHeader>
+                        <Table.ColumnHeader>Acciones</Table.ColumnHeader>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {items.map((item, index) => {
                         return (
-                            <Tr key={index}>
-                                <Td>{item.material.productoId}</Td>
-                                <Td>{item.material.nombre} ({item.material.tipoUnidades}) </Td>
-                                <Td isNumeric>
+                            <Table.Row key={index}>
+                                <Table.Cell>{item.material.productoId}</Table.Cell>
+                                <Table.Cell>{item.material.nombre} ({item.material.tipoUnidades}) </Table.Cell>
+                                <Table.Cell textAlign='end'>
                                     <Input
                                         size="sm"
                                         type="number"
                                         value={item.cantidad}
-                                        onChange={(e) =>
+                                        onValueChange={(e) =>
                                             onUpdateItem(
                                                 index,
                                                 'cantidad',
@@ -93,13 +94,13 @@ const ListaItemsOCM: React.FC<OrdenCompraItemsProps> = ({
                                             )
                                         }
                                     />
-                                </Td>
-                                <Td isNumeric>
+                                </Table.Cell>
+                                <Table.Cell textAlign='end'>
                                     <Input
                                         size="sm"
                                         type="number"
                                         value={item.precioUnitario}
-                                        onChange={(e) =>
+                                        onValueChange={(e) =>
                                             onUpdateItem(
                                                 index,
                                                 'precioUnitario',
@@ -107,50 +108,50 @@ const ListaItemsOCM: React.FC<OrdenCompraItemsProps> = ({
                                             )
                                         }
                                     />
-                                </Td>
-                                <Td isNumeric>{item.material.ivaPercentual}%</Td>
-                                <Td isNumeric>{formatCOP(item.ivaCOP)}</Td>
-                                <Td isNumeric>{formatCOP(item.subTotal)}</Td>
-                                <Td>
+                                </Table.Cell>
+                                <Table.Cell textAlign='end'>{item.material.ivaPercentual}%</Table.Cell>
+                                <Table.Cell textAlign='end'>{formatCOP(item.ivaCOP)}</Table.Cell>
+                                <Table.Cell textAlign='end'>{formatCOP(item.subTotal)}</Table.Cell>
+                                <Table.Cell>
                                     <Button
-                                        colorScheme="red"
+                                        colorPalette="red"
                                         size="sm"
                                         onClick={() => onRemoveItem(index)}
                                     >
                                         Eliminar
                                     </Button>
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         );
                     })}
-                </Tbody>
-                <Tfoot>
-                    <Tr>
-                        <Td colSpan={5} textAlign="right">
+                </Table.Body>
+                <Table.Footer>
+                    <Table.Row>
+                        <Table.Cell colSpan={5} textAlign="right">
                             <strong>SubTotal:</strong>
-                        </Td>
-                        <Td isNumeric colSpan={3}>
+                        </Table.Cell>
+                        <Table.Cell colSpan={3} textAlign='end'>
                             {formatCOP(totalSubTotal)}
-                        </Td>
-                    </Tr>
-                    <Tr>
-                        <Td colSpan={5} textAlign="right">
+                        </Table.Cell>
+                    </Table.Row>
+                    <Table.Row>
+                        <Table.Cell colSpan={5} textAlign="right">
                             <strong>IVA Total:</strong>
-                        </Td>
-                        <Td isNumeric colSpan={3}>
+                        </Table.Cell>
+                        <Table.Cell colSpan={3} textAlign='end'>
                             {formatCOP(totalIVA)}
-                        </Td>
-                    </Tr>
-                    <Tr>
-                        <Td colSpan={5} textAlign="right">
+                        </Table.Cell>
+                    </Table.Row>
+                    <Table.Row>
+                        <Table.Cell colSpan={5} textAlign="right">
                             <strong>Total a Pagar:</strong>
-                        </Td>
-                        <Td isNumeric colSpan={3}>
+                        </Table.Cell>
+                        <Table.Cell colSpan={3} textAlign='end'>
                             {formatCOP(totalPagar)}
-                        </Td>
-                    </Tr>
-                </Tfoot>
-            </Table>
+                        </Table.Cell>
+                    </Table.Row>
+                </Table.Footer>
+            </Table.Root>
         </Box>
     );
 };

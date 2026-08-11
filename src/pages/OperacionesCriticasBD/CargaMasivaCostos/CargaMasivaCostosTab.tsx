@@ -1,19 +1,5 @@
-import {
-    Box,
-    Button,
-    Container,
-    Step,
-    StepDescription,
-    StepIcon,
-    StepIndicator,
-    StepNumber,
-    StepSeparator,
-    StepStatus,
-    StepTitle,
-    Stepper,
-    VStack,
-    useBreakpointValue,
-} from "@chakra-ui/react";
+import { Steps, Box, Button, Container, VStack, useBreakpointValue } from "@chakra-ui/react";
+import { LuCheck } from 'react-icons/lu';
 import { FaArrowLeft } from "react-icons/fa";
 import CargaCostosStep1Archivo from "./steps/CargaCostosStep1Archivo";
 import CargaCostosStep2Preview from "./steps/CargaCostosStep2Preview";
@@ -39,42 +25,41 @@ export default function CargaMasivaCostosTab({ onBackToSelector }: CargaMasivaCo
 
     return (
         <Container maxW="container.xl" py={4} px={{ base: 0, md: 4 }}>
-            <VStack align="stretch" spacing={6}>
+            <VStack align="stretch" gap={6}>
                 <Button
-                    leftIcon={<FaArrowLeft />}
                     w="fit-content"
                     variant="outline"
                     onClick={flow.volverAlSelector}
-                    isDisabled={flow.busy}
-                >
-                    Volver
-                </Button>
+                    disabled={flow.busy}><FaArrowLeft />Volver
+                                    </Button>
 
-                <Stepper
-                    index={flow.activeStep}
+                <Steps.Root
+                    step={flow.activeStep}
                     orientation={orientation}
                     p={4}
                     borderWidth="1px"
                     borderRadius="md"
                     gap={{ base: 2, md: 0 }}
                 >
-                    {STEPS.map((step) => (
-                        <Step key={step.title}>
-                            <StepIndicator>
-                                <StepStatus
-                                    complete={<StepIcon />}
-                                    incomplete={<StepNumber />}
-                                    active={<StepNumber />}
-                                />
-                            </StepIndicator>
-                            <Box flexShrink={0}>
-                                <StepTitle>{step.title}</StepTitle>
-                                <StepDescription>{step.description}</StepDescription>
-                            </Box>
-                            <StepSeparator />
-                        </Step>
-                    ))}
-                </Stepper>
+                      <Steps.List>
+                        {STEPS.map((step) => (
+                            <Steps.Item key={step.title}>
+                                <Steps.Indicator>
+                                    <Steps.Status
+                                        complete={<LuCheck />}
+                                        incomplete={<Steps.Number />}
+                                        current={<Steps.Number />}
+                                    />
+                                </Steps.Indicator>
+                                <Box flexShrink={0}>
+                                    <Steps.Title>{step.title}</Steps.Title>
+                                    <Steps.Description>{step.description}</Steps.Description>
+                                </Box>
+                                <Steps.Separator />
+                            </Steps.Item>
+                        ))}
+                    </Steps.List>
+                    </Steps.Root>
 
                 {flow.activeStep === 0 && (
                     <CargaCostosStep1Archivo

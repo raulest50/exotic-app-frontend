@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
+    Steps,
     Box,
     Button,
-    Divider,
     Flex,
     Heading,
     IconButton,
@@ -21,6 +21,7 @@ import {
     Text,
     VStack,
     useToast,
+    Separator,
 } from '@chakra-ui/react';
 import { FiArrowRight, FiX } from 'react-icons/fi';
 import axios from 'axios';
@@ -164,7 +165,7 @@ export default function AveriaProduccionStep2ListAverias({
                 </Box>
             )}
 
-            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4}>
+            <SimpleGrid columns={{ base: 1, lg: 2 }} gap={4}>
                 {/* Left panel */}
                 <Box borderWidth="1px" borderRadius="md" p={3}>
                     <Heading size="sm" mb={3}>
@@ -174,52 +175,50 @@ export default function AveriaProduccionStep2ListAverias({
                         <Text color="app.textSubtle" textAlign="center">Cargando...</Text>
                     ) : itemsDispensados.length > 0 ? (
                         <Box overflowX="auto">
-                            <Table variant="simple" size="sm">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Producto</Th>
-                                        <Th>Lote</Th>
-                                        <Th isNumeric>Dispensada</Th>
-                                        <Th isNumeric>Averiada</Th>
-                                        <Th isNumeric>Disponible</Th>
-                                        <Th w="50px"></Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                            <Table.Root variant="simple" size="sm">
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>Producto</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Dispensada</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Averiada</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Disponible</Table.ColumnHeader>
+                                        <Table.ColumnHeader w="50px"></Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {itemsDispensados.map((item) => {
                                         const key = itemKey(item);
                                         const isSelected = selectedKeys.has(key);
                                         return (
-                                            <Tr
+                                            <Table.Row
                                                 key={key}
                                                 opacity={isSelected ? 0.5 : 1}
                                             >
-                                                <Td>
+                                                <Table.Cell>
                                                     <Text fontSize="sm">{item.productoNombre}</Text>
                                                     <Text fontSize="xs" color="app.textSubtle">{item.tipoUnidades}</Text>
-                                                </Td>
-                                                <Td>
+                                                </Table.Cell>
+                                                <Table.Cell>
                                                     <Text fontSize="sm">{item.batchNumber}</Text>
-                                                </Td>
-                                                <Td isNumeric>{item.cantidadDispensada}</Td>
-                                                <Td isNumeric>{item.cantidadAveriadaPrevia}</Td>
-                                                <Td isNumeric fontWeight="semibold">{item.cantidadDisponibleAveria}</Td>
-                                                <Td>
+                                                </Table.Cell>
+                                                <Table.Cell textAlign='end'>{item.cantidadDispensada}</Table.Cell>
+                                                <Table.Cell textAlign='end'>{item.cantidadAveriadaPrevia}</Table.Cell>
+                                                <Table.Cell fontWeight="semibold" textAlign='end'>{item.cantidadDisponibleAveria}</Table.Cell>
+                                                <Table.Cell>
                                                     <IconButton
                                                         aria-label="Seleccionar"
-                                                        icon={<FiArrowRight />}
                                                         size="sm"
-                                                        colorScheme="teal"
+                                                        colorPalette="teal"
                                                         variant="ghost"
-                                                        isDisabled={isSelected}
-                                                        onClick={() => handleSeleccionar(item)}
-                                                    />
-                                                </Td>
-                                            </Tr>
+                                                        disabled={isSelected}
+                                                        onClick={() => handleSeleccionar(item)}><FiArrowRight /></IconButton>
+                                                </Table.Cell>
+                                            </Table.Row>
                                         );
                                     })}
-                                </Tbody>
-                            </Table>
+                                </Table.Body>
+                            </Table.Root>
                         </Box>
                     ) : (
                         <Text color="app.textSubtle" textAlign="center">
@@ -234,7 +233,7 @@ export default function AveriaProduccionStep2ListAverias({
                         Items a Reportar Avería
                     </Heading>
                     {averiaItems.length > 0 ? (
-                        <VStack spacing={3} align="stretch">
+                        <VStack gap={3} align="stretch">
                             {averiaItems.map((item) => {
                                 const key = itemKey(item);
                                 return (
@@ -257,30 +256,28 @@ export default function AveriaProduccionStep2ListAverias({
                                             </Box>
                                             <IconButton
                                                 aria-label="Eliminar"
-                                                icon={<FiX />}
                                                 size="sm"
-                                                colorScheme="red"
+                                                colorPalette="red"
                                                 variant="ghost"
-                                                onClick={() => handleRemover(key)}
-                                            />
+                                                onClick={() => handleRemover(key)}><FiX /></IconButton>
                                         </Flex>
                                         <Flex align="center" gap={2}>
                                             <Text fontSize="sm" whiteSpace="nowrap">Cant. Avería:</Text>
-                                            <NumberInput
+                                            <NumberInput.Root
                                                 size="sm"
                                                 min={0.01}
                                                 max={item.cantidadDisponibleAveria}
                                                 step={0.01}
                                                 precision={2}
-                                                value={item.cantidadAveria || ''}
-                                                onChange={(_, val) => handleCantidadChange(key, val)}
+                                                value={String(item.cantidadAveria || '')}
+                                                onValueChange={(_, val) => handleCantidadChange(key, val)}
                                             >
-                                                <NumberInputField />
-                                                <NumberInputStepper>
-                                                    <NumberIncrementStepper />
-                                                    <NumberDecrementStepper />
-                                                </NumberInputStepper>
-                                            </NumberInput>
+                                                <NumberInput.Input />
+                                                <NumberInput.Control>
+                                                    <NumberInput.IncrementTrigger />
+                                                    <NumberInput.DecrementTrigger />
+                                                </NumberInput.Control>
+                                            </NumberInput.Root>
                                         </Flex>
                                         {item.cantidadAveria > item.cantidadDisponibleAveria && (
                                             <Text fontSize="xs" color="red.500" mt={1}>
@@ -307,7 +304,7 @@ export default function AveriaProduccionStep2ListAverias({
                 {isLoadingHistorial ? (
                     <Text color="app.textSubtle" textAlign="center">Cargando historial...</Text>
                 ) : historialAverias.length > 0 ? (
-                    <VStack spacing={0} align="stretch" divider={<Divider />}>
+                    <VStack gap={0} align="stretch" separator={<Separator />}>
                         {historialAverias.map((tx) => (
                             <Box key={tx.transaccionId} py={3}>
                                 <Flex gap={4} mb={2} wrap="wrap" fontSize="sm">
@@ -327,24 +324,24 @@ export default function AveriaProduccionStep2ListAverias({
                                     )}
                                 </Flex>
                                 <Box overflowX="auto">
-                                    <Table size="sm" variant="simple">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>Producto</Th>
-                                                <Th>Unidades</Th>
-                                                <Th isNumeric>Cantidad Avería</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
+                                    <Table.Root size="sm" variant="simple">
+                                        <Table.Header>
+                                            <Table.Row>
+                                                <Table.ColumnHeader>Producto</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Unidades</Table.ColumnHeader>
+                                                <Table.ColumnHeader textAlign='end'>Cantidad Avería</Table.ColumnHeader>
+                                            </Table.Row>
+                                        </Table.Header>
+                                        <Table.Body>
                                             {tx.items.map((item) => (
-                                                <Tr key={item.productoId}>
-                                                    <Td fontSize="sm">{item.productoNombre}</Td>
-                                                    <Td fontSize="sm">{item.tipoUnidades}</Td>
-                                                    <Td isNumeric fontSize="sm">{item.cantidadAveria}</Td>
-                                                </Tr>
+                                                <Table.Row key={item.productoId}>
+                                                    <Table.Cell fontSize="sm">{item.productoNombre}</Table.Cell>
+                                                    <Table.Cell fontSize="sm">{item.tipoUnidades}</Table.Cell>
+                                                    <Table.Cell fontSize="sm" textAlign='end'>{item.cantidadAveria}</Table.Cell>
+                                                </Table.Row>
                                             ))}
-                                        </Tbody>
-                                    </Table>
+                                        </Table.Body>
+                                    </Table.Root>
                                 </Box>
                             </Box>
                         ))}
@@ -361,9 +358,9 @@ export default function AveriaProduccionStep2ListAverias({
                     Anterior
                 </Button>
                 <Button
-                    colorScheme="blue"
+                    colorPalette="blue"
                     onClick={handleSiguiente}
-                    isDisabled={!esValidoReporteAveria()}
+                    disabled={!esValidoReporteAveria()}
                 >
                     Siguiente
                 </Button>

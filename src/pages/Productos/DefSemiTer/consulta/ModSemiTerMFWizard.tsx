@@ -1,11 +1,11 @@
-import { ArrowBackIcon } from "@chakra-ui/icons";
-import { Box, Button, Flex, Heading, Spinner, Text, useToast } from "@chakra-ui/react";
+import { Steps, Box, Button, Flex, Heading, Spinner, Text, useToast } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import ModificarSemiTerMFWizard from "./ModSemioTerMFversions/ModificarSemiTerMFWizard.tsx";
 import { Producto, ProductoSemiter, ProductoManufacturingDTO } from "../../types.tsx";
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
 import { fromProductoManufacturingResponse } from "../../manufacturingMapper.ts";
+import { LuArrowLeft } from 'react-icons/lu';
 
 type Props = {
     producto: Producto;
@@ -57,9 +57,8 @@ export default function ModSemiTerMFWizard({ producto, onClose, refreshSearch }:
     return (
         <Box p={5} bg="app.surface" borderRadius="md" boxShadow="base">
             <Flex justifyContent="space-between" alignItems="center" mb={5}>
-                <Button leftIcon={<ArrowBackIcon />} colorScheme="blue" variant="outline" onClick={handleBack}>
-                    Regresar al listado
-                </Button>
+                <Button colorPalette="blue" variant="outline" onClick={handleBack}><LuArrowLeft />Regresar al listado
+                                    </Button>
                 <Heading size="lg">Modificar Semi/Terminado</Heading>
                 <Box />
             </Flex>

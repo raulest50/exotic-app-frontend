@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { Center, Spinner } from '@chakra-ui/react'
+import { Steps, Center, Spinner } from '@chakra-ui/react';
 
 import './App.css'
 import EndPointsURL from './api/EndPointsURL'
@@ -44,7 +44,7 @@ const BintelligencePage = lazy(() => import("./pages/Bintelligence/Bintelligence
 
 const biRouteFallback = (
     <Center minH="240px" w="full">
-        <Spinner size="lg" thickness="3px" color="blue.500" />
+        <Spinner size="lg" borderWidth="3px" color="blue.500" />
     </Center>
 );
 

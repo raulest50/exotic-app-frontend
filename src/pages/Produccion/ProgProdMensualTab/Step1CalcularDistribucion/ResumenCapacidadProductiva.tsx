@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Badge, Box, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr } from "@chakra-ui/react";
+import { Steps, Badge, Box, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr } from "@chakra-ui/react";
 import type { ResumenCapacidadCategoriaRow } from "./step1Distribucion.utils";
 import { formatCantidad } from "./step1Distribucion.utils";
 
@@ -32,39 +32,39 @@ function ResumenCapacidadProductivaComponent({ rows }: ResumenCapacidadProductiv
             <Text fontSize="sm" fontWeight="semibold" color="gray.700" mb={3}>
                 Capacidad productiva por categoria
             </Text>
-            <TableContainer w="full" overflowX="auto">
-                <Table size="sm" variant="simple">
-                    <Thead>
-                        <Tr>
-                            <Th>Categoria</Th>
-                            <Th isNumeric>Total asignado</Th>
-                            <Th isNumeric>Capacidad diaria</Th>
-                            <Th isNumeric>Uso total</Th>
-                            <Th isNumeric>% uso</Th>
-                            <Th>Estado</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+            <Table.ScrollArea w="full" overflowX="auto">
+                <Table.Root size="sm" variant="simple">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Categoria</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>Total asignado</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>Capacidad diaria</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>Uso total</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>% uso</Table.ColumnHeader>
+                            <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {rows.map((row) => {
                             const badge = getEstadoBadgeProps(row.estado);
                             return (
-                                <Tr key={row.rowKey}>
-                                    <Td>
+                                <Table.Row key={row.rowKey}>
+                                    <Table.Cell>
                                         <Text>{row.categoriaNombre ?? "Sin categoria"}</Text>
-                                    </Td>
-                                    <Td isNumeric>{formatCantidad(row.totalAsignado)}</Td>
-                                    <Td isNumeric>{formatCantidad(row.capacidadDiaria)}</Td>
-                                    <Td isNumeric>{formatCantidad(row.totalAsignado)}/{formatCantidad(row.capacidadDiaria)}</Td>
-                                    <Td isNumeric>{row.porcentajeUso === null ? "-" : `${row.porcentajeUso.toFixed(2)}%`}</Td>
-                                    <Td>
-                                        <Badge colorScheme={badge.colorScheme}>{badge.label}</Badge>
-                                    </Td>
-                                </Tr>
+                                    </Table.Cell>
+                                    <Table.Cell textAlign='end'>{formatCantidad(row.totalAsignado)}</Table.Cell>
+                                    <Table.Cell textAlign='end'>{formatCantidad(row.capacidadDiaria)}</Table.Cell>
+                                    <Table.Cell textAlign='end'>{formatCantidad(row.totalAsignado)}/{formatCantidad(row.capacidadDiaria)}</Table.Cell>
+                                    <Table.Cell textAlign='end'>{row.porcentajeUso === null ? "-" : `${row.porcentajeUso.toFixed(2)}%`}</Table.Cell>
+                                    <Table.Cell>
+                                        <Badge colorPalette={badge.colorScheme}>{badge.label}</Badge>
+                                    </Table.Cell>
+                                </Table.Row>
                             );
                         })}
-                    </Tbody>
-                </Table>
-            </TableContainer>
+                    </Table.Body>
+                </Table.Root>
+            </Table.ScrollArea>
         </Box>
     );
 }

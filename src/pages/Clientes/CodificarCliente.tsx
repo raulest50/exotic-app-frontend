@@ -1,8 +1,7 @@
 import { useState, useRef } from 'react';
 import {
+    Steps,
     Container,
-    FormControl,
-    FormLabel,
     Input,
     Button,
     Grid,
@@ -10,7 +9,8 @@ import {
     VStack,
     Textarea,
     Icon,
-    useToast
+    useToast,
+    Field,
 } from '@chakra-ui/react';
 import { FaFileCircleQuestion, FaFileCircleCheck } from 'react-icons/fa6';
 import axios from 'axios';
@@ -111,71 +111,71 @@ export default function CodificarCliente(){
             <form onSubmit={handleSubmit}>
                 <Grid templateColumns={['1fr','repeat(2,1fr)']} gap={4} p='1em' boxShadow='base'>
                     <GridItem>
-                        <FormControl isRequired>
-                            <FormLabel>Nombre</FormLabel>
-                            <Input value={formData.nombre} onChange={e=>handleChange('nombre',e.target.value)} />
-                        </FormControl>
+                        <Field.Root required>
+                            <Field.Label>Nombre</Field.Label>
+                            <Input value={formData.nombre} onValueChange={e=>handleChange('nombre',e.target.value)} />
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl isRequired>
-                            <FormLabel>Correo Electrónico</FormLabel>
-                            <Input type='email' value={formData.email} onChange={e=>handleChange('email',e.target.value)} />
-                        </FormControl>
+                        <Field.Root required>
+                            <Field.Label>Correo Electrónico</Field.Label>
+                            <Input type='email' value={formData.email} onValueChange={e=>handleChange('email',e.target.value)} />
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl isRequired>
-                            <FormLabel>Teléfono</FormLabel>
-                            <Input value={formData.telefono} onChange={e=>handleChange('telefono',e.target.value)} />
-                        </FormControl>
+                        <Field.Root required>
+                            <Field.Label>Teléfono</Field.Label>
+                            <Input value={formData.telefono} onValueChange={e=>handleChange('telefono',e.target.value)} />
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl isRequired>
-                            <FormLabel>Dirección</FormLabel>
-                            <Input value={formData.direccion} onChange={e=>handleChange('direccion',e.target.value)} />
-                        </FormControl>
+                        <Field.Root required>
+                            <Field.Label>Dirección</Field.Label>
+                            <Input value={formData.direccion} onValueChange={e=>handleChange('direccion',e.target.value)} />
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl>
-                            <FormLabel>Condiciones de Pago</FormLabel>
-                            <Input value={formData.condicionesPago||''} onChange={e=>handleChange('condicionesPago',e.target.value)} />
-                        </FormControl>
+                        <Field.Root>
+                            <Field.Label>Condiciones de Pago</Field.Label>
+                            <Input value={formData.condicionesPago||''} onValueChange={e=>handleChange('condicionesPago',e.target.value)} />
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl>
-                            <FormLabel>Límite de Crédito</FormLabel>
-                            <Input type='number' value={formData.limiteCredito||''} onChange={e=>handleChange('limiteCredito',Number(e.target.value))} />
-                        </FormControl>
+                        <Field.Root>
+                            <Field.Label>Límite de Crédito</Field.Label>
+                            <Input type='number' value={formData.limiteCredito||''} onValueChange={e=>handleChange('limiteCredito',Number(e.target.value))} />
+                        </Field.Root>
                     </GridItem>
                     <GridItem colSpan={[1,2]}>
-                        <FormControl>
-                            <FormLabel>Observaciones</FormLabel>
-                            <Textarea value={''} isDisabled />
-                        </FormControl>
+                        <Field.Root>
+                            <Field.Label>Observaciones</Field.Label>
+                            <Textarea value={''} disabled />
+                        </Field.Root>
                     </GridItem>
                 </Grid>
                 <Grid templateColumns={['1fr','repeat(2,1fr)']} gap={4} mt={6} p='1em' boxShadow='base'>
                     <GridItem>
-                        <FormControl>
-                            <VStack spacing={4} align='center'>
-                                <FormLabel>RUT</FormLabel>
+                        <Field.Root>
+                            <VStack gap={4} align='center'>
+                                <Field.Label>RUT</Field.Label>
                                 <Icon as={rutFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize='4em' color={rutFile ? 'green' : 'orange.500'} />
                                 <Button onClick={()=>rutInputRef.current?.click()}>Examinar</Button>
-                                <Input type='file' ref={rutInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleRutChange}/>
+                                <Input type='file' ref={rutInputRef} style={{display:'none'}} accept='application/pdf' onValueChange={handleRutChange}/>
                             </VStack>
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl>
-                            <VStack spacing={4} align='center'>
-                                <FormLabel>Cámara y Comercio</FormLabel>
+                        <Field.Root>
+                            <VStack gap={4} align='center'>
+                                <Field.Label>Cámara y Comercio</Field.Label>
                                 <Icon as={camaraFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize='4em' color={camaraFile ? 'green' : 'orange.500'} />
                                 <Button onClick={()=>camaraInputRef.current?.click()}>Examinar</Button>
-                                <Input type='file' ref={camaraInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleCamaraChange}/>
+                                <Input type='file' ref={camaraInputRef} style={{display:'none'}} accept='application/pdf' onValueChange={handleCamaraChange}/>
                             </VStack>
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
                 </Grid>
-                <Button type='submit' colorScheme='blue' mt={6} isLoading={loading} isDisabled={!isFormValid}>Registrar Cliente</Button>
+                <Button type='submit' colorPalette='blue' mt={6} loading={loading} disabled={!isFormValid}>Registrar Cliente</Button>
             </form>
         </Container>
     );

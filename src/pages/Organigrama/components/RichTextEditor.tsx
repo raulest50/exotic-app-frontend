@@ -1,11 +1,7 @@
 import { useEffect } from "react";
-import {
-  Box,
-  ButtonGroup,
-  IconButton,
-  Tooltip,
-  useColorModeValue,
-} from "@chakra-ui/react";
+import { useColorModeValue } from "../../../components/ui/color-mode";
+import { Steps, Box, ButtonGroup, IconButton } from "@chakra-ui/react";
+import { Tooltip } from '@/components/ui/tooltip';
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
@@ -88,16 +84,14 @@ export default function RichTextEditor({ value, onChange, ariaLabel }: RichTextE
     active = false,
     disabled = false
   ) => (
-    <Tooltip label={label} key={label} hasArrow>
+    <Tooltip content={label} key={label} showArrow>
       <IconButton
         aria-label={label}
-        icon={icon}
         size="sm"
         variant={active ? "solid" : "ghost"}
-        colorScheme={active ? "blue" : "gray"}
+        colorPalette={active ? "blue" : "gray"}
         onClick={action}
-        isDisabled={!editor || disabled}
-      />
+        disabled={!editor || disabled}>{icon}</IconButton>
     </Tooltip>
   );
 
@@ -105,7 +99,7 @@ export default function RichTextEditor({ value, onChange, ariaLabel }: RichTextE
     <Box borderWidth="1px" borderColor={borderColor} borderRadius="md" overflow="hidden" bg={editorBg}>
       <ButtonGroup
         size="sm"
-        spacing={1}
+        gap={1}
         p={2}
         borderBottomWidth="1px"
         borderColor={borderColor}
@@ -126,11 +120,11 @@ export default function RichTextEditor({ value, onChange, ariaLabel }: RichTextE
         {toolbarButton("Rehacer", <FaRedo />, () => editor?.chain().focus().redo().run(), false, !editor?.can().redo())}
       </ButtonGroup>
       <Box
-        sx={{
-          ".tiptap": { minH: "150px", p: 3, outline: "none" },
-          ".tiptap p": { mb: 2 },
-          ".tiptap ul, .tiptap ol": { pl: 6, mb: 2 },
-          ".tiptap a": { color: "blue.500", textDecoration: "underline" },
+        css={{
+          '& .tiptap': { minH: "150px", p: 3, outline: "none" },
+          '& .tiptap p': { mb: 2 },
+          '& .tiptap ul, .tiptap ol': { pl: 6, mb: 2 },
+          '& .tiptap a': { color: "blue.500", textDecoration: "underline" }
         }}
       >
         <EditorContent editor={editor} />

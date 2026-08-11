@@ -1,17 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
     HStack,
     Input,
-    Select,
+    NativeSelect,
     SimpleGrid,
     Spinner,
     Table,
@@ -24,6 +22,7 @@ import {
     Tr,
     VStack,
     useToast,
+    Field,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -210,7 +209,7 @@ export default function AreaOperativaUnidadMedidaConfig({
     }
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             <Flex
                 direction={{ base: 'column', sm: 'row' }}
                 justify="space-between"
@@ -224,17 +223,17 @@ export default function AreaOperativaUnidadMedidaConfig({
                     </Text>
                 </Box>
                 {!isReadOnly && (
-                    <Badge colorScheme="blue" alignSelf={{ base: 'flex-start', sm: 'center' }}>
+                    <Badge colorPalette="blue" alignSelf={{ base: 'flex-start', sm: 'center' }}>
                         Guardado individual
                     </Badge>
                 )}
             </Flex>
 
             {error && (
-                <Alert status="error" borderRadius="lg">
-                    <AlertIcon />
+                <Alert.Root status="error" borderRadius="lg">
+                    <Alert.Indicator />
                     {error}
-                </Alert>
+                </Alert.Root>
             )}
 
             {!isReadOnly && (
@@ -251,51 +250,53 @@ export default function AreaOperativaUnidadMedidaConfig({
                             Registre el nombre y su relación con una unidad estándar.
                         </Text>
                     </Box>
-                    <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={4}>
-                        <FormControl>
-                            <FormLabel>Nombre</FormLabel>
+                    <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} gap={4}>
+                        <Field.Root>
+                            <Field.Label>Nombre</Field.Label>
                             <Input
                                 size="sm"
                                 value={createUnidadDraft.nombre}
-                                onChange={(event) => setCreateUnidadDraft((prev) => ({ ...prev, nombre: event.target.value }))}
+                                onValueChange={(event) => setCreateUnidadDraft((prev) => ({ ...prev, nombre: event.target.value }))}
                                 placeholder="Marmita"
                             />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Relación estándar</FormLabel>
+                        </Field.Root>
+                        <Field.Root>
+                            <Field.Label>Relación estándar</Field.Label>
                             <Input
                                 size="sm"
                                 type="number"
                                 min={0.000001}
                                 step="0.000001"
                                 value={createUnidadDraft.relacionEstandar}
-                                onChange={(event) => setCreateUnidadDraft((prev) => ({
+                                onValueChange={(event) => setCreateUnidadDraft((prev) => ({
                                     ...prev,
                                     relacionEstandar: parseNumber(event.target.value, 1),
                                 }))}
                             />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Unidad relación</FormLabel>
-                            <Select
-                                size="sm"
-                                value={createUnidadDraft.unidadRelacion}
-                                onChange={(event) => setCreateUnidadDraft((prev) => ({
-                                    ...prev,
-                                    unidadRelacion: event.target.value as UnidadRelacionAreaOperativa,
-                                }))}
-                            >
-                                {UNIDADES_RELACION.map((unidadRelacion) => (
-                                    <option key={unidadRelacion} value={unidadRelacion}>{unidadRelacion}</option>
-                                ))}
-                            </Select>
-                        </FormControl>
+                        </Field.Root>
+                        <Field.Root>
+                            <Field.Label>Unidad relación</Field.Label>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    size="sm"
+                                    value={createUnidadDraft.unidadRelacion}
+                                    onValueChange={(event) => setCreateUnidadDraft((prev) => ({
+                                        ...prev,
+                                        unidadRelacion: event.target.value as UnidadRelacionAreaOperativa,
+                                    }))}>
+                                    {UNIDADES_RELACION.map((unidadRelacion) => (
+                                        <option key={unidadRelacion} value={unidadRelacion}>{unidadRelacion}</option>
+                                    ))}
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
+                        </Field.Root>
                         <Flex align="end">
                             <Button
                                 size="sm"
-                                colorScheme="teal"
+                                colorPalette="teal"
                                 onClick={handleCreateUnidad}
-                                isLoading={savingKey === 'create-unidad'}
+                                loading={savingKey === 'create-unidad'}
                             >
                                 Crear unidad
                             </Button>
@@ -327,7 +328,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                                 : 'Edite y guarde cada unidad de manera independiente.'}
                         </Text>
                     </Box>
-                    <Badge colorScheme="teal">{unidades.length}</Badge>
+                    <Badge colorPalette="teal">{unidades.length}</Badge>
                 </Flex>
 
                 {unidades.length === 0 ? (
@@ -347,97 +348,99 @@ export default function AreaOperativaUnidadMedidaConfig({
                     </Flex>
                 ) : (
                     <>
-                    <TableContainer display={{ base: 'none', md: 'block' }}>
-                        <Table size="sm">
-                            <Thead>
-                                <Tr>
-                                    <Th>Nombre</Th>
-                                    <Th>Relación estándar</Th>
-                                    <Th>Unidad relación</Th>
-                                    {!isReadOnly && <Th>Acciones</Th>}
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                    <Table.ScrollArea display={{ base: 'none', md: 'block' }}>
+                        <Table.Root size="sm">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Relación estándar</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Unidad relación</Table.ColumnHeader>
+                                    {!isReadOnly && <Table.ColumnHeader>Acciones</Table.ColumnHeader>}
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {unidades.map((unidad) => {
                                     const draft = unidadDrafts[unidad.id] ?? buildUnidadDraft(unidad);
                                     return (
-                                        <Tr key={unidad.id}>
-                                            <Td>
+                                        <Table.Row key={unidad.id}>
+                                            <Table.Cell>
                                                 <Input
                                                     size="sm"
                                                     value={draft.nombre}
-                                                    isReadOnly={isReadOnly}
-                                                    onChange={(event) => setUnidadDraftField(unidad.id, 'nombre', event.target.value)}
+                                                    readOnly={isReadOnly}
+                                                    onValueChange={(event) => setUnidadDraftField(unidad.id, 'nombre', event.target.value)}
                                                     bg={isReadOnly ? 'app.inputReadonly' : undefined}
                                                 />
-                                            </Td>
-                                            <Td>
+                                            </Table.Cell>
+                                            <Table.Cell>
                                                 <Input
                                                     size="sm"
                                                     type="number"
                                                     min={0.000001}
                                                     step="0.000001"
                                                     value={draft.relacionEstandar}
-                                                    isReadOnly={isReadOnly}
-                                                    onChange={(event) => setUnidadDraftField(
+                                                    readOnly={isReadOnly}
+                                                    onValueChange={(event) => setUnidadDraftField(
                                                         unidad.id,
                                                         'relacionEstandar',
                                                         parseNumber(event.target.value, 1),
                                                     )}
                                                     bg={isReadOnly ? 'app.inputReadonly' : undefined}
                                                 />
-                                            </Td>
-                                            <Td>
-                                                <Select
-                                                    size="sm"
-                                                    value={draft.unidadRelacion}
-                                                    isDisabled={isReadOnly}
-                                                    bg={isReadOnly ? 'app.inputReadonly' : undefined}
-                                                    onChange={(event) => setUnidadDraftField(
-                                                        unidad.id,
-                                                        'unidadRelacion',
-                                                        event.target.value as UnidadRelacionAreaOperativa,
-                                                    )}
-                                                >
-                                                    {UNIDADES_RELACION.map((unidadRelacion) => (
-                                                        <option key={unidadRelacion} value={unidadRelacion}>{unidadRelacion}</option>
-                                                    ))}
-                                                </Select>
-                                            </Td>
+                                            </Table.Cell>
+                                            <Table.Cell>
+                                                <NativeSelect.Root>
+                                                    <NativeSelect.Field
+                                                        size="sm"
+                                                        value={draft.unidadRelacion}
+                                                        disabled={isReadOnly}
+                                                        bg={isReadOnly ? 'app.inputReadonly' : undefined}
+                                                        onValueChange={(event) => setUnidadDraftField(
+                                                            unidad.id,
+                                                            'unidadRelacion',
+                                                            event.target.value as UnidadRelacionAreaOperativa,
+                                                        )}>
+                                                        {UNIDADES_RELACION.map((unidadRelacion) => (
+                                                            <option key={unidadRelacion} value={unidadRelacion}>{unidadRelacion}</option>
+                                                        ))}
+                                                    </NativeSelect.Field>
+                                                    <NativeSelect.Indicator />
+                                                </NativeSelect.Root>
+                                            </Table.Cell>
                                             {!isReadOnly && (
-                                                <Td>
+                                                <Table.Cell>
                                                     <HStack>
                                                         <Button
                                                             size="sm"
-                                                            colorScheme="teal"
+                                                            colorPalette="teal"
                                                             onClick={() => handleSaveUnidad(unidad)}
-                                                            isLoading={savingKey === `unidad-${unidad.id}`}
+                                                            loading={savingKey === `unidad-${unidad.id}`}
                                                         >
                                                             Guardar
                                                         </Button>
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            colorScheme="red"
+                                                            colorPalette="red"
                                                             onClick={() => handleDeleteUnidad(unidad)}
-                                                            isLoading={savingKey === `unidad-delete-${unidad.id}`}
+                                                            loading={savingKey === `unidad-delete-${unidad.id}`}
                                                         >
                                                             Eliminar
                                                         </Button>
                                                     </HStack>
-                                                </Td>
+                                                </Table.Cell>
                                             )}
-                                        </Tr>
+                                        </Table.Row>
                                     );
                                 })}
-                            </Tbody>
-                        </Table>
-                    </TableContainer>
+                            </Table.Body>
+                        </Table.Root>
+                    </Table.ScrollArea>
                         <VStack
                             display={{ base: 'flex', md: 'none' }}
                             align="stretch"
-                            spacing={0}
-                            divider={<Box borderBottomWidth="1px" borderColor="app.border" />}
+                            gap={0}
+                            separator={<Box borderBottomWidth="1px" borderColor="app.border" />}
                         >
                             {unidades.map((unidad) => {
                                 const draft = unidadDrafts[unidad.id] ?? buildUnidadDraft(unidad);
@@ -445,81 +448,83 @@ export default function AreaOperativaUnidadMedidaConfig({
                                     <Box key={unidad.id} p={4}>
                                         <Flex justify="space-between" align="center" mb={4}>
                                             <Text fontWeight="semibold">Unidad #{unidad.id}</Text>
-                                            <Badge colorScheme="gray">{draft.unidadRelacion}</Badge>
+                                            <Badge colorPalette="gray">{draft.unidadRelacion}</Badge>
                                         </Flex>
 
-                                        <VStack align="stretch" spacing={4}>
-                                            <FormControl>
-                                                <FormLabel fontSize="sm">Nombre</FormLabel>
+                                        <VStack align="stretch" gap={4}>
+                                            <Field.Root>
+                                                <Field.Label fontSize="sm">Nombre</Field.Label>
                                                 <Input
                                                     size="sm"
                                                     value={draft.nombre}
-                                                    isReadOnly={isReadOnly}
+                                                    readOnly={isReadOnly}
                                                     bg={isReadOnly ? 'app.inputReadonly' : undefined}
-                                                    onChange={(event) => setUnidadDraftField(
+                                                    onValueChange={(event) => setUnidadDraftField(
                                                         unidad.id,
                                                         'nombre',
                                                         event.target.value,
                                                     )}
                                                 />
-                                            </FormControl>
+                                            </Field.Root>
 
-                                            <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
-                                                <FormControl>
-                                                    <FormLabel fontSize="sm">Relación estándar</FormLabel>
+                                            <SimpleGrid columns={{ base: 1, sm: 2 }} gap={4}>
+                                                <Field.Root>
+                                                    <Field.Label fontSize="sm">Relación estándar</Field.Label>
                                                     <Input
                                                         size="sm"
                                                         type="number"
                                                         min={0.000001}
                                                         step="0.000001"
                                                         value={draft.relacionEstandar}
-                                                        isReadOnly={isReadOnly}
+                                                        readOnly={isReadOnly}
                                                         bg={isReadOnly ? 'app.inputReadonly' : undefined}
-                                                        onChange={(event) => setUnidadDraftField(
+                                                        onValueChange={(event) => setUnidadDraftField(
                                                             unidad.id,
                                                             'relacionEstandar',
                                                             parseNumber(event.target.value, 1),
                                                         )}
                                                     />
-                                                </FormControl>
-                                                <FormControl>
-                                                    <FormLabel fontSize="sm">Unidad relación</FormLabel>
-                                                    <Select
-                                                        size="sm"
-                                                        value={draft.unidadRelacion}
-                                                        isDisabled={isReadOnly}
-                                                        bg={isReadOnly ? 'app.inputReadonly' : undefined}
-                                                        onChange={(event) => setUnidadDraftField(
-                                                            unidad.id,
-                                                            'unidadRelacion',
-                                                            event.target.value as UnidadRelacionAreaOperativa,
-                                                        )}
-                                                    >
-                                                        {UNIDADES_RELACION.map((unidadRelacion) => (
-                                                            <option key={unidadRelacion} value={unidadRelacion}>
-                                                                {unidadRelacion}
-                                                            </option>
-                                                        ))}
-                                                    </Select>
-                                                </FormControl>
+                                                </Field.Root>
+                                                <Field.Root>
+                                                    <Field.Label fontSize="sm">Unidad relación</Field.Label>
+                                                    <NativeSelect.Root>
+                                                        <NativeSelect.Field
+                                                            size="sm"
+                                                            value={draft.unidadRelacion}
+                                                            disabled={isReadOnly}
+                                                            bg={isReadOnly ? 'app.inputReadonly' : undefined}
+                                                            onValueChange={(event) => setUnidadDraftField(
+                                                                unidad.id,
+                                                                'unidadRelacion',
+                                                                event.target.value as UnidadRelacionAreaOperativa,
+                                                            )}>
+                                                            {UNIDADES_RELACION.map((unidadRelacion) => (
+                                                                <option key={unidadRelacion} value={unidadRelacion}>
+                                                                    {unidadRelacion}
+                                                                </option>
+                                                            ))}
+                                                        </NativeSelect.Field>
+                                                        <NativeSelect.Indicator />
+                                                    </NativeSelect.Root>
+                                                </Field.Root>
                                             </SimpleGrid>
 
                                             {!isReadOnly && (
                                                 <HStack justify="flex-end">
                                                     <Button
                                                         size="sm"
-                                                        colorScheme="teal"
+                                                        colorPalette="teal"
                                                         onClick={() => handleSaveUnidad(unidad)}
-                                                        isLoading={savingKey === `unidad-${unidad.id}`}
+                                                        loading={savingKey === `unidad-${unidad.id}`}
                                                     >
                                                         Guardar
                                                     </Button>
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        colorScheme="red"
+                                                        colorPalette="red"
                                                         onClick={() => handleDeleteUnidad(unidad)}
-                                                        isLoading={savingKey === `unidad-delete-${unidad.id}`}
+                                                        loading={savingKey === `unidad-delete-${unidad.id}`}
                                                     >
                                                         Eliminar
                                                     </Button>

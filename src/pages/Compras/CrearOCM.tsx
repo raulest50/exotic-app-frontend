@@ -1,6 +1,17 @@
 // ./CrearOrdenCompra.tsx
 import { useEffect, useState } from 'react';
-import {Button, Container, Flex, FormControl, FormLabel, Input, Select, Textarea, useToast, Text} from '@chakra-ui/react';
+import {
+    Steps,
+    Button,
+    Container,
+    Flex,
+    Input,
+    NativeSelect,
+    Textarea,
+    useToast,
+    Text,
+    Field,
+} from '@chakra-ui/react';
 import axios from 'axios';
 import { Proveedor, Material, ItemOrdenCompra, OrdenCompraMateriales, DIVISAS, LeadTimeProveedorKpiDTO } from './types';
 import EndPointsURL from '../../api/EndPointsURL';
@@ -289,13 +300,13 @@ export default function CrearOCM() {
                     </Flex>
                     <Flex flex={1} w={"full"}>
                         {/* Componente de selección de moneda y TRM */}
-                        <FormControl>
-                            <FormLabel>Moneda y TRM</FormLabel>
+                        <Field.Root>
+                            <Field.Label>Moneda y TRM</Field.Label>
                             <SelectCurrencyTrm
                                 currencyIsUSD={currencyIsUSDTuple}
                                 useCurrentUsd2Cop={handleTrmUpdate}
                             />
-                        </FormControl>
+                        </Field.Root>
                     </Flex>
                 </Flex>
 
@@ -304,38 +315,40 @@ export default function CrearOCM() {
 
                     <Flex direction={"row"} gap={"2"} >
 
-                        <FormControl>
-                            <FormLabel> Condicion de Pago</FormLabel>
-                            <Select
-                                value={condicionPago}
-                                onChange={(e) => {
-                                    setCondicionPago(e.target.value)
-                                    if(e.target.value == "1") setPlazoPago(0);
+                        <Field.Root>
+                            <Field.Label> Condicion de Pago</Field.Label>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    value={condicionPago}
+                                    onValueChange={(e) => {
+                                        setCondicionPago(e.target.value)
+                                        if(e.target.value == "1") setPlazoPago(0);
+                                        }
                                     }
-                                }
-                                ml={4}
-                                width="200px"
-                            >
-                                <option value="0">Credito</option>
-                                <option value="1">Contado</option>
-                            </Select>
-                        </FormControl>
+                                    ml={4}
+                                    width="200px">
+                                    <option value="0">Credito</option>
+                                    <option value="1">Contado</option>
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
+                        </Field.Root>
 
-                        <FormControl isRequired={condicionPago == "0"} isDisabled={condicionPago == "1"}>
-                            <FormLabel>Plazo de pago (dias)</FormLabel>
+                        <Field.Root required={condicionPago == "0"} disabled={condicionPago == "1"}>
+                            <Field.Label>Plazo de pago (dias)</Field.Label>
                             <Input
                                 value={plazoPago}
-                                onChange={ (e) => {setPlazoPago(Number(e.target.value))} }
+                                onValueChange={ (e) => {setPlazoPago(Number(e.target.value))} }
                             />
-                        </FormControl>
+                        </Field.Root>
 
-                        <FormControl isRequired>
-                            <FormLabel>Tiempo de entrega (dias)</FormLabel>
+                        <Field.Root required>
+                            <Field.Label>Tiempo de entrega (dias)</Field.Label>
                             <Input
                                 value={tiempoEntrega}
-                                onChange={ (e) => {setTiempoEntrega(e.target.value)} }
+                                onValueChange={ (e) => {setTiempoEntrega(e.target.value)} }
                             />
-                        </FormControl>
+                        </Field.Root>
 
                         <MyDatePicker
                             date = {fechaVencimiento}
@@ -346,14 +359,14 @@ export default function CrearOCM() {
 
                     </Flex>
 
-                    <FormControl mt={2}>
-                        <FormLabel>Observaciones</FormLabel>
+                    <Field.Root mt={2}>
+                        <Field.Label>Observaciones</Field.Label>
                         <Textarea
                             value={observaciones}
-                            onChange={(e) => setObservaciones(e.target.value)}
+                            onValueChange={(e) => setObservaciones(e.target.value)}
                             placeholder="Ingrese observaciones"
                         />
-                    </FormControl>
+                    </Field.Root>
 
                 </Flex>
 
@@ -371,7 +384,7 @@ export default function CrearOCM() {
                     currency={isUSD ? 'USD' : 'COP'}
                 />
 
-                <Button colorScheme="teal" onClick={crearOrdenCompraOnClick}>
+                <Button colorPalette="teal" onClick={crearOrdenCompraOnClick}>
                     Crear Orden de Compra
                 </Button>
             </Flex>

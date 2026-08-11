@@ -1,8 +1,19 @@
 import {
-    Box, Spinner, Text,
-    Table, Thead, Tbody, Tr, Th, Td, Flex,
-    Menu, MenuButton, MenuList, MenuItem, Button,
-    useDisclosure
+    Steps,
+    Box,
+    Spinner,
+    Text,
+    Table,
+    Thead,
+    Tbody,
+    Tr,
+    Th,
+    Td,
+    Flex,
+    Menu,
+    Button,
+    useDisclosure,
+    Portal,
 } from "@chakra-ui/react";
 import { useState } from 'react';
 import axios from 'axios';
@@ -38,7 +49,7 @@ function ListaProductos({
     pageSize,
     onPageSizeChange,
 }: ListaProductosProps) {
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const { open, onOpen, onClose } = useDisclosure();
     const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
     /**
@@ -89,48 +100,50 @@ function ListaProductos({
                     <Spinner />
                 ) : (
                     <Box w={"full"}>
-                        <Table variant="striped" colorScheme="gray" size="sm" width="100%">
-                            <Thead position="sticky" top={0} bg="app.tableHeaderSticky" zIndex={1}>
-                                <Tr>
-                                    <Th>ID</Th>
-                                    <Th>Nombre</Th>
-                                    <Th>Stock</Th>
-                                    <Th>Unidades</Th>
-                                    <Th>Menu</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                        <Table.Root variant="striped" colorPalette="gray" size="sm" width="100%">
+                            <Table.Header position="sticky" top={0} bg="app.tableHeaderSticky" zIndex={1}>
+                                <Table.Row>
+                                    <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Stock</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Unidades</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Menu</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {productos.length === 0 ? (
-                                    <Tr>
-                                        <Td colSpan={5} textAlign="center">
+                                    <Table.Row>
+                                        <Table.Cell colSpan={5} textAlign="center">
                                             <Text py={2}>No se encontraron productos.</Text>
-                                        </Td>
-                                    </Tr>
+                                        </Table.Cell>
+                                    </Table.Row>
                                 ) : (
                                     productos.map((item) => (
-                                        <Tr key={item.producto.productoId}>
-                                            <Td>{item.producto.productoId}</Td>
-                                            <Td>{item.producto.nombre}</Td>
-                                            <Td>{item.stock}</Td>
-                                            <Td>{item.producto.tipoUnidades}</Td>
-                                            <Td>
-                                                <Menu>
-                                                    <MenuButton as={Button} size="sm" colorScheme="teal">Menu</MenuButton>
-                                                    <MenuList>
-                                                        <MenuItem onClick={() => {
-                                                            setSelectedProductId(item.producto.productoId);
-                                                            onOpen();
-                                                        }}>
-                                                            Descargar Excel de movimientos
-                                                        </MenuItem>
-                                                    </MenuList>
-                                                </Menu>
-                                            </Td>
-                                        </Tr>
+                                        <Table.Row key={item.producto.productoId}>
+                                            <Table.Cell>{item.producto.productoId}</Table.Cell>
+                                            <Table.Cell>{item.producto.nombre}</Table.Cell>
+                                            <Table.Cell>{item.stock}</Table.Cell>
+                                            <Table.Cell>{item.producto.tipoUnidades}</Table.Cell>
+                                            <Table.Cell>
+                                                <Menu.Root>
+                                                    <Menu.Trigger size="sm" colorPalette="teal" asChild><Button>Menu</Button></Menu.Trigger>
+                                                    <Portal><Menu.Positioner><Menu.Content>
+                                                                <Menu.Item
+                                                                    onSelect={() => {
+                                                                        setSelectedProductId(item.producto.productoId);
+                                                                        onOpen();
+                                                                    }}
+                                                                    value='item-0'>
+                                                                    Descargar Excel de movimientos
+                                                                </Menu.Item>
+                                                            </Menu.Content></Menu.Positioner></Portal>
+                                                </Menu.Root>
+                                            </Table.Cell>
+                                        </Table.Row>
                                     ))
                                 )}
-                            </Tbody>
-                        </Table>
+                            </Table.Body>
+                        </Table.Root>
                     </Box>
                 )}
                 <Box w="full" mt={6}>

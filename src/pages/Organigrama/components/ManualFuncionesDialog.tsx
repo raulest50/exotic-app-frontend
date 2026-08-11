@@ -1,24 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  Steps,
   Alert,
-  AlertIcon,
   Box,
   Button,
-  Divider,
-  FormControl,
-  FormLabel,
   HStack,
   Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   Text,
   useToast,
   VStack,
+  Separator,
+  Field,
+  Dialog,
+  Portal,
 } from "@chakra-ui/react";
 import type { Cargo } from "../types";
 
@@ -82,93 +76,103 @@ export default function ManualFuncionesDialog({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Detalles del cargo</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <Text fontSize="2xl" fontWeight="bold">
-            {cargo.tituloCargo || "Cargo sin título"}
-          </Text>
-          <Text color="app.textMuted" mb={4}>
-            {cargo.departamento || "Sin departamento"}
-          </Text>
-          <Text whiteSpace="pre-wrap">{cargo.descripcionCargo || "Sin descripción"}</Text>
-          {cargo.usuario && <Text mt={3}>Usuario asignado: {cargo.usuario}</Text>}
+    <Dialog.Root open={isOpen} size='lg' onOpenChange={e => {
+      if (!e.open) {
+        onClose();
+      }
+    }}>
+      <Portal>
 
-          <Divider my={6} />
-          <VStack align="stretch" spacing={4}>
-            <Text fontSize="xl" fontWeight="bold">
-              Manual de funciones
-            </Text>
-            {cargo.urlDocManualFunciones ? (
-              <HStack>
-                <Button colorScheme="blue" onClick={() => void onOpenManual(cargo)}>
-                  Ver manual actual
-                </Button>
-                {canEdit && isPersisted && (
-                  <Button colorScheme="red" variant="outline" onClick={() => void remove()} isLoading={isLoading}>
-                    Quitar
-                  </Button>
-                )}
-              </HStack>
-            ) : (
-              <Text>No hay un manual disponible para este cargo.</Text>
-            )}
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>Detalles del cargo</Dialog.Header>
+            <Dialog.CloseTrigger />
+            <Dialog.Body>
+              <Text fontSize="2xl" fontWeight="bold">
+                {cargo.tituloCargo || "Cargo sin título"}
+              </Text>
+              <Text color="app.textMuted" mb={4}>
+                {cargo.departamento || "Sin departamento"}
+              </Text>
+              <Text whiteSpace="pre-wrap">{cargo.descripcionCargo || "Sin descripción"}</Text>
+              {cargo.usuario && <Text mt={3}>Usuario asignado: {cargo.usuario}</Text>}
 
-            {canEdit && !isPersisted && (
-              <Alert status="info">
-                <AlertIcon />
-                Guarda primero el organigrama para poder asociar un manual a este cargo nuevo.
-              </Alert>
-            )}
-
-            {canEdit && isPersisted && (
-              <Box borderTop="1px solid" borderColor="app.border" pt={4}>
-                <FormControl mb={4}>
-                  <FormLabel>Subir archivo PDF</FormLabel>
-                  <Input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="application/pdf,.pdf"
-                    p={1}
-                    isDisabled={isLoading}
-                    onChange={(event) => void upload(event.target.files?.[0])}
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>O usar una URL HTTP/HTTPS</FormLabel>
-                  <HStack>
-                    <Input
-                      type="url"
-                      maxLength={255}
-                      placeholder="https://..."
-                      value={manualUrl}
-                      onChange={(event) => setManualUrl(event.target.value)}
-                      isDisabled={isLoading}
-                    />
-                    <Button
-                      colorScheme="blue"
-                      onClick={() => void saveUrl()}
-                      isDisabled={!manualUrl.trim()}
-                      isLoading={isLoading}
-                    >
-                      Guardar URL
-                    </Button>
-                  </HStack>
-                </FormControl>
-                <Text fontSize="sm" color="app.textMuted" mt={3}>
-                  El manual se guarda de inmediato y no modifica la revisión ni las coordenadas del organigrama.
+              <Separator my={6} />
+              <VStack align="stretch" gap={4}>
+                <Text fontSize="xl" fontWeight="bold">
+                  Manual de funciones
                 </Text>
-              </Box>
-            )}
-          </VStack>
-        </ModalBody>
-        <ModalFooter>
-          <Button onClick={onClose}>Cerrar</Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+                {cargo.urlDocManualFunciones ? (
+                  <HStack>
+                    <Button colorPalette="blue" onClick={() => void onOpenManual(cargo)}>
+                      Ver manual actual
+                    </Button>
+                    {canEdit && isPersisted && (
+                      <Button colorPalette="red" variant="outline" onClick={() => void remove()} loading={isLoading}>
+                        Quitar
+                      </Button>
+                    )}
+                  </HStack>
+                ) : (
+                  <Text>No hay un manual disponible para este cargo.</Text>
+                )}
+
+                {canEdit && !isPersisted && (
+                  <Alert.Root status="info">
+                    <Alert.Indicator />
+                    Guarda primero el organigrama para poder asociar un manual a este cargo nuevo.
+                  </Alert.Root>
+                )}
+
+                {canEdit && isPersisted && (
+                  <Box borderTop="1px solid" borderColor="app.border" pt={4}>
+                    <Field.Root mb={4}>
+                      <Field.Label>Subir archivo PDF</Field.Label>
+                      <Input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        p={1}
+                        disabled={isLoading}
+                        onValueChange={(event) => void upload(event.target.files?.[0])}
+                      />
+                    </Field.Root>
+                    <Field.Root>
+                      <Field.Label>O usar una URL HTTP/HTTPS</Field.Label>
+                      <HStack>
+                        <Input
+                          type="url"
+                          maxLength={255}
+                          placeholder="https://..."
+                          value={manualUrl}
+                          onValueChange={(event) => setManualUrl(event.target.value)}
+                          disabled={isLoading}
+                        />
+                        <Button
+                          colorPalette="blue"
+                          onClick={() => void saveUrl()}
+                          disabled={!manualUrl.trim()}
+                          loading={isLoading}
+                        >
+                          Guardar URL
+                        </Button>
+                      </HStack>
+                    </Field.Root>
+                    <Text fontSize="sm" color="app.textMuted" mt={3}>
+                      El manual se guarda de inmediato y no modifica la revisión ni las coordenadas del organigrama.
+                    </Text>
+                  </Box>
+                )}
+              </VStack>
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Button onClick={onClose}>Cerrar</Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+
+      </Portal>
+    </Dialog.Root>
   );
 }

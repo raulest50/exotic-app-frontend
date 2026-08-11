@@ -1,17 +1,9 @@
 import React, { useState } from 'react';
 import {
+    Steps,
     Box,
     Button,
-    FormControl,
-    FormLabel,
     Input,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalFooter,
-    ModalBody,
-    ModalCloseButton,
     useToast,
     VStack,
     HStack,
@@ -23,6 +15,9 @@ import {
     Th,
     Td,
     Flex,
+    Field,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
@@ -104,103 +99,113 @@ const ProveedorPicker: React.FC<ProveedorPickerProps> = ({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="lg">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Seleccionar Proveedor</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <VStack spacing={4}>
-                        <FormControl>
-                            <FormLabel>Buscar Proveedor</FormLabel>
-                            <HStack>
-                                <Input
-                                    value={searchText}
-                                    onChange={(e) => setSearchText(e.target.value)}
-                                    onKeyDown={onKeyPress_InputBuscar}
-                                    placeholder="Ingrese nombre o NIT"
-                                    isDisabled={isLoading}
-                                />
-                                <Button
-                                    colorScheme="blue"
-                                    onClick={handleSearch}
-                                    isLoading={isLoading}
-                                    loadingText="Buscando"
-                                >
-                                    Buscar
-                                </Button>
-                            </HStack>
-                        </FormControl>
-                        <Box w="full" overflowX="auto">
-                            {proveedores.length > 0 ? (
-                                <>
-                                    <Table variant="simple" size="sm">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>NIT</Th>
-                                                <Th>Nombre</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
-                                            {currentProveedores.map((proveedor) => (
-                                                <Tr
-                                                    key={proveedor.id}
-                                                    onClick={() => setSelectedProveedorId(proveedor.id.toString())}
-                                                    bg={selectedProveedorId === proveedor.id.toString() ? "blue.100" : "transparent"}
-                                                    _hover={{ bg: "gray.100", cursor: "pointer" }}
-                                                >
-                                                    <Td>{proveedor.id}</Td>
-                                                    <Td>{proveedor.nombre}</Td>
-                                                </Tr>
-                                            ))}
-                                        </Tbody>
-                                    </Table>
+        <Dialog.Root open={isOpen} size='lg' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                                    {totalPages > 1 && (
-                                        <Flex justifyContent="center" mt={4}>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => goToPage(currentPage - 1)}
-                                                isDisabled={currentPage === 1}
-                                                mr={2}
-                                            >
-                                                Anterior
-                                            </Button>
-                                            <Text alignSelf="center" mx={2}>
-                                                Página {currentPage} de {totalPages}
-                                            </Text>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => goToPage(currentPage + 1)}
-                                                isDisabled={currentPage === totalPages}
-                                                ml={2}
-                                            >
-                                                Siguiente
-                                            </Button>
-                                        </Flex>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Seleccionar Proveedor</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <VStack gap={4}>
+                                <Field.Root>
+                                    <Field.Label>Buscar Proveedor</Field.Label>
+                                    <HStack>
+                                        <Input
+                                            value={searchText}
+                                            onValueChange={(e) => setSearchText(e.target.value)}
+                                            onKeyDown={onKeyPress_InputBuscar}
+                                            placeholder="Ingrese nombre o NIT"
+                                            disabled={isLoading}
+                                        />
+                                        <Button
+                                            colorPalette="blue"
+                                            onClick={handleSearch}
+                                            loading={isLoading}
+                                            loadingText="Buscando"
+                                        >
+                                            Buscar
+                                        </Button>
+                                    </HStack>
+                                </Field.Root>
+                                <Box w="full" overflowX="auto">
+                                    {proveedores.length > 0 ? (
+                                        <>
+                                            <Table.Root variant="simple" size="sm">
+                                                <Table.Header>
+                                                    <Table.Row>
+                                                        <Table.ColumnHeader>NIT</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                                    </Table.Row>
+                                                </Table.Header>
+                                                <Table.Body>
+                                                    {currentProveedores.map((proveedor) => (
+                                                        <Table.Row
+                                                            key={proveedor.id}
+                                                            onClick={() => setSelectedProveedorId(proveedor.id.toString())}
+                                                            bg={selectedProveedorId === proveedor.id.toString() ? "blue.100" : "transparent"}
+                                                            _hover={{ bg: "gray.100", cursor: "pointer" }}
+                                                        >
+                                                            <Table.Cell>{proveedor.id}</Table.Cell>
+                                                            <Table.Cell>{proveedor.nombre}</Table.Cell>
+                                                        </Table.Row>
+                                                    ))}
+                                                </Table.Body>
+                                            </Table.Root>
+
+                                            {totalPages > 1 && (
+                                                <Flex justifyContent="center" mt={4}>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => goToPage(currentPage - 1)}
+                                                        disabled={currentPage === 1}
+                                                        mr={2}
+                                                    >
+                                                        Anterior
+                                                    </Button>
+                                                    <Text alignSelf="center" mx={2}>
+                                                        Página {currentPage} de {totalPages}
+                                                    </Text>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => goToPage(currentPage + 1)}
+                                                        disabled={currentPage === totalPages}
+                                                        ml={2}
+                                                    >
+                                                        Siguiente
+                                                    </Button>
+                                                </Flex>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <Text textAlign="center">No hay proveedores para mostrar</Text>
                                     )}
-                                </>
-                            ) : (
-                                <Text textAlign="center">No hay proveedores para mostrar</Text>
-                            )}
-                        </Box>
-                    </VStack>
-                </ModalBody>
-                <ModalFooter>
-                    <Button
-                        colorScheme="blue"
-                        mr={3}
-                        onClick={handleConfirm}
-                        isDisabled={selectedProveedorId === null}
-                    >
-                        Confirmar
-                    </Button>
-                    <Button variant="ghost" onClick={handleCancel}>
-                        Cancelar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                                </Box>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button
+                                colorPalette="blue"
+                                mr={3}
+                                onClick={handleConfirm}
+                                disabled={selectedProveedorId === null}
+                            >
+                                Confirmar
+                            </Button>
+                            <Button variant="ghost" onClick={handleCancel}>
+                                Cancelar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 };
 

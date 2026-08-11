@@ -10,7 +10,7 @@
  * de producción.
  */
 
-import {Button, Flex, Tab, TabList, TabPanel, TabPanels, Tabs} from '@chakra-ui/react';
+import { Steps, Button, Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
 import {FaArrowLeft} from 'react-icons/fa';
 import DefinicionProcesosTab from './ProcesosProduccion/DefinicionProcesosTab.tsx';
 import CrearRecursoProduccion from './RecursosProduccion/CrearRecursoProduccion.tsx';
@@ -25,16 +25,15 @@ interface Props {
 export function DefinicionProcesosTabs({onBack}: Props) {
     return (
         <Flex direction={'column'} gap={4} w="full" h="full">
-            <Button leftIcon={<FaArrowLeft />} w="fit-content" onClick={onBack}>
-                Volver
-            </Button>
-            <Tabs isFitted gap="1em" variant="line">
-                <TabList>
+            <Button w="fit-content" onClick={onBack}><FaArrowLeft />Volver
+                            </Button>
+            <Tabs.Root fitted gap="1em" variant='line'>
+                <Tabs.List>
                     <Tab sx={my_style_tab}>Definición de Procesos</Tab>
                     <Tab sx={my_style_tab}>Consultar Procesos de Produccion</Tab>
                     <Tab sx={my_style_tab}>Crear Recurso Producción</Tab>
                     <Tab sx={my_style_tab}>Consulta Recursos Producción</Tab>
-                </TabList>
+                </Tabs.List>
                 <TabPanels>
                     <TabPanel>
                         <DefinicionProcesosTab />
@@ -49,7 +48,7 @@ export function DefinicionProcesosTabs({onBack}: Props) {
                         <ConsultaRecursosProduccion />
                     </TabPanel>
                 </TabPanels>
-            </Tabs>
+            </Tabs.Root>
         </Flex>
     );
 }

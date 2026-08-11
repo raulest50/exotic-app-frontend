@@ -1,21 +1,20 @@
 import { useState } from 'react';
 import {
+    Steps,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
     Input,
-    Select,
+    NativeSelect,
     Text,
     VStack,
     HStack,
     Alert,
-    AlertIcon,
-    Divider,
     Grid,
     useDisclosure,
+    Separator,
+    Field,
 } from '@chakra-ui/react';
 import DatePicker from '../../../components/MyDatePicker.tsx';
 import { FiltroHistDispensacionDTO } from './types';
@@ -42,7 +41,7 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
     // Estado para filtro de producto terminado
     const [selectedTerminado, setSelectedTerminado] = useState<TerminadoPickerResult | null>(null);
     const {
-        isOpen: isTerminadoPickerOpen,
+        open: isTerminadoPickerOpen,
         onOpen: onOpenTerminadoPicker,
         onClose: onCloseTerminadoPicker
     } = useDisclosure();
@@ -147,83 +146,85 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
             </Heading>
 
             {errorMessage && (
-                <Alert status="error" mb={4}>
-                    <AlertIcon />
+                <Alert.Root status="error" mb={4}>
+                    <Alert.Indicator />
                     {errorMessage}
-                </Alert>
+                </Alert.Root>
             )}
 
-            <VStack spacing={6} align="stretch">
+            <VStack gap={6} align="stretch">
                 {/* Filtro por ID o lote */}
                 <Box>
-                    <FormLabel fontWeight="bold" mb={3}>
+                    <Field.Label fontWeight="bold" mb={3}>
                         Filtrar por ID o Lote
-                    </FormLabel>
+                    </Field.Label>
                     <Grid templateColumns="repeat(12, 1fr)" gap={4} alignItems="end">
-                        <FormControl gridColumn="span 4">
-                            <Select
-                                value={tipoFiltroId.toString()}
-                                onChange={(e) => {
-                                    const value = parseInt(e.target.value) as 0 | 1 | 2 | 3;
-                                    setTipoFiltroId(value);
-                                    setTransaccionId('');
-                                    setOrdenProduccionId('');
-                                    setLoteAsignado('');
-                                }}
-                            >
-                                <option value="0">Ninguno</option>
-                                <option value="1">ID Transacción</option>
-                                <option value="2">ID Orden de Producción</option>
-                                <option value="3">Lote de Producción</option>
-                            </Select>
-                        </FormControl>
+                        <Field.Root gridColumn="span 4">
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    value={tipoFiltroId.toString()}
+                                    onValueChange={(e) => {
+                                        const value = parseInt(e.target.value) as 0 | 1 | 2 | 3;
+                                        setTipoFiltroId(value);
+                                        setTransaccionId('');
+                                        setOrdenProduccionId('');
+                                        setLoteAsignado('');
+                                    }}>
+                                    <option value="0">Ninguno</option>
+                                    <option value="1">ID Transacción</option>
+                                    <option value="2">ID Orden de Producción</option>
+                                    <option value="3">Lote de Producción</option>
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
+                        </Field.Root>
 
                         {tipoFiltroId === 1 && (
-                            <FormControl gridColumn="span 8">
-                                <FormLabel>ID de Transacción</FormLabel>
+                            <Field.Root gridColumn="span 8">
+                                <Field.Label>ID de Transacción</Field.Label>
                                 <Input
                                     type="number"
                                     value={transaccionId}
-                                    onChange={(e) => setTransaccionId(e.target.value)}
+                                    onValueChange={(e) => setTransaccionId(e.target.value)}
                                     placeholder="Ej: 123"
                                     min="1"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         )}
 
                         {tipoFiltroId === 2 && (
-                            <FormControl gridColumn="span 8">
-                                <FormLabel>ID de Orden de Producción</FormLabel>
+                            <Field.Root gridColumn="span 8">
+                                <Field.Label>ID de Orden de Producción</Field.Label>
                                 <Input
                                     type="number"
                                     value={ordenProduccionId}
-                                    onChange={(e) => setOrdenProduccionId(e.target.value)}
+                                    onValueChange={(e) => setOrdenProduccionId(e.target.value)}
                                     placeholder="Ej: 456"
                                     min="1"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         )}
 
                         {tipoFiltroId === 3 && (
-                            <FormControl gridColumn="span 8">
-                                <FormLabel>Lote de Producción</FormLabel>
+                            <Field.Root gridColumn="span 8">
+                                <Field.Label>Lote de Producción</Field.Label>
                                 <Input
                                     value={loteAsignado}
-                                    onChange={(e) => setLoteAsignado(e.target.value)}
+                                    onValueChange={(e) => setLoteAsignado(e.target.value)}
                                     placeholder="Ej: LOT-PT"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         )}
                     </Grid>
                 </Box>
 
-                <Divider />
+                <Separator />
 
                 {/* Filtro por producto terminado */}
                 <Box>
-                    <FormLabel fontWeight="bold" mb={3}>
+                    <Field.Label fontWeight="bold" mb={3}>
                         Filtrar por Producto Terminado
-                    </FormLabel>
+                    </Field.Label>
                     <Grid templateColumns="repeat(12, 1fr)" gap={4} alignItems="center">
                         <Box gridColumn="span 8">
                             <Text fontWeight="semibold">
@@ -236,13 +237,13 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
                             )}
                         </Box>
 
-                        <HStack gridColumn="span 4" justify="flex-end" spacing={3}>
-                            <Button colorScheme="purple" variant="outline" onClick={onOpenTerminadoPicker}>
+                        <HStack gridColumn="span 4" justify="flex-end" gap={3}>
+                            <Button colorPalette="purple" variant="outline" onClick={onOpenTerminadoPicker}>
                                 {selectedTerminado ? 'Cambiar' : 'Seleccionar'}
                             </Button>
                             {selectedTerminado && (
                                 <Button
-                                    colorScheme="red"
+                                    colorPalette="red"
                                     variant="ghost"
                                     onClick={() => setSelectedTerminado(null)}
                                 >
@@ -259,30 +260,32 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
                     />
                 </Box>
 
-                <Divider />
+                <Separator />
 
                 {/* Filtro por Fecha */}
                 <Box>
-                    <FormLabel fontWeight="bold" mb={3}>
+                    <Field.Label fontWeight="bold" mb={3}>
                         Filtrar por Fecha
-                    </FormLabel>
+                    </Field.Label>
                     <Grid templateColumns="repeat(12, 1fr)" gap={4} alignItems="end">
-                        <FormControl gridColumn="span 4">
-                            <Select
-                                value={tipoFiltroFecha.toString()}
-                                onChange={(e) => {
-                                    const value = parseInt(e.target.value) as 0 | 1 | 2;
-                                    setTipoFiltroFecha(value);
-                                    setFechaInicio('');
-                                    setFechaFin('');
-                                    setFechaEspecifica('');
-                                }}
-                            >
-                                <option value="0">Ninguno</option>
-                                <option value="1">Rango de Fechas</option>
-                                <option value="2">Fecha Específica</option>
-                            </Select>
-                        </FormControl>
+                        <Field.Root gridColumn="span 4">
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    value={tipoFiltroFecha.toString()}
+                                    onValueChange={(e) => {
+                                        const value = parseInt(e.target.value) as 0 | 1 | 2;
+                                        setTipoFiltroFecha(value);
+                                        setFechaInicio('');
+                                        setFechaFin('');
+                                        setFechaEspecifica('');
+                                    }}>
+                                    <option value="0">Ninguno</option>
+                                    <option value="1">Rango de Fechas</option>
+                                    <option value="2">Fecha Específica</option>
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
+                        </Field.Root>
 
                         {tipoFiltroFecha === 1 && (
                             <Box gridColumn="span 8">
@@ -316,14 +319,14 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
                     </Grid>
                 </Box>
 
-                <Divider />
+                <Separator />
 
                 {/* Botones de acción */}
                 <Flex justify="flex-end" gap={4} mt={4}>
-                    <Button colorScheme="gray" onClick={handleLimpiar}>
+                    <Button colorPalette="gray" onClick={handleLimpiar}>
                         Limpiar
                     </Button>
-                    <Button colorScheme="blue" onClick={handleBuscar}>
+                    <Button colorPalette="blue" onClick={handleBuscar}>
                         Buscar
                     </Button>
                 </Flex>

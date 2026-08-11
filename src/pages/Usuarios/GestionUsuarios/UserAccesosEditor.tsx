@@ -1,13 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+    Steps,
     Alert,
-    AlertIcon,
-    AlertDialog,
-    AlertDialogBody,
-    AlertDialogContent,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogOverlay,
     Badge,
     Box,
     Button,
@@ -16,7 +10,7 @@ import {
     GridItem,
     HStack,
     IconButton,
-    Select,
+    NativeSelect,
     Spinner,
     Switch,
     Table,
@@ -29,8 +23,9 @@ import {
     useDisclosure,
     useToast,
     VStack,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
-import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import { fetchUserAssignmentStatus, type UserAssignmentStatus } from "../../../api/userAssignmentStatus.ts";
@@ -46,6 +41,7 @@ import {
     serializeDraft,
     type AccessDraft,
 } from "./userAccesosEditorModel.ts";
+import { LuChevronDown, LuChevronRight } from 'react-icons/lu';
 
 type Props = {
     user: User;
@@ -235,10 +231,10 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
     return (
         <Box p={4}>
             {permisosBloqueadosPorArea && (
-                <Alert status="warning" mb={4} borderRadius="md">
-                    <AlertIcon />
+                <Alert.Root status="warning" mb={4} borderRadius="md">
+                    <Alert.Indicator />
                     Este usuario ya es responsable del area {assignmentStatus?.areaResponsableNombre ?? "operativa"} y por esa razon no puede recibir permisos de modulos.
-                </Alert>
+                </Alert.Root>
             )}
 
             <Flex justify="space-between" align="center" gap={4} wrap="wrap" mb={6}>
@@ -251,15 +247,15 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                         {localUser.nombreCompleto ? ` - ${localUser.nombreCompleto}` : ""}
                     </Text>
                 </Box>
-                <HStack spacing={3}>
-                    <Button variant="outline" onClick={handleBack} isDisabled={saving}>
+                <HStack gap={3}>
+                    <Button variant="outline" onClick={handleBack} disabled={saving}>
                         Atras
                     </Button>
                     <Button
-                        colorScheme="blue"
+                        colorPalette="blue"
                         onClick={handleSave}
-                        isLoading={saving}
-                        isDisabled={!isDirty || loadingUser || saving || permisosBloqueadosPorArea}
+                        loading={saving}
+                        disabled={!isDirty || loadingUser || saving || permisosBloqueadosPorArea}
                     >
                         Guardar
                     </Button>
@@ -283,15 +279,15 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                             </Flex>
                         ) : (
                             <Box overflowX="auto">
-                                <Table size="sm" variant="simple">
-                                    <Thead bg="app.tableHeader">
-                                        <Tr>
-                                            <Th>Modulo / Tab</Th>
-                                            <Th w="140px">Acceso</Th>
-                                            <Th w="140px">Nivel</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
+                                <Table.Root size="sm" variant="simple">
+                                    <Table.Header bg="app.tableHeader">
+                                        <Table.Row>
+                                            <Table.ColumnHeader>Modulo / Tab</Table.ColumnHeader>
+                                            <Table.ColumnHeader w="140px">Acceso</Table.ColumnHeader>
+                                            <Table.ColumnHeader w="140px">Nivel</Table.ColumnHeader>
+                                        </Table.Row>
+                                    </Table.Header>
+                                    <Table.Body>
                                         {modules.map((modulo) => {
                                             const moduleRow = draft[modulo];
                                             const defs = tabsForModule(modulo);
@@ -300,27 +296,25 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
 
                                             return (
                                                 <Fragment key={modulo}>
-                                                    <Tr
+                                                    <Table.Row
                                                         onClick={() => toggleExpanded(modulo)}
                                                         _hover={{ bg: "app.rowHover", cursor: "pointer" }}
                                                         bg={moduleRow.enabled ? "app.rowActiveBlue" : undefined}
                                                     >
-                                                        <Td>
-                                                            <HStack spacing={3}>
+                                                        <Table.Cell>
+                                                            <HStack gap={3}>
                                                                 <IconButton
                                                                     aria-label={isExpanded ? "Contraer modulo" : "Expandir modulo"}
-                                                                    icon={isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
                                                                     size="xs"
                                                                     variant="ghost"
                                                                     onClick={(event) => {
                                                                         event.stopPropagation();
                                                                         toggleExpanded(modulo);
-                                                                    }}
-                                                                />
+                                                                    }}>{isExpanded ? <LuChevronDown /> : <LuChevronRight />}</IconButton>
                                                                 <Box>
                                                                     <Text fontWeight="semibold">{moduleLabel(modulo)}</Text>
-                                                                    <HStack spacing={2}>
-                                                                        <Badge colorScheme={activeTabs > 0 ? "green" : "gray"}>
+                                                                    <HStack gap={2}>
+                                                                        <Badge colorPalette={activeTabs > 0 ? "green" : "gray"}>
                                                                             {activeTabs} tabs activas
                                                                         </Badge>
                                                                         <Text fontSize="xs" color="app.textSubtle">
@@ -329,40 +323,40 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                                     </HStack>
                                                                 </Box>
                                                             </HStack>
-                                                        </Td>
-                                                        <Td onClick={(event) => event.stopPropagation()}>
+                                                        </Table.Cell>
+                                                        <Table.Cell onClick={(event) => event.stopPropagation()}>
                                                             <Switch
-                                                                isChecked={moduleRow.enabled}
-                                                                isDisabled={permisosBloqueadosPorArea}
-                                                                onChange={(event) =>
+                                                                checked={moduleRow.enabled}
+                                                                disabled={permisosBloqueadosPorArea}
+                                                                onValueChange={(event) =>
                                                                     setModuleEnabled(modulo, event.target.checked)
                                                                 }
                                                             />
-                                                        </Td>
-                                                        <Td>
+                                                        </Table.Cell>
+                                                        <Table.Cell>
                                                             <Text fontSize="xs" color="app.textSubtle">
                                                                 {moduleRow.enabled ? "Modulo habilitado" : "Modulo deshabilitado"}
                                                             </Text>
-                                                        </Td>
-                                                    </Tr>
+                                                        </Table.Cell>
+                                                    </Table.Row>
                                                     {isExpanded &&
                                                         defs.map((tab) => {
                                                             const tabRow = moduleRow.tabs[tab.tabId];
                                                             return (
-                                                                <Tr key={`${modulo}-${tab.tabId}`} bg="app.surface">
-                                                                    <Td pl={14}>
+                                                                <Table.Row key={`${modulo}-${tab.tabId}`} bg="app.surface">
+                                                                    <Table.Cell pl={14}>
                                                                         <Box>
                                                                             <Text fontSize="sm">{tab.label}</Text>
                                                                             <Text fontSize="xs" color="app.textSubtle">
                                                                                 {tab.tabId}
                                                                             </Text>
                                                                         </Box>
-                                                                    </Td>
-                                                                    <Td>
+                                                                    </Table.Cell>
+                                                                    <Table.Cell>
                                                                         <Switch
-                                                                            isChecked={tabRow.enabled}
-                                                                            isDisabled={!moduleRow.enabled || permisosBloqueadosPorArea}
-                                                                            onChange={(event) =>
+                                                                            checked={tabRow.enabled}
+                                                                            disabled={!moduleRow.enabled || permisosBloqueadosPorArea}
+                                                                            onValueChange={(event) =>
                                                                                 setTabEnabled(
                                                                                     modulo,
                                                                                     tab.tabId,
@@ -370,37 +364,39 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                                                 )
                                                                             }
                                                                         />
-                                                                    </Td>
-                                                                    <Td>
-                                                                        <Select
-                                                                            size="sm"
-                                                                            value={tabRow.nivel}
-                                                                            isDisabled={!moduleRow.enabled || !tabRow.enabled || permisosBloqueadosPorArea}
-                                                                            onChange={(event) =>
-                                                                                setTabNivel(
-                                                                                    modulo,
-                                                                                    tab.tabId,
-                                                                                    Number(event.target.value)
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            {Array.from({ length: tab.maxNivel }, (_, index) => index + 1).map(
-                                                                                (nivel) => (
-                                                                                    <option key={nivel} value={nivel}>
-                                                                                        Nivel {nivel}
-                                                                                    </option>
-                                                                                )
-                                                                            )}
-                                                                        </Select>
-                                                                    </Td>
-                                                                </Tr>
+                                                                    </Table.Cell>
+                                                                    <Table.Cell>
+                                                                        <NativeSelect.Root>
+                                                                            <NativeSelect.Field
+                                                                                size="sm"
+                                                                                value={tabRow.nivel}
+                                                                                disabled={!moduleRow.enabled || !tabRow.enabled || permisosBloqueadosPorArea}
+                                                                                onValueChange={(event) =>
+                                                                                    setTabNivel(
+                                                                                        modulo,
+                                                                                        tab.tabId,
+                                                                                        Number(event.target.value)
+                                                                                    )
+                                                                                }>
+                                                                                {Array.from({ length: tab.maxNivel }, (_, index) => index + 1).map(
+                                                                                    (nivel) => (
+                                                                                        <option key={nivel} value={nivel}>
+                                                                                            Nivel {nivel}
+                                                                                        </option>
+                                                                                    )
+                                                                                )}
+                                                                            </NativeSelect.Field>
+                                                                            <NativeSelect.Indicator />
+                                                                        </NativeSelect.Root>
+                                                                    </Table.Cell>
+                                                                </Table.Row>
                                                             );
                                                         })}
                                                 </Fragment>
                                             );
                                         })}
-                                    </Tbody>
-                                </Table>
+                                    </Table.Body>
+                                </Table.Root>
                             </Box>
                         )}
                     </Box>
@@ -419,14 +415,14 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                             {payload.accesos.length === 0 ? (
                                 <Text color="app.textSubtle">Este usuario no quedara con permisos activos.</Text>
                             ) : (
-                                <VStack align="stretch" spacing={4}>
+                                <VStack align="stretch" gap={4}>
                                     {payload.accesos.map((acceso) => (
                                         <Box key={acceso.modulo} borderWidth="1px" borderRadius="md" p={3}>
                                             <HStack justify="space-between" mb={2}>
                                                 <Text fontWeight="semibold">{moduleLabel(acceso.modulo)}</Text>
-                                                <Badge colorScheme="blue">{acceso.tabs.length} tabs</Badge>
+                                                <Badge colorPalette="blue">{acceso.tabs.length} tabs</Badge>
                                             </HStack>
-                                            <VStack align="stretch" spacing={2}>
+                                            <VStack align="stretch" gap={2}>
                                                 {acceso.tabs.map((tab) => (
                                                     <Flex
                                                         key={`${acceso.modulo}-${tab.tabId}`}
@@ -442,7 +438,7 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                                 {tab.tabId}
                                                             </Text>
                                                         </Box>
-                                                        <Badge colorScheme="green">Nivel {tab.nivel}</Badge>
+                                                        <Badge colorPalette="green">Nivel {tab.nivel}</Badge>
                                                     </Flex>
                                                 ))}
                                             </VStack>
@@ -455,35 +451,45 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                 </GridItem>
             </Grid>
 
-            <AlertDialog
-                isOpen={discardDialog.isOpen}
-                leastDestructiveRef={cancelRef}
-                onClose={discardDialog.onClose}
-            >
-                <AlertDialogOverlay>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>Descartar cambios</AlertDialogHeader>
-                        <AlertDialogBody>
-                            Hay cambios sin guardar. Si sales ahora, se perderan.
-                        </AlertDialogBody>
-                        <AlertDialogFooter>
-                            <Button ref={cancelRef} onClick={discardDialog.onClose}>
-                                Seguir editando
-                            </Button>
-                            <Button
-                                colorScheme="red"
-                                ml={3}
-                                onClick={() => {
-                                    discardDialog.onClose();
-                                    onBack();
-                                }}
-                            >
-                                Descartar y salir
-                            </Button>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialogOverlay>
-            </AlertDialog>
+            <Dialog.Root
+                open={discardDialog.open}
+                initialFocusEl={() => cancelRef.current}
+                role='alertdialog'
+                onOpenChange={e => {
+                    if (!e.open) {
+                        discardDialog.onClose();
+                    }
+                }}>
+              <Portal>
+
+                    <Dialog.Backdrop>
+                        <Dialog.Positioner>
+                            <Dialog.Content>
+                                <Dialog.Header>Descartar cambios</Dialog.Header>
+                                <Dialog.Body>
+                                    Hay cambios sin guardar. Si sales ahora, se perderan.
+                                </Dialog.Body>
+                                <Dialog.Footer>
+                                    <Button ref={cancelRef} onClick={discardDialog.onClose}>
+                                        Seguir editando
+                                    </Button>
+                                    <Button
+                                        colorPalette="red"
+                                        ml={3}
+                                        onClick={() => {
+                                            discardDialog.onClose();
+                                            onBack();
+                                        }}
+                                    >
+                                        Descartar y salir
+                                    </Button>
+                                </Dialog.Footer>
+                            </Dialog.Content>
+                        </Dialog.Positioner>
+                    </Dialog.Backdrop>
+
+                </Portal>
+</Dialog.Root>
         </Box>
     );
 }

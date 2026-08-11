@@ -1,17 +1,4 @@
-import {
-    Box,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
-    SimpleGrid,
-    Text,
-    VStack,
-    Button,
-} from "@chakra-ui/react";
+import { Steps, Box, SimpleGrid, Text, VStack, Button, Dialog, Portal } from "@chakra-ui/react";
 
 interface MetricModeInfoModalProps {
     isOpen: boolean;
@@ -44,65 +31,75 @@ export default function MetricModeInfoModal({
     onClose,
 }: MetricModeInfoModalProps) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="4xl" isCentered>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Cómo interpretar los promedios</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <VStack align="stretch" spacing={4}>
-                        <Text color="gray.600">
-                            `Actual` mira el estado vivo del tablero. `Histórico` y `Rango de fechas`
-                            miran tiempos cerrados que ya fueron recorridos por las órdenes.
-                        </Text>
+        <Dialog.Root open={isOpen} size='xl' placement='center' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                        <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={4}>
-                            {MODE_DETAILS.map((mode) => (
-                                <Box
-                                    key={mode.title}
-                                    borderWidth="1px"
-                                    borderRadius="lg"
-                                    bg="gray.50"
-                                    p={4}
-                                >
-                                    <VStack align="stretch" spacing={3}>
-                                        <Text fontWeight="bold" fontSize="lg">
-                                            {mode.title}
-                                        </Text>
-                                        <Box>
-                                            <Text fontWeight="semibold" mb={1}>
-                                                Qué mide
-                                            </Text>
-                                            <Text color="gray.700" fontSize="sm">
-                                                {mode.what}
-                                            </Text>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Cómo interpretar los promedios</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <VStack align="stretch" gap={4}>
+                                <Text color="gray.600">
+                                    `Actual` mira el estado vivo del tablero. `Histórico` y `Rango de fechas`
+                                    miran tiempos cerrados que ya fueron recorridos por las órdenes.
+                                </Text>
+
+                                <SimpleGrid columns={{ base: 1, lg: 3 }} gap={4}>
+                                    {MODE_DETAILS.map((mode) => (
+                                        <Box
+                                            key={mode.title}
+                                            borderWidth="1px"
+                                            borderRadius="lg"
+                                            bg="gray.50"
+                                            p={4}
+                                        >
+                                            <VStack align="stretch" gap={3}>
+                                                <Text fontWeight="bold" fontSize="lg">
+                                                    {mode.title}
+                                                </Text>
+                                                <Box>
+                                                    <Text fontWeight="semibold" mb={1}>
+                                                        Qué mide
+                                                    </Text>
+                                                    <Text color="gray.700" fontSize="sm">
+                                                        {mode.what}
+                                                    </Text>
+                                                </Box>
+                                                <Box>
+                                                    <Text fontWeight="semibold" mb={1}>
+                                                        Cómo se calcula
+                                                    </Text>
+                                                    <Text color="gray.700" fontSize="sm">
+                                                        {mode.how}
+                                                    </Text>
+                                                </Box>
+                                                <Box>
+                                                    <Text fontWeight="semibold" mb={1}>
+                                                        Ejemplo
+                                                    </Text>
+                                                    <Text color="gray.700" fontSize="sm">
+                                                        {mode.example}
+                                                    </Text>
+                                                </Box>
+                                            </VStack>
                                         </Box>
-                                        <Box>
-                                            <Text fontWeight="semibold" mb={1}>
-                                                Cómo se calcula
-                                            </Text>
-                                            <Text color="gray.700" fontSize="sm">
-                                                {mode.how}
-                                            </Text>
-                                        </Box>
-                                        <Box>
-                                            <Text fontWeight="semibold" mb={1}>
-                                                Ejemplo
-                                            </Text>
-                                            <Text color="gray.700" fontSize="sm">
-                                                {mode.example}
-                                            </Text>
-                                        </Box>
-                                    </VStack>
-                                </Box>
-                            ))}
-                        </SimpleGrid>
-                    </VStack>
-                </ModalBody>
-                <ModalFooter>
-                    <Button onClick={onClose}>Cerrar</Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                                    ))}
+                                </SimpleGrid>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button onClick={onClose}>Cerrar</Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

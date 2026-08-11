@@ -1,8 +1,7 @@
 import {
+    Steps,
     Box,
     Card,
-    CardBody,
-    CardHeader,
     Grid,
     GridItem,
     Heading,
@@ -50,25 +49,25 @@ const getInsumoCantidad = (insumo: PackagingInsumo) => {
 export default function CardPackagingInfo({ casePack }: Props) {
     if (!casePack) {
         return (
-            <Card mb={5} variant="outline" boxShadow="md">
-                <CardHeader bg="app.stepperBlue">
+            <Card.Root mb={5} variant="outline" boxShadow="md">
+                <Card.Header bg="app.stepperBlue">
                     <Heading size="md">Packaging</Heading>
-                </CardHeader>
-                <CardBody>
+                </Card.Header>
+                <Card.Body>
                     <Text color="app.textMuted">Sin packaging definido.</Text>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
         );
     }
 
     const insumosEmpaque = (casePack.insumosEmpaque ?? []) as PackagingInsumo[];
 
     return (
-        <Card mb={5} variant="outline" boxShadow="md">
-            <CardHeader bg="app.stepperBlue">
+        <Card.Root mb={5} variant="outline" boxShadow="md">
+            <Card.Header bg="app.stepperBlue">
                 <Heading size="md">Packaging</Heading>
-            </CardHeader>
-            <CardBody>
+            </Card.Header>
+            <Card.Body>
                 <Grid templateColumns="repeat(2, 1fr)" gap={6} mb={6}>
                     <GridItem>
                         <Box>
@@ -105,35 +104,35 @@ export default function CardPackagingInfo({ casePack }: Props) {
                     {insumosEmpaque.length === 0 ? (
                         <Text color="app.textMuted">Sin insumos de empaque registrados.</Text>
                     ) : (
-                        <Table size="sm">
-                            <Thead>
-                                <Tr>
-                                    <Th>Código</Th>
-                                    <Th>Nombre</Th>
-                                    <Th>Unidad</Th>
-                                    <Th>Cantidad</Th>
-                                    <Th>UoM</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                        <Table.Root size="sm">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>Código</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                    <Table.ColumnHeader>UoM</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {insumosEmpaque.map((insumo, index) => {
                                     const material = getInsumoMaterial(insumo);
                                     return (
-                                        <Tr key={material?.productoId ?? index}>
-                                            <Td>{material?.productoId ?? '—'}</Td>
-                                            <Td>{material?.nombre ?? '—'}</Td>
-                                            <Td>{material?.tipoUnidades ?? '—'}</Td>
-                                            <Td>{renderValue(getInsumoCantidad(insumo))}</Td>
-                                            <Td>{renderValue(insumo.uom)}</Td>
-                                        </Tr>
+                                        <Table.Row key={material?.productoId ?? index}>
+                                            <Table.Cell>{material?.productoId ?? '—'}</Table.Cell>
+                                            <Table.Cell>{material?.nombre ?? '—'}</Table.Cell>
+                                            <Table.Cell>{material?.tipoUnidades ?? '—'}</Table.Cell>
+                                            <Table.Cell>{renderValue(getInsumoCantidad(insumo))}</Table.Cell>
+                                            <Table.Cell>{renderValue(insumo.uom)}</Table.Cell>
+                                        </Table.Row>
                                     );
                                 })}
-                            </Tbody>
-                        </Table>
+                            </Table.Body>
+                        </Table.Root>
                     )}
                 </Box>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 

@@ -1,17 +1,15 @@
 import { useMemo, useState } from "react";
 import {
+    Steps,
     Button,
     Card,
-    CardBody,
-    FormControl,
-    FormHelperText,
-    FormLabel,
     Input,
-    Select,
+    NativeSelect,
     Stack,
     Text,
     VStack,
     useToast,
+    Field,
 } from "@chakra-ui/react";
 import axios from "axios";
 import EndPointsURL, { type ExcelDecimalSeparator, type ExcelExportMode } from "../../../api/EndPointsURL.tsx";
@@ -86,74 +84,76 @@ export default function InformeDiarioAjustesAlmacenPanel() {
     };
 
     return (
-        <Card variant="outline">
-            <CardBody>
+        <Card.Root variant="outline">
+            <Card.Body>
                 <Text fontWeight="semibold" mb={4}>
                     Ajustes almacén
                 </Text>
-                <VStack align="stretch" spacing={4} maxW={{ base: "full", md: "md" }}>
-                    <FormControl>
-                        <FormLabel>Fecha desde</FormLabel>
+                <VStack align="stretch" gap={4} maxW={{ base: "full", md: "md" }}>
+                    <Field.Root>
+                        <Field.Label>Fecha desde</Field.Label>
                         <Input
                             type="date"
                             value={fechaDesde}
-                            onChange={(e) => setFechaDesde(e.target.value)}
+                            onValueChange={(e) => setFechaDesde(e.target.value)}
                         />
-                        <FormHelperText>
+                        <Field.HelperText>
                             Para un solo día, use la misma fecha en desde y hasta.
-                        </FormHelperText>
-                    </FormControl>
-                    <FormControl isInvalid={rangeInvalid}>
-                        <FormLabel>Fecha hasta</FormLabel>
+                        </Field.HelperText>
+                    </Field.Root>
+                    <Field.Root invalid={rangeInvalid}>
+                        <Field.Label>Fecha hasta</Field.Label>
                         <Input
                             type="date"
                             value={fechaHasta}
-                            onChange={(e) => setFechaHasta(e.target.value)}
+                            onValueChange={(e) => setFechaHasta(e.target.value)}
                         />
                         {rangeInvalid ? (
-                            <FormHelperText color="red.500">
+                            <Field.HelperText color="red.500">
                                 &quot;Desde&quot; no puede ser posterior a &quot;hasta&quot;.
-                            </FormHelperText>
+                            </Field.HelperText>
                         ) : null}
-                    </FormControl>
-                    <FormControl>
-                        <FormLabel>Tipo de movimientos</FormLabel>
-                        <Select
-                            value={sentido}
-                            onChange={(e) => setSentido(e.target.value as SentidoAjuste)}
-                        >
-                            <option value="ENTRADAS">Entradas (ajuste positivo)</option>
-                            <option value="SALIDAS">Salidas (ajuste negativo)</option>
-                            <option value="MIXTA">Mixta (entradas y salidas)</option>
-                        </Select>
-                    </FormControl>
+                    </Field.Root>
+                    <Field.Root>
+                        <Field.Label>Tipo de movimientos</Field.Label>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                value={sentido}
+                                onValueChange={(e) => setSentido(e.target.value as SentidoAjuste)}>
+                                <option value="ENTRADAS">Entradas (ajuste positivo)</option>
+                                <option value="SALIDAS">Salidas (ajuste negativo)</option>
+                                <option value="MIXTA">Mixta (entradas y salidas)</option>
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                    </Field.Root>
                     <ExcelDecimalSeparatorSelector
                         value={decimalSeparator}
                         onChange={setDecimalSeparator}
                     />
-                    <Stack direction={{ base: "column", sm: "row" }} spacing={3} align="stretch">
+                    <Stack direction={{ base: "column", sm: "row" }} gap={3} align="stretch">
                         <Button
-                            colorScheme="blue"
+                            colorPalette="blue"
                             onClick={() => handleDownload("NUMERIC")}
-                            isDisabled={!canDownload}
-                            isLoading={downloadingMode === "NUMERIC"}
+                            disabled={!canDownload}
+                            loading={downloadingMode === "NUMERIC"}
                             w={{ base: "full", sm: "auto" }}
                         >
                             Descargar Excel funcional
                         </Button>
                         <Button
-                            colorScheme="green"
+                            colorPalette="green"
                             variant="outline"
                             onClick={() => handleDownload("TEXT_DETERMINISTIC")}
-                            isDisabled={!canDownload}
-                            isLoading={downloadingMode === "TEXT_DETERMINISTIC"}
+                            disabled={!canDownload}
+                            loading={downloadingMode === "TEXT_DETERMINISTIC"}
                             w={{ base: "full", sm: "auto" }}
                         >
                             Descargar Excel para copiar
                         </Button>
                     </Stack>
                 </VStack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }

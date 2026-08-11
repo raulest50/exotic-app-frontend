@@ -1,20 +1,6 @@
 import { useState } from 'react';
-import {
-    Box,
-    Button,
-    Container,
-    Flex,
-    Step,
-    StepDescription,
-    StepIcon,
-    StepIndicator,
-    StepNumber,
-    StepSeparator,
-    StepStatus,
-    Stepper,
-    StepTitle,
-    useSteps,
-} from '@chakra-ui/react';
+import { LuCheck } from 'react-icons/lu';
+import { Steps, Box, Button, Container, Flex, useSteps } from '@chakra-ui/react';
 import AveriaProduccionStep0SelectArea from './steps/AveriaProduccionStep0SelectArea';
 import AveriaProduccionStep1SelectOrder from './steps/AveriaProduccionStep1SelectOrder';
 import AveriaProduccionStep2ListAverias from './steps/AveriaProduccionStep2ListAverias';
@@ -71,9 +57,9 @@ const steps = [
 ];
 
 export default function WizardAveriaProduccion({ onBack }: WizardAveriaProduccionProps) {
-    const { activeStep, setActiveStep } = useSteps({
-        index: 0,
-        count: steps.length,
+    const stepsApi = useSteps({
+        defaultStep: 0,
+        count: steps.length
     });
 
     const [selectedArea, setSelectedArea] = useState<AreaProduccion | null>(null);
@@ -140,24 +126,24 @@ export default function WizardAveriaProduccion({ onBack }: WizardAveriaProduccio
                         ← Volver a selección de tipo
                     </Button>
                 </Flex>
-                <Stepper index={activeStep} p="1em" backgroundColor="app.stepperBlue" w="full">
+                <Steps.RootProvider p="1em" backgroundColor="app.stepperBlue" w="full" value={stepsApi}>
                     {steps.map((step, index) => (
-                        <Step key={index}>
-                            <StepIndicator>
-                                <StepStatus
-                                    complete={<StepIcon />}
-                                    incomplete={<StepNumber />}
-                                    active={<StepNumber />}
+                        <Steps.Item key={index}>
+                            <Steps.Indicator>
+                                <Steps.Status
+                                    complete={<LuCheck />}
+                                    incomplete={<Steps.Number />}
+                                    current={<Steps.Number />}
                                 />
-                            </StepIndicator>
+                            </Steps.Indicator>
                             <Box flexShrink="0">
-                                <StepTitle>{step.title}</StepTitle>
-                                <StepDescription>{step.description}</StepDescription>
+                                <Steps.Title>{step.title}</Steps.Title>
+                                <Steps.Description>{step.description}</Steps.Description>
                             </Box>
-                            <StepSeparator />
-                        </Step>
+                            <Steps.Separator />
+                        </Steps.Item>
                     ))}
-                </Stepper>
+                </Steps.RootProvider>
                 {ConditionalRenderStep()}
             </Flex>
         </Container>

@@ -1,10 +1,9 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Card,
-    CardBody,
     HStack,
     SimpleGrid,
     Stack,
@@ -15,10 +14,10 @@ import {
     Text,
     Th,
     Thead,
-    Tooltip,
     Tr,
     useBreakpointValue,
 } from "@chakra-ui/react";
+import { Tooltip } from '@/components/ui/tooltip';
 import ReactECharts from "echarts-for-react";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactElement } from "react";
@@ -64,22 +63,27 @@ export default function InformeProduccionAreasSection({
 
     if (!analytics.disponible) {
         return (
-            <Stack spacing={3}>
+            <Stack gap={3}>
                 <SectionHeading
                     title="Performance por área operativa"
                     description="Flujo, tiempos y señales de acumulación por etapa productiva."
                 />
-                <Alert status="info" variant="left-accent" borderRadius="md">
-                    <AlertIcon />
+                <Alert.Root
+                    status="info"
+                    variant='subtle'
+                    borderRadius="md"
+                    borderStartWidth='3px'
+                    borderStartColor='colorPalette.solid'>
+                    <Alert.Indicator />
                     {analytics.mensaje ?? "La analítica por áreas no está disponible temporalmente."}
-                </Alert>
+                </Alert.Root>
             </Stack>
         );
     }
 
     if (areas.length === 0) {
         return (
-            <Stack spacing={3}>
+            <Stack gap={3}>
                 <SectionHeading
                     title="Performance por área operativa"
                     description="Flujo, tiempos y señales de acumulación por etapa productiva."
@@ -97,20 +101,20 @@ export default function InformeProduccionAreasSection({
     const chartOptions = buildAreaFlowChart(selectedArea, compact);
 
     return (
-        <Stack spacing={4}>
+        <Stack gap={4}>
             <Stack
                 direction={{ base: "column", md: "row" }}
                 align={{ base: "flex-start", md: "center" }}
                 justify="space-between"
-                spacing={2}
+                gap={2}
             >
                 <SectionHeading
                     title="Performance por área operativa"
                     description="Producción en la unidad propia del área y señales observadas de congestión."
                 />
-                <HStack spacing={2} flexWrap="wrap">
-                    <Badge colorScheme="gray">{areas.length} áreas</Badge>
-                    <Badge colorScheme="purple">
+                <HStack gap={2} flexWrap="wrap">
+                    <Badge colorPalette="gray">{areas.length} áreas</Badge>
+                    <Badge colorPalette="purple">
                         Comparación: {formatDate(analytics.fechaDesdePeriodoAnterior)}
                         {" – "}
                         {formatDate(analytics.fechaHastaPeriodoAnterior)}
@@ -119,7 +123,7 @@ export default function InformeProduccionAreasSection({
             </Stack>
 
             {compact ? (
-                <Stack spacing={3}>
+                <Stack gap={3}>
                     {areas.map((area) => (
                         <AreaMobileCard
                             key={area.areaId}
@@ -130,21 +134,21 @@ export default function InformeProduccionAreasSection({
                     ))}
                 </Stack>
             ) : (
-                <Card variant="outline">
-                    <CardBody p={0}>
-                        <TableContainer>
-                            <Table size="sm">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Área</Th>
-                                        <Th>Producción</Th>
-                                        <Th isNumeric>Salidas/día</Th>
-                                        <Th isNumeric>Trabajo listo</Th>
-                                        <Th isNumeric>Días backlog</Th>
-                                        <Th>Señal</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                <Card.Root variant="outline">
+                    <Card.Body p={0}>
+                        <Table.ScrollArea>
+                            <Table.Root size="sm">
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>Área</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Producción</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Salidas/día</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Trabajo listo</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Días backlog</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Señal</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {areas.map((area) => (
                                         <AreaTableRow
                                             key={area.areaId}
@@ -153,30 +157,30 @@ export default function InformeProduccionAreasSection({
                                             onSelect={() => setSelectedAreaId(area.areaId)}
                                         />
                                     ))}
-                                </Tbody>
-                            </Table>
-                        </TableContainer>
-                    </CardBody>
-                </Card>
+                                </Table.Body>
+                            </Table.Root>
+                        </Table.ScrollArea>
+                    </Card.Body>
+                </Card.Root>
             )}
 
-            <Card variant="outline">
-                <CardBody p={{ base: 3, md: 5 }}>
-                    <Stack spacing={4}>
+            <Card.Root variant="outline">
+                <Card.Body p={{ base: 3, md: 5 }}>
+                    <Stack gap={4}>
                         <Stack
                             direction={{ base: "column", md: "row" }}
                             justify="space-between"
                             align={{ base: "flex-start", md: "center" }}
-                            spacing={2}
+                            gap={2}
                         >
                             <SectionHeading
                                 title={selectedArea.areaNombre}
                                 description="Entradas, salidas y trabajo listo al cierre de cada día."
                             />
-                            <HStack spacing={2} flexWrap="wrap">
+                            <HStack gap={2} flexWrap="wrap">
                                 <SignalBadge state={selectedArea.estado} />
                                 <Badge
-                                    colorScheme={selectedArea.confiabilidad === "SUFICIENTE"
+                                    colorPalette={selectedArea.confiabilidad === "SUFICIENTE"
                                         ? "green"
                                         : "gray"}
                                 >
@@ -184,7 +188,7 @@ export default function InformeProduccionAreasSection({
                                         ? "suficiente"
                                         : "limitada"}
                                 </Badge>
-                                <Badge colorScheme={coverageColor(selectedArea.coberturaUnidadPct)}>
+                                <Badge colorPalette={coverageColor(selectedArea.coberturaUnidadPct)}>
                                     {selectedArea.coberturaUnidadPct === null
                                     || selectedArea.coberturaUnidadPct === undefined
                                         ? "Sin salidas para medir cobertura"
@@ -195,7 +199,7 @@ export default function InformeProduccionAreasSection({
 
                         <SimpleGrid
                             columns={{ base: 1, sm: 2, xl: 4 }}
-                            spacing={3}
+                            gap={3}
                         >
                             <KpiCard
                                 label="Mediana de espera"
@@ -250,8 +254,8 @@ export default function InformeProduccionAreasSection({
                             style={{ height: `${chartHeight}px`, width: "100%" }}
                         />
                     </Stack>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
         </Stack>
     );
 }
@@ -266,7 +270,7 @@ function AreaTableRow({
     onSelect: () => void;
 }) {
     return (
-        <Tr
+        <Table.Row
             cursor="pointer"
             bg={selected ? "app.surfaceSubtle" : undefined}
             _hover={{ bg: "app.surfaceSubtle" }}
@@ -280,30 +284,30 @@ function AreaTableRow({
                 }
             }}
         >
-            <Td>
+            <Table.Cell>
                 <Text fontWeight="semibold">{area.areaNombre}</Text>
                 <Text color="app.textMuted" fontSize="xs">
                     {area.actual.entradas} entradas · {area.actual.salidas} salidas
                 </Text>
-            </Td>
-            <Td maxW="300px">
+            </Table.Cell>
+            <Table.Cell maxW="300px">
                 <ProductionSummary area={area} />
-            </Td>
-            <Td isNumeric>{formatQuantity(area.actual.ritmoSalidaDiario)}</Td>
-            <Td isNumeric>{area.actual.trabajoListo} lotes</Td>
-            <Td isNumeric>
+            </Table.Cell>
+            <Table.Cell textAlign='end'>{formatQuantity(area.actual.ritmoSalidaDiario)}</Table.Cell>
+            <Table.Cell textAlign='end'>{area.actual.trabajoListo} lotes</Table.Cell>
+            <Table.Cell textAlign='end'>
                 {area.actual.diasBacklog === null || area.actual.diasBacklog === undefined
                     ? "Sin ritmo"
                     : formatQuantity(area.actual.diasBacklog)}
-            </Td>
-            <Td>
+            </Table.Cell>
+            <Table.Cell>
                 <SignalTooltip area={area}>
                     <Box display="inline-block">
                         <SignalBadge state={area.estado} />
                     </Box>
                 </SignalTooltip>
-            </Td>
-        </Tr>
+            </Table.Cell>
+        </Table.Row>
     );
 }
 
@@ -317,7 +321,7 @@ function AreaMobileCard({
     onSelect: () => void;
 }) {
     return (
-        <Card
+        <Card.Root
             variant="outline"
             borderColor={selected ? "blue.400" : undefined}
             cursor="pointer"
@@ -332,11 +336,11 @@ function AreaMobileCard({
                 }
             }}
         >
-            <CardBody p={3}>
-                <Stack spacing={3}>
+            <Card.Body p={3}>
+                <Stack gap={3}>
                     <HStack justify="space-between" align="flex-start">
                         <Box minW={0}>
-                            <Text fontWeight="semibold" noOfLines={2}>
+                            <Text fontWeight="semibold" lineClamp={2}>
                                 {area.areaNombre}
                             </Text>
                             <Text color="app.textMuted" fontSize="xs">
@@ -350,7 +354,7 @@ function AreaMobileCard({
                         </SignalTooltip>
                     </HStack>
                     <ProductionSummary area={area} />
-                    <SimpleGrid columns={3} spacing={2}>
+                    <SimpleGrid columns={3} gap={2}>
                         <CompactMetric
                             label="Salidas/día"
                             value={formatQuantity(area.actual.ritmoSalidaDiario)}
@@ -368,8 +372,8 @@ function AreaMobileCard({
                         />
                     </SimpleGrid>
                 </Stack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
@@ -382,13 +386,15 @@ function ProductionSummary({ area }: { area: AnaliticaAreaProduccion }) {
     const visible = currentProduction.slice(0, MAX_VISIBLE_QUANTITIES);
     return (
         <Tooltip
-            hasArrow
-            placement="top"
-            label={<ProductionTooltipContent area={area} />}
+            showArrow
+            content={<ProductionTooltipContent area={area} />}
+            positioning={{
+                placement: "top"
+            }}
         >
-            <Stack spacing={1} cursor="help">
+            <Stack gap={1} cursor="help">
                 {visible.map((item) => (
-                    <HStack key={productionKey(item)} spacing={2} flexWrap="wrap">
+                    <HStack key={productionKey(item)} gap={2} flexWrap="wrap">
                         <Text fontWeight="semibold" fontSize="sm">
                             {formatQuantity(item.cantidadActual)} {item.unidad}
                         </Text>
@@ -397,7 +403,7 @@ function ProductionSummary({ area }: { area: AnaliticaAreaProduccion }) {
                     </HStack>
                 ))}
                 {currentProduction.length > visible.length ? (
-                    <Badge colorScheme="gray" alignSelf="flex-start">
+                    <Badge colorPalette="gray" alignSelf="flex-start">
                         +{currentProduction.length - visible.length} cantidades
                     </Badge>
                 ) : null}
@@ -415,7 +421,7 @@ function ProductionSummary({ area }: { area: AnaliticaAreaProduccion }) {
 
 function ProductionTooltipContent({ area }: { area: AnaliticaAreaProduccion }) {
     return (
-        <Stack spacing={2} maxW="320px">
+        <Stack gap={2} maxW="320px">
             <Text fontWeight="bold">{area.areaNombre}</Text>
             {area.produccion
                 .filter((item) => item.cantidadActual > 0)
@@ -450,13 +456,14 @@ function ProductionTooltipContent({ area }: { area: AnaliticaAreaProduccion }) {
 function SignalExplanation({ area }: { area: AnaliticaAreaProduccion }) {
     const presentation = signalPresentation(area.estado);
     return (
-        <Alert
+        <Alert.Root
             status={presentation.alertStatus}
-            variant="left-accent"
+            variant='subtle'
             borderRadius="md"
             alignItems="flex-start"
-        >
-            <AlertIcon mt={0.5} />
+            borderStartWidth='3px'
+            borderStartColor='colorPalette.solid'>
+            <Alert.Indicator mt={0.5} />
             <Box>
                 <Text fontWeight="semibold">{presentation.label}</Text>
                 {area.motivos.map((reason, index) => (
@@ -465,7 +472,7 @@ function SignalExplanation({ area }: { area: AnaliticaAreaProduccion }) {
                     </Text>
                 ))}
             </Box>
-        </Alert>
+        </Alert.Root>
     );
 }
 
@@ -478,10 +485,9 @@ function SignalTooltip({
 }) {
     return (
         <Tooltip
-            hasArrow
-            placement="top"
-            label={(
-                <Stack spacing={1} maxW="300px">
+            showArrow
+            content={(
+                <Stack gap={1} maxW="300px">
                     {area.motivos.map((reason, index) => (
                         <Text key={`${area.areaId}-tooltip-${index}`} fontSize="xs">
                             {reason}
@@ -489,6 +495,9 @@ function SignalTooltip({
                     ))}
                 </Stack>
             )}
+            positioning={{
+                placement: "top"
+            }}
         >
             {children}
         </Tooltip>
@@ -498,7 +507,7 @@ function SignalTooltip({
 function SignalBadge({ state }: { state: EstadoAreaProduccion }) {
     const presentation = signalPresentation(state);
     return (
-        <Badge colorScheme={presentation.colorScheme}>
+        <Badge colorPalette={presentation.colorScheme}>
             {presentation.label}
         </Badge>
     );
@@ -511,7 +520,7 @@ function SourceBadge({ source }: { source: FuenteProduccionArea }) {
             ? "blue"
             : "gray";
     return (
-        <Badge colorScheme={colorScheme} fontSize="xs">
+        <Badge colorPalette={colorScheme} fontSize="xs">
             {sourceLabel(source)}
         </Badge>
     );

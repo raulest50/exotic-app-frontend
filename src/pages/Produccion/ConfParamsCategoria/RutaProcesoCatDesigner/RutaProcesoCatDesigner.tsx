@@ -1,20 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
-    AlertTitle,
     Badge,
     Box,
     Button,
-    Divider,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
     IconButton,
     Input,
-    ListItem,
     Spinner,
     Table,
     TableContainer,
@@ -24,11 +18,12 @@ import {
     Th,
     Thead,
     Tr,
-    UnorderedList,
     Switch,
     useToast,
+    Separator,
+    Field,
+    List,
 } from "@chakra-ui/react";
-import { ArrowBackIcon, CloseIcon, AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import {
     ReactFlow,
     Node,
@@ -59,6 +54,7 @@ import {
 } from "./types.ts";
 import { Categoria } from "../../types.tsx";
 import { getConnectionError, validateRuta } from "./rutaValidation.ts";
+import { LuArrowLeft, LuPlus, LuTrash2, LuX } from 'react-icons/lu';
 
 const nodeTypes = {
     areaOperativaNode: AreaOperativaNode,
@@ -572,73 +568,68 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     return (
         <Flex direction="column" gap={4} p="1em">
             <Flex direction="row" align="center" gap={4}>
-                <Button
-                    leftIcon={<ArrowBackIcon />}
-                    variant="outline"
-                    onClick={onBack}
-                >
-                    Volver
-                </Button>
+                <Button variant="outline" onClick={onBack}><LuArrowLeft />Volver
+                                    </Button>
                 <Heading flex={2} as="h2" size="lg" fontFamily="Comfortaa Variable">
                     Ruta de Proceso - {categoria.categoriaNombre}
                 </Heading>
                 {currentRuta?.versionNumber ? (
-                    <Badge colorScheme={viewingHistorical ? 'gray' : 'green'} fontSize="sm" px={3} py={1}>
+                    <Badge colorPalette={viewingHistorical ? 'gray' : 'green'} fontSize="sm" px={3} py={1}>
                         Versión {currentRuta.versionNumber} {currentRuta.estado ? `· ${currentRuta.estado}` : ''}
                     </Badge>
                 ) : null}
             </Flex>
 
-            <Divider />
+            <Separator />
 
-            <Alert status="info" borderRadius="md">
-                <AlertIcon />
+            <Alert.Root status="info" borderRadius="md">
+                <Alert.Indicator />
                 <Box>
-                    <AlertTitle>Convención operativa</AlertTitle>
-                    <AlertDescription>
+                    <Alert.Title>Convención operativa</Alert.Title>
+                    <Alert.Description>
                         La ruta debe iniciar en Almacen General y terminar en el último nodo productivo.
                         El ingreso del producto terminado a almacén se sigue manejando por su flujo propio.
-                    </AlertDescription>
+                    </Alert.Description>
                 </Box>
-            </Alert>
+            </Alert.Root>
 
             {viewingHistorical && (
-                <Alert status="warning" borderRadius="md">
-                    <AlertIcon />
+                <Alert.Root status="warning" borderRadius="md">
+                    <Alert.Indicator />
                     <Box>
-                        <AlertTitle>Versión histórica solo lectura</AlertTitle>
-                        <AlertDescription>
+                        <Alert.Title>Versión histórica solo lectura</Alert.Title>
+                        <Alert.Description>
                             Esta versión se conserva para trazabilidad de órdenes existentes. Vuelve a la versión vigente para editar.
-                        </AlertDescription>
+                        </Alert.Description>
                     </Box>
-                </Alert>
+                </Alert.Root>
             )}
 
             {!validation.isValid && (
-                <Alert status="warning" borderRadius="md" alignItems="flex-start">
-                    <AlertIcon mt={1} />
+                <Alert.Root status="warning" borderRadius="md" alignItems="flex-start">
+                    <Alert.Indicator mt={1} />
                     <Box>
-                        <AlertTitle>La ruta aún no cumple las reglas</AlertTitle>
-                        <AlertDescription>
-                            <UnorderedList mt={2} spacing={1}>
+                        <Alert.Title>La ruta aún no cumple las reglas</Alert.Title>
+                        <Alert.Description>
+                            <List.Root as='ul' mt={2} gap={1}>
                                 {validation.errors.map((error) => (
-                                    <ListItem key={error}>{error}</ListItem>
+                                    <List.Item key={error}>{error}</List.Item>
                                 ))}
-                            </UnorderedList>
-                        </AlertDescription>
+                            </List.Root>
+                        </Alert.Description>
                     </Box>
-                </Alert>
+                </Alert.Root>
             )}
 
             {!viewingHistorical && (
-                <FormControl>
-                    <FormLabel>Motivo del cambio</FormLabel>
+                <Field.Root>
+                    <Field.Label>Motivo del cambio</Field.Label>
                     <Input
                         value={motivoCambio}
-                        onChange={(event) => setMotivoCambio(event.target.value)}
+                        onValueChange={(event) => setMotivoCambio(event.target.value)}
                         placeholder="Opcional: describe por qué se crea esta nueva versión"
                     />
-                </FormControl>
+                </Field.Root>
             )}
 
             <Box
@@ -688,16 +679,14 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     <>
                         <IconButton
                             aria-label="Salir de pantalla completa"
-                            icon={<CloseIcon />}
                             position="absolute"
                             top={4}
                             right={4}
                             size="lg"
-                            colorScheme="purple"
+                            colorPalette="purple"
                             onClick={toggleFullScreen}
                             zIndex={10000}
-                            boxShadow="lg"
-                        />
+                            boxShadow="lg"><LuX /></IconButton>
                         <Flex
                             position="absolute"
                             bottom={4}
@@ -707,23 +696,17 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                             zIndex={10000}
                         >
                             <Button
-                                colorScheme="purple"
-                                leftIcon={<AddIcon />}
+                                colorPalette="purple"
                                 onClick={handleAddArea}
-                                isDisabled={isReadOnly}
-                                boxShadow="lg"
-                            >
-                                Agregar Area
-                            </Button>
+                                disabled={isReadOnly}
+                                boxShadow="lg"><LuPlus />Agregar Area
+                                                            </Button>
                             <Button
-                                colorScheme="red"
-                                leftIcon={<DeleteIcon />}
+                                colorPalette="red"
                                 onClick={handleDeleteSelected}
-                                isDisabled={!selectedElement || isReadOnly}
-                                boxShadow="lg"
-                            >
-                                Eliminar Seleccion
-                            </Button>
+                                disabled={!selectedElement || isReadOnly}
+                                boxShadow="lg"><LuTrash2 />Eliminar Seleccion
+                                                            </Button>
                         </Flex>
                     </>
                 )}
@@ -739,27 +722,27 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                             </Text>
                         </Box>
 
-                        <FormControl maxW={{ base: "full", md: "220px" }}>
-                            <FormLabel>Duración estimada (min)</FormLabel>
+                        <Field.Root maxW={{ base: "full", md: "220px" }}>
+                            <Field.Label>Duración estimada (min)</Field.Label>
                             <Input
                                 type="number"
                                 min={0}
                                 step={1}
                                 value={selectedNode.data.duracionEstimadaMinutos ?? 0}
-                                onChange={(event) => handleSelectedNodeDurationChange(event.target.value)}
-                                isDisabled={isReadOnly}
+                                onValueChange={(event) => handleSelectedNodeDurationChange(event.target.value)}
+                                disabled={isReadOnly}
                             />
-                        </FormControl>
+                        </Field.Root>
 
-                        <FormControl display="flex" alignItems="center" gap={3} maxW={{ base: "full", md: "260px" }}>
-                            <FormLabel mb={0}>Requiere jornada laboral</FormLabel>
+                        <Field.Root display="flex" alignItems="center" gap={3} maxW={{ base: "full", md: "260px" }}>
+                            <Field.Label mb={0}>Requiere jornada laboral</Field.Label>
                             <Switch
-                                colorScheme="purple"
-                                isChecked={selectedNode.data.requiereJornadaLaboral !== false}
-                                onChange={(event) => handleSelectedNodeJornadaChange(event.target.checked)}
-                                isDisabled={isReadOnly}
+                                colorPalette="purple"
+                                checked={selectedNode.data.requiereJornadaLaboral !== false}
+                                onValueChange={(event) => handleSelectedNodeJornadaChange(event.target.checked)}
+                                disabled={isReadOnly}
                             />
-                        </FormControl>
+                        </Field.Root>
                     </Flex>
                 </Box>
             )}
@@ -767,19 +750,19 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
             <Flex direction="row" gap={4} alignItems="center" flexWrap="wrap">
                 <Button
                     variant="solid"
-                    colorScheme="purple"
+                    colorPalette="purple"
                     onClick={handleAddArea}
-                    isDisabled={isReadOnly}
+                    disabled={isReadOnly}
                 >
                     Agregar Area
                 </Button>
 
                 <Button
                     variant="solid"
-                    colorScheme="green"
+                    colorPalette="green"
                     onClick={handleSave}
-                    isLoading={saving}
-                    isDisabled={!validation.isValid || isReadOnly}
+                    loading={saving}
+                    disabled={!validation.isValid || isReadOnly}
                     title={!validation.isValid ? "La ruta tiene reglas pendientes por corregir" : ""}
                 >
                     Guardar nueva versión
@@ -788,7 +771,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                 {viewingHistorical && (
                     <Button
                         variant="outline"
-                        colorScheme="purple"
+                        colorPalette="purple"
                         onClick={() => void handleReturnToVigente()}
                     >
                         Volver a vigente
@@ -804,18 +787,18 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
 
                 <Button
                     variant="solid"
-                    colorScheme="red"
+                    colorPalette="red"
                     onClick={handleReset}
-                    isDisabled={isReadOnly}
+                    disabled={isReadOnly}
                 >
                     Reset
                 </Button>
 
                 <Button
                     variant="solid"
-                    colorScheme="red"
+                    colorPalette="red"
                     onClick={handleDeleteSelected}
-                    isDisabled={!selectedElement || isReadOnly}
+                    disabled={!selectedElement || isReadOnly}
                 >
                     Eliminar Seleccion
                 </Button>
@@ -842,48 +825,48 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                         Aún no hay versiones guardadas para esta categoría.
                     </Text>
                 ) : (
-                    <TableContainer>
-                        <Table size="sm">
-                            <Thead>
-                                <Tr>
-                                    <Th>Versión</Th>
-                                    <Th>Estado</Th>
-                                    <Th>Vigente desde</Th>
-                                    <Th>Vigente hasta</Th>
-                                    <Th>Motivo</Th>
-                                    <Th>Acción</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                    <Table.ScrollArea>
+                        <Table.Root size="sm">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>Versión</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Vigente desde</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Vigente hasta</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Motivo</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Acción</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {versions.map((version) => (
-                                    <Tr key={version.versionId ?? version.versionNumber}>
-                                        <Td>{version.versionNumber ?? '-'}</Td>
-                                        <Td>
-                                            <Badge colorScheme={version.estado === 'VIGENTE' ? 'green' : 'gray'}>
+                                    <Table.Row key={version.versionId ?? version.versionNumber}>
+                                        <Table.Cell>{version.versionNumber ?? '-'}</Table.Cell>
+                                        <Table.Cell>
+                                            <Badge colorPalette={version.estado === 'VIGENTE' ? 'green' : 'gray'}>
                                                 {version.estado || '-'}
                                             </Badge>
-                                        </Td>
-                                        <Td>{formatVersionDate(version.vigenteDesde)}</Td>
-                                        <Td>{formatVersionDate(version.vigenteHasta)}</Td>
-                                        <Td maxW="320px">
-                                            <Text noOfLines={2}>{version.motivoCambio || '-'}</Text>
-                                        </Td>
-                                        <Td>
+                                        </Table.Cell>
+                                        <Table.Cell>{formatVersionDate(version.vigenteDesde)}</Table.Cell>
+                                        <Table.Cell>{formatVersionDate(version.vigenteHasta)}</Table.Cell>
+                                        <Table.Cell maxW="320px">
+                                            <Text lineClamp={2}>{version.motivoCambio || '-'}</Text>
+                                        </Table.Cell>
+                                        <Table.Cell>
                                             <Button
                                                 size="xs"
                                                 variant={currentRuta?.versionId === version.versionId ? 'solid' : 'outline'}
-                                                colorScheme="purple"
+                                                colorPalette="purple"
                                                 onClick={() => void handleViewVersion(version.versionId)}
-                                                isDisabled={currentRuta?.versionId === version.versionId}
+                                                disabled={currentRuta?.versionId === version.versionId}
                                             >
                                                 {currentRuta?.versionId === version.versionId ? 'Abierta' : 'Abrir'}
                                             </Button>
-                                        </Td>
-                                    </Tr>
+                                        </Table.Cell>
+                                    </Table.Row>
                                 ))}
-                            </Tbody>
-                        </Table>
-                    </TableContainer>
+                            </Table.Body>
+                        </Table.Root>
+                    </Table.ScrollArea>
                 )}
             </Box>
 

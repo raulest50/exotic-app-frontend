@@ -12,24 +12,40 @@
  */
 
 import {
-    Flex, Box, Heading, Text, Button, VStack, HStack, 
-    Grid, GridItem, Card, CardHeader, CardBody, 
-    FormControl, Select, Input, Textarea, IconButton,
-    useToast, useDisclosure,
-    Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
+    Steps,
+    Flex,
+    Box,
+    Heading,
+    Text,
+    Button,
+    VStack,
+    HStack,
+    Grid,
+    GridItem,
+    Card,
+    NativeSelect,
+    Input,
+    Textarea,
+    IconButton,
+    useToast,
+    useDisclosure,
+    Field,
+    Icon,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import { useState, useEffect, useRef } from 'react';
 import { CasePack, Categoria, Insumo, Material, Producto, ProductoBasicUpdatePayload } from "../../types.tsx";
-import { ArrowBackIcon, EditIcon, CheckIcon, QuestionIcon, WarningIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
 import {IVA_VALUES} from "../../types.tsx";
-
 import DeleteProductoDialog from './DeleteProductoDialog.tsx';
+
 import { Modulo } from '../../../Usuarios/GestionUsuarios/types.tsx';
 import { useModuleAccessLevel } from '../../../../auth/usePermissions';
 import InsumoListCard from './InsumoListCard.tsx';
 import CardPackagingInfo from './CardPackagingInfo.tsx';
+import { LuAlertTriangle, LuArrowLeft, LuCheck, LuHelpCircle, LuPencil } from 'react-icons/lu';
 
 type ProductoDetalle = (Producto | Material) & { insumos?: Insumo[]; casePack?: CasePack; categoria?: Categoria };
 
@@ -63,9 +79,9 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     const toast = useToast();
     const endPoints = new EndPointsURL();
     const { nivel: productosAccessLevel } = useModuleAccessLevel(Modulo.PRODUCTOS);
-    const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
-    const { isOpen: isForceDeleteOpen, onOpen: onForceDeleteOpen, onClose: onForceDeleteClose } = useDisclosure();
-    const { isOpen: isHelpPrefijoOpen, onOpen: onHelpPrefijoOpen, onClose: onHelpPrefijoClose } = useDisclosure();
+    const { open: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+    const { open: isForceDeleteOpen, onOpen: onForceDeleteOpen, onClose: onForceDeleteClose } = useDisclosure();
+    const { open: isHelpPrefijoOpen, onOpen: onHelpPrefijoOpen, onClose: onHelpPrefijoClose } = useDisclosure();
 
     const handleDeleteProduct = async () => {
         try {
@@ -636,15 +652,15 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     const renderActionButtons = () => {
         if (editMode) {
             return (
-                <VStack align="stretch" spacing={2}>
+                <VStack align="stretch" gap={2}>
                     <HStack>
                         {isMaterial && (
-                            <Button colorScheme="red" onClick={onDeleteOpen}>
+                            <Button colorPalette="red" onClick={onDeleteOpen}>
                                 Eliminar
                             </Button>
                         )}
                         <Button
-                            colorScheme="red"
+                            colorPalette="red"
                             variant="outline"
                             onClick={() => {
                                 setEditMode(false);
@@ -655,16 +671,16 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                             Cancelar
                         </Button>
                         <Button
-                            colorScheme="green"
+                            colorPalette="green"
                             onClick={handleSaveChanges}
-                            isDisabled={isGuardarDisabled}
+                            disabled={isGuardarDisabled}
                         >
                             Guardar
                         </Button>
                     </HStack>
                     {guardarDisabledReason && (
                         <Flex align="center" gap={2} fontSize="sm" color="orange.600">
-                            <WarningIcon boxSize={4} flexShrink={0} />
+                            <Icon as={LuAlertTriangle} boxSize={4} flexShrink={0} />
                             <Text>{guardarDisabledReason}</Text>
                         </Flex>
                     )}
@@ -675,18 +691,13 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
         return (
             <HStack>
                 {canUseWizard && (
-                    <Button colorScheme="teal" onClick={handleOpenWizard}>
+                    <Button colorPalette="teal" onClick={handleOpenWizard}>
                         Modificar Insumos y Proceso de Produccion
                     </Button>
                 )}
                 {canEdit && (
-                    <Button
-                        leftIcon={<EditIcon />}
-                        colorScheme="green"
-                        onClick={() => setEditMode(true)}
-                    >
-                        Editar
-                    </Button>
+                    <Button colorPalette="green" onClick={() => setEditMode(true)}><LuPencil />Editar
+                                            </Button>
                 )}
             </HStack>
         );
@@ -695,36 +706,30 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     return (
         <Box p={5} bg="app.surface" borderRadius="md" boxShadow="base">
             <Flex justifyContent="space-between" alignItems="center" mb={5}>
-                <Button
-                    leftIcon={<ArrowBackIcon />}
-                    colorScheme="blue"
-                    variant="outline"
-                    onClick={handleBack}
-                >
-                    Regresar
-                </Button>
+                <Button colorPalette="blue" variant="outline" onClick={handleBack}><LuArrowLeft />Regresar
+                                    </Button>
                 <Heading size="lg">Detalle del Producto</Heading>
                 {renderActionButtons()}
             </Flex>
 
-            <Card mb={5} variant="outline" boxShadow="md">
-                <CardHeader bg="app.stepperBlue">
+            <Card.Root mb={5} variant="outline" boxShadow="md">
+                <Card.Header bg="app.stepperBlue">
                     <Heading size="md">{productoData.nombre}</Heading>
                     <Text color="app.textMuted">ID: {productoData.productoId}</Text>
-                </CardHeader>
-                <CardBody>
+                </Card.Header>
+                <Card.Body>
                     <Grid templateColumns="repeat(2, 1fr)" gap={6}>
                         <GridItem>
-                            <VStack align="start" spacing={3}>
+                            <VStack align="start" gap={3}>
                                 <Box>
                                     <Text fontWeight="bold">Nombre:</Text>
                                     {editMode ? (
-                                        <FormControl mt={2}>
+                                        <Field.Root mt={2}>
                                             <Input
                                                 value={productoData.nombre}
-                                                onChange={(e) => handleInputChange('nombre', e.target.value)}
+                                                onValueChange={(e) => handleInputChange('nombre', e.target.value)}
                                             />
-                                        </FormControl>
+                                        </Field.Root>
                                     ) : (
                                         <Text>{productoData.nombre}</Text>
                                     )}
@@ -737,15 +742,17 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                     <Box>
                                         <Text fontWeight="bold">Tipo de Material:</Text>
                                         {editMode ? (
-                                            <FormControl mt={2}>
-                                                <Select
-                                                    value={(productoData as Material).tipoMaterial}
-                                                    onChange={(e) => handleInputChange('tipoMaterial', Number(e.target.value))}
-                                                >
-                                                    <option value={1}>Materia Prima</option>
-                                                    <option value={2}>Material de Empaque</option>
-                                                </Select>
-                                            </FormControl>
+                                            <Field.Root mt={2}>
+                                                <NativeSelect.Root>
+                                                    <NativeSelect.Field
+                                                        value={(productoData as Material).tipoMaterial}
+                                                        onValueChange={(e) => handleInputChange('tipoMaterial', Number(e.target.value))}>
+                                                        <option value={1}>Materia Prima</option>
+                                                        <option value={2}>Material de Empaque</option>
+                                                    </NativeSelect.Field>
+                                                    <NativeSelect.Indicator />
+                                                </NativeSelect.Root>
+                                            </Field.Root>
                                         ) : (
                                             <Text>{getTipoMaterialText((productoData as Material).tipoMaterial)}</Text>
                                         )}
@@ -755,29 +762,31 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                     <Box width="100%">
                                         <Text fontWeight="bold">Categoría:</Text>
                                         {editMode ? (
-                                            <FormControl mt={2}>
-                                                <Select
-                                                    value={categoriaActualId}
-                                                    onChange={(e) => handleCategoriaChange(Number(e.target.value))}
-                                                    isDisabled={!categoriaEditable}
-                                                >
-                                                    <option value="" disabled>
-                                                        {loadingCategorias || loadingCategoriaEditability
-                                                            ? 'Cargando categorías...'
-                                                            : 'Seleccione una categoría'}
-                                                    </option>
-                                                    {categoriasParaSeleccion.map((categoria) => (
-                                                        <option key={categoria.categoriaId} value={categoria.categoriaId}>
-                                                            {categoria.categoriaNombre}
+                                            <Field.Root mt={2}>
+                                                <NativeSelect.Root>
+                                                    <NativeSelect.Field
+                                                        value={categoriaActualId}
+                                                        onValueChange={(e) => handleCategoriaChange(Number(e.target.value))}
+                                                        disabled={!categoriaEditable}>
+                                                        <option value="" disabled>
+                                                            {loadingCategorias || loadingCategoriaEditability
+                                                                ? 'Cargando categorías...'
+                                                                : 'Seleccione una categoría'}
                                                         </option>
-                                                    ))}
-                                                </Select>
+                                                        {categoriasParaSeleccion.map((categoria) => (
+                                                            <option key={categoria.categoriaId} value={categoria.categoriaId}>
+                                                                {categoria.categoriaNombre}
+                                                            </option>
+                                                        ))}
+                                                    </NativeSelect.Field>
+                                                    <NativeSelect.Indicator />
+                                                </NativeSelect.Root>
                                                 {categoriaFieldMessage && (
                                                     <Text fontSize="sm" color="orange.600" mt={1}>
                                                         {categoriaFieldMessage}
                                                     </Text>
                                                 )}
-                                            </FormControl>
+                                            </Field.Root>
                                         ) : (
                                             <Text>{productoData.categoria?.categoriaNombre ?? 'Sin categoría'}</Text>
                                         )}
@@ -787,37 +796,33 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                     <Box>
                                         <Text fontWeight="bold">Prefijo de lote:</Text>
                                         {editMode ? (
-                                            <FormControl mt={2}>
-                                                <HStack align="center" spacing={2}>
+                                            <Field.Root mt={2}>
+                                                <HStack align="center" gap={2}>
                                                     <Input
                                                         value={(productoData as Producto).prefijoLote ?? ''}
-                                                        onChange={(e) => handleInputChange('prefijoLote', e.target.value)}
+                                                        onValueChange={(e) => handleInputChange('prefijoLote', e.target.value)}
                                                         placeholder="Ej: TRK, SLA"
                                                         flex="1"
                                                     />
                                                     <IconButton
                                                         aria-label="Verificar prefijo único"
-                                                        icon={<CheckIcon />}
                                                         size="sm"
-                                                        colorScheme={prefijoVerificado ? "green" : "gray"}
+                                                        colorPalette={prefijoVerificado ? "green" : "gray"}
                                                         onClick={handleVerificarPrefijo}
-                                                        isLoading={verificandoPrefijo}
-                                                        isDisabled={!(productoData as Producto).prefijoLote?.trim()}
-                                                    />
+                                                        loading={verificandoPrefijo}
+                                                        disabled={!(productoData as Producto).prefijoLote?.trim()}><LuCheck /></IconButton>
                                                     <IconButton
                                                         aria-label="Ayuda prefijo de lote"
-                                                        icon={<QuestionIcon />}
                                                         size="sm"
                                                         variant="outline"
-                                                        onClick={onHelpPrefijoOpen}
-                                                    />
+                                                        onClick={onHelpPrefijoOpen}><LuHelpCircle /></IconButton>
                                                 </HStack>
                                                 {prefijoVerificado && (
                                                     <Text color="green.600" fontSize="sm" mt={1}>
                                                         Prefijo verificado y disponible.
                                                     </Text>
                                                 )}
-                                            </FormControl>
+                                            </Field.Root>
                                         ) : (
                                             <Text>{(productoData as Producto).prefijoLote ?? '—'}</Text>
                                         )}
@@ -830,7 +835,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                             </VStack>
                         </GridItem>
                         <GridItem>
-                            <VStack align="start" spacing={3}>
+                            <VStack align="start" gap={3}>
                                 <Box>
                                     <Text fontWeight="bold">Unidad de Medida:</Text>
                                     <Text>{productoData.tipoUnidades}</Text>
@@ -838,12 +843,12 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                 <Box>
                                     <Text fontWeight="bold">Cantidad por Unidad:</Text>
                                     {editMode ? (
-                                        <FormControl mt={2}>
+                                        <Field.Root mt={2}>
                                             <Input
                                                 value={productoData.cantidadUnidad}
-                                                onChange={(e) => handleInputChange('cantidadUnidad', e.target.value)}
+                                                onValueChange={(e) => handleInputChange('cantidadUnidad', e.target.value)}
                                             />
-                                        </FormControl>
+                                        </Field.Root>
                                     ) : (
                                         <Text>{productoData.cantidadUnidad}</Text>
                                     )}
@@ -851,18 +856,20 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                 <Box>
                                     <Text fontWeight="bold">IVA (%):</Text>
                                     {editMode ? (
-                                        <FormControl mt={2}>
-                                            <Select
-                                                value={productoData.ivaPercentual}
-                                                onChange={(e) =>
-                                                    handleInputChange('ivaPercentual', Number(e.target.value))
-                                                }
-                                            >
-                                                <option value={IVA_VALUES.iva_0}> No Tiene </option>
-                                                <option value={IVA_VALUES.iva_5} > 5 %</option>
-                                                <option value={IVA_VALUES.iva_19} > 19 %</option>
-                                            </Select>
-                                        </FormControl>
+                                        <Field.Root mt={2}>
+                                            <NativeSelect.Root>
+                                                <NativeSelect.Field
+                                                    value={productoData.ivaPercentual}
+                                                    onValueChange={(e) =>
+                                                        handleInputChange('ivaPercentual', Number(e.target.value))
+                                                    }>
+                                                    <option value={IVA_VALUES.iva_0}> No Tiene </option>
+                                                    <option value={IVA_VALUES.iva_5} > 5 %</option>
+                                                    <option value={IVA_VALUES.iva_19} > 19 %</option>
+                                                </NativeSelect.Field>
+                                                <NativeSelect.Indicator />
+                                            </NativeSelect.Root>
+                                        </Field.Root>
                                     ) : (
                                         <Text>{productoData.ivaPercentual || 0}%</Text>
                                     )}
@@ -876,12 +883,12 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                             </VStack>
                         </GridItem>
                     </Grid>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
 
             {isSemiOTerminado && (
-                <Card mb={5} variant="outline" boxShadow="md">
-                    <CardHeader bg="app.stepperBlue">
+                <Card.Root mb={5} variant="outline" boxShadow="md">
+                    <Card.Header bg="app.stepperBlue">
                         <Heading size="md">Insumos</Heading>
                         <Text color="app.textMuted">
                             Las cantidades corresponden a una unidad del {producto.tipo_producto === 'S' ? 'semiterminado' : 'terminado'} ({producto.tipoUnidades}).
@@ -894,43 +901,43 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                 Usa la opción "Ver insumos" para explorar cantidades anidadas.
                             </Text>
                         )}
-                    </CardHeader>
-                    <CardBody>
+                    </Card.Header>
+                    <Card.Body>
                         {isLoadingDetalle ? (
                             <Text color="app.textMuted">Cargando insumos...</Text>
                         ) : (
                             <InsumoListCard insumos={productoData.insumos ?? []} titulo="Insumos" />
                         )}
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
             )}
 
             {isTerminado && (
                 <CardPackagingInfo casePack={productoData.casePack} />
             )}
 
-            <Card variant="outline" boxShadow="md">
-                <CardHeader bg="app.stepperBlue">
+            <Card.Root variant="outline" boxShadow="md">
+                <Card.Header bg="app.stepperBlue">
                     <Heading size="md">Observaciones</Heading>
-                </CardHeader>
-                <CardBody>
+                </Card.Header>
+                <Card.Body>
                     {editMode ? (
-                        <FormControl>
+                        <Field.Root>
                             <Textarea
                                 value={productoData.observaciones || ''}
-                                onChange={(e) => handleInputChange('observaciones', e.target.value)}
+                                onValueChange={(e) => handleInputChange('observaciones', e.target.value)}
                                 placeholder="Ingrese observaciones sobre el producto"
                                 rows={4}
                             />
-                        </FormControl>
+                        </Field.Root>
                     ) : (
                         <Text>{productoData.observaciones || 'Sin observaciones'}</Text>
                     )}
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
             {!editMode && !isMaterial && (
                 <Flex justifyContent="flex-end" mt={4}>
-                    <Button colorScheme="red" onClick={onForceDeleteOpen}>
+                    <Button colorPalette="red" onClick={onForceDeleteOpen}>
                         Eliminar producto
                     </Button>
                 </Flex>
@@ -945,36 +952,46 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                 onClose={onForceDeleteClose}
                 onConfirm={handleForceDeleteProduct}
             />
-            <Modal isOpen={isHelpPrefijoOpen} onClose={onHelpPrefijoClose} size="md">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Prefijo de lote</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody pb={4}>
-                        <Text mb={2}>
-                            El prefijo de lote identifica de forma única a cada producto terminado y se usa para generar
-                            los números de lote al crear órdenes de producción (por ejemplo: TRK-0000001-26).
-                        </Text>
-                        <Text mb={2}>
-                            <strong>Modo automático:</strong> El prefijo se calcula a partir del nombre del producto,
-                            tomando la primera letra de cada palabra en mayúscula. Ejemplo: &quot;Tratamiento Rizo Kids&quot; → TRK,
-                            &quot;Shampoo Liso Adulto&quot; → SLA.
-                        </Text>
-                        <Text mb={2}>
-                            <strong>Modo editar:</strong> Puede definir un prefijo propio si lo desea. El prefijo debe ser
-                            único entre todos los productos terminados.
-                        </Text>
-                        <Text mb={2}>
-                            Use el botón con el símbolo de verificación (✓) para comprobar que el prefijo no esté ya
-                            asignado a otro producto.
-                        </Text>
-                        <Text mb={2}>
-                            <strong>Al editar:</strong> Si modifica el prefijo de lote, debe verificar de nuevo con el botón (✓).
-                            El botón Guardar solo se habilita después de verificar el prefijo cuando hubo cambios en él.
-                        </Text>
-                    </ModalBody>
-                </ModalContent>
-            </Modal>
+            <Dialog.Root open={isHelpPrefijoOpen} size='md' onOpenChange={e => {
+                if (!e.open) {
+                    onHelpPrefijoClose();
+                }
+            }}>
+                <Portal>
+
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>Prefijo de lote</Dialog.Header>
+                            <Dialog.CloseTrigger />
+                            <Dialog.Body pb={4}>
+                                <Text mb={2}>
+                                    El prefijo de lote identifica de forma única a cada producto terminado y se usa para generar
+                                    los números de lote al crear órdenes de producción (por ejemplo: TRK-0000001-26).
+                                </Text>
+                                <Text mb={2}>
+                                    <strong>Modo automático:</strong> El prefijo se calcula a partir del nombre del producto,
+                                    tomando la primera letra de cada palabra en mayúscula. Ejemplo: &quot;Tratamiento Rizo Kids&quot; → TRK,
+                                    &quot;Shampoo Liso Adulto&quot; → SLA.
+                                </Text>
+                                <Text mb={2}>
+                                    <strong>Modo editar:</strong> Puede definir un prefijo propio si lo desea. El prefijo debe ser
+                                    único entre todos los productos terminados.
+                                </Text>
+                                <Text mb={2}>
+                                    Use el botón con el símbolo de verificación (✓) para comprobar que el prefijo no esté ya
+                                    asignado a otro producto.
+                                </Text>
+                                <Text mb={2}>
+                                    <strong>Al editar:</strong> Si modifica el prefijo de lote, debe verificar de nuevo con el botón (✓).
+                                    El botón Guardar solo se habilita después de verificar el prefijo cuando hubo cambios en él.
+                                </Text>
+                            </Dialog.Body>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+
+                </Portal>
+            </Dialog.Root>
         </Box>
     );
 }

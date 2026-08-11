@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Container, Flex, Select, Button, Spinner } from '@chakra-ui/react';
+import { Steps, Container, Flex, NativeSelect, Button, Spinner } from '@chakra-ui/react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import EndPointsURL from '../../../api/EndPointsURL';
@@ -90,18 +90,20 @@ export function ReportesTabAf() {
                             setDate2={setDate2}
                             flex_direction="column"
                         />
-                        <Select
-                            value={estadoSearch}
-                            onChange={(e) => setEstadoSearch(e.target.value)}
-                            ml={4}
-                            width="200px"
-                        >
-                            <option value="0,1,2">Pendientes</option>
-                            <option value="3">Cerradas</option>
-                            <option value="-1">Canceladas</option>
-                            <option value="-1,0,1,2,3">Todas</option>
-                        </Select>
-                        <Button variant="solid" colorScheme="teal" onClick={() => onClickBuscar()}>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                value={estadoSearch}
+                                onValueChange={(e) => setEstadoSearch(e.target.value)}
+                                ml={4}
+                                width="200px">
+                                <option value="0,1,2">Pendientes</option>
+                                <option value="3">Cerradas</option>
+                                <option value="-1">Canceladas</option>
+                                <option value="-1,0,1,2,3">Todas</option>
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                        <Button variant="solid" colorPalette="teal" onClick={() => onClickBuscar()}>
                             Buscar
                         </Button>
                     </Flex>

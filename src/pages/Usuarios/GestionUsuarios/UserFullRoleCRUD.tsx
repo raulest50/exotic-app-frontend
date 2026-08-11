@@ -1,8 +1,6 @@
 // src/components/UserFullRoleCRUD.tsx
 import { useState } from 'react';
-import {
-    Box,
-} from '@chakra-ui/react';
+import { Steps, Box } from '@chakra-ui/react';
 import CreateUser from "./CreateUser.tsx";
 import UserViewer from "./UserViewer.tsx";
 import EditarUsuario from "./EditarUsuario.tsx";

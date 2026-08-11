@@ -1,5 +1,5 @@
 import MyHeader from "../../components/MyHeader";
-import { Container, Tabs, TabList, TabPanels, Tab, TabPanel, Spinner, Text } from "@chakra-ui/react";
+import { Steps, Container, Tabs, TabList, TabPanels, Tab, TabPanel, Spinner, Text } from "@chakra-ui/react";
 import AsistenteIngresoMercancia from "./AsistenteIngresoOCM/AsistenteIngresoMercancia";
 import { AsistenteDispensacion } from "./AsistenteDispensacion/AsistenteDispensacion.tsx";
 import AjustesInventarioTab from "./AjustesInventario/AjustesInventarioTab";
@@ -85,18 +85,18 @@ export default function TransaccionesAlmacenPage() {
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <MyHeader title="Transacciones De Almacen" />
-            <Tabs>
-                <TabList>
+            <Tabs.Root>
+                <Tabs.List>
                     {visibleTabs.map((tab) => (
                         <Tab key={tab.key} sx={my_style_tab}>{tab.label}</Tab>
                     ))}
-                </TabList>
+                </Tabs.List>
                 <TabPanels>
                     {visibleTabs.map((tab) => (
                         <TabPanel key={tab.key}>{tab.render()}</TabPanel>
                     ))}
                 </TabPanels>
-            </Tabs>
+            </Tabs.Root>
         </Container>
     );
 }

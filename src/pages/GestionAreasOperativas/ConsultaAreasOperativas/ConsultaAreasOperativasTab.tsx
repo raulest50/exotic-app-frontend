@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { VStack, Alert, AlertIcon, Text } from '@chakra-ui/react';
-import { useToast } from '@chakra-ui/react';
+import { VStack, Alert, Text } from '@chakra-ui/react';
+import { useToast, Alert } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import BetterPagination from '../../../components/BetterPagination/BetterPagination.tsx';
@@ -103,10 +103,10 @@ export default function ConsultaAreasOperativasTab() {
             />
 
             {error && (
-                <Alert status="error">
-                    <AlertIcon />
+                <Alert.Root status="error">
+                    <Alert.Indicator />
                     {error}
-                </Alert>
+                </Alert.Root>
             )}
 
             {areas.length > 0 || loading ? (

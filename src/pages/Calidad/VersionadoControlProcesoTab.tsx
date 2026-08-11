@@ -1,12 +1,12 @@
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import {
+    Steps,
     Badge,
     Box,
     Button,
     HStack,
     IconButton,
     Input,
-    Select,
+    NativeSelect,
     Table,
     Tbody,
     Td,
@@ -33,6 +33,7 @@ import type {
     PlantillaResponse,
     TipoCaracteristicaControlProceso,
 } from "./types";
+import { LuPlus, LuTrash2 } from 'react-icons/lu';
 
 type DraftCaracteristica = {
     key: string;
@@ -224,7 +225,7 @@ export default function VersionadoControlProcesoTab() {
     };
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             <CalidadAreaOperativaPicker
                 value={selectedArea}
                 onChange={handleAreaChange}
@@ -236,33 +237,33 @@ export default function VersionadoControlProcesoTab() {
                     <Box borderWidth="1px" borderRadius="md" p={4}>
                         <HStack justify="space-between" mb={3}>
                             <Text fontWeight="semibold">Versiones de {selectedArea.nombre}</Text>
-                            <Button size="sm" onClick={() => cargarPlantillas(selectedArea)} isLoading={loadingPlantillas}>Actualizar</Button>
+                            <Button size="sm" onClick={() => cargarPlantillas(selectedArea)} loading={loadingPlantillas}>Actualizar</Button>
                         </HStack>
                         {plantillas.length === 0 ? (
                             <Text color="gray.500">No hay versiones registradas.</Text>
                         ) : (
-                            <Table size="sm">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Version</Th>
-                                        <Th>Estado</Th>
-                                        <Th>Caracteristicas</Th>
-                                        <Th>Acciones</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                            <Table.Root size="sm">
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>Version</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Caracteristicas</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Acciones</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {plantillas.map((plantilla) => (
-                                        <Tr key={plantilla.id}>
-                                            <Td>{plantilla.version}</Td>
-                                            <Td><Badge colorScheme={estadoColor(plantilla.estado)}>{plantilla.estado}</Badge></Td>
-                                            <Td>{plantilla.caracteristicas.length}</Td>
-                                            <Td>
-                                                <HStack spacing={2}>
+                                        <Table.Row key={plantilla.id}>
+                                            <Table.Cell>{plantilla.version}</Table.Cell>
+                                            <Table.Cell><Badge colorPalette={estadoColor(plantilla.estado)}>{plantilla.estado}</Badge></Table.Cell>
+                                            <Table.Cell>{plantilla.caracteristicas.length}</Table.Cell>
+                                            <Table.Cell>
+                                                <HStack gap={2}>
                                                     <Button size="xs" onClick={() => setRows(plantilla.caracteristicas.map(fromCaracteristica))}>
                                                         Cargar
                                                     </Button>
                                                     {plantilla.estado === "BORRADOR" && (
-                                                        <Button size="xs" colorScheme="teal" onClick={() => publicar(plantilla)}>
+                                                        <Button size="xs" colorPalette="teal" onClick={() => publicar(plantilla)}>
                                                             Publicar
                                                         </Button>
                                                     )}
@@ -272,110 +273,111 @@ export default function VersionadoControlProcesoTab() {
                                                         </Button>
                                                     )}
                                                 </HStack>
-                                            </Td>
-                                        </Tr>
+                                            </Table.Cell>
+                                        </Table.Row>
                                     ))}
-                                </Tbody>
-                            </Table>
+                                </Table.Body>
+                            </Table.Root>
                         )}
                     </Box>
 
                     <Box borderWidth="1px" borderRadius="md" p={4}>
                         <HStack justify="space-between" mb={3}>
                             <Text fontWeight="semibold">Caracteristicas del borrador</Text>
-                            <Button leftIcon={<AddIcon />} size="sm" onClick={() => setRows((current) => [...current, newDraftRow()])}>
-                                Agregar
-                            </Button>
+                            <Button
+                                size="sm"
+                                onClick={() => setRows((current) => [...current, newDraftRow()])}><LuPlus />Agregar
+                                                            </Button>
                         </HStack>
-                        <Table size="sm">
-                            <Thead>
-                                <Tr>
-                                    <Th>Nombre</Th>
-                                    <Th>Tipo</Th>
-                                    <Th>Unidad</Th>
-                                    <Th>Muestras</Th>
-                                    <Th>Unidades/muestra</Th>
-                                    <Th>Lim. inf.</Th>
-                                    <Th>Lim. sup.</Th>
-                                    <Th />
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                        <Table.Root size="sm">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Muestras</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Unidades/muestra</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Lim. inf.</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Lim. sup.</Table.ColumnHeader>
+                                    <Table.ColumnHeader />
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {rows.map((row) => (
-                                    <Tr key={row.key}>
-                                        <Td>
-                                            <Input size="sm" value={row.nombre} onChange={(event) => updateRow(row.key, { nombre: event.target.value })} />
-                                        </Td>
-                                        <Td>
-                                            <Select
-                                                size="sm"
-                                                value={row.tipo}
-                                                onChange={(event) => updateRow(row.key, { tipo: event.target.value as TipoCaracteristicaControlProceso })}
-                                            >
-                                                <option value="NUMERICA">Numerica</option>
-                                                <option value="BOOLEANA">Cumple/No cumple</option>
-                                            </Select>
-                                        </Td>
-                                        <Td>
+                                    <Table.Row key={row.key}>
+                                        <Table.Cell>
+                                            <Input size="sm" value={row.nombre} onValueChange={(event) => updateRow(row.key, { nombre: event.target.value })} />
+                                        </Table.Cell>
+                                        <Table.Cell>
+                                            <NativeSelect.Root>
+                                                <NativeSelect.Field
+                                                    size="sm"
+                                                    value={row.tipo}
+                                                    onValueChange={(event) => updateRow(row.key, { tipo: event.target.value as TipoCaracteristicaControlProceso })}>
+                                                    <option value="NUMERICA">Numerica</option>
+                                                    <option value="BOOLEANA">Cumple/No cumple</option>
+                                                </NativeSelect.Field>
+                                                <NativeSelect.Indicator />
+                                            </NativeSelect.Root>
+                                        </Table.Cell>
+                                        <Table.Cell>
                                             <Input
                                                 size="sm"
                                                 value={row.unidad}
-                                                isDisabled={row.tipo === "BOOLEANA"}
-                                                onChange={(event) => updateRow(row.key, { unidad: event.target.value })}
+                                                disabled={row.tipo === "BOOLEANA"}
+                                                onValueChange={(event) => updateRow(row.key, { unidad: event.target.value })}
                                             />
-                                        </Td>
-                                        <Td>
+                                        </Table.Cell>
+                                        <Table.Cell>
                                             <Input
                                                 size="sm"
                                                 type="number"
                                                 min={1}
                                                 value={row.cantidadMuestras}
-                                                onChange={(event) => updateRow(row.key, { cantidadMuestras: event.target.value })}
+                                                onValueChange={(event) => updateRow(row.key, { cantidadMuestras: event.target.value })}
                                             />
-                                        </Td>
-                                        <Td>
+                                        </Table.Cell>
+                                        <Table.Cell>
                                             <Input
                                                 size="sm"
                                                 type="number"
                                                 min={1}
                                                 value={row.unidadesPorMuestra}
-                                                onChange={(event) => updateRow(row.key, { unidadesPorMuestra: event.target.value })}
+                                                onValueChange={(event) => updateRow(row.key, { unidadesPorMuestra: event.target.value })}
                                             />
-                                        </Td>
-                                        <Td>
+                                        </Table.Cell>
+                                        <Table.Cell>
                                             <Input
                                                 size="sm"
                                                 type="number"
                                                 value={row.limiteInferior}
-                                                isDisabled={row.tipo === "BOOLEANA"}
-                                                onChange={(event) => updateRow(row.key, { limiteInferior: event.target.value })}
+                                                disabled={row.tipo === "BOOLEANA"}
+                                                onValueChange={(event) => updateRow(row.key, { limiteInferior: event.target.value })}
                                             />
-                                        </Td>
-                                        <Td>
+                                        </Table.Cell>
+                                        <Table.Cell>
                                             <Input
                                                 size="sm"
                                                 type="number"
                                                 value={row.limiteSuperior}
-                                                isDisabled={row.tipo === "BOOLEANA"}
-                                                onChange={(event) => updateRow(row.key, { limiteSuperior: event.target.value })}
+                                                disabled={row.tipo === "BOOLEANA"}
+                                                onValueChange={(event) => updateRow(row.key, { limiteSuperior: event.target.value })}
                                             />
-                                        </Td>
-                                        <Td>
+                                        </Table.Cell>
+                                        <Table.Cell>
                                             <IconButton
                                                 aria-label="Eliminar caracteristica"
-                                                icon={<DeleteIcon />}
                                                 size="sm"
                                                 variant="ghost"
-                                                isDisabled={rows.length === 1}
-                                                onClick={() => setRows((current) => current.filter((item) => item.key !== row.key))}
-                                            />
-                                        </Td>
-                                    </Tr>
+                                                disabled={rows.length === 1}
+                                                onClick={() => setRows((current) => current.filter((item) => item.key !== row.key))}><LuTrash2 /></IconButton>
+                                        </Table.Cell>
+                                    </Table.Row>
                                 ))}
-                            </Tbody>
-                        </Table>
+                            </Table.Body>
+                        </Table.Root>
                         <HStack justify="flex-end" mt={4}>
-                            <Button colorScheme="teal" onClick={guardarBorrador} isLoading={saving}>
+                            <Button colorPalette="teal" onClick={guardarBorrador} loading={saving}>
                                 Guardar borrador
                             </Button>
                         </HStack>

@@ -1,4 +1,4 @@
-import { Container, Flex, Box } from "@chakra-ui/react";
+import { Steps, Container, Flex, Box } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader.tsx";
 import CatalogoCuentas from "./cuentas/CatalogoCuentas";
 

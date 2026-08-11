@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useColorModeValue } from "../../components/ui/color-mode";
 import {
     closestCenter,
     DndContext,
@@ -9,28 +10,18 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Box,
     Button,
     ButtonGroup,
     Flex,
-    FormControl,
-    FormHelperText,
-    FormLabel,
     Grid,
     HStack,
     Heading,
     Input,
     InputGroup,
     InputLeftElement,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     NumberInput,
     NumberInputField,
     SimpleGrid,
@@ -44,8 +35,10 @@ import {
     Textarea,
     VStack,
     useDisclosure,
-    useColorModeValue,
     useToast,
+    Field,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
 import {
     FiArchive,
@@ -251,17 +244,14 @@ function CompletedPaginationControls({
     }
 
     return (
-        <HStack justify="space-between" spacing={2} aria-label="Paginación de órdenes completadas">
+        <HStack justify="space-between" gap={2} aria-label="Paginación de órdenes completadas">
             <Button
                 size="sm"
                 minH={12}
                 variant="outline"
-                leftIcon={<FiChevronLeft />}
-                isDisabled={loading || pagination.first}
-                onClick={() => onPageChange(pagination.page - 1)}
-            >
-                Anterior
-            </Button>
+                disabled={loading || pagination.first}
+                onClick={() => onPageChange(pagination.page - 1)}><FiChevronLeft />Anterior
+                            </Button>
             <Text
                 minW="92px"
                 textAlign="center"
@@ -275,12 +265,9 @@ function CompletedPaginationControls({
                 size="sm"
                 minH={12}
                 variant="outline"
-                rightIcon={<FiChevronRight />}
-                isDisabled={loading || pagination.last}
-                onClick={() => onPageChange(pagination.page + 1)}
-            >
-                Siguiente
-            </Button>
+                disabled={loading || pagination.last}
+                onClick={() => onPageChange(pagination.page + 1)}>Siguiente
+                            <FiChevronRight /></Button>
         </HStack>
     );
 }
@@ -305,12 +292,12 @@ export default function AreaOperativaPanel() {
     useAreaOperativaNoiseSampler();
 
     const {
-        isOpen: isActionOpen,
+        open: isActionOpen,
         onOpen: onActionOpen,
         onClose: onActionClose,
     } = useDisclosure();
     const {
-        isOpen: isDetailOpen,
+        open: isDetailOpen,
         onOpen: onDetailOpen,
         onClose: onDetailClose,
     } = useDisclosure();
@@ -702,58 +689,52 @@ export default function AreaOperativaPanel() {
         ) : null;
 
     return (
-        <VStack w="full" spacing={{ base: 4, md: 6 }} align="stretch" p={{ base: 2, md: 3, lg: 4 }}>
+        <VStack w="full" gap={{ base: 4, md: 6 }} align="stretch" p={{ base: 2, md: 3, lg: 4 }}>
             <Box>
                 <HStack justify="space-between" align="start" flexWrap="wrap" gap={4}>
                     <Box>
                         <Heading size="lg" mb={2}>Centro Operativo del Área</Heading>
                         {meProfile ? (
-                            <HStack spacing={2} color="app.textMuted">
+                            <HStack gap={2} color="app.textMuted">
                                 <FiUser />
                                 <Text>{meProfile.nombreCompleto || meProfile.username}</Text>
                             </HStack>
                         ) : null}
                     </Box>
 
-                    <HStack spacing={3} w={{ base: "full", sm: "auto" }}>
+                    <HStack gap={3} w={{ base: "full", sm: "auto" }}>
                         <Button
                             minH={12}
                             flex={{ base: 1, sm: "initial" }}
                             variant="outline"
-                            leftIcon={<FiRefreshCw />}
                             onClick={() => void handleRefreshPanel()}
-                            isLoading={boardLoading}
-                            isDisabled={directivesLoading}
-                        >
-                            Refrescar
-                        </Button>
+                            loading={boardLoading}
+                            disabled={directivesLoading}><FiRefreshCw />Refrescar
+                                                    </Button>
                         <Button
                             minH={12}
                             flex={{ base: 1, sm: "initial" }}
-                            colorScheme="red"
+                            colorPalette="red"
                             variant="outline"
-                            leftIcon={<FiLogOut />}
-                            onClick={logout}
-                        >
-                            Cerrar sesión
-                        </Button>
+                            onClick={logout}><FiLogOut />Cerrar sesión
+                                                    </Button>
                     </HStack>
                 </HStack>
             </Box>
 
-            <Tabs variant="enclosed" colorScheme="teal" isLazy>
-                <TabList>
+            <Tabs.Root variant='enclosed' colorPalette="teal" lazyMount>
+                <Tabs.List>
                     <Tab minH={12}>Tablero operativo</Tab>
                     <Tab minH={12}>MPS semanal</Tab>
-                </TabList>
+                </Tabs.List>
                 <TabPanels>
                     <TabPanel px={0} pb={0}>
-                        <VStack w="full" spacing={6} align="stretch">
+                        <VStack w="full" gap={6} align="stretch">
                             <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
-                                <VStack align="stretch" spacing={3}>
+                                <VStack align="stretch" gap={3}>
                                     <SimpleGrid
                                         columns={{ base: 1, lg: tableroVistaToggleEnabled ? 2 : 1 }}
-                                        spacing={4}
+                                        gap={4}
                                         alignItems="end"
                                     >
                                         {tableroVistaToggleEnabled ? (
@@ -762,7 +743,7 @@ export default function AreaOperativaPanel() {
                                                 Periodo de completadas
                                             </Text>
                                             <ButtonGroup
-                                                isAttached
+                                                attached
                                                 size="md"
                                                 variant="outline"
                                                 w="full"
@@ -770,48 +751,33 @@ export default function AreaOperativaPanel() {
                                                 <Button
                                                     flex={1}
                                                     minH={12}
-                                                    leftIcon={(
-                                                        <Box display={{ base: "none", sm: "inline-flex" }}>
-                                                            <FiClock />
-                                                        </Box>
-                                                    )}
-                                                    colorScheme={effectiveTableroVista === "HOY" ? "teal" : "gray"}
+                                                    colorPalette={effectiveTableroVista === "HOY" ? "teal" : "gray"}
                                                     variant={effectiveTableroVista === "HOY" ? "solid" : "outline"}
                                                     aria-pressed={effectiveTableroVista === "HOY"}
-                                                    onClick={() => handleTableroVistaChange("HOY")}
-                                                >
-                                                    Hoy
-                                                </Button>
+                                                    onClick={() => handleTableroVistaChange("HOY")}>(<Box display={{ base: "none", sm: "inline-flex" }}>
+                                                        <FiClock />
+                                                    </Box>)Hoy
+                                                                                                    </Button>
                                                 <Button
                                                     flex={1}
                                                     minH={12}
-                                                    leftIcon={(
-                                                        <Box display={{ base: "none", sm: "inline-flex" }}>
-                                                            <FiCalendar />
-                                                        </Box>
-                                                    )}
-                                                    colorScheme={effectiveTableroVista === "SEMANA_ACTUAL" ? "teal" : "gray"}
+                                                    colorPalette={effectiveTableroVista === "SEMANA_ACTUAL" ? "teal" : "gray"}
                                                     variant={effectiveTableroVista === "SEMANA_ACTUAL" ? "solid" : "outline"}
                                                     aria-pressed={effectiveTableroVista === "SEMANA_ACTUAL"}
-                                                    onClick={() => handleTableroVistaChange("SEMANA_ACTUAL")}
-                                                >
-                                                    Semana actual
-                                                </Button>
+                                                    onClick={() => handleTableroVistaChange("SEMANA_ACTUAL")}>(<Box display={{ base: "none", sm: "inline-flex" }}>
+                                                        <FiCalendar />
+                                                    </Box>)Semana actual
+                                                                                                    </Button>
                                                 <Button
                                                     flex={1}
                                                     minH={12}
-                                                    leftIcon={(
-                                                        <Box display={{ base: "none", sm: "inline-flex" }}>
-                                                            <FiArchive />
-                                                        </Box>
-                                                    )}
-                                                    colorScheme={effectiveTableroVista === "HISTORICO" ? "teal" : "gray"}
+                                                    colorPalette={effectiveTableroVista === "HISTORICO" ? "teal" : "gray"}
                                                     variant={effectiveTableroVista === "HISTORICO" ? "solid" : "outline"}
                                                     aria-pressed={effectiveTableroVista === "HISTORICO"}
-                                                    onClick={() => handleTableroVistaChange("HISTORICO")}
-                                                >
-                                                    Histórico
-                                                </Button>
+                                                    onClick={() => handleTableroVistaChange("HISTORICO")}>(<Box display={{ base: "none", sm: "inline-flex" }}>
+                                                        <FiArchive />
+                                                    </Box>)Histórico
+                                                                                                    </Button>
                                             </ButtonGroup>
                                             </Box>
                                         ) : null}
@@ -826,7 +792,7 @@ export default function AreaOperativaPanel() {
                                             </InputLeftElement>
                                             <Input
                                                 value={searchTerm}
-                                                onChange={(event) => setSearchTerm(event.target.value)}
+                                                onValueChange={(event) => setSearchTerm(event.target.value)}
                                                 placeholder="Buscar por lote, OP, producto o nodo"
                                             />
                                         </InputGroup>
@@ -859,10 +825,10 @@ export default function AreaOperativaPanel() {
                             />
 
                             {error ? (
-                                <Alert status="error" borderRadius="md">
-                                    <AlertIcon />
+                                <Alert.Root status="error" borderRadius="md">
+                                    <Alert.Indicator />
                                     {error}
-                                </Alert>
+                                </Alert.Root>
                             ) : null}
 
                             {boardLoading ? (
@@ -893,7 +859,9 @@ export default function AreaOperativaPanel() {
                                             overflowX={{ base: "visible", md: "auto" }}
                                             overscrollBehaviorX="contain"
                                             pb={{ base: 0, md: 2 }}
-                                            sx={{ WebkitOverflowScrolling: "touch" }}
+                                            css={{
+                                                WebkitOverflowScrolling: "touch"
+                                            }}
                                         >
                                             <Grid
                                                 templateColumns={{
@@ -937,94 +905,104 @@ export default function AreaOperativaPanel() {
                         <AreaOperativaMpsSemanalTab />
                     </TabPanel>
                 </TabPanels>
-            </Tabs>
+            </Tabs.Root>
 
-            <Modal isOpen={isActionOpen} onClose={onActionClose} size="lg" scrollBehavior="inside" isCentered>
-                <ModalOverlay />
-                <ModalContent mx={{ base: 2, md: 4 }} maxH="calc(100dvh - 2rem)">
-                    <ModalHeader>{actionMeta.title}</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        {selectedOrden ? (
-                            <VStack align="stretch" spacing={4}>
-                                <Box>
-                                    <Text fontWeight="bold" mb={1}>Orden</Text>
-                                    <Text>{selectedOrden.loteAsignado || `OP-${selectedOrden.ordenId}`}</Text>
-                                </Box>
-                                <Box>
-                                    <Text fontWeight="bold" mb={1}>Producto</Text>
-                                    <Text>{selectedOrden.productoNombre}</Text>
-                                </Box>
-                                <Box>
-                                    <Text fontWeight="bold" mb={1}>Estado actual</Text>
-                                    <Text>{selectedOrden.estadoDescripcion}</Text>
-                                </Box>
-                                {selectedAction === "completar" && selectedOrden.esNodoFinal ? (
-                                    <FormControl isRequired>
-                                        <FormLabel>Cantidad producida</FormLabel>
-                                        <NumberInput
-                                            value={cantidadProducida}
-                                            onChange={(value) => setCantidadProducida(value)}
-                                            min={0.0001}
-                                            precision={4}
-                                            clampValueOnBlur={false}
-                                        >
-                                            <NumberInputField
-                                                minH={12}
-                                                inputMode="decimal"
-                                                placeholder="0"
-                                                aria-label="Cantidad de producto terminado fabricado"
+            <Dialog.Root open={isActionOpen} size='lg' scrollBehavior="inside" placement='center' onOpenChange={e => {
+                if (!e.open) {
+                    onActionClose();
+                }
+            }}>
+                <Portal>
+
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content mx={{ base: 2, md: 4 }} maxH="calc(100dvh - 2rem)">
+                            <Dialog.Header>{actionMeta.title}</Dialog.Header>
+                            <Dialog.CloseTrigger />
+                            <Dialog.Body>
+                                {selectedOrden ? (
+                                    <VStack align="stretch" gap={4}>
+                                        <Box>
+                                            <Text fontWeight="bold" mb={1}>Orden</Text>
+                                            <Text>{selectedOrden.loteAsignado || `OP-${selectedOrden.ordenId}`}</Text>
+                                        </Box>
+                                        <Box>
+                                            <Text fontWeight="bold" mb={1}>Producto</Text>
+                                            <Text>{selectedOrden.productoNombre}</Text>
+                                        </Box>
+                                        <Box>
+                                            <Text fontWeight="bold" mb={1}>Estado actual</Text>
+                                            <Text>{selectedOrden.estadoDescripcion}</Text>
+                                        </Box>
+                                        {selectedAction === "completar" && selectedOrden.esNodoFinal ? (
+                                            <Field.Root required>
+                                                <Field.Label>Cantidad producida</Field.Label>
+                                                <NumberInput.Root
+                                                    value={String(cantidadProducida)}
+                                                    onValueChange={(value) => setCantidadProducida(value)}
+                                                    min={0.0001}
+                                                    precision={4}
+                                                    clampValueOnBlur={false}
+                                                >
+                                                    <NumberInput.Input
+                                                        minH={12}
+                                                        inputMode="decimal"
+                                                        placeholder="0"
+                                                        aria-label="Cantidad de producto terminado fabricado"
+                                                    />
+                                                </NumberInput.Root>
+                                                <Field.HelperText>
+                                                    Planeado: {selectedOrden.cantidadProducir.toLocaleString("es-CO")}{" "}
+                                                    {selectedOrden.tipoUnidades || "unidades"}. Este reporte deja la OP pendiente de cierre.
+                                                </Field.HelperText>
+                                            </Field.Root>
+                                        ) : null}
+                                        <Box>
+                                            <Text fontWeight="bold" mb={1}>Observaciones (opcionales)</Text>
+                                            <Textarea
+                                                value={observaciones}
+                                                onValueChange={(event) => setObservaciones(event.target.value)}
+                                                placeholder="Agregar observaciones para esta transición"
+                                                maxLength={500}
+                                                rows={4}
                                             />
-                                        </NumberInput>
-                                        <FormHelperText>
-                                            Planeado: {selectedOrden.cantidadProducir.toLocaleString("es-CO")}{" "}
-                                            {selectedOrden.tipoUnidades || "unidades"}. Este reporte deja la OP pendiente de cierre.
-                                        </FormHelperText>
-                                    </FormControl>
+                                            <Text fontSize="xs" color="app.textSubtle" textAlign="right">
+                                                {observaciones.length}/500
+                                            </Text>
+                                        </Box>
+                                    </VStack>
                                 ) : null}
-                                <Box>
-                                    <Text fontWeight="bold" mb={1}>Observaciones (opcionales)</Text>
-                                    <Textarea
-                                        value={observaciones}
-                                        onChange={(event) => setObservaciones(event.target.value)}
-                                        placeholder="Agregar observaciones para esta transición"
-                                        maxLength={500}
-                                        rows={4}
-                                    />
-                                    <Text fontSize="xs" color="app.textSubtle" textAlign="right">
-                                        {observaciones.length}/500
-                                    </Text>
-                                </Box>
-                            </VStack>
-                        ) : null}
-                    </ModalBody>
-                    <ModalFooter gap={3} flexWrap="wrap">
-                        <Button
-                            minH={12}
-                            flex={{ base: "1 1 45%", sm: "initial" }}
-                            variant="ghost"
-                            onClick={onActionClose}
-                            isDisabled={submitting}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button
-                            minH={12}
-                            flex={{ base: "1 1 45%", sm: "initial" }}
-                            colorScheme={actionMeta.colorScheme}
-                            onClick={() => void handleSubmitAction()}
-                            isLoading={submitting}
-                            isDisabled={
-                                selectedAction === "completar"
-                                && Boolean(selectedOrden?.esNodoFinal)
-                                && (!Number.isFinite(Number(cantidadProducida)) || Number(cantidadProducida) <= 0)
-                            }
-                        >
-                            {actionMeta.submitLabel}
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+                            </Dialog.Body>
+                            <Dialog.Footer gap={3} flexWrap="wrap">
+                                <Button
+                                    minH={12}
+                                    flex={{ base: "1 1 45%", sm: "initial" }}
+                                    variant="ghost"
+                                    onClick={onActionClose}
+                                    disabled={submitting}
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button
+                                    minH={12}
+                                    flex={{ base: "1 1 45%", sm: "initial" }}
+                                    colorPalette={actionMeta.colorScheme}
+                                    onClick={() => void handleSubmitAction()}
+                                    loading={submitting}
+                                    disabled={
+                                        selectedAction === "completar"
+                                        && Boolean(selectedOrden?.esNodoFinal)
+                                        && (!Number.isFinite(Number(cantidadProducida)) || Number(cantidadProducida) <= 0)
+                                    }
+                                >
+                                    {actionMeta.submitLabel}
+                                </Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+
+                </Portal>
+            </Dialog.Root>
 
             <AreaOperativaOrderDetailDrawer
                 isOpen={isDetailOpen}

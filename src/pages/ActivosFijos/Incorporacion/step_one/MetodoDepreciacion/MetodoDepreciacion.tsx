@@ -1,17 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
-  Select, 
-  FormControl, 
-  FormLabel, 
-  NumberInput, 
-  NumberInputField, 
-  NumberInputStepper, 
-  NumberIncrementStepper, 
+  Steps,
+  NativeSelect,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
   NumberDecrementStepper,
   VStack,
   Text,
   Box,
   Flex,
+  Field,
 } from '@chakra-ui/react';
 import ReactECharts from 'echarts-for-react';
 
@@ -193,94 +193,96 @@ export function MetodoDepreciacionComponent(props: Props) {
   return (
     <Flex direction={{ base: 'column', md: 'row' }} gap={4} align="stretch" w="full">
       {/* Formulario de inputs (ahora vertical) */}
-      <VStack spacing={4} align="stretch" w={{ base: 'full', md: '40%' }} pr={{ md: 4 }}>
+      <VStack gap={4} align="stretch" w={{ base: 'full', md: '40%' }} pr={{ md: 4 }}>
         <Box p={4} borderWidth="1px" borderRadius="lg" bg="app.surface">
           <Text fontSize="xl" fontWeight="bold" mb={4}>Método de Depreciación</Text>
 
-          <FormControl mb={4}>
-            <FormLabel>Método de Depreciación</FormLabel>
-            <Select
-              value={metodoDepreciacion}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                setMetodoDepreciacion(e.target.value as MetodoDepreciacion)
-              }
-            >
-              <option value={MetodoDepreciacion.SL}>Línea Recta (SL)</option>
-              <option value={MetodoDepreciacion.DB}>Balance Decreciente (DB)</option>
-            </Select>
-          </FormControl>
+          <Field.Root mb={4}>
+            <Field.Label>Método de Depreciación</Field.Label>
+            <NativeSelect.Root>
+              <NativeSelect.Field
+                value={metodoDepreciacion}
+                onValueChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                  setMetodoDepreciacion(e.target.value as MetodoDepreciacion)
+                }>
+                <option value={MetodoDepreciacion.SL}>Línea Recta (SL)</option>
+                <option value={MetodoDepreciacion.DB}>Balance Decreciente (DB)</option>
+              </NativeSelect.Field>
+              <NativeSelect.Indicator />
+            </NativeSelect.Root>
+          </Field.Root>
 
-          <FormControl mb={4}>
-            <FormLabel>Valor Inicial</FormLabel>
-            <NumberInput
-              value={valorInicial}
-              isReadOnly={true}
+          <Field.Root mb={4}>
+            <Field.Label>Valor Inicial</Field.Label>
+            <NumberInput.Root
+              value={String(valorInicial)}
+              readOnly={true}
               min={0}
               bg="app.inputReadonlyStrong" // Indicación visual de que es de solo lectura
             >
-              <NumberInputField />
-            </NumberInput>
+              <NumberInput.Input />
+            </NumberInput.Root>
             <Text fontSize="sm" color="app.textSubtle" mt={1}>
               Este valor se toma automáticamente del "Valor unitario con IVA" del grupo
             </Text>
-          </FormControl>
+          </Field.Root>
 
-          <FormControl mb={4}>
-            <FormLabel>Valor Residual</FormLabel>
-            <NumberInput
-              value={valorResidual}
-              onChange={(
+          <Field.Root mb={4}>
+            <Field.Label>Valor Residual</Field.Label>
+            <NumberInput.Root
+              value={String(valorResidual)}
+              onValueChange={(
                 _valueAsString: string,
                 valueAsNumber: number
               ) => setValorResidual(valueAsNumber)}
               min={0}
               max={valorInicial}
             >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-          </FormControl>
+              <NumberInput.Input />
+              <NumberInput.Control>
+                <NumberInput.IncrementTrigger />
+                <NumberInput.DecrementTrigger />
+              </NumberInput.Control>
+            </NumberInput.Root>
+          </Field.Root>
 
-          <FormControl mb={4}>
-            <FormLabel>Tiempo de Vida (meses)</FormLabel>
-            <NumberInput
-              value={tiempoDeVida}
-              onChange={(
+          <Field.Root mb={4}>
+            <Field.Label>Tiempo de Vida (meses)</Field.Label>
+            <NumberInput.Root
+              value={String(tiempoDeVida)}
+              onValueChange={(
                 _valueAsString: string,
                 valueAsNumber: number
               ) => setTiempoDeVida(valueAsNumber)}
               min={1}
             >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-          </FormControl>
+              <NumberInput.Input />
+              <NumberInput.Control>
+                <NumberInput.IncrementTrigger />
+                <NumberInput.DecrementTrigger />
+              </NumberInput.Control>
+            </NumberInput.Root>
+          </Field.Root>
 
           {metodoDepreciacion === MetodoDepreciacion.DB && (
-            <FormControl>
-              <FormLabel>Porcentaje (%)</FormLabel>
-              <NumberInput
-                value={porcentajeDB}
-                onChange={(
+            <Field.Root>
+              <Field.Label>Porcentaje (%)</Field.Label>
+              <NumberInput.Root
+                value={String(porcentajeDB)}
+                onValueChange={(
                   _valueAsString: string,
                   valueAsNumber: number
                 ) => setPorcentajeDB(valueAsNumber)}
                 min={0}
                 max={100}
               >
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
-              </NumberInput>
-            </FormControl>
+                <NumberInput.Input />
+                <NumberInput.Control>
+                  <NumberInput.IncrementTrigger />
+                  <NumberInput.DecrementTrigger />
+                </NumberInput.Control>
+              </NumberInput.Root>
+            </Field.Root>
           )}
         </Box>
       </VStack>

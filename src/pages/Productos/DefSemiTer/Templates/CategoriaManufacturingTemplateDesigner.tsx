@@ -1,20 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+    Steps,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
     HStack,
     Spinner,
     Stat,
-    StatHelpText,
-    StatLabel,
-    StatNumber,
     Text,
     VStack,
     useToast,
+    Field,
 } from "@chakra-ui/react";
 import axios from "axios";
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
@@ -321,11 +318,11 @@ export default function CategoriaManufacturingTemplateDesigner({ categoria, onBa
                 </Box>
                 <HStack>
                     {hasExistingTemplate && (
-                        <Button colorScheme="red" variant="outline" onClick={handleDelete} isDisabled={saving}>
+                        <Button colorPalette="red" variant="outline" onClick={handleDelete} disabled={saving}>
                             Eliminar
                         </Button>
                     )}
-                    <Button colorScheme="teal" onClick={handleSave} isDisabled={!canSave} isLoading={saving}>
+                    <Button colorPalette="teal" onClick={handleSave} disabled={!canSave} loading={saving}>
                         Guardar plantilla
                     </Button>
                 </HStack>
@@ -334,11 +331,11 @@ export default function CategoriaManufacturingTemplateDesigner({ categoria, onBa
             <HStack gap={8} align="flex-start">
                 <BandejaBusqueda onAddInsumo={handleAddInsumo} />
                 <VStack w="full">
-                    <Stat backgroundColor="app.surfaceSubtle" p="1em" boxShadow="md" w="full">
-                        <StatLabel>Total Costo</StatLabel>
-                        <StatNumber>{totalCost} ( $ COP)</StatNumber>
-                        <StatHelpText>Costo base sumando los insumos de plantilla</StatHelpText>
-                    </Stat>
+                    <Stat.Root backgroundColor="app.surfaceSubtle" p="1em" boxShadow="md" w="full">
+                        <Stat.Label>Total Costo</Stat.Label>
+                        <Stat.ValueText>{totalCost} ( $ COP)</Stat.ValueText>
+                        <Stat.HelpText>Costo base sumando los insumos de plantilla</Stat.HelpText>
+                    </Stat.Root>
                     <BandejaSeleccion
                         selectedInsumos={selectedInsumos}
                         onUpdateCantidad={handleUpdateCantidad}
@@ -347,19 +344,19 @@ export default function CategoriaManufacturingTemplateDesigner({ categoria, onBa
                 </VStack>
             </HStack>
 
-            <HStack spacing={4} alignItems="flex-start">
-                <FormControl w="sm">
-                    <FormLabel>Rendimiento Teorico</FormLabel>
+            <HStack gap={4} alignItems="flex-start">
+                <Field.Root w="sm">
+                    <Field.Label>Rendimiento Teorico</Field.Label>
                     <CustomDecimalInput
                         value={rendimientoTeorico}
                         onChange={setRendimientoTeorico}
                         min={0}
                         placeholder="0.0000"
                     />
-                </FormControl>
+                </Field.Root>
                 <Box>
-                    <FormLabel>Packaging base</FormLabel>
-                    <Button colorScheme={casePack ? "green" : "blue"} onClick={() => setIsPackagingDefinerOpen(true)}>
+                    <Field.Label>Packaging base</Field.Label>
+                    <Button colorPalette={casePack ? "green" : "blue"} onClick={() => setIsPackagingDefinerOpen(true)}>
                         {casePack ? "Packaging definido" : "Definir packaging"}
                     </Button>
                 </Box>

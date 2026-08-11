@@ -1,5 +1,16 @@
 import { lazy, Suspense } from "react";
-import { Box, Center, Container, Spinner, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
+import {
+    Steps,
+    Box,
+    Center,
+    Container,
+    Spinner,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
+} from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader.tsx";
 import { my_style_tab } from "../../styles/styles_general.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
@@ -16,7 +27,7 @@ const AprovisionamientoTab = lazy(() => import("./AprovisionamientoTab/Aprovisio
 function TabLoadingFallback() {
     return (
         <Center minH="180px" w="full">
-            <Spinner size="md" thickness="3px" color="blue.500" />
+            <Spinner size="md" borderWidth="3px" color="blue.500" />
         </Center>
     );
 }
@@ -48,9 +59,9 @@ export default function BintelligencePage() {
             h="full"
         >
             <MyHeader title={"BI"} />
-            <Tabs isLazy lazyBehavior="keepMounted">
+            <Tabs.Root lazyMount>
                 <Box overflowX="auto" pb={1}>
-                    <TabList minW="max-content">
+                    <Tabs.List minW="max-content">
                         {visibleTabs.map((tab) => (
                             <Tab
                                 key={tab.key}
@@ -63,7 +74,7 @@ export default function BintelligencePage() {
                                 {tab.label}
                             </Tab>
                         ))}
-                    </TabList>
+                    </Tabs.List>
                 </Box>
                 <TabPanels>
                     {visibleTabs.map((tab) => (
@@ -74,7 +85,7 @@ export default function BintelligencePage() {
                         </TabPanel>
                     ))}
                 </TabPanels>
-            </Tabs>
+            </Tabs.Root>
         </Container>
     );
 }

@@ -1,15 +1,9 @@
 import {
+  Steps,
   Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
   Badge,
   Box,
   Button,
-  FormControl,
-  FormHelperText,
-  FormLabel,
   Heading,
   HStack,
   Input,
@@ -24,6 +18,7 @@ import {
   Tr,
   VStack,
   useToast,
+  Field,
 } from '@chakra-ui/react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import type {ChangeEvent} from 'react';
@@ -167,12 +162,12 @@ export default function ProcesoDocumentosSection({
   return (
     <Box>
       <Heading size="sm" mb={3}>Documento del proceso</Heading>
-      <VStack align="stretch" spacing={4}>
+      <VStack align="stretch" gap={4}>
         <Box borderWidth="1px" borderRadius="md" p={4}>
           {loading ? (
             <Spinner size="sm" />
           ) : vigente ? (
-            <VStack align="stretch" spacing={2}>
+            <VStack align="stretch" gap={2}>
               <HStack justify="space-between" align="flex-start">
                 <Box>
                   <Text fontWeight="semibold">{vigente.nombreArchivoOriginal}</Text>
@@ -183,14 +178,14 @@ export default function ProcesoDocumentosSection({
                     Cargado por {vigente.creadoPor || '-'} · {formatDateTime(vigente.creadoEn)}
                   </Text>
                 </Box>
-                <Badge colorScheme="green">Vigente</Badge>
+                <Badge colorPalette="green">Vigente</Badge>
               </HStack>
               <Button
                 size="sm"
                 alignSelf="flex-start"
                 variant="outline"
                 onClick={() => void handleDownload(vigente)}
-                isLoading={downloadingId === vigente.id}
+                loading={downloadingId === vigente.id}
               >
                 Descargar versión vigente
               </Button>
@@ -201,20 +196,20 @@ export default function ProcesoDocumentosSection({
         </Box>
 
         <Box borderWidth="1px" borderRadius="md" p={4}>
-          <VStack align="stretch" spacing={3}>
-            <FormControl>
-              <FormLabel>{vigente ? 'Cargar nueva versión' : 'Cargar documento inicial'}</FormLabel>
+          <VStack align="stretch" gap={3}>
+            <Field.Root>
+              <Field.Label>{vigente ? 'Cargar nueva versión' : 'Cargar documento inicial'}</Field.Label>
               <Input
                 key={fileInputKey}
                 type="file"
                 accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                onChange={handleFileChange}
+                onValueChange={handleFileChange}
                 p={1}
               />
-              <FormHelperText>
+              <Field.HelperText>
                 Formatos permitidos: PDF y Word (.docx). Tamaño máximo: 2 MB.
-              </FormHelperText>
-            </FormControl>
+              </Field.HelperText>
+            </Field.Root>
 
             {selectedFile ? (
               <HStack justify="space-between">
@@ -236,22 +231,22 @@ export default function ProcesoDocumentosSection({
             ) : null}
 
             {selectedFile ? (
-              <FormControl isRequired={Boolean(vigente)}>
-                <FormLabel>{vigente ? 'Motivo del cambio' : 'Observación inicial (opcional)'}</FormLabel>
+              <Field.Root required={Boolean(vigente)}>
+                <Field.Label>{vigente ? 'Motivo del cambio' : 'Observación inicial (opcional)'}</Field.Label>
                 <Textarea
                   value={motivoCambio}
-                  onChange={(event) => setMotivoCambio(event.target.value)}
+                  onValueChange={(event) => setMotivoCambio(event.target.value)}
                   placeholder={vigente ? 'Describa brevemente qué cambió' : 'Documento inicial del proceso'}
                 />
-              </FormControl>
+              </Field.Root>
             ) : null}
 
             <Button
-              colorScheme="teal"
+              colorPalette="teal"
               alignSelf="flex-end"
               onClick={() => void handleUpload()}
-              isDisabled={!selectedFile || Boolean(vigente && !motivoCambio.trim())}
-              isLoading={uploading}
+              disabled={!selectedFile || Boolean(vigente && !motivoCambio.trim())}
+              loading={uploading}
             >
               {vigente ? 'Crear nueva versión' : 'Cargar documento'}
             </Button>
@@ -259,61 +254,61 @@ export default function ProcesoDocumentosSection({
         </Box>
 
         {versiones.length > 0 ? (
-          <Accordion allowToggle borderWidth="1px" borderRadius="md">
-            <AccordionItem border="none">
-              <AccordionButton>
+          <Accordion.Root collapsible borderWidth="1px" borderRadius="md">
+            <Accordion.Item border="none" value='item-0'>
+              <Accordion.ItemTrigger>
                 <Box as="span" flex="1" textAlign="left" fontWeight="semibold">
                   Historial de versiones ({versiones.length})
                 </Box>
-                <AccordionIcon />
-              </AccordionButton>
-              <AccordionPanel px={0} pb={0}>
-                <Box overflowX="auto">
-                  <Table size="sm">
-                    <Thead>
-                      <Tr>
-                        <Th>Versión</Th>
-                        <Th>Estado</Th>
-                        <Th>Archivo</Th>
-                        <Th>Tamaño</Th>
-                        <Th>Fecha</Th>
-                        <Th>Usuario</Th>
-                        <Th>Motivo</Th>
-                        <Th>Acción</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {versiones.map((version) => (
-                        <Tr key={version.id}>
-                          <Td>{version.version}</Td>
-                          <Td>
-                            <Badge colorScheme={version.estado === 'VIGENTE' ? 'green' : 'gray'}>
-                              {version.estado}
-                            </Badge>
-                          </Td>
-                          <Td>{version.nombreArchivoOriginal}</Td>
-                          <Td>{formatBytes(version.tamanoBytes)}</Td>
-                          <Td>{formatDateTime(version.creadoEn)}</Td>
-                          <Td>{version.creadoPor || '-'}</Td>
-                          <Td>{version.motivoCambio || '-'}</Td>
-                          <Td>
-                            <Button
-                              size="xs"
-                              variant="ghost"
-                              onClick={() => void handleDownload(version)}
-                              isLoading={downloadingId === version.id}
-                            >
-                              Descargar
-                            </Button>
-                          </Td>
-                        </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
-                </Box>
-              </AccordionPanel>
-            </AccordionItem>
-          </Accordion>
+                <Accordion.ItemIndicator />
+              </Accordion.ItemTrigger>
+              <Accordion.ItemContent px={0} pb={0}><Accordion.ItemBody>
+                  <Box overflowX="auto">
+                    <Table.Root size="sm">
+                      <Table.Header>
+                        <Table.Row>
+                          <Table.ColumnHeader>Versión</Table.ColumnHeader>
+                          <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                          <Table.ColumnHeader>Archivo</Table.ColumnHeader>
+                          <Table.ColumnHeader>Tamaño</Table.ColumnHeader>
+                          <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                          <Table.ColumnHeader>Usuario</Table.ColumnHeader>
+                          <Table.ColumnHeader>Motivo</Table.ColumnHeader>
+                          <Table.ColumnHeader>Acción</Table.ColumnHeader>
+                        </Table.Row>
+                      </Table.Header>
+                      <Table.Body>
+                        {versiones.map((version) => (
+                          <Table.Row key={version.id}>
+                            <Table.Cell>{version.version}</Table.Cell>
+                            <Table.Cell>
+                              <Badge colorPalette={version.estado === 'VIGENTE' ? 'green' : 'gray'}>
+                                {version.estado}
+                              </Badge>
+                            </Table.Cell>
+                            <Table.Cell>{version.nombreArchivoOriginal}</Table.Cell>
+                            <Table.Cell>{formatBytes(version.tamanoBytes)}</Table.Cell>
+                            <Table.Cell>{formatDateTime(version.creadoEn)}</Table.Cell>
+                            <Table.Cell>{version.creadoPor || '-'}</Table.Cell>
+                            <Table.Cell>{version.motivoCambio || '-'}</Table.Cell>
+                            <Table.Cell>
+                              <Button
+                                size="xs"
+                                variant="ghost"
+                                onClick={() => void handleDownload(version)}
+                                loading={downloadingId === version.id}
+                              >
+                                Descargar
+                              </Button>
+                            </Table.Cell>
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table.Root>
+                  </Box>
+                </Accordion.ItemBody></Accordion.ItemContent>
+            </Accordion.Item>
+          </Accordion.Root>
         ) : null}
       </VStack>
     </Box>

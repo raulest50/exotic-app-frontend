@@ -1,4 +1,5 @@
 import {
+    Steps,
     Badge,
     Box,
     Button,
@@ -155,25 +156,25 @@ function MpsItemCard({
         >
             <Flex justify="space-between" gap={2} align="start">
                 <Box minW={0}>
-                    <Text fontWeight="semibold" fontSize="sm" noOfLines={2}>{item.terminadoNombre}</Text>
+                    <Text fontWeight="semibold" fontSize="sm" lineClamp={2}>{item.terminadoNombre}</Text>
                     <Text fontSize="xs" color="gray.600">{item.terminadoId}</Text>
                     <Text fontSize="xs" color="gray.600">{item.categoriaNombre ?? "Sin categoria"}</Text>
                 </Box>
                 {isClickable && itemClickMode === "button" && (
-                    <Button size="xs" colorScheme="teal" variant="outline" onClick={() => onItemClick?.(item, context)}>
+                    <Button size="xs" colorPalette="teal" variant="outline" onClick={() => onItemClick?.(item, context)}>
                         {itemActionLabel}
                     </Button>
                 )}
                 {isCardClickable && (
-                    <Badge colorScheme="teal" variant="solid">{itemActionLabel}</Badge>
+                    <Badge colorPalette="teal" variant="solid">{itemActionLabel}</Badge>
                 )}
             </Flex>
 
             <Flex mt={2} gap={2} wrap="wrap">
-                <Badge colorScheme="teal">{formatNumber(item.numeroLotes)} lotes</Badge>
-                <Badge colorScheme="purple">{formatNumber(item.cantidadTotal)} und</Badge>
-                <Badge colorScheme="blue">Lote {formatNumber(item.loteSize)}</Badge>
-                <Badge colorScheme={generatedLots > 0 ? "green" : "gray"}>
+                <Badge colorPalette="teal">{formatNumber(item.numeroLotes)} lotes</Badge>
+                <Badge colorPalette="purple">{formatNumber(item.cantidadTotal)} und</Badge>
+                <Badge colorPalette="blue">Lote {formatNumber(item.loteSize)}</Badge>
+                <Badge colorPalette={generatedLots > 0 ? "green" : "gray"}>
                     {formatNumber(generatedLots)} ODP
                 </Badge>
             </Flex>
@@ -218,7 +219,7 @@ export default function MpsReadonlyReviewPanel({
         .reduce((total, item) => total + item.cantidadTotal, 0);
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             <Box>
                 <Flex justify="space-between" align="start" gap={3} wrap="wrap">
                     <Box>
@@ -227,7 +228,7 @@ export default function MpsReadonlyReviewPanel({
                             Semana {getSemanaMpsLabel(mps)} - {getSemanaMpsDateRange(mps)}
                         </Text>
                     </Box>
-                    <Badge colorScheme={getEstadoColorScheme(mps.estado)}>{getEstadoLabel(mps.estado)}</Badge>
+                    <Badge colorPalette={getEstadoColorScheme(mps.estado)}>{getEstadoLabel(mps.estado)}</Badge>
                 </Flex>
             </Box>
 
@@ -273,15 +274,15 @@ export default function MpsReadonlyReviewPanel({
                                             </Text>
                                         </Box>
                                         <Flex gap={2} wrap="wrap" justify="end">
-                                            <Badge colorScheme="gray">{dia.items.length} items</Badge>
-                                            <Badge colorScheme="purple">{formatNumber(totalDiaUnidades)} und</Badge>
+                                            <Badge colorPalette="gray">{dia.items.length} items</Badge>
+                                            <Badge colorPalette="purple">{formatNumber(totalDiaUnidades)} und</Badge>
                                         </Flex>
                                     </Flex>
 
                                     {dia.items.length === 0 ? (
                                         <Text fontSize="sm" color="gray.500">Sin programacion.</Text>
                                     ) : (
-                                        <VStack align="stretch" spacing={2}>
+                                        <VStack align="stretch" gap={2}>
                                             {dia.items.map((item) => (
                                                 <MpsItemCard
                                                     key={item.id}

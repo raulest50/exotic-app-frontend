@@ -1,21 +1,16 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
-    Divider,
     Drawer,
-    DrawerBody,
-    DrawerCloseButton,
-    DrawerContent,
-    DrawerHeader,
-    DrawerOverlay,
     HStack,
-    ListItem,
     SimpleGrid,
     Stack,
     Text,
-    UnorderedList,
+    Separator,
+    Portal,
+    List,
 } from "@chakra-ui/react";
 import {
     formatDate,
@@ -45,148 +40,158 @@ export default function CoberturaMaterialDetailDrawer({
     if (!estimate) return null;
 
     return (
-        <Drawer
-            isOpen={isOpen}
-            placement="right"
-            onClose={onClose}
+        <Drawer.Root
+            open={isOpen}
+            placement='end'
             size={{ base: "full", md: "md" }}
+            onOpenChange={e => {
+                if (!e.open) {
+                    onClose();
+                }
+            }}
         >
-            <DrawerOverlay />
-            <DrawerContent>
-                <DrawerCloseButton />
-                <DrawerHeader pr={12}>Detalle de cobertura</DrawerHeader>
-                <DrawerBody pb={8}>
-                    <Stack spacing={5}>
-                        <Box>
-                            <HStack spacing={2} mb={2} flexWrap="wrap">
-                                <Badge colorScheme={horizonColor(estimate)}>
-                                    {horizonLabel(estimate)}
-                                </Badge>
-                                <Badge variant="outline">
-                                    {groupLabel(estimate.grupo)}
-                                </Badge>
-                                {estimate.confianzaBaja ? (
-                                    <Badge colorScheme="yellow">
-                                        Confianza baja
-                                    </Badge>
-                                ) : (
-                                    <Badge colorScheme="green">
-                                        Confianza aceptable
-                                    </Badge>
-                                )}
-                            </HStack>
-                            <Text fontWeight="bold" fontSize="lg">
-                                {estimate.nombre}
-                            </Text>
-                            <Text color="app.textMuted">{estimate.productoId}</Text>
-                        </Box>
+            <Portal>
 
-                        <Divider />
-
-                        <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
-                            <DetailMetric
-                                label="Stock físico actual"
-                                value={`${formatQuantity(estimate.stockActual)} ${estimate.unidadMedida}`}
-                            />
-                            <DetailMetric
-                                label="Demanda media diaria"
-                                value={`${formatQuantity(estimate.demandaMediaDiaria)} ${estimate.unidadMedida}/día`}
-                            />
-                            <DetailMetric
-                                label="Demanda operativa"
-                                value={`${formatQuantity(estimate.demandaMediaDiariaOperativa)} ${estimate.unidadMedida}/día`}
-                            />
-                            <DetailMetric
-                                label="Demanda por contingencias"
-                                value={`${formatQuantity(estimate.demandaMediaDiariaContingencia)} ${estimate.unidadMedida}/día`}
-                            />
-                            <DetailMetric
-                                label="Días restantes"
-                                value={estimate.diasHastaAgotamiento === null
-                                || estimate.diasHastaAgotamiento === undefined
-                                    ? "No estimable"
-                                    : formatQuantity(
-                                        estimate.diasHastaAgotamiento,
-                                    )}
-                            />
-                            <DetailMetric
-                                label="Fecha estimada"
-                                value={estimate.fechaAgotamiento
-                                    ? formatDate(estimate.fechaAgotamiento)
-                                    : "No estimable"}
-                            />
-                            <DetailMetric
-                                label="Intervalo estimado"
-                                value={intervalLabel(
-                                    estimate.intervaloFechaMin,
-                                    estimate.intervaloFechaMax,
-                                )}
-                            />
-                            <DetailMetric
-                                label="Días con demanda"
-                                value={`${estimate.diasConDemanda} de ${windowDays}`}
-                            />
-                            <DetailMetric
-                                label="Días con dispensación"
-                                value={estimate.diasConDispensacion.toLocaleString(
-                                    "es-CO",
-                                )}
-                            />
-                            <DetailMetric
-                                label="Contingencias incluidas"
-                                value={estimate.ajustesContingenciaIncluidos
-                                    .toLocaleString("es-CO")}
-                            />
-                        </SimpleGrid>
-
-                        {estimate.confianzaBaja ? (
-                            <Alert
-                                status="warning"
-                                alignItems="flex-start"
-                                borderRadius="md"
-                            >
-                                <AlertIcon mt={0.5} />
+                <Drawer.Backdrop />
+                <Drawer.Positioner>
+                    <Drawer.Content>
+                        <Drawer.CloseTrigger />
+                        <Drawer.Header pr={12}>Detalle de cobertura</Drawer.Header>
+                        <Drawer.Body pb={8}>
+                            <Stack gap={5}>
                                 <Box>
-                                    <Text fontWeight="semibold" mb={1}>
-                                        Motivos de confianza baja
-                                    </Text>
-                                    <UnorderedList pl={4} spacing={1}>
-                                        {estimate.motivosConfianzaBaja.map(
-                                            (reason) => (
-                                                <ListItem
-                                                    key={reason}
-                                                    fontSize="sm"
-                                                >
-                                                    {reason}
-                                                </ListItem>
-                                            ),
+                                    <HStack gap={2} mb={2} flexWrap="wrap">
+                                        <Badge colorPalette={horizonColor(estimate)}>
+                                            {horizonLabel(estimate)}
+                                        </Badge>
+                                        <Badge variant="outline">
+                                            {groupLabel(estimate.grupo)}
+                                        </Badge>
+                                        {estimate.confianzaBaja ? (
+                                            <Badge colorPalette="yellow">
+                                                Confianza baja
+                                            </Badge>
+                                        ) : (
+                                            <Badge colorPalette="green">
+                                                Confianza aceptable
+                                            </Badge>
                                         )}
-                                    </UnorderedList>
+                                    </HStack>
+                                    <Text fontWeight="bold" fontSize="lg">
+                                        {estimate.nombre}
+                                    </Text>
+                                    <Text color="app.textMuted">{estimate.productoId}</Text>
                                 </Box>
-                            </Alert>
-                        ) : null}
 
-                        <Divider />
+                                <Separator />
 
-                        <Stack spacing={2}>
-                            <Text color="app.textMuted" fontSize="sm">
-                                Stock del almacén General al{" "}
-                                {formatDateTime(cutoff)}.
-                            </Text>
-                            <Text color="app.textMuted" fontSize="sm">
-                                Fuente de demanda:{" "}
-                                {demandSource === "SOLO_DISPENSACIONES"
-                                    ? "dispensaciones formales"
-                                    : "dispensaciones formales y contingencias de producción"}.
-                                La proyección supone que el ritmo observado se
-                                repite y que no ingresan materiales; no constituye
-                                un compromiso de abastecimiento.
-                            </Text>
-                        </Stack>
-                    </Stack>
-                </DrawerBody>
-            </DrawerContent>
-        </Drawer>
+                                <SimpleGrid columns={{ base: 1, sm: 2 }} gap={4}>
+                                    <DetailMetric
+                                        label="Stock físico actual"
+                                        value={`${formatQuantity(estimate.stockActual)} ${estimate.unidadMedida}`}
+                                    />
+                                    <DetailMetric
+                                        label="Demanda media diaria"
+                                        value={`${formatQuantity(estimate.demandaMediaDiaria)} ${estimate.unidadMedida}/día`}
+                                    />
+                                    <DetailMetric
+                                        label="Demanda operativa"
+                                        value={`${formatQuantity(estimate.demandaMediaDiariaOperativa)} ${estimate.unidadMedida}/día`}
+                                    />
+                                    <DetailMetric
+                                        label="Demanda por contingencias"
+                                        value={`${formatQuantity(estimate.demandaMediaDiariaContingencia)} ${estimate.unidadMedida}/día`}
+                                    />
+                                    <DetailMetric
+                                        label="Días restantes"
+                                        value={estimate.diasHastaAgotamiento === null
+                                        || estimate.diasHastaAgotamiento === undefined
+                                            ? "No estimable"
+                                            : formatQuantity(
+                                                estimate.diasHastaAgotamiento,
+                                            )}
+                                    />
+                                    <DetailMetric
+                                        label="Fecha estimada"
+                                        value={estimate.fechaAgotamiento
+                                            ? formatDate(estimate.fechaAgotamiento)
+                                            : "No estimable"}
+                                    />
+                                    <DetailMetric
+                                        label="Intervalo estimado"
+                                        value={intervalLabel(
+                                            estimate.intervaloFechaMin,
+                                            estimate.intervaloFechaMax,
+                                        )}
+                                    />
+                                    <DetailMetric
+                                        label="Días con demanda"
+                                        value={`${estimate.diasConDemanda} de ${windowDays}`}
+                                    />
+                                    <DetailMetric
+                                        label="Días con dispensación"
+                                        value={estimate.diasConDispensacion.toLocaleString(
+                                            "es-CO",
+                                        )}
+                                    />
+                                    <DetailMetric
+                                        label="Contingencias incluidas"
+                                        value={estimate.ajustesContingenciaIncluidos
+                                            .toLocaleString("es-CO")}
+                                    />
+                                </SimpleGrid>
+
+                                {estimate.confianzaBaja ? (
+                                    <Alert.Root
+                                        status="warning"
+                                        alignItems="flex-start"
+                                        borderRadius="md"
+                                    >
+                                        <Alert.Indicator mt={0.5} />
+                                        <Box>
+                                            <Text fontWeight="semibold" mb={1}>
+                                                Motivos de confianza baja
+                                            </Text>
+                                            <List.Root as='ul' pl={4} gap={1}>
+                                                {estimate.motivosConfianzaBaja.map(
+                                                    (reason) => (
+                                                        <List.Item
+                                                            key={reason}
+                                                            fontSize="sm"
+                                                        >
+                                                            {reason}
+                                                        </List.Item>
+                                                    ),
+                                                )}
+                                            </List.Root>
+                                        </Box>
+                                    </Alert.Root>
+                                ) : null}
+
+                                <Separator />
+
+                                <Stack gap={2}>
+                                    <Text color="app.textMuted" fontSize="sm">
+                                        Stock del almacén General al{" "}
+                                        {formatDateTime(cutoff)}.
+                                    </Text>
+                                    <Text color="app.textMuted" fontSize="sm">
+                                        Fuente de demanda:{" "}
+                                        {demandSource === "SOLO_DISPENSACIONES"
+                                            ? "dispensaciones formales"
+                                            : "dispensaciones formales y contingencias de producción"}.
+                                        La proyección supone que el ritmo observado se
+                                        repite y que no ingresan materiales; no constituye
+                                        un compromiso de abastecimiento.
+                                    </Text>
+                                </Stack>
+                            </Stack>
+                        </Drawer.Body>
+                    </Drawer.Content>
+                </Drawer.Positioner>
+
+            </Portal>
+        </Drawer.Root>
     );
 }
 

@@ -1,14 +1,5 @@
 import { useState, useRef } from "react";
-import {
-  Box,
-  Flex,
-  IconButton,
-  Icon,
-  Text,
-  Divider,
-  useToast,
-  VStack,
-} from "@chakra-ui/react";
+import { Steps, Box, Flex, IconButton, Icon, Text, useToast, VStack, Separator } from "@chakra-ui/react";
 import { MdAddAPhoto } from "react-icons/md";
 import { FaFolderOpen } from "react-icons/fa";
 import { FaFileCircleQuestion, FaFileCircleCheck } from "react-icons/fa6";
@@ -122,12 +113,12 @@ export function DocSuppUploader({
   };
 
   return (
-    <VStack spacing={4} align="stretch" w="full">
+    <VStack gap={4} align="stretch" w="full">
       {title && <Text fontWeight="bold" fontSize="lg" textAlign="center">{title}</Text>}
       {description && <Text textAlign="center">{description}</Text>}
-      
-      <Divider />
-      
+
+      <Separator />
+
       <Flex
         direction="row"
         gap="10em"
@@ -136,26 +127,22 @@ export function DocSuppUploader({
         w="full"
       >
         <IconButton
-          colorScheme="teal"
-          icon={<FaFolderOpen />}
+          colorPalette="teal"
           aria-label="Buscar Archivo"
           fontSize="5em"
           w="2em"
           h="2em"
-          onClick={onClickBrowse}
-        />
+          onClick={onClickBrowse}><FaFolderOpen /></IconButton>
         <IconButton
-          colorScheme="teal"
-          icon={<MdAddAPhoto />}
+          colorPalette="teal"
           aria-label="Tomar una Foto"
           fontSize="5em"
           w="2em"
           h="2em"
-          onClick={onClickCamera}
-        />
+          onClick={onClickCamera}><MdAddAPhoto /></IconButton>
       </Flex>
 
-      <Divider />
+      <Separator />
 
       <Flex
         direction="row"
@@ -184,7 +171,7 @@ export function DocSuppUploader({
         onChange={handleFileChange}
         style={{ display: "none" }}
       />
-      
+
       {/* Hidden input for camera capture */}
       <input
         type="file"

@@ -3,13 +3,11 @@ import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import MyPagination from "../../../components/MyPagination.tsx";
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     Icon,
     IconButton,
     Input,
@@ -25,12 +23,13 @@ import {
     Thead,
     Tr,
     useToast,
+    Field,
 } from "@chakra-ui/react";
-import { LockIcon, UnlockIcon } from "@chakra-ui/icons";
 import { RiSave3Fill } from "react-icons/ri";
 import CustomIntegerInput from "../../../components/CustomIntegerInput/CustomIntegerInput.tsx";
 import type { Categoria } from "../types.tsx";
 import { RutaProcesoCatDesigner } from "./RutaProcesoCatDesigner";
+import { LuLock, LuUnlock } from 'react-icons/lu';
 
 const PAGE_SIZE = 10;
 
@@ -245,29 +244,29 @@ export default function ConfParamsCategoria() {
     return (
         <Flex direction="column" p={4}>
             <Box p={4} borderWidth="1px" borderRadius="lg" mb={4}>
-                <FormControl>
-                    <FormLabel>Buscar por nombre</FormLabel>
+                <Field.Root>
+                    <Field.Label>Buscar por nombre</Field.Label>
                     <InputGroup>
                         <Input
                             value={searchNombre}
-                            onChange={(e) => setSearchNombre(e.target.value)}
+                            onValueChange={(e) => setSearchNombre(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder="Coincidencia parcial (vacio = todas)"
                         />
                         <InputRightElement width="auto" px={2}>
-                            <Button colorScheme="blue" size="sm" onClick={handleSearch} isLoading={loading}>
+                            <Button colorPalette="blue" size="sm" onClick={handleSearch} loading={loading}>
                                 Buscar
                             </Button>
                         </InputRightElement>
                     </InputGroup>
-                </FormControl>
+                </Field.Root>
             </Box>
 
             {error && (
-                <Alert status="error" mb={4}>
-                    <AlertIcon />
+                <Alert.Root status="error" mb={4}>
+                    <Alert.Indicator />
                     <Text>{error}</Text>
-                </Alert>
+                </Alert.Root>
             )}
 
             {loading && categorias.length === 0 ? (
@@ -275,30 +274,30 @@ export default function ConfParamsCategoria() {
                     <Spinner size="lg" />
                 </Flex>
             ) : !loading && categorias.length === 0 ? (
-                <Alert status="info" mb={4}>
-                    <AlertIcon />
+                <Alert.Root status="info" mb={4}>
+                    <Alert.Indicator />
                     <Text>
                         No se encontraron categorias.
                         {searchNombre.trim()
                             ? " Pruebe con otro criterio de busqueda."
                             : " No hay categorias registradas."}
                     </Text>
-                </Alert>
+                </Alert.Root>
             ) : (
                 <>
                     <Box borderWidth="1px" borderRadius="lg" overflow="hidden" mb={4}>
-                        <TableContainer w="full" overflowX="auto">
-                            <Table variant="simple" size="sm" minW="900px">
-                                <Thead>
-                                    <Tr>
-                                        <Th>ID</Th>
-                                        <Th>Nombre</Th>
-                                        <Th>Tamano de lote</Th>
-                                        <Th>Tiempo fabricacion (dias)</Th>
-                                        <Th>Ruta de Proceso</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                        <Table.ScrollArea w="full" overflowX="auto">
+                            <Table.Root variant="simple" size="sm" minW="900px">
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Tamano de lote</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Tiempo fabricacion (dias)</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Ruta de Proceso</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {categorias.map((categoria) => {
                                         const catId = categoria.categoriaId;
                                         const loteFieldKey = buildFieldKey(catId, "loteSize");
@@ -308,87 +307,79 @@ export default function ConfParamsCategoria() {
                                         const currentTiempo = editingTiempoDiasFabricacion[catId] ?? categoria.tiempoDiasFabricacion ?? 0;
 
                                         return (
-                                            <Tr key={catId}>
-                                            <Td>{catId}</Td>
-                                            <Td>{categoria.categoriaNombre}</Td>
-                                            <Td>
-                                                <Flex align="center" gap={2}>
-                                                    <IconButton
-                                                        aria-label={unlockedFields[loteFieldKey] ? "Bloquear edicion" : "Habilitar edicion"}
-                                                        icon={unlockedFields[loteFieldKey] ? <UnlockIcon boxSize={5} /> : <LockIcon boxSize={5} />}
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        boxSize={10}
-                                                        onClick={() => toggleLock(catId, "loteSize")}
-                                                    />
-                                                    <CustomIntegerInput
-                                                        value={currentLote}
-                                                        onChange={(v) => handleLoteSizeChange(catId, v)}
-                                                        isDisabled={!unlockedFields[loteFieldKey]}
-                                                        min={0}
-                                                        placeholder="0"
-                                                        width="100px"
-                                                    />
-                                                    {unlockedFields[loteFieldKey] && currentLote !== (categoria.loteSize ?? 0) && (
+                                            <Table.Row key={catId}>
+                                                <Table.Cell>{catId}</Table.Cell>
+                                                <Table.Cell>{categoria.categoriaNombre}</Table.Cell>
+                                                <Table.Cell>
+                                                    <Flex align="center" gap={2}>
                                                         <IconButton
-                                                            aria-label="Guardar"
-                                                            icon={<Icon as={RiSave3Fill} boxSize={5} />}
-                                                            colorScheme="green"
+                                                            aria-label={unlockedFields[loteFieldKey] ? "Bloquear edicion" : "Habilitar edicion"}
+                                                            variant="ghost"
                                                             size="sm"
                                                             boxSize={10}
-                                                            onClick={() => handleSaveLoteSize(categoria)}
-                                                            isLoading={savingFieldKey === loteFieldKey}
+                                                            onClick={() => toggleLock(catId, "loteSize")}>{unlockedFields[loteFieldKey] ? <Icon as={LuUnlock} boxSize={5} /> : <Icon as={LuLock} boxSize={5} />}</IconButton>
+                                                        <CustomIntegerInput
+                                                            value={currentLote}
+                                                            onChange={(v) => handleLoteSizeChange(catId, v)}
+                                                            isDisabled={!unlockedFields[loteFieldKey]}
+                                                            min={0}
+                                                            placeholder="0"
+                                                            width="100px"
                                                         />
-                                                    )}
-                                                </Flex>
-                                            </Td>
-                                            <Td>
-                                                <Flex align="center" gap={2}>
-                                                    <IconButton
-                                                        aria-label={unlockedFields[tiempoFieldKey] ? "Bloquear edicion" : "Habilitar edicion"}
-                                                        icon={unlockedFields[tiempoFieldKey] ? <UnlockIcon boxSize={5} /> : <LockIcon boxSize={5} />}
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        boxSize={10}
-                                                        onClick={() => toggleLock(catId, "tiempoDiasFabricacion")}
-                                                    />
-                                                    <CustomIntegerInput
-                                                        value={currentTiempo}
-                                                        onChange={(v) => handleTiempoDiasFabricacionChange(catId, v)}
-                                                        isDisabled={!unlockedFields[tiempoFieldKey]}
-                                                        min={0}
-                                                        placeholder="0"
-                                                        width="120px"
-                                                    />
-                                                    {unlockedFields[tiempoFieldKey] && currentTiempo !== (categoria.tiempoDiasFabricacion ?? 0) && (
+                                                        {unlockedFields[loteFieldKey] && currentLote !== (categoria.loteSize ?? 0) && (
+                                                            <IconButton
+                                                                aria-label="Guardar"
+                                                                colorPalette="green"
+                                                                size="sm"
+                                                                boxSize={10}
+                                                                onClick={() => handleSaveLoteSize(categoria)}
+                                                                loading={savingFieldKey === loteFieldKey}><Icon boxSize={5} asChild><RiSave3Fill /></Icon></IconButton>
+                                                        )}
+                                                    </Flex>
+                                                </Table.Cell>
+                                                <Table.Cell>
+                                                    <Flex align="center" gap={2}>
                                                         <IconButton
-                                                            aria-label="Guardar"
-                                                            icon={<Icon as={RiSave3Fill} boxSize={5} />}
-                                                            colorScheme="green"
+                                                            aria-label={unlockedFields[tiempoFieldKey] ? "Bloquear edicion" : "Habilitar edicion"}
+                                                            variant="ghost"
                                                             size="sm"
                                                             boxSize={10}
-                                                            onClick={() => handleSaveTiempoDiasFabricacion(categoria)}
-                                                            isLoading={savingFieldKey === tiempoFieldKey}
+                                                            onClick={() => toggleLock(catId, "tiempoDiasFabricacion")}>{unlockedFields[tiempoFieldKey] ? <Icon as={LuUnlock} boxSize={5} /> : <Icon as={LuLock} boxSize={5} />}</IconButton>
+                                                        <CustomIntegerInput
+                                                            value={currentTiempo}
+                                                            onChange={(v) => handleTiempoDiasFabricacionChange(catId, v)}
+                                                            isDisabled={!unlockedFields[tiempoFieldKey]}
+                                                            min={0}
+                                                            placeholder="0"
+                                                            width="120px"
                                                         />
-                                                    )}
-                                                </Flex>
-                                            </Td>
-                                            <Td>
-                                                <Button
-                                                    size="sm"
-                                                    colorScheme={rutasExistentes[catId] ? "purple" : "teal"}
-                                                    onClick={() => openRutaDesigner(categoria)}
-                                                    isLoading={loadingRutas}
-                                                >
-                                                    {rutasExistentes[catId] ? "Editar Ruta Proc" : "Crear Ruta Proc"}
-                                                </Button>
-                                            </Td>
-                                            </Tr>
+                                                        {unlockedFields[tiempoFieldKey] && currentTiempo !== (categoria.tiempoDiasFabricacion ?? 0) && (
+                                                            <IconButton
+                                                                aria-label="Guardar"
+                                                                colorPalette="green"
+                                                                size="sm"
+                                                                boxSize={10}
+                                                                onClick={() => handleSaveTiempoDiasFabricacion(categoria)}
+                                                                loading={savingFieldKey === tiempoFieldKey}><Icon boxSize={5} asChild><RiSave3Fill /></Icon></IconButton>
+                                                        )}
+                                                    </Flex>
+                                                </Table.Cell>
+                                                <Table.Cell>
+                                                    <Button
+                                                        size="sm"
+                                                        colorPalette={rutasExistentes[catId] ? "purple" : "teal"}
+                                                        onClick={() => openRutaDesigner(categoria)}
+                                                        loading={loadingRutas}
+                                                    >
+                                                        {rutasExistentes[catId] ? "Editar Ruta Proc" : "Crear Ruta Proc"}
+                                                    </Button>
+                                                </Table.Cell>
+                                            </Table.Row>
                                         );
                                     })}
-                                </Tbody>
-                            </Table>
-                        </TableContainer>
+                                </Table.Body>
+                            </Table.Root>
+                        </Table.ScrollArea>
                     </Box>
                     {totalPages > 1 && (
                         <MyPagination

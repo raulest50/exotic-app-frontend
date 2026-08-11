@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Box, Button, Flex, FormControl, FormLabel, HStack } from "@chakra-ui/react";
+import { Steps, Box, Button, Flex, HStack, Field } from "@chakra-ui/react";
 import ProcessDesigner from "../../../../DefProcesses/CreadorProcesos/ProcessDesigner.tsx";
 import PackagingTerminadoDefiner from "./PackagingTerminadoDefiner.tsx";
 import CustomDecimalInput from "../../../../../../components/CustomDecimalInput/CustomDecimalInput.tsx";
@@ -49,21 +49,21 @@ export default function StepThree_ModProdMF({ setActiveStep, semioter2, setSemio
 
     return (
         <Flex direction="column" gap={4}>
-            <HStack spacing={4} alignItems="flex-start">
-                <FormControl w="sm">
-                    <FormLabel>Rendimiento Teorico</FormLabel>
+            <HStack gap={4} alignItems="flex-start">
+                <Field.Root w="sm">
+                    <Field.Label>Rendimiento Teorico</Field.Label>
                     <CustomDecimalInput
                         value={rendimientoTeorico}
                         onChange={setRendimientoTeorico}
                         min={0}
                         placeholder="0.0000"
                     />
-                </FormControl>
+                </Field.Root>
 
                 {isTerminado && (
                     <Box>
-                        <FormLabel>Packaging</FormLabel>
-                        <Button colorScheme={casePack ? "green" : "blue"} onClick={() => setIsPackagingDefinerOpen(true)}>
+                        <Field.Label>Packaging</Field.Label>
+                        <Button colorPalette={casePack ? "green" : "blue"} onClick={() => setIsPackagingDefinerOpen(true)}>
                             {casePack ? "Packaging definido" : "Definir packaging"}
                         </Button>
                     </Box>
@@ -82,16 +82,16 @@ export default function StepThree_ModProdMF({ setActiveStep, semioter2, setSemio
             />
 
             <Flex direction="row" w="full" gap={20} justifyContent="center" pr="2em" pl="2em">
-                <Button colorScheme="yellow" variant="solid" onClick={() => setActiveStep(1)} flex={2}>
+                <Button colorPalette="yellow" variant="solid" onClick={() => setActiveStep(1)} flex={2}>
                     Volver a insumos
                 </Button>
 
                 <Button
-                    colorScheme="teal"
+                    colorPalette="teal"
                     variant="solid"
                     onClick={onClickSiguiente}
                     flex={2}
-                    isDisabled={!isProcessValid || rendimientoTeorico <= 0 || (isTerminado && !casePack)}
+                    disabled={!isProcessValid || rendimientoTeorico <= 0 || (isTerminado && !casePack)}
                 >
                     Continuar con confirmacion
                 </Button>

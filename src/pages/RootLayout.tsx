@@ -1,6 +1,6 @@
 
 import {Outlet} from 'react-router-dom'
-import {Flex} from '@chakra-ui/react'
+import { Steps, Flex } from '@chakra-ui/react';
 
 
 function RootLayout(){

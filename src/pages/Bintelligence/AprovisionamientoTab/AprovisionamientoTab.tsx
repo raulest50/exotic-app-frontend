@@ -1,17 +1,16 @@
 import {
+    Steps,
     Badge,
     Box,
     Button,
     Card,
-    CardBody,
     Flex,
-    FormControl,
-    FormLabel,
     Input,
     Stack,
     Text,
     useDisclosure,
     useToast,
+    Field,
 } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import axios from "axios";
@@ -64,10 +63,10 @@ export default function AprovisionamientoTab() {
     };
 
     return (
-        <Stack spacing={4}>
-            <Card variant="outline">
-                <CardBody>
-                    <Stack spacing={4}>
+        <Stack gap={4}>
+            <Card.Root variant="outline">
+                <Card.Body>
+                    <Stack gap={4}>
                         <Flex justify="space-between" align={{ base: "stretch", md: "center" }} direction={{ base: "column", md: "row" }} gap={4}>
                             <Box>
                                 <Text fontSize="lg" fontWeight="semibold">Aprovisionamiento</Text>
@@ -75,17 +74,17 @@ export default function AprovisionamientoTab() {
                                     Consulte el lead time informativo para un par material-proveedor.
                                 </Text>
                             </Box>
-                            <Badge colorScheme="blue" alignSelf={{ base: "flex-start", md: "center" }}>
+                            <Badge colorPalette="blue" alignSelf={{ base: "flex-start", md: "center" }}>
                                 BI nivel {biAccessLevel}
                             </Badge>
                         </Flex>
 
                         <Flex gap={4} direction={{ base: "column", xl: "row" }}>
-                            <FormControl>
-                                <FormLabel>Material seleccionado</FormLabel>
+                            <Field.Root>
+                                <Field.Label>Material seleccionado</Field.Label>
                                 <Box borderWidth="1px" borderRadius="md" px={3} py={2} minH="70px">
                                     {selectedMaterial ? (
-                                        <Stack spacing={1}>
+                                        <Stack gap={1}>
                                             <Text fontWeight="medium">
                                                 {selectedMaterial.nombre} ({selectedMaterial.productoId})
                                             </Text>
@@ -97,13 +96,13 @@ export default function AprovisionamientoTab() {
                                         <Text color="app.textSubtle">Aun no ha seleccionado un material.</Text>
                                     )}
                                 </Box>
-                            </FormControl>
+                            </Field.Root>
 
-                            <FormControl>
-                                <FormLabel>Proveedor seleccionado</FormLabel>
+                            <Field.Root>
+                                <Field.Label>Proveedor seleccionado</Field.Label>
                                 <Box borderWidth="1px" borderRadius="md" px={3} py={2} minH="70px">
                                     {selectedProveedor ? (
-                                        <Stack spacing={1}>
+                                        <Stack gap={1}>
                                             <Text fontWeight="medium">{selectedProveedor.nombre}</Text>
                                             <Text fontSize="sm" color="app.textMuted">ID: {selectedProveedor.id}</Text>
                                         </Stack>
@@ -111,22 +110,22 @@ export default function AprovisionamientoTab() {
                                         <Text color="app.textSubtle">Aun no ha seleccionado un proveedor.</Text>
                                     )}
                                 </Box>
-                            </FormControl>
+                            </Field.Root>
                         </Flex>
 
                         <Flex gap={4} direction={{ base: "column", lg: "row" }} align={{ base: "stretch", lg: "flex-end" }}>
-                            <Stack direction={{ base: "column", sm: "row" }} spacing={2} align="stretch">
+                            <Stack direction={{ base: "column", sm: "row" }} gap={2} align="stretch">
                                 <Button
                                     onClick={materialPicker.onOpen}
-                                    colorScheme="blue"
-                                    isLoading={materialLoading}
+                                    colorPalette="blue"
+                                    loading={materialLoading}
                                     w={{ base: "full", sm: "auto" }}
                                 >
                                     {selectedMaterial ? "Cambiar material" : "Seleccionar material"}
                                 </Button>
                                 <Button
                                     onClick={proveedorPicker.onOpen}
-                                    colorScheme="blue"
+                                    colorPalette="blue"
                                     variant="outline"
                                     w={{ base: "full", sm: "auto" }}
                                 >
@@ -134,29 +133,29 @@ export default function AprovisionamientoTab() {
                                 </Button>
                             </Stack>
 
-                            <FormControl maxW={{ base: "full", lg: "220px" }}>
-                                <FormLabel>Fecha corte</FormLabel>
+                            <Field.Root maxW={{ base: "full", lg: "220px" }}>
+                                <Field.Label>Fecha corte</Field.Label>
                                 <Input
                                     type="date"
                                     value={fechaCorte}
-                                    onChange={(e) => setFechaCorte(e.target.value)}
+                                    onValueChange={(e) => setFechaCorte(e.target.value)}
                                 />
-                            </FormControl>
+                            </Field.Root>
 
-                            <FormControl maxW={{ base: "full", lg: "220px" }}>
-                                <FormLabel>Ventana dias</FormLabel>
+                            <Field.Root maxW={{ base: "full", lg: "220px" }}>
+                                <Field.Label>Ventana dias</Field.Label>
                                 <Input
                                     type="number"
                                     min={1}
                                     step={1}
                                     value={ventanaDiasInput}
-                                    onChange={(e) => setVentanaDiasInput(e.target.value)}
+                                    onValueChange={(e) => setVentanaDiasInput(e.target.value)}
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </Flex>
                     </Stack>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
 
             <LeadTimesView
                 selectedMaterial={selectedMaterial}
@@ -166,13 +165,13 @@ export default function AprovisionamientoTab() {
             />
 
             <MaterialSelectorModal
-                isOpen={materialPicker.isOpen}
+                isOpen={materialPicker.open}
                 onClose={materialPicker.onClose}
                 onSelectMaterial={hydrateMaterial}
             />
 
             <ProveedorPicker
-                isOpen={proveedorPicker.isOpen}
+                isOpen={proveedorPicker.open}
                 onClose={proveedorPicker.onClose}
                 onSelectProveedor={setSelectedProveedor}
             />

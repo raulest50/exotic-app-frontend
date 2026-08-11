@@ -1,16 +1,4 @@
-import {
-    Box,
-    Button,
-    Flex,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Text,
-    VStack,
-} from '@chakra-ui/react';
+import { Steps, Box, Button, Flex, Table, Thead, Tbody, Tr, Th, Td, Text, VStack } from '@chakra-ui/react';
 import CustomDecimalInput from '../../../../../components/CustomDecimalInput/CustomDecimalInput';
 import { AveriaAlmacenItem } from '../WizardAveriaAlmacen';
 
@@ -53,31 +41,31 @@ export default function AveriaAlmacenStep1Quantities({
                 Paso 2: Especificar Cantidades Averiadas
             </Text>
 
-            <VStack spacing={4} align="stretch">
+            <VStack gap={4} align="stretch">
                 <Box w="full" overflowX="auto">
-                    <Table variant="simple" size="sm">
-                        <Thead>
-                            <Tr>
-                                <Th>Código</Th>
-                                <Th>Nombre</Th>
-                                <Th>Lote</Th>
-                                <Th isNumeric>Disponible</Th>
-                                <Th isNumeric>Cantidad Avería</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root variant="simple" size="sm">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>Código</Table.ColumnHeader>
+                                <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Disponible</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Cantidad Avería</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {selectedItems.map((item) => {
                                 const key = itemKey(item);
                                 const exceedsMax = item.cantidadAveria > item.cantidadDisponible;
                                 return (
-                                    <Tr key={key}>
-                                        <Td>{item.productoId}</Td>
-                                        <Td>{item.productoNombre}</Td>
-                                        <Td>{item.batchNumber}</Td>
-                                        <Td isNumeric>
+                                    <Table.Row key={key}>
+                                        <Table.Cell>{item.productoId}</Table.Cell>
+                                        <Table.Cell>{item.productoNombre}</Table.Cell>
+                                        <Table.Cell>{item.batchNumber}</Table.Cell>
+                                        <Table.Cell textAlign='end'>
                                             {item.cantidadDisponible.toFixed(2)} {item.tipoUnidades}
-                                        </Td>
-                                        <Td isNumeric>
+                                        </Table.Cell>
+                                        <Table.Cell textAlign='end'>
                                             <Box>
                                                 <CustomDecimalInput
                                                     value={item.cantidadAveria}
@@ -94,12 +82,12 @@ export default function AveriaAlmacenStep1Quantities({
                                                     </Text>
                                                 )}
                                             </Box>
-                                        </Td>
-                                    </Tr>
+                                        </Table.Cell>
+                                    </Table.Row>
                                 );
                             })}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 </Box>
 
                 {!allItemsValid && selectedItems.some((i) => i.cantidadAveria > 0) && (
@@ -113,9 +101,9 @@ export default function AveriaAlmacenStep1Quantities({
                         Anterior
                     </Button>
                     <Button
-                        colorScheme="blue"
+                        colorPalette="blue"
                         onClick={handleSiguiente}
-                        isDisabled={!allItemsValid}
+                        disabled={!allItemsValid}
                     >
                         Siguiente
                     </Button>

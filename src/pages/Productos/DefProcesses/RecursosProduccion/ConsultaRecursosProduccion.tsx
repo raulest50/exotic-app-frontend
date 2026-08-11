@@ -1,5 +1,20 @@
 import {useState} from 'react';
-import {Box, Button, Flex, FormControl, FormLabel, Input, Select, Table, Tbody, Td, Th, Thead, Tr, useToast} from '@chakra-ui/react';
+import {
+  Steps,
+  Box,
+  Button,
+  Flex,
+  Input,
+  NativeSelect,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  useToast,
+  Field,
+} from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
 import MyPagination from '../../../../components/MyPagination.tsx';
@@ -62,42 +77,47 @@ function PanelBusqueda({setEstado,setRecursoSel,setRefreshFn}:PanelProps){
     <Flex direction="column" p={4} gap={4}>
       <Box p={4} borderWidth="1px" borderRadius="lg">
         <Flex gap={4} alignItems="end">
-          <FormControl flex={2}>
-            <FormLabel>{searchType===TipoBusqueda.ID? 'ID' : 'Nombre'}</FormLabel>
+          <Field.Root flex={2}>
+            <Field.Label>{searchType===TipoBusqueda.ID? 'ID' : 'Nombre'}</Field.Label>
             <Input
               value={searchText}
-              onChange={e=>setSearchText(e.target.value)}
+              onValueChange={e=>setSearchText(e.target.value)}
               onKeyDown={(e)=>{
                 if(e.key==='Enter'){
                   handleSearch();
                 }
               }}
             />
-          </FormControl>
-          <FormControl flex={1}>
-            <FormLabel>Tipo de Búsqueda</FormLabel>
-            <Select value={searchType} onChange={e=>setSearchType(e.target.value as TipoBusqueda)}>
-              <option value={TipoBusqueda.ID}>ID</option>
-              <option value={TipoBusqueda.NOMBRE}>Nombre</option>
-            </Select>
-          </FormControl>
-          <Button colorScheme='blue' onClick={handleSearch}>Buscar</Button>
+          </Field.Root>
+          <Field.Root flex={1}>
+            <Field.Label>Tipo de Búsqueda</Field.Label>
+            <NativeSelect.Root>
+              <NativeSelect.Field
+                value={searchType}
+                onValueChange={e=>setSearchType(e.target.value as TipoBusqueda)}>
+                <option value={TipoBusqueda.ID}>ID</option>
+                <option value={TipoBusqueda.NOMBRE}>Nombre</option>
+              </NativeSelect.Field>
+              <NativeSelect.Indicator />
+            </NativeSelect.Root>
+          </Field.Root>
+          <Button colorPalette='blue' onClick={handleSearch}>Buscar</Button>
         </Flex>
       </Box>
       <Box>
-        <Table size='sm'>
-          <Thead><Tr><Th>ID</Th><Th>Nombre</Th><Th>Descripción</Th><Th></Th></Tr></Thead>
-          <Tbody>
+        <Table.Root size='sm'>
+          <Table.Header><Table.Row><Table.ColumnHeader>ID</Table.ColumnHeader><Table.ColumnHeader>Nombre</Table.ColumnHeader><Table.ColumnHeader>Descripción</Table.ColumnHeader><Table.ColumnHeader></Table.ColumnHeader></Table.Row></Table.Header>
+          <Table.Body>
             {recursos.map(r=>(
-              <Tr key={r.id}>
-                <Td>{r.id}</Td>
-                <Td>{r.nombre}</Td>
-                <Td>{r.descripcion}</Td>
-                <Td><Button size='xs' onClick={()=>verDetalles(r)}>Ver Detalles</Button></Td>
-              </Tr>
+              <Table.Row key={r.id}>
+                <Table.Cell>{r.id}</Table.Cell>
+                <Table.Cell>{r.nombre}</Table.Cell>
+                <Table.Cell>{r.descripcion}</Table.Cell>
+                <Table.Cell><Button size='xs' onClick={()=>verDetalles(r)}>Ver Detalles</Button></Table.Cell>
+              </Table.Row>
             ))}
-          </Tbody>
-        </Table>
+          </Table.Body>
+        </Table.Root>
       </Box>
       {totalPages>1 && (
         <MyPagination page={page} totalPages={totalPages} loading={false} handlePageChange={fetchRecursos} />

@@ -1,4 +1,4 @@
-import { Button, Container, Flex } from "@chakra-ui/react";
+import { Steps, Button, Container, Flex } from "@chakra-ui/react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useState } from "react";
 import Step0SelectTipoCarga, { TipoCargaTerminado } from "./Step0SelectTipoCarga";
@@ -21,9 +21,8 @@ export default function CargaMasivaTerminadosTab() {
         return (
             <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
                 <Flex direction="column" gap={4} w="full" h="full">
-                    <Button leftIcon={<FaArrowLeft />} w="fit-content" onClick={() => setTipoCargaSeleccionado(null)}>
-                        Volver
-                    </Button>
+                    <Button w="fit-content" onClick={() => setTipoCargaSeleccionado(null)}><FaArrowLeft />Volver
+                                            </Button>
                     <CargaMasivaTerminadosSinInsumosFlow />
                 </Flex>
             </Container>
@@ -34,9 +33,8 @@ export default function CargaMasivaTerminadosTab() {
         return (
             <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
                 <Flex direction="column" gap={4} w="full" h="full">
-                    <Button leftIcon={<FaArrowLeft />} w="fit-content" onClick={() => setTipoCargaSeleccionado(null)}>
-                        Volver
-                    </Button>
+                    <Button w="fit-content" onClick={() => setTipoCargaSeleccionado(null)}><FaArrowLeft />Volver
+                                            </Button>
                     <CargaMasivaTerminadosSoloInsumosFlow />
                 </Flex>
             </Container>

@@ -1,11 +1,5 @@
 import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalFooter,
-    ModalBody,
-    ModalCloseButton,
+    Steps,
     Button,
     Box,
     Table,
@@ -19,9 +13,11 @@ import {
     HStack,
     Spinner,
     Flex,
-    useColorModeValue,
     useToast,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
+import { useColorModeValue } from "../../../components/ui/color-mode";
 import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
@@ -116,116 +112,126 @@ export default function DetalleTransaccionDialog({
     }
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader fontFamily="Comfortaa Variable">
-                    Detalle de Transacción
-                </ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <VStack align="stretch" spacing={4}>
-                        <Box>
-                            <Text fontWeight="bold" mb={2} fontSize="md">Información de la Transacción</Text>
-                            <HStack spacing={4} flexWrap="wrap">
-                                <Box>
-                                    <Text fontSize="sm" color="app.textMuted">ID Transacción:</Text>
-                                    <Text fontSize="md" fontWeight="semibold">{transaccion.transaccionId}</Text>
-                                </Box>
-                                {transaccion.idEntidadCausante > 0 && (
-                                    <Box>
-                                        <Text fontSize="sm" color="app.textMuted">ID Entidad Causante:</Text>
-                                        <Text fontSize="md" fontWeight="semibold">{transaccion.idEntidadCausante}</Text>
-                                    </Box>
-                                )}
-                                <Box>
-                                    <Text fontSize="sm" color="app.textMuted">Fecha:</Text>
-                                    <Text fontSize="md" fontWeight="semibold">{formatFecha(transaccion.fechaTransaccion)}</Text>
-                                </Box>
-                                <Box>
-                                    <Text fontSize="sm" color="app.textMuted">Estado Contable:</Text>
-                                    <Text fontSize="md" fontWeight="semibold">{formatEstadoContable(transaccion.estadoContable)}</Text>
-                                </Box>
-                                {transaccion.tipoEntidadCausante === 'OAA' && (
-                                    <Box>
-                                        <Text fontSize="sm" color="app.textMuted">Causa del ajuste:</Text>
-                                        <Text fontSize="md" fontWeight="semibold">
-                                            {causaAjusteLabel(transaccion.causaAjuste)}
-                                        </Text>
-                                    </Box>
-                                )}
-                            </HStack>
-                            {transaccion.observaciones && (
-                                <Box mt={2}>
-                                    <Text fontSize="sm" color="app.textMuted">Observaciones:</Text>
-                                    <Text fontSize="sm">{transaccion.observaciones}</Text>
-                                </Box>
-                            )}
-                            {transaccion.usuarioAprobador && (
-                                <Box mt={2}>
-                                    <Text fontSize="sm" color="app.textMuted">Usuario Aprobador:</Text>
-                                    <Text fontSize="sm">{transaccion.usuarioAprobador.nombre || `ID: ${transaccion.usuarioAprobador.userId}`}</Text>
-                                </Box>
-                            )}
-                        </Box>
+        <Dialog.Root open={isOpen} size='xl' placement='center' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                        <Box>
-                            <Text fontWeight="bold" mb={2} fontSize="md">Movimientos</Text>
-                            {loading ? (
-                                <Flex justify="center" py={6}>
-                                    <Spinner />
-                                </Flex>
-                            ) : error ? (
-                                <Box p={4} bg={errorBg} borderRadius="md">
-                                    <Text color={errorText}>{error}</Text>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header fontFamily="Comfortaa Variable">
+                            Detalle de Transacción
+                        </Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <VStack align="stretch" gap={4}>
+                                <Box>
+                                    <Text fontWeight="bold" mb={2} fontSize="md">Información de la Transacción</Text>
+                                    <HStack gap={4} flexWrap="wrap">
+                                        <Box>
+                                            <Text fontSize="sm" color="app.textMuted">ID Transacción:</Text>
+                                            <Text fontSize="md" fontWeight="semibold">{transaccion.transaccionId}</Text>
+                                        </Box>
+                                        {transaccion.idEntidadCausante > 0 && (
+                                            <Box>
+                                                <Text fontSize="sm" color="app.textMuted">ID Entidad Causante:</Text>
+                                                <Text fontSize="md" fontWeight="semibold">{transaccion.idEntidadCausante}</Text>
+                                            </Box>
+                                        )}
+                                        <Box>
+                                            <Text fontSize="sm" color="app.textMuted">Fecha:</Text>
+                                            <Text fontSize="md" fontWeight="semibold">{formatFecha(transaccion.fechaTransaccion)}</Text>
+                                        </Box>
+                                        <Box>
+                                            <Text fontSize="sm" color="app.textMuted">Estado Contable:</Text>
+                                            <Text fontSize="md" fontWeight="semibold">{formatEstadoContable(transaccion.estadoContable)}</Text>
+                                        </Box>
+                                        {transaccion.tipoEntidadCausante === 'OAA' && (
+                                            <Box>
+                                                <Text fontSize="sm" color="app.textMuted">Causa del ajuste:</Text>
+                                                <Text fontSize="md" fontWeight="semibold">
+                                                    {causaAjusteLabel(transaccion.causaAjuste)}
+                                                </Text>
+                                            </Box>
+                                        )}
+                                    </HStack>
+                                    {transaccion.observaciones && (
+                                        <Box mt={2}>
+                                            <Text fontSize="sm" color="app.textMuted">Observaciones:</Text>
+                                            <Text fontSize="sm">{transaccion.observaciones}</Text>
+                                        </Box>
+                                    )}
+                                    {transaccion.usuarioAprobador && (
+                                        <Box mt={2}>
+                                            <Text fontSize="sm" color="app.textMuted">Usuario Aprobador:</Text>
+                                            <Text fontSize="sm">{transaccion.usuarioAprobador.nombre || `ID: ${transaccion.usuarioAprobador.userId}`}</Text>
+                                        </Box>
+                                    )}
                                 </Box>
-                            ) : movimientos.length === 0 ? (
-                                <Text fontSize="sm" color="app.textSubtle" py={4}>
-                                    No hay movimientos registrados para esta transacción.
-                                </Text>
-                            ) : (
-                                <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
-                                    <Table size="sm" variant="striped">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>Producto ID</Th>
-                                                <Th>Nombre</Th>
-                                                <Th>Cantidad</Th>
-                                                <Th>Tipo Mov.</Th>
-                                                <Th>Almacén</Th>
-                                                <Th>Lote (Batch)</Th>
-                                                <Th>Fecha Venc.</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
-                                            {movimientos.map((mov) => (
-                                                <Tr key={mov.movimientoId}>
-                                                    <Td>{mov.productoId || 'N/A'}</Td>
-                                                    <Td>{mov.productoNombre || 'N/A'}</Td>
-                                                    <Td>{mov.cantidad.toFixed(2)}</Td>
-                                                    <Td>{mov.tipoMovimiento || 'N/A'}</Td>
-                                                    <Td>{mov.almacen || 'N/A'}</Td>
-                                                    <Td>{mov.batchNumber || '-'}</Td>
-                                                    <Td>
-                                                        {mov.expirationDate
-                                                            ? new Date(mov.expirationDate).toLocaleDateString('es-ES')
-                                                            : '-'}
-                                                    </Td>
-                                                </Tr>
-                                            ))}
-                                        </Tbody>
-                                    </Table>
+
+                                <Box>
+                                    <Text fontWeight="bold" mb={2} fontSize="md">Movimientos</Text>
+                                    {loading ? (
+                                        <Flex justify="center" py={6}>
+                                            <Spinner />
+                                        </Flex>
+                                    ) : error ? (
+                                        <Box p={4} bg={errorBg} borderRadius="md">
+                                            <Text color={errorText}>{error}</Text>
+                                        </Box>
+                                    ) : movimientos.length === 0 ? (
+                                        <Text fontSize="sm" color="app.textSubtle" py={4}>
+                                            No hay movimientos registrados para esta transacción.
+                                        </Text>
+                                    ) : (
+                                        <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
+                                            <Table.Root size="sm" variant="striped">
+                                                <Table.Header>
+                                                    <Table.Row>
+                                                        <Table.ColumnHeader>Producto ID</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Tipo Mov.</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Almacén</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Lote (Batch)</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Fecha Venc.</Table.ColumnHeader>
+                                                    </Table.Row>
+                                                </Table.Header>
+                                                <Table.Body>
+                                                    {movimientos.map((mov) => (
+                                                        <Table.Row key={mov.movimientoId}>
+                                                            <Table.Cell>{mov.productoId || 'N/A'}</Table.Cell>
+                                                            <Table.Cell>{mov.productoNombre || 'N/A'}</Table.Cell>
+                                                            <Table.Cell>{mov.cantidad.toFixed(2)}</Table.Cell>
+                                                            <Table.Cell>{mov.tipoMovimiento || 'N/A'}</Table.Cell>
+                                                            <Table.Cell>{mov.almacen || 'N/A'}</Table.Cell>
+                                                            <Table.Cell>{mov.batchNumber || '-'}</Table.Cell>
+                                                            <Table.Cell>
+                                                                {mov.expirationDate
+                                                                    ? new Date(mov.expirationDate).toLocaleDateString('es-ES')
+                                                                    : '-'}
+                                                            </Table.Cell>
+                                                        </Table.Row>
+                                                    ))}
+                                                </Table.Body>
+                                            </Table.Root>
+                                        </Box>
+                                    )}
                                 </Box>
-                            )}
-                        </Box>
-                    </VStack>
-                </ModalBody>
-                <ModalFooter>
-                    <Button colorScheme="blue" onClick={onClose}>
-                        Cerrar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button colorPalette="blue" onClick={onClose}>
+                                Cerrar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

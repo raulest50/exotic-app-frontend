@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ProveedorPicker from './ProveedorPicker.tsx';
-import { Button, Box, Text, VStack } from '@chakra-ui/react';
+import { Steps, Button, Box, Text, VStack } from '@chakra-ui/react';
 
 interface Proveedor {
     id: string;
@@ -20,8 +20,8 @@ export const Default = () => {
     };
 
     return (
-        <VStack spacing={4} align="start" p={5}>
-            <Button colorScheme="blue" onClick={handleOpen}>
+        <VStack gap={4} align="start" p={5}>
+            <Button colorPalette="blue" onClick={handleOpen}>
                 Abrir Selector de Proveedor
             </Button>
 

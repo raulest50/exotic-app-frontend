@@ -1,17 +1,5 @@
-import {
-    Box,
-    Container,
-    Flex,
-    Step,
-    StepDescription,
-    StepIcon,
-    StepIndicator,
-    StepNumber,
-    StepSeparator,
-    StepStatus,
-    Stepper,
-    StepTitle,
-} from "@chakra-ui/react";
+import { Steps, Box, Container, Flex } from "@chakra-ui/react";
+import { LuCheck } from 'react-icons/lu';
 import { useCallback, useState } from "react";
 import DispensacionV2Step1SelectArea, { type AreaOperativaDispensacionV2 } from "./DispensacionV2Step1SelectArea";
 import DispensacionV2Step2MpsSemana from "./DispensacionV2Step2MpsSemana";
@@ -125,20 +113,22 @@ export default function DispensacionV2Tab() {
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <Flex direction="column" gap={4}>
-                <Stepper index={activeStep} p="1em" backgroundColor="app.stepperTeal" w="full">
-                    {steps.map((step, index) => (
-                        <Step key={step.title}>
-                            <StepIndicator>
-                                <StepStatus complete={<StepIcon />} incomplete={<StepNumber />} active={<StepNumber />} />
-                            </StepIndicator>
-                            <Box flexShrink="0">
-                                <StepTitle>{step.title}</StepTitle>
-                                <StepDescription>{step.description}</StepDescription>
-                            </Box>
-                            {index < steps.length - 1 && <StepSeparator />}
-                        </Step>
-                    ))}
-                </Stepper>
+                <Steps.Root step={activeStep} p="1em" backgroundColor="app.stepperTeal" w="full">
+                      <Steps.List>
+                        {steps.map((step, index) => (
+                            <Steps.Item key={step.title}>
+                                <Steps.Indicator>
+                                    <Steps.Status complete={<LuCheck />} incomplete={<Steps.Number />} current={<Steps.Number />} />
+                                </Steps.Indicator>
+                                <Box flexShrink="0">
+                                    <Steps.Title>{step.title}</Steps.Title>
+                                    <Steps.Description>{step.description}</Steps.Description>
+                                </Box>
+                                {index < steps.length - 1 && <Steps.Separator />}
+                            </Steps.Item>
+                        ))}
+                    </Steps.List>
+                    </Steps.Root>
 
                 {activeStep === 0 && (
                     <DispensacionV2Step1SelectArea

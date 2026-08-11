@@ -1,28 +1,21 @@
 import { useEffect, useState } from 'react';
+import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
+    Steps,
     Badge,
     Box,
     Button,
     Checkbox,
     Flex,
-    FormControl,
-    FormLabel,
     Grid,
     Heading,
     HStack,
     Input,
     InputGroup,
     InputRightElement,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     SimpleGrid,
     Spinner,
-    Select,
+    NativeSelect,
     Table,
     TableContainer,
     Tbody,
@@ -31,9 +24,11 @@ import {
     Th,
     Thead,
     Tr,
-    useColorModeValue,
     useToast,
     VStack,
+    Field,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -210,307 +205,315 @@ export default function CategoriaHabilitadaPickerModal({
     );
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="4xl" isCentered scrollBehavior="inside">
-            <ModalOverlay />
-            <ModalContent
-                w="calc(100% - 24px)"
-                h={{ base: 'calc(100dvh - 24px)', md: 'min(760px, calc(100dvh - 48px))' }}
-                maxH={{ base: 'calc(100dvh - 24px)', md: 'calc(100dvh - 48px)' }}
-                my={3}
-                mx={3}
-                overflow="hidden"
-                borderRadius={{ base: 'xl', md: '2xl' }}
-                bg="app.surface"
-            >
-                <ModalHeader px={{ base: 4, md: 6 }} py={4} borderBottomWidth="1px" borderColor="app.border">
-                    <Box pr={10}>
-                        <HStack spacing={3} flexWrap="wrap">
-                            <Heading as="h2" size="md" fontFamily="Comfortaa Variable">
-                                Gestionar categorías
-                            </Heading>
-                            <Badge colorScheme="teal">{selectedCategorias.length} seleccionadas</Badge>
-                        </HStack>
-                        <Text color="app.textSubtle" fontSize="sm" fontWeight="normal" mt={1}>
-                            Busque categorías y configure sus unidades de medida cuando corresponda.
-                        </Text>
-                    </Box>
-                </ModalHeader>
-                <ModalCloseButton top={4} right={4} />
-                <ModalBody p={0} overflow="hidden" minH={0}>
-                    <Grid
-                        h="full"
-                        minH={0}
-                        templateColumns={{ base: '1fr', lg: 'minmax(0, 1.15fr) minmax(320px, 0.85fr)' }}
-                        overflowY={{ base: 'auto', lg: 'hidden' }}
-                    >
-                        <VStack
-                            align="stretch"
-                            spacing={4}
-                            p={{ base: 4, md: 5 }}
-                            minW={0}
-                            overflowY={{ base: 'visible', lg: 'auto' }}
-                        >
-                            <Box>
-                                <Heading as="h3" size="sm">Categorías disponibles</Heading>
-                                <Text color="app.textSubtle" fontSize="sm" mt={1}>
-                                    Seleccione una o varias categorías de los resultados.
+        <Dialog.Root open={isOpen} size='xl' placement='center' scrollBehavior="inside" onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
+
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content
+                        w="calc(100% - 24px)"
+                        h={{ base: 'calc(100dvh - 24px)', md: 'min(760px, calc(100dvh - 48px))' }}
+                        maxH={{ base: 'calc(100dvh - 24px)', md: 'calc(100dvh - 48px)' }}
+                        my={3}
+                        mx={3}
+                        overflow="hidden"
+                        borderRadius={{ base: 'xl', md: '2xl' }}
+                        bg="app.surface">
+                        <Dialog.Header px={{ base: 4, md: 6 }} py={4} borderBottomWidth="1px" borderColor="app.border">
+                            <Box pr={10}>
+                                <HStack gap={3} flexWrap="wrap">
+                                    <Heading as="h2" size="md" fontFamily="Comfortaa Variable">
+                                        Gestionar categorías
+                                    </Heading>
+                                    <Badge colorPalette="teal">{selectedCategorias.length} seleccionadas</Badge>
+                                </HStack>
+                                <Text color="app.textSubtle" fontSize="sm" fontWeight="normal" mt={1}>
+                                    Busque categorías y configure sus unidades de medida cuando corresponda.
                                 </Text>
                             </Box>
-
-                            <InputGroup>
-                                <Input
-                                    value={searchNombre}
-                                    onChange={(event) => setSearchNombre(event.target.value)}
-                                    onKeyDown={(event) => {
-                                        if (event.key === 'Enter' && !loading) {
-                                            void fetchCategorias(0);
-                                        }
-                                    }}
-                                    placeholder="Buscar categoría por nombre"
-                                    pr="92px"
-                                />
-                                <InputRightElement width="auto" px={2}>
-                                    <Button
-                                        colorScheme="teal"
-                                        size="sm"
-                                        onClick={() => void fetchCategorias(0)}
-                                        isLoading={loading}
-                                    >
-                                        Buscar
-                                    </Button>
-                                </InputRightElement>
-                            </InputGroup>
-
-                            {loading ? (
-                                <Flex justify="center" align="center" minH="260px">
-                                    <Spinner size="lg" />
-                                </Flex>
-                            ) : categorias.length === 0 ? (
-                                <Flex
-                                    minH="260px"
-                                    borderWidth="1px"
-                                    borderStyle="dashed"
-                                    borderColor="app.border"
-                                    borderRadius="xl"
-                                    align="center"
-                                    justify="center"
-                                    direction="column"
-                                    textAlign="center"
-                                    px={6}
+                        </Dialog.Header>
+                        <Dialog.CloseTrigger top={4} right={4} />
+                        <Dialog.Body p={0} overflow="hidden" minH={0}>
+                            <Grid
+                                h="full"
+                                minH={0}
+                                templateColumns={{ base: '1fr', lg: 'minmax(0, 1.15fr) minmax(320px, 0.85fr)' }}
+                                overflowY={{ base: 'auto', lg: 'hidden' }}
+                            >
+                                <VStack
+                                    align="stretch"
+                                    gap={4}
+                                    p={{ base: 4, md: 5 }}
+                                    minW={0}
+                                    overflowY={{ base: 'visible', lg: 'auto' }}
                                 >
-                                    <Text fontWeight="semibold">No se encontraron categorías</Text>
-                                    <Text color="app.textSubtle" fontSize="sm" mt={1}>
-                                        Intente con otro término de búsqueda.
-                                    </Text>
-                                </Flex>
-                            ) : (
-                                <>
-                                    <TableContainer borderWidth="1px" borderColor="app.border" borderRadius="xl">
-                                        <Table size="sm">
-                                            <Thead bg="app.tableHeader">
-                                                <Tr>
-                                                    <Th>Seleccionar</Th>
-                                                    <Th>ID</Th>
-                                                    <Th>Nombre</Th>
-                                                    <Th>Descripción</Th>
-                                                </Tr>
-                                            </Thead>
-                                            <Tbody>
-                                                {categorias.map((categoria) => {
-                                                    const checked = Boolean(selectedById[categoria.categoriaId]);
-                                                    return (
-                                                        <Tr
-                                                            key={categoria.categoriaId}
-                                                            bg={checked ? 'app.rowSelectedTeal' : 'app.surface'}
-                                                            _hover={{ bg: checked ? selectedRowHoverBg : 'app.rowHover' }}
-                                                            cursor="pointer"
-                                                            onClick={() => toggleCategoria(categoria)}
-                                                        >
-                                                            <Td onClick={(event) => event.stopPropagation()}>
-                                                                <Checkbox
-                                                                    isChecked={checked}
-                                                                    onChange={() => toggleCategoria(categoria)}
-                                                                />
-                                                            </Td>
-                                                            <Td>{categoria.categoriaId}</Td>
-                                                            <Td fontWeight="medium">{categoria.categoriaNombre}</Td>
-                                                            <Td>
-                                                                <Text noOfLines={2} minW="180px">
-                                                                    {categoria.categoriaDescripcion || '-'}
-                                                                </Text>
-                                                            </Td>
-                                                        </Tr>
-                                                    );
-                                                })}
-                                            </Tbody>
-                                        </Table>
-                                    </TableContainer>
+                                    <Box>
+                                        <Heading as="h3" size="sm">Categorías disponibles</Heading>
+                                        <Text color="app.textSubtle" fontSize="sm" mt={1}>
+                                            Seleccione una o varias categorías de los resultados.
+                                        </Text>
+                                    </Box>
 
-                                    <MyPagination
-                                        page={page}
-                                        totalPages={totalPages}
-                                        loading={loading}
-                                        handlePageChange={(nextPage) => void fetchCategorias(nextPage)}
-                                    />
-                                </>
-                            )}
-                        </VStack>
+                                    <InputGroup>
+                                        <Input
+                                            value={searchNombre}
+                                            onValueChange={(event) => setSearchNombre(event.target.value)}
+                                            onKeyDown={(event) => {
+                                                if (event.key === 'Enter' && !loading) {
+                                                    void fetchCategorias(0);
+                                                }
+                                            }}
+                                            placeholder="Buscar categoría por nombre"
+                                            pr="92px"
+                                        />
+                                        <InputRightElement width="auto" px={2}>
+                                            <Button
+                                                colorPalette="teal"
+                                                size="sm"
+                                                onClick={() => void fetchCategorias(0)}
+                                                loading={loading}
+                                            >
+                                                Buscar
+                                            </Button>
+                                        </InputRightElement>
+                                    </InputGroup>
 
-                        <VStack
-                            align="stretch"
-                            spacing={4}
-                            p={{ base: 4, md: 5 }}
-                            minW={0}
-                            bg="app.surfaceSubtle"
-                            borderTopWidth={{ base: '1px', lg: 0 }}
-                            borderLeftWidth={{ base: 0, lg: '1px' }}
-                            borderColor="app.border"
-                            overflowY={{ base: 'visible', lg: 'auto' }}
-                        >
-                            <Flex justify="space-between" align="flex-start" gap={3}>
-                                <Box>
-                                    <HStack>
-                                        <Heading as="h3" size="sm">Selección actual</Heading>
-                                        <Badge colorScheme="teal">{selectedCategorias.length}</Badge>
-                                    </HStack>
-                                    <Text color="app.textSubtle" fontSize="sm" mt={1}>
-                                        {allowUnidadSelection
-                                            ? 'Asocie una unidad y un factor de lote cuando sea necesario.'
-                                            : 'Estas categorías quedarán habilitadas para el área.'}
-                                    </Text>
-                                </Box>
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    colorScheme="red"
-                                    onClick={() => setSelectedById({})}
-                                    isDisabled={selectedCategorias.length === 0}
-                                    flexShrink={0}
-                                >
-                                    Limpiar
-                                </Button>
-                            </Flex>
-
-                            {selectedCategorias.length === 0 ? (
-                                <Flex
-                                    minH="260px"
-                                    borderWidth="1px"
-                                    borderStyle="dashed"
-                                    borderColor="app.border"
-                                    borderRadius="xl"
-                                    bg="app.surface"
-                                    align="center"
-                                    justify="center"
-                                    direction="column"
-                                    textAlign="center"
-                                    px={6}
-                                >
-                                    <Text fontWeight="semibold">Sin categorías seleccionadas</Text>
-                                    <Text color="app.textSubtle" fontSize="sm" mt={1}>
-                                        Seleccione categorías desde la tabla de resultados.
-                                    </Text>
-                                </Flex>
-                            ) : (
-                                <VStack align="stretch" spacing={3}>
-                                    {allowUnidadSelection && unidadesDisponibles.length === 0 && (
-                                        <Box
+                                    {loading ? (
+                                        <Flex justify="center" align="center" minH="260px">
+                                            <Spinner size="lg" />
+                                        </Flex>
+                                    ) : categorias.length === 0 ? (
+                                        <Flex
+                                            minH="260px"
                                             borderWidth="1px"
+                                            borderStyle="dashed"
                                             borderColor="app.border"
-                                            borderRadius="lg"
-                                            bg="app.surface"
-                                            px={4}
-                                            py={3}
+                                            borderRadius="xl"
+                                            align="center"
+                                            justify="center"
+                                            direction="column"
+                                            textAlign="center"
+                                            px={6}
                                         >
-                                            <Text color="app.textSubtle" fontSize="sm">
-                                                Sin unidades disponibles para asociar.
+                                            <Text fontWeight="semibold">No se encontraron categorías</Text>
+                                            <Text color="app.textSubtle" fontSize="sm" mt={1}>
+                                                Intente con otro término de búsqueda.
+                                            </Text>
+                                        </Flex>
+                                    ) : (
+                                        <>
+                                            <Table.ScrollArea borderWidth="1px" borderColor="app.border" borderRadius="xl">
+                                                <Table.Root size="sm">
+                                                    <Table.Header bg="app.tableHeader">
+                                                        <Table.Row>
+                                                            <Table.ColumnHeader>Seleccionar</Table.ColumnHeader>
+                                                            <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                                            <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                                            <Table.ColumnHeader>Descripción</Table.ColumnHeader>
+                                                        </Table.Row>
+                                                    </Table.Header>
+                                                    <Table.Body>
+                                                        {categorias.map((categoria) => {
+                                                            const checked = Boolean(selectedById[categoria.categoriaId]);
+                                                            return (
+                                                                <Table.Row
+                                                                    key={categoria.categoriaId}
+                                                                    bg={checked ? 'app.rowSelectedTeal' : 'app.surface'}
+                                                                    _hover={{ bg: checked ? selectedRowHoverBg : 'app.rowHover' }}
+                                                                    cursor="pointer"
+                                                                    onClick={() => toggleCategoria(categoria)}
+                                                                >
+                                                                    <Table.Cell onClick={(event) => event.stopPropagation()}>
+                                                                        <Checkbox.Root checked={checked} onCheckedChange={() => toggleCategoria(categoria)}><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control></Checkbox.Root>
+                                                                    </Table.Cell>
+                                                                    <Table.Cell>{categoria.categoriaId}</Table.Cell>
+                                                                    <Table.Cell fontWeight="medium">{categoria.categoriaNombre}</Table.Cell>
+                                                                    <Table.Cell>
+                                                                        <Text lineClamp={2} minW="180px">
+                                                                            {categoria.categoriaDescripcion || '-'}
+                                                                        </Text>
+                                                                    </Table.Cell>
+                                                                </Table.Row>
+                                                            );
+                                                        })}
+                                                    </Table.Body>
+                                                </Table.Root>
+                                            </Table.ScrollArea>
+
+                                            <MyPagination
+                                                page={page}
+                                                totalPages={totalPages}
+                                                loading={loading}
+                                                handlePageChange={(nextPage) => void fetchCategorias(nextPage)}
+                                            />
+                                        </>
+                                    )}
+                                </VStack>
+
+                                <VStack
+                                    align="stretch"
+                                    gap={4}
+                                    p={{ base: 4, md: 5 }}
+                                    minW={0}
+                                    bg="app.surfaceSubtle"
+                                    borderTopWidth={{ base: '1px', lg: 0 }}
+                                    borderLeftWidth={{ base: 0, lg: '1px' }}
+                                    borderColor="app.border"
+                                    overflowY={{ base: 'visible', lg: 'auto' }}
+                                >
+                                    <Flex justify="space-between" align="flex-start" gap={3}>
+                                        <Box>
+                                            <HStack>
+                                                <Heading as="h3" size="sm">Selección actual</Heading>
+                                                <Badge colorPalette="teal">{selectedCategorias.length}</Badge>
+                                            </HStack>
+                                            <Text color="app.textSubtle" fontSize="sm" mt={1}>
+                                                {allowUnidadSelection
+                                                    ? 'Asocie una unidad y un factor de lote cuando sea necesario.'
+                                                    : 'Estas categorías quedarán habilitadas para el área.'}
                                             </Text>
                                         </Box>
-                                    )}
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            colorPalette="red"
+                                            onClick={() => setSelectedById({})}
+                                            disabled={selectedCategorias.length === 0}
+                                            flexShrink={0}
+                                        >
+                                            Limpiar
+                                        </Button>
+                                    </Flex>
 
-                                    {selectedCategorias.map((categoria) => (
-                                        <Box
-                                            key={categoria.categoriaId}
+                                    {selectedCategorias.length === 0 ? (
+                                        <Flex
+                                            minH="260px"
                                             borderWidth="1px"
+                                            borderStyle="dashed"
                                             borderColor="app.border"
                                             borderRadius="xl"
                                             bg="app.surface"
-                                            p={4}
+                                            align="center"
+                                            justify="center"
+                                            direction="column"
+                                            textAlign="center"
+                                            px={6}
                                         >
-                                            <Flex justify="space-between" align="flex-start" gap={3} mb={allowUnidadSelection ? 4 : 0}>
-                                                <Box minW={0}>
-                                                    <Text fontSize="sm" fontWeight="semibold" noOfLines={2}>
-                                                        {categoria.categoriaNombre}
-                                                    </Text>
-                                                    <Text color="app.textSubtle" fontSize="xs" mt={1}>
-                                                        Categoría #{categoria.categoriaId}
+                                            <Text fontWeight="semibold">Sin categorías seleccionadas</Text>
+                                            <Text color="app.textSubtle" fontSize="sm" mt={1}>
+                                                Seleccione categorías desde la tabla de resultados.
+                                            </Text>
+                                        </Flex>
+                                    ) : (
+                                        <VStack align="stretch" gap={3}>
+                                            {allowUnidadSelection && unidadesDisponibles.length === 0 && (
+                                                <Box
+                                                    borderWidth="1px"
+                                                    borderColor="app.border"
+                                                    borderRadius="lg"
+                                                    bg="app.surface"
+                                                    px={4}
+                                                    py={3}
+                                                >
+                                                    <Text color="app.textSubtle" fontSize="sm">
+                                                        Sin unidades disponibles para asociar.
                                                     </Text>
                                                 </Box>
-                                                <Badge colorScheme="teal" flexShrink={0}>Seleccionada</Badge>
-                                            </Flex>
-
-                                            {allowUnidadSelection && (
-                                                <SimpleGrid columns={{ base: 1, sm: 2, lg: 1, xl: 2 }} spacing={3}>
-                                                    <FormControl>
-                                                        <FormLabel fontSize="xs">Unidad</FormLabel>
-                                                        <Select
-                                                            size="sm"
-                                                            value={categoria.unidadMedidaId ?? ''}
-                                                            onChange={(event) => setUnidadForCategoria(
-                                                                categoria.categoriaId,
-                                                                event.target.value ? Number(event.target.value) : null,
-                                                            )}
-                                                        >
-                                                            <option value="">Sin unidad</option>
-                                                            {unidadesDisponibles.map((unidad) => (
-                                                                <option key={unidad.id} value={unidad.id}>
-                                                                    {unidad.nombre}
-                                                                </option>
-                                                            ))}
-                                                        </Select>
-                                                    </FormControl>
-                                                    <FormControl>
-                                                        <FormLabel fontSize="xs">Factor lote</FormLabel>
-                                                        <Input
-                                                            size="sm"
-                                                            type="number"
-                                                            min={0.000001}
-                                                            step="0.000001"
-                                                            value={categoria.factorLote ?? ''}
-                                                            isDisabled={!categoria.unidadMedidaId}
-                                                            onChange={(event) => {
-                                                                const parsed = Number(event.target.value);
-                                                                setFactorLoteForCategoria(
-                                                                    categoria.categoriaId,
-                                                                    event.target.value && Number.isFinite(parsed) ? parsed : null,
-                                                                );
-                                                            }}
-                                                        />
-                                                    </FormControl>
-                                                </SimpleGrid>
                                             )}
-                                        </Box>
-                                    ))}
+
+                                            {selectedCategorias.map((categoria) => (
+                                                <Box
+                                                    key={categoria.categoriaId}
+                                                    borderWidth="1px"
+                                                    borderColor="app.border"
+                                                    borderRadius="xl"
+                                                    bg="app.surface"
+                                                    p={4}
+                                                >
+                                                    <Flex justify="space-between" align="flex-start" gap={3} mb={allowUnidadSelection ? 4 : 0}>
+                                                        <Box minW={0}>
+                                                            <Text fontSize="sm" fontWeight="semibold" lineClamp={2}>
+                                                                {categoria.categoriaNombre}
+                                                            </Text>
+                                                            <Text color="app.textSubtle" fontSize="xs" mt={1}>
+                                                                Categoría #{categoria.categoriaId}
+                                                            </Text>
+                                                        </Box>
+                                                        <Badge colorPalette="teal" flexShrink={0}>Seleccionada</Badge>
+                                                    </Flex>
+
+                                                    {allowUnidadSelection && (
+                                                        <SimpleGrid columns={{ base: 1, sm: 2, lg: 1, xl: 2 }} gap={3}>
+                                                            <Field.Root>
+                                                                <Field.Label fontSize="xs">Unidad</Field.Label>
+                                                                <NativeSelect.Root>
+                                                                    <NativeSelect.Field
+                                                                        size="sm"
+                                                                        value={categoria.unidadMedidaId ?? ''}
+                                                                        onValueChange={(event) => setUnidadForCategoria(
+                                                                            categoria.categoriaId,
+                                                                            event.target.value ? Number(event.target.value) : null,
+                                                                        )}>
+                                                                        <option value="">Sin unidad</option>
+                                                                        {unidadesDisponibles.map((unidad) => (
+                                                                            <option key={unidad.id} value={unidad.id}>
+                                                                                {unidad.nombre}
+                                                                            </option>
+                                                                        ))}
+                                                                    </NativeSelect.Field>
+                                                                    <NativeSelect.Indicator />
+                                                                </NativeSelect.Root>
+                                                            </Field.Root>
+                                                            <Field.Root>
+                                                                <Field.Label fontSize="xs">Factor lote</Field.Label>
+                                                                <Input
+                                                                    size="sm"
+                                                                    type="number"
+                                                                    min={0.000001}
+                                                                    step="0.000001"
+                                                                    value={categoria.factorLote ?? ''}
+                                                                    disabled={!categoria.unidadMedidaId}
+                                                                    onValueChange={(event) => {
+                                                                        const parsed = Number(event.target.value);
+                                                                        setFactorLoteForCategoria(
+                                                                            categoria.categoriaId,
+                                                                            event.target.value && Number.isFinite(parsed) ? parsed : null,
+                                                                        );
+                                                                    }}
+                                                                />
+                                                            </Field.Root>
+                                                        </SimpleGrid>
+                                                    )}
+                                                </Box>
+                                            ))}
+                                        </VStack>
+                                    )}
                                 </VStack>
-                            )}
-                        </VStack>
-                    </Grid>
-                </ModalBody>
-                <ModalFooter
-                    px={{ base: 4, md: 6 }}
-                    py={4}
-                    borderTopWidth="1px"
-                    borderColor="app.border"
-                    bg="app.surface"
-                    flexShrink={0}
-                >
-                    <Button variant="ghost" mr={3} onClick={onClose}>
-                        Cancelar
-                    </Button>
-                    <Button colorScheme="teal" onClick={handleConfirm} isDisabled={hasInvalidFactor}>
-                        Confirmar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                            </Grid>
+                        </Dialog.Body>
+                        <Dialog.Footer
+                            px={{ base: 4, md: 6 }}
+                            py={4}
+                            borderTopWidth="1px"
+                            borderColor="app.border"
+                            bg="app.surface"
+                            flexShrink={0}
+                        >
+                            <Button variant="ghost" mr={3} onClick={onClose}>
+                                Cancelar
+                            </Button>
+                            <Button colorPalette="teal" onClick={handleConfirm} disabled={hasInvalidFactor}>
+                                Confirmar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

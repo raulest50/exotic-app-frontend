@@ -1,4 +1,5 @@
-import {Card, CardBody, CardHeader, Flex, Heading, Icon, SimpleGrid, Text, useColorModeValue} from '@chakra-ui/react';
+import { Steps, Card, Flex, Heading, Icon, SimpleGrid, Text } from '@chakra-ui/react';
+import { useColorModeValue } from "../../../../components/ui/color-mode";
 import {FaClipboardList, FaFileAlt, FaFileInvoiceDollar} from "react-icons/fa";
 import {TIPO_INCORPORACION} from "../../types.tsx";
 
@@ -37,9 +38,9 @@ export function TipoIngresoSelection({setTipoIncorporacion}: Props) {
                 Seleccione el tipo de incorporación
             </Heading>
 
-            <SimpleGrid columns={3} spacing={8} w="full">
+            <SimpleGrid columns={3} gap={8} w="full">
                 {/* Card for "Incorporacion con OC" */}
-                <Card
+                <Card.Root
                     h="250px"
                     cursor="pointer"
                     bg={conOcBg}
@@ -52,21 +53,21 @@ export function TipoIngresoSelection({setTipoIncorporacion}: Props) {
                     transition="all 0.3s ease"
                     onClick={handleConOCClick}
                 >
-                    <CardHeader borderBottom="0.1em solid" p={4}>
+                    <Card.Header borderBottom="0.1em solid" p={4}>
                         <Heading as="h3" size="md" fontFamily="Comfortaa Variable">
                             Incorporación con OC
                         </Heading>
-                    </CardHeader>
-                    <CardBody display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
-                        <Icon as={FaFileInvoiceDollar} boxSize="5em" mb={4} />
+                    </Card.Header>
+                    <Card.Body display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
+                        <Icon boxSize="5em" mb={4} asChild><FaFileInvoiceDollar /></Icon>
                         <Text textAlign="center">
                             Incorporar activo fijo con orden de compra existente
                         </Text>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
 
                 {/* Card for "Incorporacion sin OC" */}
-                <Card
+                <Card.Root
                     h="250px"
                     cursor="pointer"
                     bg={sinOcBg}
@@ -79,21 +80,21 @@ export function TipoIngresoSelection({setTipoIncorporacion}: Props) {
                     transition="all 0.3s ease"
                     onClick={handleSinOCClick}
                 >
-                    <CardHeader borderBottom="0.1em solid" p={4}>
+                    <Card.Header borderBottom="0.1em solid" p={4}>
                         <Heading as="h3" size="md" fontFamily="Comfortaa Variable">
                             Incorporación sin OC
                         </Heading>
-                    </CardHeader>
-                    <CardBody display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
-                        <Icon as={FaFileAlt} boxSize="5em" mb={4} />
+                    </Card.Header>
+                    <Card.Body display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
+                        <Icon boxSize="5em" mb={4} asChild><FaFileAlt /></Icon>
                         <Text textAlign="center">
                             Incorporar activo fijo sin orden de compra
                         </Text>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
 
                 {/* Card for "Incorporacion AF Existente" */}
-                <Card
+                <Card.Root
                     h="250px"
                     cursor="pointer"
                     bg={existenteBg}
@@ -106,18 +107,18 @@ export function TipoIngresoSelection({setTipoIncorporacion}: Props) {
                     transition="all 0.3s ease"
                     onClick={handleAFExistenteClick}
                 >
-                    <CardHeader borderBottom="0.1em solid" p={4}>
+                    <Card.Header borderBottom="0.1em solid" p={4}>
                         <Heading as="h3" size="md" fontFamily="Comfortaa Variable">
                             Incorporación AF Existente ó Donación
                         </Heading>
-                    </CardHeader>
-                    <CardBody display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
-                        <Icon as={FaClipboardList} boxSize="5em" mb={4} />
+                    </Card.Header>
+                    <Card.Body display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
+                        <Icon boxSize="5em" mb={4} asChild><FaClipboardList /></Icon>
                         <Text textAlign="center">
                             Incorporar activo fijo existente al sistema
                         </Text>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
             </SimpleGrid>
         </Flex>
     );

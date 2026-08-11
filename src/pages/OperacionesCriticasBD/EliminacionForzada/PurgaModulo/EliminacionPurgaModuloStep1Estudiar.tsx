@@ -1,7 +1,6 @@
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
     Box,
     Button,
     Flex,
@@ -107,72 +106,72 @@ export default function EliminacionPurgaModuloStep1Estudiar({
     const { permitido, mensajeEntorno } = studyResultPurga;
 
     return (
-        <VStack align="stretch" spacing={6}>
+        <VStack align="stretch" gap={6}>
             <Heading size="md" color="red.700">
                 Purga Completa Módulo Productos
             </Heading>
 
-            <Alert status="info">
-                <AlertIcon />
-                <AlertDescription>
+            <Alert.Root status="info">
+                <Alert.Indicator />
+                <Alert.Description>
                     Esta funcionalidad permite eliminar <strong>todas</strong> las entidades
                     relacionadas con el módulo de productos: transacciones de almacén, movimientos,
                     lotes, órdenes de compra y producción, insumos, recetas, procesos de producción,
                     case packs, y productos (materiales, semiterminados y terminados). Las entidades
                     de otros módulos como usuarios, vendedores, proveedores, categorías y áreas de
                     producción <strong>no se verán afectadas</strong>.
-                </AlertDescription>
-            </Alert>
+                </Alert.Description>
+            </Alert.Root>
 
-            <Alert status="success">
-                <AlertIcon />
-                <AlertDescription>
+            <Alert.Root status="success">
+                <Alert.Indicator />
+                <Alert.Description>
                     <strong>Seguridad:</strong> Esta funcionalidad únicamente está disponible en
                     entornos de desarrollo local (localhost) y entorno de pruebas remotas (staging).
                     <strong> No está disponible en el entorno de producción</strong>, por lo que sus
                     datos reales en producción no corren ningún riesgo.
-                </AlertDescription>
-            </Alert>
+                </Alert.Description>
+            </Alert.Root>
 
             <Text color="app.textMuted" fontSize="sm">
                 Entorno actual: {mensajeEntorno}
             </Text>
 
             {!permitido && (
-                <Alert status="error">
-                    <AlertIcon />
-                    <AlertDescription>
+                <Alert.Root status="error">
+                    <Alert.Indicator />
+                    <Alert.Description>
                         La purga no está permitida en el entorno actual (producción). Esta
                         operación solo se puede ejecutar en entornos de desarrollo o pruebas.
-                    </AlertDescription>
-                </Alert>
+                    </Alert.Description>
+                </Alert.Root>
             )}
 
             <Box>
                 <Heading size="sm" mb={2}>
                     Resumen de entidades a eliminar
                 </Heading>
-                <Table size="sm" variant="simple">
-                    <Thead>
-                        <Tr>
-                            <Th>Entidad</Th>
-                            <Th isNumeric>Cantidad</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+                <Table.Root size="sm" variant="simple">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Entidad</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>Cantidad</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {ENTITY_LABELS.map(({ key, label }) => {
                             const val = studyResultPurga[key];
                             return (
-                                <Tr key={key}>
-                                    <Td>{label}</Td>
-                                    <Td isNumeric>
+                                <Table.Row key={key}>
+                                    <Table.Cell>{label}</Table.Cell>
+                                    <Table.Cell textAlign='end'>
                                         {typeof val === "number" ? val.toLocaleString() : "-"}
-                                    </Td>
-                                </Tr>
+                                    </Table.Cell>
+                                </Table.Row>
                             );
                         })}
-                    </Tbody>
-                </Table>
+                    </Table.Body>
+                </Table.Root>
             </Box>
 
             <Flex gap={3} w="full" justify="space-between">
@@ -180,9 +179,9 @@ export default function EliminacionPurgaModuloStep1Estudiar({
                     Atrás
                 </Button>
                 <Button
-                    colorScheme="red"
+                    colorPalette="red"
                     onClick={handleContinuar}
-                    isDisabled={!permitido}
+                    disabled={!permitido}
                 >
                     Continuar y ejecutar purga
                 </Button>

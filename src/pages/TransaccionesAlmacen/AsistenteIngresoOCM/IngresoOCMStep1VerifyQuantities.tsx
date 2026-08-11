@@ -1,13 +1,9 @@
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
-    AlertTitle,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
     HStack,
     Input,
@@ -19,6 +15,7 @@ import {
     Tr,
     useDisclosure,
     useToast,
+    Field,
 } from "@chakra-ui/react";
 import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from "react";
 
@@ -55,7 +52,7 @@ export default function IngresoOCMStep1VerifyQuantities({
     setIngresoOCM_DTA,
 }: StepOneComponentProps) {
     const toast = useToast();
-    const { isOpen: isDialogOpen, onOpen: onDialogOpen, onClose: onDialogClose } = useDisclosure();
+    const { open: isDialogOpen, onOpen: onDialogOpen, onClose: onDialogClose } = useDisclosure();
     const [token, setToken] = useState("");
     const [inputToken, setInputToken] = useState("");
 
@@ -171,16 +168,16 @@ export default function IngresoOCMStep1VerifyQuantities({
                 </Heading>
 
                 {proveedorInconsistente && (
-                    <Alert status="warning" borderRadius="md" w="full" maxW="4xl">
-                        <AlertIcon />
+                    <Alert.Root status="warning" borderRadius="md" w="full" maxW="4xl">
+                        <Alert.Indicator />
                         <Box>
-                            <AlertTitle>Proveedor no disponible en la respuesta</AlertTitle>
-                            <AlertDescription>
+                            <Alert.Title>Proveedor no disponible en la respuesta</Alert.Title>
+                            <Alert.Description>
                                 La OCM deberia tener proveedor asociado. El ingreso puede seguir visible,
                                 pero conviene revisar la relacion proveedor de esta orden en backend.
-                            </AlertDescription>
+                            </Alert.Description>
                         </Box>
-                    </Alert>
+                    </Alert.Root>
                 )}
 
                 <Flex direction="column" align="center" gap={2}>
@@ -197,9 +194,9 @@ export default function IngresoOCMStep1VerifyQuantities({
                 </Flex>
 
                 {limiteRecepcionesAlcanzado && (
-                    <Alert
+                    <Alert.Root
                         status="error"
-                        variant="left-accent"
+                        variant='subtle'
                         flexDirection="column"
                         alignItems="center"
                         justifyContent="center"
@@ -208,17 +205,18 @@ export default function IngresoOCMStep1VerifyQuantities({
                         boxShadow="lg"
                         p={6}
                         w="full"
-                    >
-                        <AlertIcon boxSize="40px" mr={0} mb={2} />
-                        <AlertTitle mt={2} mb={2} fontSize="lg" fontWeight="bold">
+                        borderStartWidth='3px'
+                        borderStartColor='colorPalette.solid'>
+                        <Alert.Indicator boxSize="40px" mr={0} mb={2} />
+                        <Alert.Title mt={2} mb={2} fontSize="lg" fontWeight="bold">
                             Limite de recepciones alcanzado
-                        </AlertTitle>
-                        <AlertDescription fontSize="md">
+                        </Alert.Title>
+                        <Alert.Description fontSize="md">
                             Esta orden de compra ya tiene {transacciones.length} recepciones registradas.
                             El limite efectivo para esta OCM es de {limiteRecepcionesParciales} recepciones parciales.
                             Puede cerrar la orden si ya se recibieron todos los materiales necesarios.
-                        </AlertDescription>
-                    </Alert>
+                        </Alert.Description>
+                    </Alert.Root>
                 )}
 
                 {!limiteRecepcionesAlcanzado && (
@@ -238,27 +236,27 @@ export default function IngresoOCMStep1VerifyQuantities({
                 )}
 
                 {lotePreview.error && (
-                    <Alert status="warning" borderRadius="md" w="full">
-                        <AlertIcon />
-                        <AlertDescription>
+                    <Alert.Root status="warning" borderRadius="md" w="full">
+                        <Alert.Indicator />
+                        <Alert.Description>
                             No fue posible previsualizar los lotes internos en este momento. El backend confirmara el lote definitivo al registrar.
-                        </AlertDescription>
-                    </Alert>
+                        </Alert.Description>
+                    </Alert.Root>
                 )}
 
                 <Box w="full" bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
-                    <Table size="sm" variant="simple">
-                        <Thead bg="app.tableHeader">
-                            <Tr>
-                                <Th>Material</Th>
-                                <Th>ID</Th>
-                                <Th>Cantidad Ordenada</Th>
-                                <Th>Cantidad Ingresada</Th>
-                                <Th>Estado</Th>
-                                <Th textAlign="center">Acciones</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header bg="app.tableHeader">
+                            <Table.Row>
+                                <Table.ColumnHeader>Material</Table.ColumnHeader>
+                                <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Cantidad Ordenada</Table.ColumnHeader>
+                                <Table.ColumnHeader>Cantidad Ingresada</Table.ColumnHeader>
+                                <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign="center">Acciones</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {draftItems.map(draftItem => {
                                 const cantidadYaRecibida = getCantidadYaRecibida(
                                     draftItem.item,
@@ -285,8 +283,8 @@ export default function IngresoOCMStep1VerifyQuantities({
                                     />
                                 );
                             })}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 </Box>
 
                 <ListaTransaccionesAlmacen
@@ -303,27 +301,27 @@ export default function IngresoOCMStep1VerifyQuantities({
                     error={consolidadoError}
                 />
 
-                <FormControl w="40%" isRequired>
-                    <FormLabel>Token de verificacion</FormLabel>
+                <Field.Root w="40%" required>
+                    <Field.Label>Token de verificacion</Field.Label>
                     <Input
                         placeholder="Ingrese el token"
                         value={inputToken}
-                        onChange={(e) => setInputToken(e.target.value)}
+                        onValueChange={(e) => setInputToken(e.target.value)}
                     />
-                </FormControl>
+                </Field.Root>
 
                 <Text fontFamily="Comfortaa Variable">
                     Token: <strong>{token}</strong>
                 </Text>
 
                 <Flex w="40%">
-                    <HStack spacing={4} w="full">
+                    <HStack gap={4} w="full">
                         {!limiteRecepcionesAlcanzado && (
                             <Button
-                                colorScheme="teal"
+                                colorPalette="teal"
                                 flex="1"
-                                isDisabled={!validation.isValid || lotePreview.loading}
-                                isLoading={lotePreview.loading}
+                                disabled={!validation.isValid || lotePreview.loading}
+                                loading={lotePreview.loading}
                                 loadingText="Calculando lotes..."
                                 onClick={onClickContinuar}
                             >
@@ -332,10 +330,10 @@ export default function IngresoOCMStep1VerifyQuantities({
                         )}
                         {transacciones.length > 0 && (
                             <Button
-                                colorScheme="red"
+                                colorPalette="red"
                                 variant="outline"
                                 onClick={onDialogOpen}
-                                isDisabled={loadingTransacciones}
+                                disabled={loadingTransacciones}
                             >
                                 Cerrar Orden
                             </Button>

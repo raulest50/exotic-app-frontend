@@ -1,6 +1,6 @@
 // src/pages/ActivosFijos/Incorporacion/step_one/MetodoDepreciacion/MetodoDepreciacion.stories.tsx
 import React, { useState } from 'react';
-import { Box } from '@chakra-ui/react';
+import { Steps, Box } from '@chakra-ui/react';
 import { MetodoDepreciacionComponent } from './MetodoDepreciacion';
 import { MetodoDepreciacion } from '../../../types';
 

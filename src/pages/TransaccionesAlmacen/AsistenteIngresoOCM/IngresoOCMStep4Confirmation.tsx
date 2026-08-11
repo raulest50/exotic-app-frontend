@@ -1,5 +1,5 @@
 
-import {Button, Flex, Heading, HStack, Icon, Text} from "@chakra-ui/react";
+import { Steps, Button, Flex, Heading, HStack, Icon, Text } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 
 import { RiSave3Fill } from "react-icons/ri";
@@ -21,7 +21,7 @@ export default function IngresoOCMStep4Confirmation({setActiveStep}: StepFourCom
         setActiveStep(0);
     }
 
-    return(
+    return (
         <Flex
             p="1em"
             direction="column"
@@ -33,17 +33,21 @@ export default function IngresoOCMStep4Confirmation({setActiveStep}: StepFourCom
                 <Heading fontFamily="Comfortaa Variable">
                     Formato de Ingreso Enviado
                 </Heading>
-                <Icon as={ImCheckboxChecked} w={"3em"} h={"3em"} color={"green.500"} />
+                <Icon w={"3em"} h={"3em"} color={"green.500"} asChild><ImCheckboxChecked /></Icon>
             </HStack>
             <Text fontFamily="Comfortaa Variable">
                 El formato de ingreso a almacen fue enviado y guardado correctamente.
             </Text>
 
-            <Icon as={RiSave3Fill} w={"10em"} h={"10em"} animation={`${colorAnimation} 3s infinite ease-in-out`} />
+            <Icon
+                w={"10em"}
+                h={"10em"}
+                animation={`${colorAnimation} 3s infinite ease-in-out`}
+                asChild><RiSave3Fill /></Icon>
 
             <Button
                 variant="solid"
-                colorScheme={"green"}
+                colorPalette={"green"}
                 onClick={onClickRegresar}
             > Regresar </Button>
         </Flex>

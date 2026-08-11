@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardBody, HStack, IconButton, Text, Button, VStack } from "@chakra-ui/react";
+import { Steps, Card, HStack, IconButton, Text, Button, VStack } from "@chakra-ui/react";
 import { FaSearch } from "react-icons/fa";
 import { Proveedor } from "../types";
 
@@ -15,18 +15,16 @@ const ProveedorFilterOCM: React.FC<ProveedorFilterOCMProps> = ({
                                                                   onClearFilter,
                                                               }) => {
     return (
-        <Card variant="outline" borderColor="blue.200" minW="280px">
-            <CardBody>
+        <Card.Root variant="outline" borderColor="blue.200" minW="280px">
+            <Card.Body>
                 <HStack justifyContent="space-between" alignItems="flex-start">
-                    <HStack alignItems="flex-start" spacing={3}>
+                    <HStack alignItems="flex-start" gap={3}>
                         <IconButton
                             aria-label="Buscar proveedor"
-                            icon={<FaSearch />}
                             onClick={onOpenPicker}
                             size="sm"
-                            variant="outline"
-                        />
-                        <VStack spacing={0} alignItems="flex-start">
+                            variant="outline"><FaSearch /></IconButton>
+                        <VStack gap={0} alignItems="flex-start">
                             <Text fontWeight="semibold">
                                 {selectedProveedor ? selectedProveedor.nombre : "Sin Filtro por proveedor"}
                             </Text>
@@ -41,15 +39,15 @@ const ProveedorFilterOCM: React.FC<ProveedorFilterOCMProps> = ({
                         <Button
                             size="sm"
                             variant="ghost"
-                            colorScheme="red"
+                            colorPalette="red"
                             onClick={onClearFilter}
                         >
                             Quitar Filtro proveedor
                         </Button>
                     )}
                 </HStack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 };
 

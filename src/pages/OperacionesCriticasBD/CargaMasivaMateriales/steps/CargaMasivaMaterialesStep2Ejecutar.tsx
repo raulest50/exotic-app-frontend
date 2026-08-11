@@ -1,18 +1,5 @@
-import {
-    Box,
-    Button,
-    Flex,
-    Text,
-    useToast,
-    VStack,
-    Alert,
-    AlertIcon,
-    AlertDescription,
-    AlertTitle,
-    Spinner,
-    Heading,
-    useColorModeValue,
-} from "@chakra-ui/react";
+import { Steps, Box, Button, Flex, Text, useToast, VStack, Alert, Spinner, Heading } from "@chakra-ui/react";
+import { useColorModeValue } from "../../../../components/ui/color-mode";
 import { useState, useMemo } from "react";
 import axios, { AxiosError } from "axios";
 import EndPointsURL from "../../../../api/EndPointsURL";
@@ -157,7 +144,7 @@ export default function CargaMasivaMaterialesStep2Ejecutar({
                 />
                 <Button
                     variant="solid"
-                    colorScheme="green"
+                    colorPalette="green"
                     onClick={() => {
                         setExecutionSuccess(false);
                         setActiveStep(0);
@@ -172,7 +159,7 @@ export default function CargaMasivaMaterialesStep2Ejecutar({
 
     return (
         <Box p={4}>
-            <VStack align="stretch" spacing={6}>
+            <VStack align="stretch" gap={6}>
                 <Text fontSize="lg" fontWeight="semibold">
                     Ejecutar carga masiva
                 </Text>
@@ -183,12 +170,12 @@ export default function CargaMasivaMaterialesStep2Ejecutar({
                     </Text>
 
                     {executionError && (
-                        <Alert status="error" mb={4}>
-                            <AlertIcon />
+                        <Alert.Root status="error" mb={4}>
+                            <Alert.Indicator />
                             <Box>
-                                <AlertTitle>Error</AlertTitle>
-                                <AlertDescription>
-                                    <VStack align="stretch" spacing={1} mt={2}>
+                                <Alert.Title>Error</Alert.Title>
+                                <Alert.Description>
+                                    <VStack align="stretch" gap={1} mt={2}>
                                         <Text>{executionError}</Text>
                                         {executionErrors.slice(0, 10).map((e, idx) => (
                                             <Text key={idx} fontSize="sm">
@@ -201,9 +188,9 @@ export default function CargaMasivaMaterialesStep2Ejecutar({
                                             </Text>
                                         )}
                                     </VStack>
-                                </AlertDescription>
+                                </Alert.Description>
                             </Box>
-                        </Alert>
+                        </Alert.Root>
                     )}
 
                     {isExecuting && (
@@ -214,15 +201,15 @@ export default function CargaMasivaMaterialesStep2Ejecutar({
                     )}
 
                     <Flex gap={4} justify="flex-end" mt={4}>
-                        <Button variant="outline" onClick={() => setActiveStep(1)} isDisabled={isExecuting}>
+                        <Button variant="outline" onClick={() => setActiveStep(1)} disabled={isExecuting}>
                             Atrás
                         </Button>
                         <Button
-                            colorScheme="teal"
+                            colorPalette="teal"
                             onClick={handleExecute}
-                            isLoading={isExecuting}
+                            loading={isExecuting}
                             loadingText="Ejecutando..."
-                            isDisabled={isExecuting || !excelFile}
+                            disabled={isExecuting || !excelFile}
                         >
                             Ejecutar carga masiva
                         </Button>

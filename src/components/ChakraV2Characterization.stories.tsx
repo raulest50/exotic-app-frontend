@@ -1,45 +1,21 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { LuCheck } from 'react-icons/lu';
 import {
+  Steps,
   Box,
   Button,
   Checkbox,
   Drawer,
-  DrawerBody,
-  DrawerCloseButton,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerOverlay,
-  FormControl,
-  FormErrorMessage,
-  FormHelperText,
-  FormLabel,
   HStack,
   Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   NumberDecrementStepper,
   NumberIncrementStepper,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
   Progress,
-  Select,
+  NativeSelect,
   SimpleGrid,
-  Step,
-  StepDescription,
-  StepIcon,
-  StepIndicator,
-  StepNumber,
-  StepSeparator,
-  StepStatus,
-  StepTitle,
-  Stepper,
   Tab,
   Table,
   TableContainer,
@@ -52,16 +28,20 @@ import {
   Text,
   Th,
   Thead,
-  Tooltip,
   Tr,
   VStack,
   useDisclosure,
   useToast,
+  Portal,
+  Field,
+  Dialog,
 } from '@chakra-ui/react';
+
+import { Tooltip } from '@/components/ui/tooltip';
 
 const StoryFrame = ({ children, title }: { children: ReactNode; title: string }) => (
   <Box minH="100vh" bg="app.surfaceSubtle" color="chakra-body-text" p={{ base: 4, md: 8 }}>
-    <VStack align="stretch" spacing={6} maxW="960px" mx="auto">
+    <VStack align="stretch" gap={6} maxW="960px" mx="auto">
       <Box>
         <Text as="h1" fontSize="2xl" fontWeight="bold">
           {title}
@@ -76,75 +56,97 @@ const StoryFrame = ({ children, title }: { children: ReactNode; title: string })
 );
 
 export const ModalV2 = () => {
-  const { isOpen, onClose, onOpen } = useDisclosure({ defaultIsOpen: true });
+  const { open, onClose, onOpen } = useDisclosure({ defaultIsOpen: true });
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   return (
     <StoryFrame title="Modal v2">
-      <Button ref={triggerRef} alignSelf="flex-start" colorScheme="blue" onClick={onOpen}>
+      <Button ref={triggerRef} alignSelf="flex-start" colorPalette="blue" onClick={onOpen}>
         Abrir modal
       </Button>
-      <Modal isOpen={isOpen} onClose={onClose} finalFocusRef={triggerRef} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Confirmar operación</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Text>La información permanecerá sin cambios hasta confirmar.</Text>
-          </ModalBody>
-          <ModalFooter gap={3}>
-            <Button variant="ghost" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button colorScheme="blue" onClick={onClose}>
-              Confirmar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <Dialog.Root open={isOpen} finalFocusEl={() => triggerRef.current} placement='center' onOpenChange={e => {
+        if (!e.open) {
+          onClose();
+        }
+      }}>
+        <Portal>
+
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>Confirmar operación</Dialog.Header>
+              <Dialog.CloseTrigger />
+              <Dialog.Body>
+                <Text>La información permanecerá sin cambios hasta confirmar.</Text>
+              </Dialog.Body>
+              <Dialog.Footer gap={3}>
+                <Button variant="ghost" onClick={onClose}>
+                  Cancelar
+                </Button>
+                <Button colorPalette="blue" onClick={onClose}>
+                  Confirmar
+                </Button>
+              </Dialog.Footer>
+            </Dialog.Content>
+          </Dialog.Positioner>
+
+        </Portal>
+      </Dialog.Root>
     </StoryFrame>
   );
 };
 
 export const DrawerV2 = () => {
-  const { isOpen, onClose, onOpen } = useDisclosure({ defaultIsOpen: true });
+  const { open, onClose, onOpen } = useDisclosure({ defaultIsOpen: true });
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   return (
     <StoryFrame title="Drawer v2">
-      <Button ref={triggerRef} alignSelf="flex-start" colorScheme="teal" onClick={onOpen}>
+      <Button ref={triggerRef} alignSelf="flex-start" colorPalette="teal" onClick={onOpen}>
         Abrir panel
       </Button>
-      <Drawer isOpen={isOpen} placement="right" onClose={onClose} finalFocusRef={triggerRef} size="sm">
-        <DrawerOverlay />
-        <DrawerContent>
-          <DrawerCloseButton />
-          <DrawerHeader borderBottomWidth="1px">Filtros del inventario</DrawerHeader>
-          <DrawerBody>
-            <VStack align="stretch" spacing={4} pt={2}>
-              <FormControl>
-                <FormLabel>Estado</FormLabel>
-                <Select defaultValue="available">
-                  <option value="all">Todos</option>
-                  <option value="available">Disponible</option>
-                  <option value="reserved">Reservado</option>
-                </Select>
-              </FormControl>
-              <Checkbox defaultChecked colorScheme="teal">
-                Incluir existencias bajas
-              </Checkbox>
-            </VStack>
-          </DrawerBody>
-          <DrawerFooter borderTopWidth="1px" gap={3}>
-            <Button variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button colorScheme="teal" onClick={onClose}>
-              Aplicar
-            </Button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+      <Drawer.Root open={isOpen} placement='end' finalFocusEl={() => triggerRef.current} size='sm' onOpenChange={e => {
+        if (!e.open) {
+          onClose();
+        }
+      }}>
+        <Portal>
+
+          <Drawer.Backdrop />
+          <Drawer.Positioner>
+            <Drawer.Content>
+              <Drawer.CloseTrigger />
+              <Drawer.Header borderBottomWidth="1px">Filtros del inventario</Drawer.Header>
+              <Drawer.Body>
+                <VStack align="stretch" gap={4} pt={2}>
+                  <Field.Root>
+                    <Field.Label>Estado</Field.Label>
+                    <NativeSelect.Root>
+                      <NativeSelect.Field defaultValue="available">
+                        <option value="all">Todos</option>
+                        <option value="available">Disponible</option>
+                        <option value="reserved">Reservado</option>
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                  </Field.Root>
+                  <Checkbox.Root defaultChecked colorPalette="teal"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Incluir existencias bajas
+                                    </Checkbox.Label></Checkbox.Root>
+                </VStack>
+              </Drawer.Body>
+              <Drawer.Footer borderTopWidth="1px" gap={3}>
+                <Button variant="outline" onClick={onClose}>
+                  Cancelar
+                </Button>
+                <Button colorPalette="teal" onClick={onClose}>
+                  Aplicar
+                </Button>
+              </Drawer.Footer>
+            </Drawer.Content>
+          </Drawer.Positioner>
+
+        </Portal>
+      </Drawer.Root>
     </StoryFrame>
   );
 };
@@ -154,25 +156,23 @@ export const TabsV2 = () => {
 
   return (
     <StoryFrame title="Tabs v2">
-      <Tabs
-        index={tabIndex}
-        onChange={setTabIndex}
-        colorScheme="blue"
-        variant="enclosed"
-        isLazy
-        lazyBehavior="keepMounted"
-      >
-        <TabList overflowX="auto">
+      <Tabs.Root
+        value={tabIndex}
+        onValueChange={setTabIndex}
+        colorPalette="blue"
+        variant='enclosed'
+        lazyMount>
+        <Tabs.List overflowX="auto">
           <Tab>Resumen</Tab>
           <Tab>Movimientos</Tab>
-          <Tab isDisabled>Auditoría</Tab>
-        </TabList>
+          <Tab disabled>Auditoría</Tab>
+        </Tabs.List>
         <TabPanels bg="app.surface" borderWidth="1px" borderTopWidth="0">
           <TabPanel>
             <Text>Resumen general del inventario.</Text>
           </TabPanel>
           <TabPanel>
-            <VStack align="stretch" spacing={2}>
+            <VStack align="stretch" gap={2}>
               <Text fontWeight="semibold">Último movimiento</Text>
               <Text color="app.textMuted">Ingreso OCM · 24 unidades · Lote L-001</Text>
             </VStack>
@@ -181,7 +181,7 @@ export const TabsV2 = () => {
             <Text>Contenido restringido.</Text>
           </TabPanel>
         </TabPanels>
-      </Tabs>
+      </Tabs.Root>
     </StoryFrame>
   );
 };
@@ -192,49 +192,51 @@ export const FormsV2 = () => {
 
   return (
     <StoryFrame title="Formularios v2">
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5} bg="app.surface" borderWidth="1px" borderRadius="md" p={6}>
-        <FormControl isRequired>
-          <FormLabel>Código de material</FormLabel>
+      <SimpleGrid columns={{ base: 1, md: 2 }} gap={5} bg="app.surface" borderWidth="1px" borderRadius="md" p={6}>
+        <Field.Root required>
+          <Field.Label>Código de material</Field.Label>
           <Input defaultValue="MAT-001" />
-          <FormHelperText>Identificador interno obligatorio.</FormHelperText>
-        </FormControl>
-        <FormControl>
-          <FormLabel>Tipo de movimiento</FormLabel>
-          <Select defaultValue="entry">
-            <option value="entry">Ingreso</option>
-            <option value="dispatch">Dispensación</option>
-          </Select>
-        </FormControl>
-        <FormControl>
-          <FormLabel>Cantidad</FormLabel>
-          <NumberInput value={quantity} min={0} precision={2} step={0.25} onChange={setQuantity}>
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
-        </FormControl>
-        <FormControl isInvalid>
-          <FormLabel>Lote</FormLabel>
-          <Input value="" onChange={() => undefined} placeholder="Ej. L-001" />
-          <FormErrorMessage>El lote es obligatorio.</FormErrorMessage>
-        </FormControl>
-        <FormControl isReadOnly>
-          <FormLabel>Responsable</FormLabel>
+          <Field.HelperText>Identificador interno obligatorio.</Field.HelperText>
+        </Field.Root>
+        <Field.Root>
+          <Field.Label>Tipo de movimiento</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field defaultValue="entry">
+              <option value="entry">Ingreso</option>
+              <option value="dispatch">Dispensación</option>
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
+        <Field.Root>
+          <Field.Label>Cantidad</Field.Label>
+          <NumberInput.Root value={String(quantity)} min={0} precision={2} step={0.25} onValueChange={setQuantity}>
+            <NumberInput.Input />
+            <NumberInput.Control>
+              <NumberInput.IncrementTrigger />
+              <NumberInput.DecrementTrigger />
+            </NumberInput.Control>
+          </NumberInput.Root>
+        </Field.Root>
+        <Field.Root invalid>
+          <Field.Label>Lote</Field.Label>
+          <Input value="" onValueChange={() => undefined} placeholder="Ej. L-001" />
+          <Field.ErrorText>El lote es obligatorio.</Field.ErrorText>
+        </Field.Root>
+        <Field.Root readOnly>
+          <Field.Label>Responsable</Field.Label>
           <Input value="Usuario de prueba" readOnly bg="app.inputReadonly" />
-        </FormControl>
-        <FormControl isDisabled>
-          <FormLabel>Ubicación automática</FormLabel>
+        </Field.Root>
+        <Field.Root disabled>
+          <Field.Label>Ubicación automática</Field.Label>
           <Input value="Bodega principal" readOnly />
-        </FormControl>
-        <Checkbox
-          isChecked={requiresInspection}
-          colorScheme="teal"
-          onChange={(event) => setRequiresInspection(event.target.checked)}
-        >
-          Requiere inspección de calidad
-        </Checkbox>
+        </Field.Root>
+        <Checkbox.Root
+          checked={requiresInspection}
+          colorPalette="teal"
+          onCheckedChange={(event) => setRequiresInspection(event.target.checked)}
+        ><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Requiere inspección de calidad
+                    </Checkbox.Label></Checkbox.Root>
       </SimpleGrid>
     </StoryFrame>
   );
@@ -269,7 +271,7 @@ export const ToastV2 = () => {
 
   return (
     <StoryFrame title="Toast v2">
-      <Button alignSelf="flex-start" colorScheme="green" onClick={showToast}>
+      <Button alignSelf="flex-start" colorPalette="green" onClick={showToast}>
         Mostrar notificación
       </Button>
       <Text color="app.textMuted">La notificación permanece visible para comparación visual.</Text>
@@ -281,16 +283,16 @@ export const TooltipV2 = () => (
   <StoryFrame title="Tooltip v2">
     <Box pt={12} alignSelf="flex-start">
       <Tooltip
-        label="Consulta el detalle del movimiento"
-        placement="top"
-        hasArrow
-        isOpen
-        shouldWrapChildren
-      >
-        <Button colorScheme="purple" variant="outline">
-          Ver detalle
-        </Button>
-      </Tooltip>
+        content="Consulta el detalle del movimiento"
+        showArrow
+        open
+        positioning={{
+          placement: "top"
+        }}><span>
+          <Button colorPalette="purple" variant="outline">
+            Ver detalle
+          </Button>
+        </span></Tooltip>
     </Box>
   </StoryFrame>
 );
@@ -303,28 +305,28 @@ const inventoryRows = [
 
 export const TableV2 = () => (
   <StoryFrame title="Table v2">
-    <TableContainer bg="app.surface" borderWidth="1px" borderRadius="md">
-      <Table variant="simple" size="sm">
-        <Thead bg="app.tableHeader">
-          <Tr>
-            <Th>Código</Th>
-            <Th>Descripción</Th>
-            <Th isNumeric>Existencias</Th>
-            <Th>Estado</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
+    <Table.ScrollArea bg="app.surface" borderWidth="1px" borderRadius="md">
+      <Table.Root variant="simple" size="sm">
+        <Table.Header bg="app.tableHeader">
+          <Table.Row>
+            <Table.ColumnHeader>Código</Table.ColumnHeader>
+            <Table.ColumnHeader>Descripción</Table.ColumnHeader>
+            <Table.ColumnHeader textAlign='end'>Existencias</Table.ColumnHeader>
+            <Table.ColumnHeader>Estado</Table.ColumnHeader>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
           {inventoryRows.map((row, index) => (
-            <Tr key={row.code} bg={index === 1 ? 'app.rowSelectedBlue' : undefined}>
-              <Td fontWeight="semibold">{row.code}</Td>
-              <Td>{row.description}</Td>
-              <Td isNumeric>{row.stock}</Td>
-              <Td>{row.state}</Td>
-            </Tr>
+            <Table.Row key={row.code} bg={index === 1 ? 'app.rowSelectedBlue' : undefined}>
+              <Table.Cell fontWeight="semibold">{row.code}</Table.Cell>
+              <Table.Cell>{row.description}</Table.Cell>
+              <Table.Cell textAlign='end'>{row.stock}</Table.Cell>
+              <Table.Cell>{row.state}</Table.Cell>
+            </Table.Row>
           ))}
-        </Tbody>
-      </Table>
-    </TableContainer>
+        </Table.Body>
+      </Table.Root>
+    </Table.ScrollArea>
   </StoryFrame>
 );
 
@@ -336,27 +338,33 @@ const processSteps = [
 
 export const StepperAndProgressV2 = () => (
   <StoryFrame title="Stepper y Progress v2">
-    <VStack align="stretch" spacing={8} bg="app.surface" borderWidth="1px" borderRadius="md" p={6}>
-      <Stepper index={1} colorScheme="teal" size="sm">
-        {processSteps.map((step) => (
-          <Step key={step.title}>
-            <StepIndicator>
-              <StepStatus complete={<StepIcon />} incomplete={<StepNumber />} active={<StepNumber />} />
-            </StepIndicator>
-            <Box flexShrink={0}>
-              <StepTitle>{step.title}</StepTitle>
-              <StepDescription>{step.description}</StepDescription>
-            </Box>
-            <StepSeparator />
-          </Step>
-        ))}
-      </Stepper>
+    <VStack align="stretch" gap={8} bg="app.surface" borderWidth="1px" borderRadius="md" p={6}>
+      <Steps.Root step={1} colorPalette="teal" size="sm">
+            <Steps.List>
+          {processSteps.map((step) => (
+            <Steps.Item key={step.title}>
+              <Steps.Indicator>
+                <Steps.Status complete={<LuCheck />} incomplete={<Steps.Number />} current={<Steps.Number />} />
+              </Steps.Indicator>
+              <Box flexShrink={0}>
+                <Steps.Title>{step.title}</Steps.Title>
+                <Steps.Description>{step.description}</Steps.Description>
+              </Box>
+              <Steps.Separator />
+            </Steps.Item>
+          ))}
+        </Steps.List>
+          </Steps.Root>
       <Box>
         <HStack justify="space-between" mb={2}>
           <Text fontWeight="semibold">Progreso del asistente</Text>
           <Text color="app.textMuted">62 %</Text>
         </HStack>
-        <Progress value={62} colorScheme="teal" size="sm" borderRadius="full" />
+        <Progress.Root value={62} colorPalette="teal" size="sm" borderRadius="full">
+          <Progress.Track>
+            <Progress.Range />
+          </Progress.Track>
+        </Progress.Root>
       </Box>
     </VStack>
   </StoryFrame>

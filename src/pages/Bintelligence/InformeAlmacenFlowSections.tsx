@@ -1,9 +1,9 @@
 import {
+    Steps,
     Box,
     Button,
     ButtonGroup,
     Card,
-    CardBody,
     SimpleGrid,
     Stack,
     Table,
@@ -60,8 +60,8 @@ export function MovementsSection({
     ] as const;
 
     return (
-        <Stack spacing={4}>
-            <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} spacing={3}>
+        <Stack gap={4}>
+            <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} gap={3}>
                 {summaries.map(([label, summary]) => (
                     <KpiCard
                         key={label}
@@ -73,14 +73,14 @@ export function MovementsSection({
             </SimpleGrid>
 
             {!singleDate ? (
-                <Card variant="outline">
-                    <CardBody p={{ base: 3, md: 5 }}>
-                        <Stack spacing={4}>
+                <Card.Root variant="outline">
+                    <Card.Body p={{ base: 3, md: 5 }}>
+                        <Stack gap={4}>
                             <Stack
                                 direction={{ base: "column", xl: "row" }}
                                 justify="space-between"
                                 align={{ base: "stretch", xl: "center" }}
-                                spacing={3}
+                                gap={3}
                             >
                                 <SectionHeading
                                     title="Tendencia de movimientos"
@@ -89,14 +89,14 @@ export function MovementsSection({
                                 <Stack
                                     direction={{ base: "column", sm: "row" }}
                                     align={{ base: "stretch", sm: "center" }}
-                                    spacing={2}
+                                    gap={2}
                                 >
-                                    <ButtonGroup isAttached size="sm">
+                                    <ButtonGroup attached size="sm">
                                         <Button
                                             minH="44px"
                                             onClick={() => setPerspective("valor")}
                                             variant={perspective === "valor" ? "solid" : "outline"}
-                                            colorScheme={perspective === "valor" ? "blue" : undefined}
+                                            colorPalette={perspective === "valor" ? "blue" : undefined}
                                             aria-pressed={perspective === "valor"}
                                         >
                                             Valor estimado
@@ -105,21 +105,21 @@ export function MovementsSection({
                                             minH="44px"
                                             onClick={() => setPerspective("cantidad")}
                                             variant={perspective === "cantidad" ? "solid" : "outline"}
-                                            colorScheme={perspective === "cantidad" ? "blue" : undefined}
+                                            colorPalette={perspective === "cantidad" ? "blue" : undefined}
                                             aria-pressed={perspective === "cantidad"}
                                         >
                                             Cantidad
                                         </Button>
                                     </ButtonGroup>
                                     {perspective === "cantidad" ? (
-                                        <ButtonGroup isAttached size="sm">
+                                        <ButtonGroup attached size="sm">
                                             {availableUnits.map((unit) => (
                                                 <Button
                                                     key={unit}
                                                     minH="44px"
                                                     onClick={() => setSelectedUnit(unit)}
                                                     variant={selectedUnit === unit ? "solid" : "outline"}
-                                                    colorScheme={selectedUnit === unit ? "blue" : undefined}
+                                                    colorPalette={selectedUnit === unit ? "blue" : undefined}
                                                     aria-pressed={selectedUnit === unit}
                                                 >
                                                     {unit}
@@ -147,19 +147,19 @@ export function MovementsSection({
                                 </Text>
                             )}
                         </Stack>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
             ) : null}
 
-            <Card variant="outline">
-                <CardBody p={{ base: 3, md: 5 }}>
-                    <Stack spacing={4}>
+            <Card.Root variant="outline">
+                <Card.Body p={{ base: 3, md: 5 }}>
+                    <Stack gap={4}>
                         <SectionHeading
                             title="Flujos físicos por unidad"
                             description="Cantidades del periodo consultado, separadas para evitar sumar magnitudes incompatibles."
                         />
                         {compactChart ? (
-                            <Stack spacing={3}>
+                            <Stack gap={3}>
                                 {movements.porUnidad.map((unit) => (
                                     <Box
                                         key={unit.unidadMedida}
@@ -167,11 +167,11 @@ export function MovementsSection({
                                         borderRadius="md"
                                         p={3}
                                     >
-                                        <Stack spacing={3}>
+                                        <Stack gap={3}>
                                             <Text fontWeight="semibold">
                                                 Unidad {unit.unidadMedida}
                                             </Text>
-                                            <SimpleGrid columns={2} spacing={3}>
+                                            <SimpleGrid columns={2} gap={3}>
                                                 <FlowMetric
                                                     label="Recepciones"
                                                     value={unit.recepcionesOcm}
@@ -194,34 +194,34 @@ export function MovementsSection({
                                 ))}
                             </Stack>
                         ) : (
-                            <TableContainer>
-                                <Table size="sm">
-                                    <Thead>
-                                        <Tr>
-                                            <Th>Unidad</Th>
-                                            <Th isNumeric>Recepciones</Th>
-                                            <Th isNumeric>Dispensaciones</Th>
-                                            <Th isNumeric>Prod. terminado</Th>
-                                            <Th isNumeric>Otros ingresos</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
+                            <Table.ScrollArea>
+                                <Table.Root size="sm">
+                                    <Table.Header>
+                                        <Table.Row>
+                                            <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                                            <Table.ColumnHeader textAlign='end'>Recepciones</Table.ColumnHeader>
+                                            <Table.ColumnHeader textAlign='end'>Dispensaciones</Table.ColumnHeader>
+                                            <Table.ColumnHeader textAlign='end'>Prod. terminado</Table.ColumnHeader>
+                                            <Table.ColumnHeader textAlign='end'>Otros ingresos</Table.ColumnHeader>
+                                        </Table.Row>
+                                    </Table.Header>
+                                    <Table.Body>
                                         {movements.porUnidad.map((unit) => (
-                                            <Tr key={unit.unidadMedida}>
-                                                <Td fontWeight="semibold">{unit.unidadMedida}</Td>
-                                                <Td isNumeric>{formatQuantity(unit.recepcionesOcm)}</Td>
-                                                <Td isNumeric>{formatQuantity(unit.dispensaciones)}</Td>
-                                                <Td isNumeric>{formatQuantity(unit.productoTerminado)}</Td>
-                                                <Td isNumeric>{formatQuantity(unit.otrosIngresos)}</Td>
-                                            </Tr>
+                                            <Table.Row key={unit.unidadMedida}>
+                                                <Table.Cell fontWeight="semibold">{unit.unidadMedida}</Table.Cell>
+                                                <Table.Cell textAlign='end'>{formatQuantity(unit.recepcionesOcm)}</Table.Cell>
+                                                <Table.Cell textAlign='end'>{formatQuantity(unit.dispensaciones)}</Table.Cell>
+                                                <Table.Cell textAlign='end'>{formatQuantity(unit.productoTerminado)}</Table.Cell>
+                                                <Table.Cell textAlign='end'>{formatQuantity(unit.otrosIngresos)}</Table.Cell>
+                                            </Table.Row>
                                         ))}
-                                    </Tbody>
-                                </Table>
-                            </TableContainer>
+                                    </Table.Body>
+                                </Table.Root>
+                            </Table.ScrollArea>
                         )}
                     </Stack>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
         </Stack>
     );
 }

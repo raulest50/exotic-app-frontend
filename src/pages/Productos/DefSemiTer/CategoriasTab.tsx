@@ -2,10 +2,9 @@ import {useState, useEffect} from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import {
+    Steps,
     Flex,
     Grid,
-    FormControl,
-    FormLabel,
     Input,
     Button,
     VStack,
@@ -20,8 +19,8 @@ import {
     useToast,
     Spinner,
     Alert,
-    AlertIcon,
-    Text
+    Text,
+    Field,
 } from '@chakra-ui/react';
 
 import {Categoria} from '../types.tsx';
@@ -162,52 +161,52 @@ export function CategoriasTab() {
     return (
         <Grid templateColumns="1fr 1fr" gap={6} p={4}>
             <Box p={6} borderWidth="1px" borderRadius="lg">
-                <VStack spacing={4} align="stretch">
+                <VStack gap={4} align="stretch">
                     <Heading size="md" mb={4}>Nueva Categoría</Heading>
 
-                    <FormControl isRequired>
-                        <FormLabel>Categoría ID</FormLabel>
+                    <Field.Root required>
+                        <Field.Label>Categoría ID</Field.Label>
                         <Input
                             name="categoriaId"
                             value={formData.categoriaId}
-                            onChange={handleInputChange}
+                            onValueChange={handleInputChange}
                             placeholder="Id de la categoría"
-                            isDisabled={submitting}
+                            disabled={submitting}
                         />
-                    </FormControl>
+                    </Field.Root>
 
-                    <FormControl isRequired>
-                        <FormLabel>Nombre</FormLabel>
+                    <Field.Root required>
+                        <Field.Label>Nombre</Field.Label>
                         <Input
                             name="categoriaNombre"
                             value={formData.categoriaNombre}
-                            onChange={handleInputChange}
+                            onValueChange={handleInputChange}
                             placeholder="Nombre de la categoría"
-                            isDisabled={submitting}
+                            disabled={submitting}
                         />
-                    </FormControl>
+                    </Field.Root>
 
-                    <FormControl isRequired>
-                        <FormLabel>Descripción</FormLabel>
+                    <Field.Root required>
+                        <Field.Label>Descripción</Field.Label>
                         <Input
                             name="categoriaDescripcion"
                             value={formData.categoriaDescripcion}
-                            onChange={handleInputChange}
+                            onValueChange={handleInputChange}
                             placeholder="Descripción de la categoría"
-                            isDisabled={submitting}
+                            disabled={submitting}
                         />
-                    </FormControl>
+                    </Field.Root>
                     <Flex justify="space-between" mt={4}>
                         <Button
-                            colorScheme="blue"
+                            colorPalette="blue"
                             onClick={handleSubmit}
-                            isDisabled={!isFormValid || submitting}
-                            isLoading={submitting}
+                            disabled={!isFormValid || submitting}
+                            loading={submitting}
                             loadingText="Guardando..."
                         >
                             Guardar
                         </Button>
-                        <Button onClick={handleClear} isDisabled={submitting}>Limpiar</Button>
+                        <Button onClick={handleClear} disabled={submitting}>Limpiar</Button>
                     </Flex>
                 </VStack>
             </Box>
@@ -217,48 +216,48 @@ export function CategoriasTab() {
                 {loading && <Spinner size="md" />}
 
                 {error && (
-                    <Alert status="error" mb={4}>
-                        <AlertIcon />
+                    <Alert.Root status="error" mb={4}>
+                        <Alert.Indicator />
                         <Text>{error}</Text>
-                    </Alert>
+                    </Alert.Root>
                 )}
 
                 {!loading && !error && categorias.length === 0 && (
-                    <Alert status="info" mb={4}>
-                        <AlertIcon />
+                    <Alert.Root status="info" mb={4}>
+                        <Alert.Indicator />
                         <Text>No hay categorías registradas. Cree una nueva categoría utilizando el formulario.</Text>
-                    </Alert>
+                    </Alert.Root>
                 )}
 
                 {!loading && !error && categorias.length > 0 && (
-                    <Table variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>ID</Th>
-                                <Th>Nombre</Th>
-                                <Th>Descripción</Th>
-                                <Th>Plantilla</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                <Table.ColumnHeader>Descripción</Table.ColumnHeader>
+                                <Table.ColumnHeader>Plantilla</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {categorias.map((categoria) => (
-                                <Tr key={categoria.categoriaId}>
-                                    <Td>{categoria.categoriaId}</Td>
-                                    <Td>{categoria.categoriaNombre}</Td>
-                                    <Td>{categoria.categoriaDescripcion}</Td>
-                                    <Td>
+                                <Table.Row key={categoria.categoriaId}>
+                                    <Table.Cell>{categoria.categoriaId}</Table.Cell>
+                                    <Table.Cell>{categoria.categoriaNombre}</Table.Cell>
+                                    <Table.Cell>{categoria.categoriaDescripcion}</Table.Cell>
+                                    <Table.Cell>
                                         <Button
                                             size="sm"
-                                            colorScheme={templatesExistentes[categoria.categoriaId] ? 'purple' : 'teal'}
+                                            colorPalette={templatesExistentes[categoria.categoriaId] ? 'purple' : 'teal'}
                                             onClick={() => setSelectedTemplateCategoria(categoria)}
                                         >
                                             {templatesExistentes[categoria.categoriaId] ? 'Editar plantilla' : 'Crear plantilla'}
                                         </Button>
-                                    </Td>
-                                </Tr>
+                                    </Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 )}
             </Box>
         </Grid>

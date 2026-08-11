@@ -1,7 +1,20 @@
 import {useState} from 'react';
+import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
-    Box, Select, FormControl, FormLabel, Flex, useDisclosure,
-    Input, Card, CardBody, HStack, IconButton, Text, VStack, Button, Badge, useColorModeValue
+    Steps,
+    Box,
+    NativeSelect,
+    Flex,
+    useDisclosure,
+    Input,
+    Card,
+    HStack,
+    IconButton,
+    Text,
+    VStack,
+    Button,
+    Badge,
+    Field,
 } from "@chakra-ui/react";
 import {FaSearch} from "react-icons/fa";
 import {format} from "date-fns";
@@ -49,7 +62,7 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
 
     // --- OCM state ---
     const [proveedor, setProveedor] = useState<Proveedor | null>(null);
-    const {isOpen: isProveedorPickerOpen, onOpen: onOpenProveedorPicker, onClose: onCloseProveedorPicker} = useDisclosure();
+    const {open: isProveedorPickerOpen, onOpen: onOpenProveedorPicker, onClose: onCloseProveedorPicker} = useDisclosure();
 
     // --- Date state (shared across modes) ---
     type DateMode = 'none' | 'range' | 'single';
@@ -63,7 +76,7 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
     const [odTipoFiltroId, setOdTipoFiltroId] = useState<0 | 1>(0);
     const [odLoteAsignado, setOdLoteAsignado] = useState('');
     const [selectedTerminado, setSelectedTerminado] = useState<TerminadoPickerResult | null>(null);
-    const {isOpen: isTerminadoPickerOpen, onOpen: onOpenTerminadoPicker, onClose: onCloseTerminadoPicker} = useDisclosure();
+    const {open: isTerminadoPickerOpen, onOpen: onOpenTerminadoPicker, onClose: onCloseTerminadoPicker} = useDisclosure();
 
     function buildFiltroDTO(): FiltroHistorialTransaccionesDTO {
         const filtro: FiltroHistorialTransaccionesDTO = {
@@ -104,17 +117,19 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
     function DateModeSelector() {
         return (
             <Flex gap={4} alignItems="flex-start">
-                <FormControl maxW="220px">
-                    <FormLabel>Modo de Fecha</FormLabel>
-                    <Select
-                        value={dateMode}
-                        onChange={(e) => setDateMode(e.target.value as DateMode)}
-                    >
-                        <option value="none">Ninguno</option>
-                        <option value="range">Rango de Fechas</option>
-                        <option value="single">Fecha Específica</option>
-                    </Select>
-                </FormControl>
+                <Field.Root maxW="220px">
+                    <Field.Label>Modo de Fecha</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            value={dateMode}
+                            onValueChange={(e) => setDateMode(e.target.value as DateMode)}>
+                            <option value="none">Ninguno</option>
+                            <option value="range">Rango de Fechas</option>
+                            <option value="single">Fecha Específica</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
 
                 <Box display="grid" minW="300px">
                     <Box
@@ -171,55 +186,55 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
         if(viewMode === MODE.OD){
             return (
                 <>
-                    <FormControl maxW="220px">
-                        <FormLabel>Filtrar por</FormLabel>
-                        <Select
-                            value={odTipoFiltroId.toString()}
-                            onChange={(e) => {
-                                const value = parseInt(e.target.value) as 0 | 1;
-                                setOdTipoFiltroId(value);
-                                setOdLoteAsignado('');
-                            }}
-                        >
-                            <option value="0">Ninguno</option>
-                            <option value="1">Lote de Fabricación</option>
-                        </Select>
-                    </FormControl>
+                    <Field.Root maxW="220px">
+                        <Field.Label>Filtrar por</Field.Label>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                value={odTipoFiltroId.toString()}
+                                onValueChange={(e) => {
+                                    const value = parseInt(e.target.value) as 0 | 1;
+                                    setOdTipoFiltroId(value);
+                                    setOdLoteAsignado('');
+                                }}>
+                                <option value="0">Ninguno</option>
+                                <option value="1">Lote de Fabricación</option>
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                    </Field.Root>
 
-                    <FormControl
+                    <Field.Root
                         maxW="220px"
                         visibility={odTipoFiltroId === 0 ? "hidden" : "visible"}
                         pointerEvents={odTipoFiltroId === 0 ? "none" : "auto"}
                     >
-                        <FormLabel>Lote de Fabricación</FormLabel>
+                        <Field.Label>Lote de Fabricación</Field.Label>
                         <Input
                             type="text"
                             value={odLoteAsignado}
-                            onChange={(e) => setOdLoteAsignado(e.target.value)}
+                            onValueChange={(e) => setOdLoteAsignado(e.target.value)}
                             placeholder="Ej: L-2025-001"
                         />
-                    </FormControl>
+                    </Field.Root>
 
                     <DateModeSelector />
 
-                    <Card variant="outline" borderColor={terminadoCardBorder} minW="280px">
-                        <CardBody>
+                    <Card.Root variant="outline" borderColor={terminadoCardBorder} minW="280px">
+                        <Card.Body>
                             <HStack justifyContent="space-between" alignItems="flex-start">
-                                <HStack alignItems="flex-start" spacing={3}>
+                                <HStack alignItems="flex-start" gap={3}>
                                     <IconButton
                                         aria-label="Buscar producto terminado"
-                                        icon={<FaSearch />}
                                         onClick={onOpenTerminadoPicker}
                                         size="sm"
-                                        variant="outline"
-                                    />
-                                    <VStack spacing={0} alignItems="flex-start">
+                                        variant="outline"><FaSearch /></IconButton>
+                                    <VStack gap={0} alignItems="flex-start">
                                         <HStack>
                                             <Text fontWeight="semibold">
                                                 {selectedTerminado ? selectedTerminado.nombre : "Sin filtro por producto"}
                                             </Text>
                                             {selectedTerminado?.tipo_producto && (
-                                                <Badge colorScheme="purple">{selectedTerminado.tipo_producto}</Badge>
+                                                <Badge colorPalette="purple">{selectedTerminado.tipo_producto}</Badge>
                                             )}
                                         </HStack>
                                         {selectedTerminado && (
@@ -233,15 +248,15 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
                                     <Button
                                         size="sm"
                                         variant="ghost"
-                                        colorScheme="red"
+                                        colorPalette="red"
                                         onClick={() => setSelectedTerminado(null)}
                                     >
                                         Quitar filtro
                                     </Button>
                                 )}
                             </HStack>
-                        </CardBody>
-                    </Card>
+                        </Card.Body>
+                    </Card.Root>
 
                     <TerminadoPicker
                         isOpen={isTerminadoPickerOpen}
@@ -249,7 +264,7 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
                         onSelectTerminado={(t) => setSelectedTerminado(t)}
                     />
                 </>
-            )
+            );
         }
 
         if(viewMode === MODE.OAA){
@@ -275,27 +290,29 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
     return (
         <Box w="full" p={6} borderWidth="1px" borderRadius="lg" boxShadow="md">
             <Flex gap={4} wrap="wrap" alignItems="flex-start">
-                <FormControl maxW="300px">
-                    <FormLabel>Tipo de Transacción</FormLabel>
-                    <Select
-                        value={viewMode}
-                        onChange={(e) => setViewMode(e.target.value as MODE)}
-                    >
-                        <option value={MODE.OCM}>Ingreso de Materiales (OCM) </option>
-                        {/*<option value={MODE.OP}>Ingreso Producto Terminado (OP) </option>*/}
-                        <option value={MODE.OAA}>Ajustes de Almacén</option>
-                        <option value={MODE.OD}>Dispensación de Materiales</option>
-                        <option value={MODE.CM}>Carga Masiva de Inventario</option>
-                        <option value={MODE.RA}>Reporte de Avería</option>
-                    </Select>
-                </FormControl>
+                <Field.Root maxW="300px">
+                    <Field.Label>Tipo de Transacción</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            value={viewMode}
+                            onValueChange={(e) => setViewMode(e.target.value as MODE)}>
+                            <option value={MODE.OCM}>Ingreso de Materiales (OCM) </option>
+                            {/*<option value={MODE.OP}>Ingreso Producto Terminado (OP) </option>*/}
+                            <option value={MODE.OAA}>Ajustes de Almacén</option>
+                            <option value={MODE.OD}>Dispensación de Materiales</option>
+                            <option value={MODE.CM}>Carga Masiva de Inventario</option>
+                            <option value={MODE.RA}>Reporte de Avería</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
 
                 <ConditionalRender />
 
                 <Button
-                    colorScheme="blue"
+                    colorPalette="blue"
                     onClick={handleBuscar}
-                    isLoading={loading}
+                    loading={loading}
                     loadingText="Buscando..."
                 >
                     Buscar

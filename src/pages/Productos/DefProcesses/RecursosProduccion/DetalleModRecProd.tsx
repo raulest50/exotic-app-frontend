@@ -1,4 +1,4 @@
-import {Box, Button, Flex, FormControl, FormLabel, Heading, Input, useToast} from '@chakra-ui/react';
+import { Steps, Box, Button, Flex, Heading, Input, useToast, Field } from '@chakra-ui/react';
 import {useState} from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
@@ -43,19 +43,19 @@ export default function DetalleModRecProd({recurso, setEstado, refreshSearch}:Pr
     <Box p={4}>
       <Button mb={4} onClick={handleBack}>Volver</Button>
       <Heading size='md' mb={4}>Detalle Recurso Producción</Heading>
-      <FormControl mb={4} isRequired>
-        <FormLabel>Nombre</FormLabel>
-        <Input value={recursoData.nombre} onChange={e=>setRecursoData({...recursoData, nombre:e.target.value})} isDisabled={!editMode} />
-      </FormControl>
-      <FormControl mb={4} isRequired>
-        <FormLabel>Descripción</FormLabel>
-        <Input value={recursoData.descripcion} onChange={e=>setRecursoData({...recursoData, descripcion:e.target.value})} isDisabled={!editMode} />
-      </FormControl>
+      <Field.Root mb={4} required>
+        <Field.Label>Nombre</Field.Label>
+        <Input value={recursoData.nombre} onValueChange={e=>setRecursoData({...recursoData, nombre:e.target.value})} disabled={!editMode} />
+      </Field.Root>
+      <Field.Root mb={4} required>
+        <Field.Label>Descripción</Field.Label>
+        <Input value={recursoData.descripcion} onValueChange={e=>setRecursoData({...recursoData, descripcion:e.target.value})} disabled={!editMode} />
+      </Field.Root>
       <RPAFmanager recursoId={recursoData.id} activos={recursoData.activosFijos || []} onChange={handleActivosChange} editMode={editMode} />
       <Flex mt={4} gap={2}>
         {editMode ? (
           <>
-            <Button colorScheme='teal' onClick={handleSave}>Guardar</Button>
+            <Button colorPalette='teal' onClick={handleSave}>Guardar</Button>
             <Button onClick={()=>{setEditMode(false); setRecursoData({...recurso});}}>Cancelar</Button>
           </>
         ) : (

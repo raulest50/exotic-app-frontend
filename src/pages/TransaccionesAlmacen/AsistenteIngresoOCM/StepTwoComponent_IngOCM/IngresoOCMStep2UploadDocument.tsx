@@ -1,14 +1,6 @@
 import { type Dispatch, type SetStateAction } from "react";
 import {IngresoOCM_DTA, OrdenCompra, TipoEntidadCausante} from "../../types.tsx";
-import {
-    Button,
-    Divider,
-    Flex,
-    Heading,
-    Icon,
-    IconButton,
-    Text,
-} from "@chakra-ui/react";
+import { Steps, Button, Flex, Heading, Icon, IconButton, Text, Separator } from "@chakra-ui/react";
 import { MdAddAPhoto } from "react-icons/md";
 import { FaFolderOpen } from "react-icons/fa";
 import { FaFileCircleQuestion } from "react-icons/fa6";
@@ -75,7 +67,7 @@ export default function IngresoOCMStep2UploadDocument({
             <Text fontFamily="Comfortaa Variable">
                 Por ahora se guarda fuera de la app; puede continuar sin adjuntar archivo.
             </Text>
-            <Divider />
+            <Separator />
             <Flex
                 direction="row"
                 gap="10em"
@@ -84,26 +76,22 @@ export default function IngresoOCMStep2UploadDocument({
                 w="full"
             >
                 <IconButton
-                    colorScheme="teal"
-                    icon={<FaFolderOpen />}
+                    colorPalette="teal"
                     aria-label="Buscar Archivo"
                     fontSize="5em"
                     w="2em"
                     h="2em"
-                    isDisabled
-                />
+                    disabled><FaFolderOpen /></IconButton>
                 <IconButton
-                    colorScheme="teal"
-                    icon={<MdAddAPhoto />}
+                    colorPalette="teal"
                     aria-label="Tomar una Foto"
                     fontSize="5em"
                     w="2em"
                     h="2em"
-                    isDisabled
-                />
+                    disabled><MdAddAPhoto /></IconButton>
             </Flex>
 
-            <Divider />
+            <Separator />
 
             <Flex
                 direction="row"
@@ -112,18 +100,14 @@ export default function IngresoOCMStep2UploadDocument({
                 justifyContent="center"
                 w="full"
             >
-                <Icon
-                    as={FaFileCircleQuestion}
-                    boxSize="4em"
-                    color="orange.500"
-                />
+                <Icon boxSize="4em" color="orange.500" asChild><FaFileCircleQuestion /></Icon>
                 <Text fontFamily="Comfortaa Variable">
                     Carga de soporte deshabilitada temporalmente. El ingreso puede continuar.
                 </Text>
             </Flex>
 
             <Button
-                colorScheme="teal"
+                colorPalette="teal"
                 variant="solid"
                 onClick={onClickContinuar}
             >

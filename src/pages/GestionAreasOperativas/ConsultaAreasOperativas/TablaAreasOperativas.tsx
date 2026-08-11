@@ -1,4 +1,5 @@
 import {
+    Steps,
     Box,
     Button,
     Flex,
@@ -35,48 +36,48 @@ export default function TablaAreasOperativas({ areas, loading, onVerDetalle }: T
 
     return (
         <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
-            <TableContainer>
-                <Table variant="simple" size="sm">
-                    <Thead>
-                        <Tr>
-                            <Th>ID</Th>
-                            <Th>Nombre</Th>
-                            <Th>Descripción</Th>
-                            <Th>Responsable</Th>
-                            <Th textAlign="center">Acciones</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+            <Table.ScrollArea>
+                <Table.Root variant="simple" size="sm">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>ID</Table.ColumnHeader>
+                            <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                            <Table.ColumnHeader>Descripción</Table.ColumnHeader>
+                            <Table.ColumnHeader>Responsable</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign="center">Acciones</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {areas.map((area) => (
-                            <Tr key={area.areaId}>
-                                <Td>{area.areaId}</Td>
-                                <Td>{area.nombre}</Td>
-                                <Td>
-                                    <Text noOfLines={1} maxW="250px">
+                            <Table.Row key={area.areaId}>
+                                <Table.Cell>{area.areaId}</Table.Cell>
+                                <Table.Cell>{area.nombre}</Table.Cell>
+                                <Table.Cell>
+                                    <Text lineClamp={1} maxW="250px">
                                         {area.descripcion || '—'}
                                     </Text>
-                                </Td>
-                                <Td>
+                                </Table.Cell>
+                                <Table.Cell>
                                     {area.responsableArea
                                         ? area.responsableArea.nombreCompleto || area.responsableArea.username
                                         : '—'}
-                                </Td>
-                                <Td>
+                                </Table.Cell>
+                                <Table.Cell>
                                     <Flex justify="center">
                                         <Button
-                                            colorScheme="teal"
+                                            colorPalette="teal"
                                             size="sm"
                                             onClick={() => onVerDetalle(area)}
                                         >
                                             Ver Detalle
                                         </Button>
                                     </Flex>
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         ))}
-                    </Tbody>
-                </Table>
-            </TableContainer>
+                    </Table.Body>
+                </Table.Root>
+            </Table.ScrollArea>
         </Box>
     );
 }

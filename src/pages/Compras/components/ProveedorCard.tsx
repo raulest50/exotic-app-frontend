@@ -2,21 +2,19 @@
 
 import React from "react";
 import {
+    Steps,
     Badge,
     Card,
-    CardHeader,
     HStack,
     IconButton,
     Heading,
-    Divider,
-    CardBody,
     Spinner,
-    Tooltip,
     useDisclosure,
     VStack,
     Text,
+    Separator,
 } from "@chakra-ui/react";
-import { QuestionIcon } from "@chakra-ui/icons";
+import { Tooltip } from '@/components/ui/tooltip';
 import { FaSearch } from "react-icons/fa";
 import {
     getRegimenTributario,
@@ -25,6 +23,7 @@ import {
     Proveedor,
 } from "../types.tsx"; // Adjust path if needed
 import ProveedorLeadTimeKpiHelpModal from "./ProveedorLeadTimeKpiHelpModal.tsx";
+import { LuHelpCircle } from 'react-icons/lu';
 
 interface ProveedorCardProps {
     selectedProveedor: Proveedor | null;
@@ -41,7 +40,7 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
                                                          isLeadTimeKpiLoading = false,
                                                          leadTimeKpiError = false,
                                                      }) => {
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const { open, onOpen, onClose } = useDisclosure();
 
     const formatLeadTimeDays = (value: number) => {
         const rounded = Math.round(value * 10) / 10;
@@ -55,9 +54,9 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
 
         if (isLeadTimeKpiLoading) {
             return (
-                <HStack spacing={2} px={2} py={1} bg="whiteAlpha.800" borderRadius="md">
+                <HStack gap={2} px={2} py={1} bg="whiteAlpha.800" borderRadius="md">
                     <Spinner size="xs" />
-                    <Text fontSize="xs" noOfLines={1}>
+                    <Text fontSize="xs" lineClamp={1}>
                         Cargando KPI
                     </Text>
                 </HStack>
@@ -66,9 +65,8 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
 
         if (leadTimeKpiError) {
             return (
-                <Badge colorScheme="red" variant="subtle" px={2} py={1} borderRadius="md">
-                    KPI no disponible
-                </Badge>
+                <Badge colorPalette="red" variant="subtle" px={2} py={1} borderRadius="md">KPI no disponible
+                                    </Badge>
             );
         }
 
@@ -95,11 +93,11 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
                 : "gray";
 
         return (
-            <HStack spacing={2} px={2} py={1} bg="whiteAlpha.800" borderRadius="md" maxW="360px">
-                <Text fontSize="xs" fontWeight="semibold" noOfLines={1}>
+            <HStack gap={2} px={2} py={1} bg="whiteAlpha.800" borderRadius="md" maxW="360px">
+                <Text fontSize="xs" fontWeight="semibold" lineClamp={1}>
                     {label}
                 </Text>
-                <Badge colorScheme={badgeColor} variant="subtle" flexShrink={0}>
+                <Badge colorPalette={badgeColor} variant="subtle" flexShrink={0}>
                     {badgeLabel}
                 </Badge>
             </HStack>
@@ -108,40 +106,34 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
 
     return (
         <>
-            <Card variant="outline" borderColor="blue.200" w={"full"}>
-                <CardHeader bg="app.stepperBlue">
-                    <HStack w="full" justifyContent="space-between" alignItems="center" spacing={3}>
+            <Card.Root variant="outline" borderColor="blue.200" w={"full"}>
+                <Card.Header bg="app.stepperBlue">
+                    <HStack w="full" justifyContent="space-between" alignItems="center" gap={3}>
                         <HStack minW={0} flex="1">
-                            <IconButton
-                                aria-label="Buscar Proveedor"
-                                icon={<FaSearch />}
-                                onClick={onSearchClick}
-                            />
-                            <Heading size="sm" noOfLines={1}>
+                            <IconButton aria-label="Buscar Proveedor" onClick={onSearchClick}><FaSearch /></IconButton>
+                            <Heading size="sm" lineClamp={1}>
                                 {selectedProveedor
                                     ? selectedProveedor.nombre
                                     : "Click para seleccionar un proveedor"}
                             </Heading>
                         </HStack>
 
-                        <HStack spacing={2} flexShrink={0}>
+                        <HStack gap={2} flexShrink={0}>
                             {renderLeadTimeKpi()}
-                            <Tooltip label="Informacion del KPI de lead time proveedor">
+                            <Tooltip content="Informacion del KPI de lead time proveedor">
                                 <IconButton
                                     aria-label="Información del KPI de lead time proveedor"
-                                    icon={<QuestionIcon />}
                                     onClick={onOpen}
                                     size="sm"
-                                    variant="ghost"
-                                />
+                                    variant="ghost"><LuHelpCircle /></IconButton>
                             </Tooltip>
                         </HStack>
                     </HStack>
-                </CardHeader>
-                <Divider />
-                <CardBody>
+                </Card.Header>
+                <Separator />
+                <Card.Body>
                     <HStack alignItems="flex-start" justifyContent="space-between">
-                        <VStack alignItems="start" spacing={1}>
+                        <VStack alignItems="start" gap={1}>
                             <Text pt="2" fontSize="sm">
                                 Nit: {selectedProveedor ? selectedProveedor.id : ""}
                             </Text>
@@ -159,7 +151,7 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
                             </Text>
                         </VStack>
 
-                        <VStack alignItems="start" spacing={1}>
+                        <VStack alignItems="start" gap={1}>
                             <Text pt="2" fontSize="sm">
                                 Régimen Tributario: {selectedProveedor ? getRegimenTributario(selectedProveedor.regimenTributario) : ""}
                             </Text>
@@ -172,8 +164,8 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
                         </VStack>
 
                     </HStack>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
             <ProveedorLeadTimeKpiHelpModal isOpen={isOpen} onClose={onClose} />
         </>
     );

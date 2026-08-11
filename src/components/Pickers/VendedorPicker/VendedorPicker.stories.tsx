@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import VendedorPicker from './VendedorPicker.tsx';
-import { Button, Box, Text, VStack } from '@chakra-ui/react';
+import { Steps, Button, Box, Text, VStack } from '@chakra-ui/react';
 
 // Interface for Vendedor based on the backend model
 interface Vendedor {
@@ -26,11 +26,11 @@ export const Default = () => {
   };
 
   return (
-    <VStack spacing={4} align="start" p={5}>
-      <Button colorScheme="blue" onClick={handleOpen}>
+    <VStack gap={4} align="start" p={5}>
+      <Button colorPalette="blue" onClick={handleOpen}>
         Abrir Selector de Vendedor
       </Button>
-      
+
       {selectedVendedor && (
         <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50" width="100%">
           <Text fontWeight="bold">Vendedor Seleccionado:</Text>
@@ -40,7 +40,7 @@ export const Default = () => {
           {selectedVendedor.username && <Text>Usuario: {selectedVendedor.username}</Text>}
         </Box>
       )}
-      
+
       <VendedorPicker
         isOpen={isOpen}
         onClose={handleClose}

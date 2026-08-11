@@ -1,9 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  Card, CardBody, CardHeader, Flex, IconButton, Text, Box, HStack, Heading, 
-  FormControl, FormLabel, Input, Select, Divider, Grid, GridItem
+import {
+    Steps,
+    Card,
+    Flex,
+    IconButton,
+    Text,
+    Box,
+    HStack,
+    Heading,
+    Input,
+    NativeSelect,
+    Grid,
+    GridItem,
+    Separator,
+    Field,
 } from '@chakra-ui/react';
-import { AddIcon, MinusIcon } from '@chakra-ui/icons';
 import { 
   ActivoFijo, 
   ItemOrdenCompraActivo, 
@@ -13,6 +24,7 @@ import {
   DIVISAS
 } from "../../../types.tsx";
 import { MetodoDepreciacionComponent } from "../MetodoDepreciacion/MetodoDepreciacion.tsx";
+import { LuMinus, LuPlus } from 'react-icons/lu';
 
 type Props = {
     itemOrdenCompraActivo?: ItemOrdenCompraActivo;
@@ -219,31 +231,27 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
 
     return (
         <Flex direction="column" width="100%">
-            <Card boxShadow='lg' mb={4}>
-                <CardHeader bg="app.tabSelected" p={4}>
+            <Card.Root boxShadow='lg' mb={4}>
+                <Card.Header bg="app.tabSelected" p={4}>
                     <Flex justifyContent="space-between" alignItems="center">
                         <Heading size="md">{item.nombre}</Heading>
-                        <HStack spacing={2}>
+                        <HStack gap={2}>
                             <IconButton
                                 aria-label="Agregar activo"
-                                icon={<AddIcon />}
-                                colorScheme="green"
+                                colorPalette="green"
                                 size="sm"
-                                isDisabled={!isAddEnabled}
-                                onClick={addActivo}
-                            />
+                                disabled={!isAddEnabled}
+                                onClick={addActivo}><LuPlus /></IconButton>
                             <IconButton
                                 aria-label="Quitar activo"
-                                icon={<MinusIcon />}
-                                colorScheme="red"
+                                colorPalette="red"
                                 size="sm"
-                                isDisabled={!isRemoveEnabled}
-                                onClick={removeActivo}
-                            />
+                                disabled={!isRemoveEnabled}
+                                onClick={removeActivo}><LuMinus /></IconButton>
                         </HStack>
                     </Flex>
-                </CardHeader>
-                <CardBody p={4}>
+                </Card.Header>
+                <Card.Body p={4}>
                     <Box mb={4}>
                         <Text fontWeight="bold">Cantidad de activos: {listaActivos.length}</Text>
                         <Flex alignItems="center" mb={2}>
@@ -251,7 +259,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                             <Input 
                                 type="number"
                                 value={precioUnitario}
-                                onChange={(e) => {
+                                onValueChange={(e) => {
                                     const newPrecioUnitario = parseFloat(e.target.value);
 
                                     // Validate that the price is a positive number
@@ -282,7 +290,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                             <Input 
                                 type="number"
                                 value={ivaPercentage}
-                                onChange={(e) => {
+                                onValueChange={(e) => {
                                     const newIvaPercentage = parseFloat(e.target.value);
 
                                     // Validate that the IVA percentage is a non-negative number
@@ -320,46 +328,48 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                         <Text fontWeight="bold" mb={2}>Atributos comunes del grupo</Text>
                         <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                             <GridItem>
-                                <FormControl>
-                                    <FormLabel>Tipo de Activo</FormLabel>
-                                    <Select 
-                                        value={tipoActivo}
-                                        onChange={(e) => {
-                                            const newTipoActivo = e.target.value as TipoActivo;
-                                            setTipoActivo(newTipoActivo);
-                                            updateCommonAttributes(newTipoActivo, undefined, undefined);
-                                        }}
-                                    >
-                                        <option value={TipoActivo.EQUIPO}>Equipos</option>
-                                        <option value={TipoActivo.MOBILIARIO}>Mobiliario</option>
-                                        <option value={TipoActivo.PRODUCCION}>Activo de Producción</option>
-                                    </Select>
-                                </FormControl>
+                                <Field.Root>
+                                    <Field.Label>Tipo de Activo</Field.Label>
+                                    <NativeSelect.Root>
+                                        <NativeSelect.Field
+                                            value={tipoActivo}
+                                            onValueChange={(e) => {
+                                                const newTipoActivo = e.target.value as TipoActivo;
+                                                setTipoActivo(newTipoActivo);
+                                                updateCommonAttributes(newTipoActivo, undefined, undefined);
+                                            }}>
+                                            <option value={TipoActivo.EQUIPO}>Equipos</option>
+                                            <option value={TipoActivo.MOBILIARIO}>Mobiliario</option>
+                                            <option value={TipoActivo.PRODUCCION}>Activo de Producción</option>
+                                        </NativeSelect.Field>
+                                        <NativeSelect.Indicator />
+                                    </NativeSelect.Root>
+                                </Field.Root>
                             </GridItem>
                             <GridItem>
-                                <FormControl>
-                                    <FormLabel>Marca</FormLabel>
+                                <Field.Root>
+                                    <Field.Label>Marca</Field.Label>
                                     <Input 
                                         value={brand} 
-                                        onChange={(e) => {
+                                        onValueChange={(e) => {
                                             const newBrand = e.target.value;
                                             setBrand(newBrand);
                                             updateCommonAttributes(undefined, newBrand, undefined);
                                         }}
                                         placeholder="Ej: Dell, Lenovo, Fluke..."
                                     />
-                                </FormControl>
+                                </Field.Root>
                             </GridItem>
                             {tipoActivo === TipoActivo.PRODUCCION && (
                                 <>
                                     <GridItem>
-                                        <FormControl>
-                                            <FormLabel>Capacidad</FormLabel>
+                                        <Field.Root>
+                                            <Field.Label>Capacidad</Field.Label>
                                             <Input 
                                                 type="number"
                                                 placeholder="Capacidad"
                                                 value={capacidad}
-                                                onChange={(e) => {
+                                                onValueChange={(e) => {
                                                     const newCapacidad = parseFloat(e.target.value);
 
                                                     // Validate that the capacity is a positive number
@@ -379,35 +389,37 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                                                     }
                                                 }}
                                             />
-                                        </FormControl>
+                                        </Field.Root>
                                     </GridItem>
                                     <GridItem>
-                                        <FormControl>
-                                            <FormLabel>Unidad de Capacidad</FormLabel>
-                                            <Select 
-                                                value={unidadCapacidad}
-                                                onChange={(e) => {
-                                                    const newUnidadCapacidad = e.target.value as UnidadesCapacidad;
-                                                    setUnidadCapacidad(newUnidadCapacidad);
-                                                    // Actualizar la unidad de capacidad en todos los activos
-                                                    if (listaActivos.length > 0) {
-                                                        const updatedActivos = listaActivos.map(activo => ({
-                                                            ...activo,
-                                                            unidadCapacidad: newUnidadCapacidad
-                                                        }));
-                                                        setListaActivos(updatedActivos);
-                                                        setActivoFijoGroup(updatedActivos);
-                                                    }
-                                                }}
-                                            >
-                                                <option value={UnidadesCapacidad.L}>Litros (L)</option>
-                                                <option value={UnidadesCapacidad.KG}>Kilogramos (KG)</option>
-                                                <option value={UnidadesCapacidad.TON}>Toneladas (TON)</option>
-                                                <option value={UnidadesCapacidad.M3}>Metros cúbicos (M3)</option>
-                                                <option value={UnidadesCapacidad.W}>Watts (W)</option>
-                                                <option value={UnidadesCapacidad.HP}>Horse Power (HP)</option>
-                                            </Select>
-                                        </FormControl>
+                                        <Field.Root>
+                                            <Field.Label>Unidad de Capacidad</Field.Label>
+                                            <NativeSelect.Root>
+                                                <NativeSelect.Field
+                                                    value={unidadCapacidad}
+                                                    onValueChange={(e) => {
+                                                        const newUnidadCapacidad = e.target.value as UnidadesCapacidad;
+                                                        setUnidadCapacidad(newUnidadCapacidad);
+                                                        // Actualizar la unidad de capacidad en todos los activos
+                                                        if (listaActivos.length > 0) {
+                                                            const updatedActivos = listaActivos.map(activo => ({
+                                                                ...activo,
+                                                                unidadCapacidad: newUnidadCapacidad
+                                                            }));
+                                                            setListaActivos(updatedActivos);
+                                                            setActivoFijoGroup(updatedActivos);
+                                                        }
+                                                    }}>
+                                                    <option value={UnidadesCapacidad.L}>Litros (L)</option>
+                                                    <option value={UnidadesCapacidad.KG}>Kilogramos (KG)</option>
+                                                    <option value={UnidadesCapacidad.TON}>Toneladas (TON)</option>
+                                                    <option value={UnidadesCapacidad.M3}>Metros cúbicos (M3)</option>
+                                                    <option value={UnidadesCapacidad.W}>Watts (W)</option>
+                                                    <option value={UnidadesCapacidad.HP}>Horse Power (HP)</option>
+                                                </NativeSelect.Field>
+                                                <NativeSelect.Indicator />
+                                            </NativeSelect.Root>
+                                        </Field.Root>
                                     </GridItem>
                                 </>
                             )}
@@ -427,22 +439,22 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                             <Text fontWeight="bold">Activo #{index + 1}</Text>
                             <Grid templateColumns="repeat(2, 1fr)" gap={4} mt={2}>
                                 <GridItem>
-                                    <FormControl>
-                                        <FormLabel>ID</FormLabel>
+                                    <Field.Root>
+                                        <Field.Label>ID</Field.Label>
                                         <Input 
                                             value={activo.id} 
-                                            onChange={(e) => updateActivo(index, 'id', e.target.value)}
+                                            onValueChange={(e) => updateActivo(index, 'id', e.target.value)}
                                         />
-                                    </FormControl>
+                                    </Field.Root>
                                 </GridItem>
                                 <GridItem>
-                                    <FormControl>
-                                        <FormLabel>Nombre</FormLabel>
+                                    <Field.Root>
+                                        <Field.Label>Nombre</Field.Label>
                                         <Input 
                                             value={activo.nombre} 
-                                            onChange={(e) => updateActivo(index, 'nombre', e.target.value)}
+                                            onValueChange={(e) => updateActivo(index, 'nombre', e.target.value)}
                                         />
-                                    </FormControl>
+                                    </Field.Root>
                                 </GridItem>
 
                             </Grid>
@@ -455,7 +467,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                         </Box>
                     )}
 
-                    <Divider my={4} />
+                    <Separator my={4} />
 
                     {/* Método de depreciación común para todo el grupo */}
                     {listaActivos.length > 0 && (
@@ -468,8 +480,8 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                             />
                         </Box>
                     )}
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
         </Flex>
     );
 }

@@ -1,4 +1,4 @@
-import { Card, CardBody, HStack, IconButton, Text, Button, VStack } from "@chakra-ui/react";
+import { Steps, Card, HStack, IconButton, Text, Button, VStack } from "@chakra-ui/react";
 import { FaSearch } from "react-icons/fa";
 import { ProductoWithInsumos } from "../types.tsx";
 
@@ -16,18 +16,16 @@ export default function ProductoFilterCard({
     const producto = selectedProducto?.producto;
 
     return (
-        <Card variant="outline" borderColor="blue.200" minW="280px">
-            <CardBody>
+        <Card.Root variant="outline" borderColor="blue.200" minW="280px">
+            <Card.Body>
                 <HStack justifyContent="space-between" alignItems="flex-start">
-                    <HStack alignItems="flex-start" spacing={3}>
+                    <HStack alignItems="flex-start" gap={3}>
                         <IconButton
                             aria-label="Buscar producto"
-                            icon={<FaSearch />}
                             onClick={onOpenPicker}
                             size="sm"
-                            variant="outline"
-                        />
-                        <VStack spacing={0} alignItems="flex-start">
+                            variant="outline"><FaSearch /></IconButton>
+                        <VStack gap={0} alignItems="flex-start">
                             <Text fontWeight="semibold">
                                 {producto ? producto.nombre : "Sin filtro por producto"}
                             </Text>
@@ -39,12 +37,12 @@ export default function ProductoFilterCard({
                         </VStack>
                     </HStack>
                     {producto && (
-                        <Button size="sm" variant="ghost" colorScheme="red" onClick={onClearFilter}>
+                        <Button size="sm" variant="ghost" colorPalette="red" onClick={onClearFilter}>
                             Quitar filtro
                         </Button>
                     )}
                 </HStack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }

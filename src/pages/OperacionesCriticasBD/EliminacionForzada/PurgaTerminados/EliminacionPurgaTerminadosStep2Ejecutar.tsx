@@ -1,7 +1,6 @@
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
     Box,
     Button,
     Flex,
@@ -92,27 +91,27 @@ export default function EliminacionPurgaTerminadosStep2Ejecutar({
     const hasResult = resultPurgaTerminados != null;
 
     return (
-        <VStack align="stretch" spacing={6}>
+        <VStack align="stretch" gap={6}>
             <Heading size="md" color="red.700">
                 Ejecutar Purga Completa Terminados
             </Heading>
 
             {!hasResult && (
-                <Alert status="warning">
-                    <AlertIcon />
-                    <AlertDescription>
+                <Alert.Root status="warning">
+                    <Alert.Indicator />
+                    <Alert.Description>
                         Al ejecutar esta acción se intentará eliminar todos los
                         terminados existentes. El backend devolverá un resumen de
                         éxitos, fallos parciales o bloqueo por entorno.
-                    </AlertDescription>
-                </Alert>
+                    </Alert.Description>
+                </Alert.Root>
             )}
 
             {hasResult && (
-                <Alert status={!resultPurgaTerminados.permitted ? "error" : resultPurgaTerminados.fallidos > 0 ? "warning" : "success"}>
-                    <AlertIcon />
-                    <AlertDescription>{resultPurgaTerminados.message}</AlertDescription>
-                </Alert>
+                <Alert.Root status={!resultPurgaTerminados.permitted ? "error" : resultPurgaTerminados.fallidos > 0 ? "warning" : "success"}>
+                    <Alert.Indicator />
+                    <Alert.Description>{resultPurgaTerminados.message}</Alert.Description>
+                </Alert.Root>
             )}
 
             {hasResult && (
@@ -120,36 +119,36 @@ export default function EliminacionPurgaTerminadosStep2Ejecutar({
                     <Heading size="sm" mb={2}>
                         Resumen de ejecución
                     </Heading>
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>Campo</Th>
-                                <Th>Valor</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            <Tr>
-                                <Td>Permitido</Td>
-                                <Td>{resultPurgaTerminados.permitted ? "Sí" : "No"}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Ejecutado</Td>
-                                <Td>{resultPurgaTerminados.executed ? "Sí" : "No"}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Total terminados</Td>
-                                <Td>{resultPurgaTerminados.totalTerminados}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Eliminados</Td>
-                                <Td>{resultPurgaTerminados.eliminados}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Fallidos</Td>
-                                <Td>{resultPurgaTerminados.fallidos}</Td>
-                            </Tr>
-                        </Tbody>
-                    </Table>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>Campo</Table.ColumnHeader>
+                                <Table.ColumnHeader>Valor</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            <Table.Row>
+                                <Table.Cell>Permitido</Table.Cell>
+                                <Table.Cell>{resultPurgaTerminados.permitted ? "Sí" : "No"}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Ejecutado</Table.Cell>
+                                <Table.Cell>{resultPurgaTerminados.executed ? "Sí" : "No"}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Total terminados</Table.Cell>
+                                <Table.Cell>{resultPurgaTerminados.totalTerminados}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Eliminados</Table.Cell>
+                                <Table.Cell>{resultPurgaTerminados.eliminados}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Fallidos</Table.Cell>
+                                <Table.Cell>{resultPurgaTerminados.fallidos}</Table.Cell>
+                            </Table.Row>
+                        </Table.Body>
+                    </Table.Root>
                 </Box>
             )}
 
@@ -169,22 +168,22 @@ export default function EliminacionPurgaTerminadosStep2Ejecutar({
                     <Heading size="sm" mb={2}>
                         Fallos parciales
                     </Heading>
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>Producto ID</Th>
-                                <Th>Razón</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>Producto ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Razón</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {resultPurgaTerminados.failures.map((failure) => (
-                                <Tr key={`${failure.productoId}-${failure.reason}`}>
-                                    <Td>{failure.productoId}</Td>
-                                    <Td>{failure.reason}</Td>
-                                </Tr>
+                                <Table.Row key={`${failure.productoId}-${failure.reason}`}>
+                                    <Table.Cell>{failure.productoId}</Table.Cell>
+                                    <Table.Cell>{failure.reason}</Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 </Box>
             )}
 
@@ -210,15 +209,15 @@ export default function EliminacionPurgaTerminadosStep2Ejecutar({
 
                 {!hasResult ? (
                     <Button
-                        colorScheme="red"
+                        colorPalette="red"
                         onClick={handleEjecutarPurga}
-                        isLoading={isExecuting}
+                        loading={isExecuting}
                         loadingText="Ejecutando..."
                     >
                         Ejecutar purga completa
                     </Button>
                 ) : (
-                    <Button colorScheme="teal" onClick={onReset}>
+                    <Button colorPalette="teal" onClick={onReset}>
                         Reiniciar flujo
                     </Button>
                 )}

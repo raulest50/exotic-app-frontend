@@ -1,21 +1,17 @@
 import {
+    Steps,
     Box,
     Button,
     Card,
-    CardBody,
     Flex,
-    FormControl,
-    FormHelperText,
-    FormLabel,
     Input,
     SimpleGrid,
     Spinner,
     Stack,
     Stat,
-    StatLabel,
-    StatNumber,
     Text,
     useToast,
+    Field,
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
@@ -154,42 +150,42 @@ export default function ReorderPointView({
 
     if (!selectedMaterial) {
         return (
-            <Card variant="outline">
-                <CardBody>
+            <Card.Root variant="outline">
+                <Card.Body>
                     <Text color="app.textMuted">Seleccione un material para estimar y actualizar su punto de reorden.</Text>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
         );
     }
 
     return (
-        <Stack spacing={4}>
-            <SimpleGrid columns={{ base: 1, xl: 3 }} spacing={4}>
-                <Card variant="outline">
-                    <CardBody>
+        <Stack gap={4}>
+            <SimpleGrid columns={{ base: 1, xl: 3 }} gap={4}>
+                <Card.Root variant="outline">
+                    <Card.Body>
                         <Text fontWeight="semibold" mb={3}>Valor actual</Text>
-                        <SimpleGrid columns={1} spacing={3}>
-                            <Stat>
-                                <StatLabel>Punto de reorden persistido</StatLabel>
-                                <StatNumber>{formatNumber(selectedMaterial.puntoReorden, 2)}</StatNumber>
-                            </Stat>
-                            <Stat>
-                                <StatLabel>Tipo de material</StatLabel>
-                                <StatNumber fontSize="md">{formatTipoMaterial(selectedMaterial.tipoMaterial)}</StatNumber>
-                            </Stat>
-                            <Stat>
-                                <StatLabel>Inventareable</StatLabel>
-                                <StatNumber fontSize="md">{selectedMaterial.inventareable === false ? "No" : "Si"}</StatNumber>
-                            </Stat>
+                        <SimpleGrid columns={1} gap={3}>
+                            <Stat.Root>
+                                <Stat.Label>Punto de reorden persistido</Stat.Label>
+                                <Stat.ValueText>{formatNumber(selectedMaterial.puntoReorden, 2)}</Stat.ValueText>
+                            </Stat.Root>
+                            <Stat.Root>
+                                <Stat.Label>Tipo de material</Stat.Label>
+                                <Stat.ValueText fontSize="md">{formatTipoMaterial(selectedMaterial.tipoMaterial)}</Stat.ValueText>
+                            </Stat.Root>
+                            <Stat.Root>
+                                <Stat.Label>Inventareable</Stat.Label>
+                                <Stat.ValueText fontSize="md">{selectedMaterial.inventareable === false ? "No" : "Si"}</Stat.ValueText>
+                            </Stat.Root>
                         </SimpleGrid>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
 
-                <Card variant="outline">
-                    <CardBody>
+                <Card.Root variant="outline">
+                    <Card.Body>
                         <Flex justify="space-between" align={{ base: "stretch", md: "center" }} mb={3} direction={{ base: "column", md: "row" }} gap={3}>
                             <Text fontWeight="semibold">Estimacion BI</Text>
-                            <Button variant="outline" colorScheme="blue" onClick={fetchEstimate} isLoading={loading}>
+                            <Button variant="outline" colorPalette="blue" onClick={fetchEstimate} loading={loading}>
                                 Recalcular
                             </Button>
                         </Flex>
@@ -202,47 +198,47 @@ export default function ReorderPointView({
                         ) : !estimate ? (
                             <Text color="app.textMuted">No hay estimacion disponible.</Text>
                         ) : (
-                            <SimpleGrid columns={1} spacing={3}>
-                                <Stat>
-                                    <StatLabel>Metodo usado</StatLabel>
-                                    <StatNumber fontSize="md">{estimate.metodoUsado}</StatNumber>
-                                </Stat>
-                                <Stat>
-                                    <StatLabel>Punto de reorden estimado</StatLabel>
-                                    <StatNumber>{formatNumber(estimate.puntoReordenEstimado, 2)}</StatNumber>
-                                </Stat>
-                                <Stat>
-                                    <StatLabel>Confianza global</StatLabel>
-                                    <StatNumber>{formatNumber(estimate.confianzaGlobal, 0)} / 100</StatNumber>
-                                </Stat>
-                                <Stat>
-                                    <StatLabel>Demanda diaria promedio</StatLabel>
-                                    <StatNumber>{formatNumber(estimate.demandaDiariaPromedio, 4)}</StatNumber>
-                                </Stat>
-                                <Stat>
-                                    <StatLabel>Desviacion estandar demanda</StatLabel>
-                                    <StatNumber>{formatNumber(estimate.desviacionEstandarDemandaDiaria, 4)}</StatNumber>
-                                </Stat>
-                                <Stat>
-                                    <StatLabel>Lead time representativo</StatLabel>
-                                    <StatNumber>{formatNumber(estimate.leadTimeRepresentativoDias, 4)} dias</StatNumber>
-                                </Stat>
-                                <Stat>
-                                    <StatLabel>Lead time promedio</StatLabel>
-                                    <StatNumber>{formatNumber(estimate.leadTimePromedioDias, 4)} dias</StatNumber>
-                                </Stat>
-                                <Stat>
-                                    <StatLabel>Desviacion estandar lead time</StatLabel>
-                                    <StatNumber>{formatNumber(estimate.desviacionEstandarLeadTimeDias, 4)} dias</StatNumber>
-                                </Stat>
-                                <Stat>
-                                    <StatLabel>Observaciones lead time</StatLabel>
-                                    <StatNumber>{formatNumber(estimate.observacionesLeadTime, 0)}</StatNumber>
-                                </Stat>
-                                <Stat>
-                                    <StatLabel>Proveedores observados</StatLabel>
-                                    <StatNumber>{formatNumber(estimate.proveedoresObservados, 0)}</StatNumber>
-                                </Stat>
+                            <SimpleGrid columns={1} gap={3}>
+                                <Stat.Root>
+                                    <Stat.Label>Metodo usado</Stat.Label>
+                                    <Stat.ValueText fontSize="md">{estimate.metodoUsado}</Stat.ValueText>
+                                </Stat.Root>
+                                <Stat.Root>
+                                    <Stat.Label>Punto de reorden estimado</Stat.Label>
+                                    <Stat.ValueText>{formatNumber(estimate.puntoReordenEstimado, 2)}</Stat.ValueText>
+                                </Stat.Root>
+                                <Stat.Root>
+                                    <Stat.Label>Confianza global</Stat.Label>
+                                    <Stat.ValueText>{formatNumber(estimate.confianzaGlobal, 0)} / 100</Stat.ValueText>
+                                </Stat.Root>
+                                <Stat.Root>
+                                    <Stat.Label>Demanda diaria promedio</Stat.Label>
+                                    <Stat.ValueText>{formatNumber(estimate.demandaDiariaPromedio, 4)}</Stat.ValueText>
+                                </Stat.Root>
+                                <Stat.Root>
+                                    <Stat.Label>Desviacion estandar demanda</Stat.Label>
+                                    <Stat.ValueText>{formatNumber(estimate.desviacionEstandarDemandaDiaria, 4)}</Stat.ValueText>
+                                </Stat.Root>
+                                <Stat.Root>
+                                    <Stat.Label>Lead time representativo</Stat.Label>
+                                    <Stat.ValueText>{formatNumber(estimate.leadTimeRepresentativoDias, 4)} dias</Stat.ValueText>
+                                </Stat.Root>
+                                <Stat.Root>
+                                    <Stat.Label>Lead time promedio</Stat.Label>
+                                    <Stat.ValueText>{formatNumber(estimate.leadTimePromedioDias, 4)} dias</Stat.ValueText>
+                                </Stat.Root>
+                                <Stat.Root>
+                                    <Stat.Label>Desviacion estandar lead time</Stat.Label>
+                                    <Stat.ValueText>{formatNumber(estimate.desviacionEstandarLeadTimeDias, 4)} dias</Stat.ValueText>
+                                </Stat.Root>
+                                <Stat.Root>
+                                    <Stat.Label>Observaciones lead time</Stat.Label>
+                                    <Stat.ValueText>{formatNumber(estimate.observacionesLeadTime, 0)}</Stat.ValueText>
+                                </Stat.Root>
+                                <Stat.Root>
+                                    <Stat.Label>Proveedores observados</Stat.Label>
+                                    <Stat.ValueText>{formatNumber(estimate.proveedoresObservados, 0)}</Stat.ValueText>
+                                </Stat.Root>
                                 {estimate.reason ? (
                                     <Box>
                                         <Text fontWeight="medium">Motivo</Text>
@@ -251,36 +247,36 @@ export default function ReorderPointView({
                                 ) : null}
                             </SimpleGrid>
                         )}
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
 
-                <Card variant="outline">
-                    <CardBody>
+                <Card.Root variant="outline">
+                    <Card.Body>
                         <Text fontWeight="semibold" mb={3}>Nuevo valor a guardar</Text>
-                        <Stack spacing={4}>
-                            <FormControl isInvalid={Boolean(inputValue.trim()) && !inputIsValid}>
-                                <FormLabel>Punto de reorden</FormLabel>
+                        <Stack gap={4}>
+                            <Field.Root invalid={Boolean(inputValue.trim()) && !inputIsValid}>
+                                <Field.Label>Punto de reorden</Field.Label>
                                 <Input
                                     type="text"
                                     inputMode="decimal"
                                     value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
+                                    onValueChange={(e) => setInputValue(e.target.value)}
                                 />
-                                <FormHelperText>
+                                <Field.HelperText>
                                     -1 sin alertas; 0 sin umbral definido; mayor o igual a 0 es valido.
-                                </FormHelperText>
-                            </FormControl>
+                                </Field.HelperText>
+                            </Field.Root>
 
                             <Flex direction="column" gap={2}>
                                 <Button
-                                    colorScheme="blue"
+                                    colorPalette="blue"
                                     variant="outline"
                                     onClick={() => {
                                         if (estimate?.metodoUsado !== "NO_DATA" && estimate?.puntoReordenEstimado != null) {
                                             setInputValue(String(estimate.puntoReordenEstimado));
                                         }
                                     }}
-                                    isDisabled={estimate?.metodoUsado === "NO_DATA" || estimate?.puntoReordenEstimado == null}
+                                    disabled={estimate?.metodoUsado === "NO_DATA" || estimate?.puntoReordenEstimado == null}
                                 >
                                     Usar estimacion BI
                                 </Button>
@@ -291,10 +287,10 @@ export default function ReorderPointView({
                                     Restablecer valor actual
                                 </Button>
                                 <Button
-                                    colorScheme="green"
+                                    colorPalette="green"
                                     onClick={handleSave}
-                                    isLoading={saving}
-                                    isDisabled={!canSave || !inputIsValid || parsedInput === undefined || !hasChanges}
+                                    loading={saving}
+                                    disabled={!canSave || !inputIsValid || parsedInput === undefined || !hasChanges}
                                 >
                                     Guardar nuevo punto de reorden
                                 </Button>
@@ -305,8 +301,8 @@ export default function ReorderPointView({
                                 ) : null}
                             </Flex>
                         </Stack>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
             </SimpleGrid>
         </Stack>
     );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Input, InputProps } from "@chakra-ui/react";
+import { Steps, Input, InputProps } from "@chakra-ui/react";
 
 export interface CustomIntegerInputProps extends Omit<InputProps, 'value' | 'onChange' | 'type'> {
     /**
@@ -112,7 +112,7 @@ const CustomIntegerInput: React.FC<CustomIntegerInputProps> = ({
             type="text"
             inputMode="numeric"
             value={inputValue}
-            onChange={handleInputChange}
+            onValueChange={handleInputChange}
             onBlur={handleBlur}
             placeholder={placeholder}
             textAlign={inputProps.textAlign || "right"}

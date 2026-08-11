@@ -1,22 +1,5 @@
-import {
-    Alert,
-    AlertDescription,
-    AlertIcon,
-    Box,
-    Button,
-    Container,
-    Flex,
-    Step,
-    StepDescription,
-    StepIcon,
-    StepIndicator,
-    StepNumber,
-    StepSeparator,
-    StepStatus,
-    StepTitle,
-    Stepper,
-    Text,
-} from "@chakra-ui/react";
+import { Steps, Alert, Box, Button, Container, Flex, Text } from "@chakra-ui/react";
+import { LuCheck } from 'react-icons/lu';
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
@@ -444,31 +427,33 @@ export default function AjustesInventarioTab() {
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <Flex direction="column" gap={4}>
-                <Stepper index={activeStep} p="1em" backgroundColor="app.stepperTeal" w="full">
-                    {steps.map((step, index) => (
-                        <Step key={step.title}>
-                            <StepIndicator>
-                                <StepStatus complete={<StepIcon />} incomplete={<StepNumber />} active={<StepNumber />} />
-                            </StepIndicator>
-                            <Box flexShrink="0">
-                                <StepTitle>{step.label}</StepTitle>
-                                <StepDescription>{step.description}</StepDescription>
-                            </Box>
-                            {index < steps.length - 1 && <StepSeparator />}
-                        </Step>
-                    ))}
-                </Stepper>
+                <Steps.Root step={activeStep} p="1em" backgroundColor="app.stepperTeal" w="full">
+                      <Steps.List>
+                        {steps.map((step, index) => (
+                            <Steps.Item key={step.title}>
+                                <Steps.Indicator>
+                                    <Steps.Status complete={<LuCheck />} incomplete={<Steps.Number />} current={<Steps.Number />} />
+                                </Steps.Indicator>
+                                <Box flexShrink="0">
+                                    <Steps.Title>{step.label}</Steps.Title>
+                                    <Steps.Description>{step.description}</Steps.Description>
+                                </Box>
+                                {index < steps.length - 1 && <Steps.Separator />}
+                            </Steps.Item>
+                        ))}
+                    </Steps.List>
+                    </Steps.Root>
 
                 {activeStep === 1 && selectedProducts.some((producto) => {
                     const quantity = quantities[producto.productoId];
                     return quantity !== "" && typeof quantity === "number" && quantity < 0 && !isAssignmentValid(producto.productoId);
                 }) && (
-                    <Alert status="warning" borderRadius="md">
-                        <AlertIcon />
-                        <AlertDescription>
+                    <Alert.Root status="warning" borderRadius="md">
+                        <Alert.Indicator />
+                        <Alert.Description>
                             Cada ajuste negativo debe quedar asignado completamente a lotes con saldo disponible en GENERAL.
-                        </AlertDescription>
-                    </Alert>
+                        </Alert.Description>
+                    </Alert.Root>
                 )}
 
                 <Box backgroundColor="app.surface" p={4} borderRadius="md" boxShadow="sm">
@@ -480,15 +465,15 @@ export default function AjustesInventarioTab() {
                 </Box>
 
                 <Flex alignItems="center" justifyContent="space-between" gap={2}>
-                    <Button onClick={goToStart} isDisabled={activeStep === 0} variant="ghost">
+                    <Button onClick={goToStart} disabled={activeStep === 0} variant="ghost">
                         Volver al paso inicial
                     </Button>
 
                     <Flex gap={2} justifyContent="flex-end">
-                        <Button onClick={goToPrevious} isDisabled={isPreviousDisabled} variant="outline">
+                        <Button onClick={goToPrevious} disabled={isPreviousDisabled} variant="outline">
                             Anterior
                         </Button>
-                        <Button onClick={goToNext} isDisabled={isNextDisabled} colorScheme="teal">
+                        <Button onClick={goToNext} disabled={isNextDisabled} colorPalette="teal">
                             Siguiente
                         </Button>
                     </Flex>

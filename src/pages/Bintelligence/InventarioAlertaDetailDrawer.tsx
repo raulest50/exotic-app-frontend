@@ -1,17 +1,14 @@
 import {
+    Steps,
     Badge,
     Box,
-    Divider,
     Drawer,
-    DrawerBody,
-    DrawerCloseButton,
-    DrawerContent,
-    DrawerHeader,
-    DrawerOverlay,
     HStack,
     SimpleGrid,
     Stack,
     Text,
+    Separator,
+    Portal,
 } from "@chakra-ui/react";
 import { formatPercent, formatQuantity } from "./InformeGlobalUi";
 import type { AlertaStock } from "./informesGlobales.types";
@@ -28,111 +25,121 @@ export default function InventarioAlertaDetailDrawer({
     if (!alert) return null;
 
     return (
-        <Drawer
-            isOpen={isOpen}
-            placement="right"
-            onClose={onClose}
+        <Drawer.Root
+            open={isOpen}
+            placement='end'
             size={{ base: "full", md: "md" }}
+            onOpenChange={e => {
+                if (!e.open) {
+                    onClose();
+                }
+            }}
         >
-            <DrawerOverlay />
-            <DrawerContent>
-                <DrawerCloseButton />
-                <DrawerHeader pr={12}>Detalle de alerta</DrawerHeader>
-                <DrawerBody pb={8}>
-                    <Stack spacing={5}>
-                        <Box>
-                            <HStack spacing={2} mb={2} flexWrap="wrap">
-                                <Badge colorScheme={alertColor(alert.tipo)}>
-                                    {alertLabel(alert.tipo)}
-                                </Badge>
-                                <Badge variant="outline">
-                                    {groupLabel(alert.grupo)}
-                                </Badge>
-                            </HStack>
-                            <Text fontWeight="bold" fontSize="lg">
-                                {alert.productoNombre}
-                            </Text>
-                            <Text color="app.textMuted">{alert.productoId}</Text>
-                        </Box>
+            <Portal>
 
-                        <Divider />
+                <Drawer.Backdrop />
+                <Drawer.Positioner>
+                    <Drawer.Content>
+                        <Drawer.CloseTrigger />
+                        <Drawer.Header pr={12}>Detalle de alerta</Drawer.Header>
+                        <Drawer.Body pb={8}>
+                            <Stack gap={5}>
+                                <Box>
+                                    <HStack gap={2} mb={2} flexWrap="wrap">
+                                        <Badge colorPalette={alertColor(alert.tipo)}>
+                                            {alertLabel(alert.tipo)}
+                                        </Badge>
+                                        <Badge variant="outline">
+                                            {groupLabel(alert.grupo)}
+                                        </Badge>
+                                    </HStack>
+                                    <Text fontWeight="bold" fontSize="lg">
+                                        {alert.productoNombre}
+                                    </Text>
+                                    <Text color="app.textMuted">{alert.productoId}</Text>
+                                </Box>
 
-                        <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
-                            <DetailMetric
-                                label="Stock actual en GENERAL"
-                                value={`${formatQuantity(alert.stock)} ${alert.unidadMedida}`}
-                            />
-                            <DetailMetric
-                                label="Umbral efectivo"
-                                value={quantityOrDash(alert.umbral, alert.unidadMedida)}
-                            />
-                            <DetailMetric
-                                label="Stock mínimo configurado"
-                                value={`${formatQuantity(alert.stockMinimo)} ${alert.unidadMedida}`}
-                            />
-                            <DetailMetric
-                                label="Punto de reorden"
-                                value={`${formatQuantity(alert.puntoReorden)} ${alert.unidadMedida}`}
-                            />
-                            <DetailMetric
-                                label="Brecha frente al umbral"
-                                value={quantityOrDash(
-                                    alert.brechaUmbral,
-                                    alert.unidadMedida,
-                                )}
-                            />
-                            <DetailMetric
-                                label="Brecha relativa"
-                                value={alert.brechaPct === null
-                                || alert.brechaPct === undefined
-                                    ? "No estimable"
-                                    : formatPercent(alert.brechaPct)}
-                            />
-                        </SimpleGrid>
+                                <Separator />
 
-                        <Divider />
+                                <SimpleGrid columns={{ base: 1, sm: 2 }} gap={4}>
+                                    <DetailMetric
+                                        label="Stock actual en GENERAL"
+                                        value={`${formatQuantity(alert.stock)} ${alert.unidadMedida}`}
+                                    />
+                                    <DetailMetric
+                                        label="Umbral efectivo"
+                                        value={quantityOrDash(alert.umbral, alert.unidadMedida)}
+                                    />
+                                    <DetailMetric
+                                        label="Stock mínimo configurado"
+                                        value={`${formatQuantity(alert.stockMinimo)} ${alert.unidadMedida}`}
+                                    />
+                                    <DetailMetric
+                                        label="Punto de reorden"
+                                        value={`${formatQuantity(alert.puntoReorden)} ${alert.unidadMedida}`}
+                                    />
+                                    <DetailMetric
+                                        label="Brecha frente al umbral"
+                                        value={quantityOrDash(
+                                            alert.brechaUmbral,
+                                            alert.unidadMedida,
+                                        )}
+                                    />
+                                    <DetailMetric
+                                        label="Brecha relativa"
+                                        value={alert.brechaPct === null
+                                        || alert.brechaPct === undefined
+                                            ? "No estimable"
+                                            : formatPercent(alert.brechaPct)}
+                                    />
+                                </SimpleGrid>
 
-                        <Box>
-                            <Text fontWeight="semibold" mb={2}>
-                                Condiciones observadas
-                            </Text>
-                            <Stack spacing={2}>
-                                <ConditionRow
-                                    label="Costo maestro vigente"
-                                    met={alert.costoVigente}
-                                    positiveLabel="Disponible"
-                                    negativeLabel="No disponible"
-                                />
-                                <ConditionRow
-                                    label="Stock mínimo"
-                                    met={alert.umbralesIncumplidos.includes(
-                                        "STOCK_MINIMO",
-                                    )}
-                                    positiveLabel="Incumplido"
-                                    negativeLabel="No incumplido"
-                                    warning
-                                />
-                                <ConditionRow
-                                    label="Punto de reorden"
-                                    met={alert.umbralesIncumplidos.includes(
-                                        "PUNTO_REORDEN",
-                                    )}
-                                    positiveLabel="Incumplido"
-                                    negativeLabel="No incumplido"
-                                    warning
-                                />
+                                <Separator />
+
+                                <Box>
+                                    <Text fontWeight="semibold" mb={2}>
+                                        Condiciones observadas
+                                    </Text>
+                                    <Stack gap={2}>
+                                        <ConditionRow
+                                            label="Costo maestro vigente"
+                                            met={alert.costoVigente}
+                                            positiveLabel="Disponible"
+                                            negativeLabel="No disponible"
+                                        />
+                                        <ConditionRow
+                                            label="Stock mínimo"
+                                            met={alert.umbralesIncumplidos.includes(
+                                                "STOCK_MINIMO",
+                                            )}
+                                            positiveLabel="Incumplido"
+                                            negativeLabel="No incumplido"
+                                            warning
+                                        />
+                                        <ConditionRow
+                                            label="Punto de reorden"
+                                            met={alert.umbralesIncumplidos.includes(
+                                                "PUNTO_REORDEN",
+                                            )}
+                                            positiveLabel="Incumplido"
+                                            negativeLabel="No incumplido"
+                                            warning
+                                        />
+                                    </Stack>
+                                </Box>
+
+                                <Text color="app.textMuted" fontSize="sm">
+                                    La clasificación corresponde al stock físico actual del
+                                    almacén General. Los valores iguales o menores que cero
+                                    configurados como umbral no participan en su cálculo.
+                                </Text>
                             </Stack>
-                        </Box>
+                        </Drawer.Body>
+                    </Drawer.Content>
+                </Drawer.Positioner>
 
-                        <Text color="app.textMuted" fontSize="sm">
-                            La clasificación corresponde al stock físico actual del
-                            almacén General. Los valores iguales o menores que cero
-                            configurados como umbral no participan en su cálculo.
-                        </Text>
-                    </Stack>
-                </DrawerBody>
-            </DrawerContent>
-        </Drawer>
+            </Portal>
+        </Drawer.Root>
     );
 }
 
@@ -161,7 +168,7 @@ function ConditionRow({
     return (
         <HStack justify="space-between">
             <Text fontSize="sm">{label}</Text>
-            <Badge colorScheme={met ? (warning ? "orange" : "green") : "gray"}>
+            <Badge colorPalette={met ? (warning ? "orange" : "green") : "gray"}>
                 {met ? positiveLabel : negativeLabel}
             </Badge>
         </HStack>

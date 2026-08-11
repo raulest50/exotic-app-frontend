@@ -1,19 +1,5 @@
 import { useState, useEffect } from 'react';
-import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    ModalCloseButton,
-    Button,
-    FormControl,
-    FormLabel,
-    Input,
-    Text,
-    useToast,
-} from '@chakra-ui/react';
+import { Steps, Button, Input, Text, useToast, Field, Dialog, Portal } from '@chakra-ui/react';
 import { OrdenCompra } from '../../types';
 import { closeOrdenCompraOcm } from '../ocmIngresoApi';
 
@@ -105,66 +91,76 @@ export function CerrarOrdenDialog({ isOpen, onClose, orden, setActiveStep }: Cer
     const isTokenValid = inputToken === token && inputToken.length === 4;
 
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} isCentered>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader fontFamily="Comfortaa Variable">
-                    Cerrar Orden de Compra
-                </ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <Text fontFamily="Comfortaa Variable" mb={4}>
-                        Está a punto de cerrar la orden de compra <strong>#{orden?.ordenCompraId}</strong>.
-                        Para confirmar esta acción, ingrese el token de verificación mostrado a continuación.
-                    </Text>
-                    
-                    <FormControl mb={4}>
-                        <FormLabel fontFamily="Comfortaa Variable">Token de verificación</FormLabel>
-                        <Text 
-                            fontFamily="Comfortaa Variable" 
-                            fontSize="xl" 
-                            fontWeight="bold" 
-                            color="teal.600"
-                            mb={2}
-                        >
-                            {token}
-                        </Text>
-                        <Input
-                            placeholder="Ingrese el token"
-                            value={inputToken}
-                            onChange={(e) => setInputToken(e.target.value)}
-                            maxLength={4}
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                        />
-                    </FormControl>
+        <Dialog.Root open={isOpen} placement='center' onOpenChange={e => {
+            if (!e.open) {
+                handleClose();
+            }
+        }}>
+            <Portal>
 
-                    <Text fontFamily="Comfortaa Variable" fontSize="sm" color="app.textMuted">
-                        Ingrese el token de 4 dígitos mostrado arriba para habilitar el botón de cierre.
-                    </Text>
-                </ModalBody>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header fontFamily="Comfortaa Variable">
+                            Cerrar Orden de Compra
+                        </Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <Text fontFamily="Comfortaa Variable" mb={4}>
+                                Está a punto de cerrar la orden de compra <strong>#{orden?.ordenCompraId}</strong>.
+                                Para confirmar esta acción, ingrese el token de verificación mostrado a continuación.
+                            </Text>
+                            
+                            <Field.Root mb={4}>
+                                <Field.Label fontFamily="Comfortaa Variable">Token de verificación</Field.Label>
+                                <Text 
+                                    fontFamily="Comfortaa Variable" 
+                                    fontSize="xl" 
+                                    fontWeight="bold" 
+                                    color="teal.600"
+                                    mb={2}
+                                >
+                                    {token}
+                                </Text>
+                                <Input
+                                    placeholder="Ingrese el token"
+                                    value={inputToken}
+                                    onValueChange={(e) => setInputToken(e.target.value)}
+                                    maxLength={4}
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                />
+                            </Field.Root>
 
-                <ModalFooter>
-                    <Button 
-                        variant="ghost" 
-                        mr={3} 
-                        onClick={handleClose}
-                        isDisabled={isLoading}
-                    >
-                        Cancelar
-                    </Button>
-                    <Button
-                        colorScheme="red"
-                        onClick={handleCerrarOrden}
-                        isDisabled={!isTokenValid}
-                        isLoading={isLoading}
-                        loadingText="Cerrando..."
-                    >
-                        Cerrar Orden de Compra
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                            <Text fontFamily="Comfortaa Variable" fontSize="sm" color="app.textMuted">
+                                Ingrese el token de 4 dígitos mostrado arriba para habilitar el botón de cierre.
+                            </Text>
+                        </Dialog.Body>
+
+                        <Dialog.Footer>
+                            <Button 
+                                variant="ghost" 
+                                mr={3} 
+                                onClick={handleClose}
+                                disabled={isLoading}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                colorPalette="red"
+                                onClick={handleCerrarOrden}
+                                disabled={!isTokenValid}
+                                loading={isLoading}
+                                loadingText="Cerrando..."
+                            >
+                                Cerrar Orden de Compra
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

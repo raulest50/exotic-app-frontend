@@ -1,16 +1,14 @@
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
     Box,
     Button,
-    FormControl,
-    FormLabel,
     Input,
     SimpleGrid,
     Text,
     VStack,
     useToast,
+    Field,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
@@ -88,41 +86,41 @@ export default function ResetPasswordsNoProductivoTab() {
     };
 
     return (
-        <VStack align="stretch" spacing={6}>
-            <Alert status="warning">
-                <AlertIcon />
-                <AlertDescription>
+        <VStack align="stretch" gap={6}>
+            <Alert.Root status="warning">
+                <Alert.Indicator />
+                <Alert.Description>
                     Esta operacion asigna staging1234 a todos los usuarios no privilegiados. Master y super_master se conservan sin cambios.
-                </AlertDescription>
-            </Alert>
+                </Alert.Description>
+            </Alert.Root>
 
             <Box>
                 <Text fontWeight="bold" mb={2}>
                     Token de confirmacion: <strong>{randomToken}</strong>
                 </Text>
 
-                <FormControl>
-                    <FormLabel>Ingrese el token de 4 digitos</FormLabel>
+                <Field.Root>
+                    <Field.Label>Ingrese el token de 4 digitos</Field.Label>
                     <Input
                         placeholder="Ingrese el token de 4 digitos"
                         value={inputToken}
-                        onChange={(event) => setInputToken(event.target.value)}
+                        onValueChange={(event) => setInputToken(event.target.value)}
                         maxLength={4}
                     />
-                </FormControl>
+                </Field.Root>
             </Box>
 
             <Button
-                colorScheme="red"
+                colorPalette="red"
                 onClick={handleExecute}
-                isLoading={isExecuting}
-                isDisabled={!randomToken || inputToken !== randomToken}
+                loading={isExecuting}
+                disabled={!randomToken || inputToken !== randomToken}
             >
                 Ejecutar reset
             </Button>
 
             {result && (
-                <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+                <SimpleGrid columns={{ base: 1, md: 3 }} gap={4}>
                     <Box borderWidth="1px" borderRadius="md" p={4}>
                         <Text color="app.textSubtle" fontSize="sm">Usuarios saneados</Text>
                         <Text fontSize="2xl" fontWeight="bold">{result.sanitizedUsers}</Text>

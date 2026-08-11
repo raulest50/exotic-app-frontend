@@ -1,14 +1,9 @@
 import {
+    Steps,
     Box,
     Button,
     Center,
     Heading,
-    Modal,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     Spinner,
     Table,
     TableContainer,
@@ -19,6 +14,8 @@ import {
     Thead,
     Tr,
     VStack,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
 import axios from "axios";
 import type { RefObject } from "react";
@@ -62,73 +59,73 @@ function formatFecha(fecha?: string | null): string {
 
 function renderMaterialBaseTable(rows: MaterialEnPuntoReordenDTO[]) {
     return (
-        <TableContainer maxH="18rem" overflowY="auto">
-            <Table size="sm" variant="simple">
-                <Thead>
-                    <Tr>
-                        <Th>Codigo</Th>
-                        <Th>Nombre</Th>
-                        <Th>Tipo</Th>
-                        <Th isNumeric>Stock actual</Th>
-                        <Th isNumeric>Punto reorden</Th>
-                        <Th>Unidad</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
+        <Table.ScrollArea maxH="18rem" overflowY="auto">
+            <Table.Root size="sm" variant="simple">
+                <Table.Header>
+                    <Table.Row>
+                        <Table.ColumnHeader>Codigo</Table.ColumnHeader>
+                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                        <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Stock actual</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Punto reorden</Table.ColumnHeader>
+                        <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {rows.map((row) => (
-                        <Tr key={row.productoId}>
-                            <Td>{row.productoId}</Td>
-                            <Td>{row.nombre}</Td>
-                            <Td>{row.tipoMaterialLabel}</Td>
-                            <Td isNumeric>{formatQty(row.stockActual)}</Td>
-                            <Td isNumeric>{formatQty(row.puntoReorden)}</Td>
-                            <Td>{row.tipoUnidades}</Td>
-                        </Tr>
+                        <Table.Row key={row.productoId}>
+                            <Table.Cell>{row.productoId}</Table.Cell>
+                            <Table.Cell>{row.nombre}</Table.Cell>
+                            <Table.Cell>{row.tipoMaterialLabel}</Table.Cell>
+                            <Table.Cell textAlign='end'>{formatQty(row.stockActual)}</Table.Cell>
+                            <Table.Cell textAlign='end'>{formatQty(row.puntoReorden)}</Table.Cell>
+                            <Table.Cell>{row.tipoUnidades}</Table.Cell>
+                        </Table.Row>
                     ))}
-                </Tbody>
-            </Table>
-        </TableContainer>
+                </Table.Body>
+            </Table.Root>
+        </Table.ScrollArea>
     );
 }
 
 function renderMaterialConOcmTable(rows: MaterialEnPuntoReordenConOcmDTO[]) {
     return (
-        <TableContainer maxH="18rem" overflowY="auto">
-            <Table size="sm" variant="simple">
-                <Thead>
-                    <Tr>
-                        <Th>Codigo</Th>
-                        <Th>Nombre</Th>
-                        <Th>Tipo</Th>
-                        <Th isNumeric>Stock actual</Th>
-                        <Th isNumeric>Punto reorden</Th>
-                        <Th>Unidad</Th>
-                        <Th>OCM(s)</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
+        <Table.ScrollArea maxH="18rem" overflowY="auto">
+            <Table.Root size="sm" variant="simple">
+                <Table.Header>
+                    <Table.Row>
+                        <Table.ColumnHeader>Codigo</Table.ColumnHeader>
+                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                        <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Stock actual</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Punto reorden</Table.ColumnHeader>
+                        <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                        <Table.ColumnHeader>OCM(s)</Table.ColumnHeader>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {rows.map((row) => (
-                        <Tr key={row.productoId}>
-                            <Td>{row.productoId}</Td>
-                            <Td>{row.nombre}</Td>
-                            <Td>{row.tipoMaterialLabel}</Td>
-                            <Td isNumeric>{formatQty(row.stockActual)}</Td>
-                            <Td isNumeric>{formatQty(row.puntoReorden)}</Td>
-                            <Td>{row.tipoUnidades}</Td>
-                            <Td>
-                                <VStack align="start" spacing={1}>
+                        <Table.Row key={row.productoId}>
+                            <Table.Cell>{row.productoId}</Table.Cell>
+                            <Table.Cell>{row.nombre}</Table.Cell>
+                            <Table.Cell>{row.tipoMaterialLabel}</Table.Cell>
+                            <Table.Cell textAlign='end'>{formatQty(row.stockActual)}</Table.Cell>
+                            <Table.Cell textAlign='end'>{formatQty(row.puntoReorden)}</Table.Cell>
+                            <Table.Cell>{row.tipoUnidades}</Table.Cell>
+                            <Table.Cell>
+                                <VStack align="start" gap={1}>
                                     {row.ocmsPendientesIngreso.map((ocm) => (
                                         <Text key={`${row.productoId}-${ocm.ordenCompraId}`} fontSize="sm">
                                             {`OCM #${ocm.ordenCompraId} (${formatFecha(ocm.fechaEmision)})`}
                                         </Text>
                                     ))}
                                 </VStack>
-                            </Td>
-                        </Tr>
+                            </Table.Cell>
+                        </Table.Row>
                     ))}
-                </Tbody>
-            </Table>
-        </TableContainer>
+                </Table.Body>
+            </Table.Root>
+        </Table.ScrollArea>
     );
 }
 
@@ -173,67 +170,76 @@ export default function AlertaInfoDialogStock({
     }, [isOpen]);
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} isCentered size="6xl" finalFocusRef={finalFocusRef}>
-            <ModalOverlay />
-            <ModalContent maxW="72rem">
-                <ModalHeader>Materiales en punto de reorden</ModalHeader>
-                <ModalBody>
-                    <VStack align="stretch" spacing={5}>
-                        <Text>{notification.message}</Text>
-                        <Text fontSize="sm" color="gray.600">
-                            <strong>Total en alerta:</strong> {materialesCount}
-                        </Text>
+        <Dialog.Root open={isOpen} placement='center' size='xl' finalFocusEl={() => finalFocusRef.current} onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                        {stockLoading && (
-                            <Center py={6}>
-                                <Spinner size="lg" />
-                            </Center>
-                        )}
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content maxW="72rem">
+                        <Dialog.Header>Materiales en punto de reorden</Dialog.Header>
+                        <Dialog.Body>
+                            <VStack align="stretch" gap={5}>
+                                <Text>{notification.message}</Text>
+                                <Text fontSize="sm" color="gray.600">
+                                    <strong>Total en alerta:</strong> {materialesCount}
+                                </Text>
 
-                        {stockError && !stockLoading && <Text color="red.500">{stockError}</Text>}
-
-                        {!stockLoading && !stockError && stockDetail && (
-                            <>
-                                {stockDetail.pendientesOrdenar.length > 0 && (
-                                    <Box>
-                                        <Heading size="sm" mb={2}>
-                                            Pendientes por pedir ({stockDetail.totalPendientesOrdenar})
-                                        </Heading>
-                                        {renderMaterialBaseTable(stockDetail.pendientesOrdenar)}
-                                    </Box>
+                                {stockLoading && (
+                                    <Center py={6}>
+                                        <Spinner size="lg" />
+                                    </Center>
                                 )}
 
-                                {stockDetail.pendientesIngresoAlmacen.length > 0 && (
-                                    <Box>
-                                        <Heading size="sm" mb={2}>
-                                            Ya pedidos, pendiente ingreso (
-                                            {stockDetail.totalPendientesIngresoAlmacen})
-                                        </Heading>
-                                        {renderMaterialConOcmTable(stockDetail.pendientesIngresoAlmacen)}
-                                    </Box>
-                                )}
+                                {stockError && !stockLoading && <Text color="red.500">{stockError}</Text>}
 
-                                {stockDetail.sinPuntoReorden.length > 0 && (
-                                    <Box>
-                                        <Heading size="sm" mb={2}>
-                                            Sin punto de reorden ({stockDetail.totalSinPuntoReorden})
-                                        </Heading>
-                                        {renderMaterialBaseTable(stockDetail.sinPuntoReorden)}
-                                    </Box>
+                                {!stockLoading && !stockError && stockDetail && (
+                                    <>
+                                        {stockDetail.pendientesOrdenar.length > 0 && (
+                                            <Box>
+                                                <Heading size="sm" mb={2}>
+                                                    Pendientes por pedir ({stockDetail.totalPendientesOrdenar})
+                                                </Heading>
+                                                {renderMaterialBaseTable(stockDetail.pendientesOrdenar)}
+                                            </Box>
+                                        )}
+
+                                        {stockDetail.pendientesIngresoAlmacen.length > 0 && (
+                                            <Box>
+                                                <Heading size="sm" mb={2}>
+                                                    Ya pedidos, pendiente ingreso (
+                                                    {stockDetail.totalPendientesIngresoAlmacen})
+                                                </Heading>
+                                                {renderMaterialConOcmTable(stockDetail.pendientesIngresoAlmacen)}
+                                            </Box>
+                                        )}
+
+                                        {stockDetail.sinPuntoReorden.length > 0 && (
+                                            <Box>
+                                                <Heading size="sm" mb={2}>
+                                                    Sin punto de reorden ({stockDetail.totalSinPuntoReorden})
+                                                </Heading>
+                                                {renderMaterialBaseTable(stockDetail.sinPuntoReorden)}
+                                            </Box>
+                                        )}
+                                    </>
                                 )}
-                            </>
-                        )}
-                    </VStack>
-                </ModalBody>
-                <ModalFooter gap={2}>
-                    <Button variant="ghost" onClick={onClose}>
-                        Cerrar
-                    </Button>
-                    <Button as={RouterLink} to={to} colorScheme="blue" onClick={onClose}>
-                        Ir a {name}
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer gap={2}>
+                            <Button variant="ghost" onClick={onClose}>
+                                Cerrar
+                            </Button>
+                            <Button colorPalette="blue" asChild><RouterLink to={to} onClick={onClose}>Ir a {name}
+                                </RouterLink></Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

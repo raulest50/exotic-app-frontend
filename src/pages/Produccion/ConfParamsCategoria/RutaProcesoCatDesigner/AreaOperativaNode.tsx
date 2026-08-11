@@ -1,4 +1,4 @@
-import { Badge, Box, Flex, Text, Icon, VStack, Checkbox } from "@chakra-ui/react";
+import { Steps, Badge, Box, Flex, Text, Icon, VStack, Checkbox } from "@chakra-ui/react";
 import { Handle, Position, NodeProps, useReactFlow } from "@xyflow/react";
 import { MdLocationOn } from "react-icons/md";
 
@@ -49,13 +49,12 @@ export default function AreaOperativaNode(props: NodeProps) {
                     transform="translateY(-50%)"
                     zIndex={10}
                 >
-                    <Checkbox
-                        isChecked={hasLeftHandle}
-                        onChange={handleLeftHandleChange}
-                        colorScheme="purple"
+                    <Checkbox.Root
+                        checked={hasLeftHandle}
+                        onCheckedChange={handleLeftHandleChange}
+                        colorPalette="purple"
                         size="lg"
-                        title="Handle izquierdo"
-                    />
+                        title="Handle izquierdo"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control></Checkbox.Root>
                 </Box>
             )}
 
@@ -68,13 +67,12 @@ export default function AreaOperativaNode(props: NodeProps) {
                     transform="translateY(-50%)"
                     zIndex={10}
                 >
-                    <Checkbox
-                        isChecked={hasRightHandle}
-                        onChange={handleRightHandleChange}
-                        colorScheme="purple"
+                    <Checkbox.Root
+                        checked={hasRightHandle}
+                        onCheckedChange={handleRightHandleChange}
+                        colorPalette="purple"
                         size="lg"
-                        title="Handle derecho"
-                    />
+                        title="Handle derecho"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control></Checkbox.Root>
                 </Box>
             )}
 
@@ -95,14 +93,14 @@ export default function AreaOperativaNode(props: NodeProps) {
                         </Text>
                     </Box>
 
-                    <VStack p={"0.5em"} spacing={2} w={"full"}>
-                        <Icon as={MdLocationOn} w="3em" h="3em" color="purple.500" />
+                    <VStack p={"0.5em"} gap={2} w={"full"}>
+                        <Icon w="3em" h="3em" color="purple.500" asChild><MdLocationOn /></Icon>
                         <Text fontWeight={"bold"} fontSize={"md"} textAlign={"center"}>
                             {String(data.label || "Sin asignar")}
                         </Text>
                         <Flex gap={2} justify="center" wrap="wrap">
-                            <Badge colorScheme="purple">{duracionEstimadaMinutos} min</Badge>
-                            <Badge colorScheme={requiereJornadaLaboral ? "green" : "orange"}>
+                            <Badge colorPalette="purple">{duracionEstimadaMinutos} min</Badge>
+                            <Badge colorPalette={requiereJornadaLaboral ? "green" : "orange"}>
                                 {requiereJornadaLaboral ? "Jornada" : "Continuo"}
                             </Badge>
                         </Flex>

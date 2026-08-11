@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
+    Steps,
     Badge,
     Box,
     Button,
-    Divider,
     Flex,
     Heading,
     Input,
@@ -13,6 +13,7 @@ import {
     Text,
     useToast,
     VStack,
+    Separator,
 } from "@chakra-ui/react";
 import {
     AprobarMpsSemanal,
@@ -553,9 +554,9 @@ export default function AprobacionMPSWeekTab() {
         && !odpsError;
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             <Box p={5} bg="white" borderRadius="md" boxShadow="sm">
-                <VStack align="stretch" spacing={4}>
+                <VStack align="stretch" gap={4}>
                     <Box>
                         <Heading size="md">Aprobacion MPS semanal</Heading>
                         <Text color="gray.600" mt={1}>
@@ -590,22 +591,22 @@ export default function AprobacionMPSWeekTab() {
                     {!selectedDisplayInfo ? (
                         <Text color="gray.500" fontSize="sm">Seleccione una semana MPS.</Text>
                     ) : (
-                        <VStack align="stretch" spacing={4}>
+                        <VStack align="stretch" gap={4}>
                             <Flex justify="space-between" align="start" gap={3} wrap="wrap">
                                 <Box>
                                     <Heading size="sm">Semana {getSemanaMpsLabel(selectedDisplayInfo)}</Heading>
                                     <Text fontSize="sm" color="gray.600">{getSemanaMpsDateRange(selectedDisplayInfo)}</Text>
                                 </Box>
                                 {selectedMpsItem ? (
-                                    <Badge colorScheme={getEstadoColorScheme(selectedMpsItem.estado)}>
+                                    <Badge colorPalette={getEstadoColorScheme(selectedMpsItem.estado)}>
                                         {getEstadoLabel(selectedMpsItem.estado)}
                                     </Badge>
                                 ) : (
-                                    <Badge colorScheme="gray">Sin MPS</Badge>
+                                    <Badge colorPalette="gray">Sin MPS</Badge>
                                 )}
                             </Flex>
 
-                            <Divider />
+                            <Separator />
 
                             {!selectedMpsItem ? (
                                 <Box p={4} bg="red.50" borderWidth="1px" borderColor="red.200" borderRadius="md">
@@ -684,7 +685,7 @@ export default function AprobacionMPSWeekTab() {
                                                 <Input
                                                     aria-label="Token de aprobacion MPS"
                                                     value={approvalTokenInput}
-                                                    onChange={(event) => setApprovalTokenInput(
+                                                    onValueChange={(event) => setApprovalTokenInput(
                                                         event.target.value.replace(/\D/g, "").slice(0, 4),
                                                     )}
                                                     inputMode="numeric"
@@ -705,27 +706,27 @@ export default function AprobacionMPSWeekTab() {
                                     <Flex justify="end" gap={3} wrap="wrap">
                                         <Button
                                             variant="outline"
-                                            colorScheme="purple"
+                                            colorPalette="purple"
                                             onClick={() => void handleDownloadPdf(selectedMpsItem)}
-                                            isLoading={downloadingPdfWeekStartDate === selectedMpsItem.weekStartDate}
+                                            loading={downloadingPdfWeekStartDate === selectedMpsItem.weekStartDate}
                                         >
                                             PDF MPS
                                         </Button>
                                         {canApproveBase && selectedMpsDetail && (
                                             <Button
-                                                colorScheme="green"
+                                                colorPalette="green"
                                                 onClick={() => void handleApprove(selectedMpsDetail)}
-                                                isLoading={approvingWeekStartDate === selectedMpsDetail.weekStartDate}
-                                                isDisabled={!canApprove}
+                                                loading={approvingWeekStartDate === selectedMpsDetail.weekStartDate}
+                                                disabled={!canApprove}
                                             >
                                                 Aprobar MPS
                                             </Button>
                                         )}
                                         {canGenerateOdps && (
                                             <Button
-                                                colorScheme="blue"
+                                                colorPalette="blue"
                                                 onClick={() => void handleGenerateOdps(selectedMpsItem)}
-                                                isLoading={generatingWeekStartDate === selectedMpsItem.weekStartDate}
+                                                loading={generatingWeekStartDate === selectedMpsItem.weekStartDate}
                                             >
                                                 Generar ODPs
                                             </Button>
@@ -750,7 +751,7 @@ export default function AprobacionMPSWeekTab() {
                             <Text color="red.700" fontSize="sm">{mpsDetailError}</Text>
                         </Box>
                     ) : selectedMpsDetail ? (
-                        <VStack align="stretch" spacing={4}>
+                        <VStack align="stretch" gap={4}>
                             {selectedMpsItem.totalOdpsGeneradas > 0 && odpsError && (
                                 <Box p={3} bg="red.50" borderWidth="1px" borderColor="red.200" borderRadius="md">
                                     <Text color="red.700" fontSize="sm">

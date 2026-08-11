@@ -1,21 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
+  Steps,
   Button,
   Flex,
-  FormControl,
-  FormLabel,
   Input,
   NumberInput,
   NumberInputField,
-  FormErrorMessage,
   Grid,
   GridItem,
   InputGroup,
@@ -29,11 +20,14 @@ import {
   Td,
   Box,
   Text,
-  useToast
+  useToast,
+  Field,
+  Dialog,
+  Portal,
 } from "@chakra-ui/react";
-import { SearchIcon, DeleteIcon } from "@chakra-ui/icons";
 import EndPointsURL from "../../../../../../api/EndPointsURL";
 import CustomDecimalInput from "../../../../../../components/CustomDecimalInput/CustomDecimalInput.tsx";
+import { LuSearch, LuTrash2 } from 'react-icons/lu';
 
 // Interfaces based on backend models
 interface CasePack {
@@ -207,218 +201,224 @@ const PackagingTerminadoDefiner: React.FC<Props> = ({ isOpen, onClose, onSave, i
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="6xl">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Definir Packaging de Terminado</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <Grid templateColumns="repeat(2, 1fr)" gap={6}>
-            {/* Left Panel - Material Search and List */}
-            <GridItem>
-              <Box borderWidth="1px" borderRadius="lg" p={4}>
-                <Text fontSize="lg" fontWeight="bold" mb={4}>
-                  Materiales de Empaque
-                </Text>
-                
-                {/* Search Input */}
-                <FormControl mb={4}>
-                  <FormLabel>Buscar Material</FormLabel>
-                  <InputGroup>
-                    <Input
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Nombre del material"
-                    />
-                    <InputRightElement>
-                      <IconButton
-                        aria-label="Buscar material"
-                        icon={<SearchIcon />}
-                        size="sm"
-                        onClick={searchMaterials}
-                        isLoading={isSearching}
-                      />
-                    </InputRightElement>
-                  </InputGroup>
-                </FormControl>
-                
-                {/* Search Results */}
-                {searchResults.length > 0 && (
-                  <Box mb={4} maxH="200px" overflowY="auto" borderWidth="1px" borderRadius="md">
-                    <Table size="sm">
-                      <Thead>
-                        <Tr>
-                          <Th>Código</Th>
-                          <Th>Nombre</Th>
-                          <Th>Unidad</Th>
-                          <Th></Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {searchResults.map((material) => (
-                          <Tr key={material.productoId}>
-                            <Td>{material.productoId}</Td>
-                            <Td>{material.nombre}</Td>
-                            <Td>{material.tipoUnidades}</Td>
-                            <Td>
-                              <Button
-                                size="xs"
-                                colorScheme="blue"
-                                onClick={() => addMaterial(material)}
-                              >
-                                Agregar
-                              </Button>
-                            </Td>
-                          </Tr>
-                        ))}
-                      </Tbody>
-                    </Table>
+    <Dialog.Root open={isOpen} size='xl' onOpenChange={e => {
+      if (!e.open) {
+        onClose();
+      }
+    }}>
+      <Portal>
+
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>Definir Packaging de Terminado</Dialog.Header>
+            <Dialog.CloseTrigger />
+            <Dialog.Body>
+              <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+                {/* Left Panel - Material Search and List */}
+                <GridItem>
+                  <Box borderWidth="1px" borderRadius="lg" p={4}>
+                    <Text fontSize="lg" fontWeight="bold" mb={4}>
+                      Materiales de Empaque
+                    </Text>
+                    
+                    {/* Search Input */}
+                    <Field.Root mb={4}>
+                      <Field.Label>Buscar Material</Field.Label>
+                      <InputGroup>
+                        <Input
+                          value={searchTerm}
+                          onValueChange={(e) => setSearchTerm(e.target.value)}
+                          placeholder="Nombre del material"
+                        />
+                        <InputRightElement>
+                          <IconButton
+                            aria-label="Buscar material"
+                            size="sm"
+                            onClick={searchMaterials}
+                            loading={isSearching}><LuSearch /></IconButton>
+                        </InputRightElement>
+                      </InputGroup>
+                    </Field.Root>
+                    
+                    {/* Search Results */}
+                    {searchResults.length > 0 && (
+                      <Box mb={4} maxH="200px" overflowY="auto" borderWidth="1px" borderRadius="md">
+                        <Table.Root size="sm">
+                          <Table.Header>
+                            <Table.Row>
+                              <Table.ColumnHeader>Código</Table.ColumnHeader>
+                              <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                              <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                              <Table.ColumnHeader></Table.ColumnHeader>
+                            </Table.Row>
+                          </Table.Header>
+                          <Table.Body>
+                            {searchResults.map((material) => (
+                              <Table.Row key={material.productoId}>
+                                <Table.Cell>{material.productoId}</Table.Cell>
+                                <Table.Cell>{material.nombre}</Table.Cell>
+                                <Table.Cell>{material.tipoUnidades}</Table.Cell>
+                                <Table.Cell>
+                                  <Button
+                                    size="xs"
+                                    colorPalette="blue"
+                                    onClick={() => addMaterial(material)}
+                                  >
+                                    Agregar
+                                  </Button>
+                                </Table.Cell>
+                              </Table.Row>
+                            ))}
+                          </Table.Body>
+                        </Table.Root>
+                      </Box>
+                    )}
+                    
+                    {/* Selected Materials Table */}
+                    <Box maxH="300px" overflowY="auto">
+                      <Table.Root size="sm">
+                        <Table.Header>
+                          <Table.Row>
+                            <Table.ColumnHeader>Código</Table.ColumnHeader>
+                            <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                            <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                            <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                            <Table.ColumnHeader></Table.ColumnHeader>
+                          </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                          {casePack.insumosEmpaque.map((insumo, index) => (
+                            <Table.Row key={index}>
+                              <Table.Cell>{insumo.material.productoId}</Table.Cell>
+                              <Table.Cell>{insumo.material.nombre}</Table.Cell>
+                              <Table.Cell>{insumo.material.tipoUnidades}</Table.Cell>
+                              <Table.Cell>
+                                <CustomDecimalInput
+                                  value={insumo.cantidad}
+                                  onChange={(newCantidad) => updateQuantity(index, newCantidad)}
+                                  min={0.1}
+                                  maxDecimals={1}
+                                  size="sm"
+                                  w="80px"
+                                />
+                              </Table.Cell>
+                              <Table.Cell>
+                                <IconButton
+                                  aria-label="Eliminar material"
+                                  size="sm"
+                                  colorPalette="red"
+                                  onClick={() => removeMaterial(index)}><LuTrash2 /></IconButton>
+                              </Table.Cell>
+                            </Table.Row>
+                          ))}
+                        </Table.Body>
+                      </Table.Root>
+                    </Box>
                   </Box>
-                )}
+                </GridItem>
                 
-                {/* Selected Materials Table */}
-                <Box maxH="300px" overflowY="auto">
-                  <Table size="sm">
-                    <Thead>
-                      <Tr>
-                        <Th>Código</Th>
-                        <Th>Nombre</Th>
-                        <Th>Unidad</Th>
-                        <Th>Cantidad</Th>
-                        <Th></Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {casePack.insumosEmpaque.map((insumo, index) => (
-                        <Tr key={index}>
-                          <Td>{insumo.material.productoId}</Td>
-                          <Td>{insumo.material.nombre}</Td>
-                          <Td>{insumo.material.tipoUnidades}</Td>
-                          <Td>
-                            <CustomDecimalInput
-                              value={insumo.cantidad}
-                              onChange={(newCantidad) => updateQuantity(index, newCantidad)}
-                              min={0.1}
-                              maxDecimals={1}
-                              size="sm"
-                              w="80px"
-                            />
-                          </Td>
-                          <Td>
-                            <IconButton
-                              aria-label="Eliminar material"
-                              icon={<DeleteIcon />}
-                              size="sm"
-                              colorScheme="red"
-                              onClick={() => removeMaterial(index)}
-                            />
-                          </Td>
-                        </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
-                </Box>
-              </Box>
-            </GridItem>
-            
-            {/* Right Panel - CasePack Properties */}
-            <GridItem>
-              <Box borderWidth="1px" borderRadius="lg" p={4}>
-                <Text fontSize="lg" fontWeight="bold" mb={4}>
-                  Propiedades del Empaque
-                </Text>
-                
-                {/* Units Per Case */}
-                <FormControl isInvalid={errors.unitsPerCase} mb={4} isRequired>
-                  <FormLabel>Unidades por Caja</FormLabel>
-                  <NumberInput
-                    min={1}
-                    value={casePack.unitsPerCase}
-                    onChange={(_, value) => handleInputChange('unitsPerCase', value)}
-                  >
-                    <NumberInputField />
-                  </NumberInput>
-                  <FormErrorMessage>
-                    El valor debe ser mayor que cero
-                  </FormErrorMessage>
-                </FormControl>
-                
-                {/* EAN14 */}
-                <FormControl mb={4}>
-                  <FormLabel>EAN14 / ITF-14</FormLabel>
-                  <Input
-                    value={casePack.ean14 || ""}
-                    onChange={(e) => handleInputChange('ean14', e.target.value)}
-                    placeholder="Código EAN14"
-                  />
-                </FormControl>
-                
-                {/* Dimensions */}
-                <Flex gap={4} mb={4}>
-                  <FormControl>
-                    <FormLabel>Largo (cm)</FormLabel>
-                    <NumberInput
-                      min={0}
-                      value={casePack.largoCm || ""}
-                      onChange={(_, value) => handleInputChange('largoCm', value)}
-                    >
-                      <NumberInputField />
-                    </NumberInput>
-                  </FormControl>
-                  
-                  <FormControl>
-                    <FormLabel>Ancho (cm)</FormLabel>
-                    <NumberInput
-                      min={0}
-                      value={casePack.anchoCm || ""}
-                      onChange={(_, value) => handleInputChange('anchoCm', value)}
-                    >
-                      <NumberInputField />
-                    </NumberInput>
-                  </FormControl>
-                  
-                  <FormControl>
-                    <FormLabel>Alto (cm)</FormLabel>
-                    <NumberInput
-                      min={0}
-                      value={casePack.altoCm || ""}
-                      onChange={(_, value) => handleInputChange('altoCm', value)}
-                    >
-                      <NumberInputField />
-                    </NumberInput>
-                  </FormControl>
-                </Flex>
-                
-                {/* Gross Weight */}
-                <FormControl mb={4}>
-                  <FormLabel>Peso Bruto (kg)</FormLabel>
-                  <NumberInput
-                    min={0}
-                    value={casePack.grossWeightKg || ""}
-                    onChange={(_, value) => handleInputChange('grossWeightKg', value)}
-                  >
-                    <NumberInputField />
-                  </NumberInput>
-                </FormControl>
-              </Box>
-            </GridItem>
-          </Grid>
-        </ModalBody>
-        
-        <ModalFooter>
-          <Button colorScheme="gray" mr={3} onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button 
-            colorScheme="blue" 
-            onClick={handleSave}
-            isDisabled={!isFormValid()}
-          >
-            Aceptar
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+                {/* Right Panel - CasePack Properties */}
+                <GridItem>
+                  <Box borderWidth="1px" borderRadius="lg" p={4}>
+                    <Text fontSize="lg" fontWeight="bold" mb={4}>
+                      Propiedades del Empaque
+                    </Text>
+                    
+                    {/* Units Per Case */}
+                    <Field.Root invalid={errors.unitsPerCase} mb={4} required>
+                      <Field.Label>Unidades por Caja</Field.Label>
+                      <NumberInput.Root
+                        min={1}
+                        value={String(casePack.unitsPerCase)}
+                        onValueChange={(_, value) => handleInputChange('unitsPerCase', value)}
+                      >
+                        <NumberInput.Input />
+                      </NumberInput.Root>
+                      <Field.ErrorText>
+                        El valor debe ser mayor que cero
+                      </Field.ErrorText>
+                    </Field.Root>
+                    
+                    {/* EAN14 */}
+                    <Field.Root mb={4}>
+                      <Field.Label>EAN14 / ITF-14</Field.Label>
+                      <Input
+                        value={casePack.ean14 || ""}
+                        onValueChange={(e) => handleInputChange('ean14', e.target.value)}
+                        placeholder="Código EAN14"
+                      />
+                    </Field.Root>
+                    
+                    {/* Dimensions */}
+                    <Flex gap={4} mb={4}>
+                      <Field.Root>
+                        <Field.Label>Largo (cm)</Field.Label>
+                        <NumberInput.Root
+                          min={0}
+                          value={String(casePack.largoCm || "")}
+                          onValueChange={(_, value) => handleInputChange('largoCm', value)}
+                        >
+                          <NumberInput.Input />
+                        </NumberInput.Root>
+                      </Field.Root>
+                      
+                      <Field.Root>
+                        <Field.Label>Ancho (cm)</Field.Label>
+                        <NumberInput.Root
+                          min={0}
+                          value={String(casePack.anchoCm || "")}
+                          onValueChange={(_, value) => handleInputChange('anchoCm', value)}
+                        >
+                          <NumberInput.Input />
+                        </NumberInput.Root>
+                      </Field.Root>
+                      
+                      <Field.Root>
+                        <Field.Label>Alto (cm)</Field.Label>
+                        <NumberInput.Root
+                          min={0}
+                          value={String(casePack.altoCm || "")}
+                          onValueChange={(_, value) => handleInputChange('altoCm', value)}
+                        >
+                          <NumberInput.Input />
+                        </NumberInput.Root>
+                      </Field.Root>
+                    </Flex>
+                    
+                    {/* Gross Weight */}
+                    <Field.Root mb={4}>
+                      <Field.Label>Peso Bruto (kg)</Field.Label>
+                      <NumberInput.Root
+                        min={0}
+                        value={String(casePack.grossWeightKg || "")}
+                        onValueChange={(_, value) => handleInputChange('grossWeightKg', value)}
+                      >
+                        <NumberInput.Input />
+                      </NumberInput.Root>
+                    </Field.Root>
+                  </Box>
+                </GridItem>
+              </Grid>
+            </Dialog.Body>
+
+            <Dialog.Footer>
+              <Button colorPalette="gray" mr={3} onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button 
+                colorPalette="blue" 
+                onClick={handleSave}
+                disabled={!isFormValid()}
+              >
+                Aceptar
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+
+      </Portal>
+    </Dialog.Root>
   );
 };
 

@@ -1,18 +1,17 @@
 import {useState} from 'react';
 import {
+  Steps,
   Box,
   Heading,
-  FormControl,
-  FormLabel,
-  FormHelperText,
   Input,
   VStack,
   Button,
   useToast,
-  Select,
+  NativeSelect,
   Text,
   Textarea,
   HStack,
+  Field,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
@@ -213,74 +212,74 @@ function DefinicionProcesosTab() {
     switch (model) {
       case TimeModelType.CONSTANT:
         return (
-          <FormControl isRequired>
-            <FormLabel>Tiempo Constante (segundos)</FormLabel>
+          <Field.Root required>
+            <Field.Label>Tiempo Constante (segundos)</Field.Label>
             <Input
               type="number"
               value={constantSeconds}
-              onChange={(e) => setConstantSeconds(Number(e.target.value))}
+              onValueChange={(e) => setConstantSeconds(Number(e.target.value))}
               sx={input_style}
             />
-            <FormHelperText>
+            <Field.HelperText>
               Tiempo total = Setup Time + Tiempo Constante
-            </FormHelperText>
-          </FormControl>
+            </Field.HelperText>
+          </Field.Root>
         );
       case TimeModelType.THROUGHPUT_RATE:
         return (
-          <FormControl isRequired>
-            <FormLabel>Tasa de Rendimiento (unidades/segundo)</FormLabel>
+          <Field.Root required>
+            <Field.Label>Tasa de Rendimiento (unidades/segundo)</Field.Label>
             <Input
               type="number"
               value={throughputUnitsPerSec}
-              onChange={(e) => setThroughputUnitsPerSec(Number(e.target.value))}
+              onValueChange={(e) => setThroughputUnitsPerSec(Number(e.target.value))}
               step="any"
               sx={input_style}
             />
-            <FormHelperText>
+            <Field.HelperText>
               Tiempo total = Setup Time + (Unidades / Tasa de Rendimiento)
-            </FormHelperText>
-          </FormControl>
+            </Field.HelperText>
+          </Field.Root>
         );
       case TimeModelType.PER_UNIT:
         return (
-          <FormControl isRequired>
-            <FormLabel>Tiempo por Unidad (segundos)</FormLabel>
+          <Field.Root required>
+            <Field.Label>Tiempo por Unidad (segundos)</Field.Label>
             <Input
               type="number"
               value={secondsPerUnit}
-              onChange={(e) => setSecondsPerUnit(Number(e.target.value))}
+              onValueChange={(e) => setSecondsPerUnit(Number(e.target.value))}
               sx={input_style}
             />
-            <FormHelperText>
+            <Field.HelperText>
               Tiempo total = Setup Time + (Unidades * Tiempo por Unidad)
-            </FormHelperText>
-          </FormControl>
+            </Field.HelperText>
+          </Field.Root>
         );
       case TimeModelType.PER_BATCH:
         return (
           <>
-            <FormControl isRequired>
-              <FormLabel>Tiempo por Lote (segundos)</FormLabel>
+            <Field.Root required>
+              <Field.Label>Tiempo por Lote (segundos)</Field.Label>
               <Input
                 type="number"
                 value={secondsPerBatch}
-                onChange={(e) => setSecondsPerBatch(Number(e.target.value))}
+                onValueChange={(e) => setSecondsPerBatch(Number(e.target.value))}
                 sx={input_style}
               />
-            </FormControl>
-            <FormControl isRequired>
-              <FormLabel>Tamaño del Lote (unidades)</FormLabel>
+            </Field.Root>
+            <Field.Root required>
+              <Field.Label>Tamaño del Lote (unidades)</Field.Label>
               <Input
                 type="number"
                 value={batchSize}
-                onChange={(e) => setBatchSize(Number(e.target.value))}
+                onValueChange={(e) => setBatchSize(Number(e.target.value))}
                 sx={input_style}
               />
-              <FormHelperText>
+              <Field.HelperText>
                 Tiempo total = Setup Time + Math.ceil(Unidades / Tamaño del Lote) * Tiempo por Lote
-              </FormHelperText>
-            </FormControl>
+              </Field.HelperText>
+            </Field.Root>
           </>
         );
     }
@@ -291,75 +290,77 @@ function DefinicionProcesosTab() {
       <Heading size="md" mb={4}>
         Crear Proceso de Producción
       </Heading>
-      <VStack spacing={4} align="stretch">
-        <FormControl isRequired>
-          <FormLabel>Nombre</FormLabel>
-          <Input value={nombre} onChange={(e) => setNombre(e.target.value)} sx={input_style} />
-        </FormControl>
-        <FormControl>
-          <FormLabel>Set-up Time (segundos)</FormLabel>
+      <VStack gap={4} align="stretch">
+        <Field.Root required>
+          <Field.Label>Nombre</Field.Label>
+          <Input value={nombre} onValueChange={(e) => setNombre(e.target.value)} sx={input_style} />
+        </Field.Root>
+        <Field.Root>
+          <Field.Label>Set-up Time (segundos)</Field.Label>
           <Input
             type="number"
             value={setUpTime}
-            onChange={(e) => setSetUpTime(Number(e.target.value))}
+            onValueChange={(e) => setSetUpTime(Number(e.target.value))}
             sx={input_style}
           />
-        </FormControl>
+        </Field.Root>
 
         {/* Selector de modelo de tiempo */}
-        <FormControl isRequired>
-          <FormLabel>Modelo de Tiempo</FormLabel>
-          <Select 
-            value={model} 
-            onChange={(e) => setModel(e.target.value as TimeModelType)}
-            sx={input_style}
-          >
-            <option value={TimeModelType.CONSTANT}>Tiempo Constante</option>
-            <option value={TimeModelType.THROUGHPUT_RATE}>Tasa de Rendimiento</option>
-            <option value={TimeModelType.PER_UNIT}>Por Unidad</option>
-            <option value={TimeModelType.PER_BATCH}>Por Lote</option>
-          </Select>
-          <FormHelperText>
+        <Field.Root required>
+          <Field.Label>Modelo de Tiempo</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field
+              value={model}
+              onValueChange={(e) => setModel(e.target.value as TimeModelType)}
+              sx={input_style}>
+              <option value={TimeModelType.CONSTANT}>Tiempo Constante</option>
+              <option value={TimeModelType.THROUGHPUT_RATE}>Tasa de Rendimiento</option>
+              <option value={TimeModelType.PER_UNIT}>Por Unidad</option>
+              <option value={TimeModelType.PER_BATCH}>Por Lote</option>
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+          <Field.HelperText>
             Seleccione el modelo para calcular el tiempo de proceso
-          </FormHelperText>
-        </FormControl>
+          </Field.HelperText>
+        </Field.Root>
 
         {/* Campos específicos según el modelo */}
         {renderModelFields()}
 
-        <FormControl>
-          <FormLabel>Nivel de Acceso</FormLabel>
+        <Field.Root>
+          <Field.Label>Nivel de Acceso</Field.Label>
           <Input
             type="number"
             value={nivelAcceso}
-            onChange={(e) => setNivelAcceso(Number(e.target.value))}
+            onValueChange={(e) => setNivelAcceso(Number(e.target.value))}
             sx={input_style}
           />
-          <FormHelperText>
+          <Field.HelperText>
             Define qué usuarios pueden ver este proceso según su nivel de acceso
-          </FormHelperText>
-        </FormControl>
-        <FormControl>
-          <FormLabel>Recursos Requeridos</FormLabel>
+          </Field.HelperText>
+        </Field.Root>
+        <Field.Root>
+          <Field.Label>Recursos Requeridos</Field.Label>
           <PPRPmanager recursos={recursosSel} onChange={setRecursosSel} />
-        </FormControl>
+        </Field.Root>
 
         <Box borderWidth="1px" borderRadius="md" p={4}>
           <Text fontWeight="semibold" mb={3}>Documento del proceso (opcional)</Text>
-          <VStack align="stretch" spacing={3}>
-            <FormControl>
-              <FormLabel>Archivo PDF o Word</FormLabel>
+          <VStack align="stretch" gap={3}>
+            <Field.Root>
+              <Field.Label>Archivo PDF o Word</Field.Label>
               <Input
                 key={fileInputKey}
                 type="file"
                 accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                onChange={handleDocumentoChange}
+                onValueChange={handleDocumentoChange}
                 p={1}
               />
-              <FormHelperText>
+              <Field.HelperText>
                 Formatos permitidos: PDF y Word (.docx). Tamaño máximo: 2 MB.
-              </FormHelperText>
-            </FormControl>
+              </Field.HelperText>
+            </Field.Root>
 
             {documento ? (
               <HStack justify="space-between" align="center">
@@ -381,22 +382,22 @@ function DefinicionProcesosTab() {
             ) : null}
 
             {documento ? (
-              <FormControl>
-                <FormLabel>Observación inicial (opcional)</FormLabel>
+              <Field.Root>
+                <Field.Label>Observación inicial (opcional)</Field.Label>
                 <Textarea
                   value={documentoMotivo}
-                  onChange={(event) => setDocumentoMotivo(event.target.value)}
+                  onValueChange={(event) => setDocumentoMotivo(event.target.value)}
                   placeholder="Ejemplo: Documento inicial del proceso"
                 />
-              </FormControl>
+              </Field.Root>
             ) : null}
           </VStack>
         </Box>
 
-        <Button colorScheme="teal" onClick={handleSubmit} isLoading={saving} loadingText="Guardando...">
+        <Button colorPalette="teal" onClick={handleSubmit} loading={saving} loadingText="Guardando...">
           Guardar
         </Button>
-        <Button colorScheme="orange" onClick={clearFields} isDisabled={saving}>
+        <Button colorPalette="orange" onClick={clearFields} disabled={saving}>
           Limpiar
         </Button>
       </VStack>

@@ -1,20 +1,18 @@
 import {
-  Flex, 
-  Card, 
-  CardHeader,
-  CardBody,
-  FormControl,
-  FormLabel,
-  Input,
-  IconButton,
-  Button,
-  InputGroup,
-  InputRightElement,
-  Heading,
-  Text,
-  useColorModeValue,
+    Steps,
+    Flex,
+    Card,
+    Input,
+    IconButton,
+    Button,
+    InputGroup,
+    InputRightElement,
+    Heading,
+    Text,
+    Field,
 } from '@chakra-ui/react';
-import { ArrowBackIcon, SearchIcon } from '@chakra-ui/icons';
+import { useColorModeValue } from "../../../../components/ui/color-mode";
+import { LuArrowLeft, LuSearch } from 'react-icons/lu';
 
 type Props = {
     ocNumber: string;
@@ -49,7 +47,6 @@ export function PanelBusquedaOCFA({
             <Flex direction="row" gap={5} alignItems="start" w="full" maxW="800px" mx="auto">
                 <IconButton
                     aria-label="Volver"
-                    icon={<ArrowBackIcon/>}
                     onClick={onBack}
                     size="lg"
                     color="app.textMuted"
@@ -58,10 +55,9 @@ export function PanelBusquedaOCFA({
                     borderColor="app.border"
                     borderRadius="md"
                     boxShadow="sm"
-                    _hover={{ bg: "app.rowHover", color: backHoverColor }}
-                />
+                    _hover={{ bg: "app.rowHover", color: backHoverColor }}><LuArrowLeft /></IconButton>
 
-                <Card 
+                <Card.Root 
                     flex={1} 
                     boxShadow="sm" 
                     borderRadius="md" 
@@ -72,7 +68,7 @@ export function PanelBusquedaOCFA({
                     border="1px solid"
                     borderColor={softBorderColor}
                 >
-                    <CardHeader 
+                    <Card.Header 
                         borderBottom="1px solid"
                         borderColor={softBorderColor}
                         color={headerTextColor}
@@ -83,20 +79,20 @@ export function PanelBusquedaOCFA({
                         bg="app.surfaceSubtle"
                     >
                         Buscar OC-AF por ID
-                    </CardHeader>
+                    </Card.Header>
 
-                    <CardBody p={8}>
+                    <Card.Body p={8}>
                         <Text mb={5} color="app.textMuted" fontSize="md" lineHeight="1.6">
                             Ingrese el número de la orden de compra para activos fijos que desea incorporar al sistema.
                         </Text>
 
-                        <FormControl mb={8}>
-                            <FormLabel fontWeight="medium" color={labelColor} fontSize="md" mb={2}>Número de OC-AF</FormLabel>
+                        <Field.Root mb={8}>
+                            <Field.Label fontWeight="medium" color={labelColor} fontSize="md" mb={2}>Número de OC-AF</Field.Label>
                             <InputGroup size="lg">
-                                <Input 
+                                <Input
                                     placeholder="Ej: 12345"
                                     value={ocNumber}
-                                    onChange={(e) => setOcNumber(e.target.value)}
+                                    onValueChange={(e) => setOcNumber(e.target.value)}
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') {
                                             onSearch();
@@ -105,11 +101,9 @@ export function PanelBusquedaOCFA({
                                     borderRadius="md"
                                     border="1px solid"
                                     borderColor="app.border"
-                                    focusBorderColor="blue.500"
                                     _hover={{ borderColor: inputHoverBorderColor }}
                                     fontSize="md"
-                                    py={6}
-                                />
+                                    py={6} />
                                 <InputRightElement width="4.5rem" h="full" pr={1}>
                                     <Button 
                                         h="2rem" 
@@ -121,11 +115,11 @@ export function PanelBusquedaOCFA({
                                         onClick={onSearch}
                                         borderRadius="md"
                                     >
-                                        <SearchIcon />
+                                        <LuSearch />
                                     </Button>
                                 </InputRightElement>
                             </InputGroup>
-                        </FormControl>
+                        </Field.Root>
 
                         <Button
                             bg="blue.600"
@@ -133,20 +127,17 @@ export function PanelBusquedaOCFA({
                             size="lg"
                             width="full"
                             onClick={onSearch}
-                            isLoading={isSearching}
+                            loading={isSearching}
                             loadingText="Buscando..."
-                            leftIcon={<SearchIcon />}
                             _hover={{ bg: "blue.700" }}
                             _active={{ bg: "blue.800" }}
                             borderRadius="md"
                             py={6}
                             fontWeight="medium"
-                            boxShadow="sm"
-                        >
-                            Buscar Orden de Compra
-                        </Button>
-                    </CardBody>
-                </Card>
+                            boxShadow="sm"><LuSearch />Buscar Orden de Compra
+                                                    </Button>
+                    </Card.Body>
+                </Card.Root>
             </Flex>
         </Flex>
     );

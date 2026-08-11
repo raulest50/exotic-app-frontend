@@ -1,13 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
     Input,
     Table,
@@ -19,6 +16,7 @@ import {
     Thead,
     Tr,
     VStack,
+    Field,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL';
@@ -82,13 +80,13 @@ export default function AveriaAlmacenStep2ReviewSubmit({
     if (submissionSuccess) {
         return (
             <Box p={4}>
-                <Alert status="success" borderRadius="md" mb={6}>
-                    <AlertIcon />
-                    <AlertDescription>
+                <Alert.Root status="success" borderRadius="md" mb={6}>
+                    <Alert.Indicator />
+                    <Alert.Description>
                         El reporte de avería de almacén se registró exitosamente.
-                    </AlertDescription>
-                </Alert>
-                <Button colorScheme="blue" onClick={onReset}>
+                    </Alert.Description>
+                </Alert.Root>
+                <Button colorPalette="blue" onClick={onReset}>
                     Nuevo Reporte
                 </Button>
             </Box>
@@ -101,38 +99,38 @@ export default function AveriaAlmacenStep2ReviewSubmit({
                 Paso 3: Validar y Realizar Transacción de Almacén
             </Heading>
 
-            <VStack align="stretch" spacing={5} mb={6}>
+            <VStack align="stretch" gap={5} mb={6}>
                 <Box>
                     <Text fontWeight="bold" mb={2}>Materiales a Reportar como Avería</Text>
                     <Box overflowX="auto">
-                        <Table size="sm" variant="simple">
-                            <Thead>
-                                <Tr>
-                                    <Th>Código</Th>
-                                    <Th>Nombre</Th>
-                                    <Th>Lote</Th>
-                                    <Th>Unidades</Th>
-                                    <Th isNumeric>Cantidad Avería</Th>
-                                    <Th isNumeric>Saldo en General</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                        <Table.Root size="sm" variant="simple">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>Código</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Unidades</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign='end'>Cantidad Avería</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign='end'>Saldo en General</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {selectedItems.map(item => (
-                                    <Tr key={`${item.productoId}|${item.loteId}`}>
-                                        <Td>{item.productoId}</Td>
-                                        <Td>{item.productoNombre}</Td>
-                                        <Td>{item.batchNumber}</Td>
-                                        <Td>{item.tipoUnidades}</Td>
-                                        <Td isNumeric fontWeight="semibold" color="red.600">
+                                    <Table.Row key={`${item.productoId}|${item.loteId}`}>
+                                        <Table.Cell>{item.productoId}</Table.Cell>
+                                        <Table.Cell>{item.productoNombre}</Table.Cell>
+                                        <Table.Cell>{item.batchNumber}</Table.Cell>
+                                        <Table.Cell>{item.tipoUnidades}</Table.Cell>
+                                        <Table.Cell fontWeight="semibold" color="red.600" textAlign='end'>
                                             {item.cantidadAveria.toFixed(2)}
-                                        </Td>
-                                        <Td isNumeric>
+                                        </Table.Cell>
+                                        <Table.Cell textAlign='end'>
                                             {(item.cantidadDisponible - item.cantidadAveria).toFixed(2)}
-                                        </Td>
-                                    </Tr>
+                                        </Table.Cell>
+                                    </Table.Row>
                                 ))}
-                            </Tbody>
-                        </Table>
+                            </Table.Body>
+                        </Table.Root>
                     </Box>
                 </Box>
 
@@ -140,7 +138,7 @@ export default function AveriaAlmacenStep2ReviewSubmit({
                     <Text fontWeight="bold" mb={2}>Observaciones (opcional)</Text>
                     <Textarea
                         value={observaciones}
-                        onChange={e => setObservaciones(e.target.value)}
+                        onValueChange={e => setObservaciones(e.target.value)}
                         placeholder="Escriba observaciones adicionales sobre este reporte de avería..."
                         size="sm"
                         resize="vertical"
@@ -148,11 +146,11 @@ export default function AveriaAlmacenStep2ReviewSubmit({
                 </Box>
 
                 <Box bg="app.surface" p={4} borderRadius="md" borderWidth="1px">
-                    <FormControl isRequired>
-                        <FormLabel>Token de Verificación</FormLabel>
+                    <Field.Root required>
+                        <Field.Label>Token de Verificación</Field.Label>
                         <Input
                             value={inputToken}
-                            onChange={e => setInputToken(e.target.value)}
+                            onValueChange={e => setInputToken(e.target.value)}
                             placeholder="Ingrese el token de 4 dígitos"
                             maxLength={4}
                             type="text"
@@ -160,30 +158,30 @@ export default function AveriaAlmacenStep2ReviewSubmit({
                         <Text mt={2} fontSize="sm" color="app.textMuted">
                             Token generado: <strong>{token}</strong>
                         </Text>
-                    </FormControl>
+                    </Field.Root>
                 </Box>
             </VStack>
 
             {submissionError && (
-                <Alert status="error" borderRadius="md" mb={4}>
-                    <AlertIcon />
-                    <AlertDescription>{submissionError}</AlertDescription>
-                </Alert>
+                <Alert.Root status="error" borderRadius="md" mb={4}>
+                    <Alert.Indicator />
+                    <Alert.Description>{submissionError}</Alert.Description>
+                </Alert.Root>
             )}
 
             <Flex gap={4}>
                 <Button
                     variant="outline"
                     onClick={() => setActiveStep(1)}
-                    isDisabled={isSubmitting}
+                    disabled={isSubmitting}
                 >
                     Anterior
                 </Button>
                 <Button
-                    colorScheme="green"
+                    colorPalette="green"
                     onClick={handleSubmit}
-                    isDisabled={inputToken !== token}
-                    isLoading={isSubmitting}
+                    disabled={inputToken !== token}
+                    loading={isSubmitting}
                     loadingText="Registrando..."
                 >
                     Ejecutar Transacción

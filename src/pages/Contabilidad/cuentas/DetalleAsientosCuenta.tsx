@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Steps,
   Button,
   Box,
   Table,
@@ -12,18 +13,17 @@ import {
   Text,
   Spinner,
   Alert,
-  AlertIcon,
   Badge,
-  Divider,
   HStack,
   VStack,
-  Heading
+  Heading,
+  Separator,
 } from '@chakra-ui/react';
-import { ArrowBackIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import { CuentaContable, MovimientoLibroMayor, PeriodoContable } from '../types';
 import EndPointsURL from '../../../api/EndPointsURL';
 import MyPagination from '../../../components/MyPagination';
+import { LuArrowLeft } from 'react-icons/lu';
 
 interface DetalleAsientosCuentaProps {
   cuenta: CuentaContable;
@@ -182,22 +182,16 @@ const DetalleAsientosCuenta: React.FC<DetalleAsientosCuentaProps> = ({
   return (
     <Box w="full">
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
-        <Button 
-          leftIcon={<ArrowBackIcon />} 
-          colorScheme="blue" 
-          variant="outline" 
-          onClick={onVolver}
-        >
-          Volver al catálogo
-        </Button>
+        <Button colorPalette="blue" variant="outline" onClick={onVolver}><LuArrowLeft />Volver al catálogo
+                  </Button>
         <Heading size="md">
           Asientos de Cuenta: {cuenta.codigo} - {cuenta.nombre}
         </Heading>
       </Flex>
 
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         <Box bg="app.surfaceSubtle" p={4} borderRadius="md">
-          <HStack spacing={4} wrap="wrap">
+          <HStack gap={4} wrap="wrap">
             <Box flex="1" minW="200px">
               <Text fontWeight="bold">Código:</Text>
               <Text>{cuenta.codigo}</Text>
@@ -208,7 +202,7 @@ const DetalleAsientosCuenta: React.FC<DetalleAsientosCuentaProps> = ({
             </Box>
             <Box flex="1" minW="200px">
               <Text fontWeight="bold">Tipo:</Text>
-              <Badge colorScheme={
+              <Badge colorPalette={
                 cuenta.tipo === 'ACTIVO' ? 'blue' :
                 cuenta.tipo === 'PASIVO' ? 'red' :
                 cuenta.tipo === 'PATRIMONIO' ? 'purple' :
@@ -224,7 +218,7 @@ const DetalleAsientosCuenta: React.FC<DetalleAsientosCuentaProps> = ({
           </HStack>
         </Box>
 
-        <Divider />
+        <Separator />
 
         <Box>
           {selectedPeriodo && (
@@ -237,10 +231,10 @@ const DetalleAsientosCuenta: React.FC<DetalleAsientosCuentaProps> = ({
           )}
 
           {error && (
-            <Alert status="error" mb={4}>
-              <AlertIcon />
+            <Alert.Root status="error" mb={4}>
+              <Alert.Indicator />
               {error}
-            </Alert>
+            </Alert.Root>
           )}
 
           {isLoading ? (
@@ -250,36 +244,36 @@ const DetalleAsientosCuenta: React.FC<DetalleAsientosCuentaProps> = ({
           ) : movimientos.length > 0 ? (
             <>
               <Box overflowX="auto">
-                <Table variant="simple">
-                  <Thead>
-                    <Tr>
-                      <Th>Fecha</Th>
-                      <Th>Asiento #</Th>
-                      <Th>Descripción</Th>
-                      <Th isNumeric>Débito</Th>
-                      <Th isNumeric>Crédito</Th>
-                      <Th isNumeric>Saldo</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
+                <Table.Root variant="simple">
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                      <Table.ColumnHeader>Asiento #</Table.ColumnHeader>
+                      <Table.ColumnHeader>Descripción</Table.ColumnHeader>
+                      <Table.ColumnHeader textAlign='end'>Débito</Table.ColumnHeader>
+                      <Table.ColumnHeader textAlign='end'>Crédito</Table.ColumnHeader>
+                      <Table.ColumnHeader textAlign='end'>Saldo</Table.ColumnHeader>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
                     {movimientos.map((movimiento, index) => (
-                      <Tr key={index}>
-                        <Td>{formatDate(movimiento.fecha)}</Td>
-                        <Td>{movimiento.numeroAsiento}</Td>
-                        <Td>{movimiento.descripcion}</Td>
-                        <Td isNumeric>{movimiento.debito ? formatCurrency(movimiento.debito) : '-'}</Td>
-                        <Td isNumeric>{movimiento.credito ? formatCurrency(movimiento.credito) : '-'}</Td>
-                        <Td isNumeric>{formatCurrency(movimiento.saldoAcumulado)}</Td>
-                      </Tr>
+                      <Table.Row key={index}>
+                        <Table.Cell>{formatDate(movimiento.fecha)}</Table.Cell>
+                        <Table.Cell>{movimiento.numeroAsiento}</Table.Cell>
+                        <Table.Cell>{movimiento.descripcion}</Table.Cell>
+                        <Table.Cell textAlign='end'>{movimiento.debito ? formatCurrency(movimiento.debito) : '-'}</Table.Cell>
+                        <Table.Cell textAlign='end'>{movimiento.credito ? formatCurrency(movimiento.credito) : '-'}</Table.Cell>
+                        <Table.Cell textAlign='end'>{formatCurrency(movimiento.saldoAcumulado)}</Table.Cell>
+                      </Table.Row>
                     ))}
-                    <Tr fontWeight="bold">
-                      <Td colSpan={3} textAlign="right">Totales:</Td>
-                      <Td isNumeric>{formatCurrency(totalDebito)}</Td>
-                      <Td isNumeric>{formatCurrency(totalCredito)}</Td>
-                      <Td></Td>
-                    </Tr>
-                  </Tbody>
-                </Table>
+                    <Table.Row fontWeight="bold">
+                      <Table.Cell colSpan={3} textAlign="right">Totales:</Table.Cell>
+                      <Table.Cell textAlign='end'>{formatCurrency(totalDebito)}</Table.Cell>
+                      <Table.Cell textAlign='end'>{formatCurrency(totalCredito)}</Table.Cell>
+                      <Table.Cell></Table.Cell>
+                    </Table.Row>
+                  </Table.Body>
+                </Table.Root>
               </Box>
               
               <MyPagination
@@ -290,11 +284,11 @@ const DetalleAsientosCuenta: React.FC<DetalleAsientosCuentaProps> = ({
               />
             </>
           ) : (
-            <Alert status="info">
-              <AlertIcon />
+            <Alert.Root status="info">
+              <Alert.Indicator />
               No hay movimientos para esta cuenta
               {selectedPeriodo ? ' en el período seleccionado' : ''}
-            </Alert>
+            </Alert.Root>
           )}
         </Box>
       </VStack>

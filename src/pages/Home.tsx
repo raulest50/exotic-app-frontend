@@ -1,15 +1,6 @@
-import {
-    SimpleGrid,
-    Flex,
-    Heading,
-    Button,
-    Container,
-    Box,
-    Tooltip,
-    IconButton,
-    useColorMode,
-    useColorModeValue,
-} from "@chakra-ui/react";
+import { Steps, SimpleGrid, Flex, Heading, Button, Container, Box, IconButton } from "@chakra-ui/react";
+import { Tooltip } from '@/components/ui/tooltip';
+import { useColorMode, useColorModeValue } from "../components/ui/color-mode";
 import { useEffect, useMemo, useState } from "react";
 import type { IconType } from "react-icons";
 import SectionCard from "../components/SectionCard.tsx";
@@ -32,13 +23,12 @@ import { MdNotificationsActive } from "react-icons/md";
 import { FaCogs, FaCrown } from "react-icons/fa";
 import { FaCalendarAlt } from "react-icons/fa";
 import { MdRefresh } from "react-icons/md";
-import { MoonIcon, SunIcon } from "@chakra-ui/icons";
-
 import "@fontsource-variable/comfortaa";
 
 import { Modulo } from "./Usuarios/GestionUsuarios/types.tsx";
 
 import { useAuth } from "../context/AuthContext";
+
 import { useMasterDirectives } from "../context/MasterDirectivesContext";
 import {
     ENABLE_MASTER_SUPERMASTER_DIRECTIVES_ACCESS_DEFAULT,
@@ -47,6 +37,7 @@ import {
 import { useNotifications } from "../context/NotificationsContext";
 import type { AccessRule } from "../auth/accessModel.ts";
 import { moduleAccessRule } from "../auth/accessHelpers.ts";
+import { LuMoon, LuSun } from 'react-icons/lu';
 
 type HomeCardDef = {
     to: string;
@@ -162,40 +153,33 @@ export default function Home() {
                             <SplitText text={"Usuario : " + user} fontSize={{ base: "sm", md: "md", lg: "xl" }} />
                         </Box>
                     </Box>
-                    <Tooltip label="Actualizar notificaciones">
+                    <Tooltip content="Actualizar notificaciones">
                         <Button
                             display={{ base: "none", sm: "inline-flex" }}
                             size="md"
-                            colorScheme="blue"
+                            colorPalette="blue"
                             variant="ghost"
                             onClick={refreshNotifications}
-                            leftIcon={<MdRefresh />}
-                            aria-label="Actualizar notificaciones"
-                        >
-                            Actualizar
-                        </Button>
+                            aria-label="Actualizar notificaciones"><MdRefresh />Actualizar
+                                                    </Button>
                     </Tooltip>
-                    <Tooltip label="Actualizar notificaciones">
+                    <Tooltip content="Actualizar notificaciones">
                         <IconButton
                             display={{ base: "inline-flex", sm: "none" }}
                             size="md"
-                            colorScheme="blue"
+                            colorPalette="blue"
                             variant="ghost"
                             onClick={refreshNotifications}
-                            icon={<MdRefresh />}
-                            aria-label="Actualizar notificaciones"
-                        />
+                            aria-label="Actualizar notificaciones"><MdRefresh /></IconButton>
                     </Tooltip>
-                    <Tooltip label={colorMode === "light" ? "Modo oscuro" : "Modo claro"}>
+                    <Tooltip content={colorMode === "light" ? "Modo oscuro" : "Modo claro"}>
                         <IconButton
                             size="md"
                             aria-label="Toggle color mode"
-                            icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
                             onClick={toggleColorMode}
-                            variant="ghost"
-                        />
+                            variant="ghost">{colorMode === "light" ? <LuMoon /> : <LuSun />}</IconButton>
                     </Tooltip>
-                    <Button size="md" colorScheme="green" variant="ghost" onClick={logout}>
+                    <Button size="md" colorPalette="green" variant="ghost" onClick={logout}>
                         Cerrar Sesion
                     </Button>
                 </Flex>

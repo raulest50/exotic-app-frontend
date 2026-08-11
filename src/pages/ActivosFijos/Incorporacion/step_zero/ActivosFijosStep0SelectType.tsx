@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Flex, useToast } from '@chakra-ui/react';
+import { Steps, Flex, useToast } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL';
 import { IncorporacionActivoDto, OrdenCompraActivo } from "../../types.tsx";

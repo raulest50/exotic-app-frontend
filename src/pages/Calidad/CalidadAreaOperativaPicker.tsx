@@ -1,23 +1,13 @@
-import { CloseIcon, SearchIcon } from "@chakra-ui/icons";
 import {
+    Steps,
     Badge,
     Box,
     Button,
-    FormControl,
-    FormHelperText,
-    FormLabel,
     HStack,
     IconButton,
     Input,
     InputGroup,
     InputLeftElement,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     Table,
     Tbody,
     Td,
@@ -28,10 +18,15 @@ import {
     VStack,
     useDisclosure,
     useToast,
+    Field,
+    Icon,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import { extractApiError, searchAreasOperativas } from "./calidadApi";
 import type { AreaOperativaOption } from "./types";
+import { LuSearch, LuX } from 'react-icons/lu';
 
 interface CalidadAreaOperativaPickerProps {
     value: AreaOperativaOption | null;
@@ -57,7 +52,7 @@ export default function CalidadAreaOperativaPicker({
     isDisabled = false,
 }: CalidadAreaOperativaPickerProps) {
     const toast = useToast();
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const { open, onOpen, onClose } = useDisclosure();
     const [searchText, setSearchText] = useState("");
     const [areas, setAreas] = useState<AreaOperativaOption[]>([]);
     const [loading, setLoading] = useState(false);
@@ -102,19 +97,19 @@ export default function CalidadAreaOperativaPicker({
     };
 
     return (
-        <FormControl>
-            <FormLabel>{label}</FormLabel>
+        <Field.Root>
+            <Field.Label>{label}</Field.Label>
             <Box borderWidth="1px" borderRadius="md" p={4}>
-                <HStack justify="space-between" align="center" spacing={4}>
+                <HStack justify="space-between" align="center" gap={4}>
                     <Box minW={0}>
                         {value ? (
-                            <VStack align="start" spacing={1}>
-                                <HStack spacing={2} flexWrap="wrap">
+                            <VStack align="start" gap={1}>
+                                <HStack gap={2} flexWrap="wrap">
                                     <Text fontWeight="semibold">{value.nombre}</Text>
                                     <Badge variant="subtle">ID {value.areaId}</Badge>
                                 </HStack>
                                 {value.descripcion && (
-                                    <Text fontSize="sm" color="gray.600" noOfLines={2}>
+                                    <Text fontSize="sm" color="gray.600" lineClamp={2}>
                                         {value.descripcion}
                                     </Text>
                                 )}
@@ -126,110 +121,118 @@ export default function CalidadAreaOperativaPicker({
                             <Text color="gray.500">No hay area seleccionada.</Text>
                         )}
                     </Box>
-                    <HStack spacing={2}>
+                    <HStack gap={2}>
                         {value && (
                             <IconButton
                                 aria-label="Limpiar area operativa"
-                                icon={<CloseIcon />}
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => onChange(null)}
-                                isDisabled={isDisabled}
-                            />
+                                disabled={isDisabled}><LuX /></IconButton>
                         )}
-                        <Button onClick={onOpen} isDisabled={isDisabled}>
+                        <Button onClick={onOpen} disabled={isDisabled}>
                             {value ? "Cambiar" : "Seleccionar"}
                         </Button>
                     </HStack>
                 </HStack>
             </Box>
-            {helperText && <FormHelperText>{helperText}</FormHelperText>}
+            {helperText && <Field.HelperText>{helperText}</Field.HelperText>}
 
-            <Modal isOpen={isOpen} onClose={onClose} size="3xl">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Seleccionar area operativa</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <VStack align="stretch" spacing={4}>
-                            <HStack>
-                                <InputGroup>
-                                    <InputLeftElement pointerEvents="none">
-                                        <SearchIcon color="gray.400" />
-                                    </InputLeftElement>
-                                    <Input
-                                        value={searchText}
-                                        onChange={(event) => setSearchText(event.target.value)}
-                                        onKeyDown={(event) => {
-                                            if (event.key === "Enter") buscarAreas();
-                                        }}
-                                        placeholder="Buscar por nombre"
-                                    />
-                                </InputGroup>
-                                <Button onClick={() => buscarAreas()} isLoading={loading}>
-                                    Buscar
+            <Dialog.Root open={isOpen} size='xl' onOpenChange={e => {
+                if (!e.open) {
+                    onClose();
+                }
+            }}>
+                <Portal>
+
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>Seleccionar area operativa</Dialog.Header>
+                            <Dialog.CloseTrigger />
+                            <Dialog.Body>
+                                <VStack align="stretch" gap={4}>
+                                    <HStack>
+                                        <InputGroup>
+                                            <InputLeftElement pointerEvents="none">
+                                                <Icon as={LuSearch} color="gray.400" />
+                                            </InputLeftElement>
+                                            <Input
+                                                value={searchText}
+                                                onValueChange={(event) => setSearchText(event.target.value)}
+                                                onKeyDown={(event) => {
+                                                    if (event.key === "Enter") buscarAreas();
+                                                }}
+                                                placeholder="Buscar por nombre"
+                                            />
+                                        </InputGroup>
+                                        <Button onClick={() => buscarAreas()} loading={loading}>
+                                            Buscar
+                                        </Button>
+                                    </HStack>
+
+                                    <Box overflowX="auto">
+                                        <Table.Root size="sm">
+                                            <Table.Header>
+                                                <Table.Row>
+                                                    <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                                    <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                                    <Table.ColumnHeader>Descripcion</Table.ColumnHeader>
+                                                    <Table.ColumnHeader>Responsable</Table.ColumnHeader>
+                                                    <Table.ColumnHeader />
+                                                </Table.Row>
+                                            </Table.Header>
+                                            <Table.Body>
+                                                {currentAreas.map((area) => (
+                                                    <Table.Row
+                                                        key={area.areaId}
+                                                        bg={value?.areaId === area.areaId ? "teal.50" : undefined}
+                                                    >
+                                                        <Table.Cell>{area.areaId}</Table.Cell>
+                                                        <Table.Cell fontWeight="semibold">{area.nombre}</Table.Cell>
+                                                        <Table.Cell maxW="280px">
+                                                            <Text lineClamp={2}>{area.descripcion || "-"}</Text>
+                                                        </Table.Cell>
+                                                        <Table.Cell>{responsableLabel(area)}</Table.Cell>
+                                                        <Table.Cell textAlign="right">
+                                                            <Button size="xs" colorPalette="teal" onClick={() => seleccionarArea(area)}>
+                                                                Seleccionar
+                                                            </Button>
+                                                        </Table.Cell>
+                                                    </Table.Row>
+                                                ))}
+                                            </Table.Body>
+                                        </Table.Root>
+                                        {!loading && areas.length === 0 && (
+                                            <Text textAlign="center" color="gray.500" py={6}>
+                                                No hay areas para mostrar.
+                                            </Text>
+                                        )}
+                                    </Box>
+
+                                    {areas.length > PAGE_SIZE && (
+                                        <HStack justify="center">
+                                            <Button size="sm" onClick={() => setPage((current) => current - 1)} disabled={page === 1}>
+                                                Anterior
+                                            </Button>
+                                            <Text fontSize="sm">Pagina {page} de {totalPages}</Text>
+                                            <Button size="sm" onClick={() => setPage((current) => current + 1)} disabled={page === totalPages}>
+                                                Siguiente
+                                            </Button>
+                                        </HStack>
+                                    )}
+                                </VStack>
+                            </Dialog.Body>
+                            <Dialog.Footer>
+                                <Button variant="outline" onClick={onClose}>
+                                    Cerrar
                                 </Button>
-                            </HStack>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
 
-                            <Box overflowX="auto">
-                                <Table size="sm">
-                                    <Thead>
-                                        <Tr>
-                                            <Th>ID</Th>
-                                            <Th>Nombre</Th>
-                                            <Th>Descripcion</Th>
-                                            <Th>Responsable</Th>
-                                            <Th />
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
-                                        {currentAreas.map((area) => (
-                                            <Tr
-                                                key={area.areaId}
-                                                bg={value?.areaId === area.areaId ? "teal.50" : undefined}
-                                            >
-                                                <Td>{area.areaId}</Td>
-                                                <Td fontWeight="semibold">{area.nombre}</Td>
-                                                <Td maxW="280px">
-                                                    <Text noOfLines={2}>{area.descripcion || "-"}</Text>
-                                                </Td>
-                                                <Td>{responsableLabel(area)}</Td>
-                                                <Td textAlign="right">
-                                                    <Button size="xs" colorScheme="teal" onClick={() => seleccionarArea(area)}>
-                                                        Seleccionar
-                                                    </Button>
-                                                </Td>
-                                            </Tr>
-                                        ))}
-                                    </Tbody>
-                                </Table>
-                                {!loading && areas.length === 0 && (
-                                    <Text textAlign="center" color="gray.500" py={6}>
-                                        No hay areas para mostrar.
-                                    </Text>
-                                )}
-                            </Box>
-
-                            {areas.length > PAGE_SIZE && (
-                                <HStack justify="center">
-                                    <Button size="sm" onClick={() => setPage((current) => current - 1)} isDisabled={page === 1}>
-                                        Anterior
-                                    </Button>
-                                    <Text fontSize="sm">Pagina {page} de {totalPages}</Text>
-                                    <Button size="sm" onClick={() => setPage((current) => current + 1)} isDisabled={page === totalPages}>
-                                        Siguiente
-                                    </Button>
-                                </HStack>
-                            )}
-                        </VStack>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button variant="outline" onClick={onClose}>
-                            Cerrar
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-        </FormControl>
+                </Portal>
+            </Dialog.Root>
+        </Field.Root>
     );
 }

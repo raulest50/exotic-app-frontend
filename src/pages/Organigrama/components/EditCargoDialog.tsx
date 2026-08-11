@@ -1,24 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Steps,
   Button,
-  FormControl,
-  FormLabel,
   Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   NumberDecrementStepper,
   NumberIncrementStepper,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
-  Select,
+  NativeSelect,
   Text,
   Textarea,
+  Field,
+  Dialog,
+  Portal,
 } from "@chakra-ui/react";
 import type { Cargo, OrganigramaUser } from "../types";
 
@@ -64,102 +59,114 @@ export default function EditCargoDialog({
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Editar cargo</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <FormControl mb={4}>
-            <FormLabel>ID del cargo</FormLabel>
-            <Text fontSize="sm" wordBreak="break-all">
-              {draft.idCargo}
-            </Text>
-          </FormControl>
+    <Dialog.Root open={isOpen} size='md' onOpenChange={e => {
+      if (!e.open) {
+        onClose();
+      }
+    }}>
+      <Portal>
 
-          <FormControl mb={4} isRequired>
-            <FormLabel>Título del cargo</FormLabel>
-            <Input
-              maxLength={255}
-              value={draft.tituloCargo}
-              onChange={(event) => setDraft({ ...draft, tituloCargo: event.target.value })}
-            />
-          </FormControl>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>Editar cargo</Dialog.Header>
+            <Dialog.CloseTrigger />
+            <Dialog.Body>
+              <Field.Root mb={4}>
+                <Field.Label>ID del cargo</Field.Label>
+                <Text fontSize="sm" wordBreak="break-all">
+                  {draft.idCargo}
+                </Text>
+              </Field.Root>
 
-          <FormControl mb={4} isRequired>
-            <FormLabel>Departamento</FormLabel>
-            <Input
-              maxLength={255}
-              value={draft.departamento}
-              onChange={(event) => setDraft({ ...draft, departamento: event.target.value })}
-            />
-          </FormControl>
+              <Field.Root mb={4} required>
+                <Field.Label>Título del cargo</Field.Label>
+                <Input
+                  maxLength={255}
+                  value={draft.tituloCargo}
+                  onValueChange={(event) => setDraft({ ...draft, tituloCargo: event.target.value })}
+                />
+              </Field.Root>
 
-          <FormControl mb={4} isRequired>
-            <FormLabel>Descripción</FormLabel>
-            <Textarea
-              maxLength={255}
-              value={draft.descripcionCargo}
-              onChange={(event) =>
-                setDraft({ ...draft, descripcionCargo: event.target.value })
-              }
-            />
-          </FormControl>
+              <Field.Root mb={4} required>
+                <Field.Label>Departamento</Field.Label>
+                <Input
+                  maxLength={255}
+                  value={draft.departamento}
+                  onValueChange={(event) => setDraft({ ...draft, departamento: event.target.value })}
+                />
+              </Field.Root>
 
-          <FormControl mb={4} isRequired>
-            <FormLabel>Nivel jerárquico</FormLabel>
-            <NumberInput
-              min={1}
-              max={10}
-              value={draft.nivel}
-              onChange={(_, value) =>
-                setDraft({ ...draft, nivel: Number.isNaN(value) ? 1 : value })
-              }
-            >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-          </FormControl>
+              <Field.Root mb={4} required>
+                <Field.Label>Descripción</Field.Label>
+                <Textarea
+                  maxLength={255}
+                  value={draft.descripcionCargo}
+                  onValueChange={(event) =>
+                    setDraft({ ...draft, descripcionCargo: event.target.value })
+                  }
+                />
+              </Field.Root>
 
-          <FormControl mb={4}>
-            <FormLabel>Usuario</FormLabel>
-            <Select
-              value={draft.usuario || ""}
-              onChange={(event) =>
-                setDraft({ ...draft, usuario: event.target.value || undefined })
-              }
-              placeholder="Sin usuario asignado"
-            >
-              {availableUsers.map((user) => (
-                <option key={user.id} value={user.username}>
-                  {user.nombreCompleto || user.username}
-                </option>
-              ))}
-            </Select>
-          </FormControl>
+              <Field.Root mb={4} required>
+                <Field.Label>Nivel jerárquico</Field.Label>
+                <NumberInput.Root
+                  min={1}
+                  max={10}
+                  value={String(draft.nivel)}
+                  onValueChange={(_, value) =>
+                    setDraft({ ...draft, nivel: Number.isNaN(value) ? 1 : value })
+                  }
+                >
+                  <NumberInput.Input />
+                  <NumberInput.Control>
+                    <NumberInput.IncrementTrigger />
+                    <NumberInput.DecrementTrigger />
+                  </NumberInput.Control>
+                </NumberInput.Root>
+              </Field.Root>
 
-          <Text fontSize="sm" color="app.textMuted">
-            Estos cambios permanecerán en el borrador hasta guardar el organigrama.
-          </Text>
-        </ModalBody>
+              <Field.Root mb={4}>
+                <Field.Label>Usuario</Field.Label>
+                <NativeSelect.Root>
+                  <NativeSelect.Field
+                    value={draft.usuario || ""}
+                    onValueChange={(event) =>
+                      setDraft({ ...draft, usuario: event.target.value || undefined })
+                    }
+                    placeholder="Sin usuario asignado">
+                    {availableUsers.map((user) => (
+                      <option key={user.id} value={user.username}>
+                        {user.nombreCompleto || user.username}
+                      </option>
+                    ))}
+                  </NativeSelect.Field>
+                  <NativeSelect.Indicator />
+                </NativeSelect.Root>
+              </Field.Root>
 
-        <ModalFooter justifyContent="space-between">
-          <Button colorScheme="red" variant="outline" onClick={onDelete}>
-            Eliminar cargo
-          </Button>
-          <div>
-            <Button mr={3} variant="ghost" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button colorScheme="blue" isDisabled={!isValid} onClick={() => onSave(draft)}>
-              Aplicar al borrador
-            </Button>
-          </div>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+              <Text fontSize="sm" color="app.textMuted">
+                Estos cambios permanecerán en el borrador hasta guardar el organigrama.
+              </Text>
+            </Dialog.Body>
+
+            <Dialog.Footer justifyContent="space-between">
+              <Button colorPalette="red" variant="outline" onClick={onDelete}>
+                Eliminar cargo
+              </Button>
+              <div>
+                <Button mr={3} variant="ghost" onClick={onClose}>
+                  Cancelar
+                </Button>
+                <Button colorPalette="blue" disabled={!isValid} onClick={() => onSave(draft)}>
+                  Aplicar al borrador
+                </Button>
+              </div>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+
+      </Portal>
+    </Dialog.Root>
   );
 }

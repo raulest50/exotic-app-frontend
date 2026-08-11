@@ -1,10 +1,8 @@
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
     Box,
     Button,
-    Divider,
     Flex,
     Heading,
     Icon,
@@ -16,8 +14,9 @@ import {
     Th,
     Thead,
     Tr,
-    useColorModeValue,
+    Separator,
 } from "@chakra-ui/react";
+import { useColorModeValue } from "../../../components/ui/color-mode";
 import { keyframes } from "@emotion/react";
 import { ImCheckboxChecked } from "react-icons/im";
 import { RiSave3Fill } from "react-icons/ri";
@@ -74,21 +73,24 @@ export default function AjustesInventarioStep2ReviewSubmit({
                     <Heading fontFamily="Comfortaa Variable" color={successHeadingColor}>
                         Ajuste enviado correctamente
                     </Heading>
-                    <Icon as={ImCheckboxChecked} w={{ base: "2.5em", md: "3em" }} h={{ base: "2.5em", md: "3em" }} color="green.500" />
+                    <Icon
+                        w={{ base: "2.5em", md: "3em" }}
+                        h={{ base: "2.5em", md: "3em" }}
+                        color="green.500"
+                        asChild><ImCheckboxChecked /></Icon>
                 </Flex>
                 <Text fontFamily="Comfortaa Variable" color={successTextColor}>
                     El ajuste de inventario se registró. Puedes iniciar un nuevo ajuste cuando lo necesites.
                 </Text>
 
                 <Icon
-                    as={RiSave3Fill}
                     w={{ base: "8em", md: "10em" }}
                     h={{ base: "8em", md: "10em" }}
                     color="green.400"
                     animation={`${colorAnimation} 3s infinite ease-in-out`}
-                />
+                    asChild><RiSave3Fill /></Icon>
 
-                <Button variant="solid" colorScheme="green" onClick={onRestart}>
+                <Button variant="solid" colorPalette="green" onClick={onRestart}>
                     Iniciar nuevo ajuste
                 </Button>
             </Flex>
@@ -102,12 +104,12 @@ export default function AjustesInventarioStep2ReviewSubmit({
                     Resumen del ajuste
                 </Heading>
 
-                <Stack spacing={3} mb={4}>
+                <Stack gap={3} mb={4}>
                     <Flex alignItems="center" justifyContent="space-between">
                         <Text fontWeight="semibold">Usuario</Text>
                         <Text>{currentUserName ?? "No disponible"}</Text>
                     </Flex>
-                    <Divider />
+                    <Separator />
                     <Flex alignItems="center" justifyContent="space-between" gap={4}>
                         <Text fontWeight="semibold">Causa del ajuste</Text>
                         <Text textAlign="right">
@@ -116,7 +118,7 @@ export default function AjustesInventarioStep2ReviewSubmit({
                                 : "Sin clasificar"}
                         </Text>
                     </Flex>
-                    <Divider />
+                    <Separator />
                     <Box>
                         <Text fontWeight="semibold" mb={2}>
                             Observaciones
@@ -130,49 +132,49 @@ export default function AjustesInventarioStep2ReviewSubmit({
                 </Stack>
 
                 <Box overflowX="auto">
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>ID</Th>
-                                <Th>Nombre</Th>
-                                <Th>Tipo</Th>
-                                <Th>Lote</Th>
-                                <Th>ID lote</Th>
-                                <Th isNumeric>Cantidad</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                                <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                                <Table.ColumnHeader>ID lote</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Cantidad</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {normalizedItems.map((item) => (
-                                <Tr key={`${item.productoId}-${item.loteId}-${item.cantidad}`}>
-                                    <Td>{item.productoId}</Td>
-                                    <Td>{item.productoNombre}</Td>
-                                    <Td textTransform="capitalize">{item.tipoProducto}</Td>
-                                    <Td>{item.batchNumber}</Td>
-                                    <Td>{item.loteId}</Td>
-                                    <Td isNumeric>{item.cantidad.toFixed(4)}</Td>
-                                </Tr>
+                                <Table.Row key={`${item.productoId}-${item.loteId}-${item.cantidad}`}>
+                                    <Table.Cell>{item.productoId}</Table.Cell>
+                                    <Table.Cell>{item.productoNombre}</Table.Cell>
+                                    <Table.Cell textTransform="capitalize">{item.tipoProducto}</Table.Cell>
+                                    <Table.Cell>{item.batchNumber}</Table.Cell>
+                                    <Table.Cell>{item.loteId}</Table.Cell>
+                                    <Table.Cell textAlign='end'>{item.cantidad.toFixed(4)}</Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 </Box>
 
                 {error && (
-                    <Alert status="error" mt={4} borderRadius="md">
-                        <AlertIcon />
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
+                    <Alert.Root status="error" mt={4} borderRadius="md">
+                        <Alert.Indicator />
+                        <Alert.Description>{error}</Alert.Description>
+                    </Alert.Root>
                 )}
 
                 <Flex mt={4} justifyContent="flex-end" gap={3}>
-                    <Button onClick={onBack} variant="outline" isDisabled={isSending}>
+                    <Button onClick={onBack} variant="outline" disabled={isSending}>
                         Regresar
                     </Button>
                     <Button
-                        colorScheme="teal"
+                        colorPalette="teal"
                         onClick={onSend}
-                        isLoading={isSending}
+                        loading={isSending}
                         loadingText="Enviando"
-                        isDisabled={normalizedItems.length === 0}
+                        disabled={normalizedItems.length === 0}
                     >
                         Enviar ajuste
                     </Button>

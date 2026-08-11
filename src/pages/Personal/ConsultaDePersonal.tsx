@@ -1,24 +1,19 @@
 import { useMemo, useState } from 'react';
 import {
+    Steps,
     Button,
     Container,
     Flex,
-    FormControl,
-    FormLabel,
     Grid,
     GridItem,
     Input,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
-    Select,
+    NativeSelect,
     Spinner,
     useDisclosure,
     useToast,
+    Field,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import axios, { AxiosError } from 'axios';
 import EndPointsURL from '../../api/EndPointsURL';
@@ -264,12 +259,12 @@ export function ConsultaDePersonal() {
                     <Input
                         placeholder="Buscar por cédula, nombre o apellido"
                         value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
+                        onValueChange={(e) => setSearchText(e.target.value)}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') onBuscar();
                         }}
                     />
-                    <Button variant="solid" colorScheme="teal" onClick={() => onBuscar()}>
+                    <Button variant="solid" colorPalette="teal" onClick={() => onBuscar()}>
                         Buscar
                     </Button>
                 </Flex>
@@ -289,177 +284,193 @@ export function ConsultaDePersonal() {
                 )}
             </Flex>
 
-            <Modal isOpen={detalleModal.isOpen} onClose={detalleModal.onClose} size="5xl" scrollBehavior="inside">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Detalle de integrante</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <Grid templateColumns={['1fr', 'repeat(2, 1fr)']} gap={4}>
-                            <GridItem>
-                                <FormControl>
-                                    <FormLabel>Cédula</FormLabel>
-                                    <Input value={detalleForm.id} isReadOnly />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl>
-                                    <FormLabel>Fecha de registro</FormLabel>
-                                    <Input value={formatDateTime(detalleForm.fechaRegistro)} isReadOnly />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl isRequired>
-                                    <FormLabel>Nombres</FormLabel>
-                                    <Input value={detalleForm.nombres} onChange={(e) => updateForm('nombres', e.target.value)} />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl isRequired>
-                                    <FormLabel>Apellidos</FormLabel>
-                                    <Input value={detalleForm.apellidos} onChange={(e) => updateForm('apellidos', e.target.value)} />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl isRequired>
-                                    <FormLabel>Celular</FormLabel>
-                                    <Input value={detalleForm.celular} onChange={(e) => updateForm('celular', e.target.value)} />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl>
-                                    <FormLabel>Correo electrónico</FormLabel>
-                                    <Input value={detalleForm.email} onChange={(e) => updateForm('email', e.target.value)} />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem colSpan={[1, 2]}>
-                                <FormControl isRequired>
-                                    <FormLabel>Dirección</FormLabel>
-                                    <Input value={detalleForm.direccion} onChange={(e) => updateForm('direccion', e.target.value)} />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl>
-                                    <FormLabel>Contacto de emergencia</FormLabel>
-                                    <Input
-                                        value={detalleForm.nombreContactoEmergencia}
-                                        onChange={(e) => updateForm('nombreContactoEmergencia', e.target.value)}
-                                    />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl>
-                                    <FormLabel>Celular de emergencia</FormLabel>
-                                    <Input
-                                        value={detalleForm.celularContactoEmergencia}
-                                        onChange={(e) => updateForm('celularContactoEmergencia', e.target.value)}
-                                    />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl>
-                                    <FormLabel>Estado civil</FormLabel>
-                                    <Select
-                                        placeholder="Seleccione estado civil"
-                                        value={detalleForm.estadoCivil}
-                                        onChange={(e) => updateForm('estadoCivil', e.target.value as EstadoCivil | '')}
-                                    >
-                                        {Object.values(EstadoCivil).map((item) => (
-                                            <option key={item} value={item}>{getEstadoCivilText(item)}</option>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl>
-                                    <FormLabel>Número de hijos</FormLabel>
-                                    <Input
-                                        type="number"
-                                        min={0}
-                                        value={detalleForm.numeroHijos}
-                                        onChange={(e) => updateForm('numeroHijos', e.target.value)}
-                                    />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl isRequired>
-                                    <FormLabel>Fecha de ingreso</FormLabel>
-                                    <Input
-                                        type="date"
-                                        value={detalleForm.fechaIngreso}
-                                        onChange={(e) => updateForm('fechaIngreso', e.target.value)}
-                                    />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl>
-                                    <FormLabel>Estado</FormLabel>
-                                    <Select
-                                        value={detalleForm.estado}
-                                        onChange={(e) => updateForm('estado', e.target.value as EstadoIntegrante | '')}
-                                    >
-                                        <option value={EstadoIntegrante.ACTIVO}>Activo</option>
-                                        <option value={EstadoIntegrante.INACTIVO}>Inactivo</option>
-                                    </Select>
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl>
-                                    <FormLabel>Cargo</FormLabel>
-                                    <Input value={detalleForm.cargo} onChange={(e) => updateForm('cargo', e.target.value)} />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl>
-                                    <FormLabel>Departamento</FormLabel>
-                                    <Select
-                                        placeholder="Seleccione departamento"
-                                        value={detalleForm.departamento}
-                                        onChange={(e) => updateForm('departamento', e.target.value as DepartamentoIntegrante | '')}
-                                    >
-                                        <option value="PRODUCCION">Producción</option>
-                                        <option value="ADMINISTRATIVO">Administrativo</option>
-                                    </Select>
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl>
-                                    <FormLabel>Salario (COP)</FormLabel>
-                                    <Input
-                                        type="number"
-                                        min={0}
-                                        value={detalleForm.salario}
-                                        onChange={(e) => updateForm('salario', e.target.value)}
-                                    />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl>
-                                    <FormLabel>Número de cuenta</FormLabel>
-                                    <Input
-                                        value={detalleForm.numeroCuentaBancaria}
-                                        onChange={(e) => updateForm('numeroCuentaBancaria', e.target.value)}
-                                    />
-                                </FormControl>
-                            </GridItem>
-                            <GridItem>
-                                <FormControl>
-                                    <FormLabel>Banco</FormLabel>
-                                    <Input value={detalleForm.banco} onChange={(e) => updateForm('banco', e.target.value)} />
-                                </FormControl>
-                            </GridItem>
-                        </Grid>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button variant="ghost" mr={3} onClick={detalleModal.onClose}>
-                            Cerrar
-                        </Button>
-                        <Button colorScheme="blue" onClick={guardarDetalle} isLoading={savingDetalle}>
-                            Guardar cambios
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+            <Dialog.Root open={detalleModal.open} size='xl' scrollBehavior="inside" onOpenChange={e => {
+                if (!e.open) {
+                    detalleModal.onClose();
+                }
+            }}>
+                <Portal>
+
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>Detalle de integrante</Dialog.Header>
+                            <Dialog.CloseTrigger />
+                            <Dialog.Body>
+                                <Grid templateColumns={['1fr', 'repeat(2, 1fr)']} gap={4}>
+                                    <GridItem>
+                                        <Field.Root>
+                                            <Field.Label>Cédula</Field.Label>
+                                            <Input value={detalleForm.id} readOnly />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root>
+                                            <Field.Label>Fecha de registro</Field.Label>
+                                            <Input value={formatDateTime(detalleForm.fechaRegistro)} readOnly />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root required>
+                                            <Field.Label>Nombres</Field.Label>
+                                            <Input value={detalleForm.nombres} onValueChange={(e) => updateForm('nombres', e.target.value)} />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root required>
+                                            <Field.Label>Apellidos</Field.Label>
+                                            <Input value={detalleForm.apellidos} onValueChange={(e) => updateForm('apellidos', e.target.value)} />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root required>
+                                            <Field.Label>Celular</Field.Label>
+                                            <Input value={detalleForm.celular} onValueChange={(e) => updateForm('celular', e.target.value)} />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root>
+                                            <Field.Label>Correo electrónico</Field.Label>
+                                            <Input value={detalleForm.email} onValueChange={(e) => updateForm('email', e.target.value)} />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem colSpan={[1, 2]}>
+                                        <Field.Root required>
+                                            <Field.Label>Dirección</Field.Label>
+                                            <Input value={detalleForm.direccion} onValueChange={(e) => updateForm('direccion', e.target.value)} />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root>
+                                            <Field.Label>Contacto de emergencia</Field.Label>
+                                            <Input
+                                                value={detalleForm.nombreContactoEmergencia}
+                                                onValueChange={(e) => updateForm('nombreContactoEmergencia', e.target.value)}
+                                            />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root>
+                                            <Field.Label>Celular de emergencia</Field.Label>
+                                            <Input
+                                                value={detalleForm.celularContactoEmergencia}
+                                                onValueChange={(e) => updateForm('celularContactoEmergencia', e.target.value)}
+                                            />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root>
+                                            <Field.Label>Estado civil</Field.Label>
+                                            <NativeSelect.Root>
+                                                <NativeSelect.Field
+                                                    placeholder="Seleccione estado civil"
+                                                    value={detalleForm.estadoCivil}
+                                                    onValueChange={(e) => updateForm('estadoCivil', e.target.value as EstadoCivil | '')}>
+                                                    {Object.values(EstadoCivil).map((item) => (
+                                                        <option key={item} value={item}>{getEstadoCivilText(item)}</option>
+                                                    ))}
+                                                </NativeSelect.Field>
+                                                <NativeSelect.Indicator />
+                                            </NativeSelect.Root>
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root>
+                                            <Field.Label>Número de hijos</Field.Label>
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                value={detalleForm.numeroHijos}
+                                                onValueChange={(e) => updateForm('numeroHijos', e.target.value)}
+                                            />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root required>
+                                            <Field.Label>Fecha de ingreso</Field.Label>
+                                            <Input
+                                                type="date"
+                                                value={detalleForm.fechaIngreso}
+                                                onValueChange={(e) => updateForm('fechaIngreso', e.target.value)}
+                                            />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root>
+                                            <Field.Label>Estado</Field.Label>
+                                            <NativeSelect.Root>
+                                                <NativeSelect.Field
+                                                    value={detalleForm.estado}
+                                                    onValueChange={(e) => updateForm('estado', e.target.value as EstadoIntegrante | '')}>
+                                                    <option value={EstadoIntegrante.ACTIVO}>Activo</option>
+                                                    <option value={EstadoIntegrante.INACTIVO}>Inactivo</option>
+                                                </NativeSelect.Field>
+                                                <NativeSelect.Indicator />
+                                            </NativeSelect.Root>
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root>
+                                            <Field.Label>Cargo</Field.Label>
+                                            <Input value={detalleForm.cargo} onValueChange={(e) => updateForm('cargo', e.target.value)} />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root>
+                                            <Field.Label>Departamento</Field.Label>
+                                            <NativeSelect.Root>
+                                                <NativeSelect.Field
+                                                    placeholder="Seleccione departamento"
+                                                    value={detalleForm.departamento}
+                                                    onValueChange={(e) => updateForm('departamento', e.target.value as DepartamentoIntegrante | '')}>
+                                                    <option value="PRODUCCION">Producción</option>
+                                                    <option value="ADMINISTRATIVO">Administrativo</option>
+                                                </NativeSelect.Field>
+                                                <NativeSelect.Indicator />
+                                            </NativeSelect.Root>
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root>
+                                            <Field.Label>Salario (COP)</Field.Label>
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                value={detalleForm.salario}
+                                                onValueChange={(e) => updateForm('salario', e.target.value)}
+                                            />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root>
+                                            <Field.Label>Número de cuenta</Field.Label>
+                                            <Input
+                                                value={detalleForm.numeroCuentaBancaria}
+                                                onValueChange={(e) => updateForm('numeroCuentaBancaria', e.target.value)}
+                                            />
+                                        </Field.Root>
+                                    </GridItem>
+                                    <GridItem>
+                                        <Field.Root>
+                                            <Field.Label>Banco</Field.Label>
+                                            <Input value={detalleForm.banco} onValueChange={(e) => updateForm('banco', e.target.value)} />
+                                        </Field.Root>
+                                    </GridItem>
+                                </Grid>
+                            </Dialog.Body>
+                            <Dialog.Footer>
+                                <Button variant="ghost" mr={3} onClick={detalleModal.onClose}>
+                                    Cerrar
+                                </Button>
+                                <Button colorPalette="blue" onClick={guardarDetalle} loading={savingDetalle}>
+                                    Guardar cambios
+                                </Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+
+                </Portal>
+            </Dialog.Root>
         </Container>
     );
 }

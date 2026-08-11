@@ -1,13 +1,7 @@
 // OrdenCompraDetails.tsx
 import React from 'react';
 import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalCloseButton,
-    ModalBody,
-    ModalFooter,
+    Steps,
     Button,
     Box,
     Text,
@@ -16,7 +10,10 @@ import {
     Tbody,
     Tr,
     Th,
-    Td, Tfoot
+    Td,
+    Tfoot,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import {getCondicionPagoText, getEstadoText, OrdenCompraMateriales} from '../types';
 import { formatCOP } from '../../../utils/formatters';
@@ -45,101 +42,111 @@ const OrdenCompraDetails: React.FC<OrdenCompraDetailsProps> = ({ isOpen, onClose
         : releaseFallback;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Detalles de la Orden de Compra</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <Box mb={4}>
-                        <Text><strong>ID:</strong> {orden.ordenCompraId}</Text>
-                        <Text>
-                            <strong>Fecha Emisión:</strong>{' '}
-                            {orden.fechaEmision ? new Date(orden.fechaEmision).toLocaleString() : '-'}
-                        </Text>
-                        <Text><strong>Creada por:</strong> {creatorLabel}</Text>
-                        <Text><strong>Liberada por:</strong> {releaserLabel}</Text>
-                        <Text><strong>Fecha de liberación:</strong> {releaseDateLabel}</Text>
-                        <Text>
-                            <strong>Fecha Vencimiento:</strong>{' '}
-                            {orden.fechaVencimiento ? new Date(orden.fechaVencimiento).toLocaleDateString() : '-'}
-                        </Text>
-                        <Text>
-                            <strong>Proveedor:</strong>{' '}
-                            {orden.proveedor ? orden.proveedor.nombre : '-'}
-                        </Text>
-                        <Text><strong>Total a Pagar:</strong> {formatCOP(orden.totalPagar)}</Text>
-                        <Text><strong>Estado:</strong> {getEstadoText(orden.estado)}</Text>
-                        <Text><strong>Condición de Pago:</strong> {getCondicionPagoText(orden.condicionPago)}</Text>
-                        <Text><strong>Tiempo de Entrega:</strong> {orden.tiempoEntrega}</Text>
-                        <Text><strong>Plazo de Pago:</strong> {orden.plazoPago}</Text>
-                        <Text><strong>Observaciones:</strong> {orden.observaciones || '-'}</Text>
-                    </Box>
-                    <Box>
-                        <Text fontWeight="bold" mb={2}>Items de la Orden</Text>
-                        {orden.itemsOrdenCompra && orden.itemsOrdenCompra.length > 0 ? (
-                            <Table variant="simple" size="sm">
-                                <Thead>
-                                    <Tr>
-                                        <Th>ID</Th>
-                                        <Th>Materia Prima</Th>
-                                        <Th>Cantidad</Th>
-                                        <Th>Precio Unitario</Th>
-                                        <Th>IVA</Th>
-                                        <Th>Subtotal</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
-                                    {orden.itemsOrdenCompra.map((item) => (
-                                        <Tr key={item.itemOrdenId}>
-                                            <Td>{item.itemOrdenId}</Td>
-                                            <Td>{item.material ? `${item.material.productoId} - ${item.material.nombre} - (${item.material.tipoUnidades}) ` : '-'}</Td>
-                                            <Td>{item.cantidad}</Td>
-                                            <Td>{formatCOP(item.precioUnitario)}</Td>
-                                            <Td>{formatCOP(item.ivaCOP)}</Td>
-                                            <Td>{formatCOP(item.subTotal)}</Td>
-                                        </Tr>
-                                    ))}
-                                </Tbody>
-                                <Tfoot>
-                                    <Tr>
-                                        <Td colSpan={4} textAlign="right">
-                                            <strong>SubTotal:</strong>
-                                        </Td>
-                                        <Td isNumeric colSpan={3}>
-                                            {formatCOP(orden.subTotal)}
-                                        </Td>
-                                    </Tr>
-                                    <Tr>
-                                        <Td colSpan={4} textAlign="right">
-                                            <strong>IVA (19%):</strong>
-                                        </Td>
-                                        <Td isNumeric colSpan={3}>
-                                            {formatCOP(orden.ivaCOP)}
-                                        </Td>
-                                    </Tr>
-                                    <Tr>
-                                        <Td colSpan={4} textAlign="right">
-                                            <strong>Total a Pagar:</strong>
-                                        </Td>
-                                        <Td isNumeric colSpan={3}>
-                                            {formatCOP(orden.totalPagar)}
-                                        </Td>
-                                    </Tr>
-                                </Tfoot>
-                            </Table>
-                        ) : (
-                            <Text>No hay items en esta orden.</Text>
-                        )}
-                    </Box>
-                </ModalBody>
-                <ModalFooter>
-                    <Button colorScheme="blue" mr={3} onClick={onClose}>
-                        Cerrar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+        <Dialog.Root open={isOpen} size='xl' scrollBehavior="inside" onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
+
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Detalles de la Orden de Compra</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <Box mb={4}>
+                                <Text><strong>ID:</strong> {orden.ordenCompraId}</Text>
+                                <Text>
+                                    <strong>Fecha Emisión:</strong>{' '}
+                                    {orden.fechaEmision ? new Date(orden.fechaEmision).toLocaleString() : '-'}
+                                </Text>
+                                <Text><strong>Creada por:</strong> {creatorLabel}</Text>
+                                <Text><strong>Liberada por:</strong> {releaserLabel}</Text>
+                                <Text><strong>Fecha de liberación:</strong> {releaseDateLabel}</Text>
+                                <Text>
+                                    <strong>Fecha Vencimiento:</strong>{' '}
+                                    {orden.fechaVencimiento ? new Date(orden.fechaVencimiento).toLocaleDateString() : '-'}
+                                </Text>
+                                <Text>
+                                    <strong>Proveedor:</strong>{' '}
+                                    {orden.proveedor ? orden.proveedor.nombre : '-'}
+                                </Text>
+                                <Text><strong>Total a Pagar:</strong> {formatCOP(orden.totalPagar)}</Text>
+                                <Text><strong>Estado:</strong> {getEstadoText(orden.estado)}</Text>
+                                <Text><strong>Condición de Pago:</strong> {getCondicionPagoText(orden.condicionPago)}</Text>
+                                <Text><strong>Tiempo de Entrega:</strong> {orden.tiempoEntrega}</Text>
+                                <Text><strong>Plazo de Pago:</strong> {orden.plazoPago}</Text>
+                                <Text><strong>Observaciones:</strong> {orden.observaciones || '-'}</Text>
+                            </Box>
+                            <Box>
+                                <Text fontWeight="bold" mb={2}>Items de la Orden</Text>
+                                {orden.itemsOrdenCompra && orden.itemsOrdenCompra.length > 0 ? (
+                                    <Table.Root variant="simple" size="sm">
+                                        <Table.Header>
+                                            <Table.Row>
+                                                <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Materia Prima</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Precio Unitario</Table.ColumnHeader>
+                                                <Table.ColumnHeader>IVA</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Subtotal</Table.ColumnHeader>
+                                            </Table.Row>
+                                        </Table.Header>
+                                        <Table.Body>
+                                            {orden.itemsOrdenCompra.map((item) => (
+                                                <Table.Row key={item.itemOrdenId}>
+                                                    <Table.Cell>{item.itemOrdenId}</Table.Cell>
+                                                    <Table.Cell>{item.material ? `${item.material.productoId} - ${item.material.nombre} - (${item.material.tipoUnidades}) ` : '-'}</Table.Cell>
+                                                    <Table.Cell>{item.cantidad}</Table.Cell>
+                                                    <Table.Cell>{formatCOP(item.precioUnitario)}</Table.Cell>
+                                                    <Table.Cell>{formatCOP(item.ivaCOP)}</Table.Cell>
+                                                    <Table.Cell>{formatCOP(item.subTotal)}</Table.Cell>
+                                                </Table.Row>
+                                            ))}
+                                        </Table.Body>
+                                        <Table.Footer>
+                                            <Table.Row>
+                                                <Table.Cell colSpan={4} textAlign="right">
+                                                    <strong>SubTotal:</strong>
+                                                </Table.Cell>
+                                                <Table.Cell colSpan={3} textAlign='end'>
+                                                    {formatCOP(orden.subTotal)}
+                                                </Table.Cell>
+                                            </Table.Row>
+                                            <Table.Row>
+                                                <Table.Cell colSpan={4} textAlign="right">
+                                                    <strong>IVA (19%):</strong>
+                                                </Table.Cell>
+                                                <Table.Cell colSpan={3} textAlign='end'>
+                                                    {formatCOP(orden.ivaCOP)}
+                                                </Table.Cell>
+                                            </Table.Row>
+                                            <Table.Row>
+                                                <Table.Cell colSpan={4} textAlign="right">
+                                                    <strong>Total a Pagar:</strong>
+                                                </Table.Cell>
+                                                <Table.Cell colSpan={3} textAlign='end'>
+                                                    {formatCOP(orden.totalPagar)}
+                                                </Table.Cell>
+                                            </Table.Row>
+                                        </Table.Footer>
+                                    </Table.Root>
+                                ) : (
+                                    <Text>No hay items en esta orden.</Text>
+                                )}
+                            </Box>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button colorPalette="blue" mr={3} onClick={onClose}>
+                                Cerrar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 };
 

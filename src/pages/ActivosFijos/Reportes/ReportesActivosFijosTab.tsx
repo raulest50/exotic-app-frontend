@@ -9,12 +9,13 @@
  */
 import { useState } from 'react';
 import {
+    Steps,
     Button,
     Checkbox,
     Container,
     Flex,
     Input,
-    Select,
+    NativeSelect,
     Spinner,
     Table,
     Tbody,
@@ -90,42 +91,45 @@ export default function ReportesActivosFijosTab() {
                     <Input
                         placeholder="Buscar"
                         value={valorBusqueda}
-                        onChange={(e) => setValorBusqueda(e.target.value)}
+                        onValueChange={(e) => setValorBusqueda(e.target.value)}
                     />
-                    <Select
-                        value={tipoBusqueda}
-                        onChange={(e) => setTipoBusqueda(e.target.value)}
-                        width="200px"
-                    >
-                        {/* QUICKFIX TEMPORAL: Valores actualizados con prefijo "POR_" para coincidir con el backend */}
-                        <option value="POR_ID">ID</option>
-                        <option value="POR_NOMBRE">Nombre</option>
-                        <option value="POR_UBICACION">Ubicación</option>
-                        <option value="POR_RESPONSABLE">Responsable</option>
-                        <option value="POR_MARCA">Marca</option>
-                        <option value="POR_CAPACIDAD">Capacidad</option>
-                    </Select>
-                    <Select
-                        placeholder="Todas las categorias"
-                        value={tipoActivo}
-                        onChange={(e) => setTipoActivo(e.target.value)}
-                        width="200px"
-                    >
-                        <option value={TipoActivo.PRODUCCION}>Producción</option>
-                        <option value={TipoActivo.MOBILIARIO}>Mobiliario</option>
-                        <option value={TipoActivo.EQUIPO}>Equipo</option>
-                    </Select>
-                    <Checkbox
-                        isChecked={soloActivos}
-                        onChange={(e) => setSoloActivos(e.target.checked)}
-                    >
-                        Solo activos
-                    </Checkbox>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            value={tipoBusqueda}
+                            onValueChange={(e) => setTipoBusqueda(e.target.value)}
+                            width="200px">
+                            {/* QUICKFIX TEMPORAL: Valores actualizados con prefijo "POR_" para coincidir con el backend */}
+                            <option value="POR_ID">ID</option>
+                            <option value="POR_NOMBRE">Nombre</option>
+                            <option value="POR_UBICACION">Ubicación</option>
+                            <option value="POR_RESPONSABLE">Responsable</option>
+                            <option value="POR_MARCA">Marca</option>
+                            <option value="POR_CAPACIDAD">Capacidad</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            placeholder="Todas las categorias"
+                            value={tipoActivo}
+                            onValueChange={(e) => setTipoActivo(e.target.value)}
+                            width="200px">
+                            <option value={TipoActivo.PRODUCCION}>Producción</option>
+                            <option value={TipoActivo.MOBILIARIO}>Mobiliario</option>
+                            <option value={TipoActivo.EQUIPO}>Equipo</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                    <Checkbox.Root
+                        checked={soloActivos}
+                        onCheckedChange={(e) => setSoloActivos(e.target.checked)}
+                    ><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Solo activos
+                                                </Checkbox.Label></Checkbox.Root>
                     <Button
                         variant="solid"
-                        colorScheme="teal"
+                        colorPalette="teal"
                         onClick={() => buscarActivos()}
-                        isLoading={loading}
+                        loading={loading}
                         loadingText="Buscando..."
                     >
                         Buscar
@@ -136,44 +140,44 @@ export default function ReportesActivosFijosTab() {
                     <Spinner mt={4} />
                 ) : (
                     <>
-                        <Table size="sm">
-                            <Thead>
-                                <Tr>
-                                    <Th>ID</Th>
-                                    <Th>Nombre</Th>
-                                    <Th>Tipo</Th>
-                                    <Th>Ubicación</Th>
-                                    <Th>Responsable</Th>
-                                    <Th>Marca</Th>
-                                    <Th>Capacidad</Th>
-                                    <Th>Fecha Incorp.</Th>
-                                    <Th>Estado</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                        <Table.Root size="sm">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Ubicación</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Responsable</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Marca</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Capacidad</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Fecha Incorp.</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {/* Verificar que activos sea un array antes de llamar a map() */}
                                 {Array.isArray(activos) && activos.map((a) => (
-                                    <Tr key={a.id}>
-                                        <Td>{a.id}</Td>
-                                        <Td>{a.nombre}</Td>
-                                        <Td>{a.tipo}</Td>
-                                        <Td>{a.ubicacion}</Td>
-                                        <Td>{a.responsable}</Td>
-                                        <Td>{a.brand}</Td>
-                                        <Td>{a.capacidad ?? ''}</Td>
-                                        <Td>
+                                    <Table.Row key={a.id}>
+                                        <Table.Cell>{a.id}</Table.Cell>
+                                        <Table.Cell>{a.nombre}</Table.Cell>
+                                        <Table.Cell>{a.tipo}</Table.Cell>
+                                        <Table.Cell>{a.ubicacion}</Table.Cell>
+                                        <Table.Cell>{a.responsable}</Table.Cell>
+                                        <Table.Cell>{a.brand}</Table.Cell>
+                                        <Table.Cell>{a.capacidad ?? ''}</Table.Cell>
+                                        <Table.Cell>
                                             {a.fechaCodificacion
                                                 ? format(
                                                       new Date(a.fechaCodificacion),
                                                       'yyyy-MM-dd'
                                                   )
                                                 : ''}
-                                        </Td>
-                                        <Td>{getEstadoText(a.estado)}</Td>
-                                    </Tr>
+                                        </Table.Cell>
+                                        <Table.Cell>{getEstadoText(a.estado)}</Table.Cell>
+                                    </Table.Row>
                                 ))}
-                            </Tbody>
-                        </Table>
+                            </Table.Body>
+                        </Table.Root>
                         <MyPagination
                             page={page}
                             totalPages={totalPages}

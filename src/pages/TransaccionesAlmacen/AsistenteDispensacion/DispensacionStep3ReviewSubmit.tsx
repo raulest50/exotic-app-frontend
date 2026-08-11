@@ -1,15 +1,13 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
     IconButton,
     Input,
-    Select,
+    NativeSelect,
     Table,
     Tbody,
     Td,
@@ -19,7 +17,8 @@ import {
     Tr,
     useToast,
     VStack,
-    Tag
+    Tag,
+    Field,
 } from '@chakra-ui/react';
 import {useEffect, useMemo, useState} from 'react';
 import {AreaOperativaDestinoOption, DispensacionDTO, InsumoDesglosado, ItemPendienteReposicion, LoteSeleccionado} from '../types';
@@ -27,9 +26,9 @@ import UserPickerGeneric from '../../../components/Pickers/UserPickerGeneric/Use
 import {User} from '../../../pages/Usuarios/GestionUsuarios/types';
 import EndPointsURL from '../../../api/EndPointsURL';
 import axios from 'axios';
-import {DeleteIcon} from '@chakra-ui/icons';
 import DispensacionPDF_Generator_Class from './AsistenteDispensacionComponents/DispensacionPDF_Generator';
 import { useAuth } from '../../../context/AuthContext';
+import { LuTrash2 } from 'react-icons/lu';
 
 const DispensacionPDF_Generator = new DispensacionPDF_Generator_Class();
 
@@ -686,42 +685,40 @@ export default function DispensacionStep3ReviewSubmit({
                     </Heading>
                     <VStack align='stretch' gap={3}>
                         <Button
-                            colorScheme='teal'
+                            colorPalette='teal'
                             onClick={() => setIsPickerOpen(true)}
                             size='sm'
                             w='fit-content'
-                            isDisabled={true} // Deshabilitar también por seguridad
+                            disabled={true} // Deshabilitar también por seguridad
                         >
                             Agregar Usuario
                         </Button>
                         {usuariosRealizadores.length > 0 ? (
-                            <Table size='sm' variant='simple'>
-                                <Thead>
-                                    <Tr>
-                                        <Th>Usuario</Th>
-                                        <Th>Nombre Completo</Th>
-                                        <Th>Acción</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                            <Table.Root size='sm' variant='simple'>
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>Usuario</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Nombre Completo</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Acción</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {usuariosRealizadores.map(user => (
-                                        <Tr key={user.id}>
-                                            <Td>{user.username}</Td>
-                                            <Td>{user.nombreCompleto || 'N/A'}</Td>
-                                            <Td>
+                                        <Table.Row key={user.id}>
+                                            <Table.Cell>{user.username}</Table.Cell>
+                                            <Table.Cell>{user.nombreCompleto || 'N/A'}</Table.Cell>
+                                            <Table.Cell>
                                                 <IconButton
                                                     aria-label='Eliminar usuario'
-                                                    icon={<DeleteIcon />}
                                                     size='sm'
-                                                    colorScheme='red'
+                                                    colorPalette='red'
                                                     variant='ghost'
-                                                    onClick={() => handleRemoveUser(user.id)}
-                                                />
-                                            </Td>
-                                        </Tr>
+                                                    onClick={() => handleRemoveUser(user.id)}><LuTrash2 /></IconButton>
+                                            </Table.Cell>
+                                        </Table.Row>
                                     ))}
-                                </Tbody>
-                            </Table>
+                                </Table.Body>
+                            </Table.Root>
                         ) : (
                             <Text color='app.textSubtle' fontStyle='italic'>
                                 No hay usuarios seleccionados. Debe agregar al menos uno.
@@ -750,34 +747,36 @@ export default function DispensacionStep3ReviewSubmit({
                     {loadingAreasDestino ? (
                         <Text color='app.textMuted'>Cargando áreas operativas de la orden...</Text>
                     ) : areasDestinoDisponibles.length > 0 ? (
-                        <FormControl isRequired>
-                            <FormLabel>Área que recibe la dispensación</FormLabel>
-                            <Select
-                                placeholder='Seleccione un área operativa'
-                                value={dispensacion?.areaOperativaDestinoId?.toString() ?? ''}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setDispensacion({
-                                        ...(dispensacion ?? {ordenProduccionId: ordenProduccionId ?? 0, items: []}),
-                                        areaOperativaDestinoId: value ? Number(value) : undefined,
-                                    });
-                                }}
-                            >
-                                {areasDestinoDisponibles.map(area => (
-                                    <option key={area.areaId} value={area.areaId}>
-                                        {area.areaNombre} (ID: {area.areaId})
-                                    </option>
-                                ))}
-                            </Select>
+                        <Field.Root required>
+                            <Field.Label>Área que recibe la dispensación</Field.Label>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    placeholder='Seleccione un área operativa'
+                                    value={dispensacion?.areaOperativaDestinoId?.toString() ?? ''}
+                                    onValueChange={(e) => {
+                                        const value = e.target.value;
+                                        setDispensacion({
+                                            ...(dispensacion ?? {ordenProduccionId: ordenProduccionId ?? 0, items: []}),
+                                            areaOperativaDestinoId: value ? Number(value) : undefined,
+                                        });
+                                    }}>
+                                    {areasDestinoDisponibles.map(area => (
+                                        <option key={area.areaId} value={area.areaId}>
+                                            {area.areaNombre} (ID: {area.areaId})
+                                        </option>
+                                    ))}
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
                             <Text mt={2} fontSize='sm' color='app.textMuted'>
                                 Esta selección se guardará en la trazabilidad de la dispensación y habilitará automáticamente el avance de Almacén General.
                             </Text>
-                        </FormControl>
+                        </Field.Root>
                     ) : (
-                        <Alert status='info' borderRadius='md'>
-                            <AlertIcon />
+                        <Alert.Root status='info' borderRadius='md'>
+                            <Alert.Indicator />
                             Esta orden no tiene áreas operativas destino configuradas en su seguimiento. La dispensación se registrará sin área destino.
-                        </Alert>
+                        </Alert.Root>
                     )}
                 </Box>
 
@@ -787,37 +786,37 @@ export default function DispensacionStep3ReviewSubmit({
                         Resumen de Materiales a Dispensar
                     </Heading>
                     {summaryItems.length > 0 ? (
-                        <Table size='sm' variant='striped'>
-                            <Thead>
-                                <Tr>
-                                    <Th>Material (ID)</Th>
-                                    <Th>Nombre</Th>
-                                    <Th>Lote (Batch)</Th>
-                                    <Th>Cantidad</Th>
-                                    <Th>Unidad</Th>
-                                    <Th>Fecha Vencimiento</Th>
-                                </Tr>
-                            </Thead>
-                    <Tbody>
+                        <Table.Root size='sm' variant='striped'>
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>Material (ID)</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Lote (Batch)</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Fecha Vencimiento</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                    <Table.Body>
                                 {summaryItems.map((item, idx) => (
-                            <Tr key={idx}>
-                                        <Td>{item.productoId}</Td>
-                                        <Td>
+                            <Table.Row key={idx}>
+                                        <Table.Cell>{item.productoId}</Table.Cell>
+                                        <Table.Cell>
                                             {item.productoNombre}
                                             {item.esEmpaque && (
-                                                <Tag ml={2} size="sm" colorScheme="blue" variant="outline">
+                                                <Tag.Root ml={2} size="sm" colorPalette="blue" variant="outline">
                                                     Empaque
-                                                </Tag>
+                                                </Tag.Root>
                                             )}
-                                        </Td>
-                                        <Td>{item.loteBatch}</Td>
-                                        <Td>{item.cantidad.toFixed(2)}</Td>
-                                        <Td>{item.unidad}</Td>
-                                        <Td>{item.fechaVencimiento || 'N/A'}</Td>
-                            </Tr>
+                                        </Table.Cell>
+                                        <Table.Cell>{item.loteBatch}</Table.Cell>
+                                        <Table.Cell>{item.cantidad.toFixed(2)}</Table.Cell>
+                                        <Table.Cell>{item.unidad}</Table.Cell>
+                                        <Table.Cell>{item.fechaVencimiento || 'N/A'}</Table.Cell>
+                            </Table.Row>
                         ))}
-                    </Tbody>
-                </Table>
+                    </Table.Body>
+                </Table.Root>
                     ) : (
                         <Text color='app.textSubtle' fontStyle='italic'>
                             No hay items para mostrar
@@ -831,45 +830,45 @@ export default function DispensacionStep3ReviewSubmit({
                         <Heading size='md' mb={4} fontFamily='Comfortaa Variable' color='orange.700'>
                             Reposición de Material por Averías
                         </Heading>
-                        <Table size='sm' variant='striped'>
-                            <Thead>
-                                <Tr>
-                                    <Th>Material (ID)</Th>
-                                    <Th>Nombre</Th>
-                                    <Th>Lote (Batch)</Th>
-                                    <Th>Cantidad</Th>
-                                    <Th>Unidad</Th>
-                                    <Th>Fecha Vencimiento</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                        <Table.Root size='sm' variant='striped'>
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>Material (ID)</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Lote (Batch)</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Fecha Vencimiento</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {reposicionItems.map((item, idx) => (
-                                    <Tr key={`repo-${idx}`}>
-                                        <Td>{item.productoId}</Td>
-                                        <Td>
+                                    <Table.Row key={`repo-${idx}`}>
+                                        <Table.Cell>{item.productoId}</Table.Cell>
+                                        <Table.Cell>
                                             {item.productoNombre}
-                                            <Tag ml={2} size="sm" colorScheme="orange" variant="solid">
+                                            <Tag.Root ml={2} size="sm" colorPalette="orange" variant="solid">
                                                 Reposición Avería
-                                            </Tag>
-                                        </Td>
-                                        <Td>{item.loteBatch}</Td>
-                                        <Td>{item.cantidad.toFixed(2)}</Td>
-                                        <Td>{item.unidad}</Td>
-                                        <Td>{item.fechaVencimiento || 'N/A'}</Td>
-                                    </Tr>
+                                            </Tag.Root>
+                                        </Table.Cell>
+                                        <Table.Cell>{item.loteBatch}</Table.Cell>
+                                        <Table.Cell>{item.cantidad.toFixed(2)}</Table.Cell>
+                                        <Table.Cell>{item.unidad}</Table.Cell>
+                                        <Table.Cell>{item.fechaVencimiento || 'N/A'}</Table.Cell>
+                                    </Table.Row>
                                 ))}
-                            </Tbody>
-                        </Table>
+                            </Table.Body>
+                        </Table.Root>
                     </Box>
                 )}
 
                 {/* Token de Verificación */}
                 <Box bg='app.surface' p={4} borderRadius='md' boxShadow='sm'>
-                    <FormControl isRequired>
-                        <FormLabel fontFamily='Comfortaa Variable'>Token de Verificación</FormLabel>
+                    <Field.Root required>
+                        <Field.Label fontFamily='Comfortaa Variable'>Token de Verificación</Field.Label>
                         <Input
                             value={inputToken}
-                            onChange={e => setInputToken(e.target.value)}
+                            onValueChange={e => setInputToken(e.target.value)}
                             placeholder='Ingrese el token de 4 dígitos'
                             maxLength={4}
                             type='text'
@@ -878,24 +877,24 @@ export default function DispensacionStep3ReviewSubmit({
                         <Text mt={2} fontSize='sm' color='app.textMuted'>
                             Token generado: <strong>{token}</strong>
                         </Text>
-                </FormControl>
+                </Field.Root>
                 </Box>
 
                 {/* Botones de Acción */}
                 <Flex gap={4} justify='flex-end'>
                     <Button onClick={() => setActiveStep(1)}>Atrás</Button>
                     <Button
-                        colorScheme='blue'
+                        colorPalette='blue'
                         onClick={handleGeneratePDF}
-                        isDisabled={!canGeneratePDF}
+                        disabled={!canGeneratePDF}
                     >
                         Generar borrador PDF
                     </Button>
                     <Button
-                        colorScheme='teal'
+                        colorPalette='teal'
                         onClick={handleRegistrarDispensacion}
-                        isDisabled={!canRegister}
-                        isLoading={isLoading}
+                        disabled={!canRegister}
+                        loading={isLoading}
                         loadingText='Registrando...'
                     >
                         Registrar Dispensación

@@ -1,4 +1,4 @@
-import { Container, Tabs, TabList, Tab, TabPanels, TabPanel } from "@chakra-ui/react";
+import { Steps, Container, Tabs, TabList, Tab, TabPanels, TabPanel } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader.tsx";
 import InventarioConsolidadoTab from "./InventarioConsolidado/InventarioConsolidadoTab.tsx";
 import { my_style_tab } from "../../styles/styles_general.tsx";
@@ -23,18 +23,18 @@ export default function StockPage() {
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w={"full"} h={"full"}>
             <MyHeader title={"Stock"} />
-            <Tabs>
-                <TabList>
+            <Tabs.Root>
+                <Tabs.List>
                     {visibleTabs.map((tab) => (
                         <Tab key={tab.key} sx={my_style_tab}>{tab.label}</Tab>
                     ))}
-                </TabList>
+                </Tabs.List>
                 <TabPanels>
                     {visibleTabs.map((tab) => (
                         <TabPanel key={tab.key}>{tab.render()}</TabPanel>
                     ))}
                 </TabPanels>
-            </Tabs>
+            </Tabs.Root>
         </Container>
     );
 }

@@ -1,19 +1,7 @@
 import { useCallback, type CSSProperties } from "react";
+import { useColorModeValue } from "../../../components/ui/color-mode";
 import { Handle, type NodeProps, Position } from "@xyflow/react";
-import {
-  Box,
-  Flex,
-  HStack,
-  Icon,
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Text,
-  useColorModeValue,
-  VStack,
-} from "@chakra-ui/react";
+import { Steps, Box, Flex, HStack, Icon, IconButton, Menu, Text, VStack, Portal } from "@chakra-ui/react";
 import { FaUserTie } from "react-icons/fa";
 import { LuMousePointerClick } from "react-icons/lu";
 import { MdBusinessCenter, MdEdit, MdInfoOutline } from "react-icons/md";
@@ -61,17 +49,17 @@ export default function CargoNode(props: NodeProps<OrganigramaNode>) {
           </Text>
         </Box>
 
-        <Icon as={FaUserTie} w="3em" h="3em" color="blue.500" my="0.5em" />
+        <Icon w="3em" h="3em" color="blue.500" my="0.5em" asChild><FaUserTie /></Icon>
 
-        <VStack w="full" p="0.5em" align="start" spacing={1} position="relative">
+        <VStack w="full" p="0.5em" align="start" gap={1} position="relative">
           <HStack w="full">
-            <Icon as={MdBusinessCenter} color="blue.500" />
+            <Icon color="blue.500" asChild><MdBusinessCenter /></Icon>
             <Text fontSize="sm" fontWeight="medium">
               {cargo.departamento || "Sin departamento"}
             </Text>
           </HStack>
 
-          <Text fontSize="xs" color="app.textMuted" noOfLines={2} minH="2.4em">
+          <Text fontSize="xs" color="app.textMuted" lineClamp={2} minH="2.4em">
             {cargo.descripcionCargo || "Sin descripción"}
           </Text>
 
@@ -82,28 +70,27 @@ export default function CargoNode(props: NodeProps<OrganigramaNode>) {
           )}
 
           <Box position="absolute" bottom="2px" right="2px" className="nodrag">
-            <Menu>
-              <MenuButton
-                as={IconButton}
+            <Menu.Root>
+              <Menu.Trigger
                 aria-label="Opciones del cargo"
                 icon={<LuMousePointerClick />}
                 variant="ghost"
                 size="lg"
                 color="blue.500"
                 _hover={{ bg: actionHoverBg }}
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => event.stopPropagation()}
-              />
-              <MenuList>
-                {canEdit && (
-                  <MenuItem icon={<MdEdit />} onClick={handleEdit}>
-                    Editar cargo
-                  </MenuItem>
-                )}
-                <MenuItem icon={<MdInfoOutline />} onClick={handleViewDetails}>
-                  Detalles y manual
-                </MenuItem>
-              </MenuList>
-            </Menu>
+                asChild><IconButton
+                    onClick={(event: React.MouseEvent<HTMLButtonElement>) => event.stopPropagation()} /></Menu.Trigger>
+              <Portal><Menu.Positioner><Menu.Content>
+                    {canEdit && (
+                      <Menu.Item icon={<MdEdit />} onSelect={handleEdit} value='item-0'>
+                        Editar cargo
+                      </Menu.Item>
+                    )}
+                    <Menu.Item icon={<MdInfoOutline />} onSelect={handleViewDetails} value='item-1'>
+                      Detalles y manual
+                    </Menu.Item>
+                  </Menu.Content></Menu.Positioner></Portal>
+            </Menu.Root>
           </Box>
         </VStack>
 

@@ -1,11 +1,9 @@
 import {
+    Steps,
     Card,
-    CardHeader,
     HStack,
     IconButton,
     Heading,
-    Divider,
-    CardBody,
     VStack,
     Text,
     Flex,
@@ -19,8 +17,9 @@ import {
     Td,
     TableContainer,
     Spinner,
-    Collapse,
+    Collapsible,
     Button,
+    Separator,
 } from '@chakra-ui/react';
 import { FaSearch, FaChevronDown, FaChevronUp, FaList } from 'react-icons/fa';
 import { ProductoWithInsumos, InsumoWithStock } from '../types.tsx';
@@ -175,7 +174,7 @@ const TerSemiTerCard = ({ productoSeleccionado, canProduce, onSearchClick, canti
 
         // Añadir la fila principal
         elements.push(
-            <Tr 
+            <Table.Row 
                 key={`row-${reactKey}`}
                 bg={esSemi ? `purple.${50 + nivel * 10}` : undefined}
                 borderLeftWidth={esSemi ? "4px" : "0"}
@@ -198,79 +197,81 @@ const TerSemiTerCard = ({ productoSeleccionado, canProduce, onSearchClick, canti
                     }
                 }}
             >
-                <Td>{insumo.productoId}</Td>
-                <Td fontWeight="medium">
+                <Table.Cell>{insumo.productoId}</Table.Cell>
+                <Table.Cell fontWeight="medium">
                     {nivel > 0 && <Box as="span" ml={`${nivel}rem`} />}
                     {insumo.productoNombre}
                     {esSemi && (
-                        <Tag ml={2} size="sm" colorScheme="purple">
+                        <Tag.Root ml={2} size="sm" colorPalette="purple">
                             Semiterminado
-                        </Tag>
+                        </Tag.Root>
                     )}
-                </Td>
-                <Td>{obtenerUMB(insumo)}</Td>
-                <Td isNumeric>{formatCantidad(insumo.cantidadRequerida)}</Td>
-                <Td isNumeric fontWeight="bold">{formatCantidad(cantidadAjustada)}</Td>
-                <Td isNumeric>{formatCantidad(insumo.stockActual)}</Td>
-                <Td>
-                    <Tag colorScheme={tieneStock ? 'green' : 'red'}>
+                </Table.Cell>
+                <Table.Cell>{obtenerUMB(insumo)}</Table.Cell>
+                <Table.Cell textAlign='end'>{formatCantidad(insumo.cantidadRequerida)}</Table.Cell>
+                <Table.Cell fontWeight="bold" textAlign='end'>{formatCantidad(cantidadAjustada)}</Table.Cell>
+                <Table.Cell textAlign='end'>{formatCantidad(insumo.stockActual)}</Table.Cell>
+                <Table.Cell>
+                    <Tag.Root colorPalette={tieneStock ? 'green' : 'red'}>
                         {tieneStock ? 'Suficiente' : 'Insuficiente'}
-                    </Tag>
-                </Td>
-                <Td>
+                    </Tag.Root>
+                </Table.Cell>
+                <Table.Cell>
                     {(esSemi && tieneSubInsumos) && (
                         <Box color="purple.500">
                             {isExpanded ? <FaChevronUp /> : <FaChevronDown />}
                         </Box>
                     )}
-                </Td>
-            </Tr>
+                </Table.Cell>
+            </Table.Row>
         );
 
         // Añadir la fila de subinsumos si es necesario
         if (tieneSubInsumos && isExpanded) {
             elements.push(
-                <Tr key={`subrow-${reactKey}`}>
-                    <Td colSpan={8} p={0}>
-                        <Collapse in={isExpanded} animateOpacity>
-                            <Box 
-                                p={4} 
-                                bg="gray.50" 
-                                borderWidth="1px" 
-                                borderColor="purple.200"
-                                borderRadius="md"
-                                m={2}
-                            >
-                                <Flex align="center" mb={2}>
-                                    <FaList color="purple" />
-                                    <Text ml={2} fontWeight="bold" color="purple.700">
-                                        Componentes del semiterminado
-                                    </Text>
-                                </Flex>
+                <Table.Row key={`subrow-${reactKey}`}>
+                    <Table.Cell colSpan={8} p={0}>
+                        <Collapsible.Root open={isExpanded}>
+                            <Collapsible.Content>
+                                <Box 
+                                    p={4} 
+                                    bg="gray.50" 
+                                    borderWidth="1px" 
+                                    borderColor="purple.200"
+                                    borderRadius="md"
+                                    m={2}
+                                >
+                                    <Flex align="center" mb={2}>
+                                        <FaList color="purple" />
+                                        <Text ml={2} fontWeight="bold" color="purple.700">
+                                            Componentes del semiterminado
+                                        </Text>
+                                    </Flex>
 
-                                <Table variant="simple" size="sm" colorScheme="purple">
-                                    <Thead bg="purple.100">
-                                        <Tr>
-                                            <Th>Código</Th>
-                                            <Th>Componente</Th>
-                                            <Th>UMB</Th>
-                                            <Th isNumeric>Cantidad</Th>
-                                            <Th isNumeric>Cantidad Total</Th>
-                                            <Th isNumeric>Stock</Th>
-                                            <Th>Estado</Th>
-                                            <Th></Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
-                                        {insumo.subInsumos?.map(subInsumo => 
-                                            renderInsumoRecursivo(subInsumo, nivel + 1, insumoId)
-                                        )}
-                                    </Tbody>
-                                </Table>
-                            </Box>
-                        </Collapse>
-                    </Td>
-                </Tr>
+                                    <Table.Root variant="simple" size="sm" colorPalette="purple">
+                                        <Table.Header bg="purple.100">
+                                            <Table.Row>
+                                                <Table.ColumnHeader>Código</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Componente</Table.ColumnHeader>
+                                                <Table.ColumnHeader>UMB</Table.ColumnHeader>
+                                                <Table.ColumnHeader textAlign='end'>Cantidad</Table.ColumnHeader>
+                                                <Table.ColumnHeader textAlign='end'>Cantidad Total</Table.ColumnHeader>
+                                                <Table.ColumnHeader textAlign='end'>Stock</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                                <Table.ColumnHeader></Table.ColumnHeader>
+                                            </Table.Row>
+                                        </Table.Header>
+                                        <Table.Body>
+                                            {insumo.subInsumos?.map(subInsumo => 
+                                                renderInsumoRecursivo(subInsumo, nivel + 1, insumoId)
+                                            )}
+                                        </Table.Body>
+                                    </Table.Root>
+                                </Box>
+                            </Collapsible.Content>
+                        </Collapsible.Root>
+                    </Table.Cell>
+                </Table.Row>
             );
         }
 
@@ -279,24 +280,20 @@ const TerSemiTerCard = ({ productoSeleccionado, canProduce, onSearchClick, canti
     };
 
     return (
-        <Card variant="outline" borderColor="blue.200" w="full">
-            <CardHeader bg="blue.50">
+        <Card.Root variant="outline" borderColor="blue.200" w="full">
+            <Card.Header bg="blue.50">
                 <HStack>
-                    <IconButton
-                        aria-label="Buscar terminado"
-                        icon={<FaSearch />}
-                        onClick={onSearchClick}
-                    />
+                    <IconButton aria-label="Buscar terminado" onClick={onSearchClick}><FaSearch /></IconButton>
                     <Heading size="sm">
                         {producto ? producto.nombre : 'Selecciona un terminado'}
                     </Heading>
                 </HStack>
-            </CardHeader>
-            <Divider />
-            <CardBody>
+            </Card.Header>
+            <Separator />
+            <Card.Body>
                 {producto ? (
-                    <VStack align="stretch" spacing={4}>
-                        <VStack align="start" spacing={1}>
+                    <VStack align="stretch" gap={4}>
+                        <VStack align="start" gap={1}>
                             <Text fontSize="sm" fontWeight="medium">
                                 Nombre: {producto.nombre}
                             </Text>
@@ -316,8 +313,8 @@ const TerSemiTerCard = ({ productoSeleccionado, canProduce, onSearchClick, canti
                                 </Text>
                             )}
                         </VStack>
-                        <Divider />
-                        <VStack align="stretch" spacing={2}>
+                        <Separator />
+                        <VStack align="stretch" gap={2}>
                             <Text fontWeight="medium">
                                 Insumos requeridos (Cantidad a producir: {cantidadAProducir})
                             </Text>
@@ -326,25 +323,25 @@ const TerSemiTerCard = ({ productoSeleccionado, canProduce, onSearchClick, canti
                                     No se registran insumos para este producto.
                                 </Text>
                             ) : (
-                                <TableContainer>
-                                    <Table variant="simple" size="sm">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>Código</Th>
-                                                <Th>Insumo</Th>
-                                                <Th>UMB</Th>
-                                                <Th isNumeric>Cantidad Base</Th>
-                                                <Th isNumeric>Cantidad Total</Th>
-                                                <Th isNumeric>Stock Actual</Th>
-                                                <Th>Estado</Th>
-                                                <Th></Th> {/* Columna para el botón de expandir */}
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
+                                <Table.ScrollArea>
+                                    <Table.Root variant="simple" size="sm">
+                                        <Table.Header>
+                                            <Table.Row>
+                                                <Table.ColumnHeader>Código</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Insumo</Table.ColumnHeader>
+                                                <Table.ColumnHeader>UMB</Table.ColumnHeader>
+                                                <Table.ColumnHeader textAlign='end'>Cantidad Base</Table.ColumnHeader>
+                                                <Table.ColumnHeader textAlign='end'>Cantidad Total</Table.ColumnHeader>
+                                                <Table.ColumnHeader textAlign='end'>Stock Actual</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                                <Table.ColumnHeader></Table.ColumnHeader> {/* Columna para el botón de expandir */}
+                                            </Table.Row>
+                                        </Table.Header>
+                                        <Table.Body>
                                             {insumos.map((insumo) => renderInsumoRecursivo(insumo))}
-                                        </Tbody>
-                                    </Table>
-                                </TableContainer>
+                                        </Table.Body>
+                                    </Table.Root>
+                                </Table.ScrollArea>
                             )}
                         </VStack>
                         <Text fontWeight="medium" color={canProduce ? 'green.600' : 'red.600'}>
@@ -354,7 +351,7 @@ const TerSemiTerCard = ({ productoSeleccionado, canProduce, onSearchClick, canti
                         </Text>
                     </VStack>
                 ) : (
-                    <VStack align="stretch" spacing={3}>
+                    <VStack align="stretch" gap={3}>
                         <Text fontSize="sm" color="gray.600">
                             Aún no se ha seleccionado un producto terminado.
                         </Text>
@@ -363,8 +360,8 @@ const TerSemiTerCard = ({ productoSeleccionado, canProduce, onSearchClick, canti
                         </Text>
                     </VStack>
                 )}
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 };
 

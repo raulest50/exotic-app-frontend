@@ -1,26 +1,21 @@
 import {
+    Steps,
     Badge,
     Box,
     Button,
-    Divider,
     Drawer,
-    DrawerBody,
-    DrawerCloseButton,
-    DrawerContent,
-    DrawerHeader,
-    DrawerOverlay,
     Flex,
     HStack,
     SimpleGrid,
     Spinner,
     Stack,
     Stat,
-    StatLabel,
-    StatNumber,
     Text,
-    useColorModeValue,
     VStack,
+    Separator,
+    Portal,
 } from "@chakra-ui/react";
+import { useColorModeValue } from "../../../components/ui/color-mode";
 import { useCallback, type MutableRefObject, type ReactNode } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
@@ -290,37 +285,37 @@ function SeguimientoOrdenCardContent({
     const isOrdenCerrada = card.estadoOrden === -1 || card.estadoOrden === 2;
 
     return (
-        <VStack align="stretch" spacing={2}>
-            <VStack align="start" spacing={1}>
-                <Badge colorScheme="teal" px={2} py={1}>
+        <VStack align="stretch" gap={2}>
+            <VStack align="start" gap={1}>
+                <Badge colorPalette="teal" px={2} py={1}>
                     {card.loteAsignado || `OP-${card.ordenId}`}
                 </Badge>
-                <Text fontSize="xs" color="app.textSubtle" noOfLines={1}>
+                <Text fontSize="xs" color="app.textSubtle" lineClamp={1}>
                     {card.nodeLabel || "Sin nodo"}
                 </Text>
             </VStack>
 
             <Box>
-                <Text fontWeight="bold" noOfLines={2}>{card.productoNombre}</Text>
+                <Text fontWeight="bold" lineClamp={2}>{card.productoNombre}</Text>
                 <Text fontSize="xs" color="app.textMuted">
                     {card.productoId} · Cant. {card.cantidadProducir}
                 </Text>
             </Box>
 
-            <HStack spacing={2} flexWrap="wrap">
+            <HStack gap={2} flexWrap="wrap">
                 {card.estadoDispensacionMateriales ? (
-                    <Badge colorScheme={getEstadoDispensacionMaterialesColor(card.estadoDispensacionMateriales)}>
+                    <Badge colorPalette={getEstadoDispensacionMaterialesColor(card.estadoDispensacionMateriales)}>
                         {getEstadoDispensacionMaterialesLabel(card.estadoDispensacionMateriales)}
                     </Badge>
                 ) : null}
                 {card.politicaDispensacionInicio === "NO_BLOQUEANTE" ? (
-                    <Badge colorScheme={getPoliticaDispensacionInicioColor(card.politicaDispensacionInicio)}>
+                    <Badge colorPalette={getPoliticaDispensacionInicioColor(card.politicaDispensacionInicio)}>
                         No bloqueante
                     </Badge>
                 ) : null}
             </HStack>
 
-            <Stack spacing={0.5} fontSize="xs" color="app.textMuted">
+            <Stack gap={0.5} fontSize="xs" color="app.textMuted">
                 <Text>Desde: {formatDateTime(card.fechaEstadoActual)}</Text>
                 <Text>Tiempo: {formatMinutesDuration(card.minutosEnEstadoActual)}</Text>
                 <Text>
@@ -333,7 +328,7 @@ function SeguimientoOrdenCardContent({
                     <Text fontSize="xs" color="app.textSubtle" mb={1}>
                         Obs.
                     </Text>
-                    <Text fontSize="sm" noOfLines={2}>
+                    <Text fontSize="sm" lineClamp={2}>
                         {card.ordenObservaciones}
                     </Text>
                 </Box>
@@ -344,24 +339,18 @@ function SeguimientoOrdenCardContent({
                     size="sm"
                     minH={touchOptimized ? 12 : undefined}
                     variant="outline"
-                    leftIcon={<FiEye />}
-                    onClick={() => onOpenDetail(card)}
-                >
-                    Detalle
-                </Button>
+                    onClick={() => onOpenDetail(card)}><FiEye />Detalle
+                                    </Button>
 
                 {mode === "leader" ? (
-                    <HStack spacing={2}>
+                    <HStack gap={2}>
                         {card.estado === 1 && !isAlmacenGeneral ? (
                             <Button
                                 size="sm"
                                 minH={touchOptimized ? 12 : undefined}
-                                colorScheme="blue"
-                                leftIcon={<FiPlay />}
-                                onClick={() => onAction?.("iniciar", card)}
-                            >
-                                Iniciar
-                            </Button>
+                                colorPalette="blue"
+                                onClick={() => onAction?.("iniciar", card)}><FiPlay />Iniciar
+                                                            </Button>
                         ) : null}
 
                         {card.estado === 4 && !isAlmacenGeneral ? (
@@ -370,25 +359,19 @@ function SeguimientoOrdenCardContent({
                                     size="sm"
                                     minH={touchOptimized ? 12 : undefined}
                                     variant="outline"
-                                    leftIcon={<FiPause />}
-                                    onClick={() => onAction?.("pausar", card)}
-                                >
-                                    Pausar
-                                </Button>
+                                    onClick={() => onAction?.("pausar", card)}><FiPause />Pausar
+                                                                    </Button>
                                 <Button
                                     size="sm"
                                     minH={touchOptimized ? 12 : undefined}
-                                    colorScheme="green"
-                                    leftIcon={<FiRefreshCw />}
-                                    onClick={() => onAction?.("completar", card)}
-                                >
-                                    Completar
-                                </Button>
+                                    colorPalette="green"
+                                    onClick={() => onAction?.("completar", card)}><FiRefreshCw />Completar
+                                                                    </Button>
                             </>
                         ) : null}
 
                         {isAlmacenGeneral ? (
-                            <Badge colorScheme="purple">Se reporta al dispensar</Badge>
+                            <Badge colorPalette="purple">Se reporta al dispensar</Badge>
                         ) : null}
                     </HStack>
                 ) : null}
@@ -397,13 +380,10 @@ function SeguimientoOrdenCardContent({
                     <Button
                         size="sm"
                         minH={touchOptimized ? 12 : undefined}
-                        colorScheme="purple"
+                        colorPalette="purple"
                         variant="outline"
-                        leftIcon={<FiEdit3 />}
-                        onClick={() => onCorrectState?.(card)}
-                    >
-                        Corregir
-                    </Button>
+                        onClick={() => onCorrectState?.(card)}><FiEdit3 />Corregir
+                                            </Button>
                 ) : null}
             </HStack>
         </VStack>
@@ -459,7 +439,7 @@ export function SeguimientoBoardColumn({
                 containerRef={containerRef}
                 totalItems={totalItems}
                 footer={footer}
-                isLoading={isLoading}
+                loading={isLoading}
                 touchOptimized={touchOptimized}
             />
         );
@@ -574,13 +554,13 @@ function SeguimientoBoardColumnContent({
             <Box borderTop="4px solid" borderTopColor={meta.accentColor} px={4} py={3} bg="app.surfaceSubtle">
                 <HStack justify="space-between">
                     <Text fontWeight="bold">{meta.title}</Text>
-                    <Badge colorScheme="gray">{totalItems ?? items.length}</Badge>
+                    <Badge colorPalette="gray">{totalItems ?? items.length}</Badge>
                 </HStack>
             </Box>
 
             <VStack
                 align="stretch"
-                spacing={3}
+                gap={3}
                 p={4}
                 minH={touchOptimized ? "240px" : undefined}
                 maxH={touchOptimized ? { base: "none", md: "calc(100dvh - 24rem)" } : "70vh"}
@@ -659,22 +639,19 @@ export function SeguimientoResumenCards({
     return (
         <SimpleGrid
             columns={tabletOptimized ? { base: 2, md: 3, lg: 5 } : { base: 2, md: 3, xl: 5 }}
-            spacing={{ base: 3, md: 4 }}
+            gap={{ base: 3, md: 4 }}
         >
             {stats.map((item) => {
                 const content = (
-                    <Stat>
-                        <StatLabel>{item.label}</StatLabel>
-                        <StatNumber color={item.color}>{item.value}</StatNumber>
-                    </Stat>
+                    <Stat.Root>
+                        <Stat.Label>{item.label}</Stat.Label>
+                        <Stat.ValueText color={item.color}>{item.value}</Stat.ValueText>
+                    </Stat.Root>
                 );
 
                 if (item.onClick) {
                     return (
                         <Box
-                            key={item.label}
-                            as="button"
-                            type="button"
                             borderWidth="1px"
                             borderRadius="lg"
                             bg="app.surface"
@@ -689,10 +666,9 @@ export function SeguimientoResumenCards({
                             _hover={{ borderColor: "teal.300", boxShadow: "sm", transform: "translateY(-1px)" }}
                             _focusVisible={{ outline: "2px solid", outlineColor: "teal.400", outlineOffset: "2px" }}
                             aria-label={item.ariaLabel}
-                            onClick={item.onClick}
-                        >
-                            {content}
-                        </Box>
+                            asChild><button key={item.label} type="button" onClick={item.onClick}>
+                                {content}
+                            </button></Box>
                     );
                 }
 
@@ -727,139 +703,149 @@ export function SeguimientoOrdenDetailDrawer({
     loading,
 }: SeguimientoOrdenDetailDrawerProps) {
     return (
-        <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="lg">
-            <DrawerOverlay />
-            <DrawerContent>
-                <DrawerCloseButton />
-                <DrawerHeader>Detalle de seguimiento</DrawerHeader>
+        <Drawer.Root open={isOpen} placement='end' size='lg' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                <DrawerBody>
-                    {loading ? (
-                        <Flex align="center" justify="center" py={10}>
-                            <Spinner />
-                        </Flex>
-                    ) : null}
+                <Drawer.Backdrop />
+                <Drawer.Positioner>
+                    <Drawer.Content>
+                        <Drawer.CloseTrigger />
+                        <Drawer.Header>Detalle de seguimiento</Drawer.Header>
 
-                    {!loading && detail ? (
-                        <VStack align="stretch" spacing={5}>
-                            <Box>
-                                <Text fontWeight="bold">{detail.loteAsignado || `OP-${detail.ordenId}`}</Text>
-                                <Text color="app.textMuted">
-                                    {detail.productoNombre} · {detail.productoId}
-                                </Text>
-                                <Text color="app.textMuted">Cantidad: {detail.cantidadProducir}</Text>
-                                <HStack mt={2} spacing={2} flexWrap="wrap">
-                                    <Badge colorScheme={getEstadoDispensacionMaterialesColor(detail.estadoDispensacionMateriales)}>
-                                        {getEstadoDispensacionMaterialesLabel(detail.estadoDispensacionMateriales)}
-                                    </Badge>
-                                    <Badge colorScheme={getPoliticaDispensacionInicioColor(detail.politicaDispensacionInicio)}>
-                                        {getPoliticaDispensacionInicioLabel(detail.politicaDispensacionInicio)}
-                                    </Badge>
-                                </HStack>
-                            </Box>
+                        <Drawer.Body>
+                            {loading ? (
+                                <Flex align="center" justify="center" py={10}>
+                                    <Spinner />
+                                </Flex>
+                            ) : null}
 
-                            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                                <Box borderWidth="1px" borderRadius="md" p={3}>
-                                    <Text fontSize="sm" color="app.textSubtle">Politica dispensacion</Text>
-                                    <Text>{getPoliticaDispensacionInicioLabel(detail.politicaDispensacionInicio)}</Text>
-                                    <Text fontSize="xs" color="app.textMuted">
-                                        {formatDateTime(detail.fechaAplicacionPoliticaDispensacion)}
-                                    </Text>
-                                </Box>
-                                <Box borderWidth="1px" borderRadius="md" p={3}>
-                                    <Text fontSize="sm" color="app.textSubtle">Estado materiales</Text>
-                                    <Text>{getEstadoDispensacionMaterialesLabel(detail.estadoDispensacionMateriales)}</Text>
-                                </Box>
-                                <Box borderWidth="1px" borderRadius="md" p={3}>
-                                    <Text fontSize="sm" color="app.textSubtle">Creación</Text>
-                                    <Text>{formatDateTime(detail.fechaCreacion)}</Text>
-                                </Box>
-                                <Box borderWidth="1px" borderRadius="md" p={3}>
-                                    <Text fontSize="sm" color="app.textSubtle">Fin planificada</Text>
-                                    <Text>{formatDateTime(detail.fechaFinalPlanificada)}</Text>
-                                </Box>
-                                <Box borderWidth="1px" borderRadius="md" p={3}>
-                                    <Text fontSize="sm" color="app.textSubtle">Inicio estimado</Text>
-                                    <Text>{formatDateTime(detail.fechaInicioEstimacion)}</Text>
-                                </Box>
-                                <Box borderWidth="1px" borderRadius="md" p={3}>
-                                    <Text fontSize="sm" color="app.textSubtle">Fin estimado</Text>
-                                    <Text>{formatDateTime(detail.fechaFinalEstimada)}</Text>
-                                </Box>
-                                <Box borderWidth="1px" borderRadius="md" p={3}>
-                                    <Text fontSize="sm" color="app.textSubtle">Duración estimada</Text>
-                                    <Text>{formatMinutesDuration(detail.duracionCalendarioRutaCriticaMinutos)}</Text>
-                                </Box>
-                                <Box borderWidth="1px" borderRadius="md" p={3}>
-                                    <Text fontSize="sm" color="app.textSubtle">Inicio real</Text>
-                                    <Text>{formatDateTime(detail.fechaInicio)}</Text>
-                                </Box>
-                                <Box borderWidth="1px" borderRadius="md" p={3}>
-                                    <Text fontSize="sm" color="app.textSubtle">Fin real</Text>
-                                    <Text>{formatDateTime(detail.fechaFinal)}</Text>
-                                </Box>
-                            </SimpleGrid>
+                            {!loading && detail ? (
+                                <VStack align="stretch" gap={5}>
+                                    <Box>
+                                        <Text fontWeight="bold">{detail.loteAsignado || `OP-${detail.ordenId}`}</Text>
+                                        <Text color="app.textMuted">
+                                            {detail.productoNombre} · {detail.productoId}
+                                        </Text>
+                                        <Text color="app.textMuted">Cantidad: {detail.cantidadProducir}</Text>
+                                        <HStack mt={2} gap={2} flexWrap="wrap">
+                                            <Badge colorPalette={getEstadoDispensacionMaterialesColor(detail.estadoDispensacionMateriales)}>
+                                                {getEstadoDispensacionMaterialesLabel(detail.estadoDispensacionMateriales)}
+                                            </Badge>
+                                            <Badge colorPalette={getPoliticaDispensacionInicioColor(detail.politicaDispensacionInicio)}>
+                                                {getPoliticaDispensacionInicioLabel(detail.politicaDispensacionInicio)}
+                                            </Badge>
+                                        </HStack>
+                                    </Box>
 
-                            <Box>
-                                <Text fontWeight="semibold" mb={2}>Observaciones de la orden</Text>
-                                <Box borderWidth="1px" borderRadius="md" p={3} bg="app.surfaceSubtle">
-                                    <Text whiteSpace="pre-wrap">
-                                        {detail.ordenObservaciones?.trim() || "Sin observaciones registradas."}
-                                    </Text>
-                                </Box>
-                            </Box>
-
-                            <Box>
-                                <Text fontWeight="semibold" mb={3}>Ruta y estado actual</Text>
-                                <VStack align="stretch" spacing={3}>
-                                    {detail.rutaEstados.map((ruta, index) => (
-                                        <Box key={ruta.seguimientoId} borderWidth="1px" borderRadius="md" p={3}>
-                                            <HStack justify="space-between" align="start" mb={2}>
-                                                <Box>
-                                                    <Text fontWeight="bold">
-                                                        {index + 1}. {ruta.nodeLabel}
-                                                    </Text>
-                                                    <Text fontSize="sm" color="app.textMuted">
-                                                        {ruta.areaNombre}
-                                                    </Text>
-                                                </Box>
-                                                <Badge colorScheme={getEstadoBadgeColor(ruta.estado)}>
-                                                    {ruta.estadoDescripcion}
-                                                </Badge>
-                                            </HStack>
-
-                                            <Stack spacing={1} fontSize="sm" color="app.textMuted">
-                                                <Text>
-                                                    Estimado: {formatMinutesDuration(ruta.duracionEstimadaMinutos)} · {ruta.requiereJornadaLaboral ? "Jornada laboral" : "Tiempo continuo"}
-                                                </Text>
-                                                <Text>Visible desde: {formatDateTime(ruta.fechaVisible)}</Text>
-                                                <Text>Estado actual desde: {formatDateTime(ruta.fechaEstadoActual)}</Text>
-                                                <Text>Completado: {formatDateTime(ruta.fechaCompletado)}</Text>
-                                                <Text>
-                                                    Último reporte por: {ruta.usuarioReportaNombre || "Sistema / sin registro"}
-                                                </Text>
-                                            </Stack>
-
-                                            {ruta.observaciones?.trim() ? (
-                                                <>
-                                                    <Divider my={3} />
-                                                    <Text fontSize="sm" whiteSpace="pre-wrap">
-                                                        {ruta.observaciones}
-                                                    </Text>
-                                                </>
-                                            ) : null}
+                                    <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                                        <Box borderWidth="1px" borderRadius="md" p={3}>
+                                            <Text fontSize="sm" color="app.textSubtle">Politica dispensacion</Text>
+                                            <Text>{getPoliticaDispensacionInicioLabel(detail.politicaDispensacionInicio)}</Text>
+                                            <Text fontSize="xs" color="app.textMuted">
+                                                {formatDateTime(detail.fechaAplicacionPoliticaDispensacion)}
+                                            </Text>
                                         </Box>
-                                    ))}
-                                </VStack>
-                            </Box>
-                        </VStack>
-                    ) : null}
+                                        <Box borderWidth="1px" borderRadius="md" p={3}>
+                                            <Text fontSize="sm" color="app.textSubtle">Estado materiales</Text>
+                                            <Text>{getEstadoDispensacionMaterialesLabel(detail.estadoDispensacionMateriales)}</Text>
+                                        </Box>
+                                        <Box borderWidth="1px" borderRadius="md" p={3}>
+                                            <Text fontSize="sm" color="app.textSubtle">Creación</Text>
+                                            <Text>{formatDateTime(detail.fechaCreacion)}</Text>
+                                        </Box>
+                                        <Box borderWidth="1px" borderRadius="md" p={3}>
+                                            <Text fontSize="sm" color="app.textSubtle">Fin planificada</Text>
+                                            <Text>{formatDateTime(detail.fechaFinalPlanificada)}</Text>
+                                        </Box>
+                                        <Box borderWidth="1px" borderRadius="md" p={3}>
+                                            <Text fontSize="sm" color="app.textSubtle">Inicio estimado</Text>
+                                            <Text>{formatDateTime(detail.fechaInicioEstimacion)}</Text>
+                                        </Box>
+                                        <Box borderWidth="1px" borderRadius="md" p={3}>
+                                            <Text fontSize="sm" color="app.textSubtle">Fin estimado</Text>
+                                            <Text>{formatDateTime(detail.fechaFinalEstimada)}</Text>
+                                        </Box>
+                                        <Box borderWidth="1px" borderRadius="md" p={3}>
+                                            <Text fontSize="sm" color="app.textSubtle">Duración estimada</Text>
+                                            <Text>{formatMinutesDuration(detail.duracionCalendarioRutaCriticaMinutos)}</Text>
+                                        </Box>
+                                        <Box borderWidth="1px" borderRadius="md" p={3}>
+                                            <Text fontSize="sm" color="app.textSubtle">Inicio real</Text>
+                                            <Text>{formatDateTime(detail.fechaInicio)}</Text>
+                                        </Box>
+                                        <Box borderWidth="1px" borderRadius="md" p={3}>
+                                            <Text fontSize="sm" color="app.textSubtle">Fin real</Text>
+                                            <Text>{formatDateTime(detail.fechaFinal)}</Text>
+                                        </Box>
+                                    </SimpleGrid>
 
-                    {!loading && !detail ? (
-                        <Text color="app.textSubtle">No se encontró detalle para esta orden.</Text>
-                    ) : null}
-                </DrawerBody>
-            </DrawerContent>
-        </Drawer>
+                                    <Box>
+                                        <Text fontWeight="semibold" mb={2}>Observaciones de la orden</Text>
+                                        <Box borderWidth="1px" borderRadius="md" p={3} bg="app.surfaceSubtle">
+                                            <Text whiteSpace="pre-wrap">
+                                                {detail.ordenObservaciones?.trim() || "Sin observaciones registradas."}
+                                            </Text>
+                                        </Box>
+                                    </Box>
+
+                                    <Box>
+                                        <Text fontWeight="semibold" mb={3}>Ruta y estado actual</Text>
+                                        <VStack align="stretch" gap={3}>
+                                            {detail.rutaEstados.map((ruta, index) => (
+                                                <Box key={ruta.seguimientoId} borderWidth="1px" borderRadius="md" p={3}>
+                                                    <HStack justify="space-between" align="start" mb={2}>
+                                                        <Box>
+                                                            <Text fontWeight="bold">
+                                                                {index + 1}. {ruta.nodeLabel}
+                                                            </Text>
+                                                            <Text fontSize="sm" color="app.textMuted">
+                                                                {ruta.areaNombre}
+                                                            </Text>
+                                                        </Box>
+                                                        <Badge colorPalette={getEstadoBadgeColor(ruta.estado)}>
+                                                            {ruta.estadoDescripcion}
+                                                        </Badge>
+                                                    </HStack>
+
+                                                    <Stack gap={1} fontSize="sm" color="app.textMuted">
+                                                        <Text>
+                                                            Estimado: {formatMinutesDuration(ruta.duracionEstimadaMinutos)} · {ruta.requiereJornadaLaboral ? "Jornada laboral" : "Tiempo continuo"}
+                                                        </Text>
+                                                        <Text>Visible desde: {formatDateTime(ruta.fechaVisible)}</Text>
+                                                        <Text>Estado actual desde: {formatDateTime(ruta.fechaEstadoActual)}</Text>
+                                                        <Text>Completado: {formatDateTime(ruta.fechaCompletado)}</Text>
+                                                        <Text>
+                                                            Último reporte por: {ruta.usuarioReportaNombre || "Sistema / sin registro"}
+                                                        </Text>
+                                                    </Stack>
+
+                                                    {ruta.observaciones?.trim() ? (
+                                                        <>
+                                                            <Separator my={3} />
+                                                            <Text fontSize="sm" whiteSpace="pre-wrap">
+                                                                {ruta.observaciones}
+                                                            </Text>
+                                                        </>
+                                                    ) : null}
+                                                </Box>
+                                            ))}
+                                        </VStack>
+                                    </Box>
+                                </VStack>
+                            ) : null}
+
+                            {!loading && !detail ? (
+                                <Text color="app.textSubtle">No se encontró detalle para esta orden.</Text>
+                            ) : null}
+                        </Drawer.Body>
+                    </Drawer.Content>
+                </Drawer.Positioner>
+
+            </Portal>
+        </Drawer.Root>
     );
 }

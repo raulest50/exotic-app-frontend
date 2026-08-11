@@ -1,4 +1,4 @@
-import {Alert, AlertIcon, AlertTitle, AlertDescription, Box, Button, Flex, Heading, Text} from '@chakra-ui/react';
+import { Steps, Alert, Box, Button, Flex, Heading, Text } from '@chakra-ui/react';
 import React, {useEffect, useMemo, useState} from 'react';
 import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, ItemPendienteReposicion, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
 import {LotePickerDispensacion} from './AsistenteDispensacionComponents/LotePickerDispensacion';
@@ -403,7 +403,7 @@ export default function DispensacionStep2EditItems({
                         <Button flex='1' onClick={()=>setActiveStep(0)}>Atrás</Button>
                         <Button 
                             flex='1' 
-                            colorScheme='teal' 
+                            colorPalette='teal' 
                             onClick={() => {
                                 // Guardar lotesPorMaterial antes de avanzar
                                 if (setLotesPorMaterial) {
@@ -414,15 +414,15 @@ export default function DispensacionStep2EditItems({
                                 }
                                 setActiveStep(2);
                             }}
-                            isDisabled={requiereNivel3}
+                            disabled={requiereNivel3}
                         >
                             Continuar
                         </Button>
                     </Flex>
                     {requiereNivel3 && (
-                        <Alert
+                        <Alert.Root
                             status="error"
-                            variant="left-accent"
+                            variant='subtle'
                             flexDirection="column"
                             alignItems="center"
                             justifyContent="center"
@@ -431,22 +431,23 @@ export default function DispensacionStep2EditItems({
                             boxShadow="lg"
                             p={6}
                             w="full"
-                        >
-                            <AlertIcon boxSize="40px" mr={0} mb={2} />
-                            <AlertTitle mt={2} mb={2} fontSize="xl" fontWeight="bold">
+                            borderStartWidth='3px'
+                            borderStartColor='colorPalette.solid'>
+                            <Alert.Indicator boxSize="40px" mr={0} mb={2} />
+                            <Alert.Title mt={2} mb={2} fontSize="xl" fontWeight="bold">
                                 🚫 ERROR: Dispensación Excede la Receta
-                            </AlertTitle>
-                            <AlertDescription fontSize="md" maxW="container.md">
+                            </Alert.Title>
+                            <Alert.Description fontSize="md" maxW="container.md">
                                 La suma de dispensaciones <strong>supera la cantidad requerida por la receta</strong>.
                                 Solo usuarios con <strong>nivel 3 del módulo TRANSACCIONES_ALMACEN</strong> pueden
                                 continuar con esta dispensación.
-                            </AlertDescription>
-                        </Alert>
+                            </Alert.Description>
+                        </Alert.Root>
                     )}
                     {tienePrivilegiosPeroHayExcedidos && (
-                        <Alert
+                        <Alert.Root
                             status="warning"
-                            variant="left-accent"
+                            variant='subtle'
                             flexDirection="column"
                             alignItems="center"
                             justifyContent="center"
@@ -455,17 +456,18 @@ export default function DispensacionStep2EditItems({
                             boxShadow="lg"
                             p={6}
                             w="full"
-                        >
-                            <AlertIcon boxSize="40px" mr={0} mb={2} />
-                            <AlertTitle mt={2} mb={2} fontSize="xl" fontWeight="bold">
+                            borderStartWidth='3px'
+                            borderStartColor='colorPalette.solid'>
+                            <Alert.Indicator boxSize="40px" mr={0} mb={2} />
+                            <Alert.Title mt={2} mb={2} fontSize="xl" fontWeight="bold">
                                 ⚠️ ADVERTENCIA: Dispensación Excede la Receta
-                            </AlertTitle>
-                            <AlertDescription fontSize="md" maxW="container.md">
+                            </Alert.Title>
+                            <Alert.Description fontSize="md" maxW="container.md">
                                 La suma de dispensaciones <strong>supera la cantidad requerida por la receta</strong>.
                                 Esta operación es permitida debido a su nivel de acceso, pero debe tener precaución
                                 ya que <strong>NO es una operación normal</strong>.
-                            </AlertDescription>
-                        </Alert>
+                            </Alert.Description>
+                        </Alert.Root>
                     )}
                 </Flex>
 
@@ -496,7 +498,7 @@ export default function DispensacionStep2EditItems({
                 <Text>No hay insumos disponibles para mostrar.</Text>
                 <Flex w='40%' gap={4}>
                     <Button flex='1' onClick={()=>setActiveStep(0)}>Atrás</Button>
-                    <Button flex='1' colorScheme='teal' onClick={()=>setActiveStep(2)}>Continuar</Button>
+                    <Button flex='1' colorPalette='teal' onClick={()=>setActiveStep(2)}>Continuar</Button>
                 </Flex>
             </Flex>
         </Box>

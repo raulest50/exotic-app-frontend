@@ -1,8 +1,22 @@
 import React from 'react';
-import {Box, Button, Collapse, IconButton, Table, Tbody, Td, Text, Th, Thead, Tr, Tag} from '@chakra-ui/react';
+import {
+    Steps,
+    Box,
+    Button,
+    Collapsible,
+    IconButton,
+    Table,
+    Tbody,
+    Td,
+    Text,
+    Th,
+    Thead,
+    Tr,
+    Tag,
+} from '@chakra-ui/react';
 import {FaChevronDown, FaChevronUp} from 'react-icons/fa';
-import {DeleteIcon} from '@chakra-ui/icons';
 import {InsumoDesglosado, LoteSeleccionado} from '../types';
+import { LuTrash2 } from 'react-icons/lu';
 
 interface Props {
     insumos: InsumoDesglosado[];
@@ -56,7 +70,7 @@ export default function TablaDispensacionInsumos({
         const elements = [];
 
         elements.push(
-            <Tr 
+            <Table.Row 
                 key={`row-${reactKey}`}
                 bg={esSemi ? `purple.${50 + nivel * 10}` : undefined}
                 borderLeftWidth={esSemi ? "4px" : "0"}
@@ -69,28 +83,28 @@ export default function TablaDispensacionInsumos({
                     }
                 }}
             >
-                <Td>{insumo.productoId}</Td>
-                <Td fontWeight="medium">
+                <Table.Cell>{insumo.productoId}</Table.Cell>
+                <Table.Cell fontWeight="medium">
                     {nivel > 0 && <Box as="span" ml={`${nivel * 0.5}rem`} />}
                     {insumo.productoNombre}
                     {esSemi && (
-                        <Tag ml={2} size="sm" colorScheme="purple">
+                        <Tag.Root ml={2} size="sm" colorPalette="purple">
                             Semiterminado
-                        </Tag>
+                        </Tag.Root>
                     )}
                     {esMaterial && insumo.consumoDirecto === true && (
-                        <Tag ml={2} size="sm" colorScheme="purple">
+                        <Tag.Root ml={2} size="sm" colorPalette="purple">
                             Consumo directo
-                        </Tag>
+                        </Tag.Root>
                     )}
-                </Td>
-                <Td>{insumo.cantidadTotalRequerida.toFixed(2)}</Td>
-                <Td>{insumo.tipoUnidades}</Td>
-                <Td>
+                </Table.Cell>
+                <Table.Cell>{insumo.cantidadTotalRequerida.toFixed(2)}</Table.Cell>
+                <Table.Cell>{insumo.tipoUnidades}</Table.Cell>
+                <Table.Cell>
                     {esMaterial && esInvent ? (
                         <Button
                             size='sm'
-                            colorScheme='teal'
+                            colorPalette='teal'
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onDefinirLotes(insumo);
@@ -109,38 +123,36 @@ export default function TablaDispensacionInsumos({
                             </Box>
                         )
                     )}
-                </Td>
-            </Tr>
+                </Table.Cell>
+            </Table.Row>
         );
 
         if (esMaterial && lotesSeleccionados.length > 0) {
             lotesSeleccionados.forEach((lote) => {
                 elements.push(
-                    <Tr key={`${insumoKey}-lote-${lote.loteId}`} bg='app.surfaceSubtle'>
-                        <Td></Td>
-                        <Td pl={8} fontSize='xs' color='app.textMuted'>
+                    <Table.Row key={`${insumoKey}-lote-${lote.loteId}`} bg='app.surfaceSubtle'>
+                        <Table.Cell></Table.Cell>
+                        <Table.Cell pl={8} fontSize='xs' color='app.textMuted'>
                             └─ Lote: {lote.batchNumber}
-                        </Td>
-                        <Td fontSize='xs' color='app.textMuted'>
+                        </Table.Cell>
+                        <Table.Cell fontSize='xs' color='app.textMuted'>
                             {Math.abs(lote.cantidad).toFixed(2)}
-                        </Td>
-                        <Td fontSize='xs' color='app.textMuted'>
+                        </Table.Cell>
+                        <Table.Cell fontSize='xs' color='app.textMuted'>
                             {formatDate(lote.expirationDate)}
-                        </Td>
-                        <Td>
+                        </Table.Cell>
+                        <Table.Cell>
                             <IconButton
                                 aria-label="Eliminar lote"
-                                icon={<DeleteIcon />}
                                 size="xs"
-                                colorScheme="red"
+                                colorPalette="red"
                                 variant="ghost"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onRemoveLote(insumoKey, lote.loteId);
-                                }}
-                            />
-                        </Td>
-                    </Tr>
+                                }}><LuTrash2 /></IconButton>
+                        </Table.Cell>
+                    </Table.Row>
                 );
             });
         }
@@ -148,56 +160,58 @@ export default function TablaDispensacionInsumos({
         if (esMaterial && historico.length > 0) {
             historico.forEach((lote) => {
                 elements.push(
-                    <Tr key={`${insumoKey}-hist-${lote.batchNumber}-${lote.loteId}`} bg='app.surfaceMuted'>
-                        <Td></Td>
-                        <Td pl={8} fontSize='xs' color='app.textMuted'>
+                    <Table.Row key={`${insumoKey}-hist-${lote.batchNumber}-${lote.loteId}`} bg='app.surfaceMuted'>
+                        <Table.Cell></Table.Cell>
+                        <Table.Cell pl={8} fontSize='xs' color='app.textMuted'>
                             └─ Histórico: {lote.batchNumber}
-                        </Td>
-                        <Td fontSize='xs' color='app.textMuted'>
+                        </Table.Cell>
+                        <Table.Cell fontSize='xs' color='app.textMuted'>
                             {lote.cantidad.toFixed(2)}
-                        </Td>
-                        <Td fontSize='xs' color='app.textMuted'>
+                        </Table.Cell>
+                        <Table.Cell fontSize='xs' color='app.textMuted'>
                             {formatDate(lote.expirationDate)}
-                        </Td>
-                        <Td></Td>
-                    </Tr>
+                        </Table.Cell>
+                        <Table.Cell></Table.Cell>
+                    </Table.Row>
                 );
             });
         }
 
         if (tieneSubInsumos && isExpanded) {
             elements.push(
-                <Tr key={`subrow-${reactKey}`}>
-                    <Td colSpan={5} p={0}>
-                        <Collapse in={isExpanded} animateOpacity>
-                            <Box 
-                                p={4} 
-                                bg="app.surfaceSubtle"
-                                borderWidth="1px" 
-                                borderColor="purple.200"
-                                borderRadius="md"
-                                m={2}
-                            >
-                                <Table variant="simple" size="sm" colorScheme="purple">
-                                    <Thead bg="app.rowSelectedPurple">
-                                        <Tr>
-                                            <Th>ID Producto</Th>
-                                            <Th>Componente</Th>
-                                            <Th>Cantidad Requerida</Th>
-                                            <Th>Unidad</Th>
-                                            <Th>Acción</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
-                                        {insumo.subInsumos?.map(subInsumo => 
-                                            renderInsumoRecursivo(subInsumo, nivel + 1, insumo.productoId)
-                                        )}
-                                    </Tbody>
-                                </Table>
-                            </Box>
-                        </Collapse>
-                    </Td>
-                </Tr>
+                <Table.Row key={`subrow-${reactKey}`}>
+                    <Table.Cell colSpan={5} p={0}>
+                        <Collapsible.Root open={isExpanded}>
+                            <Collapsible.Content>
+                                <Box 
+                                    p={4} 
+                                    bg="app.surfaceSubtle"
+                                    borderWidth="1px" 
+                                    borderColor="purple.200"
+                                    borderRadius="md"
+                                    m={2}
+                                >
+                                    <Table.Root variant="simple" size="sm" colorPalette="purple">
+                                        <Table.Header bg="app.rowSelectedPurple">
+                                            <Table.Row>
+                                                <Table.ColumnHeader>ID Producto</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Componente</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Cantidad Requerida</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Acción</Table.ColumnHeader>
+                                            </Table.Row>
+                                        </Table.Header>
+                                        <Table.Body>
+                                            {insumo.subInsumos?.map(subInsumo => 
+                                                renderInsumoRecursivo(subInsumo, nivel + 1, insumo.productoId)
+                                            )}
+                                        </Table.Body>
+                                    </Table.Root>
+                                </Box>
+                            </Collapsible.Content>
+                        </Collapsible.Root>
+                    </Table.Cell>
+                </Table.Row>
             );
         }
 
@@ -206,28 +220,28 @@ export default function TablaDispensacionInsumos({
 
     return (
         <Box bg='app.surface' borderRadius='md' boxShadow='sm' overflowX='auto' w='full' maxW='1200px'>
-            <Table size='sm'>
-                <Thead>
-                    <Tr>
-                        <Th>ID Producto</Th>
-                        <Th>Nombre</Th>
-                        <Th>Cantidad Requerida</Th>
-                        <Th>Unidad</Th>
-                        <Th>Acción</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
+            <Table.Root size='sm'>
+                <Table.Header>
+                    <Table.Row>
+                        <Table.ColumnHeader>ID Producto</Table.ColumnHeader>
+                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                        <Table.ColumnHeader>Cantidad Requerida</Table.ColumnHeader>
+                        <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                        <Table.ColumnHeader>Acción</Table.ColumnHeader>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {insumos.length === 0 ? (
-                        <Tr>
-                            <Td colSpan={5} textAlign='center' py={4}>
+                        <Table.Row>
+                            <Table.Cell colSpan={5} textAlign='center' py={4}>
                                 <Text>No hay materiales registrados</Text>
-                            </Td>
-                        </Tr>
+                            </Table.Cell>
+                        </Table.Row>
                     ) : (
                         insumos.map((insumo) => renderInsumoRecursivo(insumo))
                     )}
-                </Tbody>
-            </Table>
+                </Table.Body>
+            </Table.Root>
         </Box>
     );
 }

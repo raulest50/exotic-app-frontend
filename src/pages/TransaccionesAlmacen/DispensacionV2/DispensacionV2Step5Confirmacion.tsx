@@ -1,12 +1,10 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
     Input,
     Table,
@@ -19,6 +17,7 @@ import {
     Tr,
     VStack,
     useToast,
+    Field,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
@@ -100,7 +99,7 @@ export default function DispensacionV2Step5Confirmacion({
     };
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
                 <Flex justify="space-between" align="start" gap={3} wrap="wrap">
                     <Box>
@@ -110,8 +109,8 @@ export default function DispensacionV2Step5Confirmacion({
                         </Text>
                     </Box>
                     <Flex gap={2} wrap="wrap">
-                        <Badge colorScheme="teal">{asignacion.ordenes.length} OPs</Badge>
-                        <Badge colorScheme={asignacion.warnings.length > 0 ? "orange" : "green"}>
+                        <Badge colorPalette="teal">{asignacion.ordenes.length} OPs</Badge>
+                        <Badge colorPalette={asignacion.warnings.length > 0 ? "orange" : "green"}>
                             {asignacion.warnings.length} warnings
                         </Badge>
                     </Flex>
@@ -119,107 +118,107 @@ export default function DispensacionV2Step5Confirmacion({
             </Box>
 
             {asignacion.warnings.length > 0 ? (
-                <Alert status="warning" borderRadius="md" alignItems="flex-start">
-                    <AlertIcon />
+                <Alert.Root status="warning" borderRadius="md" alignItems="flex-start">
+                    <Alert.Indicator />
                     <Box>
                         <Text fontWeight="semibold">La operación tiene advertencias</Text>
                         <Text fontSize="sm">
                             El sistema permite continuar en v2, pero estas cantidades deben revisarse antes de registrar.
                         </Text>
                     </Box>
-                </Alert>
+                </Alert.Root>
             ) : null}
 
             <Box borderWidth="1px" borderRadius="md" bg="app.surface" p={4}>
                 <Heading size="sm" mb={3}>Resumen final por material</Heading>
-                <TableContainer>
-                    <Table size="sm" variant="striped">
-                        <Thead>
-                            <Tr>
-                                <Th>Material</Th>
-                                <Th isNumeric>Actual</Th>
-                                <Th isNumeric>Historico</Th>
-                                <Th isNumeric>Total</Th>
-                                <Th isNumeric>Receta</Th>
-                                <Th>Estado</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                <Table.ScrollArea>
+                    <Table.Root size="sm" variant="striped">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>Material</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Actual</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Historico</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Total</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Receta</Table.ColumnHeader>
+                                <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {asignacion.totalesMateriales.map((material) => {
                                 const seDispensa = material.cantidadADispensarTotal > 0;
                                 const rowBg = material.warning ? "orange.50" : seDispensa ? "teal.50" : undefined;
                                 return (
-                                    <Tr key={material.productoId} sx={rowBg ? { "> td": { bg: rowBg } } : undefined}>
-                                        <Td>
+                                    <Table.Row key={material.productoId} sx={rowBg ? { "> td": { bg: rowBg } } : undefined}>
+                                        <Table.Cell>
                                             <Flex align="center" gap={2} wrap="wrap">
                                                 <Text fontWeight="semibold" fontSize="sm">{material.productoNombre}</Text>
-                                                {seDispensa ? <Badge colorScheme="teal">Dispensa</Badge> : null}
+                                                {seDispensa ? <Badge colorPalette="teal">Dispensa</Badge> : null}
                                             </Flex>
                                             <Text fontSize="xs" color="app.textMuted">{material.productoId}</Text>
-                                        </Td>
-                                        <Td isNumeric>
+                                        </Table.Cell>
+                                        <Table.Cell textAlign='end'>
                                             {formatDispensacionV2Number(material.cantidadADispensarTotal)} {material.tipoUnidades}
-                                        </Td>
-                                        <Td isNumeric>
+                                        </Table.Cell>
+                                        <Table.Cell textAlign='end'>
                                             {formatDispensacionV2Number(material.cantidadHistoricaTotal)} {material.tipoUnidades}
-                                        </Td>
-                                        <Td isNumeric>
+                                        </Table.Cell>
+                                        <Table.Cell textAlign='end'>
                                             {formatDispensacionV2Number(material.totalConHistorico)} {material.tipoUnidades}
-                                        </Td>
-                                        <Td isNumeric>
+                                        </Table.Cell>
+                                        <Table.Cell textAlign='end'>
                                             {formatDispensacionV2Number(material.cantidadRecetaTotal)} {material.tipoUnidades}
-                                        </Td>
-                                        <Td>
+                                        </Table.Cell>
+                                        <Table.Cell>
                                             {material.warning ? (
-                                                <Badge colorScheme="orange" whiteSpace="normal">{material.warning}</Badge>
+                                                <Badge colorPalette="orange" whiteSpace="normal">{material.warning}</Badge>
                                             ) : (
-                                                <Badge colorScheme="green">OK</Badge>
+                                                <Badge colorPalette="green">OK</Badge>
                                             )}
-                                        </Td>
-                                    </Tr>
+                                        </Table.Cell>
+                                    </Table.Row>
                                 );
                             })}
-                        </Tbody>
-                    </Table>
-                </TableContainer>
+                        </Table.Body>
+                    </Table.Root>
+                </Table.ScrollArea>
             </Box>
 
             <Box borderWidth="1px" borderRadius="md" bg="app.surface" p={4}>
-                <FormControl isRequired maxW="320px">
-                    <FormLabel>Token de verificación</FormLabel>
+                <Field.Root required maxW="320px">
+                    <Field.Label>Token de verificación</Field.Label>
                     <Input
                         value={inputToken}
-                        onChange={(event) => setInputToken(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                        onValueChange={(event) => setInputToken(event.target.value.replace(/\D/g, "").slice(0, 4))}
                         placeholder="Ingrese el token"
                         inputMode="numeric"
                         maxLength={4}
-                        isDisabled={submitting}
+                        disabled={submitting}
                     />
                     <Text mt={2} fontSize="sm" color="app.textMuted">
                         Token generado: <strong>{token}</strong>
                     </Text>
-                </FormControl>
+                </Field.Root>
             </Box>
 
             {error ? (
-                <Alert status="error" borderRadius="md" alignItems="flex-start">
-                    <AlertIcon />
+                <Alert.Root status="error" borderRadius="md" alignItems="flex-start">
+                    <Alert.Indicator />
                     <Box>
                         <Text fontWeight="semibold">No se pudo registrar la dispensación</Text>
                         <Text fontSize="sm">{error}</Text>
                     </Box>
-                </Alert>
+                </Alert.Root>
             ) : null}
 
             <Flex justify="flex-end" gap={3}>
-                <Button variant="outline" onClick={onBack} isDisabled={submitting}>
+                <Button variant="outline" onClick={onBack} disabled={submitting}>
                     Atrás
                 </Button>
                 <Button
-                    colorScheme="teal"
+                    colorPalette="teal"
                     onClick={handleConfirm}
-                    isDisabled={!canConfirm}
-                    isLoading={submitting}
+                    disabled={!canConfirm}
+                    loading={submitting}
                 >
                     Registrar dispensación
                 </Button>

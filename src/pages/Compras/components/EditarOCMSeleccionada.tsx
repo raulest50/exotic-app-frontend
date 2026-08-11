@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { 
-    Flex, 
-    Button, 
-    Heading, 
-    Box, 
+import {
+    Steps,
+    Flex,
+    Button,
+    Heading,
+    Box,
     Text,
     useToast,
-    FormControl,
-    FormLabel,
     Input,
-    Select,
-    Textarea
+    NativeSelect,
+    Textarea,
+    Field,
 } from '@chakra-ui/react';
 import { OrdenCompraMateriales, ItemOrdenCompra, Material, DIVISAS } from "../types.tsx";
 import MateriaPrimaPicker from './MateriaPrimaPicker.tsx';
@@ -352,7 +352,7 @@ export function EditarOcmSeleccionada({ ocm, onVolver }: Props) {
         <Flex direction="column" p="1em" gap="4">
             <Flex justify="space-between" align="center">
                 <Heading size="md">Editar Orden de Compra #{ordenActual.ordenCompraId}</Heading>
-                <Button colorScheme="gray" onClick={onVolver}>
+                <Button colorPalette="gray" onClick={onVolver}>
                     Volver a Búsqueda
                 </Button>
             </Flex>
@@ -363,47 +363,49 @@ export function EditarOcmSeleccionada({ ocm, onVolver }: Props) {
                     <Text>Fecha Emisión: {ordenActual.fechaEmision ? new Date(ordenActual.fechaEmision).toLocaleDateString() : '-'}</Text>
                 </Box>
                 <Flex flex={1}>
-                    <FormControl>
-                        <FormLabel>Moneda y TRM</FormLabel>
+                    <Field.Root>
+                        <Field.Label>Moneda y TRM</Field.Label>
                         <SelectCurrencyTrm
                             currencyIsUSD={currencyIsUSDTuple}
                             useCurrentUsd2Cop={handleTrmUpdate}
                         />
-                    </FormControl>
+                    </Field.Root>
                 </Flex>
             </Flex>
 
             {/* Nuevos campos de formulario */}
             <Flex direction="row" gap={4} wrap="wrap">
-                <FormControl>
-                    <FormLabel>Condición de Pago</FormLabel>
-                    <Select
-                        value={condicionPago}
-                        onChange={handleCondicionPagoChange}
-                        width="200px"
-                    >
-                        <option value="0">Crédito</option>
-                        <option value="1">Contado</option>
-                    </Select>
-                </FormControl>
+                <Field.Root>
+                    <Field.Label>Condición de Pago</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            value={condicionPago}
+                            onValueChange={handleCondicionPagoChange}
+                            width="200px">
+                            <option value="0">Crédito</option>
+                            <option value="1">Contado</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
 
-                <FormControl isRequired={condicionPago === "0"} isDisabled={condicionPago === "1"}>
-                    <FormLabel>Plazo de pago (días)</FormLabel>
+                <Field.Root required={condicionPago === "0"} disabled={condicionPago === "1"}>
+                    <Field.Label>Plazo de pago (días)</Field.Label>
                     <Input
                         value={plazoPago}
-                        onChange={handlePlazoPagoChange}
+                        onValueChange={handlePlazoPagoChange}
                         type="number"
                         min={0}
                     />
-                </FormControl>
+                </Field.Root>
 
-                <FormControl isRequired>
-                    <FormLabel>Tiempo de entrega (días)</FormLabel>
+                <Field.Root required>
+                    <Field.Label>Tiempo de entrega (días)</Field.Label>
                     <Input
                         value={tiempoEntrega}
-                        onChange={handleTiempoEntregaChange}
+                        onValueChange={handleTiempoEntregaChange}
                     />
-                </FormControl>
+                </Field.Root>
 
                 <MyDatePicker
                     date={fechaVencimiento}
@@ -413,16 +415,16 @@ export function EditarOcmSeleccionada({ ocm, onVolver }: Props) {
                 />
             </Flex>
 
-            <FormControl>
-                <FormLabel>Observaciones</FormLabel>
+            <Field.Root>
+                <Field.Label>Observaciones</Field.Label>
                 <Textarea
                     value={observaciones}
-                    onChange={handleObservacionesChange}
+                    onValueChange={handleObservacionesChange}
                     placeholder="Ingrese observaciones"
                 />
-            </FormControl>
+            </Field.Root>
 
-            <Button colorScheme="blue" onClick={() => setIsMateriaPrimaPickerOpen(true)}>
+            <Button colorPalette="blue" onClick={() => setIsMateriaPrimaPickerOpen(true)}>
                 Agregar Material
             </Button>
 
@@ -436,13 +438,13 @@ export function EditarOcmSeleccionada({ ocm, onVolver }: Props) {
             />
 
             <Flex justify="flex-end" gap={4}>
-                <Button colorScheme="red" onClick={onVolver}>
+                <Button colorPalette="red" onClick={onVolver}>
                     Cancelar
                 </Button>
                 <Button 
-                    colorScheme="teal" 
+                    colorPalette="teal" 
                     onClick={handleGuardarCambios}
-                    isDisabled={!isFormValid}
+                    disabled={!isFormValid}
                 >
                     Guardar Cambios
                 </Button>

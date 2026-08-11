@@ -1,4 +1,4 @@
-import { Box, Table, Thead, Tbody, Tr, Th, Td, Text, Button } from '@chakra-ui/react';
+import { Steps, Box, Table, Thead, Tbody, Tr, Th, Td, Text, Button } from '@chakra-ui/react';
 import { Proveedor } from '../../types.tsx';
 
 type Props = {
@@ -9,47 +9,47 @@ type Props = {
 export function ListaSearchProveedores({ proveedores, onVerDetalle }: Props) {
     return (
         <Box overflowX="auto" width="100%">
-            <Table variant="simple" size="sm">
-                <Thead>
-                    <Tr>
-                        <Th>ID</Th>
-                        <Th>Nombre</Th>
-                        <Th>Ciudad</Th>
-                        <Th>Departamento</Th>
-                        <Th>Ver Detalle</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
+            <Table.Root variant="simple" size="sm">
+                <Table.Header>
+                    <Table.Row>
+                        <Table.ColumnHeader>ID</Table.ColumnHeader>
+                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                        <Table.ColumnHeader>Ciudad</Table.ColumnHeader>
+                        <Table.ColumnHeader>Departamento</Table.ColumnHeader>
+                        <Table.ColumnHeader>Ver Detalle</Table.ColumnHeader>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {proveedores.length === 0 ? (
-                        <Tr>
-                            <Td colSpan={5} textAlign="center">
+                        <Table.Row>
+                            <Table.Cell colSpan={5} textAlign="center">
                                 <Text py={4}>No se encontraron proveedores con los criterios de búsqueda.</Text>
-                            </Td>
-                        </Tr>
+                            </Table.Cell>
+                        </Table.Row>
                     ) : (
                         proveedores.map((proveedor) => (
-                            <Tr 
+                            <Table.Row 
                                 key={proveedor.id}
                                 _hover={{ bg: "app.rowHoverStrong" }}
                             >
-                                <Td>{proveedor.id}</Td>
-                                <Td>{proveedor.nombre}</Td>
-                                <Td>{proveedor.ciudad || '-'}</Td>
-                                <Td>{proveedor.departamento || '-'}</Td>
-                                <Td>
+                                <Table.Cell>{proveedor.id}</Table.Cell>
+                                <Table.Cell>{proveedor.nombre}</Table.Cell>
+                                <Table.Cell>{proveedor.ciudad || '-'}</Table.Cell>
+                                <Table.Cell>{proveedor.departamento || '-'}</Table.Cell>
+                                <Table.Cell>
                                     <Button 
                                         size="sm" 
-                                        colorScheme="blue"
+                                        colorPalette="blue"
                                         onClick={() => onVerDetalle && onVerDetalle(proveedor)}
                                     >
                                         Ver Detalle
                                     </Button>
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         ))
                     )}
-                </Tbody>
-            </Table>
+                </Table.Body>
+            </Table.Root>
         </Box>
     );
 }

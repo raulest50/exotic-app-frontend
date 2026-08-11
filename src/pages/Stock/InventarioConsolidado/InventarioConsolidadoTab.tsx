@@ -1,17 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+    Steps,
     Box,
     Button,
     Checkbox,
     Container,
     Flex,
-    FormControl,
-    FormHelperText,
-    FormLabel,
     HStack,
     IconButton,
     Input,
-    Select,
+    NativeSelect,
     Stack,
     Text,
     useDisclosure,
@@ -19,14 +17,14 @@ import {
     VStack,
     Wrap,
     WrapItem,
+    Field,
 } from '@chakra-ui/react';
-import { QuestionOutlineIcon } from '@chakra-ui/icons';
 import axios from 'axios';
-
 import '@fontsource-variable/league-spartan';
-import '@fontsource/anton';
 
+import '@fontsource/anton';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
+
 import {
     AlcanceStock,
     AlmacenStock,
@@ -35,6 +33,7 @@ import {
 } from '../types.tsx';
 import AlcanceStockHelpModal from './AlcanceStockHelpModal.tsx';
 import ListaProductos from './ListaProductos.tsx';
+import { LuHelpCircle } from 'react-icons/lu';
 
 const endPoints = new EndPointsURL();
 
@@ -305,7 +304,7 @@ function InventarioConsolidadoTab() {
     return (
         <>
             <Container minW={['auto', 'container.lg', 'container.xl']} w="full" h="full">
-                <VStack h="full" w="full" align="stretch" spacing={4}>
+                <VStack h="full" w="full" align="stretch" gap={4}>
                     <Box w="full" borderWidth="1px" borderRadius="md" p={{ base: 3, md: 4 }}>
                         <Text fontSize="lg" fontWeight="bold" mb={3}>
                             Inventario consolidado
@@ -316,31 +315,31 @@ function InventarioConsolidadoTab() {
                             align={{ base: 'stretch', md: 'flex-start' }}
                             gap={4}
                         >
-                            <FormControl maxW={{ base: 'full', md: '520px' }}>
-                                <FormLabel mb={1}>Alcance del stock</FormLabel>
+                            <Field.Root maxW={{ base: 'full', md: '520px' }}>
+                                <Field.Label mb={1}>Alcance del stock</Field.Label>
                                 <HStack align="stretch">
-                                    <Select
-                                        value={alcance}
-                                        onChange={(event) =>
-                                            handleScopeChange(event.target.value as AlcanceStock)
-                                        }
-                                    >
-                                        <option value="FISICO_TOTAL">Inventario físico total</option>
-                                        <option value="DISPONIBLE_OPERATIVO">Disponible operativo</option>
-                                        <option value="RESTRINGIDO">
-                                            Stock restringido/no disponible
-                                        </option>
-                                        <option value="PERSONALIZADO">Personalizado</option>
-                                    </Select>
+                                    <NativeSelect.Root>
+                                        <NativeSelect.Field
+                                            value={alcance}
+                                            onValueChange={(event) =>
+                                                handleScopeChange(event.target.value as AlcanceStock)
+                                            }>
+                                            <option value="FISICO_TOTAL">Inventario físico total</option>
+                                            <option value="DISPONIBLE_OPERATIVO">Disponible operativo</option>
+                                            <option value="RESTRINGIDO">
+                                                Stock restringido/no disponible
+                                            </option>
+                                            <option value="PERSONALIZADO">Personalizado</option>
+                                        </NativeSelect.Field>
+                                        <NativeSelect.Indicator />
+                                    </NativeSelect.Root>
                                     <IconButton
                                         aria-label="Explicar los alcances del stock"
-                                        icon={<QuestionOutlineIcon />}
                                         variant="outline"
-                                        onClick={helpModal.onOpen}
-                                    />
+                                        onClick={helpModal.onOpen}><LuHelpCircle /></IconButton>
                                 </HStack>
-                                <FormHelperText>{descripcionAlcance}</FormHelperText>
-                            </FormControl>
+                                <Field.HelperText>{descripcionAlcance}</Field.HelperText>
+                            </Field.Root>
 
                             <Box textAlign={{ base: 'left', md: 'right' }}>
                                 <Text fontSize="sm" color="gray.500">
@@ -362,12 +361,12 @@ function InventarioConsolidadoTab() {
                                 <Wrap spacingX={6} spacingY={2}>
                                     {TODOS_LOS_ALMACENES.map((almacen) => (
                                         <WrapItem key={almacen}>
-                                            <Checkbox
-                                                isChecked={almacenesPersonalizados.includes(almacen)}
-                                                onChange={() => handleToggleAlmacen(almacen)}
-                                            >
+                                            <Checkbox.Root
+                                                checked={almacenesPersonalizados.includes(almacen)}
+                                                onCheckedChange={() => handleToggleAlmacen(almacen)}
+                                            ><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>
                                                 {ALMACEN_LABELS[almacen]}
-                                            </Checkbox>
+                                            </Checkbox.Label></Checkbox.Root>
                                         </WrapItem>
                                     ))}
                                 </Wrap>
@@ -375,43 +374,45 @@ function InventarioConsolidadoTab() {
                         )}
                     </Box>
 
-                    <FormControl>
-                        <Stack direction={{ base: 'column', lg: 'row' }} spacing={2}>
+                    <Field.Root>
+                        <Stack direction={{ base: 'column', lg: 'row' }} gap={2}>
                             <Input
                                 placeholder="Buscar producto por nombre o ID"
                                 value={searchTerm}
-                                onChange={(event) => setSearchTerm(event.target.value)}
+                                onValueChange={(event) => setSearchTerm(event.target.value)}
                                 onKeyDown={onKeyPressInputBuscar}
                             />
-                            <Select
-                                value={tipoBusqueda}
-                                onChange={(event) => setTipoBusqueda(event.target.value)}
-                                w={{ base: 'full', lg: '150px' }}
-                                flexShrink={0}
-                            >
-                                <option value="NOMBRE">Nombre</option>
-                                <option value="ID">ID</option>
-                            </Select>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    value={tipoBusqueda}
+                                    onValueChange={(event) => setTipoBusqueda(event.target.value)}
+                                    w={{ base: 'full', lg: '150px' }}
+                                    flexShrink={0}>
+                                    <option value="NOMBRE">Nombre</option>
+                                    <option value="ID">ID</option>
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
                             <Button
                                 onClick={() => void handleSearch(0)}
-                                isLoading={loadingProductos}
+                                loading={loadingProductos}
                                 loadingText="Buscando"
                                 flexShrink={0}
                             >
                                 Buscar
                             </Button>
                             <Button
-                                colorScheme="teal"
+                                colorPalette="teal"
                                 onClick={handleDownloadInventario}
-                                isLoading={downloadingInventario}
-                                isDisabled={loadingProductos}
+                                loading={downloadingInventario}
+                                disabled={loadingProductos}
                                 loadingText="Generando"
                                 flexShrink={0}
                             >
                                 Reporte inventario
                             </Button>
                         </Stack>
-                    </FormControl>
+                    </Field.Root>
 
                     <Box w="full">
                         <ListaProductos
@@ -428,7 +429,7 @@ function InventarioConsolidadoTab() {
             </Container>
 
             <AlcanceStockHelpModal
-                isOpen={helpModal.isOpen}
+                isOpen={helpModal.open}
                 onClose={helpModal.onClose}
             />
         </>

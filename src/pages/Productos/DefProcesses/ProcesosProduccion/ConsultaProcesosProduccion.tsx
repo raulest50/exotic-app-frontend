@@ -11,6 +11,7 @@
 
 import { useState, useEffect } from 'react';
 import {
+  Steps,
   Box,
   Button,
   Flex,
@@ -22,10 +23,10 @@ import {
   Thead,
   Tr,
   useToast,
-  Tooltip,
   Badge,
-  Heading
+  Heading,
 } from '@chakra-ui/react';
+import { Tooltip } from '@/components/ui/tooltip';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
 import { ProcesoProduccionEntity, TimeModelType } from '../../types.tsx';
@@ -136,7 +137,7 @@ export function ConsultaProcesosProduccion() {
         <Input
           placeholder='Buscar por nombre'
           value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
+          onValueChange={(e) => setSearchText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               fetchProcesos(0);
@@ -145,9 +146,9 @@ export function ConsultaProcesosProduccion() {
         />
         <Button
           onClick={() => fetchProcesos(0)}
-          isLoading={loading}
+          loading={loading}
           loadingText="Buscando..."
-          colorScheme="teal"
+          colorPalette="teal"
         >
           Buscar
         </Button>
@@ -155,46 +156,46 @@ export function ConsultaProcesosProduccion() {
 
       {/* Tabla de resultados */}
       <Box overflowX="auto">
-        <Table size='sm' variant="simple">
-          <Thead>
-            <Tr>
-              <Th>ID</Th>
-              <Th>Nombre</Th>
-              <Th>Modelo de Tiempo</Th>
-              <Th>Setup Time</Th>
-              <Th>Nivel de Acceso</Th>
-              <Th>Acciones</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
+        <Table.Root size='sm' variant="simple">
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeader>ID</Table.ColumnHeader>
+              <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+              <Table.ColumnHeader>Modelo de Tiempo</Table.ColumnHeader>
+              <Table.ColumnHeader>Setup Time</Table.ColumnHeader>
+              <Table.ColumnHeader>Nivel de Acceso</Table.ColumnHeader>
+              <Table.ColumnHeader>Acciones</Table.ColumnHeader>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
             {procesos.map(proceso => {
               const timeInfo = getTimeModelInfo(proceso);
               return (
-                <Tr key={proceso.procesoId}>
-                  <Td>{proceso.procesoId}</Td>
-                  <Td>{proceso.nombre}</Td>
-                  <Td>
+                <Table.Row key={proceso.procesoId}>
+                  <Table.Cell>{proceso.procesoId}</Table.Cell>
+                  <Table.Cell>{proceso.nombre}</Table.Cell>
+                  <Table.Cell>
                     <Flex alignItems="center" gap={2}>
-                      <Badge colorScheme="teal">{timeInfo.label}</Badge>
+                      <Badge colorPalette="teal">{timeInfo.label}</Badge>
                       <Box fontSize="sm">{timeInfo.details}</Box>
                     </Flex>
-                  </Td>
-                  <Td>{proceso.setUpTime} seg</Td>
-                  <Td>{proceso.nivelAcceso !== undefined ? proceso.nivelAcceso : '-'}</Td>
-                  <Td>
+                  </Table.Cell>
+                  <Table.Cell>{proceso.setUpTime} seg</Table.Cell>
+                  <Table.Cell>{proceso.nivelAcceso !== undefined ? proceso.nivelAcceso : '-'}</Table.Cell>
+                  <Table.Cell>
                     <Button 
                       size='sm' 
-                      colorScheme='blue'
+                      colorPalette='blue'
                       onClick={() => handleEdit(proceso)}
                     >
                       Editar
                     </Button>
-                  </Td>
-                </Tr>
+                  </Table.Cell>
+                </Table.Row>
               );
             })}
-          </Tbody>
-        </Table>
+          </Table.Body>
+        </Table.Root>
       </Box>
 
       {/* Paginación */}

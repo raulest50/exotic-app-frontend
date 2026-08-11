@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import UserGenericPicker from './UserPickerGeneric.tsx';
 import { User } from '../../../pages/Usuarios/GestionUsuarios/types.tsx';
-import { Button, Box, Text, VStack } from '@chakra-ui/react';
+import { Steps, Button, Box, Text, VStack } from '@chakra-ui/react';
 
 export const Default = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,11 +18,11 @@ export const Default = () => {
   };
 
   return (
-    <VStack spacing={4} align="start" p={5}>
-      <Button colorScheme="blue" onClick={handleOpen}>
+    <VStack gap={4} align="start" p={5}>
+      <Button colorPalette="blue" onClick={handleOpen}>
         Abrir Selector de Usuario
       </Button>
-      
+
       {selectedUser && (
         <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50" width="100%">
           <Text fontWeight="bold">Usuario Seleccionado:</Text>
@@ -32,7 +32,7 @@ export const Default = () => {
           <Text>Username: {selectedUser.username}</Text>
         </Box>
       )}
-      
+
       <UserGenericPicker
         isOpen={isOpen}
         onClose={handleClose}

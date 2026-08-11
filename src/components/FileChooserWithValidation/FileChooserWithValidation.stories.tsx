@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/react";
+import { Steps, Box } from "@chakra-ui/react";
 import FileChooserWithValidation from "./FileChooserWithValidation";
 
 export const Default = () => (

@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import {
+    Steps,
     Box,
     Button,
-    FormControl,
-    FormErrorMessage,
-    FormLabel,
     Heading,
     IconButton,
     Input,
@@ -17,8 +15,8 @@ import {
     Wrap,
     WrapItem,
     useToast,
+    Field,
 } from '@chakra-ui/react';
-import { SearchIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
@@ -27,6 +25,7 @@ import { input_style } from '../../../styles/styles_general.tsx';
 import { User } from '../../Usuarios/GestionUsuarios/types';
 import CategoriaHabilitadaPickerModal from '../components/CategoriaHabilitadaPickerModal.tsx';
 import { AreaOperativaMutationDTO, CategoriaHabilitada } from '../ConsultaAreasOperativas/types.ts';
+import { LuSearch } from 'react-icons/lu';
 
 function CrearAreaProduccionTab() {
     const [nombre, setNombre] = useState('');
@@ -158,12 +157,12 @@ function CrearAreaProduccionTab() {
     return (
         <Box p={4}>
             <Heading size="md" mb={4}>Crear Área de Producción</Heading>
-            <VStack spacing={4} align="stretch">
-                <FormControl isRequired isInvalid={!!errors.nombre}>
-                    <FormLabel>Nombre</FormLabel>
+            <VStack gap={4} align="stretch">
+                <Field.Root required invalid={!!errors.nombre}>
+                    <Field.Label>Nombre</Field.Label>
                     <Input
                         value={nombre}
-                        onChange={(event) => {
+                        onValueChange={(event) => {
                             setNombre(event.target.value);
                             if (errors.nombre) {
                                 setErrors((prev) => ({ ...prev, nombre: undefined }));
@@ -172,47 +171,45 @@ function CrearAreaProduccionTab() {
                         sx={input_style}
                         placeholder="Nombre del área de producción"
                     />
-                    {errors.nombre && <FormErrorMessage>{errors.nombre}</FormErrorMessage>}
-                </FormControl>
+                    {errors.nombre && <Field.ErrorText>{errors.nombre}</Field.ErrorText>}
+                </Field.Root>
 
-                <FormControl>
-                    <FormLabel>Descripción</FormLabel>
+                <Field.Root>
+                    <Field.Label>Descripción</Field.Label>
                     <Input
                         value={descripcion}
-                        onChange={(event) => setDescripcion(event.target.value)}
+                        onValueChange={(event) => setDescripcion(event.target.value)}
                         sx={input_style}
                         placeholder="Descripción del área de producción"
                     />
-                </FormControl>
+                </Field.Root>
 
-                <FormControl isRequired isInvalid={!!errors.responsable}>
-                    <FormLabel>Responsable del Área</FormLabel>
+                <Field.Root required invalid={!!errors.responsable}>
+                    <Field.Label>Responsable del Área</Field.Label>
                     <InputGroup>
                         <Input
                             value={responsable ? `${responsable.cedula} - ${responsable.nombreCompleto || responsable.username}` : ''}
                             placeholder="Seleccione un responsable"
-                            isReadOnly
+                            readOnly
                             bg="app.inputReadonly"
                         />
                         <InputRightElement>
                             <IconButton
                                 aria-label="Buscar usuario"
-                                icon={<SearchIcon />}
                                 size="sm"
                                 onClick={() => setIsUserPickerOpen(true)}
-                                isDisabled={isSubmitting || isValidatingResponsable}
-                            />
+                                disabled={isSubmitting || isValidatingResponsable}><LuSearch /></IconButton>
                         </InputRightElement>
                     </InputGroup>
-                    {errors.responsable && <FormErrorMessage>{errors.responsable}</FormErrorMessage>}
-                </FormControl>
+                    {errors.responsable && <Field.ErrorText>{errors.responsable}</Field.ErrorText>}
+                </Field.Root>
 
-                <FormControl>
-                    <FormLabel>Categorías que puede procesar</FormLabel>
+                <Field.Root>
+                    <Field.Label>Categorías que puede procesar</Field.Label>
                     <Button
                         variant="outline"
                         onClick={() => setIsCategoriaPickerOpen(true)}
-                        isDisabled={isSubmitting || isValidatingResponsable}
+                        disabled={isSubmitting || isValidatingResponsable}
                     >
                         Seleccionar categorías
                     </Button>
@@ -225,28 +222,28 @@ function CrearAreaProduccionTab() {
                         <Wrap mt={3}>
                             {categoriasHabilitadas.map((categoria) => (
                                 <WrapItem key={categoria.categoriaId}>
-                                    <Tag colorScheme="teal" borderRadius="full">
-                                        <TagLabel>{categoria.categoriaNombre}</TagLabel>
-                                    </Tag>
+                                    <Tag.Root colorPalette="teal" borderRadius="full">
+                                        <Tag.Label>{categoria.categoriaNombre}</Tag.Label>
+                                    </Tag.Root>
                                 </WrapItem>
                             ))}
                         </Wrap>
                     )}
-                </FormControl>
+                </Field.Root>
 
                 <Button
-                    colorScheme="teal"
+                    colorPalette="teal"
                     onClick={handleSubmit}
-                    isLoading={isSubmitting || isValidatingResponsable}
-                    isDisabled={!isFormValid || isSubmitting || isValidatingResponsable}
+                    loading={isSubmitting || isValidatingResponsable}
+                    disabled={!isFormValid || isSubmitting || isValidatingResponsable}
                 >
                     Guardar
                 </Button>
 
                 <Button
-                    colorScheme="orange"
+                    colorPalette="orange"
                     onClick={clearFields}
-                    isDisabled={isSubmitting || isValidatingResponsable}
+                    disabled={isSubmitting || isValidatingResponsable}
                 >
                     Limpiar
                 </Button>

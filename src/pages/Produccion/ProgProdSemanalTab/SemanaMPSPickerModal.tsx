@@ -1,22 +1,15 @@
 import { useState } from "react";
 import {
-    CalendarIcon,
-} from "@chakra-ui/icons";
-import {
+    Steps,
     Badge,
     Box,
     Button,
     Flex,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     Text,
     VStack,
     useDisclosure,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
 import type { SemanaMPSDTO } from "./SemanaMPSPicker";
 import SemanaMPSCarouselPicker from "./SemanaMPSCarouselPicker";
@@ -25,6 +18,7 @@ import {
     buildSemanaMpsCodigo,
     formatSemanaMpsDisplayDate,
 } from "./semanaMps.utils";
+import { LuCalendar } from 'react-icons/lu';
 
 interface SemanaMPSPickerModalProps {
     value: string;
@@ -138,17 +132,14 @@ export default function SemanaMPSPickerModal({
         <>
             <Button
                 variant="outline"
-                leftIcon={<CalendarIcon />}
                 onClick={handleOpen}
-                isDisabled={isDisabled}
+                disabled={isDisabled}
                 h="auto"
                 minH="64px"
                 py={2}
                 px={3}
                 justifyContent="flex-start"
-                aria-label={`${buttonLabel}. ${buttonHelperText}. Semana ${displayCodigo}, ${estadoLabel}, ${formatSemanaMpsDisplayDate(displayStartDate)} a ${formatSemanaMpsDisplayDate(displayEndDate)}`}
-            >
-                <VStack align="start" spacing={1}>
+                aria-label={`${buttonLabel}. ${buttonHelperText}. Semana ${displayCodigo}, ${estadoLabel}, ${formatSemanaMpsDisplayDate(displayStartDate)} a ${formatSemanaMpsDisplayDate(displayEndDate)}`}><LuCalendar /><VStack align="start" gap={1}>
                     <Text fontSize="xs" color="teal.700" fontWeight="semibold" lineHeight="1">
                         {buttonLabel}
                     </Text>
@@ -157,47 +148,56 @@ export default function SemanaMPSPickerModal({
                     </Text>
                     <Flex gap={2} align="center" wrap="wrap">
                         <Text fontWeight="semibold" lineHeight="1.1">{displayCodigo}</Text>
-                        <Badge colorScheme={estadoColor}>{estadoLabel}</Badge>
+                        <Badge colorPalette={estadoColor}>{estadoLabel}</Badge>
                     </Flex>
                     <Text fontSize="xs" color="gray.600" lineHeight="1.1">
                         {formatSemanaMpsDisplayDate(displayStartDate)} a {formatSemanaMpsDisplayDate(displayEndDate)}
                     </Text>
-                </VStack>
-            </Button>
+                </VStack></Button>
 
-            <Modal isOpen={disclosure.isOpen} onClose={handleClose} size="4xl">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>{modalTitle}</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody pb={6}>
-                        <VStack align="stretch" spacing={4}>
-                            <Box>
-                                <Text fontSize="sm" color="gray.600">
-                                    Seleccione la semana ISO que se usara para consultar o crear el MPS semanal.
-                                </Text>
-                            </Box>
-                            <SemanaMPSCarouselPicker
-                                value={pendingSemana?.startDate ?? value}
-                                onChange={setPendingSemana}
-                                isDisabled={isDisabled}
-                            />
-                        </VStack>
-                    </ModalBody>
-                    <ModalFooter gap={3}>
-                        <Button variant="ghost" onClick={handleClose}>
-                            Cerrar
-                        </Button>
-                        <Button
-                            colorScheme="teal"
-                            onClick={handleAccept}
-                            isDisabled={!pendingSemana}
-                        >
-                            Aceptar
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+            <Dialog.Root open={disclosure.open} size='xl' onOpenChange={e => {
+                if (!e.open) {
+                    handleClose();
+                }
+            }}>
+                <Portal>
+
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>{modalTitle}</Dialog.Header>
+                            <Dialog.CloseTrigger />
+                            <Dialog.Body pb={6}>
+                                <VStack align="stretch" gap={4}>
+                                    <Box>
+                                        <Text fontSize="sm" color="gray.600">
+                                            Seleccione la semana ISO que se usara para consultar o crear el MPS semanal.
+                                        </Text>
+                                    </Box>
+                                    <SemanaMPSCarouselPicker
+                                        value={pendingSemana?.startDate ?? value}
+                                        onChange={setPendingSemana}
+                                        isDisabled={isDisabled}
+                                    />
+                                </VStack>
+                            </Dialog.Body>
+                            <Dialog.Footer gap={3}>
+                                <Button variant="ghost" onClick={handleClose}>
+                                    Cerrar
+                                </Button>
+                                <Button
+                                    colorPalette="teal"
+                                    onClick={handleAccept}
+                                    disabled={!pendingSemana}
+                                >
+                                    Aceptar
+                                </Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+
+                </Portal>
+            </Dialog.Root>
         </>
     );
 }

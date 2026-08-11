@@ -1,23 +1,19 @@
-import { QuestionIcon } from "@chakra-ui/icons";
 import {
+    Steps,
     Badge,
     Box,
     Card,
-    CardBody,
-    Divider,
     HStack,
     IconButton,
     SimpleGrid,
     Stack,
     Stat,
-    StatHelpText,
-    StatLabel,
-    StatNumber,
     Text,
-    Tooltip,
     useBreakpointValue,
     useDisclosure,
+    Separator,
 } from "@chakra-ui/react";
+import { Tooltip } from '@/components/ui/tooltip';
 import ReactECharts from "echarts-for-react";
 import CoberturaCostosHelpModal from "./CoberturaCostosHelpModal";
 import InventarioAlertasSection from "./InventarioAlertasSection";
@@ -38,6 +34,7 @@ import type {
     StockInventario,
     StockPorUnidad,
 } from "./informesGlobales.types";
+import { LuHelpCircle } from 'react-icons/lu';
 
 export function StockOverviewSection({ stock }: { stock: StockInventario }) {
     const coverageHelp = useDisclosure();
@@ -48,8 +45,8 @@ export function StockOverviewSection({ stock }: { stock: StockInventario }) {
 
     return (
         <>
-            <Stack spacing={3}>
-                <SimpleGrid columns={{ base: 1, xl: 2 }} spacing={3}>
+            <Stack gap={3}>
+                <SimpleGrid columns={{ base: 1, xl: 2 }} gap={3}>
                     <MaterialsValuationCard
                         total={valuation.materiales.total}
                         rawMaterial={valuation.materiales.materiaPrima}
@@ -62,7 +59,7 @@ export function StockOverviewSection({ stock }: { stock: StockInventario }) {
                     />
                 </SimpleGrid>
 
-                <SimpleGrid columns={{ base: 1, md: 3 }} spacing={3}>
+                <SimpleGrid columns={{ base: 1, md: 3 }} gap={3}>
                     <KpiCard
                         label="Referencias con stock"
                         value={formatInteger(stock.resumen.referenciasConStock)}
@@ -86,7 +83,7 @@ export function StockOverviewSection({ stock }: { stock: StockInventario }) {
             </Stack>
 
             <CoberturaCostosHelpModal
-                isOpen={coverageHelp.isOpen}
+                isOpen={coverageHelp.open}
                 onClose={coverageHelp.onClose}
             />
         </>
@@ -95,14 +92,14 @@ export function StockOverviewSection({ stock }: { stock: StockInventario }) {
 
 function MaterialsStockSection({ materials }: { materials: MaterialesPorTipo }) {
     return (
-        <Card variant="outline">
-            <CardBody p={{ base: 3, md: 5 }}>
-                <Stack spacing={4}>
+        <Card.Root variant="outline">
+            <Card.Body p={{ base: 3, md: 5 }}>
+                <Stack gap={4}>
                     <SectionHeading
                         title="Stock de materiales"
                         description="Materia prima y empaque se presentan por separado; las unidades no se suman entre sí."
                     />
-                    <SimpleGrid columns={{ base: 1, xl: 2 }} spacing={4}>
+                    <SimpleGrid columns={{ base: 1, xl: 2 }} gap={4}>
                         <MaterialStockCard
                             title="Materia prima"
                             primaryUnit="KG"
@@ -115,8 +112,8 @@ function MaterialsStockSection({ materials }: { materials: MaterialesPorTipo }) 
                         />
                     </SimpleGrid>
                 </Stack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
@@ -141,17 +138,17 @@ function MaterialStockCard({
         });
 
     return (
-        <Card variant="outline" minW={0}>
-            <CardBody p={{ base: 3, md: 4 }}>
-                <Stack spacing={4}>
-                    <HStack justify="space-between" align="flex-start" spacing={3}>
+        <Card.Root variant="outline" minW={0}>
+            <Card.Body p={{ base: 3, md: 4 }}>
+                <Stack gap={4}>
+                    <HStack justify="space-between" align="flex-start" gap={3}>
                         <Box minW={0}>
                             <Text fontWeight="semibold">{title}</Text>
                             <Text color="app.textMuted" fontSize="xs">
                                 Unidad principal
                             </Text>
                         </Box>
-                        <Badge colorScheme="green" fontSize="sm">
+                        <Badge colorPalette="green" fontSize="sm">
                             {primaryUnit}
                         </Badge>
                     </HStack>
@@ -171,7 +168,7 @@ function MaterialStockCard({
                         </Text>
                     </Box>
 
-                    <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={3}>
+                    <SimpleGrid columns={{ base: 1, sm: 3 }} gap={3}>
                         <StockMetric
                             label="Stock positivo"
                             value={`${formatQuantity(primary.cantidadPositiva)} ${primaryUnit}`}
@@ -187,9 +184,9 @@ function MaterialStockCard({
                         />
                     </SimpleGrid>
 
-                    <Divider borderColor="app.border" />
+                    <Separator borderColor="app.border" />
 
-                    <Stack spacing={2}>
+                    <Stack gap={2}>
                         <Text fontSize="sm" fontWeight="semibold">
                             Otras unidades
                         </Text>
@@ -204,8 +201,8 @@ function MaterialStockCard({
                         )}
                     </Stack>
                 </Stack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
@@ -247,7 +244,7 @@ function SecondaryUnitRow({ unit }: { unit: StockPorUnidad }) {
                 direction={{ base: "column", sm: "row" }}
                 justify="space-between"
                 align={{ base: "flex-start", sm: "center" }}
-                spacing={1}
+                gap={1}
             >
                 <Text fontWeight="semibold">{unit.unidadMedida}</Text>
                 <Text
@@ -291,29 +288,29 @@ function MaterialsValuationCard({
     packaging: number;
 }) {
     return (
-        <Card variant="outline" minW={0}>
-            <CardBody p={{ base: 3, md: 4 }}>
-                <Stat minW={0}>
-                    <StatLabel fontSize="sm">Valorización de materiales</StatLabel>
-                    <StatNumber
+        <Card.Root variant="outline" minW={0}>
+            <Card.Body p={{ base: 3, md: 4 }}>
+                <Stat.Root minW={0}>
+                    <Stat.Label fontSize="sm">Valorización de materiales</Stat.Label>
+                    <Stat.ValueText
                         fontSize={{ base: "xl", md: "2xl" }}
                         lineHeight="shorter"
                         overflowWrap="anywhere"
                         mt={1}
                     >
                         {formatCurrency(total)}
-                    </StatNumber>
-                    <StatHelpText mb={0} mt={2}>
+                    </Stat.ValueText>
+                    <Stat.HelpText mb={0} mt={2}>
                         Solo stock positivo con costo maestro vigente
-                    </StatHelpText>
-                </Stat>
-                <Divider my={3} />
-                <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
+                    </Stat.HelpText>
+                </Stat.Root>
+                <Separator my={3} />
+                <SimpleGrid columns={{ base: 1, sm: 2 }} gap={3}>
                     <ValuationDetail label="Materia prima" value={rawMaterial} />
                     <ValuationDetail label="Material de empaque" value={packaging} />
                 </SimpleGrid>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
@@ -348,38 +345,36 @@ function CostCoverageCard({
     onOpenHelp: () => void;
 }) {
     return (
-        <Card variant="outline" minW={0}>
-            <CardBody p={{ base: 3, md: 4 }}>
-                <Stat minW={0}>
-                    <HStack justify="space-between" align="flex-start" spacing={2}>
-                        <StatLabel fontSize="sm">Cobertura de costos</StatLabel>
-                        <Tooltip label="¿Qué significa este indicador?" hasArrow>
+        <Card.Root variant="outline" minW={0}>
+            <Card.Body p={{ base: 3, md: 4 }}>
+                <Stat.Root minW={0}>
+                    <HStack justify="space-between" align="flex-start" gap={2}>
+                        <Stat.Label fontSize="sm">Cobertura de costos</Stat.Label>
+                        <Tooltip content="¿Qué significa este indicador?" showArrow>
                             <IconButton
                                 aria-label="Explicación de la cobertura de costos"
-                                icon={<QuestionIcon />}
                                 onClick={onOpenHelp}
                                 size="sm"
                                 variant="ghost"
-                                colorScheme="blue"
-                            />
+                                colorPalette="blue"><LuHelpCircle /></IconButton>
                         </Tooltip>
                     </HStack>
-                    <StatNumber fontSize="xl" lineHeight="shorter" mt={1}>
+                    <Stat.ValueText fontSize="xl" lineHeight="shorter" mt={1}>
                         {formatPercent(global)}
-                    </StatNumber>
+                    </Stat.ValueText>
                     {showGroups ? (
-                        <SimpleGrid columns={2} spacing={2} mt={3}>
+                        <SimpleGrid columns={2} gap={2} mt={3}>
                             <CoverageDetail label="Materiales" value={materials} />
                             <CoverageDetail label="Terminados" value={finished} />
                         </SimpleGrid>
                     ) : (
-                        <StatHelpText mb={0} mt={2}>
+                        <Stat.HelpText mb={0} mt={2}>
                             Referencias positivas con costo
-                        </StatHelpText>
+                        </Stat.HelpText>
                     )}
-                </Stat>
-            </CardBody>
-        </Card>
+                </Stat.Root>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
@@ -412,11 +407,11 @@ export function InventoryAnalyticsSection({
     const chartHeight = useBreakpointValue({ base: 300, md: 350 }) ?? 350;
 
     return (
-        <Stack spacing={4}>
-            <SimpleGrid columns={{ base: 1, xl: 2 }} spacing={4}>
-                <Card variant="outline">
-                    <CardBody p={{ base: 3, md: 5 }}>
-                        <Stack spacing={3}>
+        <Stack gap={4}>
+            <SimpleGrid columns={{ base: 1, xl: 2 }} gap={4}>
+                <Card.Root variant="outline">
+                    <Card.Body p={{ base: 3, md: 5 }}>
+                        <Stack gap={3}>
                             <SectionHeading
                                 title="Composición del inventario"
                                 description="Participación sobre el valor estimado positivo."
@@ -426,12 +421,12 @@ export function InventoryAnalyticsSection({
                                 style={{ height: `${chartHeight}px`, width: "100%" }}
                             />
                         </Stack>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
 
-                <Card variant="outline">
-                    <CardBody p={{ base: 3, md: 5 }}>
-                        <Stack spacing={3}>
+                <Card.Root variant="outline">
+                    <Card.Body p={{ base: 3, md: 5 }}>
+                        <Stack gap={3}>
                             <SectionHeading
                                 title="Clasificación ABC"
                                 description="A: mayor concentración de valor; C: menor concentración."
@@ -446,8 +441,8 @@ export function InventoryAnalyticsSection({
                                 </Text>
                             ) : null}
                         </Stack>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
             </SimpleGrid>
 
             <InventarioAlertasSection

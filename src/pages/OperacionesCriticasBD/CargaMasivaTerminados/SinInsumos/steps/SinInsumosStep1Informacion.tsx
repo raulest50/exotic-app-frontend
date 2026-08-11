@@ -1,4 +1,5 @@
 import {
+    Steps,
     Box,
     Button,
     Flex,
@@ -93,7 +94,7 @@ export default function SinInsumosStep1Informacion({ setActiveStep }: SinInsumos
 
     return (
         <Box p={4}>
-            <VStack align="stretch" spacing={6}>
+            <VStack align="stretch" gap={6}>
                 <Text>
                     Se descargara una plantilla Excel con dos hojas: <strong>Valores permitidos</strong> y <strong>Datos</strong>.
                 </Text>
@@ -110,47 +111,47 @@ export default function SinInsumosStep1Informacion({ setActiveStep }: SinInsumos
                 <Text fontWeight="semibold" mt={2}>
                     Ejemplos de filas validas
                 </Text>
-                <TableContainer borderWidth="1px" borderRadius="md" overflowX="auto">
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>producto_id</Th>
-                                <Th>nombre</Th>
-                                <Th>costo</Th>
-                                <Th>iva_%</Th>
-                                <Th>tipo_unid</Th>
-                                <Th>status</Th>
-                                <Th>categoria_id</Th>
-                                <Th>prefijo_lote</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                <Table.ScrollArea borderWidth="1px" borderRadius="md" overflowX="auto">
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>producto_id</Table.ColumnHeader>
+                                <Table.ColumnHeader>nombre</Table.ColumnHeader>
+                                <Table.ColumnHeader>costo</Table.ColumnHeader>
+                                <Table.ColumnHeader>iva_%</Table.ColumnHeader>
+                                <Table.ColumnHeader>tipo_unid</Table.ColumnHeader>
+                                <Table.ColumnHeader>status</Table.ColumnHeader>
+                                <Table.ColumnHeader>categoria_id</Table.ColumnHeader>
+                                <Table.ColumnHeader>prefijo_lote</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {EXAMPLE_ROWS.map((row, idx) => (
-                                <Tr key={idx}>
-                                    <Td>{row.producto_id}</Td>
-                                    <Td>{row.nombre}</Td>
-                                    <Td>{row.costo}</Td>
-                                    <Td>{row.iva_percentual}</Td>
-                                    <Td>{row.tipo_unidades}</Td>
-                                    <Td>{row.status}</Td>
-                                    <Td>{row.categoria_id}</Td>
-                                    <Td>{row.prefijo_lote}</Td>
-                                </Tr>
+                                <Table.Row key={idx}>
+                                    <Table.Cell>{row.producto_id}</Table.Cell>
+                                    <Table.Cell>{row.nombre}</Table.Cell>
+                                    <Table.Cell>{row.costo}</Table.Cell>
+                                    <Table.Cell>{row.iva_percentual}</Table.Cell>
+                                    <Table.Cell>{row.tipo_unidades}</Table.Cell>
+                                    <Table.Cell>{row.status}</Table.Cell>
+                                    <Table.Cell>{row.categoria_id}</Table.Cell>
+                                    <Table.Cell>{row.prefijo_lote}</Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
-                </TableContainer>
+                        </Table.Body>
+                    </Table.Root>
+                </Table.ScrollArea>
 
                 <Flex gap={4} wrap="wrap">
                     <Button
-                        colorScheme="teal"
+                        colorPalette="teal"
                         onClick={handleDownloadTemplate}
-                        isLoading={isDownloading}
+                        loading={isDownloading}
                         loadingText="Descargando..."
                     >
                         Descargar plantilla Excel (.xlsx)
                     </Button>
-                    <Button colorScheme="blue" onClick={() => setActiveStep(1)}>
+                    <Button colorPalette="blue" onClick={() => setActiveStep(1)}>
                         Siguiente
                     </Button>
                 </Flex>

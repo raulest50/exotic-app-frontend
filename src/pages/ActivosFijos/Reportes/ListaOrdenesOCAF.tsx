@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
+    Steps,
     Table,
     Thead,
     Tbody,
@@ -8,12 +10,9 @@ import {
     Td,
     Box,
     Menu,
-    MenuButton,
-    MenuList,
-    MenuItem,
     IconButton,
-    useColorModeValue,
-    useToast
+    useToast,
+    Portal,
 } from '@chakra-ui/react';
 import { FiMoreVertical, FiEye, FiXCircle, FiEdit, FiDownload } from 'react-icons/fi';
 import { OrdenCompraActivo, getEstadoOCAFText } from '../types';
@@ -62,102 +61,107 @@ const ListaOrdenesOCAF: React.FC<Props> = ({ ordenes, onEditarOrden, onEstadoAct
 
     return (
         <>
-        <Box overflowX="auto" mt={4}>
-            <Table variant="simple">
-                <Thead>
-                    <Tr>
-                        <Th>ID</Th>
-                        <Th>Fecha Emisión</Th>
-                        <Th>Fecha Vencimiento</Th>
-                        <Th>Proveedor</Th>
-                        <Th>Total a Pagar</Th>
-                        <Th>Estado</Th>
-                        <Th>Acciones</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
-                    {ordenes.map((orden) => (
-                        <Tr 
-                            key={orden.ordenCompraActivoId}
-                            _hover={{ bg: hoverBg, transition: 'background-color 0.2s' }}
-                        >
-                            <Td>{orden.ordenCompraActivoId}</Td>
-                            <Td>
-                                {orden.fechaEmision
-                                    ? new Date(orden.fechaEmision).toLocaleDateString()
-                                    : '-'}
-                            </Td>
-                            <Td>
-                                {orden.fechaVencimiento
-                                    ? new Date(orden.fechaVencimiento).toLocaleDateString()
-                                    : '-'}
-                            </Td>
-                            <Td>{orden.proveedor ? orden.proveedor.nombre : '-'}</Td>
-                            <Td>{formatCOP(orden.totalPagar)}</Td>
-                            <Td>{getEstadoOCAFText(orden.estado)}</Td>
-                            <Td onClick={(e) => e.stopPropagation()}>
-                                <Menu>
-                                    <MenuButton
-                                        as={IconButton}
-                                        aria-label='Opciones'
-                                        icon={<FiMoreVertical />}
-                                        variant='ghost'
-                                        size='sm'
-                                    />
-                                    <MenuList>
-                                        <MenuItem icon={<FiEye />} onClick={() => onEditarOrden && onEditarOrden(orden)}>
-                                            Ver detalle
-                                        </MenuItem>
-                                        {orden.estado !== -1 && (
-                                            <MenuItem
-                                                icon={<FiDownload />}
-                                                isDisabled={downloadingId !== null}
-                                                onClick={() => handleDownloadPdf(orden)}
-                                            >
-                                                {downloadingId === orden.ordenCompraActivoId
-                                                    ? 'Generando PDF...'
-                                                    : 'Descargar PDF'}
-                                            </MenuItem>
-                                        )}
-                                        {accessLevel >= 2 && (
-                                            <MenuItem icon={<FiEdit />} onClick={() => setOrdenToUpdate(orden)}>
-                                                Liberar / Enviar
-                                            </MenuItem>
-                                        )}
-                                        {accessLevel >= 2 && (
-                                            <MenuItem icon={<FiXCircle />} onClick={() => setOrdenToCancel(orden)}>
-                                                Cancelar orden de compra AF
-                                            </MenuItem>
-                                        )}
-                                    </MenuList>
-                                </Menu>
-                            </Td>
-                        </Tr>
-                    ))}
-                </Tbody>
-            </Table>
-        </Box>
+            <Box overflowX="auto" mt={4}>
+                <Table.Root variant="simple">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>ID</Table.ColumnHeader>
+                            <Table.ColumnHeader>Fecha Emisión</Table.ColumnHeader>
+                            <Table.ColumnHeader>Fecha Vencimiento</Table.ColumnHeader>
+                            <Table.ColumnHeader>Proveedor</Table.ColumnHeader>
+                            <Table.ColumnHeader>Total a Pagar</Table.ColumnHeader>
+                            <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                            <Table.ColumnHeader>Acciones</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {ordenes.map((orden) => (
+                            <Table.Row 
+                                key={orden.ordenCompraActivoId}
+                                _hover={{ bg: hoverBg, transition: 'background-color 0.2s' }}
+                            >
+                                <Table.Cell>{orden.ordenCompraActivoId}</Table.Cell>
+                                <Table.Cell>
+                                    {orden.fechaEmision
+                                        ? new Date(orden.fechaEmision).toLocaleDateString()
+                                        : '-'}
+                                </Table.Cell>
+                                <Table.Cell>
+                                    {orden.fechaVencimiento
+                                        ? new Date(orden.fechaVencimiento).toLocaleDateString()
+                                        : '-'}
+                                </Table.Cell>
+                                <Table.Cell>{orden.proveedor ? orden.proveedor.nombre : '-'}</Table.Cell>
+                                <Table.Cell>{formatCOP(orden.totalPagar)}</Table.Cell>
+                                <Table.Cell>{getEstadoOCAFText(orden.estado)}</Table.Cell>
+                                <Table.Cell onClick={(e) => e.stopPropagation()}>
+                                    <Menu.Root>
+                                        <Menu.Trigger
+                                            aria-label='Opciones'
+                                            icon={<FiMoreVertical />}
+                                            variant='ghost'
+                                            size='sm'
+                                            asChild><IconButton /></Menu.Trigger>
+                                        <Portal><Menu.Positioner><Menu.Content>
+                                                    <Menu.Item
+                                                        icon={<FiEye />}
+                                                        onSelect={() => onEditarOrden && onEditarOrden(orden)}
+                                                        value='item-0'>
+                                                        Ver detalle
+                                                    </Menu.Item>
+                                                    {orden.estado !== -1 && (
+                                                        <Menu.Item
+                                                            icon={<FiDownload />}
+                                                            disabled={downloadingId !== null}
+                                                            onSelect={() => handleDownloadPdf(orden)}
+                                                            value='item-1'>
+                                                            {downloadingId === orden.ordenCompraActivoId
+                                                                ? 'Generando PDF...'
+                                                                : 'Descargar PDF'}
+                                                        </Menu.Item>
+                                                    )}
+                                                    {accessLevel >= 2 && (
+                                                        <Menu.Item icon={<FiEdit />} onSelect={() => setOrdenToUpdate(orden)} value='item-2'>
+                                                            Liberar / Enviar
+                                                        </Menu.Item>
+                                                    )}
+                                                    {accessLevel >= 2 && (
+                                                        <Menu.Item
+                                                            icon={<FiXCircle />}
+                                                            onSelect={() => setOrdenToCancel(orden)}
+                                                            value='item-3'>
+                                                            Cancelar orden de compra AF
+                                                        </Menu.Item>
+                                                    )}
+                                                </Menu.Content></Menu.Positioner></Portal>
+                                    </Menu.Root>
+                                </Table.Cell>
+                            </Table.Row>
+                        ))}
+                    </Table.Body>
+                </Table.Root>
+            </Box>
 
-        {ordenToCancel && (
-            <DialogCancelarOCAF
-                isOpen={!!ordenToCancel}
-                onClose={() => setOrdenToCancel(null)}
-                orden={ordenToCancel}
-                onOrdenCancelada={() => setOrdenToCancel(null)}
-            />
-        )}
+            {ordenToCancel && (
+                <DialogCancelarOCAF
+                    isOpen={!!ordenToCancel}
+                    onClose={() => setOrdenToCancel(null)}
+                    orden={ordenToCancel}
+                    onOrdenCancelada={() => setOrdenToCancel(null)}
+                />
+            )}
 
-        {ordenToUpdate && (
-            <DialogLiberarEnviarOCAF
-                isOpen={!!ordenToUpdate}
-                onClose={() => setOrdenToUpdate(null)}
-                orden={ordenToUpdate}
-                onEstadoActualizado={(ordenActualizada) => {
-                    onEstadoActualizado?.(ordenActualizada);
-                    setOrdenToUpdate(null);
-                }}
-            />
-        )}
+            {ordenToUpdate && (
+                <DialogLiberarEnviarOCAF
+                    isOpen={!!ordenToUpdate}
+                    onClose={() => setOrdenToUpdate(null)}
+                    orden={ordenToUpdate}
+                    onEstadoActualizado={(ordenActualizada) => {
+                        onEstadoActualizado?.(ordenActualizada);
+                        setOrdenToUpdate(null);
+                    }}
+                />
+            )}
         </>
     );
 };

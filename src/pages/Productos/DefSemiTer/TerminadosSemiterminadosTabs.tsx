@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
+import { Steps, Button, Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
 import { FaArrowLeft } from 'react-icons/fa';
 import CodificarSemioTermiTab from './CodificarSemioTermiTab/CodificarSemioTermiTab.tsx';
 import { CategoriasTab } from './CategoriasTab.tsx';
@@ -57,24 +57,23 @@ export function TerminadosSemiterminadosTabs({ onBack }: Props) {
 
     return (
         <Flex direction={'column'} gap={4} w="full" h="full">
-            <Button leftIcon={<FaArrowLeft />} w="fit-content" onClick={onBack}>
-                Volver
-            </Button>
-            <Tabs isFitted gap="1em" variant="line" index={tabIndex} onChange={setTabIndex}>
-                <TabList>
+            <Button w="fit-content" onClick={onBack}><FaArrowLeft />Volver
+                            </Button>
+            <Tabs.Root fitted gap="1em" variant='line' value={tabIndex} onValueChange={setTabIndex}>
+                <Tabs.List>
                     {visibleTabs.map((tab) => (
                         <Tab key={tab.key} sx={my_style_tab}>
                             {tab.label}
                         </Tab>
                     ))}
-                </TabList>
+                </Tabs.List>
 
                 <TabPanels>
                     {visibleTabs.map((tab) => (
                         <TabPanel key={tab.key}>{tab.render()}</TabPanel>
                     ))}
                 </TabPanels>
-            </Tabs>
+            </Tabs.Root>
         </Flex>
     );
 }

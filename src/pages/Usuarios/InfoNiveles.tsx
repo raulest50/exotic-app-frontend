@@ -1,15 +1,11 @@
 import { useEffect, useState } from "react";
+import { useColorModeValue } from "../../components/ui/color-mode";
 import {
+  Steps,
   Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
   Alert,
-  AlertIcon,
   Box,
   Code,
-  Divider,
   Flex,
   Heading,
   Input,
@@ -18,10 +14,11 @@ import {
   Tag,
   TagLabel,
   Text,
-  useColorModeValue,
+  Separator,
+  Icon,
 } from "@chakra-ui/react";
-import { SearchIcon } from "@chakra-ui/icons";
 import { Modulo } from "./GestionUsuarios/types";
+import { LuSearch } from 'react-icons/lu';
 
 interface ModuleLevel {
   level: number;
@@ -367,13 +364,19 @@ export default function InfoNiveles() {
     <Box p={4}>
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
         <Heading size="md">Documentacion de Niveles de Acceso</Heading>
-        <Tag size="md" colorScheme="blue" borderRadius="full" px={3}>
-          <TagLabel>{Object.keys(moduleDocs).length} modulos</TagLabel>
-        </Tag>
+        <Tag.Root size="md" colorPalette="blue" borderRadius="full" px={3}>
+          <Tag.Label>{Object.keys(moduleDocs).length} modulos</Tag.Label>
+        </Tag.Root>
       </Flex>
 
-      <Alert status="info" mb={4} variant="left-accent" borderRadius="md">
-        <AlertIcon alignSelf="flex-start" mt={1} />
+      <Alert.Root
+        status="info"
+        mb={4}
+        variant='subtle'
+        borderRadius="md"
+        borderStartWidth='3px'
+        borderStartColor='colorPalette.solid'>
+        <Alert.Indicator alignSelf="flex-start" mt={1} />
         <Box width="100%">
           <Heading size="sm" mb={2} textAlign="left">
             Informacion General
@@ -384,21 +387,21 @@ export default function InfoNiveles() {
           </Text>
           <Flex direction="column" gap={2} ml={2} mb={3}>
             <Flex align="center">
-              <Tag size="sm" colorScheme="green" mr={2} minW="60px" justifyContent="center">
+              <Tag.Root size="sm" colorPalette="green" mr={2} minW="60px" justifyContent="center">
                 Nivel 1
-              </Tag>
+              </Tag.Root>
               <Text>Acceso basico</Text>
             </Flex>
             <Flex align="center">
-              <Tag size="sm" colorScheme="blue" mr={2} minW="60px" justifyContent="center">
+              <Tag.Root size="sm" colorPalette="blue" mr={2} minW="60px" justifyContent="center">
                 Nivel 2
-              </Tag>
+              </Tag.Root>
               <Text>Consulta y creacion o modificacion</Text>
             </Flex>
             <Flex align="center">
-              <Tag size="sm" colorScheme="purple" mr={2} minW="60px" justifyContent="center">
+              <Tag.Root size="sm" colorPalette="purple" mr={2} minW="60px" justifyContent="center">
                 Nivel 3
-              </Tag>
+              </Tag.Root>
               <Text>Acceso completo del modulo</Text>
             </Flex>
           </Flex>
@@ -406,16 +409,16 @@ export default function InfoNiveles() {
             Los usuarios master-like tienen bypass completo sobre las reglas declarativas de acceso.
           </Text>
         </Box>
-      </Alert>
+      </Alert.Root>
 
       <InputGroup mb={6}>
         <InputLeftElement pointerEvents="none">
-          <SearchIcon color="gray.300" />
+          <Icon as={LuSearch} color="gray.300" />
         </InputLeftElement>
         <Input
           placeholder="Buscar modulo por nombre o descripcion..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onValueChange={(e) => setSearchTerm(e.target.value)}
           size="md"
           variant="filled"
           _hover={{ bg: "app.rowHoverStrong" }}
@@ -424,86 +427,86 @@ export default function InfoNiveles() {
       </InputGroup>
 
       {filteredModules.length === 0 && (
-        <Alert status="info" mb={4}>
-          <AlertIcon />
+        <Alert.Root status="info" mb={4}>
+          <Alert.Indicator />
           No se encontraron modulos que coincidan con la busqueda.
-        </Alert>
+        </Alert.Root>
       )}
 
-      <Accordion allowMultiple>
+      <Accordion.Root multiple>
         {filteredModules.map((moduleKey) => (
-          <AccordionItem key={moduleKey} mb={2} borderWidth="1px" borderRadius="md">
+          <Accordion.Item key={moduleKey} mb={2} borderWidth="1px" borderRadius="md" value='item-0'>
             <h2>
-              <AccordionButton _expanded={{ bg: "app.rowActiveBlue", color: accordionExpandedColor }}>
+              <Accordion.ItemTrigger _expanded={{ bg: "app.rowActiveBlue", color: accordionExpandedColor }}>
                 <Box flex="1" textAlign="left">
                   <Flex alignItems="center">
                     <Text fontWeight="bold" mr={2}>
                       {moduleDocs[moduleKey].title}
                     </Text>
-                    <Tag size="sm" colorScheme="gray" borderRadius="full">
-                      <TagLabel>{moduleDocs[moduleKey].levels.length} niveles</TagLabel>
-                    </Tag>
+                    <Tag.Root size="sm" colorPalette="gray" borderRadius="full">
+                      <Tag.Label>{moduleDocs[moduleKey].levels.length} niveles</Tag.Label>
+                    </Tag.Root>
                   </Flex>
                 </Box>
-                <AccordionIcon />
-              </AccordionButton>
+                <Accordion.ItemIndicator />
+              </Accordion.ItemTrigger>
             </h2>
-            <AccordionPanel pb={4}>
-              <Text mb={4}>{moduleDocs[moduleKey].description}</Text>
+            <Accordion.ItemContent pb={4}><Accordion.ItemBody>
+                <Text mb={4}>{moduleDocs[moduleKey].description}</Text>
 
-              <Heading size="sm" mb={3}>
-                Niveles de Acceso:
-              </Heading>
-              <Box borderLeft="2px solid" borderColor="app.border" pl={4} mb={4}>
-                {moduleDocs[moduleKey].levels.map((level) => (
-                  <Box
-                    key={level.level}
-                    mb={3}
-                    p={3}
-                    bg="app.surfaceSubtle"
-                    borderRadius="md"
-                    borderLeft="4px solid"
-                    borderLeftColor={getLevelColor(level.level)}
-                    boxShadow="sm"
-                    transition="all 0.2s"
-                    _hover={{ boxShadow: "md" }}
-                  >
-                    <Flex align="center">
-                      <Tag size="md" colorScheme={getColorSchemeForLevel(level.level)} mr={3}>
-                        <TagLabel>Nivel {level.level}</TagLabel>
-                      </Tag>
-                      <Text>{level.description}</Text>
-                    </Flex>
-                  </Box>
-                ))}
-              </Box>
+                <Heading size="sm" mb={3}>
+                  Niveles de Acceso:
+                </Heading>
+                <Box borderLeft="2px solid" borderColor="app.border" pl={4} mb={4}>
+                  {moduleDocs[moduleKey].levels.map((level) => (
+                    <Box
+                      key={level.level}
+                      mb={3}
+                      p={3}
+                      bg="app.surfaceSubtle"
+                      borderRadius="md"
+                      borderLeft="4px solid"
+                      borderLeftColor={getLevelColor(level.level)}
+                      boxShadow="sm"
+                      transition="all 0.2s"
+                      _hover={{ boxShadow: "md" }}
+                    >
+                      <Flex align="center">
+                        <Tag.Root size="md" colorPalette={getColorSchemeForLevel(level.level)} mr={3}>
+                          <Tag.Label>Nivel {level.level}</Tag.Label>
+                        </Tag.Root>
+                        <Text>{level.description}</Text>
+                      </Flex>
+                    </Box>
+                  ))}
+                </Box>
 
-              {moduleDocs[moduleKey].implementationDetails && (
-                <>
-                  <Divider my={4} />
-                  <Heading size="sm" mb={2}>
-                    Implementacion:
-                  </Heading>
-                  <Box bg="app.surfaceSubtle" p={3} borderRadius="md" overflowX="auto">
-                    <Code display="block" whiteSpace="pre" p={2}>
-                      {moduleDocs[moduleKey].implementationCode}
-                    </Code>
-                  </Box>
-                </>
-              )}
+                {moduleDocs[moduleKey].implementationDetails && (
+                  <>
+                    <Separator my={4} />
+                    <Heading size="sm" mb={2}>
+                      Implementacion:
+                    </Heading>
+                    <Box bg="app.surfaceSubtle" p={3} borderRadius="md" overflowX="auto">
+                      <Code display="block" whiteSpace="pre" p={2}>
+                        {moduleDocs[moduleKey].implementationCode}
+                      </Code>
+                    </Box>
+                  </>
+                )}
 
-              <Divider my={4} />
+                <Separator my={4} />
 
-              <Box mt={2}>
-                <Text fontSize="sm" color="app.textMuted">
-                  Nota: los niveles son acumulativos. Un usuario con nivel superior conserva los permisos de
-                  los niveles anteriores.
-                </Text>
-              </Box>
-            </AccordionPanel>
-          </AccordionItem>
+                <Box mt={2}>
+                  <Text fontSize="sm" color="app.textMuted">
+                    Nota: los niveles son acumulativos. Un usuario con nivel superior conserva los permisos de
+                    los niveles anteriores.
+                  </Text>
+                </Box>
+              </Accordion.ItemBody></Accordion.ItemContent>
+          </Accordion.Item>
         ))}
-      </Accordion>
+      </Accordion.Root>
     </Box>
   );
 }

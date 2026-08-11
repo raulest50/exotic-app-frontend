@@ -1,27 +1,16 @@
 import {
-    ChevronDownIcon,
-    ChevronRightIcon,
-    ChevronUpIcon,
-    QuestionIcon,
-    RepeatIcon,
-    SearchIcon,
-} from "@chakra-ui/icons";
-import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Button,
     ButtonGroup,
     Card,
-    CardBody,
-    Collapse,
-    FormControl,
-    FormLabel,
+    Collapsible,
     HStack,
     IconButton,
     Input,
-    Select,
+    NativeSelect,
     SimpleGrid,
     Spinner,
     Stack,
@@ -32,11 +21,12 @@ import {
     Text,
     Th,
     Thead,
-    Tooltip,
     Tr,
     useBreakpointValue,
     useDisclosure,
+    Field,
 } from "@chakra-ui/react";
+import { Tooltip } from '@/components/ui/tooltip';
 import { type KeyboardEvent, useEffect, useMemo, useState } from "react";
 import {
     fetchInventoryAlerts,
@@ -57,6 +47,14 @@ import type {
     OrdenAlertaInventario,
     ResumenAlertasStock,
 } from "./informesGlobales.types";
+import {
+    LuChevronDown,
+    LuChevronRight,
+    LuChevronUp,
+    LuHelpCircle,
+    LuRepeat,
+    LuSearch,
+} from 'react-icons/lu';
 
 type AlertMode = "PRIORIDAD" | "EXPLORAR";
 type PageSize = 10 | 20;
@@ -206,10 +204,10 @@ export default function InventarioAlertasSection({
 
     return (
         <>
-            <Card variant="outline">
-                <CardBody p={{ base: 3, md: 5 }}>
-                    <Stack spacing={4}>
-                        <HStack align="flex-start" spacing={2}>
+            <Card.Root variant="outline">
+                <Card.Body p={{ base: 3, md: 5 }}>
+                    <Stack gap={4}>
+                        <HStack align="flex-start" gap={2}>
                             <Button
                                 variant="ghost"
                                 flex={1}
@@ -219,15 +217,10 @@ export default function InventarioAlertasSection({
                                 py={2}
                                 whiteSpace="normal"
                                 justifyContent="space-between"
-                                rightIcon={expanded
-                                    ? <ChevronUpIcon />
-                                    : <ChevronDownIcon />}
                                 onClick={() => setExpanded((current) => !current)}
-                                aria-expanded={expanded}
-                            >
-                                <Stack
+                                aria-expanded={expanded}><Stack
                                     align="flex-start"
-                                    spacing={1}
+                                    gap={1}
                                     textAlign="left"
                                     minW={0}
                                 >
@@ -243,198 +236,197 @@ export default function InventarioAlertasSection({
                                         {" · "}Stock actual de GENERAL al{" "}
                                         {formatDateTime(cutoff)}
                                     </Text>
-                                </Stack>
-                            </Button>
-                            <Tooltip label="Cómo se calculan las alertas" hasArrow>
+                                </Stack>{expanded
+                                    ? <LuChevronUp />
+                                    : <LuChevronDown />}</Button>
+                            <Tooltip content="Cómo se calculan las alertas" showArrow>
                                 <IconButton
                                     aria-label="Cómo se calculan las alertas"
-                                    icon={<QuestionIcon />}
                                     size="sm"
                                     variant="ghost"
-                                    colorScheme="blue"
-                                    onClick={help.onOpen}
-                                />
+                                    colorPalette="blue"
+                                    onClick={help.onOpen}><LuHelpCircle /></IconButton>
                             </Tooltip>
-                            <Tooltip label="Refrescar esta sección" hasArrow>
+                            <Tooltip content="Refrescar esta sección" showArrow>
                                 <IconButton
                                     aria-label="Refrescar alertas"
-                                    icon={<RepeatIcon />}
                                     size="sm"
                                     variant="ghost"
-                                    colorScheme="green"
-                                    isLoading={loading}
+                                    colorPalette="green"
+                                    loading={loading}
                                     onClick={() => {
                                         setExpanded(true);
                                         setRetryKey((current) => current + 1);
-                                    }}
-                                />
+                                    }}><LuRepeat /></IconButton>
                             </Tooltip>
                         </HStack>
 
                         <ButtonGroup
                             size="xs"
                             variant="outline"
-                            spacing={2}
+                            gap={2}
                             flexWrap="wrap"
-                            isAttached={false}
+                            attached={false}
                         >
                             <AlertFilterButton
                                 label={`${formatInteger(summary.negativas)} negativas`}
-                                colorScheme="red"
+                                colorPalette="red"
                                 active={mode === "EXPLORAR"
                                     && type === "STOCK_NEGATIVO"}
                                 onClick={() => exploreType("STOCK_NEGATIVO")}
                             />
                             <AlertFilterButton
                                 label={`${formatInteger(summary.agotadas)} agotadas`}
-                                colorScheme="orange"
+                                colorPalette="orange"
                                 active={mode === "EXPLORAR" && type === "AGOTADO"}
                                 onClick={() => exploreType("AGOTADO")}
                             />
                             <AlertFilterButton
                                 label={`${formatInteger(summary.bajoUmbral)} bajo umbral`}
-                                colorScheme="yellow"
+                                colorPalette="yellow"
                                 active={mode === "EXPLORAR"
                                     && type === "BAJO_UMBRAL"}
                                 onClick={() => exploreType("BAJO_UMBRAL")}
                             />
                             <AlertFilterButton
                                 label={`${formatInteger(summary.sinCosto)} sin costo`}
-                                colorScheme="purple"
+                                colorPalette="purple"
                                 active={mode === "EXPLORAR" && type === "SIN_COSTO"}
                                 onClick={() => exploreType("SIN_COSTO")}
                             />
                         </ButtonGroup>
 
-                        <Collapse in={expanded} animateOpacity>
-                            <Stack spacing={4} pt={1}>
-                                <Text color="app.textMuted" fontSize="sm">
-                                    Estas alertas representan el stock físico actual;
-                                    el periodo del informe no reconstruye alertas
-                                    históricas.
-                                </Text>
+                        <Collapsible.Root open={expanded}>
+                            <Collapsible.Content>
+                                <Stack gap={4} pt={1}>
+                                    <Text color="app.textMuted" fontSize="sm">
+                                        Estas alertas representan el stock físico actual;
+                                        el periodo del informe no reconstruye alertas
+                                        históricas.
+                                    </Text>
 
-                                <ButtonGroup isAttached size="sm">
-                                    <Button
-                                        minH="40px"
-                                        colorScheme={mode === "PRIORIDAD"
-                                            ? "green"
-                                            : undefined}
-                                        variant={mode === "PRIORIDAD"
-                                            ? "solid"
-                                            : "outline"}
-                                        onClick={() => setMode("PRIORIDAD")}
-                                    >
-                                        Vista prioritaria
-                                    </Button>
-                                    <Button
-                                        minH="40px"
-                                        colorScheme={mode === "EXPLORAR"
-                                            ? "green"
-                                            : undefined}
-                                        variant={mode === "EXPLORAR"
-                                            ? "solid"
-                                            : "outline"}
-                                        onClick={() => {
-                                            setPage(0);
-                                            setMode("EXPLORAR");
-                                        }}
-                                    >
-                                        Explorar alertas
-                                    </Button>
-                                </ButtonGroup>
-
-                                {error ? (
-                                    <Alert status="error" borderRadius="md">
-                                        <AlertIcon />
-                                        <HStack
-                                            justify="space-between"
-                                            flex={1}
-                                            align="center"
+                                    <ButtonGroup attached size="sm">
+                                        <Button
+                                            minH="40px"
+                                            colorPalette={mode === "PRIORIDAD"
+                                                ? "green"
+                                                : undefined}
+                                            variant={mode === "PRIORIDAD"
+                                                ? "solid"
+                                                : "outline"}
+                                            onClick={() => setMode("PRIORIDAD")}
                                         >
-                                            <Text fontSize="sm">{error}</Text>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => setRetryKey(
-                                                    (current) => current + 1,
-                                                )}
-                                            >
-                                                Reintentar
-                                            </Button>
-                                        </HStack>
-                                    </Alert>
-                                ) : null}
+                                            Vista prioritaria
+                                        </Button>
+                                        <Button
+                                            minH="40px"
+                                            colorPalette={mode === "EXPLORAR"
+                                                ? "green"
+                                                : undefined}
+                                            variant={mode === "EXPLORAR"
+                                                ? "solid"
+                                                : "outline"}
+                                            onClick={() => {
+                                                setPage(0);
+                                                setMode("EXPLORAR");
+                                            }}
+                                        >
+                                            Explorar alertas
+                                        </Button>
+                                    </ButtonGroup>
 
-                                {mode === "PRIORIDAD" ? (
-                                    <PriorityView
-                                        items={priorityItems}
-                                        loading={loading}
-                                        onExplore={() => {
-                                            setPage(0);
-                                            setMode("EXPLORAR");
-                                        }}
-                                        onSelect={openDetail}
-                                    />
-                                ) : (
-                                    <ExplorationView
-                                        draftSearch={draftSearch}
-                                        setDraftSearch={setDraftSearch}
-                                        appliedSearch={appliedSearch}
-                                        type={type}
-                                        group={group}
-                                        unit={unit}
-                                        order={order}
-                                        size={size}
-                                        facetGroups={facetGroups}
-                                        facetUnits={facetUnits}
-                                        pageData={pageData}
-                                        loading={loading}
-                                        hasActiveFilters={hasActiveFilters}
-                                        onApplySearch={applySearch}
-                                        onSearchKeyDown={handleSearchKeyDown}
-                                        onTypeChange={(value) => {
-                                            setType(value);
-                                            setPage(0);
-                                        }}
-                                        onGroupChange={(value) => {
-                                            setGroup(value);
-                                            setPage(0);
-                                        }}
-                                        onUnitChange={(value) => {
-                                            setUnit(value);
-                                            if (!value && order === "STOCK_ASC") {
-                                                setOrder("PRIORIDAD");
-                                            }
-                                            setPage(0);
-                                        }}
-                                        onOrderChange={(value) => {
-                                            setOrder(value);
-                                            setPage(0);
-                                        }}
-                                        onSizeChange={(value) => {
-                                            setSize(value);
-                                            setPage(0);
-                                        }}
-                                        onClear={clearFilters}
-                                        onPageChange={setPage}
-                                        onSelect={openDetail}
-                                        onBack={() => setMode("PRIORIDAD")}
-                                    />
-                                )}
-                            </Stack>
-                        </Collapse>
+                                    {error ? (
+                                        <Alert.Root status="error" borderRadius="md">
+                                            <Alert.Indicator />
+                                            <HStack
+                                                justify="space-between"
+                                                flex={1}
+                                                align="center"
+                                            >
+                                                <Text fontSize="sm">{error}</Text>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => setRetryKey(
+                                                        (current) => current + 1,
+                                                    )}
+                                                >
+                                                    Reintentar
+                                                </Button>
+                                            </HStack>
+                                        </Alert.Root>
+                                    ) : null}
+
+                                    {mode === "PRIORIDAD" ? (
+                                        <PriorityView
+                                            items={priorityItems}
+                                            loading={loading}
+                                            onExplore={() => {
+                                                setPage(0);
+                                                setMode("EXPLORAR");
+                                            }}
+                                            onSelect={openDetail}
+                                        />
+                                    ) : (
+                                        <ExplorationView
+                                            draftSearch={draftSearch}
+                                            setDraftSearch={setDraftSearch}
+                                            appliedSearch={appliedSearch}
+                                            type={type}
+                                            group={group}
+                                            unit={unit}
+                                            order={order}
+                                            size={size}
+                                            facetGroups={facetGroups}
+                                            facetUnits={facetUnits}
+                                            pageData={pageData}
+                                            loading={loading}
+                                            hasActiveFilters={hasActiveFilters}
+                                            onApplySearch={applySearch}
+                                            onSearchKeyDown={handleSearchKeyDown}
+                                            onTypeChange={(value) => {
+                                                setType(value);
+                                                setPage(0);
+                                            }}
+                                            onGroupChange={(value) => {
+                                                setGroup(value);
+                                                setPage(0);
+                                            }}
+                                            onUnitChange={(value) => {
+                                                setUnit(value);
+                                                if (!value && order === "STOCK_ASC") {
+                                                    setOrder("PRIORIDAD");
+                                                }
+                                                setPage(0);
+                                            }}
+                                            onOrderChange={(value) => {
+                                                setOrder(value);
+                                                setPage(0);
+                                            }}
+                                            onSizeChange={(value) => {
+                                                setSize(value);
+                                                setPage(0);
+                                            }}
+                                            onClear={clearFilters}
+                                            onPageChange={setPage}
+                                            onSelect={openDetail}
+                                            onBack={() => setMode("PRIORIDAD")}
+                                        />
+                                    )}
+                                </Stack>
+                            </Collapsible.Content>
+                        </Collapsible.Root>
                     </Stack>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
 
             <InventarioAlertasHelpModal
-                isOpen={help.isOpen}
+                isOpen={help.open}
                 onClose={help.onClose}
             />
             <InventarioAlertaDetailDrawer
                 alert={selectedAlert}
-                isOpen={detail.isOpen}
+                isOpen={detail.open}
                 onClose={() => {
                     detail.onClose();
                     setSelectedAlert(null);
@@ -456,7 +448,7 @@ function PriorityView({
     onSelect: (alert: AlertaStock) => void;
 }) {
     return (
-        <Stack spacing={3}>
+        <Stack gap={3}>
             <HStack justify="space-between" align="flex-start">
                 <Box>
                     <Text fontWeight="semibold">Vista prioritaria</Text>
@@ -553,14 +545,14 @@ function ExplorationView({
     ].filter((label): label is string => Boolean(label));
 
     return (
-        <Stack spacing={4}>
-            <ButtonGroup size="sm" spacing={2} flexWrap="wrap" isAttached={false}>
+        <Stack gap={4}>
+            <ButtonGroup size="sm" gap={2} flexWrap="wrap" attached={false}>
                 {ALERT_TYPES.map((option) => (
                     <Button
                         key={option.value}
                         minH="40px"
                         variant={type === option.value ? "solid" : "outline"}
-                        colorScheme={type === option.value
+                        colorPalette={type === option.value
                             ? option.colorScheme
                             : undefined}
                         onClick={() => onTypeChange(option.value)}
@@ -573,105 +565,111 @@ function ExplorationView({
             <Stack
                 direction={{ base: "column", xl: "row" }}
                 align={{ base: "stretch", xl: "flex-end" }}
-                spacing={3}
+                gap={3}
             >
-                <FormControl flex={1}>
-                    <FormLabel fontSize="xs" mb={1}>Buscar material</FormLabel>
+                <Field.Root flex={1}>
+                    <Field.Label fontSize="xs" mb={1}>Buscar material</Field.Label>
                     <HStack>
                         <Input
                             minH="40px"
                             value={draftSearch}
                             maxLength={100}
                             placeholder="Código o nombre"
-                            onChange={(event) => setDraftSearch(event.target.value)}
+                            onValueChange={(event) => setDraftSearch(event.target.value)}
                             onKeyDown={onSearchKeyDown}
                         />
                         <IconButton
                             aria-label="Buscar alertas"
-                            icon={<SearchIcon />}
                             minH="40px"
-                            colorScheme="blue"
-                            onClick={onApplySearch}
-                        />
+                            colorPalette="blue"
+                            onClick={onApplySearch}><LuSearch /></IconButton>
                     </HStack>
-                </FormControl>
-                <FormControl maxW={{ xl: "190px" }}>
-                    <FormLabel fontSize="xs" mb={1}>Grupo</FormLabel>
-                    <Select
-                        minH="40px"
-                        value={group}
-                        onChange={(event) => onGroupChange(
-                            event.target.value as FiltroGrupoAlertaInventario,
-                        )}
-                    >
-                        <option value="TODOS">Todos</option>
-                        {GROUP_OPTIONS
-                            .filter((option) => facetGroups.includes(option.value))
-                            .map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
+                </Field.Root>
+                <Field.Root maxW={{ xl: "190px" }}>
+                    <Field.Label fontSize="xs" mb={1}>Grupo</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            minH="40px"
+                            value={group}
+                            onValueChange={(event) => onGroupChange(
+                                event.target.value as FiltroGrupoAlertaInventario,
+                            )}>
+                            <option value="TODOS">Todos</option>
+                            {GROUP_OPTIONS
+                                .filter((option) => facetGroups.includes(option.value))
+                                .map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
+                <Field.Root maxW={{ xl: "150px" }}>
+                    <Field.Label fontSize="xs" mb={1}>Unidad</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            minH="40px"
+                            value={unit}
+                            onValueChange={(event) => onUnitChange(event.target.value)}>
+                            <option value="">Todas</option>
+                            {facetUnits.map((value) => (
+                                <option key={value} value={value}>{value}</option>
                             ))}
-                    </Select>
-                </FormControl>
-                <FormControl maxW={{ xl: "150px" }}>
-                    <FormLabel fontSize="xs" mb={1}>Unidad</FormLabel>
-                    <Select
-                        minH="40px"
-                        value={unit}
-                        onChange={(event) => onUnitChange(event.target.value)}
-                    >
-                        <option value="">Todas</option>
-                        {facetUnits.map((value) => (
-                            <option key={value} value={value}>{value}</option>
-                        ))}
-                    </Select>
-                </FormControl>
-                <FormControl maxW={{ xl: "235px" }}>
-                    <FormLabel fontSize="xs" mb={1}>Ordenar por</FormLabel>
-                    <Select
-                        minH="40px"
-                        value={order}
-                        onChange={(event) => onOrderChange(
-                            event.target.value as OrdenAlertaInventario,
-                        )}
-                    >
-                        <option value="PRIORIDAD">Prioridad</option>
-                        <option value="MAYOR_BRECHA_RELATIVA">
-                            Mayor brecha relativa
-                        </option>
-                        <option value="STOCK_ASC" disabled={!unit}>
-                            Menor stock (requiere unidad)
-                        </option>
-                        <option value="NOMBRE">Nombre/código</option>
-                    </Select>
-                </FormControl>
-                <FormControl maxW={{ xl: "135px" }}>
-                    <FormLabel fontSize="xs" mb={1}>Mostrar</FormLabel>
-                    <Select
-                        minH="40px"
-                        value={size}
-                        onChange={(event) => onSizeChange(
-                            Number(event.target.value) as PageSize,
-                        )}
-                    >
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                    </Select>
-                </FormControl>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
+                <Field.Root maxW={{ xl: "235px" }}>
+                    <Field.Label fontSize="xs" mb={1}>Ordenar por</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            minH="40px"
+                            value={order}
+                            onValueChange={(event) => onOrderChange(
+                                event.target.value as OrdenAlertaInventario,
+                            )}>
+                            <option value="PRIORIDAD">Prioridad</option>
+                            <option value="MAYOR_BRECHA_RELATIVA">
+                                Mayor brecha relativa
+                            </option>
+                            <option value="STOCK_ASC" disabled={!unit}>
+                                Menor stock (requiere unidad)
+                            </option>
+                            <option value="NOMBRE">Nombre/código</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
+                <Field.Root maxW={{ xl: "135px" }}>
+                    <Field.Label fontSize="xs" mb={1}>Mostrar</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            minH="40px"
+                            value={size}
+                            onValueChange={(event) => onSizeChange(
+                                Number(event.target.value) as PageSize,
+                            )}>
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
             </Stack>
 
             <HStack justify="space-between" align="flex-start" flexWrap="wrap">
-                <Stack spacing={1}>
+                <Stack gap={1}>
                     {activeFilterLabels.length > 0 ? (
-                        <HStack spacing={2} flexWrap="wrap">
+                        <HStack gap={2} flexWrap="wrap">
                             <Text color="app.textMuted" fontSize="sm">
                                 Filtros:
                             </Text>
                             {activeFilterLabels.map((label, index) => (
                                 <Badge
                                     key={`${index}-${label}`}
-                                    colorScheme="blue"
+                                    colorPalette="blue"
                                 >
                                     {label}
                                 </Badge>
@@ -712,7 +710,7 @@ function ExplorationView({
                 direction={{ base: "column", md: "row" }}
                 justify="space-between"
                 align={{ base: "stretch", md: "center" }}
-                spacing={3}
+                gap={3}
             >
                 <Text color="app.textMuted" fontSize="sm">
                     Mostrando {firstItem}–{lastItem} de{" "}
@@ -728,7 +726,7 @@ function ExplorationView({
                         minH="44px"
                         w={{ base: "full", sm: "auto" }}
                         variant="outline"
-                        isDisabled={!pageData || pageData.first || loading}
+                        disabled={!pageData || pageData.first || loading}
                         onClick={() => onPageChange(
                             Math.max(0, (pageData?.page ?? 0) - 1),
                         )}
@@ -745,7 +743,7 @@ function ExplorationView({
                         minH="44px"
                         w={{ base: "full", sm: "auto" }}
                         variant="outline"
-                        isDisabled={!pageData || pageData.last || loading}
+                        disabled={!pageData || pageData.last || loading}
                         onClick={() => onPageChange((pageData?.page ?? 0) + 1)}
                     >
                         Siguiente ›
@@ -771,14 +769,14 @@ function AlertsTable({
 
     if (compact) {
         return (
-            <Stack spacing={3}>
+            <Stack gap={3}>
                 {items.map((alert) => (
-                    <Card
+                    <Card.Root
                         key={`${alert.tipo}-${alert.productoId}`}
                         variant="outline"
                     >
-                        <CardBody p={3}>
-                            <Stack spacing={3}>
+                        <Card.Body p={3}>
+                            <Stack gap={3}>
                                 <HStack
                                     justify="space-between"
                                     align="flex-start"
@@ -795,7 +793,7 @@ function AlertsTable({
                                             {alert.productoId}
                                         </Text>
                                     </Box>
-                                    <Badge colorScheme={alertColor(alert.tipo)}>
+                                    <Badge colorPalette={alertColor(alert.tipo)}>
                                         {alertLabel(alert.tipo)}
                                     </Badge>
                                 </HStack>
@@ -805,7 +803,7 @@ function AlertsTable({
                                 >
                                     {groupLabel(alert.grupo)}
                                 </Badge>
-                                <SimpleGrid columns={2} spacing={3}>
+                                <SimpleGrid columns={2} gap={3}>
                                     <AlertMetric
                                         label="Stock"
                                         value={`${formatQuantity(alert.stock)} ${alert.unidadMedida}`}
@@ -828,78 +826,73 @@ function AlertsTable({
                                 <Button
                                     minH="44px"
                                     variant="outline"
-                                    colorScheme="blue"
-                                    rightIcon={<ChevronRightIcon />}
-                                    onClick={() => onSelect(alert)}
-                                >
-                                    Ver detalle
-                                </Button>
+                                    colorPalette="blue"
+                                    onClick={() => onSelect(alert)}>Ver detalle
+                                                                    <LuChevronRight /></Button>
                             </Stack>
-                        </CardBody>
-                    </Card>
+                        </Card.Body>
+                    </Card.Root>
                 ))}
             </Stack>
         );
     }
 
     return (
-        <TableContainer>
-            <Table size="sm">
-                <Thead>
-                    <Tr>
-                        <Th>Alerta</Th>
-                        <Th>Grupo</Th>
-                        <Th>Referencia</Th>
-                        <Th isNumeric>Stock</Th>
-                        <Th isNumeric>Umbral</Th>
-                        <Th isNumeric>Brecha</Th>
-                        <Th textAlign="center">Detalle</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
+        <Table.ScrollArea>
+            <Table.Root size="sm">
+                <Table.Header>
+                    <Table.Row>
+                        <Table.ColumnHeader>Alerta</Table.ColumnHeader>
+                        <Table.ColumnHeader>Grupo</Table.ColumnHeader>
+                        <Table.ColumnHeader>Referencia</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Stock</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Umbral</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Brecha</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign="center">Detalle</Table.ColumnHeader>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {items.map((alert) => (
-                        <Tr key={`${alert.tipo}-${alert.productoId}`}>
-                            <Td>
-                                <Badge colorScheme={alertColor(alert.tipo)}>
+                        <Table.Row key={`${alert.tipo}-${alert.productoId}`}>
+                            <Table.Cell>
+                                <Badge colorPalette={alertColor(alert.tipo)}>
                                     {alertLabel(alert.tipo)}
                                 </Badge>
-                            </Td>
-                            <Td>{groupLabel(alert.grupo)}</Td>
-                            <Td>
+                            </Table.Cell>
+                            <Table.Cell>{groupLabel(alert.grupo)}</Table.Cell>
+                            <Table.Cell>
                                 <Text fontWeight="semibold">
                                     {alert.productoNombre}
                                 </Text>
                                 <Text color="app.textMuted" fontSize="xs">
                                     {alert.productoId}
                                 </Text>
-                            </Td>
-                            <Td isNumeric>
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>
                                 {formatQuantity(alert.stock)} {alert.unidadMedida}
-                            </Td>
-                            <Td isNumeric>
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>
                                 {quantityOrDash(alert.umbral, alert.unidadMedida)}
-                            </Td>
-                            <Td isNumeric>
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>
                                 {quantityOrDash(
                                     alert.brechaUmbral,
                                     alert.unidadMedida,
                                 )}
-                            </Td>
-                            <Td textAlign="center">
+                            </Table.Cell>
+                            <Table.Cell textAlign="center">
                                 <IconButton
                                     aria-label={`Ver detalle de ${alert.productoNombre}`}
-                                    icon={<ChevronRightIcon />}
                                     size="sm"
                                     variant="ghost"
-                                    colorScheme="blue"
-                                    onClick={() => onSelect(alert)}
-                                />
-                            </Td>
-                        </Tr>
+                                    colorPalette="blue"
+                                    onClick={() => onSelect(alert)}><LuChevronRight /></IconButton>
+                            </Table.Cell>
+                        </Table.Row>
                     ))}
-                </Tbody>
-            </Table>
-        </TableContainer>
+                </Table.Body>
+            </Table.Root>
+        </Table.ScrollArea>
     );
 }
 
@@ -927,7 +920,7 @@ function AlertFilterButton({
 }) {
     return (
         <Button
-            colorScheme={colorScheme}
+            colorPalette={colorScheme}
             variant={active ? "solid" : "outline"}
             onClick={onClick}
             aria-pressed={active}

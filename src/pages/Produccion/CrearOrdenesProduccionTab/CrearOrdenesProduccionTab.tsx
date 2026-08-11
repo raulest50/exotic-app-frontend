@@ -2,13 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import {
+    Steps,
     Textarea,
     Button,
     VStack,
     useToast,
-    FormControl,
-    FormLabel,
-    FormErrorMessage,
     Input,
     HStack,
     NumberInput,
@@ -22,17 +20,12 @@ import {
     Box,
     Text,
     Heading,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalCloseButton,
-    ModalFooter,
     Spinner,
     Icon,
+    Field,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
-import { SearchIcon, LockIcon, UnlockIcon, CheckIcon } from '@chakra-ui/icons';
 import { FaQuestionCircle } from 'react-icons/fa';
 import axios from 'axios';
 import {ProductoWithInsumos, Vendedor} from "../types.tsx";
@@ -45,6 +38,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
 import { useTabPermission } from '../../../auth/usePermissions';
 import { selectNumericInputContentsOnFocus } from '../../../utils/selectNumericInputContentsOnFocus';
+import { LuCheck, LuLock, LuSearch, LuUnlock } from 'react-icons/lu';
 
 type LoteValidationStatus = 'idle' | 'valid' | 'invalid' | 'checking';
 
@@ -523,102 +517,97 @@ export default function CrearOrdenesProduccionTab() {
             />
 
             <Box display="none">
-                <HStack spacing={4} mt="4">
-                    <FormControl>
-                        <FormLabel>Asesor</FormLabel>
+                <HStack gap={4} mt="4">
+                    <Field.Root>
+                        <Field.Label>Asesor</Field.Label>
                         <InputGroup>
                             <Input
                                 value={selectedVendedor
                                     ? `${selectedVendedor.cedula} - ${selectedVendedor.nombres} ${selectedVendedor.apellidos}`
                                     : ''}
                                 placeholder="Seleccione un vendedor"
-                                isReadOnly
+                                readOnly
                             />
                             <InputRightElement>
-                                <IconButton
-                                    aria-label="Buscar vendedor"
-                                    icon={<SearchIcon />}
-                                    size="sm"
-                                    onClick={handleOpenVendedorPicker}
-                                />
+                                <IconButton aria-label="Buscar vendedor" size="sm" onClick={handleOpenVendedorPicker}><LuSearch /></IconButton>
                             </InputRightElement>
                         </InputGroup>
-                    </FormControl>
+                    </Field.Root>
 
-                    <FormControl>
-                        <FormLabel>Número de pedido comercial</FormLabel>
+                    <Field.Root>
+                        <Field.Label>Número de pedido comercial</Field.Label>
                         <Input
                             placeholder="Ingrese el número de pedido comercial"
                             value={numeroPedidoComercial}
-                            onChange={(e) => setNumeroPedidoComercial(e.target.value)}
+                            onValueChange={(e) => setNumeroPedidoComercial(e.target.value)}
                         />
-                    </FormControl>
+                    </Field.Root>
                 </HStack>
             </Box>
 
-            <HStack spacing={4} mt="4">
-                <FormControl>
-                    <FormLabel>Fecha de lanzamiento</FormLabel>
+            <HStack gap={4} mt="4">
+                <Field.Root>
+                    <Field.Label>Fecha de lanzamiento</Field.Label>
                     <Input
                         type="date"
                         value={fechaLanzamiento}
-                        onChange={(e) => handleFechaLanzamientoChange(e.target.value)}
+                        onValueChange={(e) => handleFechaLanzamientoChange(e.target.value)}
                     />
-                </FormControl>
+                </Field.Root>
 
-                <FormControl>
-                    <FormLabel>Fecha final planificada</FormLabel>
+                <Field.Root>
+                    <Field.Label>Fecha final planificada</Field.Label>
                     <Input
                         type="date"
                         value={fechaFinalPlanificada}
-                        onChange={(e) => handleFechaFinalPlanificadaChange(e.target.value)}
+                        onValueChange={(e) => handleFechaFinalPlanificadaChange(e.target.value)}
                     />
-                </FormControl>
+                </Field.Root>
             </HStack>
 
             {/* Cantidad a producir (always read-only) + Cantidad de lotes */}
-            <HStack spacing={4} mt="4">
-                <FormControl>
-                    <FormLabel>Cantidad a producir</FormLabel>
-                    <Input value={cantidadProducir} isReadOnly bg="gray.50" />
-                </FormControl>
+            <HStack gap={4} mt="4">
+                <Field.Root>
+                    <Field.Label>Cantidad a producir</Field.Label>
+                    <Input value={cantidadProducir} readOnly bg="gray.50" />
+                </Field.Root>
 
-                <FormControl>
-                    <FormLabel>Cantidad de lotes</FormLabel>
-                    <NumberInput
+                <Field.Root>
+                    <Field.Label>Cantidad de lotes</Field.Label>
+                    <NumberInput.Root
                         min={1}
                         precision={0}
-                        value={cantidadLotes}
-                        onChange={handleCantidadLotesChange}
-                        isDisabled={!selectedProducto || noLoteSize}
+                        value={String(cantidadLotes)}
+                        onValueChange={handleCantidadLotesChange}
+                        disabled={!selectedProducto || noLoteSize}
                     >
-                        <NumberInputField onFocus={selectNumericInputContentsOnFocus} />
-                        <NumberInputStepper>
-                            <NumberIncrementStepper />
-                            <NumberDecrementStepper />
-                        </NumberInputStepper>
-                    </NumberInput>
-                </FormControl>
+                        <NumberInput.Input onFocus={selectNumericInputContentsOnFocus} />
+                        <NumberInput.Control>
+                            <NumberInput.IncrementTrigger />
+                            <NumberInput.DecrementTrigger />
+                        </NumberInput.Control>
+                    </NumberInput.Root>
+                </Field.Root>
             </HStack>
 
-            <HStack spacing={4} mt="4">
-                <FormControl>
-                    <FormLabel>Área</FormLabel>
+            <HStack gap={4} mt="4">
+                <Field.Root>
+                    <Field.Label>Área</Field.Label>
                     <Input
                         placeholder="Ingrese el área"
                         value={areaOperativa}
-                        onChange={(e) => setAreaOperativa(e.target.value)}
+                        onValueChange={(e) => setAreaOperativa(e.target.value)}
                     />
-                </FormControl>
+                </Field.Root>
 
-                <FormControl>
-                    <FormLabel>Departamento</FormLabel>
+                <Field.Root>
+                    <Field.Label>Departamento</Field.Label>
                     <Input
                         placeholder="Ingrese el departamento"
                         value={departamentoOperativo}
-                        onChange={(e) => setDepartamentoOperativo(e.target.value)}
+                        onValueChange={(e) => setDepartamentoOperativo(e.target.value)}
                     />
-                </FormControl>
+                </Field.Root>
             </HStack>
 
             {/* Usuario Aprobador (no editable) */}
@@ -626,7 +615,7 @@ export default function CrearOrdenesProduccionTab() {
                 <Heading size="md" mb={2}>
                     Usuario Aprobador
                 </Heading>
-                <VStack align="start" spacing={2}>
+                <VStack align="start" gap={2}>
                     <Text fontSize="md">
                         <strong>Usuario:</strong> {currentUser?.username || 'Cargando...'}
                     </Text>
@@ -644,7 +633,7 @@ export default function CrearOrdenesProduccionTab() {
             <Textarea
                 placeholder="Observaciones"
                 value={observaciones}
-                onChange={(e) => setObservaciones(e.target.value)}
+                onValueChange={(e) => setObservaciones(e.target.value)}
                 mt="4"
             />
 
@@ -658,11 +647,9 @@ export default function CrearOrdenesProduccionTab() {
                         {canEditLote && (
                             <IconButton
                                 aria-label="Información sobre edición de lote"
-                                icon={<Icon as={FaQuestionCircle} boxSize={5} />}
                                 size="sm"
                                 variant="ghost"
-                                onClick={handleOpenInfoModal}
-                            />
+                                onClick={handleOpenInfoModal}><Icon boxSize={5} asChild><FaQuestionCircle /></Icon></IconButton>
                         )}
                     </HStack>
 
@@ -671,21 +658,21 @@ export default function CrearOrdenesProduccionTab() {
                         overflowY={cantidadLotes > 5 ? 'auto' : undefined}
                         pr={cantidadLotes > 5 ? 2 : 0}
                     >
-                        <VStack spacing={3}>
+                        <VStack gap={3}>
                             {loteBatchNumbers.map((lote, i) => (
-                                <FormControl
+                                <Field.Root
                                     key={i}
-                                    isInvalid={loteValidations[i] === 'invalid'}
+                                    invalid={loteValidations[i] === 'invalid'}
                                     w="100%"
                                 >
-                                    <FormLabel fontSize="sm">Lote {i + 1}</FormLabel>
+                                    <Field.Label fontSize="sm">Lote {i + 1}</Field.Label>
                                     <InputGroup>
                                         <Input
                                             placeholder="Número de lote"
                                             value={lote}
-                                            isReadOnly={!isLotesEditable[i] || !canEditLote}
+                                            readOnly={!isLotesEditable[i] || !canEditLote}
                                             bg={isLotesEditable[i] && canEditLote ? 'white' : 'gray.100'}
-                                            onChange={(e) => {
+                                            onValueChange={(e) => {
                                                 setLoteBatchNumbers(prev => {
                                                     const updated = [...prev];
                                                     updated[i] = e.target.value;
@@ -701,35 +688,31 @@ export default function CrearOrdenesProduccionTab() {
                                             }}
                                         />
                                         <InputRightElement width="auto">
-                                            <HStack spacing={1}>
+                                            <HStack gap={1}>
                                                 {canEditLote && (
                                                     <>
                                                         <IconButton
                                                             aria-label={isLotesEditable[i]
                                                                 ? 'Bloquear edición de lote'
                                                                 : 'Desbloquear edición de lote'}
-                                                            icon={isLotesEditable[i]
-                                                                ? <UnlockIcon />
-                                                                : <LockIcon />}
                                                             size="sm"
                                                             variant="ghost"
-                                                            onClick={() => handleToggleLoteEdit(i)}
-                                                        />
+                                                            onClick={() => handleToggleLoteEdit(i)}>{isLotesEditable[i]
+                                                                ? <LuUnlock />
+                                                                : <LuLock />}</IconButton>
                                                         {isLotesEditable[i] && (
                                                             <IconButton
                                                                 aria-label="Verificar disponibilidad del lote"
-                                                                icon={isCheckingLotes[i]
-                                                                    ? <Spinner size="sm" />
-                                                                    : <CheckIcon />}
                                                                 size="sm"
                                                                 variant="ghost"
-                                                                colorScheme={
+                                                                colorPalette={
                                                                     loteValidations[i] === 'valid' ? 'green' :
                                                                     loteValidations[i] === 'invalid' ? 'red' : 'gray'
                                                                 }
                                                                 onClick={() => handleCheckLoteDisponible(i)}
-                                                                isDisabled={!lote.trim() || isCheckingLotes[i]}
-                                                            />
+                                                                disabled={!lote.trim() || isCheckingLotes[i]}>{isCheckingLotes[i]
+                                                                    ? <Spinner size="sm" />
+                                                                    : <LuCheck />}</IconButton>
                                                         )}
                                                     </>
                                                 )}
@@ -737,14 +720,14 @@ export default function CrearOrdenesProduccionTab() {
                                         </InputRightElement>
                                     </InputGroup>
                                     {loteValidations[i] === 'invalid' && (
-                                        <FormErrorMessage>El número de lote ya está en uso</FormErrorMessage>
+                                        <Field.ErrorText>El número de lote ya está en uso</Field.ErrorText>
                                     )}
                                     {loteValidations[i] === 'valid' && (
                                         <Text fontSize="sm" color="green.500">
                                             El número de lote está disponible
                                         </Text>
                                     )}
-                                </FormControl>
+                                </Field.Root>
                             ))}
                         </VStack>
                     </Box>
@@ -753,14 +736,14 @@ export default function CrearOrdenesProduccionTab() {
 
             <Button
                 onClick={handleCrearOrden}
-                isDisabled={
+                disabled={
                     !selectedProducto ||
                     cantidadProducir < 1 ||
                     noLoteSize ||
                     anyLoteEditableButNotValid
                 }
                 mt="4"
-                colorScheme="blue"
+                colorPalette="blue"
             >
                 {cantidadLotes === 1
                     ? 'Crear Orden de Producción'
@@ -778,45 +761,55 @@ export default function CrearOrdenesProduccionTab() {
                 onSelectVendedor={handleSelectVendedor}
             />
 
-            <Modal isOpen={isInfoModalOpen} onClose={handleCloseInfoModal} size="lg">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Edición Manual de Números de Lote</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <VStack align="stretch" spacing={4}>
-                            <Text>
-                                <strong>Acceso Restringido:</strong> Esta funcionalidad está disponible exclusivamente para usuarios con nivel de acceso 3 o superior al tab Crear ODP Manualmente.
-                            </Text>
-                            <Text>
-                                <strong>Patrón de Generación Automática:</strong> El sistema genera automáticamente los números de lote siguiendo el formato <strong>PREFIJO-NNNNNNN-YY</strong>, donde:
-                            </Text>
-                            <Box pl={4}>
-                                <Text>• <strong>PREFIJO:</strong> Identificador único del producto (ej: "STD")</Text>
-                                <Text>• <strong>NNNNNNN:</strong> Número secuencial de 7 dígitos que se incrementa automáticamente</Text>
-                                <Text>• <strong>YY:</strong> Año de 2 dígitos (ej: "26" para 2026)</Text>
-                            </Box>
-                            <Text>
-                                <strong>Ejemplo:</strong> Si el último lote generado fue <strong>STD-0000009-26</strong>, el siguiente será <strong>STD-0000010-26</strong>.
-                            </Text>
-                            <Text>
-                                <strong>Uso de la Edición Manual:</strong> Esta funcionalidad permite a usuarios autorizados adelantar el número secuencial del lote. Por ejemplo, si los lotes van consecutivamente en <strong>STD-0000009-26</strong>, puedes cambiarlo manualmente a <strong>STD-0000015-26</strong> para que los siguientes lotes continúen desde el 16, 17, etc.
-                            </Text>
-                            <Text>
-                                <strong>Validación de Disponibilidad:</strong> Cuando desbloquees el campo y modifiques el número de lote, utiliza el botón de verificación (✓) para comprobar que el número ingresado no esté ya en uso. El sistema validará que el lote sea único antes de permitir crear la orden.
-                            </Text>
-                            <Text>
-                                <strong>Importante:</strong> Utiliza esta función con precaución, ya que modifica la secuencia normal de numeración. Asegúrate de que el número ingresado sea mayor al último lote registrado para evitar duplicados y siempre verifica la disponibilidad antes de crear la orden.
-                            </Text>
-                        </VStack>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button colorScheme="blue" onClick={handleCloseInfoModal}>
-                            Entendido
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+            <Dialog.Root open={isInfoModalOpen} size='lg' onOpenChange={e => {
+                if (!e.open) {
+                    handleCloseInfoModal();
+                }
+            }}>
+                <Portal>
+
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>Edición Manual de Números de Lote</Dialog.Header>
+                            <Dialog.CloseTrigger />
+                            <Dialog.Body>
+                                <VStack align="stretch" gap={4}>
+                                    <Text>
+                                        <strong>Acceso Restringido:</strong> Esta funcionalidad está disponible exclusivamente para usuarios con nivel de acceso 3 o superior al tab Crear ODP Manualmente.
+                                    </Text>
+                                    <Text>
+                                        <strong>Patrón de Generación Automática:</strong> El sistema genera automáticamente los números de lote siguiendo el formato <strong>PREFIJO-NNNNNNN-YY</strong>, donde:
+                                    </Text>
+                                    <Box pl={4}>
+                                        <Text>• <strong>PREFIJO:</strong> Identificador único del producto (ej: "STD")</Text>
+                                        <Text>• <strong>NNNNNNN:</strong> Número secuencial de 7 dígitos que se incrementa automáticamente</Text>
+                                        <Text>• <strong>YY:</strong> Año de 2 dígitos (ej: "26" para 2026)</Text>
+                                    </Box>
+                                    <Text>
+                                        <strong>Ejemplo:</strong> Si el último lote generado fue <strong>STD-0000009-26</strong>, el siguiente será <strong>STD-0000010-26</strong>.
+                                    </Text>
+                                    <Text>
+                                        <strong>Uso de la Edición Manual:</strong> Esta funcionalidad permite a usuarios autorizados adelantar el número secuencial del lote. Por ejemplo, si los lotes van consecutivamente en <strong>STD-0000009-26</strong>, puedes cambiarlo manualmente a <strong>STD-0000015-26</strong> para que los siguientes lotes continúen desde el 16, 17, etc.
+                                    </Text>
+                                    <Text>
+                                        <strong>Validación de Disponibilidad:</strong> Cuando desbloquees el campo y modifiques el número de lote, utiliza el botón de verificación (✓) para comprobar que el número ingresado no esté ya en uso. El sistema validará que el lote sea único antes de permitir crear la orden.
+                                    </Text>
+                                    <Text>
+                                        <strong>Importante:</strong> Utiliza esta función con precaución, ya que modifica la secuencia normal de numeración. Asegúrate de que el número ingresado sea mayor al último lote registrado para evitar duplicados y siempre verifica la disponibilidad antes de crear la orden.
+                                    </Text>
+                                </VStack>
+                            </Dialog.Body>
+                            <Dialog.Footer>
+                                <Button colorPalette="blue" onClick={handleCloseInfoModal}>
+                                    Entendido
+                                </Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+
+                </Portal>
+            </Dialog.Root>
         </VStack>
     );
 }

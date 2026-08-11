@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
+    Steps,
     Button,
     Container,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
     Input,
     Image,
     Box,
     Text,
     Progress,
-    useToast
+    useToast,
+    Field,
 } from "@chakra-ui/react";
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL.tsx';
@@ -161,46 +161,49 @@ export default function ResetPasswordPage() {
                     Restablecer Contraseña
                 </Heading>
 
-                <FormControl isRequired w="full">
-                    <FormLabel>Nueva Contraseña</FormLabel>
+                <Field.Root required w="full">
+                    <Field.Label>Nueva Contraseña</Field.Label>
                     <Input
                         placeholder="Nueva contraseña"
                         type="password"
                         value={newPassword}
-                        onChange={e => setNewPassword(e.target.value)}
+                        onValueChange={e => setNewPassword(e.target.value)}
                     />
-                    <Progress 
-                        value={passwordStrength.strength} 
-                        colorScheme={passwordStrength.color.split('.')[0]} 
-                        size="sm" 
-                        mt={2} 
-                    />
+                    <Progress.Root
+                        value={passwordStrength.strength}
+                        colorPalette={passwordStrength.color.split('.')[0]}
+                        size="sm"
+                        mt={2}>
+                        <Progress.Track>
+                            <Progress.Range />
+                        </Progress.Track>
+                    </Progress.Root>
                     <Text fontSize="sm" color={passwordStrength.color} mt={1}>
                         {passwordStrength.text}
                     </Text>
-                </FormControl>
+                </Field.Root>
 
-                <FormControl isRequired w="full">
-                    <FormLabel>Confirmar Contraseña</FormLabel>
+                <Field.Root required w="full">
+                    <Field.Label>Confirmar Contraseña</Field.Label>
                     <Input
                         placeholder="Confirmar contraseña"
                         type="password"
                         value={confirmPassword}
-                        onChange={e => setConfirmPassword(e.target.value)}
+                        onValueChange={e => setConfirmPassword(e.target.value)}
                     />
                     {confirmPassword && !passwordsMatch && (
                         <Text fontSize="sm" color="red.500" mt={1}>
                             Las contraseñas no coinciden
                         </Text>
                     )}
-                </FormControl>
+                </Field.Root>
 
                 <Button
                     variant="solid"
-                    colorScheme={"blue"}
+                    colorPalette={"blue"}
                     onClick={handleOnclickSend}
-                    isDisabled={!passwordsMatch || isSubmitting}
-                    isLoading={isSubmitting}
+                    disabled={!passwordsMatch || isSubmitting}
+                    loading={isSubmitting}
                     loadingText="Procesando..."
                     w={{ base: "full", sm: "auto" }}
                 >

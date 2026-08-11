@@ -1,10 +1,9 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Button,
-    Divider,
     Flex,
     Heading,
     HStack,
@@ -14,8 +13,8 @@ import {
     Text,
     useToast,
     VStack,
+    Separator,
 } from "@chakra-ui/react";
-import { ArrowBackIcon, ArrowForwardIcon, RepeatIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTabPermission } from "../../../auth/usePermissions";
@@ -37,6 +36,7 @@ import type {
     PendientesProduccionFecha,
     ResumenPendientesProduccion,
 } from "./types";
+import { LuArrowLeft, LuArrowRight, LuRepeat } from 'react-icons/lu';
 
 const STEP_LABELS = ["Reportado", "Correcciones", "Reporte HyL", "Confirmación"];
 
@@ -217,46 +217,46 @@ export function AsistenteIngresoTerminados() {
     }
 
     if (nivel < 1) {
-        return <Alert status="error"><AlertIcon />No tiene acceso al reporte de producto terminado.</Alert>;
+        return <Alert.Root status="error"><Alert.Indicator />No tiene acceso al reporte de producto terminado.</Alert.Root>;
     }
 
     if (error) {
         return (
-            <VStack align="stretch" spacing={4}>
-                <Alert status="error"><AlertIcon />{error}</Alert>
-                <Button alignSelf="flex-start" leftIcon={<RepeatIcon />} onClick={seleccion
-                    ? () => abrirFecha(seleccion.fechaProduccion)
-                    : cargarResumen}>
-                    Reintentar
-                </Button>
+            <VStack align="stretch" gap={4}>
+                <Alert.Root status="error"><Alert.Indicator />{error}</Alert.Root>
+                <Button
+                    alignSelf="flex-start"
+                    onClick={seleccion
+                        ? () => abrirFecha(seleccion.fechaProduccion)
+                        : cargarResumen}><LuRepeat />Reintentar
+                                    </Button>
             </VStack>
         );
     }
 
     if (resultado) {
         return (
-            <VStack align="stretch" spacing={5} maxW="760px">
-                <Alert status="success" borderRadius="md"><AlertIcon />El cierre se registró de forma completa.</Alert>
-                <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={3}>
+            <VStack align="stretch" gap={5} maxW="760px">
+                <Alert.Root status="success" borderRadius="md"><Alert.Indicator />El cierre se registró de forma completa.</Alert.Root>
+                <SimpleGrid columns={{ base: 1, sm: 3 }} gap={3}>
                     <Box><Text fontSize="sm" color="app.textSubtle">Cierre</Text><Text fontWeight="bold">#{resultado.cierreId}</Text></Box>
                     <Box><Text fontSize="sm" color="app.textSubtle">Reportes</Text><Text fontWeight="bold">{resultado.cantidadReportes}</Text></Box>
                     <Box><Text fontSize="sm" color="app.textSubtle">Total</Text><Text fontWeight="bold">{formatCantidad(resultado.totalUnidades)}</Text></Box>
                 </SimpleGrid>
-                <Button alignSelf="flex-start" leftIcon={<ArrowBackIcon />} onClick={volverAlResumen}>
-                    Volver a pendientes
-                </Button>
+                <Button alignSelf="flex-start" onClick={volverAlResumen}><LuArrowLeft />Volver a pendientes
+                                    </Button>
             </VStack>
         );
     }
 
     if (!seleccion) {
         return (
-            <VStack align="stretch" spacing={5}>
+            <VStack align="stretch" gap={5}>
                 <Box>
                     <Heading size="md">Reporte de producto terminado</Heading>
                     <Text mt={1} color="app.textSubtle">Seleccione una fecha para revisar y cerrar su producción.</Text>
                 </Box>
-                <SimpleGrid columns={{ base: 2, md: 3 }} spacing={3}>
+                <SimpleGrid columns={{ base: 2, md: 3 }} gap={3}>
                     <Box borderWidth="1px" borderRadius="md" px={4} py={3}>
                         <Text fontSize="sm" color="app.textSubtle">Pendientes de hoy</Text>
                         <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold">{resumen?.pendientesHoy ?? 0}</Text>
@@ -272,7 +272,7 @@ export function AsistenteIngresoTerminados() {
                 </SimpleGrid>
 
                 {resumen?.fechas.length ? (
-                    <VStack align="stretch" spacing={2}>
+                    <VStack align="stretch" gap={2}>
                         {resumen.fechas.map((fecha) => (
                             <Button
                                 key={fecha.fechaProduccion}
@@ -282,43 +282,42 @@ export function AsistenteIngresoTerminados() {
                                 px={4}
                                 py={3}
                                 justifyContent="space-between"
-                                rightIcon={<ArrowForwardIcon />}
-                                onClick={() => abrirFecha(fecha.fechaProduccion)}
-                            >
-                                <Box textAlign="left" minW={0}>
-                                    <HStack spacing={2} flexWrap="wrap">
+                                onClick={() => abrirFecha(fecha.fechaProduccion)}><Box textAlign="left" minW={0}>
+                                    <HStack gap={2} flexWrap="wrap">
                                         <Text>{formatFecha(fecha.fechaProduccion)}</Text>
-                                        {fecha.vencida ? <Badge colorScheme="orange">Vencido</Badge> : null}
+                                        {fecha.vencida ? <Badge colorPalette="orange">Vencido</Badge> : null}
                                     </HStack>
                                     <Text mt={1} fontSize="sm" fontWeight="normal" color="app.textSubtle">
                                         {fecha.cantidadReportes} lote(s) · {formatCantidad(fecha.totalUnidades)} unidades
                                     </Text>
-                                </Box>
-                            </Button>
+                                </Box><LuArrowRight /></Button>
                         ))}
                     </VStack>
                 ) : (
-                    <Alert status="info" borderRadius="md"><AlertIcon />No hay reportes de producción pendientes.</Alert>
+                    <Alert.Root status="info" borderRadius="md"><Alert.Indicator />No hay reportes de producción pendientes.</Alert.Root>
                 )}
             </VStack>
         );
     }
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             <Flex justify="space-between" gap={3} align={{ base: "flex-start", md: "center" }} flexDir={{ base: "column", md: "row" }}>
                 <Box>
                     <Heading size="md">Producción del {formatFecha(seleccion.fechaProduccion)}</Heading>
                     <Text mt={1} color="app.textSubtle">{seleccion.reportes.length} lote(s) pendientes</Text>
                 </Box>
-                <Button size="sm" variant="ghost" leftIcon={<ArrowBackIcon />} onClick={volverAlResumen}>
-                    Cambiar fecha
-                </Button>
+                <Button size="sm" variant="ghost" onClick={volverAlResumen}><LuArrowLeft />Cambiar fecha
+                                    </Button>
             </Flex>
 
             <Box>
-                <Progress value={paso * 25} size="sm" colorScheme="teal" borderRadius="sm" />
-                <HStack mt={2} justify="space-between" overflowX="auto" spacing={4}>
+                <Progress.Root value={paso * 25} size="sm" colorPalette="teal" borderRadius="sm">
+                    <Progress.Track>
+                        <Progress.Range />
+                    </Progress.Track>
+                </Progress.Root>
+                <HStack mt={2} justify="space-between" overflowX="auto" gap={4}>
                     {STEP_LABELS.map((label, index) => (
                         <Text
                             key={label}
@@ -333,7 +332,7 @@ export function AsistenteIngresoTerminados() {
                 </HStack>
             </Box>
 
-            <Divider />
+            <Separator />
 
             {paso === 1 ? <IngresoTerminadosStep1Lectura reportes={seleccion.reportes} /> : null}
             {paso === 2 ? (
@@ -367,25 +366,19 @@ export function AsistenteIngresoTerminados() {
                 />
             ) : null}
 
-            <Divider />
+            <Separator />
             <HStack justify="space-between">
                 <Button
-                    leftIcon={<ArrowBackIcon />}
                     variant="outline"
                     visibility={paso === 1 ? "hidden" : "visible"}
-                    onClick={() => setPaso((current) => Math.max(1, current - 1))}
-                >
-                    Anterior
-                </Button>
+                    onClick={() => setPaso((current) => Math.max(1, current - 1))}><LuArrowLeft />Anterior
+                                    </Button>
                 {paso < 4 ? (
                     <Button
-                        rightIcon={<ArrowForwardIcon />}
-                        colorScheme="teal"
+                        colorPalette="teal"
                         onClick={avanzar}
-                        isDisabled={(paso === 2 && Boolean(errorEdicion)) || (paso === 3 && !hylGenerado)}
-                    >
-                        Continuar
-                    </Button>
+                        disabled={(paso === 2 && Boolean(errorEdicion)) || (paso === 3 && !hylGenerado)}>Continuar
+                                            <LuArrowRight /></Button>
                 ) : null}
             </HStack>
         </VStack>

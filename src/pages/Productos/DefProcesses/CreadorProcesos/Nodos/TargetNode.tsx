@@ -1,5 +1,5 @@
 import {Handle, NodeProps, Position} from "@xyflow/react";
-import {Box, Flex, Icon, Text} from "@chakra-ui/react";
+import { Steps, Box, Flex, Icon, Text } from "@chakra-ui/react";
 import { GrCubes } from "react-icons/gr";
 
 
@@ -13,7 +13,7 @@ export default function TargetNode(props: NodeProps) {
 
     const data = props.data;
 
-    return(
+    return (
         <Box
             border={"2px solid black"}
             transition="box-shadow 0.1s ease"
@@ -36,7 +36,7 @@ export default function TargetNode(props: NodeProps) {
                     </Text>
                 </Box>
 
-                <Icon w="4em" h="4em" color={"tomato"} as={GrCubes} />
+                <Icon w="4em" h="4em" color={"tomato"} asChild><GrCubes /></Icon>
 
                 <Box w={"1em"} h={"1em"} flex={5}>
                     <Handle

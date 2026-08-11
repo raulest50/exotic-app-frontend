@@ -1,16 +1,10 @@
 import {
+    Steps,
     Badge,
     Box,
     Button,
     Flex,
     Heading,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     Spinner,
     Table,
     TableContainer,
@@ -21,6 +15,8 @@ import {
     Thead,
     Tr,
     VStack,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
 import type {
     MpsSemanalItemDTO,
@@ -102,94 +98,104 @@ export default function MpsItemOrdersModal({
     const context = selectedItem?.context ?? null;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="5xl" isCentered>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>OPs generadas del item MPS</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody pb={6}>
-                    {item && context && (
-                        <VStack align="stretch" spacing={4}>
-                            <Box>
-                                <Heading size="sm">{item.terminadoNombre}</Heading>
-                                <Text fontSize="sm" color="gray.600">
-                                    {item.terminadoId} - {context.dayLabel} {formatSemanaMpsDisplayDate(context.date)}
-                                </Text>
-                                <Flex mt={2} gap={2} wrap="wrap">
-                                    <Badge colorScheme="teal">{formatNumber(item.numeroLotes)} lotes</Badge>
-                                    <Badge colorScheme="purple">{formatNumber(item.cantidadTotal)} und</Badge>
-                                    <Badge colorScheme="gray">Item #{item.id}</Badge>
-                                </Flex>
-                            </Box>
+        <Dialog.Root open={isOpen} size='xl' placement='center' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                            {isLoading ? (
-                                <Flex justify="center" align="center" py={8} gap={3}>
-                                    <Spinner color="teal.500" />
-                                    <Text color="gray.600">Cargando OPs del item...</Text>
-                                </Flex>
-                            ) : error ? (
-                                <Box p={4} bg="red.50" borderWidth="1px" borderColor="red.200" borderRadius="md">
-                                    <Text color="red.700" fontSize="sm">{error}</Text>
-                                </Box>
-                            ) : ordenes.length === 0 ? (
-                                <Box p={4} bg="orange.50" borderWidth="1px" borderColor="orange.200" borderRadius="md">
-                                    <Text color="orange.700" fontSize="sm">
-                                        No se encontraron OPs asociadas a este item MPS.
-                                    </Text>
-                                </Box>
-                            ) : (
-                                <TableContainer>
-                                    <Table size="sm" variant="simple">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>Orden</Th>
-                                                <Th>Lote real</Th>
-                                                <Th isNumeric>Cantidad</Th>
-                                                <Th>Lanzamiento estimado</Th>
-                                                <Th>Entrega planificada</Th>
-                                                <Th>Estado</Th>
-                                                <Th>Materiales</Th>
-                                                <Th>Lote planificado</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
-                                            {ordenes.map((orden) => (
-                                                <Tr key={orden.ordenId}>
-                                                    <Td>{orden.ordenId}</Td>
-                                                    <Td>{orden.loteAsignado ?? "-"}</Td>
-                                                    <Td isNumeric>{formatNumber(orden.cantidadProducir)}</Td>
-                                                    <Td>{formatDateTimeLabel(orden.fechaLanzamiento)}</Td>
-                                                    <Td>{formatDateTimeLabel(orden.fechaFinalPlanificada)}</Td>
-                                                    <Td>{renderEstadoOrdenLabel(orden.estadoOrden)}</Td>
-                                                    <Td>
-                                                        <Flex gap={2} wrap="wrap">
-                                                            <Badge colorScheme={getEstadoDispensacionMaterialesColor(orden.estadoDispensacionMateriales)}>
-                                                                {getEstadoDispensacionMaterialesLabel(orden.estadoDispensacionMateriales)}
-                                                            </Badge>
-                                                            <Badge colorScheme={getPoliticaDispensacionInicioColor(orden.politicaDispensacionInicio)}>
-                                                                {getPoliticaDispensacionInicioLabel(orden.politicaDispensacionInicio)}
-                                                            </Badge>
-                                                        </Flex>
-                                                    </Td>
-                                                    <Td>
-                                                        {orden.mpsLoteOrdinal ?? "-"}
-                                                        {orden.mpsLotePlanificadoId ? ` (#${orden.mpsLotePlanificadoId})` : ""}
-                                                    </Td>
-                                                </Tr>
-                                            ))}
-                                        </Tbody>
-                                    </Table>
-                                </TableContainer>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>OPs generadas del item MPS</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body pb={6}>
+                            {item && context && (
+                                <VStack align="stretch" gap={4}>
+                                    <Box>
+                                        <Heading size="sm">{item.terminadoNombre}</Heading>
+                                        <Text fontSize="sm" color="gray.600">
+                                            {item.terminadoId} - {context.dayLabel} {formatSemanaMpsDisplayDate(context.date)}
+                                        </Text>
+                                        <Flex mt={2} gap={2} wrap="wrap">
+                                            <Badge colorPalette="teal">{formatNumber(item.numeroLotes)} lotes</Badge>
+                                            <Badge colorPalette="purple">{formatNumber(item.cantidadTotal)} und</Badge>
+                                            <Badge colorPalette="gray">Item #{item.id}</Badge>
+                                        </Flex>
+                                    </Box>
+
+                                    {isLoading ? (
+                                        <Flex justify="center" align="center" py={8} gap={3}>
+                                            <Spinner color="teal.500" />
+                                            <Text color="gray.600">Cargando OPs del item...</Text>
+                                        </Flex>
+                                    ) : error ? (
+                                        <Box p={4} bg="red.50" borderWidth="1px" borderColor="red.200" borderRadius="md">
+                                            <Text color="red.700" fontSize="sm">{error}</Text>
+                                        </Box>
+                                    ) : ordenes.length === 0 ? (
+                                        <Box p={4} bg="orange.50" borderWidth="1px" borderColor="orange.200" borderRadius="md">
+                                            <Text color="orange.700" fontSize="sm">
+                                                No se encontraron OPs asociadas a este item MPS.
+                                            </Text>
+                                        </Box>
+                                    ) : (
+                                        <Table.ScrollArea>
+                                            <Table.Root size="sm" variant="simple">
+                                                <Table.Header>
+                                                    <Table.Row>
+                                                        <Table.ColumnHeader>Orden</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Lote real</Table.ColumnHeader>
+                                                        <Table.ColumnHeader textAlign='end'>Cantidad</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Lanzamiento estimado</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Entrega planificada</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Materiales</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Lote planificado</Table.ColumnHeader>
+                                                    </Table.Row>
+                                                </Table.Header>
+                                                <Table.Body>
+                                                    {ordenes.map((orden) => (
+                                                        <Table.Row key={orden.ordenId}>
+                                                            <Table.Cell>{orden.ordenId}</Table.Cell>
+                                                            <Table.Cell>{orden.loteAsignado ?? "-"}</Table.Cell>
+                                                            <Table.Cell textAlign='end'>{formatNumber(orden.cantidadProducir)}</Table.Cell>
+                                                            <Table.Cell>{formatDateTimeLabel(orden.fechaLanzamiento)}</Table.Cell>
+                                                            <Table.Cell>{formatDateTimeLabel(orden.fechaFinalPlanificada)}</Table.Cell>
+                                                            <Table.Cell>{renderEstadoOrdenLabel(orden.estadoOrden)}</Table.Cell>
+                                                            <Table.Cell>
+                                                                <Flex gap={2} wrap="wrap">
+                                                                    <Badge colorPalette={getEstadoDispensacionMaterialesColor(orden.estadoDispensacionMateriales)}>
+                                                                        {getEstadoDispensacionMaterialesLabel(orden.estadoDispensacionMateriales)}
+                                                                    </Badge>
+                                                                    <Badge colorPalette={getPoliticaDispensacionInicioColor(orden.politicaDispensacionInicio)}>
+                                                                        {getPoliticaDispensacionInicioLabel(orden.politicaDispensacionInicio)}
+                                                                    </Badge>
+                                                                </Flex>
+                                                            </Table.Cell>
+                                                            <Table.Cell>
+                                                                {orden.mpsLoteOrdinal ?? "-"}
+                                                                {orden.mpsLotePlanificadoId ? ` (#${orden.mpsLotePlanificadoId})` : ""}
+                                                            </Table.Cell>
+                                                        </Table.Row>
+                                                    ))}
+                                                </Table.Body>
+                                            </Table.Root>
+                                        </Table.ScrollArea>
+                                    )}
+                                </VStack>
                             )}
-                        </VStack>
-                    )}
-                </ModalBody>
-                <ModalFooter>
-                    <Button colorScheme="blue" onClick={onClose}>
-                        Cerrar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button colorPalette="blue" onClick={onClose}>
+                                Cerrar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

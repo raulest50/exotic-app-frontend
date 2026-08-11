@@ -1,24 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+    Steps,
     Badge,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     Grid,
     GridItem,
     HStack,
     IconButton,
     Input,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
-    Select,
+    NativeSelect,
     Spinner,
     Table,
     Tbody,
@@ -26,12 +18,14 @@ import {
     Textarea,
     Th,
     Thead,
-    Tooltip,
     Tr,
     useDisclosure,
     useToast,
+    Field,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
-import { AddIcon, CheckIcon, CloseIcon, DeleteIcon, SearchIcon } from '@chakra-ui/icons';
+import { Tooltip } from '@/components/ui/tooltip';
 import axios, { AxiosError } from 'axios';
 import EndPointsURL from '../../api/EndPointsURL';
 import MyPagination from '../../components/MyPagination';
@@ -44,6 +38,7 @@ import {
     RegistroHoraExtra,
     RegistroHoraExtraRequest,
 } from './types';
+import { LuCheck, LuPlus, LuSearch, LuTrash2, LuX } from 'react-icons/lu';
 
 type DecisionAccion = 'rechazar' | 'anular';
 
@@ -280,176 +275,169 @@ export function HorasExtraPersonal() {
             <Flex direction="column" gap={6}>
                 <Grid templateColumns={['1fr', '2fr repeat(3, 1fr)']} gap={4} p="1em" boxShadow="base">
                     <GridItem>
-                        <FormControl isRequired>
-                            <FormLabel>Empleado</FormLabel>
+                        <Field.Root required>
+                            <Field.Label>Empleado</Field.Label>
                             <HStack>
                                 <Input
                                     value={selectedIntegranteLabel}
                                     placeholder="Seleccione un integrante activo"
-                                    isReadOnly
+                                    readOnly
                                 />
-                                <Tooltip label="Buscar integrante">
+                                <Tooltip content="Buscar integrante">
                                     <IconButton
                                         aria-label="Buscar integrante"
-                                        icon={<SearchIcon />}
-                                        colorScheme="blue"
-                                        onClick={integrantePicker.onOpen}
-                                    />
+                                        colorPalette="blue"
+                                        onClick={integrantePicker.onOpen}><LuSearch /></IconButton>
                                 </Tooltip>
-                                <Tooltip label="Limpiar selección">
+                                <Tooltip content="Limpiar selección">
                                     <IconButton
                                         aria-label="Limpiar integrante"
-                                        icon={<CloseIcon />}
                                         variant="outline"
-                                        isDisabled={!selectedIntegrante}
-                                        onClick={() => setSelectedIntegrante(null)}
-                                    />
+                                        disabled={!selectedIntegrante}
+                                        onClick={() => setSelectedIntegrante(null)}><LuX /></IconButton>
                                 </Tooltip>
                             </HStack>
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl isRequired>
-                            <FormLabel>Fecha</FormLabel>
-                            <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
-                        </FormControl>
+                        <Field.Root required>
+                            <Field.Label>Fecha</Field.Label>
+                            <Input type="date" value={fecha} onValueChange={(e) => setFecha(e.target.value)} />
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl isRequired>
-                            <FormLabel>Inicio</FormLabel>
-                            <Input type="time" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} />
-                        </FormControl>
+                        <Field.Root required>
+                            <Field.Label>Inicio</Field.Label>
+                            <Input type="time" value={horaInicio} onValueChange={(e) => setHoraInicio(e.target.value)} />
+                        </Field.Root>
                     </GridItem>
                     <GridItem>
-                        <FormControl isRequired>
-                            <FormLabel>Fin</FormLabel>
-                            <Input type="time" value={horaFin} onChange={(e) => setHoraFin(e.target.value)} />
-                        </FormControl>
+                        <Field.Root required>
+                            <Field.Label>Fin</Field.Label>
+                            <Input type="time" value={horaFin} onValueChange={(e) => setHoraFin(e.target.value)} />
+                        </Field.Root>
                     </GridItem>
                     <GridItem colSpan={[1, 2]}>
-                        <FormControl isRequired>
-                            <FormLabel>Motivo</FormLabel>
-                            <Input value={motivo} onChange={(e) => setMotivo(e.target.value)} />
-                        </FormControl>
+                        <Field.Root required>
+                            <Field.Label>Motivo</Field.Label>
+                            <Input value={motivo} onValueChange={(e) => setMotivo(e.target.value)} />
+                        </Field.Root>
                     </GridItem>
                     <GridItem colSpan={[1, 2]}>
-                        <FormControl>
-                            <FormLabel>Observaciones</FormLabel>
-                            <Input value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
-                        </FormControl>
+                        <Field.Root>
+                            <Field.Label>Observaciones</Field.Label>
+                            <Input value={observaciones} onValueChange={(e) => setObservaciones(e.target.value)} />
+                        </Field.Root>
                     </GridItem>
                     <GridItem colSpan={[1, 4]}>
                         <HStack justify="space-between" align="center">
-                            <Badge colorScheme={minutosEstimados ? 'teal' : 'gray'}>
+                            <Badge colorPalette={minutosEstimados ? 'teal' : 'gray'}>
                                 {minutosEstimados ? formatMinutos(minutosEstimados) : '0 h 0 min'}
                             </Badge>
-                            <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={registrar} isLoading={saving}>
-                                Registrar
-                            </Button>
+                            <Button colorPalette="blue" onClick={registrar} loading={saving}><LuPlus />Registrar
+                                                            </Button>
                         </HStack>
                     </GridItem>
                 </Grid>
 
                 <Grid templateColumns={['1fr', '2fr repeat(3, 1fr) auto']} gap={3} alignItems="end">
-                    <FormControl>
-                        <FormLabel>Buscar</FormLabel>
-                        <Input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => {
+                    <Field.Root>
+                        <Field.Label>Buscar</Field.Label>
+                        <Input value={q} onValueChange={(e) => setQ(e.target.value)} onKeyDown={(e) => {
                             if (e.key === 'Enter') buscar(0);
                         }} />
-                    </FormControl>
-                    <FormControl>
-                        <FormLabel>Desde</FormLabel>
-                        <Input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
-                    </FormControl>
-                    <FormControl>
-                        <FormLabel>Hasta</FormLabel>
-                        <Input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
-                    </FormControl>
-                    <FormControl>
-                        <FormLabel>Estado</FormLabel>
-                        <Select value={estado} onChange={(e) => setEstado(e.target.value as EstadoRegistroHoraExtra | '')}>
-                            <option value="">Todos</option>
-                            {Object.values(EstadoRegistroHoraExtra).map((item) => (
-                                <option key={item} value={item}>{getEstadoRegistroHoraExtraText(item)}</option>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <Button leftIcon={<SearchIcon />} colorScheme="teal" onClick={() => buscar(0)}>
-                        Buscar
-                    </Button>
+                    </Field.Root>
+                    <Field.Root>
+                        <Field.Label>Desde</Field.Label>
+                        <Input type="date" value={desde} onValueChange={(e) => setDesde(e.target.value)} />
+                    </Field.Root>
+                    <Field.Root>
+                        <Field.Label>Hasta</Field.Label>
+                        <Input type="date" value={hasta} onValueChange={(e) => setHasta(e.target.value)} />
+                    </Field.Root>
+                    <Field.Root>
+                        <Field.Label>Estado</Field.Label>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                value={estado}
+                                onValueChange={(e) => setEstado(e.target.value as EstadoRegistroHoraExtra | '')}>
+                                <option value="">Todos</option>
+                                {Object.values(EstadoRegistroHoraExtra).map((item) => (
+                                    <option key={item} value={item}>{getEstadoRegistroHoraExtraText(item)}</option>
+                                ))}
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                    </Field.Root>
+                    <Button colorPalette="teal" onClick={() => buscar(0)}><LuSearch />Buscar
+                                            </Button>
                 </Grid>
 
                 {loading ? (
                     <Spinner />
                 ) : (
                     <Box overflowX="auto">
-                        <Table variant="simple" size="sm">
-                            <Thead>
-                                <Tr>
-                                    <Th>Empleado</Th>
-                                    <Th>Fecha</Th>
-                                    <Th>Horario</Th>
-                                    <Th>Tiempo</Th>
-                                    <Th>Estado</Th>
-                                    <Th>Registró</Th>
-                                    <Th>Decisión</Th>
-                                    <Th>Motivo</Th>
-                                    <Th>Acciones</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                        <Table.Root variant="simple" size="sm">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>Empleado</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Horario</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Tiempo</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Registró</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Decisión</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Motivo</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Acciones</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {registros.map((registro) => (
-                                    <Tr key={registro.id}>
-                                        <Td>{registro.integranteNombre || registro.integranteId}</Td>
-                                        <Td>{registro.fecha}</Td>
-                                        <Td>{formatHora(registro.horaInicio)} - {formatHora(registro.horaFin)}</Td>
-                                        <Td>{formatMinutos(registro.minutos)}</Td>
-                                        <Td>
-                                            <Badge colorScheme={estadoColor(registro.estado)}>
+                                    <Table.Row key={registro.id}>
+                                        <Table.Cell>{registro.integranteNombre || registro.integranteId}</Table.Cell>
+                                        <Table.Cell>{registro.fecha}</Table.Cell>
+                                        <Table.Cell>{formatHora(registro.horaInicio)} - {formatHora(registro.horaFin)}</Table.Cell>
+                                        <Table.Cell>{formatMinutos(registro.minutos)}</Table.Cell>
+                                        <Table.Cell>
+                                            <Badge colorPalette={estadoColor(registro.estado)}>
                                                 {getEstadoRegistroHoraExtraText(registro.estado)}
                                             </Badge>
-                                        </Td>
-                                        <Td>{registro.registradoPorNombre || registro.registradoPorUsername}</Td>
-                                        <Td>{decisionUser(registro)}</Td>
-                                        <Td>{registro.motivo}</Td>
-                                        <Td>
-                                            <HStack spacing={1}>
-                                                <Tooltip label="Aprobar">
+                                        </Table.Cell>
+                                        <Table.Cell>{registro.registradoPorNombre || registro.registradoPorUsername}</Table.Cell>
+                                        <Table.Cell>{decisionUser(registro)}</Table.Cell>
+                                        <Table.Cell>{registro.motivo}</Table.Cell>
+                                        <Table.Cell>
+                                            <HStack gap={1}>
+                                                <Tooltip content="Aprobar">
                                                     <IconButton
                                                         aria-label="Aprobar"
-                                                        icon={<CheckIcon />}
                                                         size="sm"
-                                                        colorScheme="green"
-                                                        isDisabled={registro.estado !== EstadoRegistroHoraExtra.REGISTRADA}
-                                                        onClick={() => aprobar(registro)}
-                                                    />
+                                                        colorPalette="green"
+                                                        disabled={registro.estado !== EstadoRegistroHoraExtra.REGISTRADA}
+                                                        onClick={() => aprobar(registro)}><LuCheck /></IconButton>
                                                 </Tooltip>
-                                                <Tooltip label="Rechazar">
+                                                <Tooltip content="Rechazar">
                                                     <IconButton
                                                         aria-label="Rechazar"
-                                                        icon={<CloseIcon />}
                                                         size="sm"
-                                                        colorScheme="red"
-                                                        isDisabled={registro.estado !== EstadoRegistroHoraExtra.REGISTRADA}
-                                                        onClick={() => abrirDecision('rechazar', registro)}
-                                                    />
+                                                        colorPalette="red"
+                                                        disabled={registro.estado !== EstadoRegistroHoraExtra.REGISTRADA}
+                                                        onClick={() => abrirDecision('rechazar', registro)}><LuX /></IconButton>
                                                 </Tooltip>
-                                                <Tooltip label="Anular">
+                                                <Tooltip content="Anular">
                                                     <IconButton
                                                         aria-label="Anular"
-                                                        icon={<DeleteIcon />}
                                                         size="sm"
-                                                        colorScheme="gray"
-                                                        isDisabled={registro.estado === EstadoRegistroHoraExtra.ANULADA}
-                                                        onClick={() => abrirDecision('anular', registro)}
-                                                    />
+                                                        colorPalette="gray"
+                                                        disabled={registro.estado === EstadoRegistroHoraExtra.ANULADA}
+                                                        onClick={() => abrirDecision('anular', registro)}><LuTrash2 /></IconButton>
                                                 </Tooltip>
                                             </HStack>
-                                        </Td>
-                                    </Tr>
+                                        </Table.Cell>
+                                    </Table.Row>
                                 ))}
-                            </Tbody>
-                        </Table>
+                            </Table.Body>
+                        </Table.Root>
                         <MyPagination
                             page={currentPage}
                             totalPages={totalPages}
@@ -461,35 +449,45 @@ export function HorasExtraPersonal() {
             </Flex>
 
             <IntegrantePersonalPicker
-                isOpen={integrantePicker.isOpen}
+                isOpen={integrantePicker.open}
                 onClose={integrantePicker.onClose}
                 onSelectIntegrante={setSelectedIntegrante}
                 initialSelectedId={selectedIntegrante?.id}
             />
 
-            <Modal isOpen={decisionModal.isOpen} onClose={decisionModal.onClose} isCentered>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>
-                        {decisionState?.accion === 'rechazar' ? 'Rechazar hora extra' : 'Anular hora extra'}
-                    </ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <FormControl isRequired>
-                            <FormLabel>Motivo</FormLabel>
-                            <Textarea value={decisionMotivo} onChange={(e) => setDecisionMotivo(e.target.value)} />
-                        </FormControl>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button variant="ghost" mr={3} onClick={decisionModal.onClose}>
-                            Cancelar
-                        </Button>
-                        <Button colorScheme={decisionState?.accion === 'rechazar' ? 'red' : 'gray'} onClick={confirmarDecision}>
-                            Confirmar
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+            <Dialog.Root open={decisionModal.open} placement='center' onOpenChange={e => {
+                if (!e.open) {
+                    decisionModal.onClose();
+                }
+            }}>
+                <Portal>
+
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>
+                                {decisionState?.accion === 'rechazar' ? 'Rechazar hora extra' : 'Anular hora extra'}
+                            </Dialog.Header>
+                            <Dialog.CloseTrigger />
+                            <Dialog.Body>
+                                <Field.Root required>
+                                    <Field.Label>Motivo</Field.Label>
+                                    <Textarea value={decisionMotivo} onValueChange={(e) => setDecisionMotivo(e.target.value)} />
+                                </Field.Root>
+                            </Dialog.Body>
+                            <Dialog.Footer>
+                                <Button variant="ghost" mr={3} onClick={decisionModal.onClose}>
+                                    Cancelar
+                                </Button>
+                                <Button colorPalette={decisionState?.accion === 'rechazar' ? 'red' : 'gray'} onClick={confirmarDecision}>
+                                    Confirmar
+                                </Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+
+                </Portal>
+            </Dialog.Root>
         </Box>
     );
 }

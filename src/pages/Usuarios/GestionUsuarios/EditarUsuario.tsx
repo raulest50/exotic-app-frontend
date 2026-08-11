@@ -1,17 +1,5 @@
 import { useState, useMemo } from 'react';
-import {
-    Box,
-    Button,
-    FormControl,
-    FormLabel,
-    FormErrorMessage,
-    Input,
-    useToast,
-    Heading,
-    Grid,
-    GridItem,
-    Flex,
-} from '@chakra-ui/react';
+import { Steps, Box, Button, Input, useToast, Heading, Grid, GridItem, Flex, Field } from '@chakra-ui/react';
 import axios from 'axios';
 import { User } from './types.tsx';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -123,101 +111,101 @@ export default function EditarUsuario({ user, onBack }: Props) {
             <Heading size="md" mb={4}>Editar Usuario — {user.username}</Heading>
             <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                 <GridItem>
-                    <FormControl isRequired isInvalid={!!errors.cedula}>
-                        <FormLabel>Cédula</FormLabel>
+                    <Field.Root required invalid={!!errors.cedula}>
+                        <Field.Label>Cédula</Field.Label>
                         <Input
                             autoComplete="off"
                             type="number"
                             value={form.cedula}
-                            onChange={(e) => handleChange('cedula', e.target.value)}
-                            isDisabled={isLoading}
+                            onValueChange={(e) => handleChange('cedula', e.target.value)}
+                            disabled={isLoading}
                         />
-                        {errors.cedula && <FormErrorMessage>{errors.cedula}</FormErrorMessage>}
-                    </FormControl>
+                        {errors.cedula && <Field.ErrorText>{errors.cedula}</Field.ErrorText>}
+                    </Field.Root>
                 </GridItem>
                 <GridItem>
-                    <FormControl isRequired isInvalid={!!errors.nombreCompleto}>
-                        <FormLabel>Nombre Completo</FormLabel>
+                    <Field.Root required invalid={!!errors.nombreCompleto}>
+                        <Field.Label>Nombre Completo</Field.Label>
                         <Input
                             autoComplete="off"
                             value={form.nombreCompleto}
-                            onChange={(e) => handleChange('nombreCompleto', e.target.value)}
-                            isDisabled={isLoading}
+                            onValueChange={(e) => handleChange('nombreCompleto', e.target.value)}
+                            disabled={isLoading}
                         />
-                        {errors.nombreCompleto && <FormErrorMessage>{errors.nombreCompleto}</FormErrorMessage>}
-                    </FormControl>
+                        {errors.nombreCompleto && <Field.ErrorText>{errors.nombreCompleto}</Field.ErrorText>}
+                    </Field.Root>
                 </GridItem>
                 <GridItem>
-                    <FormControl isRequired isInvalid={!!errors.username}>
-                        <FormLabel>Nombre de Usuario</FormLabel>
+                    <Field.Root required invalid={!!errors.username}>
+                        <Field.Label>Nombre de Usuario</Field.Label>
                         <Input
                             autoComplete="off"
                             value={form.username}
-                            onChange={(e) => handleChange('username', e.target.value)}
-                            isDisabled={isLoading}
+                            onValueChange={(e) => handleChange('username', e.target.value)}
+                            disabled={isLoading}
                         />
-                        {errors.username && <FormErrorMessage>{errors.username}</FormErrorMessage>}
-                    </FormControl>
+                        {errors.username && <Field.ErrorText>{errors.username}</Field.ErrorText>}
+                    </Field.Root>
                 </GridItem>
                 <GridItem>
-                    <FormControl isRequired isInvalid={!!errors.email}>
-                        <FormLabel>Correo Electrónico</FormLabel>
+                    <Field.Root required invalid={!!errors.email}>
+                        <Field.Label>Correo Electrónico</Field.Label>
                         <Input
                             autoComplete="off"
                             type="email"
                             value={form.email}
-                            onChange={(e) => handleChange('email', e.target.value)}
-                            isDisabled={isLoading}
+                            onValueChange={(e) => handleChange('email', e.target.value)}
+                            disabled={isLoading}
                         />
-                        {errors.email && <FormErrorMessage>{errors.email}</FormErrorMessage>}
-                    </FormControl>
+                        {errors.email && <Field.ErrorText>{errors.email}</Field.ErrorText>}
+                    </Field.Root>
                 </GridItem>
                 <GridItem>
-                    <FormControl>
-                        <FormLabel>Celular</FormLabel>
+                    <Field.Root>
+                        <Field.Label>Celular</Field.Label>
                         <Input
                             autoComplete="off"
                             value={form.cel}
-                            onChange={(e) => handleChange('cel', e.target.value)}
-                            isDisabled={isLoading}
+                            onValueChange={(e) => handleChange('cel', e.target.value)}
+                            disabled={isLoading}
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
                 <GridItem>
-                    <FormControl>
-                        <FormLabel>Dirección</FormLabel>
+                    <Field.Root>
+                        <Field.Label>Dirección</Field.Label>
                         <Input
                             autoComplete="off"
                             value={form.direccion}
-                            onChange={(e) => handleChange('direccion', e.target.value)}
-                            isDisabled={isLoading}
+                            onValueChange={(e) => handleChange('direccion', e.target.value)}
+                            disabled={isLoading}
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
                 <GridItem>
-                    <FormControl>
-                        <FormLabel>Fecha de Nacimiento</FormLabel>
+                    <Field.Root>
+                        <Field.Label>Fecha de Nacimiento</Field.Label>
                         <Input
                             autoComplete="off"
                             type="date"
                             value={form.fechaNacimiento}
-                            onChange={(e) => handleChange('fechaNacimiento', e.target.value)}
-                            isDisabled={isLoading}
+                            onValueChange={(e) => handleChange('fechaNacimiento', e.target.value)}
+                            disabled={isLoading}
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
             </Grid>
             <Flex gap={4} mt={6}>
                 <Button
-                    colorScheme="blue"
+                    colorPalette="blue"
                     onClick={handleSave}
-                    isLoading={isLoading}
+                    loading={isLoading}
                     loadingText="Guardando..."
-                    isDisabled={!canSave}
+                    disabled={!canSave}
                 >
                     Guardar cambios
                 </Button>
-                <Button onClick={onBack} isDisabled={isLoading}>
+                <Button onClick={onBack} disabled={isLoading}>
                     Ir atrás
                 </Button>
             </Flex>

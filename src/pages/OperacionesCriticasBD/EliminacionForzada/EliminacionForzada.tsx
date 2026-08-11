@@ -1,18 +1,5 @@
-import {
-    Box,
-    Container,
-    Flex,
-    Step,
-    StepDescription,
-    StepIcon,
-    StepIndicator,
-    StepNumber,
-    StepSeparator,
-    StepStatus,
-    Stepper,
-    StepTitle,
-    useSteps,
-} from "@chakra-ui/react";
+import { Steps, Box, Container, Flex, useSteps } from "@chakra-ui/react";
+import { LuCheck } from 'react-icons/lu';
 import { useState } from "react";
 import EliminacionStep0SelectEntityType from "./EliminacionStep0SelectEntityType.tsx";
 import EliminacionMaterialStep1SelectAndStudy from "./Material/EliminacionMaterialStep1SelectAndStudy";
@@ -49,9 +36,9 @@ export type TipoEntidadEliminacion =
     | "PURGA_TOTAL_BASE_DATOS";
 
 export default function EliminacionForzada() {
-    const { activeStep, setActiveStep } = useSteps({
-        index: 0,
-        count: steps.length,
+    const stepsApi = useSteps({
+        defaultStep: 0,
+        count: steps.length
     });
 
     const [tipoEntidad, setTipoEntidad] = useState<TipoEntidadEliminacion | null>(null);
@@ -183,24 +170,24 @@ export default function EliminacionForzada() {
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <Flex direction="column" gap={4}>
-                <Stepper index={activeStep} p="1em" backgroundColor="app.stepperTeal" w="full">
+                <Steps.RootProvider p="1em" backgroundColor="app.stepperTeal" w="full" value={stepsApi}>
                     {steps.map((step, index) => (
-                        <Step key={index}>
-                            <StepIndicator>
-                                <StepStatus
-                                    complete={<StepIcon />}
-                                    incomplete={<StepNumber />}
-                                    active={<StepNumber />}
+                        <Steps.Item key={index}>
+                            <Steps.Indicator>
+                                <Steps.Status
+                                    complete={<LuCheck />}
+                                    incomplete={<Steps.Number />}
+                                    current={<Steps.Number />}
                                 />
-                            </StepIndicator>
+                            </Steps.Indicator>
                             <Box flexShrink="0">
-                                <StepTitle>{step.title}</StepTitle>
-                                <StepDescription>{step.description}</StepDescription>
+                                <Steps.Title>{step.title}</Steps.Title>
+                                <Steps.Description>{step.description}</Steps.Description>
                             </Box>
-                            <StepSeparator />
-                        </Step>
+                            <Steps.Separator />
+                        </Steps.Item>
                     ))}
-                </Stepper>
+                </Steps.RootProvider>
                 <ConditionalRenderStep />
             </Flex>
         </Container>

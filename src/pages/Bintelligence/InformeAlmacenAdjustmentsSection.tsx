@@ -1,34 +1,26 @@
 import {
-    ChevronDownIcon,
-    ChevronUpIcon,
-    QuestionIcon,
-    SearchIcon,
-} from "@chakra-ui/icons";
-import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Button,
     ButtonGroup,
     Card,
-    CardBody,
-    Collapse,
-    FormControl,
-    FormLabel,
+    Collapsible,
     HStack,
     IconButton,
     Input,
     Progress,
-    Select,
+    NativeSelect,
     SimpleGrid,
     Spinner,
     Stack,
     Text,
-    Tooltip,
     useBreakpointValue,
     useDisclosure,
+    Field,
 } from "@chakra-ui/react";
+import { Tooltip } from '@/components/ui/tooltip';
 import ReactECharts from "echarts-for-react";
 import {
     type KeyboardEvent,
@@ -62,6 +54,7 @@ import type {
     PeriodoInforme,
     TipoFiltroAjuste,
 } from "./informesGlobales.types";
+import { LuChevronDown, LuChevronUp, LuHelpCircle, LuSearch } from 'react-icons/lu';
 
 type TrendGroup = "TODOS" | GrupoMaterialAjuste;
 type TrendPerspective = "valor" | "cantidad";
@@ -93,9 +86,9 @@ export default function InformeAlmacenAdjustmentsSection({
         : "Sin ajustes registrados en el período.";
 
     return (
-        <Card variant="outline">
-            <CardBody p={{ base: 3, md: 5 }}>
-                <Stack spacing={4}>
+        <Card.Root variant="outline">
+            <Card.Body p={{ base: 3, md: 5 }}>
+                <Stack gap={4}>
                     <Button
                         variant="ghost"
                         minH="52px"
@@ -104,12 +97,9 @@ export default function InformeAlmacenAdjustmentsSection({
                         py={2}
                         justifyContent="space-between"
                         onClick={() => setExpanded((current) => !current)}
-                        rightIcon={expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                        aria-expanded={expanded}
-                    >
-                        <Stack
+                        aria-expanded={expanded}><Stack
                             align="flex-start"
-                            spacing={1}
+                            gap={1}
                             textAlign="left"
                             minW={0}
                             whiteSpace="normal"
@@ -125,39 +115,40 @@ export default function InformeAlmacenAdjustmentsSection({
                             >
                                 {compactSummary}
                             </Text>
-                        </Stack>
-                    </Button>
+                        </Stack>{expanded ? <LuChevronUp /> : <LuChevronDown />}</Button>
 
-                    <Collapse in={expanded} animateOpacity>
-                        <Stack spacing={{ base: 5, md: 6 }} pt={1}>
-                            <Text color="app.textMuted" fontSize="sm">
-                                Correcciones registradas durante el período consultado.
-                                Afectan el stock actual, pero no se consideran
-                                automáticamente dispensaciones ni demanda productiva.
-                            </Text>
+                    <Collapsible.Root open={expanded}>
+                        <Collapsible.Content>
+                            <Stack gap={{ base: 5, md: 6 }} pt={1}>
+                                <Text color="app.textMuted" fontSize="sm">
+                                    Correcciones registradas durante el período consultado.
+                                    Afectan el stock actual, pero no se consideran
+                                    automáticamente dispensaciones ni demanda productiva.
+                                </Text>
 
-                            <AdjustmentKpis adjustments={adjustments} />
-                            <AdjustmentComparison adjustments={adjustments} />
-                            <AdjustmentTrend
-                                adjustments={adjustments}
-                                period={period}
-                            />
-                            <ImpactExplorer
-                                adjustments={adjustments}
-                                period={period}
-                            />
-                        </Stack>
-                    </Collapse>
+                                <AdjustmentKpis adjustments={adjustments} />
+                                <AdjustmentComparison adjustments={adjustments} />
+                                <AdjustmentTrend
+                                    adjustments={adjustments}
+                                    period={period}
+                                />
+                                <ImpactExplorer
+                                    adjustments={adjustments}
+                                    period={period}
+                                />
+                            </Stack>
+                        </Collapsible.Content>
+                    </Collapsible.Root>
                 </Stack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
 function AdjustmentKpis({ adjustments }: { adjustments: AjustesInventario }) {
     const summary = adjustments.resumen;
     return (
-        <Stack spacing={3}>
+        <Stack gap={3}>
             <Text
                 color="app.textMuted"
                 fontSize="xs"
@@ -167,7 +158,7 @@ function AdjustmentKpis({ adjustments }: { adjustments: AjustesInventario }) {
             >
                 Resumen global · Todos los productos
             </Text>
-            <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} spacing={3}>
+            <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} gap={3}>
                 <KpiCard
                     label="Ajustes positivos"
                     value={formatCurrency(summary.positivos.valorEstimado)}
@@ -203,15 +194,15 @@ function AdjustmentComparison({
 }) {
     const other = adjustments.comparativo.otros;
     return (
-        <Card variant="outline">
-            <CardBody p={{ base: 3, md: 5 }}>
-                <Stack spacing={4}>
+        <Card.Root variant="outline">
+            <Card.Body p={{ base: 3, md: 5 }}>
+                <Stack gap={4}>
                     <SectionHeading
                         title="Comparativo de materiales"
                         description="Entradas y salidas por ajustes, separadas según la naturaleza del material."
                     />
 
-                    <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4}>
+                    <SimpleGrid columns={{ base: 1, lg: 2 }} gap={4}>
                         <AdjustmentGroupCard
                             title="Materias primas"
                             group={adjustments.comparativo.materiaPrima}
@@ -223,8 +214,8 @@ function AdjustmentComparison({
                     </SimpleGrid>
 
                     {other.movimientos > 0 ? (
-                        <Alert status="info" borderRadius="md">
-                            <AlertIcon />
+                        <Alert.Root status="info" borderRadius="md">
+                            <Alert.Indicator />
                             <Text fontSize="sm">
                                 Otros productos: {formatCurrency(
                                     totalImpact(other),
@@ -232,11 +223,11 @@ function AdjustmentComparison({
                                 {" · "}{formatInteger(other.referencias)} referencias.
                                 Se incluyen únicamente en el resumen y tendencia global.
                             </Text>
-                        </Alert>
+                        </Alert.Root>
                     ) : null}
                 </Stack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
@@ -253,34 +244,34 @@ function AdjustmentGroupCard({
         1,
     );
     return (
-        <Card variant="outline" bg="app.surfaceSubtle">
-            <CardBody p={{ base: 3, md: 4 }}>
-                <Stack spacing={3}>
+        <Card.Root variant="outline" bg="app.surfaceSubtle">
+            <Card.Body p={{ base: 3, md: 4 }}>
+                <Stack gap={3}>
                     <HStack justify="space-between" align="flex-start">
                         <Text fontWeight="semibold">{title}</Text>
-                        <Badge colorScheme="blue">
+                        <Badge colorPalette="blue">
                             {formatPercent(group.participacionValorAjustadoPct)}
                         </Badge>
                     </HStack>
 
-                    <SimpleGrid columns={2} spacing={3}>
+                    <SimpleGrid columns={2} gap={3}>
                         <Metric label="Positivos" value={group.positivos.valorEstimado} />
                         <Metric label="Negativos" value={group.negativos.valorEstimado} />
                     </SimpleGrid>
                     <Metric label="Balance neto" value={group.balanceNeto} signed />
 
-                    <Stack spacing={2}>
+                    <Stack gap={2}>
                         <ProgressRow
                             label="Positivos"
                             value={group.positivos.valorEstimado}
                             maximum={maximum}
-                            colorScheme="green"
+                            colorPalette="green"
                         />
                         <ProgressRow
                             label="Negativos"
                             value={group.negativos.valorEstimado}
                             maximum={maximum}
-                            colorScheme="red"
+                            colorPalette="red"
                         />
                     </Stack>
 
@@ -290,8 +281,8 @@ function AdjustmentGroupCard({
                         {formatInteger(group.transacciones)} transacciones
                     </Text>
                 </Stack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
@@ -328,17 +319,20 @@ function ProgressRow({
     colorScheme: "green" | "red";
 }) {
     return (
-        <Stack spacing={1}>
+        <Stack gap={1}>
             <HStack justify="space-between">
                 <Text color="app.textMuted" fontSize="xs">{label}</Text>
                 <Text fontSize="xs">{formatCurrency(value)}</Text>
             </HStack>
-            <Progress
+            <Progress.Root
                 value={value * 100 / maximum}
-                colorScheme={colorScheme}
+                colorPalette={colorScheme}
                 borderRadius="full"
-                size="sm"
-            />
+                size="sm">
+                <Progress.Track>
+                    <Progress.Range />
+                </Progress.Track>
+            </Progress.Root>
         </Stack>
     );
 }
@@ -396,14 +390,14 @@ function AdjustmentTrend({
     if (period.modoFecha === "FECHA_UNICA") return null;
 
     return (
-        <Card variant="outline">
-            <CardBody p={{ base: 3, md: 5 }}>
-                <Stack spacing={4}>
+        <Card.Root variant="outline">
+            <Card.Body p={{ base: 3, md: 5 }}>
+                <Stack gap={4}>
                     <Stack
                         direction={{ base: "column", xl: "row" }}
                         justify="space-between"
                         align={{ base: "stretch", xl: "flex-end" }}
-                        spacing={3}
+                        gap={3}
                     >
                         <SectionHeading
                             title="Tendencia de ajustes"
@@ -412,26 +406,28 @@ function AdjustmentTrend({
                         <Stack
                             direction={{ base: "column", md: "row" }}
                             align={{ base: "stretch", md: "flex-end" }}
-                            spacing={3}
+                            gap={3}
                         >
-                            <FormControl minW={{ md: "190px" }}>
-                                <FormLabel fontSize="xs" mb={1}>Grupo</FormLabel>
-                                <Select
-                                    size="sm"
-                                    minH="40px"
-                                    value={group}
-                                    onChange={(event) =>
-                                        setGroup(event.target.value as TrendGroup)}
-                                >
-                                    <option value="TODOS">Todos los productos</option>
-                                    <option value="MATERIA_PRIMA">Materias primas</option>
-                                    <option value="EMPAQUE">Materiales de empaque</option>
-                                </Select>
-                            </FormControl>
-                            <ButtonGroup isAttached size="sm">
+                            <Field.Root minW={{ md: "190px" }}>
+                                <Field.Label fontSize="xs" mb={1}>Grupo</Field.Label>
+                                <NativeSelect.Root>
+                                    <NativeSelect.Field
+                                        size="sm"
+                                        minH="40px"
+                                        value={group}
+                                        onValueChange={(event) =>
+                                            setGroup(event.target.value as TrendGroup)}>
+                                        <option value="TODOS">Todos los productos</option>
+                                        <option value="MATERIA_PRIMA">Materias primas</option>
+                                        <option value="EMPAQUE">Materiales de empaque</option>
+                                    </NativeSelect.Field>
+                                    <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                            </Field.Root>
+                            <ButtonGroup attached size="sm">
                                 <Button
                                     minH="40px"
-                                    colorScheme={perspective === "valor" ? "blue" : undefined}
+                                    colorPalette={perspective === "valor" ? "blue" : undefined}
                                     variant={perspective === "valor" ? "solid" : "outline"}
                                     onClick={() => setPerspective("valor")}
                                     aria-pressed={perspective === "valor"}
@@ -440,7 +436,7 @@ function AdjustmentTrend({
                                 </Button>
                                 <Button
                                     minH="40px"
-                                    colorScheme={perspective === "cantidad" ? "blue" : undefined}
+                                    colorPalette={perspective === "cantidad" ? "blue" : undefined}
                                     variant={perspective === "cantidad" ? "solid" : "outline"}
                                     onClick={() => setPerspective("cantidad")}
                                     aria-pressed={perspective === "cantidad"}
@@ -449,19 +445,21 @@ function AdjustmentTrend({
                                 </Button>
                             </ButtonGroup>
                             {perspective === "cantidad" ? (
-                                <FormControl minW={{ md: "120px" }}>
-                                    <FormLabel fontSize="xs" mb={1}>Unidad</FormLabel>
-                                    <Select
-                                        size="sm"
-                                        minH="40px"
-                                        value={unit}
-                                        onChange={(event) => setUnit(event.target.value)}
-                                    >
-                                        {availableUnits.map((item) => (
-                                            <option key={item} value={item}>{item}</option>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+                                <Field.Root minW={{ md: "120px" }}>
+                                    <Field.Label fontSize="xs" mb={1}>Unidad</Field.Label>
+                                    <NativeSelect.Root>
+                                        <NativeSelect.Field
+                                            size="sm"
+                                            minH="40px"
+                                            value={unit}
+                                            onValueChange={(event) => setUnit(event.target.value)}>
+                                            {availableUnits.map((item) => (
+                                                <option key={item} value={item}>{item}</option>
+                                            ))}
+                                        </NativeSelect.Field>
+                                        <NativeSelect.Indicator />
+                                    </NativeSelect.Root>
+                                </Field.Root>
                             ) : null}
                         </Stack>
                     </Stack>
@@ -478,8 +476,8 @@ function AdjustmentTrend({
                         </Text>
                     )}
                 </Stack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
@@ -553,41 +551,39 @@ function ImpactExplorer({
 
     return (
         <>
-            <Card variant="outline">
-                <CardBody p={{ base: 3, md: 5 }}>
-                    <Stack spacing={4}>
+            <Card.Root variant="outline">
+                <Card.Body p={{ base: 3, md: 5 }}>
+                    <Stack gap={4}>
                         <Stack
                             direction={{ base: "column", md: "row" }}
                             justify="space-between"
                             align={{ base: "stretch", md: "flex-start" }}
-                            spacing={3}
+                            gap={3}
                         >
-                            <HStack align="flex-start" spacing={2}>
+                            <HStack align="flex-start" gap={2}>
                                 <SectionHeading
                                     title="Materiales con mayor impacto"
                                     description="Clasificación por valor absoluto ajustado, sin compensar entradas contra salidas."
                                 />
                                 <Tooltip
-                                    label="¿Cómo se calcula mayor impacto?"
-                                    hasArrow
+                                    content="¿Cómo se calcula mayor impacto?"
+                                    showArrow
                                 >
                                     <IconButton
                                         aria-label="¿Cómo se calcula mayor impacto?"
-                                        icon={<QuestionIcon />}
                                         onClick={help.onOpen}
                                         size="sm"
                                         variant="ghost"
-                                        colorScheme="blue"
-                                        flexShrink={0}
-                                    />
+                                        colorPalette="blue"
+                                        flexShrink={0}><LuHelpCircle /></IconButton>
                                 </Tooltip>
                             </HStack>
 
-                            <ButtonGroup isAttached size="sm">
+                            <ButtonGroup attached size="sm">
                                 <Button
                                     minH="40px"
                                     variant={mode === "MAYOR_IMPACTO" ? "solid" : "outline"}
-                                    colorScheme={mode === "MAYOR_IMPACTO" ? "green" : undefined}
+                                    colorPalette={mode === "MAYOR_IMPACTO" ? "green" : undefined}
                                     onClick={backToImpact}
                                     aria-pressed={mode === "MAYOR_IMPACTO"}
                                 >
@@ -596,7 +592,7 @@ function ImpactExplorer({
                                 <Button
                                     minH="40px"
                                     variant={mode === "EXPLORAR" ? "solid" : "outline"}
-                                    colorScheme={mode === "EXPLORAR" ? "green" : undefined}
+                                    colorPalette={mode === "EXPLORAR" ? "green" : undefined}
                                     onClick={explore}
                                     aria-pressed={mode === "EXPLORAR"}
                                 >
@@ -606,7 +602,7 @@ function ImpactExplorer({
                         </Stack>
 
                         {mode === "MAYOR_IMPACTO" ? (
-                            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4}>
+                            <SimpleGrid columns={{ base: 1, lg: 2 }} gap={4}>
                                 <ImpactGroupPanel
                                     title="Materias primas"
                                     items={adjustments.mayorImpacto.materiaPrima}
@@ -621,7 +617,7 @@ function ImpactExplorer({
                                 />
                             </SimpleGrid>
                         ) : (
-                            <Stack spacing={4}>
+                            <Stack gap={4}>
                                 <ExplorerControls
                                     draftSearch={draftSearch}
                                     setDraftSearch={setDraftSearch}
@@ -647,7 +643,7 @@ function ImpactExplorer({
                                     onBack={backToImpact}
                                 />
 
-                                <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4}>
+                                <SimpleGrid columns={{ base: 1, lg: 2 }} gap={4}>
                                     <ExplorationGroupPanel
                                         title="Materias primas"
                                         group="MATERIA_PRIMA"
@@ -682,11 +678,11 @@ function ImpactExplorer({
                             </Stack>
                         )}
                     </Stack>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
 
             <AjustesImpactoHelpModal
-                isOpen={help.isOpen}
+                isOpen={help.open}
                 onClose={help.onClose}
             />
         </>
@@ -723,70 +719,74 @@ function ExplorerControls({
     onBack: () => void;
 }) {
     return (
-        <Stack spacing={3}>
+        <Stack gap={3}>
             <Stack
                 direction={{ base: "column", xl: "row" }}
                 align={{ base: "stretch", xl: "flex-end" }}
-                spacing={3}
+                gap={3}
             >
-                <FormControl flex={1}>
-                    <FormLabel fontSize="xs" mb={1}>Buscar material</FormLabel>
+                <Field.Root flex={1}>
+                    <Field.Label fontSize="xs" mb={1}>Buscar material</Field.Label>
                     <HStack>
                         <Input
                             minH="40px"
                             value={draftSearch}
                             placeholder="Código o nombre"
-                            onChange={(event) => setDraftSearch(event.target.value)}
+                            onValueChange={(event) => setDraftSearch(event.target.value)}
                             onKeyDown={onSearchKeyDown}
                         />
                         <IconButton
                             aria-label="Buscar materiales ajustados"
-                            icon={<SearchIcon />}
                             minH="40px"
                             onClick={onSearch}
-                            colorScheme="blue"
-                        />
+                            colorPalette="blue"><LuSearch /></IconButton>
                     </HStack>
-                </FormControl>
-                <FormControl maxW={{ xl: "190px" }}>
-                    <FormLabel fontSize="xs" mb={1}>Tipo de ajuste</FormLabel>
-                    <Select
-                        minH="40px"
-                        value={type}
-                        onChange={(event) =>
-                            onTypeChange(event.target.value as TipoFiltroAjuste)}
-                    >
-                        <option value="TODOS">Todos</option>
-                        <option value="POSITIVO">Solo positivos</option>
-                        <option value="NEGATIVO">Solo negativos</option>
-                    </Select>
-                </FormControl>
-                <FormControl maxW={{ xl: "230px" }}>
-                    <FormLabel fontSize="xs" mb={1}>Ordenar por</FormLabel>
-                    <Select
-                        minH="40px"
-                        value={order}
-                        onChange={(event) =>
-                            onOrderChange(event.target.value as OrdenAjusteMaterial)}
-                    >
-                        <option value="IMPACTO">Mayor impacto económico</option>
-                        <option value="MOVIMIENTOS">Más movimientos</option>
-                        <option value="RECIENTES">Más recientes</option>
-                        <option value="NOMBRE">Código/nombre</option>
-                    </Select>
-                </FormControl>
-                <FormControl maxW={{ xl: "140px" }}>
-                    <FormLabel fontSize="xs" mb={1}>Mostrar</FormLabel>
-                    <Select
-                        minH="40px"
-                        value={size}
-                        onChange={(event) =>
-                            onSizeChange(Number(event.target.value) as PageSize)}
-                    >
-                        <option value={5}>5 por grupo</option>
-                        <option value={10}>10 por grupo</option>
-                    </Select>
-                </FormControl>
+                </Field.Root>
+                <Field.Root maxW={{ xl: "190px" }}>
+                    <Field.Label fontSize="xs" mb={1}>Tipo de ajuste</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            minH="40px"
+                            value={type}
+                            onValueChange={(event) =>
+                                onTypeChange(event.target.value as TipoFiltroAjuste)}>
+                            <option value="TODOS">Todos</option>
+                            <option value="POSITIVO">Solo positivos</option>
+                            <option value="NEGATIVO">Solo negativos</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
+                <Field.Root maxW={{ xl: "230px" }}>
+                    <Field.Label fontSize="xs" mb={1}>Ordenar por</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            minH="40px"
+                            value={order}
+                            onValueChange={(event) =>
+                                onOrderChange(event.target.value as OrdenAjusteMaterial)}>
+                            <option value="IMPACTO">Mayor impacto económico</option>
+                            <option value="MOVIMIENTOS">Más movimientos</option>
+                            <option value="RECIENTES">Más recientes</option>
+                            <option value="NOMBRE">Código/nombre</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
+                <Field.Root maxW={{ xl: "140px" }}>
+                    <Field.Label fontSize="xs" mb={1}>Mostrar</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            minH="40px"
+                            value={size}
+                            onValueChange={(event) =>
+                                onSizeChange(Number(event.target.value) as PageSize)}>
+                            <option value={5}>5 por grupo</option>
+                            <option value={10}>10 por grupo</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
             </Stack>
 
             <HStack justify="space-between" flexWrap="wrap">
@@ -822,15 +822,15 @@ function ImpactGroupPanel({
     exploreLabel: string;
 }) {
     return (
-        <Card variant="outline">
-            <CardBody p={{ base: 3, md: 4 }}>
-                <Stack spacing={3}>
+        <Card.Root variant="outline">
+            <Card.Body p={{ base: 3, md: 4 }}>
+                <Stack gap={3}>
                     <HStack justify="space-between">
                         <Text fontWeight="semibold">{title}</Text>
                         <Badge>{formatInteger(items.length)} visibles</Badge>
                     </HStack>
                     {items.length > 0 ? (
-                        <Stack spacing={2}>
+                        <Stack gap={2}>
                             {items.map((item, index) => (
                                 <ImpactMaterialItem
                                     key={item.productoId}
@@ -848,8 +848,8 @@ function ImpactGroupPanel({
                         {exploreLabel}
                     </Button>
                 </Stack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
@@ -910,13 +910,13 @@ function ExplorationGroupPanel({
     }, [group, order, page, query, retryKey, search, size, type]);
 
     return (
-        <Card variant="outline">
-            <CardBody p={{ base: 3, md: 4 }}>
-                <Stack spacing={3}>
+        <Card.Root variant="outline">
+            <Card.Body p={{ base: 3, md: 4 }}>
+                <Stack gap={3}>
                     <HStack justify="space-between">
                         <Text fontWeight="semibold">{title}</Text>
                         {result ? (
-                            <Badge colorScheme="blue">
+                            <Badge colorPalette="blue">
                                 {formatInteger(result.totalElements)} encontrados
                             </Badge>
                         ) : null}
@@ -928,9 +928,9 @@ function ExplorationGroupPanel({
                             <Text color="app.textMuted">Consultando…</Text>
                         </HStack>
                     ) : error ? (
-                        <Alert status="error" borderRadius="md">
-                            <AlertIcon />
-                            <Stack spacing={2}>
+                        <Alert.Root status="error" borderRadius="md">
+                            <Alert.Indicator />
+                            <Stack gap={2}>
                                 <Text fontSize="sm">{error}</Text>
                                 <Button
                                     size="sm"
@@ -940,10 +940,10 @@ function ExplorationGroupPanel({
                                     Reintentar
                                 </Button>
                             </Stack>
-                        </Alert>
+                        </Alert.Root>
                     ) : result && result.items.length > 0 ? (
                         <>
-                            <Stack spacing={2}>
+                            <Stack gap={2}>
                                 {result.items.map((item) => (
                                     <ImpactMaterialItem
                                         key={item.productoId}
@@ -955,7 +955,7 @@ function ExplorationGroupPanel({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    isDisabled={result.first}
+                                    disabled={result.first}
                                     onClick={() => onPageChange(Math.max(0, page - 1))}
                                 >
                                     ‹ Anterior
@@ -967,7 +967,7 @@ function ExplorationGroupPanel({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    isDisabled={result.last}
+                                    disabled={result.last}
                                     onClick={() => onPageChange(page + 1)}
                                 >
                                     Siguiente ›
@@ -980,8 +980,8 @@ function ExplorationGroupPanel({
                         </Text>
                     )}
                 </Stack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
@@ -1003,18 +1003,15 @@ function ImpactMaterialItem({
                 px={3}
                 py={2}
                 justifyContent="space-between"
-                rightIcon={expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
                 onClick={() => setExpanded((current) => !current)}
-                aria-expanded={expanded}
-            >
-                <Stack align="flex-start" spacing={1} textAlign="left" minW={0}>
+                aria-expanded={expanded}><Stack align="flex-start" gap={1} textAlign="left" minW={0}>
                     <HStack flexWrap="wrap">
                         <Text as="span" fontWeight="semibold" whiteSpace="normal">
                             {rank ? `${rank}. ` : ""}
                             {item.productoId} · {item.productoNombre}
                         </Text>
                         {!item.costoVigente ? (
-                            <Badge colorScheme="yellow">Sin costo vigente</Badge>
+                            <Badge colorPalette="yellow">Sin costo vigente</Badge>
                         ) : null}
                     </HStack>
                     <Text
@@ -1026,55 +1023,56 @@ function ImpactMaterialItem({
                         Impacto {formatCurrency(item.impactoEstimado)} ·{" "}
                         {formatInteger(item.movimientos)} movimientos
                     </Text>
-                </Stack>
-            </Button>
+                </Stack>{expanded ? <LuChevronUp /> : <LuChevronDown />}</Button>
 
-            <Collapse in={expanded} animateOpacity>
-                <Stack
-                    spacing={3}
-                    px={3}
-                    pb={3}
-                    pt={1}
-                    borderTopWidth="1px"
-                >
-                    <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
-                        <DetailMetric
-                            label="Entradas"
-                            quantity={item.cantidadPositiva}
-                            unit={item.unidadMedida}
-                            value={item.valorPositivo}
-                        />
-                        <DetailMetric
-                            label="Salidas"
-                            quantity={item.cantidadNegativa}
-                            unit={item.unidadMedida}
-                            value={item.valorNegativo}
-                        />
-                        <DetailMetric
-                            label="Balance"
-                            quantity={item.balanceCantidad}
-                            unit={item.unidadMedida}
-                            value={item.balanceValor}
-                            signed
-                        />
-                        <Box>
-                            <Text color="app.textMuted" fontSize="xs">
-                                Actividad
-                            </Text>
-                            <Text fontSize="sm" fontWeight="semibold">
-                                {formatInteger(item.movimientos)} movimientos ·{" "}
-                                {formatInteger(item.transacciones)} transacciones
-                            </Text>
-                        </Box>
-                    </SimpleGrid>
-                    <Text color="app.textMuted" fontSize="xs">
-                        Último ajuste:{" "}
-                        {item.ultimoAjuste
-                            ? formatDateTime(item.ultimoAjuste)
-                            : "Sin fecha"}
-                    </Text>
-                </Stack>
-            </Collapse>
+            <Collapsible.Root open={expanded}>
+                <Collapsible.Content>
+                    <Stack
+                        gap={3}
+                        px={3}
+                        pb={3}
+                        pt={1}
+                        borderTopWidth="1px"
+                    >
+                        <SimpleGrid columns={{ base: 1, sm: 2 }} gap={3}>
+                            <DetailMetric
+                                label="Entradas"
+                                quantity={item.cantidadPositiva}
+                                unit={item.unidadMedida}
+                                value={item.valorPositivo}
+                            />
+                            <DetailMetric
+                                label="Salidas"
+                                quantity={item.cantidadNegativa}
+                                unit={item.unidadMedida}
+                                value={item.valorNegativo}
+                            />
+                            <DetailMetric
+                                label="Balance"
+                                quantity={item.balanceCantidad}
+                                unit={item.unidadMedida}
+                                value={item.balanceValor}
+                                signed
+                            />
+                            <Box>
+                                <Text color="app.textMuted" fontSize="xs">
+                                    Actividad
+                                </Text>
+                                <Text fontSize="sm" fontWeight="semibold">
+                                    {formatInteger(item.movimientos)} movimientos ·{" "}
+                                    {formatInteger(item.transacciones)} transacciones
+                                </Text>
+                            </Box>
+                        </SimpleGrid>
+                        <Text color="app.textMuted" fontSize="xs">
+                            Último ajuste:{" "}
+                            {item.ultimoAjuste
+                                ? formatDateTime(item.ultimoAjuste)
+                                : "Sin fecha"}
+                        </Text>
+                    </Stack>
+                </Collapsible.Content>
+            </Collapsible.Root>
         </Box>
     );
 }

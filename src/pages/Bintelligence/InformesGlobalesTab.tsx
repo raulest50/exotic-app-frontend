@@ -1,21 +1,18 @@
-import { RepeatIcon } from "@chakra-ui/icons";
 import {
+    Steps,
     Badge,
     Button,
     ButtonGroup,
     Card,
-    CardBody,
-    FormControl,
-    FormErrorMessage,
-    FormLabel,
     HStack,
     Input,
     Progress,
-    Select,
+    NativeSelect,
     SimpleGrid,
     Stack,
     Text,
     useToast,
+    Field,
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import InformeAlmacenPage from "./InformeAlmacenPage";
@@ -35,6 +32,7 @@ import type {
     InformeProduccion,
     InformeQuery,
 } from "./informesGlobales.types";
+import { LuRepeat } from 'react-icons/lu';
 
 type ReportPage = "almacen" | "produccion";
 type DateMode = "fecha_unica" | "rango";
@@ -198,9 +196,9 @@ export default function InformesGlobalesTab() {
         : null;
 
     return (
-        <Stack spacing={{ base: 4, md: 5 }}>
+        <Stack gap={{ base: 4, md: 5 }}>
             <ButtonGroup
-                isAttached
+                attached
                 w={{ base: "full", md: "fit-content" }}
                 aria-label="Página del informe global"
             >
@@ -210,7 +208,7 @@ export default function InformesGlobalesTab() {
                     h="auto"
                     py={2}
                     whiteSpace="normal"
-                    colorScheme={activePage === "almacen" ? "green" : undefined}
+                    colorPalette={activePage === "almacen" ? "green" : undefined}
                     variant={activePage === "almacen" ? "solid" : "outline"}
                     onClick={() => setActivePage("almacen")}
                     aria-pressed={activePage === "almacen"}
@@ -223,7 +221,7 @@ export default function InformesGlobalesTab() {
                     h="auto"
                     py={2}
                     whiteSpace="normal"
-                    colorScheme={activePage === "produccion" ? "green" : undefined}
+                    colorPalette={activePage === "produccion" ? "green" : undefined}
                     variant={activePage === "produccion" ? "solid" : "outline"}
                     onClick={() => setActivePage("produccion")}
                     aria-pressed={activePage === "produccion"}
@@ -232,23 +230,23 @@ export default function InformesGlobalesTab() {
                 </Button>
             </ButtonGroup>
 
-            <Card variant="outline">
-                <CardBody p={{ base: 3, md: 5 }}>
-                    <Stack spacing={4}>
+            <Card.Root variant="outline">
+                <Card.Body p={{ base: 3, md: 5 }}>
+                    <Stack gap={4}>
                         <Stack
                             direction={{ base: "column", md: "row" }}
                             align={{ base: "flex-start", md: "center" }}
                             justify="space-between"
-                            spacing={2}
+                            gap={2}
                         >
-                            <Stack spacing={1}>
+                            <Stack gap={1}>
                                 <Text fontWeight="semibold">Periodo de movimientos y producción</Text>
                                 <Text color="app.textMuted" fontSize="sm">
                                     El stock, las OCM pendientes, las OP abiertas y la cobertura representan el estado actual.
                                 </Text>
                             </Stack>
                             <Badge
-                                colorScheme="blue"
+                                colorPalette="blue"
                                 whiteSpace="normal"
                                 textAlign="center"
                             >
@@ -256,59 +254,61 @@ export default function InformesGlobalesTab() {
                             </Badge>
                         </Stack>
 
-                        <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
-                            <FormControl>
-                                <FormLabel>Tipo de consulta</FormLabel>
-                                <Select
-                                    minH="44px"
-                                    value={dateMode}
-                                    onChange={(event) => setDateMode(event.target.value as DateMode)}
-                                >
-                                    <option value="fecha_unica">Fecha única</option>
-                                    <option value="rango">Rango de fechas</option>
-                                </Select>
-                            </FormControl>
+                        <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={4}>
+                            <Field.Root>
+                                <Field.Label>Tipo de consulta</Field.Label>
+                                <NativeSelect.Root>
+                                    <NativeSelect.Field
+                                        minH="44px"
+                                        value={dateMode}
+                                        onValueChange={(event) => setDateMode(event.target.value as DateMode)}>
+                                        <option value="fecha_unica">Fecha única</option>
+                                        <option value="rango">Rango de fechas</option>
+                                    </NativeSelect.Field>
+                                    <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                            </Field.Root>
 
                             {dateMode === "fecha_unica" ? (
-                                <FormControl isRequired isInvalid={!date}>
-                                    <FormLabel>Fecha</FormLabel>
+                                <Field.Root required invalid={!date}>
+                                    <Field.Label>Fecha</Field.Label>
                                     <Input
                                         minH="44px"
                                         type="date"
                                         value={date}
-                                        onChange={(event) => setDate(event.target.value)}
+                                        onValueChange={(event) => setDate(event.target.value)}
                                     />
-                                    <FormErrorMessage>Seleccione una fecha.</FormErrorMessage>
-                                </FormControl>
+                                    <Field.ErrorText>Seleccione una fecha.</Field.ErrorText>
+                                </Field.Root>
                             ) : (
                                 <>
-                                    <FormControl isRequired isInvalid={!startDate || rangeInverted}>
-                                        <FormLabel>Fecha desde</FormLabel>
+                                    <Field.Root required invalid={!startDate || rangeInverted}>
+                                        <Field.Label>Fecha desde</Field.Label>
                                         <Input
                                             minH="44px"
                                             type="date"
                                             value={startDate}
-                                            onChange={(event) => setStartDate(event.target.value)}
+                                            onValueChange={(event) => setStartDate(event.target.value)}
                                         />
-                                        <FormErrorMessage>Revise la fecha inicial.</FormErrorMessage>
-                                    </FormControl>
-                                    <FormControl
-                                        isRequired
-                                        isInvalid={!endDate || rangeInverted || rangeTooLong}
+                                        <Field.ErrorText>Revise la fecha inicial.</Field.ErrorText>
+                                    </Field.Root>
+                                    <Field.Root
+                                        required
+                                        invalid={!endDate || rangeInverted || rangeTooLong}
                                     >
-                                        <FormLabel>Fecha hasta</FormLabel>
+                                        <Field.Label>Fecha hasta</Field.Label>
                                         <Input
                                             minH="44px"
                                             type="date"
                                             value={endDate}
-                                            onChange={(event) => setEndDate(event.target.value)}
+                                            onValueChange={(event) => setEndDate(event.target.value)}
                                         />
-                                        <FormErrorMessage>
+                                        <Field.ErrorText>
                                             {rangeTooLong
                                                 ? `El rango máximo es de ${MAX_RANGE_DAYS} días.`
                                                 : "La fecha final debe ser posterior a la inicial."}
-                                        </FormErrorMessage>
-                                    </FormControl>
+                                        </Field.ErrorText>
+                                    </Field.Root>
                                 </>
                             )}
                         </SimpleGrid>
@@ -317,34 +317,35 @@ export default function InformesGlobalesTab() {
                             direction={{ base: "column", md: "row" }}
                             align={{ base: "stretch", md: "center" }}
                             justify="space-between"
-                            spacing={3}
+                            gap={3}
                         >
-                            <HStack spacing={2} flexWrap="wrap">
+                            <HStack gap={2} flexWrap="wrap">
                                 <Text color="app.textMuted" fontSize="sm">
                                     El periodo se comparte entre Almacén y Producción.
                                 </Text>
                                 {hasUnappliedChanges ? (
-                                    <Badge colorScheme="yellow">Cambios sin aplicar</Badge>
+                                    <Badge colorPalette="yellow">Cambios sin aplicar</Badge>
                                 ) : null}
                             </HStack>
                             <Button
-                                leftIcon={<RepeatIcon />}
-                                colorScheme="green"
+                                colorPalette="green"
                                 onClick={applyPeriod}
-                                isLoading={activeIsLoading}
-                                isDisabled={!datesAreValid}
+                                loading={activeIsLoading}
+                                disabled={!datesAreValid}
                                 minH="44px"
-                                w={{ base: "full", md: "auto" }}
-                            >
-                                Aplicar periodo
-                            </Button>
+                                w={{ base: "full", md: "auto" }}><LuRepeat />Aplicar periodo
+                                                            </Button>
                         </Stack>
                     </Stack>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
 
             {activeIsLoading && activeHasCurrentData ? (
-                <Progress size="xs" isIndeterminate colorScheme="green" borderRadius="full" />
+                <Progress.Root size="xs" indeterminate colorPalette="green" borderRadius="full">
+                    <Progress.Track>
+                        <Progress.Range />
+                    </Progress.Track>
+                </Progress.Root>
             ) : null}
 
             {activeError ? <ErrorPanel message={activeError} /> : null}

@@ -1,16 +1,5 @@
 import { useState, useRef } from "react";
-import {
-  Box,
-  Button,
-  FormControl,
-  FormHelperText,
-  FormLabel,
-  HStack,
-  Icon,
-  Input,
-  Text,
-  useToast,
-} from "@chakra-ui/react";
+import { Steps, Box, Button, HStack, Icon, Input, Text, useToast, Field } from "@chakra-ui/react";
 import { FaFileCircleCheck, FaFileCircleQuestion } from "react-icons/fa6";
 import axios from "axios";
 
@@ -123,42 +112,42 @@ export function FileChooser({
         </Text>
       )}
       {showLinkInput && (
-        <FormControl mb={4}>
-          <FormLabel>URL del archivo en Google Sheets</FormLabel>
-          <HStack spacing={4} alignItems="start">
+        <Field.Root mb={4}>
+          <Field.Label>URL del archivo en Google Sheets</Field.Label>
+          <HStack gap={4} alignItems="start">
             <Input
               placeholder="Ingrese el enlace de Google Sheets"
               value={link}
-              onChange={(e) => setLink(e.target.value)}
+              onValueChange={(e) => setLink(e.target.value)}
               flex={1}
             />
-            <Button colorScheme="blue" onClick={handleUploadFromLink} isDisabled={!link}>
+            <Button colorPalette="blue" onClick={handleUploadFromLink} disabled={!link}>
               Cargar
             </Button>
           </HStack>
-          <FormHelperText>Pegue la URL de un archivo compartido en Google Sheets</FormHelperText>
-        </FormControl>
+          <Field.HelperText>Pegue la URL de un archivo compartido en Google Sheets</Field.HelperText>
+        </Field.Root>
       )}
-      <FormControl>
-        <FormLabel>Archivo local</FormLabel>
-        <HStack spacing={4} alignItems="center">
+      <Field.Root>
+        <Field.Label>Archivo local</Field.Label>
+        <HStack gap={4} alignItems="center">
           <Button onClick={() => inputRef.current?.click()}>Seleccionar archivo</Button>
           <Input
             type="file"
             ref={inputRef}
             style={{ display: "none" }}
             accept={accept}
-            onChange={handleFileChange}
+            onValueChange={handleFileChange}
           />
           <Icon as={file ? FaFileCircleCheck : FaFileCircleQuestion} boxSize="2em" color={file ? "green" : "orange.500"} />
           {file && (
-            <Text fontSize="sm" noOfLines={1}>
+            <Text fontSize="sm" lineClamp={1}>
               {file.name}
             </Text>
           )}
         </HStack>
-        <FormHelperText>Archivos permitidos: {exts.join(", ")}</FormHelperText>
-      </FormControl>
+        <Field.HelperText>Archivos permitidos: {exts.join(", ")}</Field.HelperText>
+      </Field.Root>
     </Box>
   );
 }

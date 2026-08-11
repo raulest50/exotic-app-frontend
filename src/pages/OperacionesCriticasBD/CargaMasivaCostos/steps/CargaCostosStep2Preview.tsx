@@ -1,7 +1,6 @@
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
     Badge,
     Box,
     Button,
@@ -11,8 +10,6 @@ import {
     SimpleGrid,
     Spinner,
     Stat,
-    StatLabel,
-    StatNumber,
     Table,
     TableContainer,
     Tbody,
@@ -67,20 +64,20 @@ export default function CargaCostosStep2Preview({
     const dependenciasTotalPages = Math.max(1, dependenciasPage?.totalPages ?? 1);
 
     return (
-        <VStack align="stretch" spacing={5}>
-            <SimpleGrid columns={{ base: 2, md: 3, xl: 5 }} spacing={3}>
-                <Stat><StatLabel>Candidatos</StatLabel><StatNumber>{preparacion.totalCandidatas}</StatNumber></Stat>
-                <Stat><StatLabel>Materiales a cambiar</StatLabel><StatNumber>{preparacion.totalActualizadas}</StatNumber></Stat>
-                <Stat><StatLabel>Materiales sin cambio</StatLabel><StatNumber>{preparacion.totalSinCambio}</StatNumber></Stat>
-                <Stat><StatLabel>Semiterminados</StatLabel><StatNumber>{preparacion.totalSemiterminados}</StatNumber></Stat>
-                <Stat><StatLabel>Terminados</StatLabel><StatNumber>{preparacion.totalTerminados}</StatNumber></Stat>
-                <Stat><StatLabel>Dependencias a cambiar</StatLabel><StatNumber>{preparacion.totalDependenciasActualizadas}</StatNumber></Stat>
-                <Stat><StatLabel>Dependencias sin cambio</StatLabel><StatNumber>{preparacion.totalDependenciasSinCambio}</StatNumber></Stat>
-                <Stat><StatLabel>Omitidos</StatLabel><StatNumber>{preparacion.totalOmitidas}</StatNumber></Stat>
-                <Stat>
-                    <StatLabel>Vigencia</StatLabel>
+        <VStack align="stretch" gap={5}>
+            <SimpleGrid columns={{ base: 2, md: 3, xl: 5 }} gap={3}>
+                <Stat.Root><Stat.Label>Candidatos</Stat.Label><Stat.ValueText>{preparacion.totalCandidatas}</Stat.ValueText></Stat.Root>
+                <Stat.Root><Stat.Label>Materiales a cambiar</Stat.Label><Stat.ValueText>{preparacion.totalActualizadas}</Stat.ValueText></Stat.Root>
+                <Stat.Root><Stat.Label>Materiales sin cambio</Stat.Label><Stat.ValueText>{preparacion.totalSinCambio}</Stat.ValueText></Stat.Root>
+                <Stat.Root><Stat.Label>Semiterminados</Stat.Label><Stat.ValueText>{preparacion.totalSemiterminados}</Stat.ValueText></Stat.Root>
+                <Stat.Root><Stat.Label>Terminados</Stat.Label><Stat.ValueText>{preparacion.totalTerminados}</Stat.ValueText></Stat.Root>
+                <Stat.Root><Stat.Label>Dependencias a cambiar</Stat.Label><Stat.ValueText>{preparacion.totalDependenciasActualizadas}</Stat.ValueText></Stat.Root>
+                <Stat.Root><Stat.Label>Dependencias sin cambio</Stat.Label><Stat.ValueText>{preparacion.totalDependenciasSinCambio}</Stat.ValueText></Stat.Root>
+                <Stat.Root><Stat.Label>Omitidos</Stat.Label><Stat.ValueText>{preparacion.totalOmitidas}</Stat.ValueText></Stat.Root>
+                <Stat.Root>
+                    <Stat.Label>Vigencia</Stat.Label>
                     <Text fontSize="sm">{new Date(preparacion.expiraEn).toLocaleString("es-CO")}</Text>
-                </Stat>
+                </Stat.Root>
             </SimpleGrid>
 
             <Box borderWidth="1px" borderRadius="md" p={3}>
@@ -90,20 +87,20 @@ export default function CargaCostosStep2Preview({
             </Box>
 
             {preparacion.advertencias.map((warning) => (
-                <Alert status="warning" key={warning}>
-                    <AlertIcon />
-                    <AlertDescription>{warning}</AlertDescription>
-                </Alert>
+                <Alert.Root status="warning" key={warning}>
+                    <Alert.Indicator />
+                    <Alert.Description>{warning}</Alert.Description>
+                </Alert.Root>
             ))}
 
             {!itemsPage && !loadingItems && (
-                <Alert status="error">
-                    <AlertIcon />
+                <Alert.Root status="error">
+                    <Alert.Indicator />
                     <Flex w="full" align="center" justify="space-between" gap={3} flexWrap="wrap">
-                        <AlertDescription>No fue posible cargar el detalle para revisarlo.</AlertDescription>
+                        <Alert.Description>No fue posible cargar el detalle para revisarlo.</Alert.Description>
                         <Button size="sm" onClick={() => onPageChange(0)}>Reintentar</Button>
                     </Flex>
-                </Alert>
+                </Alert.Root>
             )}
 
             <Heading as="h3" size="sm">Materiales incluidos en el Excel</Heading>
@@ -114,57 +111,57 @@ export default function CargaCostosStep2Preview({
                         <Spinner size="lg" />
                     </Flex>
                 )}
-                <TableContainer borderWidth="1px" borderRadius="md" overflowX="auto">
-                    <Table size="sm">
-                        <Thead>
-                            <Tr>
-                                <Th>Fila</Th>
-                                <Th>Codigo</Th>
-                                <Th>Nombre en sistema</Th>
-                                <Th>Descripcion Excel</Th>
-                                <Th>Descripcion</Th>
-                                <Th isNumeric>Actual</Th>
-                                <Th isNumeric>Nuevo</Th>
-                                <Th isNumeric>Diferencia</Th>
-                                <Th isNumeric>%</Th>
-                                <Th>Accion</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                <Table.ScrollArea borderWidth="1px" borderRadius="md" overflowX="auto">
+                    <Table.Root size="sm">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>Fila</Table.ColumnHeader>
+                                <Table.ColumnHeader>Codigo</Table.ColumnHeader>
+                                <Table.ColumnHeader>Nombre en sistema</Table.ColumnHeader>
+                                <Table.ColumnHeader>Descripcion Excel</Table.ColumnHeader>
+                                <Table.ColumnHeader>Descripcion</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Actual</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Nuevo</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Diferencia</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>%</Table.ColumnHeader>
+                                <Table.ColumnHeader>Accion</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {(itemsPage?.items ?? []).map((item) => (
-                                <Tr key={`${item.fila}-${item.productoId}`}>
-                                    <Td>{item.fila}</Td>
-                                    <Td>{item.productoId}</Td>
-                                    <Td>{item.nombreProducto ?? "-"}</Td>
-                                    <Td>{item.descripcionExcel ?? "-"}</Td>
-                                    <Td>
-                                        <Badge colorScheme={item.descripcionCoincide ? "green" : "yellow"}>
+                                <Table.Row key={`${item.fila}-${item.productoId}`}>
+                                    <Table.Cell>{item.fila}</Table.Cell>
+                                    <Table.Cell>{item.productoId}</Table.Cell>
+                                    <Table.Cell>{item.nombreProducto ?? "-"}</Table.Cell>
+                                    <Table.Cell>{item.descripcionExcel ?? "-"}</Table.Cell>
+                                    <Table.Cell>
+                                        <Badge colorPalette={item.descripcionCoincide ? "green" : "yellow"}>
                                             {item.descripcionCoincide ? "Coincide" : "Revisar"}
                                         </Badge>
-                                    </Td>
-                                    <Td isNumeric>{money(item.costoActual)}</Td>
-                                    <Td isNumeric>{money(item.costoNuevo)}</Td>
-                                    <Td isNumeric>{money(item.diferencia)}</Td>
-                                    <Td isNumeric>
+                                    </Table.Cell>
+                                    <Table.Cell textAlign='end'>{money(item.costoActual)}</Table.Cell>
+                                    <Table.Cell textAlign='end'>{money(item.costoNuevo)}</Table.Cell>
+                                    <Table.Cell textAlign='end'>{money(item.diferencia)}</Table.Cell>
+                                    <Table.Cell textAlign='end'>
                                         {item.porcentajeCambio === null ? "N/A" : `${money(item.porcentajeCambio)}%`}
-                                    </Td>
-                                    <Td>
-                                        <Badge colorScheme={item.cambia ? "orange" : "gray"}>
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        <Badge colorPalette={item.cambia ? "orange" : "gray"}>
                                             {item.cambia ? "Cambiar" : "Sin cambio"}
                                         </Badge>
-                                    </Td>
-                                </Tr>
+                                    </Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
-                </TableContainer>
+                        </Table.Body>
+                    </Table.Root>
+                </Table.ScrollArea>
             </Box>
 
             <HStack justify="space-between" flexWrap="wrap">
                 <Button
                     variant="outline"
                     onClick={() => onPageChange(Math.max(0, page - 1))}
-                    isDisabled={loadingItems || page === 0}
+                    disabled={loadingItems || page === 0}
                 >
                     Anterior
                 </Button>
@@ -172,35 +169,35 @@ export default function CargaCostosStep2Preview({
                 <Button
                     variant="outline"
                     onClick={() => onPageChange(Math.min(totalPages - 1, page + 1))}
-                    isDisabled={loadingItems || page + 1 >= totalPages}
+                    disabled={loadingItems || page + 1 >= totalPages}
                 >
                     Siguiente
                 </Button>
             </HStack>
 
             {!dependenciasPage && !loadingDependencias && (
-                <Alert status="error">
-                    <AlertIcon />
+                <Alert.Root status="error">
+                    <Alert.Indicator />
                     <Flex w="full" align="center" justify="space-between" gap={3} flexWrap="wrap">
-                        <AlertDescription>
+                        <Alert.Description>
                             No fue posible cargar el detalle de la propagacion.
-                        </AlertDescription>
+                        </Alert.Description>
                         <Button size="sm" onClick={() => onDependenciasPageChange(0)}>
                             Reintentar
                         </Button>
                     </Flex>
-                </Alert>
+                </Alert.Root>
             )}
 
             <Heading as="h3" size="sm">Propagacion a semiterminados y terminados</Heading>
 
             {preparacion.totalDependencias === 0 && dependenciasPage && (
-                <Alert status="info">
-                    <AlertIcon />
-                    <AlertDescription>
+                <Alert.Root status="info">
+                    <Alert.Indicator />
+                    <Alert.Description>
                         Los materiales modificados no tienen dependencias de receta.
-                    </AlertDescription>
-                </Alert>
+                    </Alert.Description>
+                </Alert.Root>
             )}
 
             {preparacion.totalDependencias > 0 && (
@@ -218,50 +215,50 @@ export default function CargaCostosStep2Preview({
                                 <Spinner size="lg" />
                             </Flex>
                         )}
-                        <TableContainer borderWidth="1px" borderRadius="md" overflowX="auto">
-                            <Table size="sm">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Nivel</Th>
-                                        <Th>Tipo</Th>
-                                        <Th>Codigo</Th>
-                                        <Th>Nombre</Th>
-                                        <Th isNumeric>Actual</Th>
-                                        <Th isNumeric>Proyectado</Th>
-                                        <Th isNumeric>Diferencia</Th>
-                                        <Th isNumeric>%</Th>
-                                        <Th>Accion</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                        <Table.ScrollArea borderWidth="1px" borderRadius="md" overflowX="auto">
+                            <Table.Root size="sm">
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>Nivel</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Codigo</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Actual</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Proyectado</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Diferencia</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>%</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Accion</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {(dependenciasPage?.items ?? []).map((item) => (
-                                        <Tr key={item.productoId}>
-                                            <Td>{item.nivel}</Td>
-                                            <Td>
-                                                <Badge colorScheme={item.tipoProducto === "S" ? "purple" : "blue"}>
+                                        <Table.Row key={item.productoId}>
+                                            <Table.Cell>{item.nivel}</Table.Cell>
+                                            <Table.Cell>
+                                                <Badge colorPalette={item.tipoProducto === "S" ? "purple" : "blue"}>
                                                     {item.tipoProducto === "S" ? "Semiterminado" : "Terminado"}
                                                 </Badge>
-                                            </Td>
-                                            <Td>{item.productoId}</Td>
-                                            <Td>{item.nombreProducto ?? "-"}</Td>
-                                            <Td isNumeric>{money(item.costoActual)}</Td>
-                                            <Td isNumeric>{money(item.costoNuevo)}</Td>
-                                            <Td isNumeric>{money(item.diferencia)}</Td>
-                                            <Td isNumeric>
+                                            </Table.Cell>
+                                            <Table.Cell>{item.productoId}</Table.Cell>
+                                            <Table.Cell>{item.nombreProducto ?? "-"}</Table.Cell>
+                                            <Table.Cell textAlign='end'>{money(item.costoActual)}</Table.Cell>
+                                            <Table.Cell textAlign='end'>{money(item.costoNuevo)}</Table.Cell>
+                                            <Table.Cell textAlign='end'>{money(item.diferencia)}</Table.Cell>
+                                            <Table.Cell textAlign='end'>
                                                 {item.porcentajeCambio === null
                                                     ? "N/A"
                                                     : `${money(item.porcentajeCambio)}%`}
-                                            </Td>
-                                            <Td>
-                                                <Badge colorScheme={item.cambia ? "orange" : "gray"}>
+                                            </Table.Cell>
+                                            <Table.Cell>
+                                                <Badge colorPalette={item.cambia ? "orange" : "gray"}>
                                                     {item.cambia ? "Cambiar" : "Sin cambio"}
                                                 </Badge>
-                                            </Td>
-                                        </Tr>
+                                            </Table.Cell>
+                                        </Table.Row>
                                     ))}
-                                </Tbody>
-                            </Table>
-                        </TableContainer>
+                                </Table.Body>
+                            </Table.Root>
+                        </Table.ScrollArea>
                     </Box>
 
                     <HStack justify="space-between" flexWrap="wrap">
@@ -270,7 +267,7 @@ export default function CargaCostosStep2Preview({
                             onClick={() => onDependenciasPageChange(
                                 Math.max(0, dependenciasPageNumber - 1),
                             )}
-                            isDisabled={loadingDependencias || dependenciasPageNumber === 0}
+                            disabled={loadingDependencias || dependenciasPageNumber === 0}
                         >
                             Anterior
                         </Button>
@@ -285,7 +282,7 @@ export default function CargaCostosStep2Preview({
                                     dependenciasPageNumber + 1,
                                 ),
                             )}
-                            isDisabled={
+                            disabled={
                                 loadingDependencias
                                 || dependenciasPageNumber + 1 >= dependenciasTotalPages
                             }
@@ -297,12 +294,12 @@ export default function CargaCostosStep2Preview({
             )}
 
             <Flex justify="space-between" gap={3} flexWrap="wrap">
-                <Button variant="outline" onClick={onCancel} isLoading={busy}>Cancelar carga</Button>
+                <Button variant="outline" onClick={onCancel} loading={busy}>Cancelar carga</Button>
                 <Button
-                    colorScheme="orange"
+                    colorPalette="orange"
                     onClick={onContinue}
-                    isLoading={busy}
-                    isDisabled={
+                    loading={busy}
+                    disabled={
                         !itemsPage
                         || !dependenciasPage
                         || preparacion.totalActualizadas === 0

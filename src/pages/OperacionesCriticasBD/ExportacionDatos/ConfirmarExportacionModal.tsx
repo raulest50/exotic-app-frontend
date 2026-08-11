@@ -1,20 +1,14 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Button,
-    FormControl,
-    FormLabel,
     Input,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     Spinner,
     Text,
     useToast,
+    Field,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -196,55 +190,65 @@ export default function ConfirmarExportacionModal({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} isCentered>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>{config?.tituloModal}</ModalHeader>
-                <ModalCloseButton isDisabled={isExporting} />
-                <ModalBody>
-                    <Alert status="warning" mb={4}>
-                        <AlertIcon />
-                        {config?.alertDescripcion}
-                    </Alert>
+        <Dialog.Root open={isOpen} placement='center' onOpenChange={e => {
+            if (!e.open) {
+                handleClose();
+            }
+        }}>
+            <Portal>
 
-                    <Text fontWeight="bold" mb={2}>
-                        Token de confirmación: <strong>{randomToken}</strong>
-                    </Text>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>{config?.tituloModal}</Dialog.Header>
+                        <Dialog.CloseTrigger disabled={isExporting} />
+                        <Dialog.Body>
+                            <Alert.Root status="warning" mb={4}>
+                                <Alert.Indicator />
+                                {config?.alertDescripcion}
+                            </Alert.Root>
 
-                    <FormControl>
-                        <FormLabel>Ingrese el token de 4 dígitos:</FormLabel>
-                        <Input
-                            placeholder="Ingrese el token de 4 dígitos"
-                            value={inputToken}
-                            onChange={(e) => setInputToken(e.target.value)}
-                            isDisabled={isExporting}
-                        />
-                    </FormControl>
+                            <Text fontWeight="bold" mb={2}>
+                                Token de confirmación: <strong>{randomToken}</strong>
+                            </Text>
 
-                    {isExporting && progressMessage ? (
-                        <Alert status="info" mt={4}>
-                            <AlertIcon />
-                            <Spinner size="sm" mr={2} />
-                            {progressMessage}
-                        </Alert>
-                    ) : null}
-                </ModalBody>
-                <ModalFooter>
-                    <Button variant="ghost" onClick={handleClose} isDisabled={isExporting}>
-                        Cancelar
-                    </Button>
-                    <Button
-                        colorScheme="teal"
-                        onClick={handleExportar}
-                        isDisabled={inputToken !== randomToken || isExporting}
-                        isLoading={isExporting}
-                        loadingText={progressMessage ?? "Exportando..."}
-                    >
-                        Exportar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                            <Field.Root>
+                                <Field.Label>Ingrese el token de 4 dígitos:</Field.Label>
+                                <Input
+                                    placeholder="Ingrese el token de 4 dígitos"
+                                    value={inputToken}
+                                    onValueChange={(e) => setInputToken(e.target.value)}
+                                    disabled={isExporting}
+                                />
+                            </Field.Root>
+
+                            {isExporting && progressMessage ? (
+                                <Alert.Root status="info" mt={4}>
+                                    <Alert.Indicator />
+                                    <Spinner size="sm" mr={2} />
+                                    {progressMessage}
+                                </Alert.Root>
+                            ) : null}
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button variant="ghost" onClick={handleClose} disabled={isExporting}>
+                                Cancelar
+                            </Button>
+                            <Button
+                                colorPalette="teal"
+                                onClick={handleExportar}
+                                disabled={inputToken !== randomToken || isExporting}
+                                loading={isExporting}
+                                loadingText={progressMessage ?? "Exportando..."}
+                            >
+                                Exportar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }
 

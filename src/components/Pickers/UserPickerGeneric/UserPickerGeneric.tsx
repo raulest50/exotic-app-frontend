@@ -2,18 +2,10 @@
 
 import React, { useState } from 'react';
 import {
+    Steps,
     Box,
     Button,
-    FormControl,
-    FormLabel,
     Input,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalFooter,
-    ModalBody,
-    ModalCloseButton,
     useToast,
     VStack,
     HStack,
@@ -25,7 +17,10 @@ import {
     Th,
     Td,
     Flex,
-    Select,
+    NativeSelect,
+    Field,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
@@ -123,118 +118,130 @@ const UserGenericPicker: React.FC<UserGenericPickerProps> = ({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="lg">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Seleccionar Usuario</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <VStack spacing={4}>
-                        <FormControl>
-                            <FormLabel>Buscar Usuario</FormLabel>
-                            <HStack>
-                                <Input
-                                    value={searchText}
-                                    onChange={(e) => setSearchText(e.target.value)}
-                                    onKeyDown={onKeyPress_InputBuscar}
-                                    placeholder="Ingrese texto de búsqueda"
-                                    isDisabled={isLoading}
-                                />
-                                <Select 
-                                    value={searchType}
-                                    onChange={(e) => setSearchType(e.target.value as SearchType)}
-                                    isDisabled={isLoading}
-                                    width="150px"
-                                >
-                                    <option value={SearchType.ID}>ID</option>
-                                    <option value={SearchType.NAME}>Nombre</option>
-                                    <option value={SearchType.EMAIL}>Correo</option>
-                                </Select>
-                                <Button 
-                                    colorScheme="blue" 
-                                    onClick={handleSearch} 
-                                    isLoading={isLoading}
-                                    loadingText="Buscando"
-                                >
-                                    Buscar
-                                </Button>
-                            </HStack>
-                        </FormControl>
-                        <Box w="full" overflowX="auto">
-                            {users.length > 0 ? (
-                                <>
-                                    <Table variant="simple" size="sm">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>ID</Th>
-                                                <Th>Cédula</Th>
-                                                <Th>Nombre</Th>
-                                                <Th>Correo</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
-                                            {currentUsers.map((user) => (
-                                                <Tr 
-                                                    key={user.id} 
-                                                    onClick={() => setSelectedUserId(user.id)}
-                                                    bg={selectedUserId === user.id ? "teal.100" : "transparent"}
-                                                    _hover={{ bg: "gray.100", cursor: "pointer" }}
-                                                >
-                                                    <Td>{user.id}</Td>
-                                                    <Td>{user.cedula}</Td>
-                                                    <Td>{user.nombreCompleto || user.username}</Td>
-                                                    <Td>{user.username}</Td>
-                                                </Tr>
-                                            ))}
-                                        </Tbody>
-                                    </Table>
+        <Dialog.Root open={isOpen} size='lg' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                                    {/* Pagination controls */}
-                                    {totalPages > 1 && (
-                                        <Flex justifyContent="center" mt={4}>
-                                            <Button 
-                                                size="sm" 
-                                                onClick={() => goToPage(currentPage - 1)} 
-                                                isDisabled={currentPage === 1}
-                                                mr={2}
-                                            >
-                                                Anterior
-                                            </Button>
-                                            <Text alignSelf="center" mx={2}>
-                                                Página {currentPage} de {totalPages}
-                                            </Text>
-                                            <Button 
-                                                size="sm" 
-                                                onClick={() => goToPage(currentPage + 1)} 
-                                                isDisabled={currentPage === totalPages}
-                                                ml={2}
-                                            >
-                                                Siguiente
-                                            </Button>
-                                        </Flex>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Seleccionar Usuario</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <VStack gap={4}>
+                                <Field.Root>
+                                    <Field.Label>Buscar Usuario</Field.Label>
+                                    <HStack>
+                                        <Input
+                                            value={searchText}
+                                            onValueChange={(e) => setSearchText(e.target.value)}
+                                            onKeyDown={onKeyPress_InputBuscar}
+                                            placeholder="Ingrese texto de búsqueda"
+                                            disabled={isLoading}
+                                        />
+                                        <NativeSelect.Root>
+                                            <NativeSelect.Field
+                                                value={searchType}
+                                                onValueChange={(e) => setSearchType(e.target.value as SearchType)}
+                                                disabled={isLoading}
+                                                width="150px">
+                                                <option value={SearchType.ID}>ID</option>
+                                                <option value={SearchType.NAME}>Nombre</option>
+                                                <option value={SearchType.EMAIL}>Correo</option>
+                                            </NativeSelect.Field>
+                                            <NativeSelect.Indicator />
+                                        </NativeSelect.Root>
+                                        <Button 
+                                            colorPalette="blue" 
+                                            onClick={handleSearch} 
+                                            loading={isLoading}
+                                            loadingText="Buscando"
+                                        >
+                                            Buscar
+                                        </Button>
+                                    </HStack>
+                                </Field.Root>
+                                <Box w="full" overflowX="auto">
+                                    {users.length > 0 ? (
+                                        <>
+                                            <Table.Root variant="simple" size="sm">
+                                                <Table.Header>
+                                                    <Table.Row>
+                                                        <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Cédula</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Correo</Table.ColumnHeader>
+                                                    </Table.Row>
+                                                </Table.Header>
+                                                <Table.Body>
+                                                    {currentUsers.map((user) => (
+                                                        <Table.Row 
+                                                            key={user.id} 
+                                                            onClick={() => setSelectedUserId(user.id)}
+                                                            bg={selectedUserId === user.id ? "teal.100" : "transparent"}
+                                                            _hover={{ bg: "gray.100", cursor: "pointer" }}
+                                                        >
+                                                            <Table.Cell>{user.id}</Table.Cell>
+                                                            <Table.Cell>{user.cedula}</Table.Cell>
+                                                            <Table.Cell>{user.nombreCompleto || user.username}</Table.Cell>
+                                                            <Table.Cell>{user.username}</Table.Cell>
+                                                        </Table.Row>
+                                                    ))}
+                                                </Table.Body>
+                                            </Table.Root>
+
+                                            {/* Pagination controls */}
+                                            {totalPages > 1 && (
+                                                <Flex justifyContent="center" mt={4}>
+                                                    <Button 
+                                                        size="sm" 
+                                                        onClick={() => goToPage(currentPage - 1)} 
+                                                        disabled={currentPage === 1}
+                                                        mr={2}
+                                                    >
+                                                        Anterior
+                                                    </Button>
+                                                    <Text alignSelf="center" mx={2}>
+                                                        Página {currentPage} de {totalPages}
+                                                    </Text>
+                                                    <Button 
+                                                        size="sm" 
+                                                        onClick={() => goToPage(currentPage + 1)} 
+                                                        disabled={currentPage === totalPages}
+                                                        ml={2}
+                                                    >
+                                                        Siguiente
+                                                    </Button>
+                                                </Flex>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <Text textAlign="center">No hay usuarios para mostrar</Text>
                                     )}
-                                </>
-                            ) : (
-                                <Text textAlign="center">No hay usuarios para mostrar</Text>
-                            )}
-                        </Box>
-                    </VStack>
-                </ModalBody>
-                <ModalFooter>
-                    <Button 
-                        colorScheme="teal" 
-                        mr={3} 
-                        onClick={handleConfirm}
-                        isDisabled={selectedUserId === null}
-                    >
-                        Aceptar
-                    </Button>
-                    <Button variant="ghost" onClick={handleCancel}>
-                        Cancelar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                                </Box>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button 
+                                colorPalette="teal" 
+                                mr={3} 
+                                onClick={handleConfirm}
+                                disabled={selectedUserId === null}
+                            >
+                                Aceptar
+                            </Button>
+                            <Button variant="ghost" onClick={handleCancel}>
+                                Cancelar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 };
 

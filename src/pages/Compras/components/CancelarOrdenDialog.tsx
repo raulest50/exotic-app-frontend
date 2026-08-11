@@ -1,17 +1,6 @@
 // src/components/CancelarOrdenDialog.tsx
 import React, { useEffect, useState } from 'react';
-import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    Button,
-    Text,
-    Input,
-    useToast
-} from '@chakra-ui/react';
+import { Steps, Button, Text, Input, useToast, Dialog, Portal } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import { OrdenCompraMateriales } from '../types.tsx';
@@ -80,35 +69,45 @@ const CancelarOrdenDialog: React.FC<CancelarOrdenDialogProps> = ({ isOpen, onClo
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Confirmar Cancelación de Orden de Compra</ModalHeader>
-                <ModalBody>
-                    <Text mb={4}>
-                        Para confirmar la cancelación de la orden de compra, digite los 7 dígitos que ve en pantalla y de click en "Anular Orden de Compra".
-                    </Text>
-                    <Text fontWeight="bold" mb={4}>Código: {randomCode}</Text>
-                    <Input
-                        placeholder="Ingrese el código aquí"
-                        value={inputCode}
-                        onChange={(e) => setInputCode(e.target.value)}
-                    />
-                </ModalBody>
-                <ModalFooter>
-                    <Button
-                        colorScheme="red"
-                        mr={3}
-                        onClick={handleAnularOrden}
-                        isLoading={isCancelling}
-                        loadingText="Anulando..."
-                    >
-                        Anular Orden
-                    </Button>
-                    <Button variant="ghost" onClick={onClose}>Atrás</Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+        <Dialog.Root open={isOpen} onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
+
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Confirmar Cancelación de Orden de Compra</Dialog.Header>
+                        <Dialog.Body>
+                            <Text mb={4}>
+                                Para confirmar la cancelación de la orden de compra, digite los 7 dígitos que ve en pantalla y de click en "Anular Orden de Compra".
+                            </Text>
+                            <Text fontWeight="bold" mb={4}>Código: {randomCode}</Text>
+                            <Input
+                                placeholder="Ingrese el código aquí"
+                                value={inputCode}
+                                onValueChange={(e) => setInputCode(e.target.value)}
+                            />
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button
+                                colorPalette="red"
+                                mr={3}
+                                onClick={handleAnularOrden}
+                                loading={isCancelling}
+                                loadingText="Anulando..."
+                            >
+                                Anular Orden
+                            </Button>
+                            <Button variant="ghost" onClick={onClose}>Atrás</Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 };
 

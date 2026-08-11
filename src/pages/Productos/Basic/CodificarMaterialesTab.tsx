@@ -1,20 +1,19 @@
 import { useState, useRef } from 'react';
 import {
+    Steps,
     VStack,
     SimpleGrid,
     GridItem,
-    FormControl,
-    FormLabel,
-    FormHelperText,
     Input,
     Textarea,
     Button,
     useToast,
-    Select,
+    NativeSelect,
     Flex,
     HStack,
     IconButton,
-    Switch
+    Switch,
+    Field,
 } from '@chakra-ui/react';
 import axios, { AxiosError } from 'axios';
 
@@ -270,133 +269,137 @@ function CodificarMaterialesTab() {
 
     return (
         <>
-            <VStack w="full" h="full" spacing={4}>
+            <VStack w="full" h="full" gap={4}>
                 <SimpleGrid w="full" h="full" columns={3} gap="2em">
                     <GridItem colSpan={1}>
-                        <FormControl isRequired>
-                            <FormLabel>Codigo</FormLabel>
+                        <Field.Root required>
+                            <Field.Label>Codigo</Field.Label>
                             <Input
                                 value={codigo}
-                                onChange={(e) => setCodigo(normalizeProductId(e.target.value))}
+                                onValueChange={(e) => setCodigo(normalizeProductId(e.target.value))}
                                 sx={input_style}
                             />
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
 
                     <GridItem colSpan={1}>
-                        <FormControl>
-                            <FormLabel>Prefijo de lote</FormLabel>
+                        <Field.Root>
+                            <Field.Label>Prefijo de lote</Field.Label>
                             <Input
                                 value={prefijoLote}
-                                onChange={(e) => setPrefijoLote(e.target.value.toUpperCase())}
-                                isDisabled={!inventareable}
+                                onValueChange={(e) => setPrefijoLote(e.target.value.toUpperCase())}
+                                disabled={!inventareable}
                                 sx={input_style}
                             />
-                            <FormHelperText fontSize="xs">
+                            <Field.HelperText fontSize="xs">
                                 {inventareable
                                     ? 'Opcional para lotes internos de ingreso.'
                                     : 'No aplica para materiales sin existencias.'}
-                            </FormHelperText>
-                        </FormControl>
+                            </Field.HelperText>
+                        </Field.Root>
                     </GridItem>
 
                     <GridItem colSpan={1}>
-                        <FormControl isRequired>
-                            <FormLabel>Nombre</FormLabel>
+                        <Field.Root required>
+                            <Field.Label>Nombre</Field.Label>
                             <Input
                                 value={nombre}
-                                onChange={(e) => setNombre(e.target.value)}
+                                onValueChange={(e) => setNombre(e.target.value)}
                                 sx={input_style}
                             />
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
 
                     <GridItem colSpan={2}>
                         <HStack gap={10}>
                             <IconButton
                                 aria-label="subir pdf"
-                                icon={<FaFileUpload />}
                                 fontSize="3em"
                                 w="2em"
                                 h="2em"
-                                colorScheme="green"
-                                onClick={onClickUploadFicha}
-                            />
-                            <FormControl>
-                                <FormLabel>Url Ficha Tecnica (Opcional)</FormLabel>
+                                colorPalette="green"
+                                onClick={onClickUploadFicha}><FaFileUpload /></IconButton>
+                            <Field.Root>
+                                <Field.Label>Url Ficha Tecnica (Opcional)</Field.Label>
                                 <Input
                                     readOnly
                                     value={url_ftecnica}
                                     sx={input_style}
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </HStack>
                     </GridItem>
 
                     <GridItem colSpan={1}>
                         <Flex w="full" direction="row" align="flex-end" justify="space-around" gap={4}>
-                            <Select
-                                flex="1"
-                                value={tipo_unidad}
-                                onChange={(e) => setTipo_unidad(e.target.value)}
-                            >
-                                <option value={UNIDADES.KG}>{UNIDADES.KG}</option>
-                                <option value={UNIDADES.L}>{UNIDADES.L}</option>
-                                <option value={UNIDADES.U}>{UNIDADES.U}</option>
-                                <option value={UNIDADES.G}>{UNIDADES.G}</option>
-                            </Select>
-                            <FormControl flex="4" isRequired>
-                                <FormLabel>Cantidad por Unidad</FormLabel>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    flex="1"
+                                    value={tipo_unidad}
+                                    onValueChange={(e) => setTipo_unidad(e.target.value)}>
+                                    <option value={UNIDADES.KG}>{UNIDADES.KG}</option>
+                                    <option value={UNIDADES.L}>{UNIDADES.L}</option>
+                                    <option value={UNIDADES.U}>{UNIDADES.U}</option>
+                                    <option value={UNIDADES.G}>{UNIDADES.G}</option>
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
+                            <Field.Root flex="4" required>
+                                <Field.Label>Cantidad por Unidad</Field.Label>
                                 <Input
                                     value={cantidad_unidad}
-                                    onChange={(e) => setCantidad_unidad(e.target.value)}
+                                    onValueChange={(e) => setCantidad_unidad(e.target.value)}
                                     variant="filled"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </Flex>
                     </GridItem>
 
                     <GridItem colSpan={1}>
                         <Flex w="full" direction="row" align="flex-end" justify="space-around" gap={4}>
-                            <FormControl>
-                                <FormLabel>Tipo:</FormLabel>
-                                <Select
-                                    flex="1"
-                                    value={tipoMaterial}
-                                    onChange={(e) => setTipoMaterial(Number(e.target.value))}
-                                >
-                                    <option value={TIPOS_MATERIALES.materiaPrima}>Materia Prima</option>
-                                    <option value={TIPOS_MATERIALES.materialDeEmpaque}>Material Empaque</option>
-                                </Select>
-                            </FormControl>
+                            <Field.Root>
+                                <Field.Label>Tipo:</Field.Label>
+                                <NativeSelect.Root>
+                                    <NativeSelect.Field
+                                        flex="1"
+                                        value={tipoMaterial}
+                                        onValueChange={(e) => setTipoMaterial(Number(e.target.value))}>
+                                        <option value={TIPOS_MATERIALES.materiaPrima}>Materia Prima</option>
+                                        <option value={TIPOS_MATERIALES.materialDeEmpaque}>Material Empaque</option>
+                                    </NativeSelect.Field>
+                                    <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                            </Field.Root>
                         </Flex>
                     </GridItem>
 
                     <GridItem colSpan={1}>
                         <Flex w="full" direction="row" align="flex-end" justify="space-around" gap={4}>
-                            <FormControl>
-                                <FormLabel>Iva (%):</FormLabel>
-                                <Select
-                                    flex="1"
-                                    value={ivaPercentage}
-                                    onChange={(e) => setIvaPercentage(Number(e.target.value))}
-                                >
-                                    <option value={IVA_VALUES.iva_0}> No tiene </option>
-                                    <option value={IVA_VALUES.iva_5}> 5 %</option>
-                                    <option value={IVA_VALUES.iva_19}> 19 %</option>
+                            <Field.Root>
+                                <Field.Label>Iva (%):</Field.Label>
+                                <NativeSelect.Root>
+                                    <NativeSelect.Field
+                                        flex="1"
+                                        value={ivaPercentage}
+                                        onValueChange={(e) => setIvaPercentage(Number(e.target.value))}>
+                                        <option value={IVA_VALUES.iva_0}> No tiene </option>
+                                        <option value={IVA_VALUES.iva_5}> 5 %</option>
+                                        <option value={IVA_VALUES.iva_19}> 19 %</option>
 
-                                </Select>
-                            </FormControl>
+                                    </NativeSelect.Field>
+                                    <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                            </Field.Root>
                         </Flex>
                     </GridItem>
 
                     <GridItem colSpan={1}>
-                        <FormControl>
+                        <Field.Root>
                             <Flex align="center">
-                                <FormLabel mb="0">Mantiene existencias</FormLabel>
+                                <Field.Label mb="0">Mantiene existencias</Field.Label>
                                 <Switch
-                                    isChecked={inventareable}
-                                    onChange={(e) => {
+                                    checked={inventareable}
+                                    onValueChange={(e) => {
                                         const nextInventareable = e.target.checked;
                                         setInventareable(nextInventareable);
                                         if (nextInventareable) {
@@ -408,62 +411,62 @@ function CodificarMaterialesTab() {
                                     }}
                                 />
                             </Flex>
-                            <FormHelperText fontSize="xs">
+                            <Field.HelperText fontSize="xs">
                                 Requiere stock, almacén y lotes durante la dispensación.
-                            </FormHelperText>
-                        </FormControl>
+                            </Field.HelperText>
+                        </Field.Root>
                     </GridItem>
 
                     {!inventareable && (
                         <GridItem colSpan={1}>
-                            <FormControl>
+                            <Field.Root>
                                 <Flex align="center">
-                                    <FormLabel mb="0">Registrar consumo directo</FormLabel>
+                                    <Field.Label mb="0">Registrar consumo directo</Field.Label>
                                     <Switch
-                                        isChecked={consumoDirecto}
-                                        onChange={(e) => setConsumoDirecto(e.target.checked)}
+                                        checked={consumoDirecto}
+                                        onValueChange={(e) => setConsumoDirecto(e.target.checked)}
                                     />
                                 </Flex>
-                                <FormHelperText fontSize="xs">
+                                <Field.HelperText fontSize="xs">
                                     Registra el consumo contra la OP sin modificar stock ni exigir lote.
-                                </FormHelperText>
-                            </FormControl>
+                                </Field.HelperText>
+                            </Field.Root>
                         </GridItem>
                     )}
 
                     <GridItem colSpan={1}>
-                        <FormControl>
-                            <FormLabel>Punto de reorden</FormLabel>
+                        <Field.Root>
+                            <Field.Label>Punto de reorden</Field.Label>
                             <Input
                                 type="number"
                                 step="any"
                                 value={puntoReordenStr}
-                                onChange={(e) => setPuntoReordenStr(e.target.value)}
-                                isDisabled={!inventareable}
+                                onValueChange={(e) => setPuntoReordenStr(e.target.value)}
+                                disabled={!inventareable}
                                 sx={input_style}
                             />
-                            <FormHelperText fontSize="xs">
+                            <Field.HelperText fontSize="xs">
                                 -1 sin alertas; 0 sin umbral definido; mayor a 0 alerta si stock es menor o igual.
-                            </FormHelperText>
-                        </FormControl>
+                            </Field.HelperText>
+                        </Field.Root>
                     </GridItem>
 
                     <GridItem colSpan={3}>
-                        <FormControl>
-                            <FormLabel>Observaciones</FormLabel>
+                        <Field.Root>
+                            <Field.Label>Observaciones</Field.Label>
                             <Textarea
                                 value={observaciones}
-                                onChange={(e) => setObservaciones(e.target.value)}
+                                onValueChange={(e) => setObservaciones(e.target.value)}
                                 variant="filled"
                             />
-                        </FormControl>
+                        </Field.Root>
                     </GridItem>
                 </SimpleGrid>
             </VStack>
-            <Button m={5} colorScheme="teal" onClick={saveMateriaPrimSubmit}>
+            <Button m={5} colorPalette="teal" onClick={saveMateriaPrimSubmit}>
                 Codificar Material
             </Button>
-            <Button m={5} colorScheme="orange" onClick={clearMP_Cod_Fields}>
+            <Button m={5} colorPalette="orange" onClick={clearMP_Cod_Fields}>
                 Borrar Campos
             </Button>
 

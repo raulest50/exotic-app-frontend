@@ -1,16 +1,16 @@
 import {useState} from 'react';
 import {
-    Button, 
-    Flex, 
-    FormControl, 
-    FormLabel, 
-    Grid, 
-    GridItem, 
-    Input, 
-    Select,
+    Steps,
+    Button,
+    Flex,
+    Grid,
+    GridItem,
+    Input,
+    NativeSelect,
     useToast,
     Box,
-    Container
+    Container,
+    Field,
 } from '@chakra-ui/react';
 import axios, { AxiosError } from 'axios';
 import {
@@ -263,230 +263,234 @@ export function IncorporarPersonal() {
                     {/* Personal Information Section */}
                     <Grid templateColumns={['1fr', 'repeat(2, 1fr)']} gap={4} p="1em" boxShadow="base">
                         <GridItem colSpan={[1, 2]}>
-                            <FormLabel fontSize="lg" fontWeight="bold">Información Personal</FormLabel>
+                            <Field.Label fontSize="lg" fontWeight="bold">Información Personal</Field.Label>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl isRequired>
-                                <FormLabel>Cédula</FormLabel>
+                            <Field.Root required>
+                                <Field.Label>Cédula</Field.Label>
                                 <Input
                                     value={id}
-                                    onChange={(e) => setId(e.target.value)}
+                                    onValueChange={(e) => setId(e.target.value)}
                                     placeholder="Número de cédula"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl isRequired>
-                                <FormLabel>Nombres</FormLabel>
+                            <Field.Root required>
+                                <Field.Label>Nombres</Field.Label>
                                 <Input
                                     value={nombres}
-                                    onChange={(e) => setNombres(e.target.value)}
+                                    onValueChange={(e) => setNombres(e.target.value)}
                                     placeholder="Nombres"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl isRequired>
-                                <FormLabel>Apellidos</FormLabel>
+                            <Field.Root required>
+                                <Field.Label>Apellidos</Field.Label>
                                 <Input
                                     value={apellidos}
-                                    onChange={(e) => setApellidos(e.target.value)}
+                                    onValueChange={(e) => setApellidos(e.target.value)}
                                     placeholder="Apellidos"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl isRequired>
-                                <FormLabel>Celular</FormLabel>
+                            <Field.Root required>
+                                <Field.Label>Celular</Field.Label>
                                 <Input
                                     value={celular}
-                                    onChange={(e) => setCelular(e.target.value)}
+                                    onValueChange={(e) => setCelular(e.target.value)}
                                     placeholder="Número de celular"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem colSpan={[1, 2]}>
-                            <FormControl isRequired>
-                                <FormLabel>Dirección</FormLabel>
+                            <Field.Root required>
+                                <Field.Label>Dirección</Field.Label>
                                 <Input
                                     value={direccion}
-                                    onChange={(e) => setDireccion(e.target.value)}
+                                    onValueChange={(e) => setDireccion(e.target.value)}
                                     placeholder="Dirección de residencia"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl>
-                                <FormLabel>Correo Electrónico</FormLabel>
+                            <Field.Root>
+                                <Field.Label>Correo Electrónico</Field.Label>
                                 <Input
                                     type="email"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onValueChange={(e) => setEmail(e.target.value)}
                                     placeholder="Correo electrónico (opcional)"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl>
-                                <FormLabel>Contacto de emergencia</FormLabel>
+                            <Field.Root>
+                                <Field.Label>Contacto de emergencia</Field.Label>
                                 <Input
                                     value={nombreContactoEmergencia}
-                                    onChange={(e) => setNombreContactoEmergencia(e.target.value)}
+                                    onValueChange={(e) => setNombreContactoEmergencia(e.target.value)}
                                     placeholder="Nombre del contacto"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl>
-                                <FormLabel>Celular de emergencia</FormLabel>
+                            <Field.Root>
+                                <Field.Label>Celular de emergencia</Field.Label>
                                 <Input
                                     value={celularContactoEmergencia}
-                                    onChange={(e) => setCelularContactoEmergencia(e.target.value)}
+                                    onValueChange={(e) => setCelularContactoEmergencia(e.target.value)}
                                     placeholder="Celular del contacto"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl>
-                                <FormLabel>Estado civil</FormLabel>
-                                <Select
-                                    placeholder="Seleccione estado civil"
-                                    value={estadoCivil}
-                                    onChange={(e) => setEstadoCivil(e.target.value as EstadoCivil | '')}
-                                >
-                                    {Object.values(EstadoCivil).map((item) => (
-                                        <option key={item} value={item}>{getEstadoCivilText(item)}</option>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            <Field.Root>
+                                <Field.Label>Estado civil</Field.Label>
+                                <NativeSelect.Root>
+                                    <NativeSelect.Field
+                                        placeholder="Seleccione estado civil"
+                                        value={estadoCivil}
+                                        onValueChange={(e) => setEstadoCivil(e.target.value as EstadoCivil | '')}>
+                                        {Object.values(EstadoCivil).map((item) => (
+                                            <option key={item} value={item}>{getEstadoCivilText(item)}</option>
+                                        ))}
+                                    </NativeSelect.Field>
+                                    <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl>
-                                <FormLabel>Número de hijos</FormLabel>
+                            <Field.Root>
+                                <Field.Label>Número de hijos</Field.Label>
                                 <Input
                                     type="number"
                                     min={0}
                                     value={numeroHijos}
-                                    onChange={(e) => setNumeroHijos(e.target.value)}
+                                    onValueChange={(e) => setNumeroHijos(e.target.value)}
                                     placeholder="Sin informar"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
                     </Grid>
 
                     {/* Work Information Section */}
                     <Grid templateColumns={['1fr', 'repeat(2, 1fr)']} gap={4} p="1em" boxShadow="base">
                         <GridItem colSpan={[1, 2]}>
-                            <FormLabel fontSize="lg" fontWeight="bold">Información Laboral</FormLabel>
+                            <Field.Label fontSize="lg" fontWeight="bold">Información Laboral</Field.Label>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl>
-                                <FormLabel>Cargo</FormLabel>
+                            <Field.Root>
+                                <Field.Label>Cargo</Field.Label>
                                 <Input
                                     value={cargo}
-                                    onChange={(e) => setCargo(e.target.value)}
+                                    onValueChange={(e) => setCargo(e.target.value)}
                                     placeholder="Cargo (opcional)"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl>
-                                <FormLabel>Departamento</FormLabel>
-                                <Select
-                                    placeholder="Seleccione departamento"
-                                    value={departamento}
-                                    onChange={(e) => setDepartamento(e.target.value as DepartamentoIntegrante | '')}
-                                >
-                                    <option value="PRODUCCION">Producción</option>
-                                    <option value="ADMINISTRATIVO">Administrativo</option>
-                                </Select>
-                            </FormControl>
+                            <Field.Root>
+                                <Field.Label>Departamento</Field.Label>
+                                <NativeSelect.Root>
+                                    <NativeSelect.Field
+                                        placeholder="Seleccione departamento"
+                                        value={departamento}
+                                        onValueChange={(e) => setDepartamento(e.target.value as DepartamentoIntegrante | '')}>
+                                        <option value="PRODUCCION">Producción</option>
+                                        <option value="ADMINISTRATIVO">Administrativo</option>
+                                    </NativeSelect.Field>
+                                    <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl isRequired>
-                                <FormLabel>Fecha de ingreso</FormLabel>
+                            <Field.Root required>
+                                <Field.Label>Fecha de ingreso</Field.Label>
                                 <Input
                                     type="date"
                                     value={fechaIngreso}
-                                    onChange={(e) => setFechaIngreso(e.target.value)}
+                                    onValueChange={(e) => setFechaIngreso(e.target.value)}
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl hidden>
-                                <FormLabel>Centro de Costo</FormLabel>
+                            <Field.Root hidden>
+                                <Field.Label>Centro de Costo</Field.Label>
                                 <Input
                                     value={centroDeCosto}
-                                    onChange={(e) => setCentroDeCosto(e.target.value)}
+                                    onValueChange={(e) => setCentroDeCosto(e.target.value)}
                                     placeholder="Centro de costo (opcional)"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl hidden>
-                                <FormLabel>Centro de Producción</FormLabel>
+                            <Field.Root hidden>
+                                <Field.Label>Centro de Producción</Field.Label>
                                 <Input
                                     value={centroDeProduccion}
-                                    onChange={(e) => setCentroDeProduccion(e.target.value)}
+                                    onValueChange={(e) => setCentroDeProduccion(e.target.value)}
                                     placeholder="Centro de producción (opcional)"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem hidden>
-                            <FormControl>
-                                <FormLabel>Salario (COP)</FormLabel>
+                            <Field.Root>
+                                <Field.Label>Salario (COP)</Field.Label>
                                 <Input
                                     type="number"
                                     value={salario}
-                                    onChange={(e) => setSalario(e.target.value)}
+                                    onValueChange={(e) => setSalario(e.target.value)}
                                     placeholder="Salario en pesos colombianos (opcional)"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                     </Grid>
 
                     <Grid templateColumns={['1fr', 'repeat(2, 1fr)']} gap={4} p="1em" boxShadow="base">
                         <GridItem colSpan={[1, 2]}>
-                            <FormLabel fontSize="lg" fontWeight="bold">Información Bancaria</FormLabel>
+                            <Field.Label fontSize="lg" fontWeight="bold">Información Bancaria</Field.Label>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl>
-                                <FormLabel>Número de cuenta</FormLabel>
+                            <Field.Root>
+                                <Field.Label>Número de cuenta</Field.Label>
                                 <Input
                                     value={numeroCuentaBancaria}
-                                    onChange={(e) => setNumeroCuentaBancaria(e.target.value)}
+                                    onValueChange={(e) => setNumeroCuentaBancaria(e.target.value)}
                                     placeholder="Número de cuenta bancaria"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
 
                         <GridItem>
-                            <FormControl>
-                                <FormLabel>Banco</FormLabel>
+                            <Field.Root>
+                                <Field.Label>Banco</Field.Label>
                                 <Input
                                     value={banco}
-                                    onChange={(e) => setBanco(e.target.value)}
+                                    onValueChange={(e) => setBanco(e.target.value)}
                                     placeholder="Entidad bancaria"
                                 />
-                            </FormControl>
+                            </Field.Root>
                         </GridItem>
                     </Grid>
 
@@ -494,7 +498,7 @@ export function IncorporarPersonal() {
                     <Flex direction={"row"} gap={6} justifyContent="center" mt={4}>
                         <Button
                             variant={"solid"}
-                            colorScheme={"blue"}
+                            colorPalette={"blue"}
                             size="lg"
                             onClick={handleRegistrar}
                         >
@@ -502,7 +506,7 @@ export function IncorporarPersonal() {
                         </Button>
                         <Button
                             variant={"solid"}
-                            colorScheme={"orange"}
+                            colorPalette={"orange"}
                             size="lg"
                             onClick={handleClear}
                         >

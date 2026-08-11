@@ -1,19 +1,13 @@
 // src/components/UserViewer.tsx
 import { useEffect, useState } from 'react';
 import {
+    Steps,
     Accordion,
-    AccordionButton,
-    AccordionIcon,
-    AccordionItem,
-    AccordionPanel,
     Box,
     Button,
     Flex,
     IconButton,
     Menu,
-    MenuButton,
-    MenuItem,
-    MenuList,
     Spacer,
     Table,
     Tbody,
@@ -23,6 +17,7 @@ import {
     Thead,
     Tr,
     useToast,
+    Portal,
 } from '@chakra-ui/react';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import axios from 'axios';
@@ -259,19 +254,19 @@ export default function UserViewer({
             </Text>
             <Flex mb={4}>
                 <Button
-                    colorScheme="blue"
+                    colorPalette="blue"
                     mr={4}
                     onClick={handleCreateUser}
-                    isLoading={isCreatingUser}
-                    isDisabled={isLoading}
+                    loading={isCreatingUser}
+                    disabled={isLoading}
                 >
                     Crear Nuevo Usuario
                 </Button>
                 <Button
-                    colorScheme="red"
+                    colorPalette="red"
                     onClick={handleDeleteUser}
-                    isLoading={isDeletingUser}
-                    isDisabled={
+                    loading={isDeletingUser}
+                    disabled={
                         isLoading ||
                         !selectedUser ||
                         selectedUser.username.toLowerCase() === 'master'
@@ -281,10 +276,10 @@ export default function UserViewer({
                     Eliminar Usuario
                 </Button>
                 <Button
-                    colorScheme="orange"
+                    colorPalette="orange"
                     onClick={handleDeactivateUser}
-                    isLoading={isDeactivatingUser}
-                    isDisabled={
+                    loading={isDeactivatingUser}
+                    disabled={
                         isLoading ||
                         !selectedUser ||
                         selectedUser.username.toLowerCase() === 'master' ||
@@ -295,10 +290,10 @@ export default function UserViewer({
                     Desactivar Usuario
                 </Button>
                 <Button
-                    colorScheme="green"
+                    colorPalette="green"
                     onClick={handleActivateUser}
-                    isLoading={isActivatingUser}
-                    isDisabled={
+                    loading={isActivatingUser}
+                    disabled={
                         isLoading ||
                         !selectedUser ||
                         selectedUser.username.toLowerCase() === 'master' ||
@@ -310,19 +305,19 @@ export default function UserViewer({
             </Flex>
             <Flex>
                 <Box flex="2">
-                    <Table variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>ID</Th>
-                                <Th>Username</Th>
-                                <Th>Nombre Completo</Th>
-                                <Th>Estado</Th>
-                                <Th>Acciones</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Username</Table.ColumnHeader>
+                                <Table.ColumnHeader>Nombre Completo</Table.ColumnHeader>
+                                <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                <Table.ColumnHeader>Acciones</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {users.map((user) => (
-                                <Tr
+                                <Table.Row
                                     key={user.id}
                                     onClick={() => handleUserSelect(user)}
                                     _hover={{ bg: 'app.rowActiveBlue', cursor: 'pointer' }}
@@ -336,37 +331,36 @@ export default function UserViewer({
                                                     : 'app.rowWarningOrange'
                                     }
                                 >
-                                    <Td>{user.id}</Td>
-                                    <Td>{user.username}</Td>
-                                    <Td>{user.nombreCompleto}</Td>
-                                    <Td>{user.username.toLowerCase() === 'master' ? 'Activo' : user.estado === 1 ? 'Activo' : 'Inactivo'}</Td>
-                                    <Td onClick={(e) => e.stopPropagation()}>
-                                        <Menu>
-                                            <MenuButton
-                                                as={IconButton}
+                                    <Table.Cell>{user.id}</Table.Cell>
+                                    <Table.Cell>{user.username}</Table.Cell>
+                                    <Table.Cell>{user.nombreCompleto}</Table.Cell>
+                                    <Table.Cell>{user.username.toLowerCase() === 'master' ? 'Activo' : user.estado === 1 ? 'Activo' : 'Inactivo'}</Table.Cell>
+                                    <Table.Cell onClick={(e) => e.stopPropagation()}>
+                                        <Menu.Root>
+                                            <Menu.Trigger
                                                 icon={<BsThreeDotsVertical />}
                                                 variant="ghost"
                                                 size="sm"
                                                 aria-label="Acciones"
-                                                isDisabled={
+                                                disabled={
                                                     isLoading ||
                                                     ['master', 'super_master'].includes(user.username.toLowerCase())
                                                 }
-                                            />
-                                            <MenuList>
-                                                <MenuItem onClick={() => onEditUser(user)}>
-                                                    Editar campos
-                                                </MenuItem>
-                                                <MenuItem onClick={() => onEditPermissions(user)}>
-                                                    Editar permisos y accesos
-                                                </MenuItem>
-                                            </MenuList>
-                                        </Menu>
-                                    </Td>
-                                </Tr>
+                                                asChild><IconButton /></Menu.Trigger>
+                                            <Portal><Menu.Positioner><Menu.Content>
+                                                        <Menu.Item onSelect={() => onEditUser(user)} value='item-0'>
+                                                            Editar campos
+                                                        </Menu.Item>
+                                                        <Menu.Item onSelect={() => onEditPermissions(user)} value='item-1'>
+                                                            Editar permisos y accesos
+                                                        </Menu.Item>
+                                                    </Menu.Content></Menu.Positioner></Portal>
+                                        </Menu.Root>
+                                    </Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 </Box>
                 <Spacer />
                 <Box flex="1" borderWidth="1px" borderRadius="md" p={4} maxW="420px">
@@ -375,14 +369,14 @@ export default function UserViewer({
                     </Text>
                     {selectedUser ? (
                         modulosDelUsuario.length > 0 ? (
-                            <Accordion allowToggle reduceMotion>
+                            <Accordion.Root collapsible>
                                 {modulosDelUsuario.map((ma) => {
                                     const modStr =
                                         typeof ma.modulo === 'string' ? ma.modulo : String(ma.modulo ?? '');
                                     const title = modStr ? modStr.replace(/_/g, ' ') : 'Desconocido';
                                     return (
-                                        <AccordionItem key={ma.id}>
-                                            <AccordionButton px={2}>
+                                        <Accordion.Item key={ma.id} value='item-0'>
+                                            <Accordion.ItemTrigger px={2}>
                                                 <Box flex="1" textAlign="left">
                                                     <Text fontWeight="medium" fontSize="sm">
                                                         {title}
@@ -391,30 +385,30 @@ export default function UserViewer({
                                                         ID {ma.id}
                                                     </Text>
                                                 </Box>
-                                                <AccordionIcon />
-                                            </AccordionButton>
-                                            <AccordionPanel pb={3} pt={0} px={2}>
-                                                {ma.tabs?.length ? (
-                                                    <Box as="ul" pl={4} fontSize="sm">
-                                                        {ma.tabs.map((t) => (
-                                                            <Text as="li" key={t.id ?? `${t.tabId}-${t.nivel}`}>
-                                                                {tabDisplayLabel(modStr, t.tabId)}{' '}
-                                                                <Text as="span" color="app.textSubtle" fontSize="xs">
-                                                                    ({t.tabId}) — nivel {t.nivel}
+                                                <Accordion.ItemIndicator />
+                                            </Accordion.ItemTrigger>
+                                            <Accordion.ItemContent pb={3} pt={0} px={2} animation='none'><Accordion.ItemBody>
+                                                    {ma.tabs?.length ? (
+                                                        <Box as="ul" pl={4} fontSize="sm">
+                                                            {ma.tabs.map((t) => (
+                                                                <Text as="li" key={t.id ?? `${t.tabId}-${t.nivel}`}>
+                                                                    {tabDisplayLabel(modStr, t.tabId)}{' '}
+                                                                    <Text as="span" color="app.textSubtle" fontSize="xs">
+                                                                        ({t.tabId}) — nivel {t.nivel}
+                                                                    </Text>
                                                                 </Text>
-                                                            </Text>
-                                                        ))}
-                                                    </Box>
-                                                ) : (
-                                                    <Text fontSize="sm" color="app.textSubtle">
-                                                        —
-                                                    </Text>
-                                                )}
-                                            </AccordionPanel>
-                                        </AccordionItem>
+                                                            ))}
+                                                        </Box>
+                                                    ) : (
+                                                        <Text fontSize="sm" color="app.textSubtle">
+                                                            —
+                                                        </Text>
+                                                    )}
+                                                </Accordion.ItemBody></Accordion.ItemContent>
+                                        </Accordion.Item>
                                     );
                                 })}
-                            </Accordion>
+                            </Accordion.Root>
                         ) : (
                             <Text fontSize="sm">No hay accesos asignados</Text>
                         )

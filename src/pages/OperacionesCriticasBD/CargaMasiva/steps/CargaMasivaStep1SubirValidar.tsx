@@ -1,4 +1,5 @@
 import {
+    Steps,
     Box,
     Button,
     Flex,
@@ -9,9 +10,6 @@ import {
     Icon,
     Input,
     Alert,
-    AlertIcon,
-    AlertDescription,
-    AlertTitle,
 } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import { FaFileCircleCheck, FaFileCircleQuestion } from "react-icons/fa6";
@@ -250,14 +248,14 @@ export default function CargaMasivaStep1SubirValidar({
 
     return (
         <Box p={4}>
-            <VStack align="stretch" spacing={6}>
+            <VStack align="stretch" gap={6}>
                 <Text fontSize="lg" fontWeight="semibold">
                     Subir y validar archivo Excel
                 </Text>
 
                 <Box p={5} borderWidth="1px" borderRadius="lg">
-                    <VStack spacing={4} align="stretch">
-                        <HStack spacing={4} alignItems="center">
+                    <VStack gap={4} align="stretch">
+                        <HStack gap={4} alignItems="center">
                             <Button
                                 onClick={() => {
                                     console.log("[CargaMasiva Step1] Subir Excel clicked, inputRef.current:", inputRef.current != null);
@@ -271,7 +269,7 @@ export default function CargaMasivaStep1SubirValidar({
                                 ref={inputRef}
                                 style={{ display: "none" }}
                                 accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                                onChange={handleFileChange}
+                                onValueChange={handleFileChange}
                             />
                             <Icon
                                 as={excelFile ? FaFileCircleCheck : FaFileCircleQuestion}
@@ -279,17 +277,17 @@ export default function CargaMasivaStep1SubirValidar({
                                 color={excelFile ? "green" : "orange.500"}
                             />
                             {excelFile && (
-                                <Text fontSize="sm" noOfLines={1} flex={1}>
+                                <Text fontSize="sm" lineClamp={1} flex={1}>
                                     {excelFile.name}
                                 </Text>
                             )}
                         </HStack>
 
                         <Button
-                            colorScheme="teal"
+                            colorPalette="teal"
                             onClick={() => excelFile && validateExcelFile(excelFile)}
-                            isDisabled={!excelFile || isValidating}
-                            isLoading={isValidating}
+                            disabled={!excelFile || isValidating}
+                            loading={isValidating}
                             loadingText="Validando..."
                         >
                             Validar Excel
@@ -298,12 +296,12 @@ export default function CargaMasivaStep1SubirValidar({
                 </Box>
 
                 {validationErrors.length > 0 && (
-                    <Alert status="error">
-                        <AlertIcon />
+                    <Alert.Root status="error">
+                        <Alert.Indicator />
                         <Box>
-                            <AlertTitle>Errores de validación encontrados:</AlertTitle>
-                            <AlertDescription>
-                                <VStack align="stretch" spacing={1} mt={2}>
+                            <Alert.Title>Errores de validación encontrados:</Alert.Title>
+                            <Alert.Description>
+                                <VStack align="stretch" gap={1} mt={2}>
                                     {validationErrors.slice(0, 10).map((error, index) => (
                                         <Text key={index} fontSize="sm">
                                             {error}
@@ -315,18 +313,18 @@ export default function CargaMasivaStep1SubirValidar({
                                         </Text>
                                     )}
                                 </VStack>
-                            </AlertDescription>
+                            </Alert.Description>
                         </Box>
-                    </Alert>
+                    </Alert.Root>
                 )}
 
                 {excel_is_valid && excelData && (
-                    <Alert status="success">
-                        <AlertIcon />
-                        <AlertDescription>
+                    <Alert.Root status="success">
+                        <Alert.Indicator />
+                        <Alert.Description>
                             Archivo validado correctamente. Se encontraron {excelData.length} materiales para actualizar.
-                        </AlertDescription>
-                    </Alert>
+                        </Alert.Description>
+                    </Alert.Root>
                 )}
 
                 <Flex gap={4} justify="flex-end">
@@ -334,9 +332,9 @@ export default function CargaMasivaStep1SubirValidar({
                         Atrás
                     </Button>
                     <Button
-                        colorScheme="blue"
+                        colorPalette="blue"
                         onClick={() => setActiveStep(2)}
-                        isDisabled={!excel_is_valid}
+                        disabled={!excel_is_valid}
                     >
                         Siguiente
                     </Button>

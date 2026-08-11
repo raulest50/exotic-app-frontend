@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import AreaPickerGeneric from './AreaPickerGeneric.tsx';
-import { Button, Box, Text, VStack } from '@chakra-ui/react';
+import { Steps, Button, Box, Text, VStack } from '@chakra-ui/react';
 
 // Interface for AreaProduccion based on the backend model
 interface AreaProduccion {
@@ -25,11 +25,11 @@ export const Default = () => {
   };
 
   return (
-    <VStack spacing={4} align="start" p={5}>
-      <Button colorScheme="blue" onClick={handleOpen}>
+    <VStack gap={4} align="start" p={5}>
+      <Button colorPalette="blue" onClick={handleOpen}>
         Abrir Selector de Área
       </Button>
-      
+
       {selectedArea && (
         <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50" width="100%">
           <Text fontWeight="bold">Área Seleccionada:</Text>
@@ -38,7 +38,7 @@ export const Default = () => {
           <Text>Descripción: {selectedArea.descripcion}</Text>
         </Box>
       )}
-      
+
       <AreaPickerGeneric
         isOpen={isOpen}
         onClose={handleClose}

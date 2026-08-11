@@ -12,23 +12,38 @@
  */
 
 import {
-    Flex, Box, Heading, Text, Button, VStack, HStack, 
-    Grid, GridItem, Card, CardHeader, CardBody, 
-    FormControl, FormHelperText, Select, Input, Textarea,
-    useToast, useDisclosure, Badge, Modal, ModalOverlay,
-    ModalContent, ModalHeader, ModalBody, ModalCloseButton, ModalFooter,
+    Steps,
+    Flex,
+    Box,
+    Heading,
+    Text,
+    Button,
+    VStack,
+    HStack,
+    Grid,
+    GridItem,
+    Card,
+    NativeSelect,
+    Input,
+    Textarea,
+    useToast,
+    useDisclosure,
+    Badge,
     Switch,
+    Field,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import {Material, Producto, ProductoBasicUpdatePayload, ProductoInventareableUpdatePayload} from "../../types.tsx";
-import { ArrowBackIcon, EditIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
 import {IVA_VALUES} from "../../types.tsx";
-
 import DeleteProductoDialog from '../../DefSemiTer/consulta/DeleteProductoDialog.tsx';
+
 import { Modulo } from '../../../Usuarios/GestionUsuarios/types.tsx';
 import { useModuleAccessLevel } from '../../../../auth/usePermissions';
+import { LuArrowLeft, LuPencil } from 'react-icons/lu';
 
 function isValidPuntoReorden(pr: number | undefined): boolean {
     if (pr === undefined) return false;
@@ -52,9 +67,9 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
     const toast = useToast();
     const endPoints = new EndPointsURL();
     const { nivel: productosAccessLevel } = useModuleAccessLevel(Modulo.PRODUCTOS);
-    const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+    const { open: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
     const {
-        isOpen: isInventareableOpen,
+        open: isInventareableOpen,
         onOpen: onInventareableOpen,
         onClose: onInventareableClose,
     } = useDisclosure();
@@ -415,19 +430,12 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
     return (
         <Box p={5} bg="app.surface" borderRadius="md" boxShadow="base">
             <Flex justifyContent="space-between" alignItems="center" mb={5}>
-                <Button 
-                    leftIcon={<ArrowBackIcon />} 
-                    colorScheme="blue" 
-                    variant="outline"
-                    onClick={handleBack}
-                >
-                    Regresar
-                </Button>
+                <Button colorPalette="blue" variant="outline" onClick={handleBack}><LuArrowLeft />Regresar
+                                    </Button>
                 <Heading size="lg">Detalle del Producto</Heading>
                 {canEdit && !editMode && (
-                    <Button 
-                        leftIcon={<EditIcon />} 
-                        colorScheme="green" 
+                    <Button
+                        colorPalette="green"
                         onClick={() => {
                             if (producto.tipo_producto === 'M') {
                                 setMaterialPuntoReordenInput(
@@ -435,20 +443,18 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                 );
                             }
                             setEditMode(true);
-                        }}
-                    >
-                        Editar
-                    </Button>
+                        }}><LuPencil />Editar
+                                            </Button>
                 )}
                 {editMode && (
                     <HStack>
                         {isMaterial && (
-                            <Button colorScheme="red" onClick={onDeleteOpen}>
+                            <Button colorPalette="red" onClick={onDeleteOpen}>
                                 Eliminar
                             </Button>
                         )}
                         <Button
-                            colorScheme="red"
+                            colorPalette="red"
                             variant="outline"
                             onClick={() => {
                                 setEditMode(false);
@@ -463,9 +469,9 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                             Cancelar
                         </Button>
                         <Button
-                            colorScheme="green"
+                            colorPalette="green"
                             onClick={handleSaveChanges}
-                            isDisabled={!isFormValid || !hasChanges}
+                            disabled={!isFormValid || !hasChanges}
                         >
                             Guardar
                         </Button>
@@ -473,24 +479,24 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                 )}
             </Flex>
 
-            <Card mb={5} variant="outline" boxShadow="md">
-                <CardHeader bg="app.stepperBlue">
+            <Card.Root mb={5} variant="outline" boxShadow="md">
+                <Card.Header bg="app.stepperBlue">
                     <Heading size="md">{producto.nombre}</Heading>
                     <Text color="app.textMuted">ID: {producto.productoId}</Text>
-                </CardHeader>
-                <CardBody>
+                </Card.Header>
+                <Card.Body>
                     <Grid templateColumns="repeat(2, 1fr)" gap={6}>
                         <GridItem>
-                            <VStack align="start" spacing={3}>
+                            <VStack align="start" gap={3}>
                                 <Box>
                                     <Text fontWeight="bold">Nombre:</Text>
                                     {editMode ? (
-                                        <FormControl mt={2}>
+                                        <Field.Root mt={2}>
                                             <Input
                                                 value={productoData.nombre}
-                                                onChange={(e) => handleInputChange('nombre', e.target.value)}
+                                                onValueChange={(e) => handleInputChange('nombre', e.target.value)}
                                             />
-                                        </FormControl>
+                                        </Field.Root>
                                     ) : (
                                         <Text>{producto.nombre}</Text>
                                     )}
@@ -501,12 +507,12 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                 </Box>
                                 <Box>
                                     <Text fontWeight="bold">Mantiene existencias:</Text>
-                                    <HStack mt={1} spacing={2}>
-                                        <Badge colorScheme={isInventareable ? "blue" : "gray"}>
+                                    <HStack mt={1} gap={2}>
+                                        <Badge colorPalette={isInventareable ? "blue" : "gray"}>
                                             {isInventareable ? "Sí" : "No"}
                                         </Badge>
                                         {isMaterial && !isInventareable && (
-                                            <Badge colorScheme={isConsumoDirecto ? "purple" : "gray"}>
+                                            <Badge colorPalette={isConsumoDirecto ? "purple" : "gray"}>
                                                 {isConsumoDirecto ? "Consumo directo" : "Sin dispensación"}
                                             </Badge>
                                         )}
@@ -514,10 +520,10 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                             <Button
                                                 size="xs"
                                                 variant="outline"
-                                                colorScheme="blue"
+                                                colorPalette="blue"
                                                 onClick={openInventoryConfiguration}
-                                                isDisabled={hasChanges || isUpdatingInventareable}
-                                                isLoading={isUpdatingInventareable}
+                                                disabled={hasChanges || isUpdatingInventareable}
+                                                loading={isUpdatingInventareable}
                                             >
                                                 Configurar
                                             </Button>
@@ -528,15 +534,17 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                     <Box>
                                         <Text fontWeight="bold">Tipo de Material:</Text>
                                         {editMode ? (
-                                            <FormControl mt={2}>
-                                                <Select
-                                                    value={(productoData as Material).tipoMaterial}
-                                                    onChange={(e) => handleInputChange('tipoMaterial', Number(e.target.value))}
-                                                >
-                                                    <option value={1}>Materia Prima</option>
-                                                    <option value={2}>Material de Empaque</option>
-                                                </Select>
-                                            </FormControl>
+                                            <Field.Root mt={2}>
+                                                <NativeSelect.Root>
+                                                    <NativeSelect.Field
+                                                        value={(productoData as Material).tipoMaterial}
+                                                        onValueChange={(e) => handleInputChange('tipoMaterial', Number(e.target.value))}>
+                                                        <option value={1}>Materia Prima</option>
+                                                        <option value={2}>Material de Empaque</option>
+                                                    </NativeSelect.Field>
+                                                    <NativeSelect.Indicator />
+                                                </NativeSelect.Root>
+                                            </Field.Root>
                                         ) : (
                                             <Text>{getTipoMaterialText((producto as Material).tipoMaterial)}</Text>
                                         )}
@@ -546,18 +554,18 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                     <Box>
                                         <Text fontWeight="bold">Prefijo de lote:</Text>
                                         {editMode ? (
-                                            <FormControl mt={2}>
+                                            <Field.Root mt={2}>
                                                 <Input
                                                     value={(productoData as Material).prefijoLote ?? ''}
-                                                    onChange={(e) => handleInputChange('prefijoLote', e.target.value.toUpperCase())}
-                                                    isDisabled={!isInventareable}
+                                                    onValueChange={(e) => handleInputChange('prefijoLote', e.target.value.toUpperCase())}
+                                                    disabled={!isInventareable}
                                                 />
-                                                <FormHelperText fontSize="xs">
+                                                <Field.HelperText fontSize="xs">
                                                     {isInventareable
                                                         ? 'Opcional para lotes internos de ingreso.'
                                                         : 'No aplica para materiales sin existencias.'}
-                                                </FormHelperText>
-                                            </FormControl>
+                                                </Field.HelperText>
+                                            </Field.Root>
                                         ) : (
                                             <Text>{(producto as Material).prefijoLote || '-'}</Text>
                                         )}
@@ -567,21 +575,21 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                     <Box>
                                         <Text fontWeight="bold">Punto de reorden:</Text>
                                         {editMode ? (
-                                            <FormControl mt={2}>
+                                            <Field.Root mt={2}>
                                                 <Input
                                                     type="text"
                                                     inputMode="decimal"
                                                     value={materialPuntoReordenInput}
-                                                    onChange={(e) =>
+                                                    onValueChange={(e) =>
                                                         setMaterialPuntoReordenInput(e.target.value)
                                                     }
-                                                    isDisabled={!isInventareable}
+                                                    disabled={!isInventareable}
                                                 />
-                                                <FormHelperText fontSize="xs">
+                                                <Field.HelperText fontSize="xs">
                                                     -1 sin alertas; 0 sin umbral definido; mayor a 0 alerta si
                                                     stock es menor o igual.
-                                                </FormHelperText>
-                                            </FormControl>
+                                                </Field.HelperText>
+                                            </Field.Root>
                                         ) : (
                                             <Text>
                                                 {(producto as Material).puntoReorden !== undefined
@@ -598,7 +606,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                             </VStack>
                         </GridItem>
                         <GridItem>
-                            <VStack align="start" spacing={3}>
+                            <VStack align="start" gap={3}>
                                 <Box>
                                     <Text fontWeight="bold">Unidad de Medida:</Text>
                                     <Text>{producto.tipoUnidades}</Text>
@@ -606,12 +614,12 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                 <Box>
                                     <Text fontWeight="bold">Cantidad por Unidad:</Text>
                                     {editMode ? (
-                                        <FormControl mt={2}>
+                                        <Field.Root mt={2}>
                                             <Input
                                                 value={productoData.cantidadUnidad}
-                                                onChange={(e) => handleInputChange('cantidadUnidad', e.target.value)}
+                                                onValueChange={(e) => handleInputChange('cantidadUnidad', e.target.value)}
                                             />
-                                        </FormControl>
+                                        </Field.Root>
                                     ) : (
                                         <Text>{producto.cantidadUnidad}</Text>
                                     )}
@@ -619,18 +627,20 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                 <Box>
                                     <Text fontWeight="bold">IVA (%):</Text>
                                     {editMode ? (
-                                        <FormControl mt={2}>
-                                            <Select
-                                                value={productoData.ivaPercentual}
-                                                onChange={(e) =>
-                                                    handleInputChange('ivaPercentual', Number(e.target.value))
-                                                }
-                                            >
-                                                <option value={IVA_VALUES.iva_0}> No Tiene </option>
-                                                <option value={IVA_VALUES.iva_5} > 5 %</option>
-                                                <option value={IVA_VALUES.iva_19} > 19 %</option>
-                                            </Select>
-                                        </FormControl>
+                                        <Field.Root mt={2}>
+                                            <NativeSelect.Root>
+                                                <NativeSelect.Field
+                                                    value={productoData.ivaPercentual}
+                                                    onValueChange={(e) =>
+                                                        handleInputChange('ivaPercentual', Number(e.target.value))
+                                                    }>
+                                                    <option value={IVA_VALUES.iva_0}> No Tiene </option>
+                                                    <option value={IVA_VALUES.iva_5} > 5 %</option>
+                                                    <option value={IVA_VALUES.iva_19} > 19 %</option>
+                                                </NativeSelect.Field>
+                                                <NativeSelect.Indicator />
+                                            </NativeSelect.Root>
+                                        </Field.Root>
                                     ) : (
                                         <Text>{producto.ivaPercentual || 0}%</Text>
                                     )}
@@ -644,103 +654,113 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                             </VStack>
                         </GridItem>
                     </Grid>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
 
-            <Card variant="outline" boxShadow="md">
-                <CardHeader bg="app.stepperBlue">
+            <Card.Root variant="outline" boxShadow="md">
+                <Card.Header bg="app.stepperBlue">
                     <Heading size="md">Observaciones</Heading>
-                </CardHeader>
-                <CardBody>
+                </Card.Header>
+                <Card.Body>
                     {editMode ? (
-                        <FormControl>
+                        <Field.Root>
                             <Textarea
                                 value={productoData.observaciones || ''}
-                                onChange={(e) => handleInputChange('observaciones', e.target.value)}
+                                onValueChange={(e) => handleInputChange('observaciones', e.target.value)}
                                 placeholder="Ingrese observaciones sobre el producto"
                                 rows={4}
                             />
-                        </FormControl>
+                        </Field.Root>
                     ) : (
                         <Text>{producto.observaciones || 'Sin observaciones'}</Text>
                     )}
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
             <DeleteProductoDialog
                 isOpen={isDeleteOpen}
                 onClose={onDeleteClose}
                 onConfirm={handleDeleteProduct}
             />
-            <Modal isOpen={isInventareableOpen} onClose={onInventareableClose} isCentered>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Configurar inventario y consumo</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <VStack align="stretch" spacing={4}>
-                            <FormControl>
-                                <HStack justify="space-between">
-                                    <Box>
-                                        <Text fontWeight="semibold">Mantiene existencias</Text>
-                                        <Text fontSize="sm" color="app.textMuted">
-                                            Usa almacén, stock y lotes en la dispensación.
+            <Dialog.Root open={isInventareableOpen} placement='center' onOpenChange={e => {
+                if (!e.open) {
+                    onInventareableClose();
+                }
+            }}>
+                <Portal>
+
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>Configurar inventario y consumo</Dialog.Header>
+                            <Dialog.CloseTrigger />
+                            <Dialog.Body>
+                                <VStack align="stretch" gap={4}>
+                                    <Field.Root>
+                                        <HStack justify="space-between">
+                                            <Box>
+                                                <Text fontWeight="semibold">Mantiene existencias</Text>
+                                                <Text fontSize="sm" color="app.textMuted">
+                                                    Usa almacén, stock y lotes en la dispensación.
+                                                </Text>
+                                            </Box>
+                                            <Switch
+                                                checked={inventareableDraft}
+                                                onValueChange={(event) => {
+                                                    const nextValue = event.target.checked;
+                                                    setInventareableDraft(nextValue);
+                                                    if (nextValue) {
+                                                        setConsumoDirectoDraft(false);
+                                                    }
+                                                }}
+                                            />
+                                        </HStack>
+                                    </Field.Root>
+                                    {!inventareableDraft && (
+                                        <Field.Root>
+                                            <HStack justify="space-between">
+                                                <Box>
+                                                    <Text fontWeight="semibold">Registrar consumo directo</Text>
+                                                    <Text fontSize="sm" color="app.textMuted">
+                                                        Registra cantidad contra la OP sin modificar stock ni exigir lote.
+                                                    </Text>
+                                                </Box>
+                                                <Switch
+                                                    checked={consumoDirectoDraft}
+                                                    onValueChange={(event) => setConsumoDirectoDraft(event.target.checked)}
+                                                />
+                                            </HStack>
+                                        </Field.Root>
+                                    )}
+                                    {!inventareableDraft && (
+                                        <Text fontSize="sm">
+                                            Al dejar de mantener existencias, el backend validará que el stock por
+                                            almacén/lote sea cero y que no existan órdenes de compra abiertas.
                                         </Text>
-                                    </Box>
-                                    <Switch
-                                        isChecked={inventareableDraft}
-                                        onChange={(event) => {
-                                            const nextValue = event.target.checked;
-                                            setInventareableDraft(nextValue);
-                                            if (nextValue) {
-                                                setConsumoDirectoDraft(false);
-                                            }
-                                        }}
-                                    />
-                                </HStack>
-                            </FormControl>
-                            {!inventareableDraft && (
-                                <FormControl>
-                                    <HStack justify="space-between">
-                                        <Box>
-                                            <Text fontWeight="semibold">Registrar consumo directo</Text>
-                                            <Text fontSize="sm" color="app.textMuted">
-                                                Registra cantidad contra la OP sin modificar stock ni exigir lote.
-                                            </Text>
-                                        </Box>
-                                        <Switch
-                                            isChecked={consumoDirectoDraft}
-                                            onChange={(event) => setConsumoDirectoDraft(event.target.checked)}
-                                        />
-                                    </HStack>
-                                </FormControl>
-                            )}
-                            {!inventareableDraft && (
-                                <Text fontSize="sm">
-                                    Al dejar de mantener existencias, el backend validará que el stock por
-                                    almacén/lote sea cero y que no existan órdenes de compra abiertas.
-                                </Text>
-                            )}
-                        </VStack>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button
-                            variant="ghost"
-                            mr={3}
-                            onClick={onInventareableClose}
-                            isDisabled={isUpdatingInventareable}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button
-                            colorScheme={inventareableDraft ? "blue" : "orange"}
-                            onClick={handleUpdateInventareable}
-                            isLoading={isUpdatingInventareable}
-                        >
-                            Confirmar
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+                                    )}
+                                </VStack>
+                            </Dialog.Body>
+                            <Dialog.Footer>
+                                <Button
+                                    variant="ghost"
+                                    mr={3}
+                                    onClick={onInventareableClose}
+                                    disabled={isUpdatingInventareable}
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button
+                                    colorPalette={inventareableDraft ? "blue" : "orange"}
+                                    onClick={handleUpdateInventareable}
+                                    loading={isUpdatingInventareable}
+                                >
+                                    Confirmar
+                                </Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+
+                </Portal>
+            </Dialog.Root>
         </Box>
     );
 }

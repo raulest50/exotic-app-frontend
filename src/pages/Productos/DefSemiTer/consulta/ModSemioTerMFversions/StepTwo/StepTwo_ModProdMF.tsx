@@ -1,7 +1,7 @@
 // SemiterminadosStep1DefineInputs.tsx
 import React, { useState, useEffect } from "react";
 import { Producto, Insumo, ProductoSemiter } from "../../../../types.tsx";
-import {Button, Flex, HStack, Stat, StatHelpText, StatLabel, StatNumber, useToast, VStack} from "@chakra-ui/react";
+import { Steps, Button, Flex, HStack, Stat, useToast, VStack } from "@chakra-ui/react";
 import SemioterBriefCard from "../../../../components/SemioterBriefCard.tsx";
 import BandejaBusqueda from "./BandejaBusqueda.tsx";
 import BandejaSeleccion from "./BandejaSeleccion.tsx";
@@ -130,11 +130,11 @@ const StepTwo_ModProdMF: React.FC<Props> = ({ setActiveStep, semioter, setSemiot
             <HStack gap={8} w="full" align="flex-start">
                 <BandejaBusqueda onAddInsumo={handleAddInsumo} />
                 <VStack w={"full"}>
-                    <Stat backgroundColor={"app.surfaceSubtle"} p={"1em"} boxShadow={"md"} w={"full"}>
-                        <StatLabel>Total Costo: </StatLabel>
-                        <StatNumber>{costo} ( $ COP)</StatNumber>
-                        <StatHelpText>Costo total sumando todos los insumos</StatHelpText>
-                    </Stat>
+                    <Stat.Root backgroundColor={"app.surfaceSubtle"} p={"1em"} boxShadow={"md"} w={"full"}>
+                        <Stat.Label>Total Costo: </Stat.Label>
+                        <Stat.ValueText>{costo} ( $ COP)</Stat.ValueText>
+                        <Stat.HelpText>Costo total sumando todos los insumos</Stat.HelpText>
+                    </Stat.Root>
                     <BandejaSeleccion
                         selectedInsumos={selectedInsumos}
                         onUpdateCantidad={handleUpdateCantidad}
@@ -145,18 +145,18 @@ const StepTwo_ModProdMF: React.FC<Props> = ({ setActiveStep, semioter, setSemiot
             </HStack>
 
             <Flex direction="row" gap={10}>
-                <Button variant="solid" colorScheme="yellow" onClick={onClickAtras}>
+                <Button variant="solid" colorPalette="yellow" onClick={onClickAtras}>
                     Atras
                 </Button>
                 <Button
                     variant="solid"
-                    colorScheme="teal"
+                    colorPalette="teal"
                     onClick={onClickSiguiente}
-                    isDisabled={!validoContinuar()}
+                    disabled={!validoContinuar()}
                 >
                     Siguiente
                 </Button>
-                <Button variant="solid" colorScheme="red" onClick={onClickCleanLists}>
+                <Button variant="solid" colorPalette="red" onClick={onClickCleanLists}>
                     Limpiar Bandeja Seleccion
                 </Button>
             </Flex>

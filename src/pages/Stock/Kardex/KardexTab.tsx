@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Steps,
   Box,
   Button,
   Flex,
-  FormControl,
-  FormLabel,
   HStack,
-  Select,
+  NativeSelect,
   Table,
   Tbody,
   Td,
@@ -16,6 +15,7 @@ import {
   Tr,
   VStack,
   useToast,
+  Field,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import { format } from 'date-fns';
@@ -166,36 +166,44 @@ export function KardexTab(_: Props) {
   }, [selectedProducto?.productoId, almacen, startDate, endDate, modoFecha]);
 
   return (
-    <VStack w="full" align="stretch" spacing={4}>
+    <VStack w="full" align="stretch" gap={4}>
       {/* Cabezote de búsqueda */}
       <Box p={4} borderWidth="1px" borderRadius="md">
-        <VStack align="stretch" spacing={4}>
-          <HStack spacing={3} align="flex-end" flexWrap="wrap">
-            <FormControl>
-              <FormLabel>Producto</FormLabel>
+        <VStack align="stretch" gap={4}>
+          <HStack gap={3} align="flex-end" flexWrap="wrap">
+            <Field.Root>
+              <Field.Label>Producto</Field.Label>
               <HStack>
                 <Button onClick={() => setIsProductoSelectorOpen(true)}>Seleccionar</Button>
                 <Text>
                   {selectedProducto ? `${selectedProducto.productoId} - ${selectedProducto.nombre}` : 'Sin selección'}
                 </Text>
               </HStack>
-            </FormControl>
+            </Field.Root>
 
-            <FormControl maxW="200px">
-              <FormLabel>Almacén</FormLabel>
-              <Select value={almacen} onChange={(e) => setAlmacen(e.target.value)}>
-                <option value="GENERAL">General</option>
-                <option value="AVERIAS">Averías</option>
-              </Select>
-            </FormControl>
+            <Field.Root maxW="200px">
+              <Field.Label>Almacén</Field.Label>
+              <NativeSelect.Root>
+                <NativeSelect.Field value={almacen} onValueChange={(e) => setAlmacen(e.target.value)}>
+                  <option value="GENERAL">General</option>
+                  <option value="AVERIAS">Averías</option>
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+            </Field.Root>
 
-            <FormControl maxW="220px">
-              <FormLabel>Filtro de fecha</FormLabel>
-              <Select value={modoFecha} onChange={(e) => setModoFecha(e.target.value as ModoFecha)}>
-                <option value="UNICA">Fecha única</option>
-                <option value="RANGO">Rango de fechas</option>
-              </Select>
-            </FormControl>
+            <Field.Root maxW="220px">
+              <Field.Label>Filtro de fecha</Field.Label>
+              <NativeSelect.Root>
+                <NativeSelect.Field
+                  value={modoFecha}
+                  onValueChange={(e) => setModoFecha(e.target.value as ModoFecha)}>
+                  <option value="UNICA">Fecha única</option>
+                  <option value="RANGO">Rango de fechas</option>
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+            </Field.Root>
 
             <Flex flex={1} minW="320px" justify="flex-start">
               {modoFecha === 'UNICA' ? (
@@ -217,10 +225,10 @@ export function KardexTab(_: Props) {
             </Flex>
 
             <HStack>
-              <Button onClick={fetchKardex} isDisabled={!canQuery} isLoading={loading} loadingText="Cargando">
+              <Button onClick={fetchKardex} disabled={!canQuery} loading={loading} loadingText="Cargando">
                 Consultar
               </Button>
-              <Button colorScheme="teal" onClick={exportExcel} isDisabled={!canQuery}>
+              <Button colorPalette="teal" onClick={exportExcel} disabled={!canQuery}>
                 Exportar Excel
               </Button>
             </HStack>
@@ -247,32 +255,32 @@ export function KardexTab(_: Props) {
             </Box>
           ) : (
             <Box borderWidth="1px" borderRadius="md" overflowX="auto">
-              <Table size="sm" variant="simple">
-                <Thead>
-                  <Tr>
-                    <Th>Fecha</Th>
-                    <Th>Tipo</Th>
-                    <Th>Almacén</Th>
-                    <Th>Lote</Th>
-                    <Th isNumeric>Entrada</Th>
-                    <Th isNumeric>Salida</Th>
-                    <Th isNumeric>Saldo</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
+              <Table.Root size="sm" variant="simple">
+                <Table.Header>
+                  <Table.Row>
+                    <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                    <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                    <Table.ColumnHeader>Almacén</Table.ColumnHeader>
+                    <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                    <Table.ColumnHeader textAlign='end'>Entrada</Table.ColumnHeader>
+                    <Table.ColumnHeader textAlign='end'>Salida</Table.ColumnHeader>
+                    <Table.ColumnHeader textAlign='end'>Saldo</Table.ColumnHeader>
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
                   {data.content.map((row) => (
-                    <Tr key={row.movimientoId}>
-                      <Td>{format(new Date(row.fechaMovimiento), 'dd/MM/yyyy HH:mm')}</Td>
-                      <Td>{row.tipoMovimiento}</Td>
-                      <Td>{row.almacen}</Td>
-                      <Td>{row.batchNumber ?? ''}</Td>
-                      <Td isNumeric>{row.entrada}</Td>
-                      <Td isNumeric>{row.salida}</Td>
-                      <Td isNumeric>{row.saldo}</Td>
-                    </Tr>
+                    <Table.Row key={row.movimientoId}>
+                      <Table.Cell>{format(new Date(row.fechaMovimiento), 'dd/MM/yyyy HH:mm')}</Table.Cell>
+                      <Table.Cell>{row.tipoMovimiento}</Table.Cell>
+                      <Table.Cell>{row.almacen}</Table.Cell>
+                      <Table.Cell>{row.batchNumber ?? ''}</Table.Cell>
+                      <Table.Cell textAlign='end'>{row.entrada}</Table.Cell>
+                      <Table.Cell textAlign='end'>{row.salida}</Table.Cell>
+                      <Table.Cell textAlign='end'>{row.saldo}</Table.Cell>
+                    </Table.Row>
                   ))}
-                </Tbody>
-              </Table>
+                </Table.Body>
+              </Table.Root>
             </Box>
           )}
 

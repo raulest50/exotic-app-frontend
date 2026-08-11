@@ -1,11 +1,8 @@
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import {
+    Steps,
     Badge,
     Box,
     Button,
-    FormControl,
-    FormErrorMessage,
-    FormLabel,
     Grid,
     HStack,
     IconButton,
@@ -19,11 +16,12 @@ import {
     Textarea,
     Th,
     Thead,
-    Tooltip,
     Tr,
     VStack,
     useToast,
+    Field,
 } from "@chakra-ui/react";
+import { Tooltip } from '@/components/ui/tooltip';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     createJornadaLaboralVersion,
@@ -33,6 +31,7 @@ import {
     type JornadaLaboralVersion,
     type JornadaLaboralVersionPayload,
 } from "../../../api/JornadaLaboralApi";
+import { LuPlus, LuTrash2 } from 'react-icons/lu';
 
 interface JornadaLaboralSectionProps {
     canEdit: boolean;
@@ -217,7 +216,7 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
     }
 
     return (
-        <VStack align="stretch" spacing={6}>
+        <VStack align="stretch" gap={6}>
             <Box borderWidth="1px" borderRadius="md" p={4}>
                 <HStack justify="space-between" align="flex-start" mb={4}>
                     <Box>
@@ -226,7 +225,7 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
                             {vigente ? `Version ${vigente.version} - ${vigenteSummary}` : "-"}
                         </Text>
                     </Box>
-                    {vigente ? <Badge colorScheme="green">{vigente.estado}</Badge> : null}
+                    {vigente ? <Badge colorPalette="green">{vigente.estado}</Badge> : null}
                 </HStack>
 
                 <Grid templateColumns={["1fr", "1fr", "repeat(3, 1fr)"]} gap={4}>
@@ -240,13 +239,13 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
                                     </Text>
                                 </Box>
                                 <Switch
-                                    isChecked={draft[section.key].laborable}
-                                    isDisabled={!canEdit}
-                                    onChange={(event) => updateSectionLaborable(section.key, event.target.checked)}
+                                    checked={draft[section.key].laborable}
+                                    disabled={!canEdit}
+                                    onValueChange={(event) => updateSectionLaborable(section.key, event.target.checked)}
                                 />
                             </HStack>
 
-                            <VStack align="stretch" spacing={3}>
+                            <VStack align="stretch" gap={3}>
                                 {draft[section.key].laborable && draft[section.key].bloques.map((block, index) => (
                                     <Grid
                                         key={index}
@@ -254,36 +253,34 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
                                         gap={2}
                                         alignItems="end"
                                     >
-                                        <FormControl isDisabled={!canEdit}>
-                                            <FormLabel fontSize="xs" mb={1}>
+                                        <Field.Root disabled={!canEdit}>
+                                            <Field.Label fontSize="xs" mb={1}>
                                                 Inicio {index + 1}
-                                            </FormLabel>
+                                            </Field.Label>
                                             <Input
                                                 type="time"
                                                 value={block.horaInicio}
-                                                onChange={(event) => updateBlock(section.key, index, "horaInicio", event.target.value)}
+                                                onValueChange={(event) => updateBlock(section.key, index, "horaInicio", event.target.value)}
                                             />
-                                        </FormControl>
-                                        <FormControl isDisabled={!canEdit}>
-                                            <FormLabel fontSize="xs" mb={1}>
+                                        </Field.Root>
+                                        <Field.Root disabled={!canEdit}>
+                                            <Field.Label fontSize="xs" mb={1}>
                                                 Fin {index + 1}
-                                            </FormLabel>
+                                            </Field.Label>
                                             <Input
                                                 type="time"
                                                 value={block.horaFin}
-                                                onChange={(event) => updateBlock(section.key, index, "horaFin", event.target.value)}
+                                                onValueChange={(event) => updateBlock(section.key, index, "horaFin", event.target.value)}
                                             />
-                                        </FormControl>
+                                        </Field.Root>
                                         {canEdit && (
-                                            <Tooltip label="Eliminar bloque">
+                                            <Tooltip content="Eliminar bloque">
                                                 <IconButton
                                                     aria-label={`Eliminar bloque ${index + 1}`}
-                                                    icon={<DeleteIcon />}
                                                     size="sm"
                                                     variant="ghost"
-                                                    colorScheme="red"
-                                                    onClick={() => removeBlock(section.key, index)}
-                                                />
+                                                    colorPalette="red"
+                                                    onClick={() => removeBlock(section.key, index)}><LuTrash2 /></IconButton>
                                             </Tooltip>
                                         )}
                                     </Grid>
@@ -291,35 +288,29 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
                                 {canEdit
                                     && draft[section.key].laborable
                                     && draft[section.key].bloques.length < MAX_BLOCKS_PER_SECTION && (
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            leftIcon={<AddIcon />}
-                                            onClick={() => addBlock(section.key)}
-                                        >
-                                            Agregar bloque
-                                        </Button>
+                                        <Button size="sm" variant="outline" onClick={() => addBlock(section.key)}><LuPlus />Agregar bloque
+                                                                                    </Button>
                                     )}
                             </VStack>
                         </Box>
                     ))}
                 </Grid>
 
-                <HStack mt={4} wrap="wrap" spacing={3}>
-                    <Badge colorScheme="blue">Total semanal {totalHours}</Badge>
-                    <Badge colorScheme="gray">Vigencia inmediata</Badge>
+                <HStack mt={4} wrap="wrap" gap={3}>
+                    <Badge colorPalette="blue">Total semanal {totalHours}</Badge>
+                    <Badge colorPalette="gray">Vigencia inmediata</Badge>
                 </HStack>
 
-                <FormControl mt={4} isRequired isInvalid={Boolean(getMotivoError(validationErrors))}>
-                    <FormLabel>Motivo del cambio</FormLabel>
+                <Field.Root mt={4} required invalid={Boolean(getMotivoError(validationErrors))}>
+                    <Field.Label>Motivo del cambio</Field.Label>
                     <Textarea
                         value={draft.motivoCambio}
-                        onChange={(event) => setDraft((current) => ({ ...current, motivoCambio: event.target.value }))}
-                        isReadOnly={!canEdit}
+                        onValueChange={(event) => setDraft((current) => ({ ...current, motivoCambio: event.target.value }))}
+                        readOnly={!canEdit}
                         minH="90px"
                     />
-                    <FormErrorMessage>{getMotivoError(validationErrors)}</FormErrorMessage>
-                </FormControl>
+                    <Field.ErrorText>{getMotivoError(validationErrors)}</Field.ErrorText>
+                </Field.Root>
 
                 {validationErrors.filter((error) => error.field !== "motivoCambio").length > 0 && (
                     <Box mt={4} p={3} borderWidth="1px" borderColor="orange.200" borderRadius="md" bg="orange.50">
@@ -338,15 +329,15 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
                     <Button
                         variant="outline"
                         onClick={handleRestore}
-                        isDisabled={saving}
+                        disabled={saving}
                     >
                         Restaurar
                     </Button>
                     <Button
-                        colorScheme="teal"
+                        colorPalette="teal"
                         onClick={handleSave}
-                        isLoading={saving}
-                        isDisabled={!canEdit || hasValidationErrors}
+                        loading={saving}
+                        disabled={!canEdit || hasValidationErrors}
                     >
                         Guardar nueva version
                     </Button>
@@ -354,38 +345,38 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
             </Box>
 
             <Box overflowX="auto" borderWidth="1px" borderRadius="md">
-                <Table size="sm" variant="simple">
-                    <Thead>
-                        <Tr>
-                            <Th>Version</Th>
-                            <Th>Estado</Th>
-                            <Th>Resumen</Th>
-                            <Th>Horas semana</Th>
-                            <Th>Vigente desde</Th>
-                            <Th>Vigente hasta</Th>
-                            <Th>Creado por</Th>
-                            <Th>Motivo</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+                <Table.Root size="sm" variant="simple">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Version</Table.ColumnHeader>
+                            <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                            <Table.ColumnHeader>Resumen</Table.ColumnHeader>
+                            <Table.ColumnHeader>Horas semana</Table.ColumnHeader>
+                            <Table.ColumnHeader>Vigente desde</Table.ColumnHeader>
+                            <Table.ColumnHeader>Vigente hasta</Table.ColumnHeader>
+                            <Table.ColumnHeader>Creado por</Table.ColumnHeader>
+                            <Table.ColumnHeader>Motivo</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {versiones.map((version) => (
-                            <Tr key={version.id}>
-                                <Td>{version.version}</Td>
-                                <Td>
-                                    <Badge colorScheme={version.estado === "VIGENTE" ? "green" : "gray"}>
+                            <Table.Row key={version.id}>
+                                <Table.Cell>{version.version}</Table.Cell>
+                                <Table.Cell>
+                                    <Badge colorPalette={version.estado === "VIGENTE" ? "green" : "gray"}>
                                         {version.estado}
                                     </Badge>
-                                </Td>
-                                <Td>{formatVersionSummary(version)}</Td>
-                                <Td>{minutesToHoursLabel(calculateVersionMinutes(version))}</Td>
-                                <Td>{formatDateTime(version.vigenteDesde)}</Td>
-                                <Td>{formatDateTime(version.vigenteHasta)}</Td>
-                                <Td>{version.creadoPor ?? "-"}</Td>
-                                <Td>{version.motivoCambio ?? "-"}</Td>
-                            </Tr>
+                                </Table.Cell>
+                                <Table.Cell>{formatVersionSummary(version)}</Table.Cell>
+                                <Table.Cell>{minutesToHoursLabel(calculateVersionMinutes(version))}</Table.Cell>
+                                <Table.Cell>{formatDateTime(version.vigenteDesde)}</Table.Cell>
+                                <Table.Cell>{formatDateTime(version.vigenteHasta)}</Table.Cell>
+                                <Table.Cell>{version.creadoPor ?? "-"}</Table.Cell>
+                                <Table.Cell>{version.motivoCambio ?? "-"}</Table.Cell>
+                            </Table.Row>
                         ))}
-                    </Tbody>
-                </Table>
+                    </Table.Body>
+                </Table.Root>
             </Box>
         </VStack>
     );

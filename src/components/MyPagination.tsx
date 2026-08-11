@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flex, Button } from '@chakra-ui/react';
+import { Steps, Flex, Button } from '@chakra-ui/react';
 
 interface PaginationProps {
     page: number;
@@ -28,7 +28,7 @@ const MyPagination: React.FC<PaginationProps> = ({ page, totalPages, loading, ha
                     onClick={() => handlePageChange(index)}
                     variant={index === page ? 'solid' : 'outline'}
                     mx={1}
-                    isDisabled={loading}
+                    disabled={loading}
                 >
                     {index + 1}
                 </Button>

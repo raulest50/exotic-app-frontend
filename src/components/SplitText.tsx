@@ -1,5 +1,5 @@
 // src/components/SplitText.tsx
-import { Text, TextProps } from "@chakra-ui/react";
+import { Steps, Text, TextProps } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 
 interface SplitTextProps extends TextProps {

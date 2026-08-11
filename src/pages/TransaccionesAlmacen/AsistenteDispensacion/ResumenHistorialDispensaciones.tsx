@@ -1,4 +1,19 @@
-import {Box, Button, Collapse, Flex, Heading, Spinner, Table, Tbody, Td, Text, Th, Thead, Tr} from '@chakra-ui/react';
+import {
+    Steps,
+    Box,
+    Button,
+    Collapsible,
+    Flex,
+    Heading,
+    Spinner,
+    Table,
+    Tbody,
+    Td,
+    Text,
+    Th,
+    Thead,
+    Tr,
+} from '@chakra-ui/react';
 import {Fragment, useEffect, useMemo, useState} from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
@@ -116,71 +131,73 @@ export default function ResumenHistorialDispensaciones({
                 </Text>
             ) : (
                 <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
-                    <Table size="sm">
-                        <Thead>
-                            <Tr>
-                                <Th>ID Transacción</Th>
-                                <Th>Fecha</Th>
-                                <Th>Observaciones</Th>
-                                <Th textAlign="right">Acciones</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>ID Transacción</Table.ColumnHeader>
+                                <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                                <Table.ColumnHeader>Observaciones</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign="right">Acciones</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {dispensacionesState.map((disp) => (
                                 <Fragment key={disp.transaccionId}>
-                                    <Tr key={disp.transaccionId}>
-                                        <Td>{disp.transaccionId}</Td>
-                                        <Td>{new Date(disp.fechaTransaccion).toLocaleString('es-ES')}</Td>
-                                        <Td>{disp.observaciones || '-'}</Td>
-                                        <Td textAlign="right">
+                                    <Table.Row key={disp.transaccionId}>
+                                        <Table.Cell>{disp.transaccionId}</Table.Cell>
+                                        <Table.Cell>{new Date(disp.fechaTransaccion).toLocaleString('es-ES')}</Table.Cell>
+                                        <Table.Cell>{disp.observaciones || '-'}</Table.Cell>
+                                        <Table.Cell textAlign="right">
                                             <Button size="xs" onClick={() => toggleExpanded(disp.transaccionId)}>
                                                 {expanded[disp.transaccionId] ? 'Ocultar' : 'Ver items'}
                                             </Button>
-                                        </Td>
-                                    </Tr>
-                                    <Tr>
-                                        <Td colSpan={4} p={0}>
-                                            <Collapse in={!!expanded[disp.transaccionId]} animateOpacity>
-                                                <Box p={3} bg="app.surfaceSubtle">
-                                                    <Table size="xs">
-                                                        <Thead>
-                                                            <Tr>
-                                                                <Th>Producto</Th>
-                                                                <Th>Área destino</Th>
-                                                                <Th>Cantidad</Th>
-                                                                <Th>Unidad</Th>
-                                                                <Th>Lote</Th>
-                                                            </Tr>
-                                                        </Thead>
-                                                        <Tbody>
-                                                            {(movimientosPorTransaccion[disp.transaccionId] ?? []).map((mov) => (
-                                                                <Tr key={`${disp.transaccionId}-${mov.movimientoId}`}>
-                                                                    <Td>{mov.productoNombre || mov.productoId}</Td>
-                                                                    <Td>{mov.areaOperativaNombre || '-'}</Td>
-                                                                    <Td>{mov.cantidad.toFixed(2)}</Td>
-                                                                    <Td>{mov.tipoUnidades}</Td>
-                                                                    <Td>{mov.batchNumber || '-'}</Td>
-                                                                </Tr>
-                                                            ))}
-                                                            {(movimientosPorTransaccion[disp.transaccionId] ?? []).length === 0 && (
-                                                                <Tr>
-                                                                    <Td colSpan={5}>
-                                                                        <Text fontSize="xs" color="app.textSubtle">
-                                                                            No hay items para esta transacción.
-                                                                        </Text>
-                                                                    </Td>
-                                                                </Tr>
-                                                            )}
-                                                        </Tbody>
-                                                    </Table>
-                                                </Box>
-                                            </Collapse>
-                                        </Td>
-                                    </Tr>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                    <Table.Row>
+                                        <Table.Cell colSpan={4} p={0}>
+                                            <Collapsible.Root open={!!expanded[disp.transaccionId]}>
+                                                <Collapsible.Content>
+                                                    <Box p={3} bg="app.surfaceSubtle">
+                                                        <Table.Root size="xs">
+                                                            <Table.Header>
+                                                                <Table.Row>
+                                                                    <Table.ColumnHeader>Producto</Table.ColumnHeader>
+                                                                    <Table.ColumnHeader>Área destino</Table.ColumnHeader>
+                                                                    <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                                                    <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                                                                    <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                                                                </Table.Row>
+                                                            </Table.Header>
+                                                            <Table.Body>
+                                                                {(movimientosPorTransaccion[disp.transaccionId] ?? []).map((mov) => (
+                                                                    <Table.Row key={`${disp.transaccionId}-${mov.movimientoId}`}>
+                                                                        <Table.Cell>{mov.productoNombre || mov.productoId}</Table.Cell>
+                                                                        <Table.Cell>{mov.areaOperativaNombre || '-'}</Table.Cell>
+                                                                        <Table.Cell>{mov.cantidad.toFixed(2)}</Table.Cell>
+                                                                        <Table.Cell>{mov.tipoUnidades}</Table.Cell>
+                                                                        <Table.Cell>{mov.batchNumber || '-'}</Table.Cell>
+                                                                    </Table.Row>
+                                                                ))}
+                                                                {(movimientosPorTransaccion[disp.transaccionId] ?? []).length === 0 && (
+                                                                    <Table.Row>
+                                                                        <Table.Cell colSpan={5}>
+                                                                            <Text fontSize="xs" color="app.textSubtle">
+                                                                                No hay items para esta transacción.
+                                                                            </Text>
+                                                                        </Table.Cell>
+                                                                    </Table.Row>
+                                                                )}
+                                                            </Table.Body>
+                                                        </Table.Root>
+                                                    </Box>
+                                                </Collapsible.Content>
+                                            </Collapsible.Root>
+                                        </Table.Cell>
+                                    </Table.Row>
                                 </Fragment>
                             ))}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 </Box>
             )}
         </Box>

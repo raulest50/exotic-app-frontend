@@ -1,22 +1,22 @@
 import { useState, useEffect } from 'react';
-import { 
-    Flex, 
-    Button, 
-    Heading, 
-    Box, 
+import {
+    Steps,
+    Flex,
+    Button,
+    Heading,
+    Box,
     Text,
     useToast,
-    FormControl,
-    FormLabel,
     Input,
-    Select,
+    NativeSelect,
     Table,
     Thead,
     Tbody,
     Tr,
     Th,
     Td,
-    Tfoot
+    Tfoot,
+    Field,
 } from '@chakra-ui/react';
 import { OrdenCompraActivo, ItemOrdenCompraActivo, DIVISAS, getEstadoOCAFText } from "../types";
 import axios from 'axios';
@@ -193,7 +193,7 @@ export function EditarOCAFSeleccionada({ ocaf, onVolver, accessLevel }: Props) {
                 <Heading size="md">
                     {isEditable ? 'Editar' : 'Ver'} Orden de Compra AF #{ordenActual.ordenCompraActivoId}
                 </Heading>
-                <Button colorScheme="gray" onClick={onVolver}>
+                <Button colorPalette="gray" onClick={onVolver}>
                     Volver a Búsqueda
                 </Button>
             </Flex>
@@ -206,13 +206,13 @@ export function EditarOCAFSeleccionada({ ocaf, onVolver, accessLevel }: Props) {
                 </Box>
                 {isEditable && (
                     <Flex flex={1}>
-                        <FormControl>
-                            <FormLabel>Moneda y TRM</FormLabel>
+                        <Field.Root>
+                            <Field.Label>Moneda y TRM</Field.Label>
                             <SelectCurrencyTrm
                                 currencyIsUSD={currencyIsUSDTuple}
                                 useCurrentUsd2Cop={handleTrmUpdate}
                             />
-                        </FormControl>
+                        </Field.Root>
                     </Flex>
                 )}
             </Flex>
@@ -220,35 +220,37 @@ export function EditarOCAFSeleccionada({ ocaf, onVolver, accessLevel }: Props) {
             {/* Campos de formulario editables */}
             {isEditable ? (
                 <Flex direction="row" gap={4} wrap="wrap">
-                    <FormControl>
-                        <FormLabel>Condición de Pago</FormLabel>
-                        <Select
-                            value={condicionPago}
-                            onChange={handleCondicionPagoChange}
-                            width="200px"
-                        >
-                            <option value="0">Crédito</option>
-                            <option value="1">Contado</option>
-                        </Select>
-                    </FormControl>
+                    <Field.Root>
+                        <Field.Label>Condición de Pago</Field.Label>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                value={condicionPago}
+                                onValueChange={handleCondicionPagoChange}
+                                width="200px">
+                                <option value="0">Crédito</option>
+                                <option value="1">Contado</option>
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                    </Field.Root>
 
-                    <FormControl isRequired={condicionPago === "0"} isDisabled={condicionPago === "1"}>
-                        <FormLabel>Plazo de pago (días)</FormLabel>
+                    <Field.Root required={condicionPago === "0"} disabled={condicionPago === "1"}>
+                        <Field.Label>Plazo de pago (días)</Field.Label>
                         <Input
                             value={plazoPago}
-                            onChange={handlePlazoPagoChange}
+                            onValueChange={handlePlazoPagoChange}
                             type="number"
                             min={0}
                         />
-                    </FormControl>
+                    </Field.Root>
 
-                    <FormControl isRequired>
-                        <FormLabel>Tiempo de entrega (días)</FormLabel>
+                    <Field.Root required>
+                        <Field.Label>Tiempo de entrega (días)</Field.Label>
                         <Input
                             value={tiempoEntrega}
-                            onChange={handleTiempoEntregaChange}
+                            onValueChange={handleTiempoEntregaChange}
                         />
-                    </FormControl>
+                    </Field.Root>
 
                     <MyDatePicker
                         date={fechaVencimiento}
@@ -270,56 +272,56 @@ export function EditarOCAFSeleccionada({ ocaf, onVolver, accessLevel }: Props) {
 
             {/* Tabla de items */}
             <Box overflowX="auto">
-                <Table variant="simple" size="sm">
-                    <Thead>
-                        <Tr>
-                            <Th>ID</Th>
-                            <Th>Descripción</Th>
-                            <Th isNumeric>Cantidad</Th>
-                            <Th isNumeric>Precio Unitario</Th>
-                            <Th isNumeric>IVA</Th>
-                            <Th isNumeric>Subtotal</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+                <Table.Root variant="simple" size="sm">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>ID</Table.ColumnHeader>
+                            <Table.ColumnHeader>Descripción</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>Cantidad</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>Precio Unitario</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>IVA</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>Subtotal</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {listaItemsOrdenCompra.map(item => (
-                            <Tr key={item.itemOrdenId}>
-                                <Td>{item.itemOrdenId}</Td>
-                                <Td>{item.nombre}</Td>
-                                <Td isNumeric>{item.cantidad}</Td>
-                                <Td isNumeric>{formatCOP(item.precioUnitario)}</Td>
-                                <Td isNumeric>{formatCOP(item.ivaValue)}</Td>
-                                <Td isNumeric>{formatCOP(item.subTotal)}</Td>
-                            </Tr>
+                            <Table.Row key={item.itemOrdenId}>
+                                <Table.Cell>{item.itemOrdenId}</Table.Cell>
+                                <Table.Cell>{item.nombre}</Table.Cell>
+                                <Table.Cell textAlign='end'>{item.cantidad}</Table.Cell>
+                                <Table.Cell textAlign='end'>{formatCOP(item.precioUnitario)}</Table.Cell>
+                                <Table.Cell textAlign='end'>{formatCOP(item.ivaValue)}</Table.Cell>
+                                <Table.Cell textAlign='end'>{formatCOP(item.subTotal)}</Table.Cell>
+                            </Table.Row>
                         ))}
-                    </Tbody>
-                    <Tfoot>
-                        <Tr>
-                            <Td colSpan={4} textAlign="right"><strong>SubTotal:</strong></Td>
-                            <Td isNumeric colSpan={2}>{formatCOP(ordenActual.subTotal)}</Td>
-                        </Tr>
-                        <Tr>
-                            <Td colSpan={4} textAlign="right"><strong>IVA:</strong></Td>
-                            <Td isNumeric colSpan={2}>{formatCOP(ordenActual.iva)}</Td>
-                        </Tr>
-                        <Tr>
-                            <Td colSpan={4} textAlign="right"><strong>Total a Pagar:</strong></Td>
-                            <Td isNumeric colSpan={2}>{formatCOP(ordenActual.totalPagar)}</Td>
-                        </Tr>
-                    </Tfoot>
-                </Table>
+                    </Table.Body>
+                    <Table.Footer>
+                        <Table.Row>
+                            <Table.Cell colSpan={4} textAlign="right"><strong>SubTotal:</strong></Table.Cell>
+                            <Table.Cell colSpan={2} textAlign='end'>{formatCOP(ordenActual.subTotal)}</Table.Cell>
+                        </Table.Row>
+                        <Table.Row>
+                            <Table.Cell colSpan={4} textAlign="right"><strong>IVA:</strong></Table.Cell>
+                            <Table.Cell colSpan={2} textAlign='end'>{formatCOP(ordenActual.iva)}</Table.Cell>
+                        </Table.Row>
+                        <Table.Row>
+                            <Table.Cell colSpan={4} textAlign="right"><strong>Total a Pagar:</strong></Table.Cell>
+                            <Table.Cell colSpan={2} textAlign='end'>{formatCOP(ordenActual.totalPagar)}</Table.Cell>
+                        </Table.Row>
+                    </Table.Footer>
+                </Table.Root>
             </Box>
 
             {/* Botones de acción */}
             {isEditable && (
                 <Flex justify="flex-end" gap={4}>
-                    <Button colorScheme="red" onClick={onVolver}>
+                    <Button colorPalette="red" onClick={onVolver}>
                         Cancelar
                     </Button>
                     <Button 
-                        colorScheme="teal" 
+                        colorPalette="teal" 
                         onClick={handleGuardarCambios}
-                        isDisabled={!isFormValid}
+                        disabled={!isFormValid}
                     >
                         Guardar Cambios
                     </Button>

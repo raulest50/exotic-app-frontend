@@ -1,7 +1,6 @@
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
     Box,
     Button,
     Flex,
@@ -109,44 +108,44 @@ export default function EliminacionMaterialStep2StudyResult({
     } = studyResultMaterial;
 
     return (
-        <VStack align="stretch" spacing={6}>
+        <VStack align="stretch" gap={6}>
             <Heading size="md">
                 Resultado del estudio - Material {material.productoId}
             </Heading>
 
-            <Alert status="info">
-                <AlertIcon />
-                <AlertDescription>
+            <Alert.Root status="info">
+                <Alert.Indicator />
+                <Alert.Description>
                     La operación eliminará el material, removerá sus referencias hijas
                     en recetas y case packs, y preservará padres mixtos como OCM o
                     transacciones cuando todavía contengan otros productos.
-                </AlertDescription>
-            </Alert>
+                </Alert.Description>
+            </Alert.Root>
 
             <Box>
                 <Heading size="sm" mb={2}>
                     Material seleccionado
                 </Heading>
-                <Table size="sm" variant="simple">
-                    <Tbody>
-                        <Tr>
-                            <Td>ID</Td>
-                            <Td>{material.productoId}</Td>
-                        </Tr>
-                        <Tr>
-                            <Td>Nombre</Td>
-                            <Td>{material.nombre}</Td>
-                        </Tr>
-                        <Tr>
-                            <Td>Tipo</Td>
-                            <Td>{getTipoMaterialLabel(material.tipoMaterial)}</Td>
-                        </Tr>
-                        <Tr>
-                            <Td>Unidad</Td>
-                            <Td>{material.tipoUnidades ?? "-"}</Td>
-                        </Tr>
-                    </Tbody>
-                </Table>
+                <Table.Root size="sm" variant="simple">
+                    <Table.Body>
+                        <Table.Row>
+                            <Table.Cell>ID</Table.Cell>
+                            <Table.Cell>{material.productoId}</Table.Cell>
+                        </Table.Row>
+                        <Table.Row>
+                            <Table.Cell>Nombre</Table.Cell>
+                            <Table.Cell>{material.nombre}</Table.Cell>
+                        </Table.Row>
+                        <Table.Row>
+                            <Table.Cell>Tipo</Table.Cell>
+                            <Table.Cell>{getTipoMaterialLabel(material.tipoMaterial)}</Table.Cell>
+                        </Table.Row>
+                        <Table.Row>
+                            <Table.Cell>Unidad</Table.Cell>
+                            <Table.Cell>{material.tipoUnidades ?? "-"}</Table.Cell>
+                        </Table.Row>
+                    </Table.Body>
+                </Table.Root>
             </Box>
 
             <Box>
@@ -154,32 +153,32 @@ export default function EliminacionMaterialStep2StudyResult({
                     Ítems de orden de compra impactados ({itemsOrdenCompra.length})
                 </Heading>
                 {itemsOrdenCompra.length > 0 ? (
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>Item ID</Th>
-                                <Th>OCM</Th>
-                                <Th>Proveedor</Th>
-                                <Th>Estado</Th>
-                                <Th>Cantidad</Th>
-                                <Th>Precio unit.</Th>
-                                <Th>Subtotal</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>Item ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>OCM</Table.ColumnHeader>
+                                <Table.ColumnHeader>Proveedor</Table.ColumnHeader>
+                                <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                <Table.ColumnHeader>Precio unit.</Table.ColumnHeader>
+                                <Table.ColumnHeader>Subtotal</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {itemsOrdenCompra.map((item) => (
-                                <Tr key={item.itemOrdenId}>
-                                    <Td>{item.itemOrdenId}</Td>
-                                    <Td>{item.ordenCompraId}</Td>
-                                    <Td>{item.proveedorNombre ?? "-"}</Td>
-                                    <Td>{item.estadoOrdenCompra ?? "-"}</Td>
-                                    <Td>{item.cantidad}</Td>
-                                    <Td>{item.precioUnitario.toLocaleString()}</Td>
-                                    <Td>{item.subTotal.toLocaleString()}</Td>
-                                </Tr>
+                                <Table.Row key={item.itemOrdenId}>
+                                    <Table.Cell>{item.itemOrdenId}</Table.Cell>
+                                    <Table.Cell>{item.ordenCompraId}</Table.Cell>
+                                    <Table.Cell>{item.proveedorNombre ?? "-"}</Table.Cell>
+                                    <Table.Cell>{item.estadoOrdenCompra ?? "-"}</Table.Cell>
+                                    <Table.Cell>{item.cantidad}</Table.Cell>
+                                    <Table.Cell>{item.precioUnitario.toLocaleString()}</Table.Cell>
+                                    <Table.Cell>{item.subTotal.toLocaleString()}</Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 ) : (
                     <Text color="app.textSubtle">Ningún ítem de orden de compra.</Text>
                 )}
@@ -190,28 +189,28 @@ export default function EliminacionMaterialStep2StudyResult({
                     Recetas impactadas ({insumosReceta.length})
                 </Heading>
                 {insumosReceta.length > 0 ? (
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>Insumo ID</Th>
-                                <Th>Producto destino</Th>
-                                <Th>Nombre</Th>
-                                <Th>Tipo</Th>
-                                <Th>Cantidad req.</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>Insumo ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Producto destino</Table.ColumnHeader>
+                                <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                                <Table.ColumnHeader>Cantidad req.</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {insumosReceta.map((insumo) => (
-                                <Tr key={`${insumo.productoDestinoId}-${insumo.insumoId}`}>
-                                    <Td>{insumo.insumoId}</Td>
-                                    <Td>{insumo.productoDestinoId}</Td>
-                                    <Td>{insumo.productoDestinoNombre}</Td>
-                                    <Td>{insumo.tipoProductoDestino}</Td>
-                                    <Td>{insumo.cantidadRequerida}</Td>
-                                </Tr>
+                                <Table.Row key={`${insumo.productoDestinoId}-${insumo.insumoId}`}>
+                                    <Table.Cell>{insumo.insumoId}</Table.Cell>
+                                    <Table.Cell>{insumo.productoDestinoId}</Table.Cell>
+                                    <Table.Cell>{insumo.productoDestinoNombre}</Table.Cell>
+                                    <Table.Cell>{insumo.tipoProductoDestino}</Table.Cell>
+                                    <Table.Cell>{insumo.cantidadRequerida}</Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 ) : (
                     <Text color="app.textSubtle">El material no aparece en recetas activas.</Text>
                 )}
@@ -222,30 +221,30 @@ export default function EliminacionMaterialStep2StudyResult({
                     Case packs impactados ({insumosEmpaque.length})
                 </Heading>
                 {insumosEmpaque.length > 0 ? (
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>Insumo empaque ID</Th>
-                                <Th>Terminado</Th>
-                                <Th>Nombre</Th>
-                                <Th>Units/case</Th>
-                                <Th>Cantidad</Th>
-                                <Th>UoM</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>Insumo empaque ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Terminado</Table.ColumnHeader>
+                                <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                <Table.ColumnHeader>Units/case</Table.ColumnHeader>
+                                <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                <Table.ColumnHeader>UoM</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {insumosEmpaque.map((insumo) => (
-                                <Tr key={`${insumo.terminadoId}-${insumo.insumoEmpaqueId}`}>
-                                    <Td>{insumo.insumoEmpaqueId}</Td>
-                                    <Td>{insumo.terminadoId}</Td>
-                                    <Td>{insumo.terminadoNombre}</Td>
-                                    <Td>{insumo.unitsPerCase ?? "-"}</Td>
-                                    <Td>{insumo.cantidad}</Td>
-                                    <Td>{insumo.uom ?? "-"}</Td>
-                                </Tr>
+                                <Table.Row key={`${insumo.terminadoId}-${insumo.insumoEmpaqueId}`}>
+                                    <Table.Cell>{insumo.insumoEmpaqueId}</Table.Cell>
+                                    <Table.Cell>{insumo.terminadoId}</Table.Cell>
+                                    <Table.Cell>{insumo.terminadoNombre}</Table.Cell>
+                                    <Table.Cell>{insumo.unitsPerCase ?? "-"}</Table.Cell>
+                                    <Table.Cell>{insumo.cantidad}</Table.Cell>
+                                    <Table.Cell>{insumo.uom ?? "-"}</Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 ) : (
                     <Text color="app.textSubtle">El material no aparece en case packs activos.</Text>
                 )}
@@ -256,26 +255,26 @@ export default function EliminacionMaterialStep2StudyResult({
                     Lotes potencialmente eliminados ({lotes.length})
                 </Heading>
                 {lotes.length > 0 ? (
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>ID</Th>
-                                <Th>Batch</Th>
-                                <Th>Fecha prod.</Th>
-                                <Th>Fecha venc.</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Batch</Table.ColumnHeader>
+                                <Table.ColumnHeader>Fecha prod.</Table.ColumnHeader>
+                                <Table.ColumnHeader>Fecha venc.</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {lotes.map((lote) => (
-                                <Tr key={lote.id}>
-                                    <Td>{lote.id}</Td>
-                                    <Td>{lote.batchNumber}</Td>
-                                    <Td>{lote.productionDate ? formatDate(lote.productionDate) : "-"}</Td>
-                                    <Td>{lote.expirationDate ? formatDate(lote.expirationDate) : "-"}</Td>
-                                </Tr>
+                                <Table.Row key={lote.id}>
+                                    <Table.Cell>{lote.id}</Table.Cell>
+                                    <Table.Cell>{lote.batchNumber}</Table.Cell>
+                                    <Table.Cell>{lote.productionDate ? formatDate(lote.productionDate) : "-"}</Table.Cell>
+                                    <Table.Cell>{lote.expirationDate ? formatDate(lote.expirationDate) : "-"}</Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 ) : (
                     <Text color="app.textSubtle">Ningún lote candidato.</Text>
                 )}
@@ -286,7 +285,7 @@ export default function EliminacionMaterialStep2StudyResult({
                     Transacciones de almacén impactadas ({transaccionesAlmacen.length})
                 </Heading>
                 {transaccionesAlmacen.length > 0 ? (
-                    <VStack align="stretch" spacing={3}>
+                    <VStack align="stretch" gap={3}>
                         {transaccionesAlmacen.map((ta) => (
                             <Box key={ta.transaccionId} borderWidth="1px" borderRadius="md" p={3}>
                                 <Text fontWeight="medium">
@@ -297,30 +296,30 @@ export default function EliminacionMaterialStep2StudyResult({
                                     <Text fontSize="sm" color="app.textMuted">{ta.observaciones}</Text>
                                 )}
                                 {ta.movimientos.length > 0 && (
-                                    <Table size="sm" mt={2} variant="simple">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>Mov. ID</Th>
-                                                <Th>Producto</Th>
-                                                <Th>Cantidad</Th>
-                                                <Th>Tipo</Th>
-                                                <Th>Almacén</Th>
-                                                <Th>Fecha</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
+                                    <Table.Root size="sm" mt={2} variant="simple">
+                                        <Table.Header>
+                                            <Table.Row>
+                                                <Table.ColumnHeader>Mov. ID</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Producto</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Almacén</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                                            </Table.Row>
+                                        </Table.Header>
+                                        <Table.Body>
                                             {ta.movimientos.map((movimiento) => (
-                                                <Tr key={movimiento.movimientoId}>
-                                                    <Td>{movimiento.movimientoId}</Td>
-                                                    <Td>{movimiento.productId ?? "-"}</Td>
-                                                    <Td>{movimiento.cantidad}</Td>
-                                                    <Td>{movimiento.tipoMovimiento ?? "-"}</Td>
-                                                    <Td>{movimiento.almacen ?? "-"}</Td>
-                                                    <Td>{formatDate(movimiento.fechaMovimiento)}</Td>
-                                                </Tr>
+                                                <Table.Row key={movimiento.movimientoId}>
+                                                    <Table.Cell>{movimiento.movimientoId}</Table.Cell>
+                                                    <Table.Cell>{movimiento.productId ?? "-"}</Table.Cell>
+                                                    <Table.Cell>{movimiento.cantidad}</Table.Cell>
+                                                    <Table.Cell>{movimiento.tipoMovimiento ?? "-"}</Table.Cell>
+                                                    <Table.Cell>{movimiento.almacen ?? "-"}</Table.Cell>
+                                                    <Table.Cell>{formatDate(movimiento.fechaMovimiento)}</Table.Cell>
+                                                </Table.Row>
                                             ))}
-                                        </Tbody>
-                                    </Table>
+                                        </Table.Body>
+                                    </Table.Root>
                                 )}
                             </Box>
                         ))}
@@ -335,41 +334,41 @@ export default function EliminacionMaterialStep2StudyResult({
                     Asientos contables relacionados ({asientosContables.length})
                 </Heading>
                 {asientosContables.length > 0 ? (
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>ID</Th>
-                                <Th>Fecha</Th>
-                                <Th>Descripción</Th>
-                                <Th>Módulo</Th>
-                                <Th>Estado</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                                <Table.ColumnHeader>Descripción</Table.ColumnHeader>
+                                <Table.ColumnHeader>Módulo</Table.ColumnHeader>
+                                <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {asientosContables.map((asiento) => (
-                                <Tr key={asiento.id}>
-                                    <Td>{asiento.id}</Td>
-                                    <Td>{formatDate(asiento.fecha)}</Td>
-                                    <Td>{asiento.descripcion ?? "-"}</Td>
-                                    <Td>{asiento.modulo ?? "-"}</Td>
-                                    <Td>{asiento.estado ?? "-"}</Td>
-                                </Tr>
+                                <Table.Row key={asiento.id}>
+                                    <Table.Cell>{asiento.id}</Table.Cell>
+                                    <Table.Cell>{formatDate(asiento.fecha)}</Table.Cell>
+                                    <Table.Cell>{asiento.descripcion ?? "-"}</Table.Cell>
+                                    <Table.Cell>{asiento.modulo ?? "-"}</Table.Cell>
+                                    <Table.Cell>{asiento.estado ?? "-"}</Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 ) : (
                     <Text color="app.textSubtle">Ningún asiento contable.</Text>
                 )}
             </Box>
 
-            <Alert status="warning">
-                <AlertIcon />
-                <AlertDescription>
+            <Alert.Root status="warning">
+                <Alert.Indicator />
+                <Alert.Description>
                     Los padres mixtos se conservarán. Solo se eliminará por completo una OCM,
                     transacción o lote cuando quede vacío o huérfano después de quitar la parte
                     correspondiente a este material.
-                </AlertDescription>
-            </Alert>
+                </Alert.Description>
+            </Alert.Root>
 
             <Flex gap={3} mt={4} w="full" justify="space-between">
                 <Button variant="outline" onClick={() => setActiveStep(1)}>
@@ -377,9 +376,9 @@ export default function EliminacionMaterialStep2StudyResult({
                 </Button>
                 {eliminable && (
                     <Button
-                        colorScheme="teal"
+                        colorPalette="teal"
                         onClick={handleEjecutarEliminacion}
-                        isLoading={isExecuting}
+                        loading={isExecuting}
                         loadingText="Ejecutando..."
                     >
                         Ejecutar eliminación

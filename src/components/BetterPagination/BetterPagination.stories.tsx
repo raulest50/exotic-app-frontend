@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, VStack, Text } from '@chakra-ui/react';
+import { Steps, Box, VStack, Text } from '@chakra-ui/react';
 import BetterPagination from './BetterPagination.tsx';
 
 export const Default = () => {
@@ -9,7 +9,7 @@ export const Default = () => {
 
   return (
     <Box p={8} maxW="800px">
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         <Text fontWeight="bold">Paginación Básica</Text>
         <BetterPagination
           page={page}
@@ -33,7 +33,7 @@ export const WithLoading = () => {
 
   return (
     <Box p={8} maxW="800px">
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         <Text fontWeight="bold">Con Estado de Carga</Text>
         <BetterPagination
           page={page}
@@ -58,7 +58,7 @@ export const FirstPage = () => {
 
   return (
     <Box p={8} maxW="800px">
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         <Text fontWeight="bold">Primera Página</Text>
         <BetterPagination
           page={page}
@@ -82,7 +82,7 @@ export const LastPage = () => {
 
   return (
     <Box p={8} maxW="800px">
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         <Text fontWeight="bold">Última Página</Text>
         <BetterPagination
           page={page}
@@ -106,7 +106,7 @@ export const SinglePage = () => {
 
   return (
     <Box p={8} maxW="800px">
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         <Text fontWeight="bold">Solo Una Página</Text>
         <BetterPagination
           page={page}
@@ -130,7 +130,7 @@ export const EmptyResults = () => {
 
   return (
     <Box p={8} maxW="800px">
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         <Text fontWeight="bold">Sin Resultados</Text>
         <BetterPagination
           page={page}

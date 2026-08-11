@@ -1,17 +1,7 @@
 // src/components/RoleSelectionDialog.tsx
 import React from 'react';
-import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalCloseButton,
-    ModalBody,
-    List,
-    ListItem,
-    ListIcon,
-} from '@chakra-ui/react';
-import { CheckCircleIcon } from '@chakra-ui/icons';
+import { Steps, List, Dialog, Portal } from '@chakra-ui/react';
+import { LuCheckCircle } from 'react-icons/lu';
 
 export type RoleItem = {
     id: number;
@@ -32,40 +22,50 @@ const RoleSelectionDialog: React.FC<RoleSelectionDialogProps> = ({
                                                                      onRoleSelect,
                                                                  }) => {
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Seleccionar Rol</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <List spacing={3}>
-                        {availableRoles && availableRoles.length > 0 ? (
-                            availableRoles.map((role) => (
-                                <ListItem
-                                    key={role.id}
-                                    onClick={() => {
-                                        onRoleSelect(role);
-                                        onClose();
-                                    }}
-                                    _hover={{
-                                        cursor: 'pointer',
-                                        bg: 'gray.100',
-                                    }}
-                                    padding="2"
-                                >
-                                    <ListIcon as={CheckCircleIcon} color="green.500" />
-                                    {role.name}
-                                </ListItem>
-                            ))
-                        ) : (
-                            <ListItem padding="2">
-                                No hay roles disponibles para asignar
-                            </ListItem>
-                        )}
-                    </List>
-                </ModalBody>
-            </ModalContent>
-        </Modal>
+        <Dialog.Root open={isOpen} onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
+
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Seleccionar Rol</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <List.Root gap={3}>
+                                {availableRoles && availableRoles.length > 0 ? (
+                                    availableRoles.map((role) => (
+                                        <List.Item
+                                            key={role.id}
+                                            onClick={() => {
+                                                onRoleSelect(role);
+                                                onClose();
+                                            }}
+                                            _hover={{
+                                                cursor: 'pointer',
+                                                bg: 'gray.100',
+                                            }}
+                                            padding="2"
+                                        >
+                                            <List.Indicator color="green.500" asChild><LuCheckCircle /></List.Indicator>
+                                            {role.name}
+                                        </List.Item>
+                                    ))
+                                ) : (
+                                    <List.Item padding="2">
+                                        No hay roles disponibles para asignar
+                                    </List.Item>
+                                )}
+                            </List.Root>
+                        </Dialog.Body>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 };
 

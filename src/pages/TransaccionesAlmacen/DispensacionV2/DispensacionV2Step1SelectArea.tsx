@@ -1,10 +1,9 @@
 import {
+    Steps,
     Badge,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     HStack,
     Input,
     InputGroup,
@@ -19,12 +18,14 @@ import {
     Tr,
     VStack,
     useToast,
+    Field,
+    Icon,
 } from "@chakra-ui/react";
-import { SearchIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import EndPointsURL from "../../../api/EndPointsURL";
 import BetterPagination from "../../../components/BetterPagination/BetterPagination";
+import { LuSearch } from 'react-icons/lu';
 
 export interface AreaOperativaDispensacionV2 {
     areaId: number;
@@ -130,63 +131,63 @@ export default function DispensacionV2Step1SelectArea({
 
     return (
         <Box backgroundColor="app.surface" p={4} borderRadius="md" boxShadow="sm">
-            <VStack align="stretch" spacing={4}>
-                <FormControl>
-                    <FormLabel>Área operativa</FormLabel>
+            <VStack align="stretch" gap={4}>
+                <Field.Root>
+                    <Field.Label>Área operativa</Field.Label>
                     <HStack>
                         <InputGroup>
                             <InputLeftElement pointerEvents="none">
-                                <SearchIcon color="gray.400" />
+                                <Icon as={LuSearch} color="gray.400" />
                             </InputLeftElement>
                             <Input
                                 value={searchText}
-                                onChange={(event) => setSearchText(event.target.value)}
+                                onValueChange={(event) => setSearchText(event.target.value)}
                                 onKeyDown={(event) => {
                                     if (event.key === "Enter" && !loading) {
                                         handleSearchSubmit();
                                     }
                                 }}
                                 placeholder="Buscar por nombre"
-                                isDisabled={loading}
+                                disabled={loading}
                             />
                         </InputGroup>
-                        <Button onClick={handleSearchSubmit} isLoading={loading} loadingText="Buscando">
+                        <Button onClick={handleSearchSubmit} loading={loading} loadingText="Buscando">
                             Buscar
                         </Button>
                     </HStack>
-                </FormControl>
+                </Field.Root>
 
                 <Box overflowX="auto">
-                    <Table size="sm">
-                        <Thead>
-                            <Tr>
-                                <Th>ID</Th>
-                                <Th>Nombre</Th>
-                                <Th>Descripción</Th>
-                                <Th>Responsable</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                <Table.ColumnHeader>Descripción</Table.ColumnHeader>
+                                <Table.ColumnHeader>Responsable</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {currentAreas.map((area) => {
                                 const isSelected = selectedArea?.areaId === area.areaId;
                                 return (
-                                    <Tr
+                                    <Table.Row
                                         key={area.areaId}
                                         bg={isSelected ? "app.rowSelectedTeal" : undefined}
                                         _hover={{ bg: isSelected ? "app.rowSelectedTeal" : "app.rowHover", cursor: "pointer" }}
                                         onClick={() => onSelectArea(area)}
                                     >
-                                        <Td>{area.areaId}</Td>
-                                        <Td fontWeight="semibold">{area.nombre}</Td>
-                                        <Td maxW="360px">
-                                            <Text noOfLines={2}>{area.descripcion || "-"}</Text>
-                                        </Td>
-                                        <Td>{responsableLabel(area)}</Td>
-                                    </Tr>
+                                        <Table.Cell>{area.areaId}</Table.Cell>
+                                        <Table.Cell fontWeight="semibold">{area.nombre}</Table.Cell>
+                                        <Table.Cell maxW="360px">
+                                            <Text lineClamp={2}>{area.descripcion || "-"}</Text>
+                                        </Table.Cell>
+                                        <Table.Cell>{responsableLabel(area)}</Table.Cell>
+                                    </Table.Row>
                                 );
                             })}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
 
                     {loading && (
                         <Flex justify="center" align="center" gap={3} py={6}>
@@ -231,7 +232,7 @@ export default function DispensacionV2Step1SelectArea({
                 )}
 
                 <Flex justify="flex-end">
-                    <Button colorScheme="teal" onClick={onNext} isDisabled={!selectedArea}>
+                    <Button colorPalette="teal" onClick={onNext} disabled={!selectedArea}>
                         Continuar al MPS
                     </Button>
                 </Flex>

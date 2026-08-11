@@ -1,31 +1,22 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
+  Steps,
   Alert,
-  AlertDescription,
-  AlertIcon,
-  AlertTitle,
   Box,
   Button,
   Flex,
-  FormControl,
-  FormLabel,
   IconButton,
   Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   Text,
   Textarea,
-  Tooltip,
   VStack,
   useToast,
+  Field,
+  Dialog,
+  Portal,
 } from "@chakra-ui/react";
-import { AddIcon, ArrowDownIcon, ArrowUpIcon, DeleteIcon, DragHandleIcon } from "@chakra-ui/icons";
+import { Tooltip } from '@/components/ui/tooltip';
 import {
   DndContext,
   DragEndEvent,
@@ -47,6 +38,7 @@ import {
 } from "../../../api/MisionVisionApi";
 import RichTextEditor from "./RichTextEditor";
 import { richTextHasContent } from "./SafeRichText";
+import { LuArrowDown, LuArrowUp, LuGripVertical, LuPlus, LuTrash2 } from 'react-icons/lu';
 
 interface DraftValue {
   key: string;
@@ -226,94 +218,98 @@ export default function MisionVisionEditorModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="6xl" scrollBehavior="inside" closeOnOverlayClick={!saving}>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Editar identidad corporativa · versión base {versionBase}</ModalHeader>
-        <ModalCloseButton isDisabled={saving} />
-        <ModalBody>
-          <VStack spacing={7} align="stretch">
-            {error && (
-              <Alert status={conflict ? "warning" : "error"} borderRadius="md">
-                <AlertIcon />
-                <Box flex="1">
-                  <AlertTitle>{conflict ? "Conflicto de edición" : "Revisa la información"}</AlertTitle>
-                  <AlertDescription>{error}</AlertDescription>
-                </Box>
-                {conflict && (
-                  <Button ml={4} size="sm" onClick={reloadCurrent} isLoading={reloading}>
-                    Recargar vigente
-                  </Button>
+    <Dialog.Root open={isOpen} size='xl' scrollBehavior="inside" closeOnInteractOutside={!saving} onOpenChange={e => {
+      if (!e.open) {
+        onClose();
+      }
+    }}>
+      <Portal>
+
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>Editar identidad corporativa · versión base {versionBase}</Dialog.Header>
+            <Dialog.CloseTrigger disabled={saving} />
+            <Dialog.Body>
+              <VStack gap={7} align="stretch">
+                {error && (
+                  <Alert.Root status={conflict ? "warning" : "error"} borderRadius="md">
+                    <Alert.Indicator />
+                    <Box flex="1">
+                      <Alert.Title>{conflict ? "Conflicto de edición" : "Revisa la información"}</Alert.Title>
+                      <Alert.Description>{error}</Alert.Description>
+                    </Box>
+                    {conflict && (
+                      <Button ml={4} size="sm" onClick={reloadCurrent} loading={reloading}>
+                        Recargar vigente
+                      </Button>
+                    )}
+                  </Alert.Root>
                 )}
-              </Alert>
-            )}
 
-            <FormControl isRequired>
-              <FormLabel>Misión</FormLabel>
-              <RichTextEditor value={misionHtml} onChange={setMisionHtml} ariaLabel="Contenido de la misión" />
-            </FormControl>
+                <Field.Root required>
+                  <Field.Label>Misión</Field.Label>
+                  <RichTextEditor value={misionHtml} onChange={setMisionHtml} ariaLabel="Contenido de la misión" />
+                </Field.Root>
 
-            <FormControl isRequired>
-              <FormLabel>Visión</FormLabel>
-              <RichTextEditor value={visionHtml} onChange={setVisionHtml} ariaLabel="Contenido de la visión" />
-            </FormControl>
+                <Field.Root required>
+                  <Field.Label>Visión</Field.Label>
+                  <RichTextEditor value={visionHtml} onChange={setVisionHtml} ariaLabel="Contenido de la visión" />
+                </Field.Root>
 
-            <Box>
-              <Flex align="center" justify="space-between" mb={3} gap={4}>
                 <Box>
-                  <Text fontWeight="semibold">Valores corporativos</Text>
-                  <Text fontSize="sm" color="app.textMuted">Arrastra las tarjetas o usa las flechas para cambiar el orden.</Text>
+                  <Flex align="center" justify="space-between" mb={3} gap={4}>
+                    <Box>
+                      <Text fontWeight="semibold">Valores corporativos</Text>
+                      <Text fontSize="sm" color="app.textMuted">Arrastra las tarjetas o usa las flechas para cambiar el orden.</Text>
+                    </Box>
+                    <Button size="sm" onClick={addValue} disabled={valores.length >= MAX_VALUES}><LuPlus />Agregar valor
+                                      </Button>
+                  </Flex>
+
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={valores.map((value) => value.key)} strategy={verticalListSortingStrategy}>
+                      <VStack gap={4} align="stretch">
+                        {valores.map((value, index) => (
+                          <SortableValue
+                            key={value.key}
+                            value={value}
+                            index={index}
+                            total={valores.length}
+                            onUpdate={(patch) => updateValue(value.key, patch)}
+                            onRemove={() => removeValue(value.key)}
+                            onMove={moveValue}
+                          />
+                        ))}
+                      </VStack>
+                    </SortableContext>
+                  </DndContext>
                 </Box>
-                <Button
-                  leftIcon={<AddIcon />}
-                  size="sm"
-                  onClick={addValue}
-                  isDisabled={valores.length >= MAX_VALUES}
-                >
-                  Agregar valor
-                </Button>
-              </Flex>
 
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={valores.map((value) => value.key)} strategy={verticalListSortingStrategy}>
-                  <VStack spacing={4} align="stretch">
-                    {valores.map((value, index) => (
-                      <SortableValue
-                        key={value.key}
-                        value={value}
-                        index={index}
-                        total={valores.length}
-                        onUpdate={(patch) => updateValue(value.key, patch)}
-                        onRemove={() => removeValue(value.key)}
-                        onMove={moveValue}
-                      />
-                    ))}
-                  </VStack>
-                </SortableContext>
-              </DndContext>
-            </Box>
+                <Field.Root required>
+                  <Field.Label>Motivo del cambio</Field.Label>
+                  <Textarea
+                    value={motivoCambio}
+                    onValueChange={(event) => setMotivoCambio(event.target.value)}
+                    maxLength={1000}
+                    rows={3}
+                    placeholder="Describe brevemente por qué se publica esta versión"
+                  />
+                  <Text textAlign="right" fontSize="xs" color="app.textMuted">{motivoCambio.length}/1000</Text>
+                </Field.Root>
+              </VStack>
+            </Dialog.Body>
+            <Dialog.Footer gap={3}>
+              <Button variant="ghost" onClick={onClose} disabled={saving}>Cancelar</Button>
+              <Button colorPalette="blue" onClick={handleSave} loading={saving} disabled={conflict}>
+                Publicar nueva versión
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
 
-            <FormControl isRequired>
-              <FormLabel>Motivo del cambio</FormLabel>
-              <Textarea
-                value={motivoCambio}
-                onChange={(event) => setMotivoCambio(event.target.value)}
-                maxLength={1000}
-                rows={3}
-                placeholder="Describe brevemente por qué se publica esta versión"
-              />
-              <Text textAlign="right" fontSize="xs" color="app.textMuted">{motivoCambio.length}/1000</Text>
-            </FormControl>
-          </VStack>
-        </ModalBody>
-        <ModalFooter gap={3}>
-          <Button variant="ghost" onClick={onClose} isDisabled={saving}>Cancelar</Button>
-          <Button colorScheme="blue" onClick={handleSave} isLoading={saving} isDisabled={conflict}>
-            Publicar nueva versión
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+      </Portal>
+    </Dialog.Root>
   );
 }
 
@@ -341,63 +337,55 @@ function SortableValue({ value, index, total, onUpdate, onRemove, onMove }: Sort
       opacity={isDragging ? 0.85 : 1}
     >
       <Flex align="center" gap={2} mb={4}>
-        <Tooltip label="Arrastrar para reordenar">
+        <Tooltip content="Arrastrar para reordenar">
           <IconButton
             aria-label={`Reordenar valor ${index + 1}`}
-            icon={<DragHandleIcon />}
             size="sm"
             variant="ghost"
             cursor="grab"
             {...attributes}
-            {...listeners}
-          />
+            {...listeners}><LuGripVertical /></IconButton>
         </Tooltip>
-        <FormControl isRequired flex="1">
-          <FormLabel fontSize="sm" mb={1}>Título del valor {index + 1}</FormLabel>
+        <Field.Root required flex="1">
+          <Field.Label fontSize="sm" mb={1}>Título del valor {index + 1}</Field.Label>
           <Input
             value={value.titulo}
-            onChange={(event) => onUpdate({ titulo: event.target.value })}
+            onValueChange={(event) => onUpdate({ titulo: event.target.value })}
             maxLength={120}
           />
-        </FormControl>
-        <Tooltip label="Subir">
+        </Field.Root>
+        <Tooltip content="Subir">
           <IconButton
             aria-label={`Subir valor ${index + 1}`}
-            icon={<ArrowUpIcon />}
             size="sm"
             onClick={() => onMove(index, -1)}
-            isDisabled={index === 0}
-          />
+            disabled={index === 0}><LuArrowUp /></IconButton>
         </Tooltip>
-        <Tooltip label="Bajar">
+        <Tooltip content="Bajar">
           <IconButton
             aria-label={`Bajar valor ${index + 1}`}
-            icon={<ArrowDownIcon />}
             size="sm"
             onClick={() => onMove(index, 1)}
-            isDisabled={index === total - 1}
-          />
+            disabled={index === total - 1}><LuArrowDown /></IconButton>
         </Tooltip>
-        <Tooltip label="Eliminar">
+        <Tooltip content="Eliminar">
           <IconButton
             aria-label={`Eliminar valor ${index + 1}`}
-            icon={<DeleteIcon />}
             size="sm"
-            colorScheme="red"
+            colorPalette="red"
             variant="ghost"
             onClick={onRemove}
-            isDisabled={total <= 1}
-          />
+            disabled={total <= 1}><LuTrash2 /></IconButton>
         </Tooltip>
       </Flex>
-      <FormControl isRequired>
-        <FormLabel fontSize="sm">Descripción</FormLabel>
+      <Field.Root required>
+        <Field.Label fontSize="sm">Descripción</Field.Label>
         <RichTextEditor
           value={value.descripcionHtml}
           onChange={(descripcionHtml) => onUpdate({ descripcionHtml })}
           ariaLabel={`Descripción del valor ${value.titulo || index + 1}`}
         />
-      </FormControl>
+      </Field.Root>
     </Box>
   );
 }

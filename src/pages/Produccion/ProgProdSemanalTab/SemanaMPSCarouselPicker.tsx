@@ -2,10 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-    ChevronLeftIcon,
-    ChevronRightIcon,
-} from "@chakra-ui/icons";
-import {
+    Steps,
     Badge,
     Box,
     Flex,
@@ -28,6 +25,7 @@ import {
     getIsoWeekNumber,
     getIsoWeekYear,
 } from "./semanaMps.utils";
+import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 
 interface SemanaMPSCarouselPickerProps {
     value: string;
@@ -227,16 +225,14 @@ export default function SemanaMPSCarouselPicker({
     };
 
     return (
-        <VStack align="stretch" spacing={4}>
+        <VStack align="stretch" gap={4}>
             <Flex align="center" gap={3}>
                 <IconButton
                     aria-label="Semana anterior"
-                    icon={<ChevronLeftIcon />}
                     variant="outline"
-                    colorScheme="teal"
-                    isDisabled={isDisabled}
-                    onClick={() => handleMove(-1)}
-                />
+                    colorPalette="teal"
+                    disabled={isDisabled}
+                    onClick={() => handleMove(-1)}><LuChevronLeft /></IconButton>
 
                 <Box flex="1" minW={0} overflow="hidden" px={2} py={3} mx={-2}>
                     <AnimatePresence initial={false} mode="wait" custom={slideDirection}>
@@ -247,7 +243,7 @@ export default function SemanaMPSCarouselPicker({
                             exit={getSlideExitTarget(slideDirection)}
                             transition={carouselSpring}
                         >
-                            <SimpleGrid columns={[1, 1, 3]} spacing={3}>
+                            <SimpleGrid columns={[1, 1, 3]} gap={3}>
                                 {visibleWeeks.map((card) => {
                                     const isFocused = card.offset === 0;
                                     const isSelected = card.semana.startDate === value;
@@ -267,9 +263,6 @@ export default function SemanaMPSCarouselPicker({
 
                                     return (
                                         <Box
-                                            key={card.semana.startDate}
-                                            as="button"
-                                            type="button"
                                             textAlign="left"
                                             p={4}
                                             minH="176px"
@@ -288,47 +281,49 @@ export default function SemanaMPSCarouselPicker({
                                                 borderColor: isSelected ? "teal.600" : "teal.300",
                                                 bg: isSelected ? "teal.100" : "teal.50",
                                             } : undefined}
-                                            onClick={() => handleSelect(card)}
-                                        >
-                                            <VStack align="stretch" spacing={3}>
-                                                <Flex justify="space-between" align="start" gap={2}>
-                                                    <Box minW={0}>
-                                                        <Text fontSize="lg" fontWeight="bold" color="gray.800">
-                                                            {card.semana.codigo}
-                                                        </Text>
-                                                        <Text fontSize="xs" color="gray.500">
-                                                            {formatSemanaMpsDisplayDate(card.semana.startDate)} a {formatSemanaMpsDisplayDate(card.semana.endDate)}
-                                                        </Text>
-                                                    </Box>
-                                                    {card.isLoaded ? null : <Spinner size="sm" color="teal.500" />}
-                                                </Flex>
+                                            asChild><button
+                                                    key={card.semana.startDate}
+                                                    type="button"
+                                                    onClick={() => handleSelect(card)}>
+                                                    <VStack align="stretch" gap={3}>
+                                                        <Flex justify="space-between" align="start" gap={2}>
+                                                            <Box minW={0}>
+                                                                <Text fontSize="lg" fontWeight="bold" color="gray.800">
+                                                                    {card.semana.codigo}
+                                                                </Text>
+                                                                <Text fontSize="xs" color="gray.500">
+                                                                    {formatSemanaMpsDisplayDate(card.semana.startDate)} a {formatSemanaMpsDisplayDate(card.semana.endDate)}
+                                                                </Text>
+                                                            </Box>
+                                                            {card.isLoaded ? null : <Spinner size="sm" color="teal.500" />}
+                                                        </Flex>
 
-                                                <Flex gap={2} wrap="wrap">
-                                                    <Badge colorScheme={estadoColor}>{estadoLabel}</Badge>
-                                                    {isCurrentWeek && <Badge colorScheme="purple">Semana actual</Badge>}
-                                                    {isSelected && <Badge colorScheme="teal">Seleccionada</Badge>}
-                                                </Flex>
+                                                        <Flex gap={2} wrap="wrap">
+                                                            <Badge colorPalette={estadoColor}>{estadoLabel}</Badge>
+                                                            {isCurrentWeek && <Badge colorPalette="purple">Semana actual</Badge>}
+                                                            {isSelected && <Badge colorPalette="teal">Seleccionada</Badge>}
+                                                        </Flex>
 
-                                                <Box>
-                                                    <Text fontSize="sm" color="gray.700">
-                                                        Lunes: <Text as="span" fontWeight="semibold">{formatSemanaMpsDisplayDate(card.semana.startDate)}</Text>
-                                                    </Text>
-                                                    <Text fontSize="sm" color="gray.700">
-                                                        Sabado: <Text as="span" fontWeight="semibold">{formatSemanaMpsDisplayDate(card.semana.endDate)}</Text>
-                                                    </Text>
-                                                </Box>
+                                                        <Box>
+                                                            <Text fontSize="sm" color="gray.700">
+                                                                Lunes: <Text as="span" fontWeight="semibold">{formatSemanaMpsDisplayDate(card.semana.startDate)}</Text>
+                                                            </Text>
+                                                            <Text fontSize="sm" color="gray.700">
+                                                                Sabado: <Text as="span" fontWeight="semibold">{formatSemanaMpsDisplayDate(card.semana.endDate)}</Text>
+                                                            </Text>
+                                                        </Box>
 
-                                                {card.semana.mpsId ? (
-                                                    <Text fontSize="xs" color="gray.600">
-                                                        MPS #{card.semana.mpsId}
-                                                    </Text>
-                                                ) : (
-                                                    <Text fontSize="xs" color="gray.500">
-                                                        {card.isFailed ? "No se pudo consultar esta semana." : "No hay MPS persistido para esta semana."}
-                                                    </Text>
-                                                )}
-                                            </VStack>
-                                        </Box>
+                                                        {card.semana.mpsId ? (
+                                                            <Text fontSize="xs" color="gray.600">
+                                                                MPS #{card.semana.mpsId}
+                                                            </Text>
+                                                        ) : (
+                                                            <Text fontSize="xs" color="gray.500">
+                                                                {card.isFailed ? "No se pudo consultar esta semana." : "No hay MPS persistido para esta semana."}
+                                                            </Text>
+                                                        )}
+                                                    </VStack>
+                                                </button></Box>
                                     );
                                 })}
                             </SimpleGrid>
@@ -338,12 +333,10 @@ export default function SemanaMPSCarouselPicker({
 
                 <IconButton
                     aria-label="Semana posterior"
-                    icon={<ChevronRightIcon />}
                     variant="outline"
-                    colorScheme="teal"
-                    isDisabled={isDisabled}
-                    onClick={() => handleMove(1)}
-                />
+                    colorPalette="teal"
+                    disabled={isDisabled}
+                    onClick={() => handleMove(1)}><LuChevronRight /></IconButton>
             </Flex>
 
             {isLoadingVisibleWeeks && (

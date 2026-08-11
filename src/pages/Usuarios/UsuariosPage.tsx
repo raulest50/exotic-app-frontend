@@ -1,5 +1,16 @@
 import type { ReactNode } from "react";
-import { Container, Tabs, TabList, TabPanels, Tab, TabPanel, Center, Spinner, Text } from "@chakra-ui/react";
+import {
+    Steps,
+    Container,
+    Tabs,
+    TabList,
+    TabPanels,
+    Tab,
+    TabPanel,
+    Center,
+    Spinner,
+    Text,
+} from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader.tsx";
 import UserFullRoleCRUD from "./GestionUsuarios/UserFullRoleCRUD.tsx";
 import InfoNiveles from "./InfoNiveles.tsx";
@@ -53,18 +64,18 @@ export default function UsuariosPage() {
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} minH={"100vh"} w={"full"} h={"full"}>
             <MyHeader title={"Roles y Usuarios"} />
-            <Tabs>
-                <TabList>
+            <Tabs.Root>
+                <Tabs.List>
                     {visibleTabs.map((d) => (
                         <Tab key={d.tabId}>{USUARIOS_TAB_LABELS[d.tabId] ?? d.label}</Tab>
                     ))}
-                </TabList>
+                </Tabs.List>
                 <TabPanels>
                     {visibleTabs.map((d) => (
                         <TabPanel key={d.tabId}>{USUARIOS_TAB_CONTENT[d.tabId]}</TabPanel>
                     ))}
                 </TabPanels>
-            </Tabs>
+            </Tabs.Root>
         </Container>
     );
 }

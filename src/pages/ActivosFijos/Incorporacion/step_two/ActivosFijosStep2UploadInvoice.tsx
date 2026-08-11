@@ -1,13 +1,5 @@
 import { useState } from 'react';
-import {
-    Button,
-    Divider,
-    Flex,
-    Heading,
-    Text,
-    useToast,
-    VStack,
-} from '@chakra-ui/react';
+import { Steps, Button, Flex, Heading, Text, useToast, VStack, Separator } from '@chakra-ui/react';
 
 import { IncorporacionActivoDto } from '../../types.tsx';
 import { useAuth } from '../../../../context/AuthContext.tsx';
@@ -53,7 +45,7 @@ export function ActivosFijosStep2UploadInvoice({
 
     return (
         <Flex direction="column" gap={8} w="full">
-            <VStack spacing={4} align="stretch" bg="app.stepperBlue" p={6} borderRadius="md">
+            <VStack gap={4} align="stretch" bg="app.stepperBlue" p={6} borderRadius="md">
                 <Heading size="md" textAlign="center">
                     Adjuntar Documento Soporte
                 </Heading>
@@ -66,7 +58,7 @@ export function ActivosFijosStep2UploadInvoice({
                     o adjuntando un scan del mismo.
                 </Text>
 
-                <Divider />
+                <Separator />
 
                 <DocSuppUploader
                     title="Seleccionar factura o documento soporte"
@@ -81,10 +73,10 @@ export function ActivosFijosStep2UploadInvoice({
                 />
 
                 <Button
-                    colorScheme="teal"
+                    colorPalette="teal"
                     variant="solid"
                     onClick={onClickContinuar}
-                    isDisabled={!file}
+                    disabled={!file}
                     alignSelf="center"
                 >
                     Continuar

@@ -1,31 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+    Steps,
     Badge,
     Box,
     Button,
     Card,
-    CardBody,
-    FormControl,
-    FormHelperText,
-    FormLabel,
     HStack,
     IconButton,
     Input,
-    Select,
+    NativeSelect,
     SimpleGrid,
     Spinner,
     Stack,
     Stat,
-    StatHelpText,
-    StatLabel,
-    StatNumber,
     Text,
-    Tooltip,
     useBreakpointValue,
     useDisclosure,
     useToast,
+    Field,
 } from "@chakra-ui/react";
-import { CloseIcon, DownloadIcon, RepeatIcon, SearchIcon } from "@chakra-ui/icons";
+import { Tooltip } from '@/components/ui/tooltip';
 import ReactECharts from "echarts-for-react";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
@@ -42,6 +36,7 @@ import type {
     HorasExtraBiSerie,
 } from "./types.ts";
 import { formatHours, formatInteger, getCurrentMonthStartIsoDate, getTodayIsoDate } from "./utils.ts";
+import { LuDownload, LuRepeat, LuSearch, LuX } from 'react-icons/lu';
 
 const endPoints = new EndPointsURL();
 
@@ -228,145 +223,139 @@ export default function HorasExtraBiPanel() {
     }, [serie?.puntos]);
 
     return (
-        <Stack spacing={4}>
-            <Card variant="outline">
-                <CardBody>
-                    <Stack spacing={4}>
-                        <SimpleGrid columns={{ base: 1, lg: 4 }} spacing={4}>
-                            <FormControl>
-                                <FormLabel>Fecha desde</FormLabel>
-                                <Input type="date" value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} />
-                            </FormControl>
-                            <FormControl isInvalid={rangeInvalid}>
-                                <FormLabel>Fecha hasta</FormLabel>
-                                <Input type="date" value={fechaHasta} onChange={(e) => setFechaHasta(e.target.value)} />
+        <Stack gap={4}>
+            <Card.Root variant="outline">
+                <Card.Body>
+                    <Stack gap={4}>
+                        <SimpleGrid columns={{ base: 1, lg: 4 }} gap={4}>
+                            <Field.Root>
+                                <Field.Label>Fecha desde</Field.Label>
+                                <Input type="date" value={fechaDesde} onValueChange={(e) => setFechaDesde(e.target.value)} />
+                            </Field.Root>
+                            <Field.Root invalid={rangeInvalid}>
+                                <Field.Label>Fecha hasta</Field.Label>
+                                <Input type="date" value={fechaHasta} onValueChange={(e) => setFechaHasta(e.target.value)} />
                                 {rangeInvalid ? (
-                                    <FormHelperText color="red.500">La fecha final no puede ser anterior.</FormHelperText>
+                                    <Field.HelperText color="red.500">La fecha final no puede ser anterior.</Field.HelperText>
                                 ) : null}
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel>Granularidad</FormLabel>
-                                <Select
-                                    value={granularidad}
-                                    onChange={(e) => setGranularidad(e.target.value as HorasExtraBiGranularidad)}
-                                >
-                                    <option value="DIA">Día</option>
-                                    <option value="SEMANA">Semana</option>
-                                    <option value="MES">Mes</option>
-                                </Select>
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel>Departamento</FormLabel>
-                                <Select
-                                    value={departamento}
-                                    onChange={(e) => setDepartamento(e.target.value as DepartamentoPersonal | "")}
-                                >
-                                    <option value="">Todos</option>
-                                    <option value="PRODUCCION">Producción</option>
-                                    <option value="ADMINISTRATIVO">Administrativo</option>
-                                </Select>
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel>Cargo</FormLabel>
-                                <Input value={cargo} onChange={(e) => setCargo(e.target.value)} />
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel>Integrante</FormLabel>
+                            </Field.Root>
+                            <Field.Root>
+                                <Field.Label>Granularidad</Field.Label>
+                                <NativeSelect.Root>
+                                    <NativeSelect.Field
+                                        value={granularidad}
+                                        onValueChange={(e) => setGranularidad(e.target.value as HorasExtraBiGranularidad)}>
+                                        <option value="DIA">Día</option>
+                                        <option value="SEMANA">Semana</option>
+                                        <option value="MES">Mes</option>
+                                    </NativeSelect.Field>
+                                    <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                            </Field.Root>
+                            <Field.Root>
+                                <Field.Label>Departamento</Field.Label>
+                                <NativeSelect.Root>
+                                    <NativeSelect.Field
+                                        value={departamento}
+                                        onValueChange={(e) => setDepartamento(e.target.value as DepartamentoPersonal | "")}>
+                                        <option value="">Todos</option>
+                                        <option value="PRODUCCION">Producción</option>
+                                        <option value="ADMINISTRATIVO">Administrativo</option>
+                                    </NativeSelect.Field>
+                                    <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                            </Field.Root>
+                            <Field.Root>
+                                <Field.Label>Cargo</Field.Label>
+                                <Input value={cargo} onValueChange={(e) => setCargo(e.target.value)} />
+                            </Field.Root>
+                            <Field.Root>
+                                <Field.Label>Integrante</Field.Label>
                                 <HStack>
-                                    <Input value={integranteLabel} placeholder="Todos" isReadOnly />
-                                    <Tooltip label="Buscar integrante">
+                                    <Input value={integranteLabel} placeholder="Todos" readOnly />
+                                    <Tooltip content="Buscar integrante">
                                         <IconButton
                                             aria-label="Buscar integrante"
-                                            icon={<SearchIcon />}
-                                            colorScheme="blue"
-                                            onClick={integrantePicker.onOpen}
-                                        />
+                                            colorPalette="blue"
+                                            onClick={integrantePicker.onOpen}><LuSearch /></IconButton>
                                     </Tooltip>
-                                    <Tooltip label="Limpiar integrante">
+                                    <Tooltip content="Limpiar integrante">
                                         <IconButton
                                             aria-label="Limpiar integrante"
-                                            icon={<CloseIcon />}
                                             variant="outline"
-                                            isDisabled={!selectedIntegrante}
-                                            onClick={() => setSelectedIntegrante(null)}
-                                        />
+                                            disabled={!selectedIntegrante}
+                                            onClick={() => setSelectedIntegrante(null)}><LuX /></IconButton>
                                     </Tooltip>
                                 </HStack>
-                            </FormControl>
+                            </Field.Root>
                         </SimpleGrid>
                         <Stack
                             direction={{ base: "column", md: "row" }}
                             justify="space-between"
                             align={{ base: "stretch", md: "center" }}
-                            spacing={3}
+                            gap={3}
                         >
-                            <Badge colorScheme="blue" alignSelf={{ base: "flex-start", md: "center" }}>
+                            <Badge colorPalette="blue" alignSelf={{ base: "flex-start", md: "center" }}>
                                 {fechaDesde} a {fechaHasta}
                             </Badge>
-                            <Stack direction={{ base: "column", sm: "row" }} spacing={3} align="stretch">
+                            <Stack direction={{ base: "column", sm: "row" }} gap={3} align="stretch">
                                 <Button
-                                    leftIcon={<RepeatIcon />}
-                                    colorScheme="blue"
+                                    colorPalette="blue"
                                     onClick={fetchData}
-                                    isLoading={loading}
-                                    isDisabled={!canQuery}
-                                    w={{ base: "full", sm: "auto" }}
-                                >
-                                    Actualizar
-                                </Button>
+                                    loading={loading}
+                                    disabled={!canQuery}
+                                    w={{ base: "full", sm: "auto" }}><LuRepeat />Actualizar
+                                                                    </Button>
                                 <Button
-                                    leftIcon={<DownloadIcon />}
                                     variant="outline"
-                                    colorScheme="green"
+                                    colorPalette="green"
                                     onClick={handleDownload}
-                                    isLoading={downloading}
-                                    isDisabled={!canQuery}
-                                    w={{ base: "full", sm: "auto" }}
-                                >
-                                    Descargar Excel
-                                </Button>
+                                    loading={downloading}
+                                    disabled={!canQuery}
+                                    w={{ base: "full", sm: "auto" }}><LuDownload />Descargar Excel
+                                                                    </Button>
                             </Stack>
                         </Stack>
                     </Stack>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
 
             {loading ? (
-                <Card variant="outline">
-                    <CardBody>
+                <Card.Root variant="outline">
+                    <Card.Body>
                         <Stack align="center" py={8}>
                             <Spinner />
                             <Text color="app.textMuted">Cargando BI de horas extra...</Text>
                         </Stack>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
             ) : (
                 <>
-                    <SimpleGrid columns={{ base: 1, md: 2, xl: 5 }} spacing={4}>
-                        <Card variant="outline">
-                            <CardBody>
-                                <Stat>
-                                    <StatLabel>Total horas</StatLabel>
-                                    <StatNumber>{formatHours(resumen?.totalHoras)} h</StatNumber>
-                                    <StatHelpText>{formatInteger(resumen?.totalRegistros)} registros</StatHelpText>
-                                </Stat>
-                            </CardBody>
-                        </Card>
+                    <SimpleGrid columns={{ base: 1, md: 2, xl: 5 }} gap={4}>
+                        <Card.Root variant="outline">
+                            <Card.Body>
+                                <Stat.Root>
+                                    <Stat.Label>Total horas</Stat.Label>
+                                    <Stat.ValueText>{formatHours(resumen?.totalHoras)} h</Stat.ValueText>
+                                    <Stat.HelpText>{formatInteger(resumen?.totalRegistros)} registros</Stat.HelpText>
+                                </Stat.Root>
+                            </Card.Body>
+                        </Card.Root>
                         {estados.map((item) => (
-                            <Card key={item.estado} variant="outline">
-                                <CardBody>
-                                    <Stat>
-                                        <StatLabel>{getEstadoRegistroHoraExtraText(item.estado)}</StatLabel>
-                                        <StatNumber>{formatHours(item.horas)} h</StatNumber>
-                                        <StatHelpText>{formatInteger(item.registros)} registros</StatHelpText>
-                                    </Stat>
-                                </CardBody>
-                            </Card>
+                            <Card.Root key={item.estado} variant="outline">
+                                <Card.Body>
+                                    <Stat.Root>
+                                        <Stat.Label>{getEstadoRegistroHoraExtraText(item.estado)}</Stat.Label>
+                                        <Stat.ValueText>{formatHours(item.horas)} h</Stat.ValueText>
+                                        <Stat.HelpText>{formatInteger(item.registros)} registros</Stat.HelpText>
+                                    </Stat.Root>
+                                </Card.Body>
+                            </Card.Root>
                         ))}
                     </SimpleGrid>
 
-                    <Card variant="outline">
-                        <CardBody>
+                    <Card.Root variant="outline">
+                        <Card.Body>
                             <Text fontWeight="semibold" mb={4}>Serie temporal de horas extra</Text>
                             {(serie?.puntos.length ?? 0) > 0 ? (
                                 <ReactECharts option={chartOptions} style={{ height: `${chartHeight}px`, width: "100%" }} />
@@ -377,13 +366,13 @@ export default function HorasExtraBiPanel() {
                                     </Text>
                                 </Box>
                             )}
-                        </CardBody>
-                    </Card>
+                        </Card.Body>
+                    </Card.Root>
                 </>
             )}
 
             <IntegrantePersonalPicker
-                isOpen={integrantePicker.isOpen}
+                isOpen={integrantePicker.open}
                 onClose={integrantePicker.onClose}
                 onSelectIntegrante={setSelectedIntegrante}
                 initialSelectedId={selectedIntegrante?.id}

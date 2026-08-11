@@ -1,11 +1,7 @@
 // BandejaSeleccion.tsx
 import React from "react";
 import { Insumo } from "../../../types.tsx";
-import {
-    Box,
-    Flex,
-    Text,
-} from "@chakra-ui/react";
+import { Steps, Box, Flex, Text } from "@chakra-ui/react";
 import ItemBandejaSeleccion from "./ItemBandejaSeleccion.tsx";
 
 interface BandejaSeleccionProps {

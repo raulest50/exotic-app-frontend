@@ -1,12 +1,6 @@
 import {useState} from 'react';
-import {
-    Select,
-    Input,
-    Button,
-    IconButton,
-    HStack
-} from '@chakra-ui/react';
-import {RepeatIcon, SearchIcon} from '@chakra-ui/icons';
+import { Steps, NativeSelect, Input, Button, IconButton, HStack } from '@chakra-ui/react';
+import { LuRepeat, LuSearch } from 'react-icons/lu';
 
 interface Props {
     onRefresh: () => void;
@@ -43,49 +37,46 @@ export default function FiltroODP_AsistDisp({onRefresh, onSearchByLote, isLoadin
     };
 
     return (
-        <HStack spacing={3}>
-            <Select
-                value={tipoFiltro}
-                onChange={(e) => handleFiltroChange(e.target.value)}
-                width='170px'
-                size='md'
-            >
-                <option value='sin_filtro'>Sin filtro</option>
-                <option value='filtro_por_lote'>Filtro por Lote</option>
-            </Select>
-            
+        <HStack gap={3}>
+            <NativeSelect.Root>
+                <NativeSelect.Field
+                    value={tipoFiltro}
+                    onValueChange={(e) => handleFiltroChange(e.target.value)}
+                    width='170px'
+                    size='md'>
+                    <option value='sin_filtro'>Sin filtro</option>
+                    <option value='filtro_por_lote'>Filtro por Lote</option>
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+            </NativeSelect.Root>
+
             {tipoFiltro === 'sin_filtro' && (
                 <IconButton
                     aria-label='Refrescar'
-                    icon={<RepeatIcon />}
                     onClick={onRefresh}
-                    isLoading={isLoading}
-                    colorScheme='teal'
-                    size='md'
-                />
+                    loading={isLoading}
+                    colorPalette='teal'
+                    size='md'><LuRepeat /></IconButton>
             )}
-            
+
             {tipoFiltro === 'filtro_por_lote' && (
                 <>
                     <Input
                         placeholder='Número de lote'
                         value={loteInput}
-                        onChange={(e) => setLoteInput(e.target.value)}
+                        onValueChange={(e) => setLoteInput(e.target.value)}
                         onKeyPress={handleKeyPress}
                         width='200px'
                         size='md'
                         type='text'
                     />
                     <Button
-                        leftIcon={<SearchIcon />}
                         onClick={handleSearch}
-                        isLoading={isLoading}
-                        colorScheme='teal'
+                        loading={isLoading}
+                        colorPalette='teal'
                         size='md'
-                        isDisabled={!loteInput.trim()}
-                    >
-                        Buscar
-                    </Button>
+                        disabled={!loteInput.trim()}><LuSearch />Buscar
+                                            </Button>
                 </>
             )}
         </HStack>

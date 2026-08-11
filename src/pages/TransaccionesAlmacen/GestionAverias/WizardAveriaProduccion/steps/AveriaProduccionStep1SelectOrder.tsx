@@ -1,11 +1,11 @@
 import { useState } from 'react';
+import { useColorModeValue } from "../../../../../components/ui/color-mode";
 import {
+    Steps,
     Badge,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     HStack,
     Input,
     Table,
@@ -16,8 +16,8 @@ import {
     Td,
     Text,
     VStack,
-    useColorModeValue,
     useToast,
+    Field,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL.tsx';
@@ -129,69 +129,69 @@ export default function AveriaProduccionStep1SelectOrder({
                 </Box>
             )}
 
-            <VStack spacing={4} align="stretch">
-                <FormControl>
-                    <FormLabel>Buscar por Lote Asignado</FormLabel>
+            <VStack gap={4} align="stretch">
+                <Field.Root>
+                    <Field.Label>Buscar por Lote Asignado</Field.Label>
                     <HStack>
                         <Input
                             value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
+                            onValueChange={(e) => setSearchText(e.target.value)}
                             onKeyDown={onKeyDown_InputBuscar}
                             placeholder="Ingrese número de lote"
-                            isDisabled={isLoading}
+                            disabled={isLoading}
                         />
                         <Button
-                            colorScheme="blue"
+                            colorPalette="blue"
                             onClick={handleSearch}
-                            isLoading={isLoading}
+                            loading={isLoading}
                             loadingText="Buscando"
                         >
                             Buscar
                         </Button>
                     </HStack>
-                </FormControl>
+                </Field.Root>
 
                 <Box w="full" overflowX="auto">
                     {ordenes.length > 0 ? (
                         <>
-                            <Table variant="simple" size="sm">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Lote Asignado</Th>
-                                        <Th>Producto</Th>
-                                        <Th>Estado</Th>
-                                        <Th>Materiales</Th>
-                                        <Th>Cantidad a Producir</Th>
-                                        <Th>Fecha Creación</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                            <Table.Root variant="simple" size="sm">
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>Lote Asignado</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Producto</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Materiales</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Cantidad a Producir</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Fecha Creación</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {currentOrdenes.map((orden) => (
-                                        <Tr
+                                        <Table.Row
                                             key={orden.ordenId}
                                             onClick={() => handleRowClick(orden)}
                                             bg={selectedOrdenId === orden.ordenId ? selectedRowBg : 'transparent'}
                                             _hover={{ bg: selectedOrdenId === orden.ordenId ? selectedRowHoverBg : 'app.rowHoverStrong', cursor: 'pointer' }}
                                         >
-                                            <Td>{orden.loteAsignado}</Td>
-                                            <Td>{orden.productoNombre}</Td>
-                                            <Td>{getEstadoLabel(orden.estadoOrden)}</Td>
-                                            <Td>
+                                            <Table.Cell>{orden.loteAsignado}</Table.Cell>
+                                            <Table.Cell>{orden.productoNombre}</Table.Cell>
+                                            <Table.Cell>{getEstadoLabel(orden.estadoOrden)}</Table.Cell>
+                                            <Table.Cell>
                                                 <Flex gap={2} wrap="wrap">
-                                                    <Badge colorScheme={getEstadoDispensacionMaterialesColor(orden.estadoDispensacionMateriales)}>
+                                                    <Badge colorPalette={getEstadoDispensacionMaterialesColor(orden.estadoDispensacionMateriales)}>
                                                         {getEstadoDispensacionMaterialesLabel(orden.estadoDispensacionMateriales)}
                                                     </Badge>
-                                                    <Badge colorScheme={getPoliticaDispensacionInicioColor(orden.politicaDispensacionInicio)}>
+                                                    <Badge colorPalette={getPoliticaDispensacionInicioColor(orden.politicaDispensacionInicio)}>
                                                         {getPoliticaDispensacionInicioLabel(orden.politicaDispensacionInicio)}
                                                     </Badge>
                                                 </Flex>
-                                            </Td>
-                                            <Td>{orden.cantidadProducir}</Td>
-                                            <Td>{orden.fechaCreacion ? new Date(orden.fechaCreacion).toLocaleDateString() : '-'}</Td>
-                                        </Tr>
+                                            </Table.Cell>
+                                            <Table.Cell>{orden.cantidadProducir}</Table.Cell>
+                                            <Table.Cell>{orden.fechaCreacion ? new Date(orden.fechaCreacion).toLocaleDateString() : '-'}</Table.Cell>
+                                        </Table.Row>
                                     ))}
-                                </Tbody>
-                            </Table>
+                                </Table.Body>
+                            </Table.Root>
 
                             <BetterPagination
                                 page={currentPage}
@@ -218,10 +218,10 @@ export default function AveriaProduccionStep1SelectOrder({
                             Estado: {getEstadoLabel(selectedOrden.estadoOrden)} | Cantidad: {selectedOrden.cantidadProducir}
                         </Text>
                         <Flex mt={2} gap={2} wrap="wrap">
-                            <Badge colorScheme={getEstadoDispensacionMaterialesColor(selectedOrden.estadoDispensacionMateriales)}>
+                            <Badge colorPalette={getEstadoDispensacionMaterialesColor(selectedOrden.estadoDispensacionMateriales)}>
                                 {getEstadoDispensacionMaterialesLabel(selectedOrden.estadoDispensacionMateriales)}
                             </Badge>
-                            <Badge colorScheme={getPoliticaDispensacionInicioColor(selectedOrden.politicaDispensacionInicio)}>
+                            <Badge colorPalette={getPoliticaDispensacionInicioColor(selectedOrden.politicaDispensacionInicio)}>
                                 {getPoliticaDispensacionInicioLabel(selectedOrden.politicaDispensacionInicio)}
                             </Badge>
                         </Flex>
@@ -233,9 +233,9 @@ export default function AveriaProduccionStep1SelectOrder({
                         Anterior
                     </Button>
                     <Button
-                        colorScheme="blue"
+                        colorPalette="blue"
                         onClick={handleSiguiente}
-                        isDisabled={!selectedOrden}
+                        disabled={!selectedOrden}
                     >
                         Siguiente
                     </Button>

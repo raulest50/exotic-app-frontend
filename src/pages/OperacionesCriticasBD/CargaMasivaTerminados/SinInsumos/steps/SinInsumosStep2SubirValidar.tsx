@@ -1,8 +1,6 @@
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
-    AlertTitle,
     Box,
     Button,
     Flex,
@@ -307,29 +305,29 @@ export default function SinInsumosStep2SubirValidar({
 
     return (
         <Box p={4}>
-            <VStack align="stretch" spacing={6}>
+            <VStack align="stretch" gap={6}>
                 <Text fontSize="lg" fontWeight="semibold">Subir y validar archivo Excel</Text>
 
                 <Box p={5} borderWidth="1px" borderRadius="lg">
-                    <VStack spacing={4} align="stretch">
-                        <HStack spacing={4} alignItems="center">
+                    <VStack gap={4} align="stretch">
+                        <HStack gap={4} alignItems="center">
                             <Button onClick={() => inputRef.current?.click()}>Subir Excel</Button>
                             <Input
                                 type="file"
                                 ref={inputRef}
                                 style={{ display: "none" }}
                                 accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                onChange={handleFileChange}
+                                onValueChange={handleFileChange}
                             />
                             <Icon as={excelFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize="2em" color={excelFile ? "green" : "orange.500"} />
-                            {excelFile && <Text fontSize="sm" noOfLines={1} flex={1}>{excelFile.name}</Text>}
+                            {excelFile && <Text fontSize="sm" lineClamp={1} flex={1}>{excelFile.name}</Text>}
                         </HStack>
 
                         <Button
-                            colorScheme="teal"
+                            colorPalette="teal"
                             onClick={() => excelFile && validateExcelFile(excelFile)}
-                            isDisabled={!excelFile || isValidating}
-                            isLoading={isValidating}
+                            disabled={!excelFile || isValidating}
+                            loading={isValidating}
                             loadingText="Validando..."
                         >
                             Validar Excel
@@ -338,83 +336,83 @@ export default function SinInsumosStep2SubirValidar({
                 </Box>
 
                 {httpErrorType === "session" && (
-                    <Alert status="error">
-                        <AlertIcon />
+                    <Alert.Root status="error">
+                        <Alert.Indicator />
                         <Box>
-                            <AlertTitle>Sesion expirada</AlertTitle>
-                            <AlertDescription>Su sesion ha expirado o no tiene permisos. Por favor inicie sesion nuevamente.</AlertDescription>
+                            <Alert.Title>Sesion expirada</Alert.Title>
+                            <Alert.Description>Su sesion ha expirado o no tiene permisos. Por favor inicie sesion nuevamente.</Alert.Description>
                         </Box>
-                    </Alert>
+                    </Alert.Root>
                 )}
 
                 {httpErrorType === "server" && (
-                    <Alert status="error">
-                        <AlertIcon />
+                    <Alert.Root status="error">
+                        <Alert.Indicator />
                         <Box>
-                            <AlertTitle>Error interno del servidor</AlertTitle>
-                            <AlertDescription>Intente mas tarde o contacte al administrador.</AlertDescription>
+                            <Alert.Title>Error interno del servidor</Alert.Title>
+                            <Alert.Description>Intente mas tarde o contacte al administrador.</Alert.Description>
                         </Box>
-                    </Alert>
+                    </Alert.Root>
                 )}
 
                 {tableErrors.length > 0 && httpErrorType === null && (
-                    <Alert status="error">
-                        <AlertIcon />
+                    <Alert.Root status="error">
+                        <Alert.Indicator />
                         <Box width="100%">
-                            <AlertTitle>Errores de validacion encontrados:</AlertTitle>
-                            <AlertDescription as="div" mt={3}>
-                                <TableContainer maxH="300px" overflowY="auto">
-                                    <Table size="sm" variant="simple">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>Fila</Th>
-                                                <Th>Columna</Th>
-                                                <Th>Producto ID</Th>
-                                                <Th>Descripcion del error</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
+                            <Alert.Title>Errores de validacion encontrados:</Alert.Title>
+                            <Alert.Description as="div" mt={3}>
+                                <Table.ScrollArea maxH="300px" overflowY="auto">
+                                    <Table.Root size="sm" variant="simple">
+                                        <Table.Header>
+                                            <Table.Row>
+                                                <Table.ColumnHeader>Fila</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Columna</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Producto ID</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Descripcion del error</Table.ColumnHeader>
+                                            </Table.Row>
+                                        </Table.Header>
+                                        <Table.Body>
                                             {tableErrors.slice(0, 20).map((error, idx) => (
-                                                <Tr key={idx}>
-                                                    <Td>{error.rowNumber}</Td>
-                                                    <Td>{error.columnName || "-"}</Td>
-                                                    <Td>{error.productoId || "-"}</Td>
-                                                    <Td>{error.message}</Td>
-                                                </Tr>
+                                                <Table.Row key={idx}>
+                                                    <Table.Cell>{error.rowNumber}</Table.Cell>
+                                                    <Table.Cell>{error.columnName || "-"}</Table.Cell>
+                                                    <Table.Cell>{error.productoId || "-"}</Table.Cell>
+                                                    <Table.Cell>{error.message}</Table.Cell>
+                                                </Table.Row>
                                             ))}
-                                        </Tbody>
-                                    </Table>
-                                </TableContainer>
+                                        </Table.Body>
+                                    </Table.Root>
+                                </Table.ScrollArea>
                                 {tableErrors.length > 20 && <Text fontSize="sm" fontStyle="italic" mt={2}>... y {tableErrors.length - 20} errores mas</Text>}
-                            </AlertDescription>
+                            </Alert.Description>
                         </Box>
-                    </Alert>
+                    </Alert.Root>
                 )}
 
                 {validationErrors.length > 0 && tableErrors.length === 0 && httpErrorType === null && (
-                    <Alert status="error">
-                        <AlertIcon />
+                    <Alert.Root status="error">
+                        <Alert.Indicator />
                         <Box>
-                            <AlertTitle>Error de validacion</AlertTitle>
-                            <AlertDescription>
-                                <VStack align="stretch" spacing={1} mt={2}>
+                            <Alert.Title>Error de validacion</Alert.Title>
+                            <Alert.Description>
+                                <VStack align="stretch" gap={1} mt={2}>
                                     {validationErrors.map((error, index) => <Text key={index} fontSize="sm">{error}</Text>)}
                                 </VStack>
-                            </AlertDescription>
+                            </Alert.Description>
                         </Box>
-                    </Alert>
+                    </Alert.Root>
                 )}
 
                 {excelIsValid && excelData && (
-                    <Alert status="success">
-                        <AlertIcon />
-                        <AlertDescription>Archivo validado correctamente. Se encontraron {excelData.length} terminado(s) para registrar.</AlertDescription>
-                    </Alert>
+                    <Alert.Root status="success">
+                        <Alert.Indicator />
+                        <Alert.Description>Archivo validado correctamente. Se encontraron {excelData.length} terminado(s) para registrar.</Alert.Description>
+                    </Alert.Root>
                 )}
 
                 <Flex gap={4} justify="flex-end">
                     <Button variant="outline" onClick={() => setActiveStep(0)}>Atras</Button>
-                    <Button colorScheme="blue" onClick={() => setActiveStep(2)} isDisabled={!excelIsValid}>Siguiente</Button>
+                    <Button colorPalette="blue" onClick={() => setActiveStep(2)} disabled={!excelIsValid}>Siguiente</Button>
                 </Flex>
             </VStack>
         </Box>

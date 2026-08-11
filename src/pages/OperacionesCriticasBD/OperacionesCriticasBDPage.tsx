@@ -1,4 +1,15 @@
-import { Container, Flex, Tab, TabList, TabPanel, TabPanels, Tabs, Spinner, Text } from "@chakra-ui/react";
+import {
+    Steps,
+    Container,
+    Flex,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
+    Spinner,
+    Text,
+} from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
@@ -95,18 +106,18 @@ export default function OperacionesCriticasBDPage() {
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <MyHeader title="Operaciones Criticas en BD" />
             <Flex direction="column" w="full" h="full">
-                <Tabs>
-                    <TabList>
+                <Tabs.Root>
+                    <Tabs.List>
                         {visibleTabs.map((tab) => (
                             <Tab key={tab.key} sx={my_style_tab}>{tab.label}</Tab>
                         ))}
-                    </TabList>
+                    </Tabs.List>
                     <TabPanels>
                         {visibleTabs.map((tab) => (
                             <TabPanel key={tab.key}>{tab.render()}</TabPanel>
                         ))}
                     </TabPanels>
-                </Tabs>
+                </Tabs.Root>
             </Flex>
         </Container>
     );

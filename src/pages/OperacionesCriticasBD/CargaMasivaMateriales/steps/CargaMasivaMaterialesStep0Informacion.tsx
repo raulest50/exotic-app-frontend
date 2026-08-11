@@ -1,4 +1,5 @@
 import {
+    Steps,
     Box,
     Button,
     Flex,
@@ -105,7 +106,7 @@ export default function CargaMasivaMaterialesStep0Informacion({ setActiveStep }:
 
     return (
         <Box p={4}>
-            <VStack align="stretch" spacing={6}>
+            <VStack align="stretch" gap={6}>
                 <Text>
                     Se descargará una plantilla Excel vacía para registrar materiales (ROH) en bloque. Todos los materiales de esta carga se consideran <strong>inventariables</strong>.
                 </Text>
@@ -119,47 +120,47 @@ export default function CargaMasivaMaterialesStep0Informacion({ setActiveStep }:
                 <Text fontWeight="semibold" mt={2}>
                     Ejemplos de filas válidas (solo referencia)
                 </Text>
-                <TableContainer borderWidth="1px" borderRadius="md" overflowX="auto">
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>producto_id</Th>
-                                <Th>nombre</Th>
-                                <Th>costo</Th>
-                                <Th>iva_%</Th>
-                                <Th>tipo_unid</Th>
-                                <Th>cant_unid</Th>
-                                <Th>tipo_mat</Th>
-                                <Th>punto_reorden</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                <Table.ScrollArea borderWidth="1px" borderRadius="md" overflowX="auto">
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>producto_id</Table.ColumnHeader>
+                                <Table.ColumnHeader>nombre</Table.ColumnHeader>
+                                <Table.ColumnHeader>costo</Table.ColumnHeader>
+                                <Table.ColumnHeader>iva_%</Table.ColumnHeader>
+                                <Table.ColumnHeader>tipo_unid</Table.ColumnHeader>
+                                <Table.ColumnHeader>cant_unid</Table.ColumnHeader>
+                                <Table.ColumnHeader>tipo_mat</Table.ColumnHeader>
+                                <Table.ColumnHeader>punto_reorden</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {EXAMPLE_ROWS.map((row, idx) => (
-                                <Tr key={idx}>
-                                    <Td>{row.producto_id}</Td>
-                                    <Td>{row.nombre}</Td>
-                                    <Td>{row.costo}</Td>
-                                    <Td>{row.iva_percentual}</Td>
-                                    <Td>{row.tipo_unidades}</Td>
-                                    <Td>{row.cantidad_unidad}</Td>
-                                    <Td>{row.tipo_material}</Td>
-                                    <Td>{row.punto_reorden}</Td>
-                                </Tr>
+                                <Table.Row key={idx}>
+                                    <Table.Cell>{row.producto_id}</Table.Cell>
+                                    <Table.Cell>{row.nombre}</Table.Cell>
+                                    <Table.Cell>{row.costo}</Table.Cell>
+                                    <Table.Cell>{row.iva_percentual}</Table.Cell>
+                                    <Table.Cell>{row.tipo_unidades}</Table.Cell>
+                                    <Table.Cell>{row.cantidad_unidad}</Table.Cell>
+                                    <Table.Cell>{row.tipo_material}</Table.Cell>
+                                    <Table.Cell>{row.punto_reorden}</Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
-                </TableContainer>
+                        </Table.Body>
+                    </Table.Root>
+                </Table.ScrollArea>
 
                 <Flex gap={4} wrap="wrap">
                     <Button
-                        colorScheme="teal"
+                        colorPalette="teal"
                         onClick={handleDownloadTemplate}
-                        isLoading={isDownloading}
+                        loading={isDownloading}
                         loadingText="Descargando…"
                     >
                         Descargar plantilla Excel
                     </Button>
-                    <Button colorScheme="blue" onClick={() => setActiveStep(1)}>
+                    <Button colorPalette="blue" onClick={() => setActiveStep(1)}>
                         Siguiente
                     </Button>
                 </Flex>

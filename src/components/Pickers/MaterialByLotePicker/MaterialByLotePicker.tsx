@@ -1,19 +1,11 @@
 import React, { useState } from 'react';
 import {
+    Steps,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     HStack,
     Input,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalFooter,
-    ModalBody,
-    ModalCloseButton,
     Table,
     Thead,
     Tbody,
@@ -23,6 +15,9 @@ import {
     Text,
     VStack,
     useToast,
+    Field,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -110,114 +105,124 @@ const MaterialByLotePicker: React.FC<MaterialByLotePickerProps> = ({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="4xl">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Buscar Material por Lote</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <VStack spacing={4}>
-                        <FormControl>
-                            <FormLabel>Buscar por Número de Lote</FormLabel>
-                            <HStack>
-                                <Input
-                                    value={searchText}
-                                    onChange={(e) => setSearchText(e.target.value)}
-                                    onKeyDown={onKeyDown_InputBuscar}
-                                    placeholder="Ingrese número de lote (parcial o completo)"
-                                    isDisabled={isLoading}
-                                />
-                                <Button
-                                    colorScheme="blue"
-                                    onClick={handleSearch}
-                                    isLoading={isLoading}
-                                    loadingText="Buscando"
-                                >
-                                    Buscar
-                                </Button>
-                            </HStack>
-                        </FormControl>
-                        <Box w="full" overflowX="auto">
-                            {results.length > 0 ? (
-                                <>
-                                    <Table variant="simple" size="sm">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>Código</Th>
-                                                <Th>Nombre</Th>
-                                                <Th>Lote</Th>
-                                                <Th>Unidades</Th>
-                                                <Th isNumeric>Cantidad Disponible</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
-                                            {currentResults.map((item) => {
-                                                const key = itemKey(item);
-                                                return (
-                                                    <Tr
-                                                        key={key}
-                                                        onClick={() => setSelectedKey(key)}
-                                                        bg={selectedKey === key ? 'blue.100' : 'transparent'}
-                                                        _hover={{ bg: selectedKey === key ? 'blue.200' : 'gray.100', cursor: 'pointer' }}
-                                                    >
-                                                        <Td>{item.productoId}</Td>
-                                                        <Td>{item.productoNombre}</Td>
-                                                        <Td>{item.batchNumber}</Td>
-                                                        <Td>{item.tipoUnidades}</Td>
-                                                        <Td isNumeric>{item.cantidadDisponible.toFixed(2)}</Td>
-                                                    </Tr>
-                                                );
-                                            })}
-                                        </Tbody>
-                                    </Table>
+        <Dialog.Root open={isOpen} size='xl' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                                    {totalPages > 1 && (
-                                        <Flex justifyContent="center" mt={4}>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => goToPage(currentPage - 1)}
-                                                isDisabled={currentPage === 1}
-                                                mr={2}
-                                            >
-                                                Anterior
-                                            </Button>
-                                            <Text alignSelf="center" mx={2}>
-                                                Página {currentPage} de {totalPages}
-                                            </Text>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => goToPage(currentPage + 1)}
-                                                isDisabled={currentPage === totalPages}
-                                                ml={2}
-                                            >
-                                                Siguiente
-                                            </Button>
-                                        </Flex>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Buscar Material por Lote</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <VStack gap={4}>
+                                <Field.Root>
+                                    <Field.Label>Buscar por Número de Lote</Field.Label>
+                                    <HStack>
+                                        <Input
+                                            value={searchText}
+                                            onValueChange={(e) => setSearchText(e.target.value)}
+                                            onKeyDown={onKeyDown_InputBuscar}
+                                            placeholder="Ingrese número de lote (parcial o completo)"
+                                            disabled={isLoading}
+                                        />
+                                        <Button
+                                            colorPalette="blue"
+                                            onClick={handleSearch}
+                                            loading={isLoading}
+                                            loadingText="Buscando"
+                                        >
+                                            Buscar
+                                        </Button>
+                                    </HStack>
+                                </Field.Root>
+                                <Box w="full" overflowX="auto">
+                                    {results.length > 0 ? (
+                                        <>
+                                            <Table.Root variant="simple" size="sm">
+                                                <Table.Header>
+                                                    <Table.Row>
+                                                        <Table.ColumnHeader>Código</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Unidades</Table.ColumnHeader>
+                                                        <Table.ColumnHeader textAlign='end'>Cantidad Disponible</Table.ColumnHeader>
+                                                    </Table.Row>
+                                                </Table.Header>
+                                                <Table.Body>
+                                                    {currentResults.map((item) => {
+                                                        const key = itemKey(item);
+                                                        return (
+                                                            <Table.Row
+                                                                key={key}
+                                                                onClick={() => setSelectedKey(key)}
+                                                                bg={selectedKey === key ? 'blue.100' : 'transparent'}
+                                                                _hover={{ bg: selectedKey === key ? 'blue.200' : 'gray.100', cursor: 'pointer' }}
+                                                            >
+                                                                <Table.Cell>{item.productoId}</Table.Cell>
+                                                                <Table.Cell>{item.productoNombre}</Table.Cell>
+                                                                <Table.Cell>{item.batchNumber}</Table.Cell>
+                                                                <Table.Cell>{item.tipoUnidades}</Table.Cell>
+                                                                <Table.Cell textAlign='end'>{item.cantidadDisponible.toFixed(2)}</Table.Cell>
+                                                            </Table.Row>
+                                                        );
+                                                    })}
+                                                </Table.Body>
+                                            </Table.Root>
+
+                                            {totalPages > 1 && (
+                                                <Flex justifyContent="center" mt={4}>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => goToPage(currentPage - 1)}
+                                                        disabled={currentPage === 1}
+                                                        mr={2}
+                                                    >
+                                                        Anterior
+                                                    </Button>
+                                                    <Text alignSelf="center" mx={2}>
+                                                        Página {currentPage} de {totalPages}
+                                                    </Text>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => goToPage(currentPage + 1)}
+                                                        disabled={currentPage === totalPages}
+                                                        ml={2}
+                                                    >
+                                                        Siguiente
+                                                    </Button>
+                                                </Flex>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <Text textAlign="center" color="gray.500">
+                                            No hay resultados. Busque por número de lote.
+                                        </Text>
                                     )}
-                                </>
-                            ) : (
-                                <Text textAlign="center" color="gray.500">
-                                    No hay resultados. Busque por número de lote.
-                                </Text>
-                            )}
-                        </Box>
-                    </VStack>
-                </ModalBody>
-                <ModalFooter>
-                    <Button
-                        colorScheme="blue"
-                        mr={3}
-                        onClick={handleConfirm}
-                        isDisabled={selectedKey === null}
-                    >
-                        Confirmar
-                    </Button>
-                    <Button variant="ghost" onClick={onClose}>
-                        Cancelar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                                </Box>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button
+                                colorPalette="blue"
+                                mr={3}
+                                onClick={handleConfirm}
+                                disabled={selectedKey === null}
+                            >
+                                Confirmar
+                            </Button>
+                            <Button variant="ghost" onClick={onClose}>
+                                Cancelar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 };
 

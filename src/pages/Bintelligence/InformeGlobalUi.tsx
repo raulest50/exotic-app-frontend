@@ -1,18 +1,14 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Box,
     Card,
-    CardBody,
     Center,
     Heading,
     HStack,
     Spinner,
     Stack,
     Stat,
-    StatHelpText,
-    StatLabel,
-    StatNumber,
     Text,
 } from "@chakra-ui/react";
 import type { NotaInforme, PeriodoInforme } from "./informesGlobales.types";
@@ -25,26 +21,26 @@ interface KpiCardProps {
 
 export function KpiCard({ label, value, help }: KpiCardProps) {
     return (
-        <Card variant="outline" minW={0}>
-            <CardBody p={{ base: 3, md: 4 }}>
-                <Stat minW={0}>
-                    <StatLabel fontSize="sm" noOfLines={2}>
+        <Card.Root variant="outline" minW={0}>
+            <Card.Body p={{ base: 3, md: 4 }}>
+                <Stat.Root minW={0}>
+                    <Stat.Label fontSize="sm" lineClamp={2}>
                         {label}
-                    </StatLabel>
-                    <StatNumber
+                    </Stat.Label>
+                    <Stat.ValueText
                         fontSize={{ base: "xl", md: "2xl" }}
                         lineHeight="shorter"
                         overflowWrap="anywhere"
                         mt={1}
                     >
                         {value}
-                    </StatNumber>
-                    <StatHelpText mb={0} mt={2} noOfLines={2}>
+                    </Stat.ValueText>
+                    <Stat.HelpText mb={0} mt={2} lineClamp={2}>
                         {help}
-                    </StatHelpText>
-                </Stat>
-            </CardBody>
-        </Card>
+                    </Stat.HelpText>
+                </Stat.Root>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
@@ -68,39 +64,44 @@ export function SectionHeading({ title, description }: {
 
 export function LoadingPanel({ label }: { label: string }) {
     return (
-        <Card variant="outline">
-            <CardBody>
+        <Card.Root variant="outline">
+            <Card.Body>
                 <Center minH="160px">
-                    <HStack spacing={3}>
+                    <HStack gap={3}>
                         <Spinner color="green.500" />
                         <Text color="app.textMuted">{label}</Text>
                     </HStack>
                 </Center>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
 export function ErrorPanel({ message }: { message: string }) {
     return (
-        <Alert status="error" variant="left-accent" borderRadius="md">
-            <AlertIcon />
+        <Alert.Root
+            status="error"
+            variant='subtle'
+            borderRadius="md"
+            borderStartWidth='3px'
+            borderStartColor='colorPalette.solid'>
+            <Alert.Indicator />
             {message}
-        </Alert>
+        </Alert.Root>
     );
 }
 
 export function EmptyPanel({ message }: { message: string }) {
     return (
-        <Card variant="outline">
-            <CardBody>
+        <Card.Root variant="outline">
+            <Card.Body>
                 <Center minH="120px">
                     <Text color="app.textMuted" textAlign="center">
                         {message}
                     </Text>
                 </Center>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
@@ -108,17 +109,18 @@ export function ReportNotes({ notes }: { notes: NotaInforme[] }) {
     if (notes.length === 0) return null;
 
     return (
-        <Stack spacing={2}>
+        <Stack gap={2}>
             {notes.map((note, index) => (
-                <Alert
+                <Alert.Root
                     key={`${note.tipo}-${index}`}
                     status={note.tipo === "WARNING" ? "warning" : "info"}
-                    variant="left-accent"
+                    variant='subtle'
                     borderRadius="md"
-                >
-                    <AlertIcon />
+                    borderStartWidth='3px'
+                    borderStartColor='colorPalette.solid'>
+                    <Alert.Indicator />
                     {note.mensaje}
-                </Alert>
+                </Alert.Root>
             ))}
         </Stack>
     );

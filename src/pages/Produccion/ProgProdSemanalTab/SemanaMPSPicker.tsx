@@ -1,16 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import {
-    Badge,
-    Flex,
-    FormControl,
-    FormLabel,
-    Select,
-    Spinner,
-    Text,
-    VStack,
-    useToast,
-} from "@chakra-ui/react";
+import { Steps, Badge, Flex, NativeSelect, Spinner, Text, VStack, useToast, Field } from "@chakra-ui/react";
 import {
     ListarSemanasMps,
     type SemanaMPSDTO,
@@ -140,46 +130,50 @@ export default function SemanaMPSPicker({
     };
 
     return (
-        <VStack align="stretch" spacing={2}>
+        <VStack align="stretch" gap={2}>
             <Flex gap={3} align="end" wrap="wrap">
-                <FormControl maxW="150px">
-                    <FormLabel>Anio ISO</FormLabel>
-                    <Select
-                        value={anioSemana}
-                        onChange={(event) => setAnioSemana(Number(event.target.value))}
-                        isDisabled={isDisabled || isLoading}
-                    >
-                        {yearOptions.map((year) => (
-                            <option key={year} value={year}>
-                                {year}
-                            </option>
-                        ))}
-                    </Select>
-                </FormControl>
+                <Field.Root maxW="150px">
+                    <Field.Label>Anio ISO</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            value={anioSemana}
+                            onValueChange={(event) => setAnioSemana(Number(event.target.value))}
+                            disabled={isDisabled || isLoading}>
+                            {yearOptions.map((year) => (
+                                <option key={year} value={year}>
+                                    {year}
+                                </option>
+                            ))}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
 
-                <FormControl minW={["100%", "360px"]} maxW="560px">
-                    <FormLabel>Semana MPS</FormLabel>
-                    <Select
-                        value={value}
-                        placeholder={isLoading ? "Cargando semanas..." : "Seleccione una semana"}
-                        onChange={(event) => handleWeekChange(event.target.value)}
-                        isDisabled={isDisabled || isLoading}
-                    >
-                        {semanas.map((semana) => (
-                            <option key={semana.codigo} value={semana.startDate}>
-                                {buildSemanaOptionLabel(semana)}
-                            </option>
-                        ))}
-                    </Select>
-                </FormControl>
+                <Field.Root minW={["100%", "360px"]} maxW="560px">
+                    <Field.Label>Semana MPS</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            value={value}
+                            placeholder={isLoading ? "Cargando semanas..." : "Seleccione una semana"}
+                            onValueChange={(event) => handleWeekChange(event.target.value)}
+                            disabled={isDisabled || isLoading}>
+                            {semanas.map((semana) => (
+                                <option key={semana.codigo} value={semana.startDate}>
+                                    {buildSemanaOptionLabel(semana)}
+                                </option>
+                            ))}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
 
                 {isLoading && <Spinner size="sm" color="teal.500" />}
             </Flex>
 
             {selectedSemana && (
                 <Flex gap={2} align="center" wrap="wrap">
-                    <Badge colorScheme="blue">{selectedSemana.codigo}</Badge>
-                    <Badge colorScheme={getSemanaEstadoColor(selectedSemana)}>
+                    <Badge colorPalette="blue">{selectedSemana.codigo}</Badge>
+                    <Badge colorPalette={getSemanaEstadoColor(selectedSemana)}>
                         {getSemanaEstadoLabel(selectedSemana)}
                     </Badge>
                     <Text fontSize="sm" color="gray.600">

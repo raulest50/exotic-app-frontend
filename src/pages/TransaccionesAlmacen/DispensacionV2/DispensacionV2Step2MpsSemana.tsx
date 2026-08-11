@@ -1,4 +1,16 @@
-import { Alert, AlertIcon, Badge, Box, Button, Flex, Heading, SimpleGrid, Spinner, Text, VStack } from "@chakra-ui/react";
+import {
+    Steps,
+    Alert,
+    Badge,
+    Box,
+    Button,
+    Flex,
+    Heading,
+    SimpleGrid,
+    Spinner,
+    Text,
+    VStack,
+} from "@chakra-ui/react";
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiRefreshCw } from "react-icons/fi";
@@ -144,7 +156,7 @@ export default function DispensacionV2Step2MpsSemana({
     }, [fetchMpsForWeek, selectedWeek.weekStartDate]);
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
                 <Flex justify="space-between" align="start" gap={3} wrap="wrap">
                     <Box>
@@ -165,16 +177,13 @@ export default function DispensacionV2Step2MpsSemana({
                         </Button>
                         <Button
                             variant="outline"
-                            leftIcon={<FiRefreshCw />}
                             onClick={() => void fetchMpsForWeek(selectedWeek.weekStartDate)}
-                            isLoading={loading}
-                        >
-                            Refrescar
-                        </Button>
+                            loading={loading}><FiRefreshCw />Refrescar
+                                                    </Button>
                     </Flex>
                 </Flex>
 
-                <SimpleGrid columns={{ base: 1, md: 3 }} spacing={3} mt={4}>
+                <SimpleGrid columns={{ base: 1, md: 3 }} gap={3} mt={4}>
                     {weekOptions.map((option) => {
                         const isSelected = option.key === selectedWeek.key;
                         return (
@@ -182,11 +191,11 @@ export default function DispensacionV2Step2MpsSemana({
                                 key={option.key}
                                 minH="64px"
                                 py={3}
-                                colorScheme={isSelected ? "teal" : "gray"}
+                                colorPalette={isSelected ? "teal" : "gray"}
                                 variant={isSelected ? "solid" : "outline"}
                                 onClick={() => handleSelectWeek(option.key)}
                             >
-                                <VStack as="span" spacing={0}>
+                                <VStack as="span" gap={0}>
                                     <Text as="span" fontWeight="bold" lineHeight="1.2">
                                         {option.code}
                                     </Text>
@@ -213,23 +222,23 @@ export default function DispensacionV2Step2MpsSemana({
             ) : null}
 
             {!loading && error ? (
-                <Alert status={getAlertStatus(errorStatus)} borderRadius="md" alignItems="flex-start">
-                    <AlertIcon />
+                <Alert.Root status={getAlertStatus(errorStatus)} borderRadius="md" alignItems="flex-start">
+                    <Alert.Indicator />
                     <Box>
                         <Text fontWeight="semibold">MPS semanal no disponible</Text>
                         <Text fontSize="sm">{error}</Text>
                     </Box>
-                </Alert>
+                </Alert.Root>
             ) : null}
 
             {!loading && mps && mps.totalItems === 0 ? (
-                <Alert status="info" borderRadius="md" alignItems="flex-start">
-                    <AlertIcon />
+                <Alert.Root status="info" borderRadius="md" alignItems="flex-start">
+                    <Alert.Indicator />
                     <Box>
                         <Text fontWeight="semibold">Sin tarjetas para esta area</Text>
                         <Text fontSize="sm">El area seleccionada no interviene en las ODPs generadas para esta semana.</Text>
                     </Box>
-                </Alert>
+                </Alert.Root>
             ) : null}
 
             {!loading && mps ? (

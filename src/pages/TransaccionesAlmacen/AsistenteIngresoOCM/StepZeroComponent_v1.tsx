@@ -1,15 +1,6 @@
 // StepZeroComponent.tsx
 import { useState } from "react";
-import {
-    Button,
-    Flex,
-    FormControl,
-    FormLabel,
-    Heading,
-    Input,
-    Text,
-    useToast,
-} from "@chakra-ui/react";
+import { Steps, Button, Flex, Heading, Input, Text, useToast, Field } from "@chakra-ui/react";
 import axios from "axios";
 import { OrdenCompra } from "../types";
 import EndPointsURL from "../../../api/EndPointsURL";
@@ -77,16 +68,16 @@ export default function StepZeroComponent_v1({
                 Ingrese el id de la orden de compra para verificar si se puede iniciar proceso de ingreso a almacen.
             </Text>
             <Flex w="40%" direction="column" gap={4}>
-                <FormControl isRequired>
-                    <FormLabel>Id Orden de Compra</FormLabel>
+                <Field.Root required>
+                    <Field.Label>Id Orden de Compra</Field.Label>
                     <Input
                         value={ordenCompraId}
-                        onChange={(e) => setOrdenCompraId(e.target.value)}
+                        onValueChange={(e) => setOrdenCompraId(e.target.value)}
                     />
-                </FormControl>
+                </Field.Root>
                 <Button
                     variant="solid"
-                    colorScheme="teal"
+                    colorPalette="teal"
                     onClick={handleOnClickBuscarOrdenByFacturaId}
                 >
                     Buscar

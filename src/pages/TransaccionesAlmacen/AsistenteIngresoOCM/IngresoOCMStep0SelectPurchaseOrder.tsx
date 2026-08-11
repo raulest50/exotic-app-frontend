@@ -1,11 +1,10 @@
 import {
+    Steps,
     Box,
     Button,
     Flex,
     Heading,
     Input,
-    FormControl,
-    FormLabel,
     Table,
     Tbody,
     Td,
@@ -17,15 +16,16 @@ import {
     VStack,
     IconButton,
     HStack,
-    Tooltip,
+    Field,
 } from "@chakra-ui/react";
-import { RepeatIcon } from "@chakra-ui/icons";
+import { Tooltip } from '@/components/ui/tooltip';
 import {useMemo, useRef, useState} from "react";
 import ProveedorFilterOCM from "../../Compras/components/ProveedorFilterOCM";
 import ProveedorPicker from "../../Compras/components/ProveedorPicker";
 import {OrdenCompra, Proveedor} from "../types";
 import BetterPagination from "../../../components/BetterPagination/BetterPagination";
 import { fetchOrdenesPendientesOcm } from "./ocmIngresoApi";
+import { LuRepeat } from 'react-icons/lu';
 
 interface StepOneComponentProps {
     setActiveStep: (step: number) => void;
@@ -52,7 +52,7 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
     const [mostrarPorcentaje, setMostrarPorcentaje] = useState(false);
     const skipNextPageChangeRef = useRef(false);
 
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const { open, onOpen, onClose } = useDisclosure();
 
     const serializeDate = (date: string, endOfDay = false) => {
         if (!date) return null;
@@ -144,39 +144,39 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
     };
 
     const tableRows = useMemo(() => ordenes.map((orden) => (
-        <Tr key={orden.ordenCompraId}>
-            <Td>{orden.ordenCompraId}</Td>
-            <Td>{orden.proveedor?.nombre}</Td>
-            <Td>{orden.fechaEmision ? new Date(orden.fechaEmision).toLocaleDateString() : ""}</Td>
-            <Td>{orden.fechaVencimiento ? new Date(orden.fechaVencimiento).toLocaleDateString() : ""}</Td>
-            <Td>{renderCellValue(orden)}</Td>
-            <Td textAlign="center">
-                <Button size="sm" colorScheme="teal" onClick={() => onRegistrarIngreso(orden)}>
+        <Table.Row key={orden.ordenCompraId}>
+            <Table.Cell>{orden.ordenCompraId}</Table.Cell>
+            <Table.Cell>{orden.proveedor?.nombre}</Table.Cell>
+            <Table.Cell>{orden.fechaEmision ? new Date(orden.fechaEmision).toLocaleDateString() : ""}</Table.Cell>
+            <Table.Cell>{orden.fechaVencimiento ? new Date(orden.fechaVencimiento).toLocaleDateString() : ""}</Table.Cell>
+            <Table.Cell>{renderCellValue(orden)}</Table.Cell>
+            <Table.Cell textAlign="center">
+                <Button size="sm" colorPalette="teal" onClick={() => onRegistrarIngreso(orden)}>
                     Gestionar
                 </Button>
-            </Td>
-        </Tr>
+            </Table.Cell>
+        </Table.Row>
     )), [ordenes, mostrarPorcentaje]); // Incluir mostrarPorcentaje en las dependencias
 
     return (
         <Box p="1em" bg="app.stepperBlue">
-            <VStack spacing={6} align="stretch">
+            <VStack gap={6} align="stretch">
                 <Heading fontFamily="Comfortaa Variable" textAlign="center">
                     Órdenes de compra pendientes por recibir
                 </Heading>
 
                 <Flex gap={4} wrap="wrap" alignItems="flex-end">
-                    <FormControl minW="180px">
-                        <FormLabel>ID OCM</FormLabel>
+                    <Field.Root minW="180px">
+                        <Field.Label>ID OCM</Field.Label>
                         <Input
                             type="text"
                             inputMode="numeric"
                             pattern="[0-9]*"
                             value={ordenCompraId}
-                            onChange={(e) => setOrdenCompraId(e.target.value.replace(/\D/g, ""))}
+                            onValueChange={(e) => setOrdenCompraId(e.target.value.replace(/\D/g, ""))}
                             placeholder="Ej: 123"
                         />
-                    </FormControl>
+                    </Field.Root>
 
                     <ProveedorFilterOCM
                         selectedProveedor={proveedor as import("../../Compras/types").Proveedor | null}
@@ -184,75 +184,75 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
                         onClearFilter={() => setProveedor(null)}
                     />
 
-                    <VStack spacing={2} alignItems="stretch">
-                        <FormControl minW="220px">
-                            <FormLabel>Fecha inicial</FormLabel>
+                    <VStack gap={2} alignItems="stretch">
+                        <Field.Root minW="220px">
+                            <Field.Label>Fecha inicial</Field.Label>
                             <Input
                                 type="date"
                                 value={fechaInicio}
-                                onChange={(e) => setFechaInicio(e.target.value)}
+                                onValueChange={(e) => setFechaInicio(e.target.value)}
                             />
-                        </FormControl>
-                        <FormControl minW="220px">
-                            <FormLabel>Fecha final</FormLabel>
+                        </Field.Root>
+                        <Field.Root minW="220px">
+                            <Field.Label>Fecha final</Field.Label>
                             <Input
                                 type="date"
                                 value={fechaFin}
-                                onChange={(e) => setFechaFin(e.target.value)}
+                                onValueChange={(e) => setFechaFin(e.target.value)}
                             />
-                        </FormControl>
+                        </Field.Root>
                     </VStack>
 
                     <Button
-                        colorScheme="teal"
+                        colorPalette="teal"
                         onClick={() => fetchOrdenesPendientes(0, size)}
-                        isLoading={isLoading}
+                        loading={isLoading}
                     >
                         Buscar
                     </Button>
                 </Flex>
 
                 <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
-                    <Table size="sm">
-                        <Thead bg="app.tableHeader">
-                            <Tr>
-                                <Th>ID</Th>
-                                <Th>Proveedor</Th>
-                                <Th>Fecha emisión</Th>
-                                <Th>Fecha vencimiento</Th>
-                                <Th>
-                                    <HStack spacing={2} justify="space-between" width="100%">
+                    <Table.Root size="sm">
+                        <Table.Header bg="app.tableHeader">
+                            <Table.Row>
+                                <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Proveedor</Table.ColumnHeader>
+                                <Table.ColumnHeader>Fecha emisión</Table.ColumnHeader>
+                                <Table.ColumnHeader>Fecha vencimiento</Table.ColumnHeader>
+                                <Table.ColumnHeader>
+                                    <HStack gap={2} justify="space-between" width="100%">
                                         <span>{mostrarPorcentaje ? "Porcentaje recibido" : "Total"}</span>
                                         <Tooltip 
-                                            label={mostrarPorcentaje ? "Mostrar precio total" : "Mostrar porcentaje recibido"}
-                                            placement="top"
+                                            content={mostrarPorcentaje ? "Mostrar precio total" : "Mostrar porcentaje recibido"}
+                                            positioning={{
+                                                placement: "top"
+                                            }}
                                         >
                                             <IconButton
                                                 aria-label={mostrarPorcentaje ? "Mostrar precio total" : "Mostrar porcentaje recibido"}
-                                                icon={<RepeatIcon />}
                                                 size="xs"
                                                 variant="ghost"
                                                 onClick={() => setMostrarPorcentaje(!mostrarPorcentaje)}
-                                                colorScheme="teal"
-                                            />
+                                                colorPalette="teal"><LuRepeat /></IconButton>
                                         </Tooltip>
                                     </HStack>
-                                </Th>
-                                <Th textAlign="center">Acciones</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                                </Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign="center">Acciones</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {tableRows.length > 0 ? (
                                 tableRows
                             ) : (
-                                <Tr>
-                                    <Td colSpan={6} textAlign="center" py={6}>
+                                <Table.Row>
+                                    <Table.Cell colSpan={6} textAlign="center" py={6}>
                                         {isLoading ? "Cargando órdenes..." : "No se encontraron órdenes pendientes."}
-                                    </Td>
-                                </Tr>
+                                    </Table.Cell>
+                                </Table.Row>
                             )}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 </Box>
                 {totalPages > 0 && (
                     <BetterPagination

@@ -1,19 +1,4 @@
-import {
-    Alert,
-    AlertDescription,
-    AlertIcon,
-    AlertTitle,
-    Box,
-    Button,
-    Flex,
-    FormControl,
-    FormHelperText,
-    FormLabel,
-    Heading,
-    Input,
-    Text,
-    VStack,
-} from "@chakra-ui/react";
+import { Steps, Alert, Box, Button, Flex, Heading, Input, Text, VStack, Field } from "@chakra-ui/react";
 import {
     CargaCostosConfirmacion,
     CargaCostosPreparacion,
@@ -63,21 +48,21 @@ export default function CargaCostosStep3Confirmacion({
 }: CargaCostosStep3ConfirmacionProps) {
     if (result) {
         return (
-            <VStack align="stretch" spacing={5}>
-                <Alert status="success">
-                    <AlertIcon />
+            <VStack align="stretch" gap={5}>
+                <Alert.Root status="success">
+                    <Alert.Indicator />
                     <Box>
-                        <AlertTitle>Carga completada</AlertTitle>
-                        <AlertDescription>
+                        <Alert.Title>Carga completada</Alert.Title>
+                        <Alert.Description>
                             {result.totalActualizadas} materiales actualizados y{" "}
                             {result.totalSinCambio} sin cambio. La propagacion actualizo{" "}
                             {result.totalDependenciasActualizadas} dependencias y dejo{" "}
                             {result.totalDependenciasSinCambio} sin cambio.{" "}
                             El lote fue {result.loteId}.
-                        </AlertDescription>
+                        </Alert.Description>
                     </Box>
-                </Alert>
-                <Button alignSelf="flex-start" colorScheme="blue" onClick={onNewLoad}>Nueva carga</Button>
+                </Alert.Root>
+                <Button alignSelf="flex-start" colorPalette="blue" onClick={onNewLoad}>Nueva carga</Button>
             </VStack>
         );
     }
@@ -86,26 +71,26 @@ export default function CargaCostosStep3Confirmacion({
     const generationsExhausted = tokenData?.generacionesRestantes === 0;
 
     return (
-        <VStack align="stretch" spacing={5}>
-            <Alert status={blocked || invalidated ? "error" : "warning"}>
-                <AlertIcon />
+        <VStack align="stretch" gap={5}>
+            <Alert.Root status={blocked || invalidated ? "error" : "warning"}>
+                <Alert.Indicator />
                 <Box>
-                    <AlertTitle>
+                    <Alert.Title>
                         {invalidated
                             ? "Preparacion desactualizada"
                             : blocked
                                 ? "Preparacion bloqueada"
                                 : "Confirmacion final"}
-                    </AlertTitle>
-                    <AlertDescription>
+                    </Alert.Title>
+                    <Alert.Description>
                         {invalidated
                             ? "Una receta o costo relacionado cambio. Debe preparar nuevamente el archivo."
                             : blocked
                                 ? "Se agotaron los intentos de confirmacion. Debe iniciar una nueva carga."
                                 : `Se actualizaran ${preparacion.totalActualizadas} materiales y ${preparacion.totalDependenciasActualizadas} dependencias. Cada cambio quedara en el historial.`}
-                    </AlertDescription>
+                    </Alert.Description>
                 </Box>
-            </Alert>
+            </Alert.Root>
 
             <Box borderWidth="1px" borderRadius="md" p={3}>
                 <Text fontWeight="semibold">{preparacion.nombreArchivo}</Text>
@@ -135,44 +120,44 @@ export default function CargaCostosStep3Confirmacion({
             {!blocked && !invalidated && expired && (
                 <Button
                     alignSelf="flex-start"
-                    colorScheme="orange"
+                    colorPalette="orange"
                     onClick={onGenerateToken}
-                    isLoading={busy}
-                    isDisabled={generationsExhausted}
+                    loading={busy}
+                    disabled={generationsExhausted}
                 >
                     Generar nuevo token
                 </Button>
             )}
 
             {!blocked && !invalidated && (
-                <FormControl isRequired isDisabled={expired || busy}>
-                    <FormLabel htmlFor="carga-costos-token">Ingrese el token de cuatro digitos</FormLabel>
+                <Field.Root required disabled={expired || busy}>
+                    <Field.Label htmlFor="carga-costos-token">Ingrese el token de cuatro digitos</Field.Label>
                     <Input
                         id="carga-costos-token"
                         inputMode="numeric"
                         pattern="[0-9]*"
                         maxLength={4}
                         value={typedToken}
-                        onChange={(event) => onTokenChange(event.target.value.replace(/\D/g, ""))}
+                        onValueChange={(event) => onTokenChange(event.target.value.replace(/\D/g, ""))}
                     />
-                    <FormHelperText>Dispone de cinco intentos por cada token.</FormHelperText>
-                </FormControl>
+                    <Field.HelperText>Dispone de cinco intentos por cada token.</Field.HelperText>
+                </Field.Root>
             )}
 
             <Flex justify="space-between" gap={3} flexWrap="wrap">
                 <Button
                     variant="outline"
                     onClick={blocked || invalidated ? onCancel : onBack}
-                    isDisabled={busy}
+                    disabled={busy}
                 >
                     {blocked || invalidated ? "Nueva carga" : "Volver a revisar"}
                 </Button>
                 {!blocked && !invalidated && (
                     <Button
-                        colorScheme="red"
+                        colorPalette="red"
                         onClick={onConfirm}
-                        isLoading={busy}
-                        isDisabled={expired || typedToken.length !== 4}
+                        loading={busy}
+                        disabled={expired || typedToken.length !== 4}
                     >
                         Confirmar actualizacion
                     </Button>

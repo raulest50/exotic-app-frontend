@@ -1,13 +1,4 @@
-import {
-    Box,
-    Button,
-    Flex,
-    Heading,
-    Text,
-    useDisclosure,
-    useToast,
-    VStack,
-} from "@chakra-ui/react";
+import { Steps, Box, Button, Flex, Heading, Text, useDisclosure, useToast, VStack } from "@chakra-ui/react";
 import axios from "axios";
 import { useMemo, useState } from "react";
 import EndPointsURL from "../../../../api/EndPointsURL";
@@ -28,7 +19,7 @@ export default function EliminacionMaterialStep1SelectAndStudy({
     setMaterialSeleccionado,
     setStudyResultMaterial,
 }: EliminacionMaterialStep1SelectAndStudyProps) {
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const { open, onOpen, onClose } = useDisclosure();
     const [isStudying, setIsStudying] = useState(false);
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const toast = useToast();
@@ -64,7 +55,7 @@ export default function EliminacionMaterialStep1SelectAndStudy({
 
     return (
         <Box>
-            <VStack align="stretch" spacing={4}>
+            <VStack align="stretch" gap={4}>
                 <Heading size="md">Material a eliminar</Heading>
                 <Text color="app.textMuted">
                     Seleccione el material sobre el cual desea estudiar la eliminación forzada.
@@ -74,7 +65,7 @@ export default function EliminacionMaterialStep1SelectAndStudy({
                 <Button
                     w="full"
                     justifyContent="flex-start"
-                    colorScheme="teal"
+                    colorPalette="teal"
                     onClick={onOpen}
                     variant="outline"
                 >
@@ -87,10 +78,10 @@ export default function EliminacionMaterialStep1SelectAndStudy({
                         Atrás
                     </Button>
                     <Button
-                        colorScheme="teal"
+                        colorPalette="teal"
                         onClick={handleEstudiarEliminacion}
-                        isDisabled={materialSeleccionado == null}
-                        isLoading={isStudying}
+                        disabled={materialSeleccionado == null}
+                        loading={isStudying}
                         loadingText="Estudiando..."
                     >
                         Estudiar eliminación y continuar

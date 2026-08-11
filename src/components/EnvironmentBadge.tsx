@@ -1,4 +1,4 @@
-import { Badge } from '@chakra-ui/react';
+import { Steps, Badge } from '@chakra-ui/react';
 import EndPointsURL from '../api/EndPointsURL';
 
 export const EnvironmentBadge = () => {
@@ -8,7 +8,7 @@ export const EnvironmentBadge = () => {
 
     return (
         <Badge
-            colorScheme={env === 'staging' ? 'orange' : 'blue'}
+            colorPalette={env === 'staging' ? 'orange' : 'blue'}
             position="fixed"
             bottom="4"
             right="4"

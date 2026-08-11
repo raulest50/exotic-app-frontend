@@ -1,19 +1,17 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Card,
-    CardBody,
-    FormControl,
-    FormLabel,
     HStack,
-    Select,
+    NativeSelect,
     SimpleGrid,
     Stack,
-    StackDivider,
     Text,
     useBreakpointValue,
+    Field,
+    StackSeparator,
 } from "@chakra-ui/react";
 import ReactECharts from "echarts-for-react";
 import { useMemo, useState } from "react";
@@ -80,23 +78,23 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
     );
 
     return (
-        <Stack spacing={{ base: 4, md: 5 }}>
+        <Stack gap={{ base: 4, md: 5 }}>
             <Stack
                 direction={{ base: "column", md: "row" }}
                 align={{ base: "flex-start", md: "center" }}
                 justify="space-between"
-                spacing={2}
+                gap={2}
             >
                 <SectionHeading
                     title="Informe global de producción"
                     description="Cumplimiento de la planeación y uso de capacidad en el periodo consultado."
                 />
-                <Badge colorScheme="blue">
+                <Badge colorPalette="blue">
                     {periodLabel(report)}
                 </Badge>
             </Stack>
 
-            <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} spacing={3}>
+            <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} gap={3}>
                 <KpiCard
                     label="Unidades producidas"
                     value={formatInteger(summary.unidadesProducidas)}
@@ -124,14 +122,14 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
 
             <ReportNotes notes={report.notas} />
 
-            <Card variant="outline">
-                <CardBody p={{ base: 3, md: 5 }}>
-                    <Stack spacing={4}>
+            <Card.Root variant="outline">
+                <Card.Body p={{ base: 3, md: 5 }}>
+                    <Stack gap={4}>
                         <Stack
                             direction={{ base: "column", md: "row" }}
                             justify="space-between"
                             align={{ base: "flex-start", md: "center" }}
-                            spacing={2}
+                            gap={2}
                         >
                             <SectionHeading
                                 title="Producción consolidada por categoría"
@@ -140,35 +138,37 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
                             <Stack
                                 direction={{ base: "column", sm: "row" }}
                                 align={{ base: "stretch", sm: "flex-end" }}
-                                spacing={3}
+                                gap={3}
                                 w={{ base: "full", md: "auto" }}
                             >
-                                <FormControl
+                                <Field.Root
                                     maxW={{ base: "full", sm: "240px" }}
                                     minW={{ sm: "220px" }}
                                 >
-                                    <FormLabel
+                                    <Field.Label
                                         fontSize="xs"
                                         color="app.textMuted"
                                         mb={1}
                                     >
                                         Detalle de referencias
-                                    </FormLabel>
-                                    <Select
-                                        size="sm"
-                                        minH="40px"
-                                        value={referenceMode}
-                                        onChange={(event) => setReferenceMode(
-                                            event.target.value as ProductionReferenceMode,
-                                        )}
-                                    >
-                                        <option value="TOP_8">Top 8 + Otras</option>
-                                        <option value="PARETO_80">Pareto 80% + Otras</option>
-                                        <option value="ALL">Todas las referencias</option>
-                                    </Select>
-                                </FormControl>
+                                    </Field.Label>
+                                    <NativeSelect.Root>
+                                        <NativeSelect.Field
+                                            size="sm"
+                                            minH="40px"
+                                            value={referenceMode}
+                                            onValueChange={(event) => setReferenceMode(
+                                                event.target.value as ProductionReferenceMode,
+                                            )}>
+                                            <option value="TOP_8">Top 8 + Otras</option>
+                                            <option value="PARETO_80">Pareto 80% + Otras</option>
+                                            <option value="ALL">Todas las referencias</option>
+                                        </NativeSelect.Field>
+                                        <NativeSelect.Indicator />
+                                    </NativeSelect.Root>
+                                </Field.Root>
                                 <Badge
-                                    colorScheme="green"
+                                    colorPalette="green"
                                     alignSelf={{ base: "flex-start", sm: "center" }}
                                     mb={{ sm: 2 }}
                                 >
@@ -186,24 +186,24 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
                             <EmptyPanel message="No hay datos por categoría para este periodo." />
                         )}
                     </Stack>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
 
             <InformeProduccionAreasSection analytics={report.analiticaAreas} />
 
-            <Stack spacing={4}>
+            <Stack gap={4}>
                 <Stack
                     direction={{ base: "column", md: "row" }}
                     align={{ base: "flex-start", md: "center" }}
                     justify="space-between"
-                    spacing={2}
+                    gap={2}
                 >
                     <SectionHeading
                         title="Desviaciones relevantes"
                         description="Diferencias entre las cantidades planeadas y producidas en el periodo."
                     />
                     {exceptionAnalysis.items.length > 0 ? (
-                        <Badge colorScheme="gray">
+                        <Badge colorPalette="gray">
                             {Math.min(
                                 exceptionAnalysis.items.length,
                                 MAX_VISIBLE_EXCEPTIONS,
@@ -212,7 +212,7 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
                     ) : null}
                 </Stack>
 
-                <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} spacing={3}>
+                <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} gap={3}>
                     <KpiCard
                         label="Sin producción"
                         value={formatInteger(exceptionAnalysis.counts.SIN_PRODUCCION)}
@@ -236,7 +236,7 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
                 </SimpleGrid>
 
                 {exceptionAnalysis.items.length > 0 ? (
-                    <Stack divider={<StackDivider borderColor="app.border" />} spacing={0}>
+                    <Stack separator={<StackSeparator borderColor="app.border" />} gap={0}>
                         {exceptionAnalysis.items
                             .slice(0, MAX_VISIBLE_EXCEPTIONS)
                             .map((item, index) => (
@@ -248,10 +248,10 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
                             ))}
                     </Stack>
                 ) : (
-                    <Alert status="success" borderRadius="md">
-                        <AlertIcon />
+                    <Alert.Root status="success" borderRadius="md">
+                        <Alert.Indicator />
                         No se identificaron desviaciones en el periodo consultado.
-                    </Alert>
+                    </Alert.Root>
                 )}
             </Stack>
         </Stack>
@@ -353,18 +353,18 @@ function ProductionExceptionRow({ item }: { item: ProductionException }) {
             direction={{ base: "column", lg: "row" }}
             align={{ base: "stretch", lg: "center" }}
             justify="space-between"
-            spacing={3}
+            gap={3}
             py={3}
         >
-            <HStack align="flex-start" spacing={3} minW={0}>
-                <Badge colorScheme={presentation.colorScheme} mt={0.5}>
+            <HStack align="flex-start" gap={3} minW={0}>
+                <Badge colorPalette={presentation.colorScheme} mt={0.5}>
                     {presentation.label}
                 </Badge>
                 <Box minW={0}>
-                    <Text fontWeight="semibold" noOfLines={2}>
+                    <Text fontWeight="semibold" lineClamp={2}>
                         {item.reference.productoNombre}
                     </Text>
-                    <Text color="app.textMuted" fontSize="xs" noOfLines={1}>
+                    <Text color="app.textMuted" fontSize="xs" lineClamp={1}>
                         {item.reference.productoId ?? "Sin código"} · {item.reference.categoriaNombre}
                     </Text>
                 </Box>
@@ -372,7 +372,7 @@ function ProductionExceptionRow({ item }: { item: ProductionException }) {
 
             <SimpleGrid
                 columns={{ base: 2, sm: 4 }}
-                spacing={3}
+                gap={3}
                 minW={{ lg: "460px" }}
             >
                 <ExceptionMetric

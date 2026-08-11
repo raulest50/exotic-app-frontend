@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Flex, Text, Alert, AlertIcon } from '@chakra-ui/react';
+import { Flex, Text, Alert } from '@chakra-ui/react';
 import { FiltroHistorialDispensaciones } from './FiltroHistorialDispensaciones.tsx';
 import TablaDispensaciones from './TablaDispensaciones.tsx';
 import BetterPagination from '../../../components/BetterPagination/BetterPagination.tsx';
 import { TransaccionAlmacen, PaginatedResponse, FiltroHistDispensacionDTO } from './types';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
-import { useToast } from '@chakra-ui/react';
+import { useToast, Alert } from '@chakra-ui/react';
 import DetalleDispensacionDialog from './DetalleDispensacionDialog.tsx';
 import DispensacionPDF_Generator_Class from '../AsistenteDispensacion/AsistenteDispensacionComponents/DispensacionPDF_Generator';
 import { MovimientoDetalle } from '../types';
@@ -216,10 +216,10 @@ export function HistorialDispensaciones() {
             />
 
             {error && (
-                <Alert status="error">
-                    <AlertIcon />
+                <Alert.Root status="error">
+                    <Alert.Indicator />
                     {error}
-                </Alert>
+                </Alert.Root>
             )}
 
             {dispensaciones.length > 0 || loading ? (

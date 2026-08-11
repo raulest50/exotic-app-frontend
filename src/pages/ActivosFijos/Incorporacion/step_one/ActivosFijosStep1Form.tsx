@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
+    Steps,
     Button,
     Flex,
     SimpleGrid,
@@ -10,11 +11,10 @@ import {
     Heading,
     useToast,
     Card,
-    CardBody
 } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon } from '@chakra-ui/icons';
 import { ActivoFijo, IncorporacionActivoDto, OrdenCompraActivo, ItemOrdenCompraActivo, TIPO_INCORPORACION, GrupoActivos, TipoActivo } from '../../types.tsx';
 import { ActivoGroup } from './ActivoGroup/ActivoGroup.tsx';
+import { LuPlus, LuTrash2 } from 'react-icons/lu';
 
 type Props = {
     setActiveStep: (step: number) => void;
@@ -158,44 +158,37 @@ export function ActivosFijosStep1Form({
                     <Heading size="md">Grupos de Activos Fijos</Heading>
                     {(incorporacionActivoDto.tipoIncorporacion === TIPO_INCORPORACION.SIN_OC || 
                       incorporacionActivoDto.tipoIncorporacion === TIPO_INCORPORACION.AF_EXISTENTE) && (
-                        <Button 
-                            leftIcon={<AddIcon />} 
-                            colorScheme="blue" 
-                            onClick={agregarGrupo}
-                        >
-                            Agregar Grupo
-                        </Button>
+                        <Button colorPalette="blue" onClick={agregarGrupo}><LuPlus />Agregar Grupo
+                                                    </Button>
                     )}
                 </Flex>
 
                 {grupos.length === 0 && (
-                    <Card>
-                        <CardBody>
+                    <Card.Root>
+                        <Card.Body>
                             <Text textAlign="center" color="app.textSubtle">
                                 {incorporacionActivoDto.tipoIncorporacion === TIPO_INCORPORACION.CON_OC 
                                     ? "No hay ítems en la orden de compra." 
                                     : "No hay grupos de activos. Haga clic en 'Agregar Grupo' para crear uno."}
                             </Text>
-                        </CardBody>
-                    </Card>
+                        </Card.Body>
+                    </Card.Root>
                 )}
 
-                <VStack spacing={4} align="stretch">
+                <VStack gap={4} align="stretch">
                     {grupos.map((grupo) => (
                         <Box key={grupo.id} position="relative">
                             {(incorporacionActivoDto.tipoIncorporacion === TIPO_INCORPORACION.SIN_OC || 
                               incorporacionActivoDto.tipoIncorporacion === TIPO_INCORPORACION.AF_EXISTENTE) && (
                                 <IconButton
                                     aria-label="Eliminar grupo"
-                                    icon={<DeleteIcon />}
-                                    colorScheme="red"
+                                    colorPalette="red"
                                     size="sm"
                                     position="absolute"
                                     top="10px"
                                     right="10px"
                                     zIndex="1"
-                                    onClick={() => eliminarGrupo(grupo.id)}
-                                />
+                                    onClick={() => eliminarGrupo(grupo.id)}><LuTrash2 /></IconButton>
                             )}
                             <ActivoGroup
                                 itemOrdenCompraActivo={grupo.itemOrdenCompra}
@@ -209,9 +202,9 @@ export function ActivosFijosStep1Form({
 
             <Button
                 variant="solid"
-                colorScheme="teal"
+                colorPalette="teal"
                 onClick={handleSiguiente}
-                isDisabled={!esFormularioValido}
+                disabled={!esFormularioValido}
             >
                 Siguiente
             </Button>

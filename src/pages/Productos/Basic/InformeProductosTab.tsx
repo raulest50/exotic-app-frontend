@@ -14,15 +14,14 @@
  */
 
 import {
+    Steps,
     Flex,
     Stack,
     Checkbox,
     CheckboxGroup,
-    FormControl,
-    FormLabel,
     Input,
     Button,
-    Select,
+    NativeSelect,
     Table,
     Thead,
     Tbody,
@@ -30,6 +29,7 @@ import {
     Th,
     Td,
     TableContainer,
+    Field,
 } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import axios from "axios";
@@ -129,17 +129,17 @@ export default function InformeProductosTab() {
     return (
         <Flex direction="column" p={4}>
             <Flex direction="row" align="center" gap={10} w="full" mb={4}>
-                <FormControl>
-                    <FormLabel>
+                <Field.Root>
+                    <Field.Label>
                         {searchType === "ID"
                             ? "Buscar por ID exacto:"
                             : searchType === "ID_PARCIAL"
                                 ? "Buscar por ID parcial:"
                                 : "Buscar por nombre:"}
-                    </FormLabel>
+                    </Field.Label>
                     <Input
                         value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
+                        onValueChange={(e) => setSearchText(e.target.value)}
                         placeholder={
                             searchType === "ID"
                                 ? "Ingrese codigo o identificador unico"
@@ -147,91 +147,92 @@ export default function InformeProductosTab() {
                                     ? "Ingrese parte del codigo o identificador"
                                     : "Ingrese nombre del producto"
                         }
-                        isDisabled={chkbox.length === 0}
+                        disabled={chkbox.length === 0}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
                                 handleSearch();
                             }
                         }}
                     />
-                </FormControl>
+                </Field.Root>
 
-                <FormControl maxW="220px">
-                    <FormLabel>Tipo de busqueda:</FormLabel>
-                    <Select
-                        value={searchType}
-                        onChange={(e) => setSearchType(e.target.value as SearchType)}
-                    >
-                        <option value="NOMBRE">Nombre</option>
-                        <option value="ID">ID exacto</option>
-                        <option value="ID_PARCIAL">ID parcial</option>
-                    </Select>
-                </FormControl>
+                <Field.Root maxW="220px">
+                    <Field.Label>Tipo de busqueda:</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            value={searchType}
+                            onValueChange={(e) => setSearchType(e.target.value as SearchType)}>
+                            <option value="NOMBRE">Nombre</option>
+                            <option value="ID">ID exacto</option>
+                            <option value="ID_PARCIAL">ID parcial</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
 
-                <FormControl>
-                    <FormLabel>Categorias:</FormLabel>
+                <Field.Root>
+                    <Field.Label>Categorias:</Field.Label>
                     <CheckboxGroup
-                        colorScheme="green"
+                        colorPalette="green"
                         value={chkbox}
-                        onChange={(values) => setChkbox(values as string[])}
+                        onValueChange={(values) => setChkbox(values as string[])}
                     >
                         <Stack
-                            spacing={[2, 5]}
+                            gap={[2, 5]}
                             direction="column"
                             border="1px solid gray"
                             borderRadius="10px"
                             p="1em"
                             w="fit-content"
                         >
-                            <Checkbox value="material empaque">
-                                Material de empaque
-                            </Checkbox>
-                            <Checkbox value="materia prima">Materia Prima</Checkbox>
-                            <Checkbox value="semiterminado">SemiTerminado</Checkbox>
-                            <Checkbox value="terminado">Producto Terminado</Checkbox>
+                            <Checkbox.Root value="material empaque"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Material de empaque
+                                                                </Checkbox.Label></Checkbox.Root>
+                            <Checkbox.Root value="materia prima"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Materia Prima</Checkbox.Label></Checkbox.Root>
+                            <Checkbox.Root value="semiterminado"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>SemiTerminado</Checkbox.Label></Checkbox.Root>
+                            <Checkbox.Root value="terminado"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Producto Terminado</Checkbox.Label></Checkbox.Root>
                         </Stack>
                     </CheckboxGroup>
-                </FormControl>
+                </Field.Root>
 
-                <Button onClick={handleSearch} colorScheme="blue" isLoading={loading}>
+                <Button onClick={handleSearch} colorPalette="blue" loading={loading}>
                     Buscar
                 </Button>
             </Flex>
 
-            <TableContainer>
-                <Table variant="striped" colorScheme="gray">
-                    <Thead>
-                        <Tr>
-                            <Th>ID</Th>
-                            <Th>Nombre</Th>
-                            <Th>Costo</Th>
-                            <Th>Tipo</Th>
-                            <Th>Fecha Creacion</Th>
-                            <Th>Acciones</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+            <Table.ScrollArea>
+                <Table.Root variant="striped" colorPalette="gray">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>ID</Table.ColumnHeader>
+                            <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                            <Table.ColumnHeader>Costo</Table.ColumnHeader>
+                            <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                            <Table.ColumnHeader>Fecha Creacion</Table.ColumnHeader>
+                            <Table.ColumnHeader>Acciones</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {productos.map((producto) => (
-                            <Tr key={producto.productoId}>
-                                <Td>{producto.productoId}</Td>
-                                <Td>{producto.nombre}</Td>
-                                <Td>{producto.costo}</Td>
-                                <Td>{producto.tipo_producto}</Td>
-                                <Td>{producto.fechaCreacion}</Td>
-                                <Td>
+                            <Table.Row key={producto.productoId}>
+                                <Table.Cell>{producto.productoId}</Table.Cell>
+                                <Table.Cell>{producto.nombre}</Table.Cell>
+                                <Table.Cell>{producto.costo}</Table.Cell>
+                                <Table.Cell>{producto.tipo_producto}</Table.Cell>
+                                <Table.Cell>{producto.fechaCreacion}</Table.Cell>
+                                <Table.Cell>
                                     <Button
                                         size="sm"
-                                        colorScheme="blue"
+                                        colorPalette="blue"
                                         onClick={() => verDetalleProducto(producto)}
                                     >
                                         Ver Detalle
                                     </Button>
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         ))}
-                    </Tbody>
-                </Table>
-            </TableContainer>
+                    </Table.Body>
+                </Table.Root>
+            </Table.ScrollArea>
 
             {totalPages > 0 && (
                 <BetterPagination

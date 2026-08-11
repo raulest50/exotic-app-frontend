@@ -1,4 +1,5 @@
 import {
+    Steps,
     Badge,
     Box,
     Button,
@@ -125,7 +126,7 @@ export default function HistorialControlProcesoTab() {
     };
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             <CalidadAreaOperativaPicker
                 value={selectedArea}
                 onChange={handleAreaChange}
@@ -133,20 +134,20 @@ export default function HistorialControlProcesoTab() {
             />
 
             <Box borderWidth="1px" borderRadius="md" p={4}>
-                <HStack align="end" spacing={3}>
+                <HStack align="end" gap={3}>
                     <Box flex="1">
                         <Text fontWeight="semibold" mb={1}>Producto</Text>
-                        <Input value={producto} onChange={(event) => setProducto(event.target.value)} placeholder="Codigo o nombre" />
+                        <Input value={producto} onValueChange={(event) => setProducto(event.target.value)} placeholder="Codigo o nombre" />
                     </Box>
                     <Box>
                         <Text fontWeight="semibold" mb={1}>Desde</Text>
-                        <Input type="date" value={fechaDesde} onChange={(event) => setFechaDesde(event.target.value)} />
+                        <Input type="date" value={fechaDesde} onValueChange={(event) => setFechaDesde(event.target.value)} />
                     </Box>
                     <Box>
                         <Text fontWeight="semibold" mb={1}>Hasta</Text>
-                        <Input type="date" value={fechaHasta} onChange={(event) => setFechaHasta(event.target.value)} />
+                        <Input type="date" value={fechaHasta} onValueChange={(event) => setFechaHasta(event.target.value)} />
                     </Box>
-                    <Button colorScheme="teal" onClick={() => buscar(0)} isLoading={loadingSearch}>Buscar</Button>
+                    <Button colorPalette="teal" onClick={() => buscar(0)} loading={loadingSearch}>Buscar</Button>
                 </HStack>
             </Box>
 
@@ -155,39 +156,39 @@ export default function HistorialControlProcesoTab() {
                     <Text fontWeight="semibold">Controles registrados</Text>
                     {resultados && <Text fontSize="sm" color="gray.600">{resultados.totalElements} registros</Text>}
                 </HStack>
-                <Table size="sm">
-                    <Thead>
-                        <Tr>
-                            <Th>Fecha</Th>
-                            <Th>Area</Th>
-                            <Th>Lote / Producto</Th>
-                            <Th>Version</Th>
-                            <Th>Usuario</Th>
-                            <Th />
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+                <Table.Root size="sm">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                            <Table.ColumnHeader>Area</Table.ColumnHeader>
+                            <Table.ColumnHeader>Lote / Producto</Table.ColumnHeader>
+                            <Table.ColumnHeader>Version</Table.ColumnHeader>
+                            <Table.ColumnHeader>Usuario</Table.ColumnHeader>
+                            <Table.ColumnHeader />
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {(resultados?.content ?? []).map((item) => (
-                            <Tr key={item.id}>
-                                <Td>{formatDateTime(item.fechaRegistro)}</Td>
-                                <Td>{item.areaOperativa.nombre}</Td>
-                                <Td>{loteLabel(item)}</Td>
-                                <Td>{item.plantillaVersion}</Td>
-                                <Td>{item.usuarioNombreCompleto || item.usuarioUsername}</Td>
-                                <Td>
-                                    <Button size="xs" onClick={() => cargarDetalle(item.id)} isLoading={loadingDetalle}>
+                            <Table.Row key={item.id}>
+                                <Table.Cell>{formatDateTime(item.fechaRegistro)}</Table.Cell>
+                                <Table.Cell>{item.areaOperativa.nombre}</Table.Cell>
+                                <Table.Cell>{loteLabel(item)}</Table.Cell>
+                                <Table.Cell>{item.plantillaVersion}</Table.Cell>
+                                <Table.Cell>{item.usuarioNombreCompleto || item.usuarioUsername}</Table.Cell>
+                                <Table.Cell>
+                                    <Button size="xs" onClick={() => cargarDetalle(item.id)} loading={loadingDetalle}>
                                         Ver
                                     </Button>
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         ))}
-                    </Tbody>
-                </Table>
+                    </Table.Body>
+                </Table.Root>
                 {resultados && resultados.totalPages > 1 && (
                     <HStack justify="flex-end" mt={3}>
-                        <Button size="sm" isDisabled={page <= 0} onClick={() => buscar(page - 1)}>Anterior</Button>
+                        <Button size="sm" disabled={page <= 0} onClick={() => buscar(page - 1)}>Anterior</Button>
                         <Text fontSize="sm">Pagina {page + 1} de {resultados.totalPages}</Text>
-                        <Button size="sm" isDisabled={page + 1 >= resultados.totalPages} onClick={() => buscar(page + 1)}>Siguiente</Button>
+                        <Button size="sm" disabled={page + 1 >= resultados.totalPages} onClick={() => buscar(page + 1)}>Siguiente</Button>
                     </HStack>
                 )}
             </Box>
@@ -195,13 +196,13 @@ export default function HistorialControlProcesoTab() {
             {detalle && (
                 <Box borderWidth="1px" borderRadius="md" p={4}>
                     <HStack justify="space-between" mb={3}>
-                        <VStack align="start" spacing={1}>
+                        <VStack align="start" gap={1}>
                             <Text fontWeight="semibold">{detalle.areaOperativa.nombre}</Text>
                             <Text fontSize="sm" color="gray.600">{loteLabel(detalle)}</Text>
                         </VStack>
-                        <Badge colorScheme="teal">Version {detalle.plantillaVersion}</Badge>
+                        <Badge colorPalette="teal">Version {detalle.plantillaVersion}</Badge>
                     </HStack>
-                    <VStack align="stretch" spacing={4}>
+                    <VStack align="stretch" gap={4}>
                         {muestrasPorCaracteristica.map(([key, muestras]) => (
                             <Box key={key} borderWidth="1px" borderRadius="md" p={3}>
                                 <HStack mb={2}>
@@ -209,20 +210,20 @@ export default function HistorialControlProcesoTab() {
                                     <Badge>{muestras[0]?.tipo === "NUMERICA" ? "Numerica" : "Cumple/No cumple"}</Badge>
                                     {muestras[0]?.unidad && <Badge variant="outline">{muestras[0].unidad}</Badge>}
                                 </HStack>
-                                <Table size="sm">
-                                    <Thead>
-                                        <Tr>
-                                            <Th>Muestra</Th>
-                                            <Th>Resumen</Th>
-                                            <Th>Lecturas</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
+                                <Table.Root size="sm">
+                                    <Table.Header>
+                                        <Table.Row>
+                                            <Table.ColumnHeader>Muestra</Table.ColumnHeader>
+                                            <Table.ColumnHeader>Resumen</Table.ColumnHeader>
+                                            <Table.ColumnHeader>Lecturas</Table.ColumnHeader>
+                                        </Table.Row>
+                                    </Table.Header>
+                                    <Table.Body>
                                         {muestras.map((muestra) => (
-                                            <Tr key={muestra.id}>
-                                                <Td>{muestra.numeroMuestra}</Td>
-                                                <Td>{resumenMuestra(muestra)}</Td>
-                                                <Td>
+                                            <Table.Row key={muestra.id}>
+                                                <Table.Cell>{muestra.numeroMuestra}</Table.Cell>
+                                                <Table.Cell>{resumenMuestra(muestra)}</Table.Cell>
+                                                <Table.Cell>
                                                     {muestra.lecturas.map((lectura) => (
                                                         <Badge key={lectura.id} mr={1} mb={1} variant="outline">
                                                             {lectura.indiceUnidad}:{" "}
@@ -233,11 +234,11 @@ export default function HistorialControlProcesoTab() {
                                                                   : "No cumple"}
                                                         </Badge>
                                                     ))}
-                                                </Td>
-                                            </Tr>
+                                                </Table.Cell>
+                                            </Table.Row>
                                         ))}
-                                    </Tbody>
-                                </Table>
+                                    </Table.Body>
+                                </Table.Root>
                             </Box>
                         ))}
                     </VStack>

@@ -1,21 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Box,
     Button,
     Flex,
-    FormControl,
     HStack,
     IconButton,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
-    Select,
+    NativeSelect,
     Spinner,
     Table,
     Tbody,
@@ -25,12 +17,15 @@ import {
     Thead,
     Tr,
     useToast,
+    Field,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
-import { AddIcon, DeleteIcon, RepeatIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
 import CustomDecimalInput from "../../../components/CustomDecimalInput/CustomDecimalInput";
 import type { AjusteLoteAsignado, AjusteLoteOption, AjusteLotePageResponse } from "./types";
+import { LuPlus, LuRepeat, LuTrash2 } from 'react-icons/lu';
 
 interface Props {
     isOpen: boolean;
@@ -144,189 +139,199 @@ export default function AjusteSalidaLotePicker({
     const canAccept = asignacionExacta && !excedeDisponible;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="6xl" isCentered>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Ajuste de salida por lotes - {productoNombre}</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <Flex direction="column" gap={4}>
-                        <Text fontSize="sm" color="app.textMuted">
-                            Cantidad de salida requerida: <strong>{cantidadRequerida.toFixed(4)}</strong> ·
-                            Asignada: <strong>{totalAsignado.toFixed(4)}</strong>
-                        </Text>
+        <Dialog.Root open={isOpen} size='xl' placement='center' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                        {!canAccept && (
-                            <Alert status="warning" borderRadius="md">
-                                <AlertIcon />
-                                La suma de cantidades por lote debe coincidir exactamente con la salida requerida.
-                            </Alert>
-                        )}
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Ajuste de salida por lotes - {productoNombre}</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <Flex direction="column" gap={4}>
+                                <Text fontSize="sm" color="app.textMuted">
+                                    Cantidad de salida requerida: <strong>{cantidadRequerida.toFixed(4)}</strong> ·
+                                    Asignada: <strong>{totalAsignado.toFixed(4)}</strong>
+                                </Text>
 
-                        <Flex gap={4} direction={{ base: "column", lg: "row" }}>
-                            <Box flex="1" borderWidth="1px" borderRadius="md" p={4}>
-                                <Flex justify="space-between" align="center" mb={3}>
-                                    <Text fontWeight="bold">Lotes disponibles en GENERAL</Text>
-                                    <HStack spacing={2}>
-                                        <FormControl width="auto" minW="120px">
-                                            <Select size="sm" value={size} onChange={(e) => setSize(Number(e.target.value))}>
-                                                <option value={5}>5 por página</option>
-                                                <option value={10}>10 por página</option>
-                                                <option value={20}>20 por página</option>
-                                            </Select>
-                                        </FormControl>
-                                        <IconButton
-                                            aria-label="Actualizar lotes"
-                                            icon={<RepeatIcon />}
-                                            size="sm"
-                                            colorScheme="blue"
-                                            onClick={handleRefresh}
-                                            isLoading={loading}
-                                        />
-                                    </HStack>
-                                </Flex>
+                                {!canAccept && (
+                                    <Alert.Root status="warning" borderRadius="md">
+                                        <Alert.Indicator />
+                                        La suma de cantidades por lote debe coincidir exactamente con la salida requerida.
+                                    </Alert.Root>
+                                )}
 
-                                {loading ? (
-                                    <Flex minH="220px" align="center" justify="center">
-                                        <Spinner size="lg" />
-                                    </Flex>
-                                ) : (
-                                    <>
-                                        <Box overflowX="auto">
-                                            <Table size="sm">
-                                                <Thead>
-                                                    <Tr>
-                                                        <Th>Lote</Th>
-                                                        <Th>Disponible</Th>
-                                                        <Th>F. produccion</Th>
-                                                        <Th>F. vencimiento</Th>
-                                                        <Th>Acción</Th>
-                                                    </Tr>
-                                                </Thead>
-                                                <Tbody>
-                                                    {lotesDisponibles.length === 0 ? (
-                                                        <Tr>
-                                                            <Td colSpan={5} textAlign="center" py={4}>
-                                                                No hay lotes disponibles con saldo positivo.
-                                                            </Td>
-                                                        </Tr>
-                                                    ) : (
-                                                        lotesDisponibles.map((lote) => (
-                                                            <Tr key={lote.loteId}>
-                                                                <Td>{lote.batchNumber}</Td>
-                                                                <Td>{lote.cantidadDisponible.toFixed(4)}</Td>
-                                                                <Td>{formatDate(lote.productionDate)}</Td>
-                                                                <Td>{formatDate(lote.expirationDate)}</Td>
-                                                                <Td>
-                                                                    <IconButton
-                                                                        aria-label="Agregar lote"
-                                                                        icon={<AddIcon />}
-                                                                        size="sm"
-                                                                        colorScheme="teal"
-                                                                        onClick={() => handleAddLote(lote)}
-                                                                        isDisabled={lotesSeleccionados.some((item) => item.loteId === lote.loteId)}
-                                                                    />
-                                                                </Td>
-                                                            </Tr>
-                                                        ))
-                                                    )}
-                                                </Tbody>
-                                            </Table>
-                                        </Box>
-
-                                        {totalPages > 1 && (
-                                            <HStack justify="center" mt={4}>
-                                                <Button
+                                <Flex gap={4} direction={{ base: "column", lg: "row" }}>
+                                    <Box flex="1" borderWidth="1px" borderRadius="md" p={4}>
+                                        <Flex justify="space-between" align="center" mb={3}>
+                                            <Text fontWeight="bold">Lotes disponibles en GENERAL</Text>
+                                            <HStack gap={2}>
+                                                <Field.Root width="auto" minW="120px">
+                                                    <NativeSelect.Root>
+                                                        <NativeSelect.Field
+                                                            size="sm"
+                                                            value={size}
+                                                            onValueChange={(e) => setSize(Number(e.target.value))}>
+                                                            <option value={5}>5 por página</option>
+                                                            <option value={10}>10 por página</option>
+                                                            <option value={20}>20 por página</option>
+                                                        </NativeSelect.Field>
+                                                        <NativeSelect.Indicator />
+                                                    </NativeSelect.Root>
+                                                </Field.Root>
+                                                <IconButton
+                                                    aria-label="Actualizar lotes"
                                                     size="sm"
-                                                    onClick={() => void fetchLotes(currentPage - 1, size)}
-                                                    isDisabled={currentPage === 0}
-                                                >
-                                                    Anterior
-                                                </Button>
-                                                <Text fontSize="sm">
-                                                    Página {currentPage + 1} de {totalPages} ({totalElements} lotes)
-                                                </Text>
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => void fetchLotes(currentPage + 1, size)}
-                                                    isDisabled={currentPage >= totalPages - 1}
-                                                >
-                                                    Siguiente
-                                                </Button>
+                                                    colorPalette="blue"
+                                                    onClick={handleRefresh}
+                                                    loading={loading}><LuRepeat /></IconButton>
                                             </HStack>
-                                        )}
-                                    </>
-                                )}
-                            </Box>
+                                        </Flex>
 
-                            <Box flex="1" borderWidth="1px" borderRadius="md" p={4}>
-                                <Text fontWeight="bold" mb={3}>Lotes asignados</Text>
-                                {lotesSeleccionados.length === 0 ? (
-                                    <Text color="app.textSubtle" py={8} textAlign="center">
-                                        Aún no has asignado lotes a esta salida.
-                                    </Text>
-                                ) : (
-                                    <Box overflowX="auto">
-                                        <Table size="sm">
-                                            <Thead>
-                                                <Tr>
-                                                    <Th>Lote</Th>
-                                                    <Th>Disponible</Th>
-                                                    <Th>Cantidad a salir</Th>
-                                                    <Th>Acción</Th>
-                                                </Tr>
-                                            </Thead>
-                                            <Tbody>
-                                                {lotesSeleccionados.map((lote) => (
-                                                    <Tr key={lote.loteId}>
-                                                        <Td>{lote.batchNumber}</Td>
-                                                        <Td>{lote.cantidadDisponible.toFixed(4)}</Td>
-                                                        <Td>
-                                                            <CustomDecimalInput
-                                                                value={lote.cantidadAsignada}
-                                                                onChange={(value) => handleCantidadChange(lote.loteId, value)}
-                                                                min={0}
-                                                                maxDecimals={4}
-                                                                size="sm"
-                                                                width="120px"
-                                                                placeholder="0.0000"
-                                                            />
-                                                        </Td>
-                                                        <Td>
-                                                            <IconButton
-                                                                aria-label="Remover lote"
-                                                                icon={<DeleteIcon />}
-                                                                size="sm"
-                                                                colorScheme="red"
-                                                                onClick={() => handleRemoveLote(lote.loteId)}
-                                                            />
-                                                        </Td>
-                                                    </Tr>
-                                                ))}
-                                            </Tbody>
-                                        </Table>
+                                        {loading ? (
+                                            <Flex minH="220px" align="center" justify="center">
+                                                <Spinner size="lg" />
+                                            </Flex>
+                                        ) : (
+                                            <>
+                                                <Box overflowX="auto">
+                                                    <Table.Root size="sm">
+                                                        <Table.Header>
+                                                            <Table.Row>
+                                                                <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                                                                <Table.ColumnHeader>Disponible</Table.ColumnHeader>
+                                                                <Table.ColumnHeader>F. produccion</Table.ColumnHeader>
+                                                                <Table.ColumnHeader>F. vencimiento</Table.ColumnHeader>
+                                                                <Table.ColumnHeader>Acción</Table.ColumnHeader>
+                                                            </Table.Row>
+                                                        </Table.Header>
+                                                        <Table.Body>
+                                                            {lotesDisponibles.length === 0 ? (
+                                                                <Table.Row>
+                                                                    <Table.Cell colSpan={5} textAlign="center" py={4}>
+                                                                        No hay lotes disponibles con saldo positivo.
+                                                                    </Table.Cell>
+                                                                </Table.Row>
+                                                            ) : (
+                                                                lotesDisponibles.map((lote) => (
+                                                                    <Table.Row key={lote.loteId}>
+                                                                        <Table.Cell>{lote.batchNumber}</Table.Cell>
+                                                                        <Table.Cell>{lote.cantidadDisponible.toFixed(4)}</Table.Cell>
+                                                                        <Table.Cell>{formatDate(lote.productionDate)}</Table.Cell>
+                                                                        <Table.Cell>{formatDate(lote.expirationDate)}</Table.Cell>
+                                                                        <Table.Cell>
+                                                                            <IconButton
+                                                                                aria-label="Agregar lote"
+                                                                                size="sm"
+                                                                                colorPalette="teal"
+                                                                                onClick={() => handleAddLote(lote)}
+                                                                                disabled={lotesSeleccionados.some((item) => item.loteId === lote.loteId)}><LuPlus /></IconButton>
+                                                                        </Table.Cell>
+                                                                    </Table.Row>
+                                                                ))
+                                                            )}
+                                                        </Table.Body>
+                                                    </Table.Root>
+                                                </Box>
+
+                                                {totalPages > 1 && (
+                                                    <HStack justify="center" mt={4}>
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => void fetchLotes(currentPage - 1, size)}
+                                                            disabled={currentPage === 0}
+                                                        >
+                                                            Anterior
+                                                        </Button>
+                                                        <Text fontSize="sm">
+                                                            Página {currentPage + 1} de {totalPages} ({totalElements} lotes)
+                                                        </Text>
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => void fetchLotes(currentPage + 1, size)}
+                                                            disabled={currentPage >= totalPages - 1}
+                                                        >
+                                                            Siguiente
+                                                        </Button>
+                                                    </HStack>
+                                                )}
+                                            </>
+                                        )}
                                     </Box>
-                                )}
-                            </Box>
-                        </Flex>
-                    </Flex>
-                </ModalBody>
-                <ModalFooter>
-                    <Button variant="ghost" mr={3} onClick={onClose}>
-                        Cancelar
-                    </Button>
-                    <Button
-                        colorScheme="teal"
-                        onClick={() => {
-                            onAccept(lotesSeleccionados);
-                            onClose();
-                        }}
-                        isDisabled={!canAccept}
-                    >
-                        Confirmar lotes
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+
+                                    <Box flex="1" borderWidth="1px" borderRadius="md" p={4}>
+                                        <Text fontWeight="bold" mb={3}>Lotes asignados</Text>
+                                        {lotesSeleccionados.length === 0 ? (
+                                            <Text color="app.textSubtle" py={8} textAlign="center">
+                                                Aún no has asignado lotes a esta salida.
+                                            </Text>
+                                        ) : (
+                                            <Box overflowX="auto">
+                                                <Table.Root size="sm">
+                                                    <Table.Header>
+                                                        <Table.Row>
+                                                            <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                                                            <Table.ColumnHeader>Disponible</Table.ColumnHeader>
+                                                            <Table.ColumnHeader>Cantidad a salir</Table.ColumnHeader>
+                                                            <Table.ColumnHeader>Acción</Table.ColumnHeader>
+                                                        </Table.Row>
+                                                    </Table.Header>
+                                                    <Table.Body>
+                                                        {lotesSeleccionados.map((lote) => (
+                                                            <Table.Row key={lote.loteId}>
+                                                                <Table.Cell>{lote.batchNumber}</Table.Cell>
+                                                                <Table.Cell>{lote.cantidadDisponible.toFixed(4)}</Table.Cell>
+                                                                <Table.Cell>
+                                                                    <CustomDecimalInput
+                                                                        value={lote.cantidadAsignada}
+                                                                        onChange={(value) => handleCantidadChange(lote.loteId, value)}
+                                                                        min={0}
+                                                                        maxDecimals={4}
+                                                                        size="sm"
+                                                                        width="120px"
+                                                                        placeholder="0.0000"
+                                                                    />
+                                                                </Table.Cell>
+                                                                <Table.Cell>
+                                                                    <IconButton
+                                                                        aria-label="Remover lote"
+                                                                        size="sm"
+                                                                        colorPalette="red"
+                                                                        onClick={() => handleRemoveLote(lote.loteId)}><LuTrash2 /></IconButton>
+                                                                </Table.Cell>
+                                                            </Table.Row>
+                                                        ))}
+                                                    </Table.Body>
+                                                </Table.Root>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                </Flex>
+                            </Flex>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button variant="ghost" mr={3} onClick={onClose}>
+                                Cancelar
+                            </Button>
+                            <Button
+                                colorPalette="teal"
+                                onClick={() => {
+                                    onAccept(lotesSeleccionados);
+                                    onClose();
+                                }}
+                                disabled={!canAccept}
+                            >
+                                Confirmar lotes
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

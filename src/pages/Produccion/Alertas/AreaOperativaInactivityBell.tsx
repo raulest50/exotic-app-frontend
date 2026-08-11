@@ -1,4 +1,5 @@
-import { Icon, Tooltip } from "@chakra-ui/react";
+import { Steps, Icon } from "@chakra-ui/react";
+import { Tooltip } from '@/components/ui/tooltip';
 import { FiBell } from "react-icons/fi";
 
 import type { AreaOperativaInactivityAlertDTO } from "./areaOperativaInactivityAlerts.types.ts";
@@ -72,15 +73,14 @@ export default function AreaOperativaInactivityBell({ alert }: AreaOperativaInac
     const visual = resolveBellVisual(alert);
 
     return (
-        <Tooltip label={visual.label} hasArrow>
+        <Tooltip content={visual.label} showArrow>
             <span>
                 <Icon
-                    as={FiBell}
                     color={visual.color}
                     boxSize={4}
                     aria-label={visual.label}
                     verticalAlign="middle"
-                />
+                    asChild><FiBell /></Icon>
             </span>
         </Tooltip>
     );

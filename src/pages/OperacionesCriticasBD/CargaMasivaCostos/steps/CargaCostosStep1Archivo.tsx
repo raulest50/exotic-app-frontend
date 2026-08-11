@@ -1,18 +1,4 @@
-import {
-    Alert,
-    AlertDescription,
-    AlertIcon,
-    AlertTitle,
-    Box,
-    Button,
-    FormControl,
-    FormHelperText,
-    FormLabel,
-    Input,
-    Text,
-    Textarea,
-    VStack,
-} from "@chakra-ui/react";
+import { Steps, Alert, Box, Button, Input, Text, Textarea, VStack, Field } from "@chakra-ui/react";
 import { ChangeEvent } from "react";
 import { CargaCostosErrorFila } from "../types";
 
@@ -38,49 +24,49 @@ export default function CargaCostosStep1Archivo({
     onPrepare,
 }: CargaCostosStep1ArchivoProps) {
     return (
-        <VStack align="stretch" spacing={5}>
-            <Alert status="warning">
-                <AlertIcon />
+        <VStack align="stretch" gap={5}>
+            <Alert.Root status="warning">
+                <Alert.Indicator />
                 <Box>
-                    <AlertTitle>Actualizacion exclusiva de costos</AlertTitle>
-                    <AlertDescription>
+                    <Alert.Title>Actualizacion exclusiva de costos</Alert.Title>
+                    <Alert.Description>
                         Se leen CODIGO, DESCRIPCION, NOMBRE PROVEEDOR y VLR SIN IVA UNIT.
                         No se modifican existencias, IVA, nombres ni proveedores.
-                    </AlertDescription>
+                    </Alert.Description>
                 </Box>
-            </Alert>
+            </Alert.Root>
 
-            <FormControl isRequired>
-                <FormLabel htmlFor="carga-costos-file">Informe de compras (.xlsx)</FormLabel>
+            <Field.Root required>
+                <Field.Label htmlFor="carga-costos-file">Informe de compras (.xlsx)</Field.Label>
                 <Input
                     key={fileInputKey}
                     id="carga-costos-file"
                     type="file"
                     accept=".xlsx"
                     p={1}
-                    onChange={onFileChange}
+                    onValueChange={onFileChange}
                 />
-                <FormHelperText>Maximo 10 MB y 5.000 materiales validos.</FormHelperText>
-            </FormControl>
+                <Field.HelperText>Maximo 10 MB y 5.000 materiales validos.</Field.HelperText>
+            </Field.Root>
 
-            <FormControl isRequired isInvalid={motivo.length > 500}>
-                <FormLabel htmlFor="carga-costos-motivo">Motivo del cambio</FormLabel>
+            <Field.Root required invalid={motivo.length > 500}>
+                <Field.Label htmlFor="carga-costos-motivo">Motivo del cambio</Field.Label>
                 <Textarea
                     id="carga-costos-motivo"
                     maxLength={500}
                     value={motivo}
-                    onChange={(event) => onMotivoChange(event.target.value)}
+                    onValueChange={(event) => onMotivoChange(event.target.value)}
                     placeholder="Ej. Actualizacion de costos segun informe de compras de julio"
                 />
-                <FormHelperText>{motivo.length}/500 caracteres. Quedara registrado en el historial.</FormHelperText>
-            </FormControl>
+                <Field.HelperText>{motivo.length}/500 caracteres. Quedara registrado en el historial.</Field.HelperText>
+            </Field.Root>
 
             {validationErrors.length > 0 && (
-                <Alert status="error" alignItems="flex-start">
-                    <AlertIcon />
+                <Alert.Root status="error" alignItems="flex-start">
+                    <Alert.Indicator />
                     <Box w="full">
-                        <AlertTitle>Corrija el archivo antes de continuar</AlertTitle>
-                        <VStack as="ul" align="stretch" mt={2} spacing={1} maxH="260px" overflowY="auto">
+                        <Alert.Title>Corrija el archivo antes de continuar</Alert.Title>
+                        <VStack as="ul" align="stretch" mt={2} gap={1} maxH="260px" overflowY="auto">
                             {validationErrors.map((error, index) => (
                                 <Text as="li" key={`${error.fila}-${error.codigo}-${error.campo}-${index}`} fontSize="sm">
                                     {error.fila > 0 ? `Fila ${error.fila}: ` : ""}
@@ -91,14 +77,14 @@ export default function CargaCostosStep1Archivo({
                             ))}
                         </VStack>
                     </Box>
-                </Alert>
+                </Alert.Root>
             )}
 
             <Button
-                colorScheme="blue"
+                colorPalette="blue"
                 onClick={onPrepare}
-                isLoading={busy}
-                isDisabled={!file || !motivo.trim() || motivo.length > 500}
+                loading={busy}
+                disabled={!file || !motivo.trim() || motivo.length > 500}
             >
                 Validar y preparar
             </Button>

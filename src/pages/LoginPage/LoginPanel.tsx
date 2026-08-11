@@ -1,13 +1,13 @@
 // src/pages/LoginPage.tsx
 import React, { useState, useEffect, useRef } from 'react';
+import { useColorModeValue } from "../../components/ui/color-mode";
 import { useAuth } from '../../context/AuthContext.tsx';
 import { useNavigate } from 'react-router-dom';
 import {
+    Steps,
     Button,
     Container,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
     Input,
     Image,
@@ -16,7 +16,7 @@ import {
     useToast,
     Spinner,
     Text,
-    useColorModeValue
+    Field,
 } from "@chakra-ui/react";
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL.tsx';
@@ -62,31 +62,31 @@ const FormularioLogin: React.FC<FormularioLoginProps> = ({
             <Heading fontSize={{ base: "2xl", md: "3xl" }} textAlign="center">
                 Login Panel
             </Heading>
-            <FormControl isRequired w="full">
-                <FormLabel>Usuario</FormLabel>
+            <Field.Root required w="full">
+                <Field.Label>Usuario</Field.Label>
                 <Input
                     placeholder="username"
                     value={username}
-                    onChange={e => setUsername(e.target.value)}
-                    isDisabled={isLoading}
+                    onValueChange={e => setUsername(e.target.value)}
+                    disabled={isLoading}
                 />
-            </FormControl>
-            <FormControl isRequired w="full">
-                <FormLabel>Contraseña</FormLabel>
+            </Field.Root>
+            <Field.Root required w="full">
+                <Field.Label>Contraseña</Field.Label>
                 <Input
                     placeholder="password"
                     type="password"
                     value={password}
-                    onChange={e => setPassword(e.target.value)}
+                    onValueChange={e => setPassword(e.target.value)}
                     required
-                    isDisabled={isLoading}
+                    disabled={isLoading}
                 />
-            </FormControl>
+            </Field.Root>
             <Button
                 variant="solid"
-                colorScheme={"blue"}
+                colorPalette={"blue"}
                 onClick={handleLogin}
-                isLoading={isLoading}
+                loading={isLoading}
                 loadingText="Iniciando sesión"
                 spinnerPlacement="start"
                 w={{ base: "full", sm: "auto" }}
@@ -124,22 +124,22 @@ const FormularioForgot: React.FC<FormularioForgotProps> = ({
             <Heading fontSize={{ base: "2xl", md: "3xl" }} textAlign="center">
                 Recuperar Contraseña
             </Heading>
-            <FormControl isRequired w="full">
-                <FormLabel>Correo Electrónico</FormLabel>
+            <Field.Root required w="full">
+                <Field.Label>Correo Electrónico</Field.Label>
                 <Input
                     placeholder="correo@ejemplo.com"
                     type="email"
                     value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    isDisabled={isLoading}
+                    onValueChange={e => setEmail(e.target.value)}
+                    disabled={isLoading}
                 />
-            </FormControl>
+            </Field.Root>
             <Button
                 variant="solid"
-                colorScheme={"blue"}
+                colorPalette={"blue"}
                 onClick={() => onHandleEnviarForgot(email)}
-                isDisabled={isRequestDisabled}
-                isLoading={isLoading}
+                disabled={isRequestDisabled}
+                loading={isLoading}
                 loadingText="Enviando correo"
                 spinnerPlacement="start"
                 w={{ base: "full", sm: "auto" }}

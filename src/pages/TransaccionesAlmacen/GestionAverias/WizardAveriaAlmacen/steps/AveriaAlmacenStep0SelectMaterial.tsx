@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+    Steps,
     Box,
     Button,
     Flex,
@@ -81,51 +82,49 @@ export default function AveriaAlmacenStep0SelectMaterial({
                 Paso 1: Selección de Materiales por Lote
             </Text>
 
-            <VStack spacing={4} align="stretch">
+            <VStack gap={4} align="stretch">
                 <Box>
-                    <Button colorScheme="teal" onClick={() => setIsPickerOpen(true)}>
+                    <Button colorPalette="teal" onClick={() => setIsPickerOpen(true)}>
                         Agregar Material
                     </Button>
                 </Box>
 
                 <Box w="full" overflowX="auto">
                     {selectedItems.length > 0 ? (
-                        <Table variant="simple" size="sm">
-                            <Thead>
-                                <Tr>
-                                    <Th>Código</Th>
-                                    <Th>Nombre</Th>
-                                    <Th>Lote</Th>
-                                    <Th isNumeric>Cantidad Disponible</Th>
-                                    <Th w="50px"></Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                        <Table.Root variant="simple" size="sm">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>Código</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign='end'>Cantidad Disponible</Table.ColumnHeader>
+                                    <Table.ColumnHeader w="50px"></Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {selectedItems.map((item) => {
                                     const key = itemKey(item);
                                     return (
-                                        <Tr key={key}>
-                                            <Td>{item.productoId}</Td>
-                                            <Td>{item.productoNombre}</Td>
-                                            <Td>{item.batchNumber}</Td>
-                                            <Td isNumeric>
+                                        <Table.Row key={key}>
+                                            <Table.Cell>{item.productoId}</Table.Cell>
+                                            <Table.Cell>{item.productoNombre}</Table.Cell>
+                                            <Table.Cell>{item.batchNumber}</Table.Cell>
+                                            <Table.Cell textAlign='end'>
                                                 {item.cantidadDisponible.toFixed(2)} {item.tipoUnidades}
-                                            </Td>
-                                            <Td>
+                                            </Table.Cell>
+                                            <Table.Cell>
                                                 <IconButton
                                                     aria-label="Eliminar"
-                                                    icon={<FiX />}
                                                     size="sm"
-                                                    colorScheme="red"
+                                                    colorPalette="red"
                                                     variant="ghost"
-                                                    onClick={() => handleRemoveItem(key)}
-                                                />
-                                            </Td>
-                                        </Tr>
+                                                    onClick={() => handleRemoveItem(key)}><FiX /></IconButton>
+                                            </Table.Cell>
+                                        </Table.Row>
                                     );
                                 })}
-                            </Tbody>
-                        </Table>
+                            </Table.Body>
+                        </Table.Root>
                     ) : (
                         <Text textAlign="center" color="app.textSubtle" py={8}>
                             No hay materiales seleccionados. Use el botón "Agregar Material" para buscar por lote.
@@ -135,9 +134,9 @@ export default function AveriaAlmacenStep0SelectMaterial({
 
                 <Flex gap={4} pt={2}>
                     <Button
-                        colorScheme="blue"
+                        colorPalette="blue"
                         onClick={handleSiguiente}
-                        isDisabled={selectedItems.length === 0}
+                        disabled={selectedItems.length === 0}
                     >
                         Siguiente
                     </Button>

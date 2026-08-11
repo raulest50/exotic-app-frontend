@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Box,
     Button,
     Flex,
@@ -16,9 +16,9 @@ import {
     Tr,
     Tag,
 } from '@chakra-ui/react';
-import {DeleteIcon} from '@chakra-ui/icons';
 import {ItemPendienteReposicion, LoteSeleccionado} from '../types';
 import {LotePickerDispensacion} from './AsistenteDispensacionComponents/LotePickerDispensacion';
+import { LuTrash2 } from 'react-icons/lu';
 
 interface SeccionReposicionAveriasProps {
     itemsPendientes: ItemPendienteReposicion[];
@@ -80,34 +80,40 @@ export default function SeccionReposicionAverias({
                         <Heading fontFamily='Comfortaa Variable' size='md' color='orange.700'>
                             Reposición de Material por Averías
                         </Heading>
-                        <Tag colorScheme='orange' size='sm'>Reposición</Tag>
+                        <Tag.Root colorPalette='orange' size='sm'>Reposición</Tag.Root>
                     </Flex>
                     <Text fontFamily='Comfortaa Variable' fontSize='sm' color='app.textMuted' textAlign='center'>
                         Los siguientes materiales tienen averías reportadas pendientes de reposición.
                         Puede definir lotes para dispensar material de reposición sin requerir privilegios especiales.
                     </Text>
 
-                    <Alert status='info' variant='left-accent' borderRadius='md' w='full'>
-                        <AlertIcon />
+                    <Alert.Root
+                        status='info'
+                        variant='subtle'
+                        borderRadius='md'
+                        w='full'
+                        borderStartWidth='3px'
+                        borderStartColor='colorPalette.solid'>
+                        <Alert.Indicator />
                         <Text fontSize='sm'>
                             La cantidad máxima dispensable por reposición se limita automáticamente a lo reportado como avería.
                         </Text>
-                    </Alert>
+                    </Alert.Root>
 
                     <Box w='full' overflowX='auto'>
-                        <Table size='sm' variant='simple'>
-                            <Thead>
-                                <Tr bg='orange.100'>
-                                    <Th>Producto</Th>
-                                    <Th>Unidad</Th>
-                                    <Th isNumeric>Averiado</Th>
-                                    <Th isNumeric>Ya Repuesto</Th>
-                                    <Th isNumeric>Pendiente</Th>
-                                    <Th isNumeric>Seleccionado</Th>
-                                    <Th textAlign='center'>Acción</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                        <Table.Root size='sm' variant='simple'>
+                            <Table.Header>
+                                <Table.Row bg='orange.100'>
+                                    <Table.ColumnHeader>Producto</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign='end'>Averiado</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign='end'>Ya Repuesto</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign='end'>Pendiente</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign='end'>Seleccionado</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign='center'>Acción</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {itemsPendientes.map((item) => {
                                     const totalSel = getTotalSeleccionado(item.productoId);
                                     const lotesSeleccionados = lotesPorReposicionAveria.get(item.productoId) || [];
@@ -115,70 +121,68 @@ export default function SeccionReposicionAverias({
 
                                     return (
                                         <React.Fragment key={item.productoId}>
-                                            <Tr>
-                                                <Td>
+                                            <Table.Row>
+                                                <Table.Cell>
                                                     <Text fontSize='sm' fontWeight='semibold'>{item.productoNombre}</Text>
                                                     <Text fontSize='xs' color='app.textSubtle'>{item.productoId}</Text>
-                                                </Td>
-                                                <Td>{item.tipoUnidades}</Td>
-                                                <Td isNumeric color='red.600' fontWeight='semibold'>
+                                                </Table.Cell>
+                                                <Table.Cell>{item.tipoUnidades}</Table.Cell>
+                                                <Table.Cell color='red.600' fontWeight='semibold' textAlign='end'>
                                                     {item.cantidadAveriada.toFixed(2)}
-                                                </Td>
-                                                <Td isNumeric color='green.600'>
+                                                </Table.Cell>
+                                                <Table.Cell color='green.600' textAlign='end'>
                                                     {item.cantidadRepuesta.toFixed(2)}
-                                                </Td>
-                                                <Td isNumeric fontWeight='bold' color='orange.600'>
+                                                </Table.Cell>
+                                                <Table.Cell fontWeight='bold' color='orange.600' textAlign='end'>
                                                     {item.cantidadPendiente.toFixed(2)}
-                                                </Td>
-                                                <Td isNumeric color={completo ? 'green.600' : 'app.textMuted'}>
+                                                </Table.Cell>
+                                                <Table.Cell color={completo ? 'green.600' : 'app.textMuted'} textAlign='end'>
                                                     {totalSel.toFixed(2)}
-                                                </Td>
-                                                <Td textAlign='center'>
+                                                </Table.Cell>
+                                                <Table.Cell textAlign='center'>
                                                     <Button
                                                         size='xs'
-                                                        colorScheme='orange'
+                                                        colorPalette='orange'
                                                         onClick={() => handleAbrirModal(item)}
-                                                        isDisabled={completo}
+                                                        disabled={completo}
                                                     >
                                                         Definir Lote
                                                     </Button>
-                                                </Td>
-                                            </Tr>
+                                                </Table.Cell>
+                                            </Table.Row>
                                             {lotesSeleccionados.map((lote) => (
-                                                <Tr key={`${item.productoId}-lote-${lote.loteId}`} bg='orange.50'>
-                                                    <Td colSpan={2} pl={8}>
+                                                <Table.Row key={`${item.productoId}-lote-${lote.loteId}`} bg='orange.50'>
+                                                    <Table.Cell colSpan={2} pl={8}>
                                                         <Text fontSize='xs' color='app.textMuted'>
                                                             Lote: <strong>{lote.batchNumber}</strong>
                                                         </Text>
-                                                    </Td>
-                                                    <Td colSpan={2}>
+                                                    </Table.Cell>
+                                                    <Table.Cell colSpan={2}>
                                                         <Text fontSize='xs' color='app.textMuted'>
                                                             {lote.expirationDate ? `Vence: ${lote.expirationDate}` : ''}
                                                         </Text>
-                                                    </Td>
-                                                    <Td isNumeric>
+                                                    </Table.Cell>
+                                                    <Table.Cell textAlign='end'>
                                                         <Text fontSize='xs' fontWeight='semibold'>
                                                             {lote.cantidad.toFixed(2)}
                                                         </Text>
-                                                    </Td>
-                                                    <Td />
-                                                    <Td textAlign='center'>
+                                                    </Table.Cell>
+                                                    <Table.Cell />
+                                                    <Table.Cell textAlign='center'>
                                                         <IconButton
                                                             aria-label='Eliminar lote'
-                                                            icon={<DeleteIcon />}
                                                             size='xs'
-                                                            colorScheme='red'
+                                                            colorPalette='red'
                                                             variant='ghost'
-                                                            onClick={() => handleRemoveLote(item.productoId, lote.loteId)}
-                                                        />
-                                                    </Td>
-                                                </Tr>
+                                                            onClick={() => handleRemoveLote(item.productoId, lote.loteId)}><LuTrash2 /></IconButton>
+                                                    </Table.Cell>
+                                                </Table.Row>
                                             ))}
                                         </React.Fragment>
                                     );
                                 })}
-                            </Tbody>
-                        </Table>
+                            </Table.Body>
+                        </Table.Root>
                     </Box>
                 </Flex>
             </Box>

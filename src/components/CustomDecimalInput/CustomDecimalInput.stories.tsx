@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { VStack, HStack, Text, Box } from '@chakra-ui/react';
+import { Steps, VStack, HStack, Text, Box } from '@chakra-ui/react';
 import CustomDecimalInput from './CustomDecimalInput';
 
 export const Default = () => {
@@ -7,7 +7,7 @@ export const Default = () => {
 
   return (
     <Box p={8} maxW="400px">
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         <Text fontWeight="bold">Input Decimal Básico</Text>
         <CustomDecimalInput
           value={value}
@@ -31,7 +31,7 @@ export const WithMinValue = () => {
 
   return (
     <Box p={8} maxW="400px">
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         <Text fontWeight="bold">Con valor mínimo (min=1)</Text>
         <CustomDecimalInput
           value={value}
@@ -53,7 +53,7 @@ export const WithMaxDecimals = () => {
 
   return (
     <Box p={8} maxW="400px">
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         <Text fontWeight="bold">Con máximo de 2 decimales</Text>
         <CustomDecimalInput
           value={value}
@@ -78,7 +78,7 @@ export const WithoutEmptyAllowed = () => {
 
   return (
     <Box p={8} maxW="400px">
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         <Text fontWeight="bold">Sin permitir vacío (allowEmpty=false)</Text>
         <CustomDecimalInput
           value={value}
@@ -104,7 +104,7 @@ export const SmallSize = () => {
 
   return (
     <Box p={8} maxW="400px">
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         <Text fontWeight="bold">Tamaño pequeño (size="sm")</Text>
         <CustomDecimalInput
           value={value}

@@ -1,19 +1,11 @@
 import React, { useState } from "react";
 import {
+    Steps,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     Input,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
-    Select,
+    NativeSelect,
     Table,
     Tbody,
     Td,
@@ -23,6 +15,9 @@ import {
     Tr,
     useToast,
     VStack,
+    Field,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
@@ -99,126 +94,136 @@ export default function OrdenCompraPicker({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="xl">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Seleccionar orden de compra</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <VStack spacing={4} align="stretch">
-                        <Flex gap={2} flexWrap="wrap">
-                            <FormControl flex="1" minW="120px">
-                                <FormLabel>Desde</FormLabel>
-                                <Input
-                                    type="date"
-                                    value={date1}
-                                    onChange={(e) => setDate1(e.target.value)}
-                                />
-                            </FormControl>
-                            <FormControl flex="1" minW="120px">
-                                <FormLabel>Hasta</FormLabel>
-                                <Input
-                                    type="date"
-                                    value={date2}
-                                    onChange={(e) => setDate2(e.target.value)}
-                                />
-                            </FormControl>
-                            <FormControl flex="1" minW="140px">
-                                <FormLabel>Estado</FormLabel>
-                                <Select
-                                    value={estados}
-                                    onChange={(e) => setEstados(e.target.value)}
-                                >
-                                    <option value="-1,0,1,2,3">Todas</option>
-                                    <option value="0,1,2">Pendientes</option>
-                                    <option value="3">Cerradas</option>
-                                    <option value="-1">Canceladas</option>
-                                </Select>
-                            </FormControl>
-                            <Button
-                                colorScheme="teal"
-                                onClick={() => handleSearch(0)}
-                                isLoading={isLoading}
-                                loadingText="Buscando"
-                                alignSelf="flex-end"
-                            >
-                                Buscar
-                            </Button>
-                        </Flex>
-                        <Box w="full" overflowX="auto">
-                            {ordenes.length > 0 ? (
-                                <>
-                                    <Table variant="simple" size="sm">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>ID</Th>
-                                                <Th>Fecha</Th>
-                                                <Th>Proveedor</Th>
-                                                <Th>Estado</Th>
-                                                <Th>Total</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
-                                            {ordenes.map((orden) => (
-                                                <Tr
-                                                    key={orden.ordenCompraId}
-                                                    onClick={() => setSelectedOrdenId(orden.ordenCompraId ?? null)}
-                                                    bg={selectedOrdenId === orden.ordenCompraId ? "app.rowSelectedTeal" : "transparent"}
-                                                    _hover={{ bg: "app.rowHover", cursor: "pointer" }}
-                                                >
-                                                    <Td>{orden.ordenCompraId}</Td>
-                                                    <Td>{orden.fechaEmision ? format(new Date(orden.fechaEmision), "yyyy-MM-dd") : "-"}</Td>
-                                                    <Td>{orden.proveedor?.nombre ?? "-"}</Td>
-                                                    <Td>{orden.estado}</Td>
-                                                    <Td>{orden.totalPagar != null ? orden.totalPagar.toLocaleString() : "-"}</Td>
-                                                </Tr>
-                                            ))}
-                                        </Tbody>
-                                    </Table>
-                                    {totalPages > 1 && (
-                                        <Flex justifyContent="center" mt={2} gap={2}>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => handleSearch(Math.max(0, page - 1))}
-                                                isDisabled={page === 0 || isLoading}
-                                            >
-                                                Anterior
-                                            </Button>
-                                            <Text alignSelf="center">
-                                                Página {page + 1} de {totalPages}
-                                            </Text>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => handleSearch(Math.min(totalPages - 1, page + 1))}
-                                                isDisabled={page >= totalPages - 1 || isLoading}
-                                            >
-                                                Siguiente
-                                            </Button>
-                                        </Flex>
+        <Dialog.Root open={isOpen} size='xl' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
+
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Seleccionar orden de compra</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <VStack gap={4} align="stretch">
+                                <Flex gap={2} flexWrap="wrap">
+                                    <Field.Root flex="1" minW="120px">
+                                        <Field.Label>Desde</Field.Label>
+                                        <Input
+                                            type="date"
+                                            value={date1}
+                                            onValueChange={(e) => setDate1(e.target.value)}
+                                        />
+                                    </Field.Root>
+                                    <Field.Root flex="1" minW="120px">
+                                        <Field.Label>Hasta</Field.Label>
+                                        <Input
+                                            type="date"
+                                            value={date2}
+                                            onValueChange={(e) => setDate2(e.target.value)}
+                                        />
+                                    </Field.Root>
+                                    <Field.Root flex="1" minW="140px">
+                                        <Field.Label>Estado</Field.Label>
+                                        <NativeSelect.Root>
+                                            <NativeSelect.Field value={estados} onValueChange={(e) => setEstados(e.target.value)}>
+                                                <option value="-1,0,1,2,3">Todas</option>
+                                                <option value="0,1,2">Pendientes</option>
+                                                <option value="3">Cerradas</option>
+                                                <option value="-1">Canceladas</option>
+                                            </NativeSelect.Field>
+                                            <NativeSelect.Indicator />
+                                        </NativeSelect.Root>
+                                    </Field.Root>
+                                    <Button
+                                        colorPalette="teal"
+                                        onClick={() => handleSearch(0)}
+                                        loading={isLoading}
+                                        loadingText="Buscando"
+                                        alignSelf="flex-end"
+                                    >
+                                        Buscar
+                                    </Button>
+                                </Flex>
+                                <Box w="full" overflowX="auto">
+                                    {ordenes.length > 0 ? (
+                                        <>
+                                            <Table.Root variant="simple" size="sm">
+                                                <Table.Header>
+                                                    <Table.Row>
+                                                        <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Proveedor</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Total</Table.ColumnHeader>
+                                                    </Table.Row>
+                                                </Table.Header>
+                                                <Table.Body>
+                                                    {ordenes.map((orden) => (
+                                                        <Table.Row
+                                                            key={orden.ordenCompraId}
+                                                            onClick={() => setSelectedOrdenId(orden.ordenCompraId ?? null)}
+                                                            bg={selectedOrdenId === orden.ordenCompraId ? "app.rowSelectedTeal" : "transparent"}
+                                                            _hover={{ bg: "app.rowHover", cursor: "pointer" }}
+                                                        >
+                                                            <Table.Cell>{orden.ordenCompraId}</Table.Cell>
+                                                            <Table.Cell>{orden.fechaEmision ? format(new Date(orden.fechaEmision), "yyyy-MM-dd") : "-"}</Table.Cell>
+                                                            <Table.Cell>{orden.proveedor?.nombre ?? "-"}</Table.Cell>
+                                                            <Table.Cell>{orden.estado}</Table.Cell>
+                                                            <Table.Cell>{orden.totalPagar != null ? orden.totalPagar.toLocaleString() : "-"}</Table.Cell>
+                                                        </Table.Row>
+                                                    ))}
+                                                </Table.Body>
+                                            </Table.Root>
+                                            {totalPages > 1 && (
+                                                <Flex justifyContent="center" mt={2} gap={2}>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => handleSearch(Math.max(0, page - 1))}
+                                                        disabled={page === 0 || isLoading}
+                                                    >
+                                                        Anterior
+                                                    </Button>
+                                                    <Text alignSelf="center">
+                                                        Página {page + 1} de {totalPages}
+                                                    </Text>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => handleSearch(Math.min(totalPages - 1, page + 1))}
+                                                        disabled={page >= totalPages - 1 || isLoading}
+                                                    >
+                                                        Siguiente
+                                                    </Button>
+                                                </Flex>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <Text textAlign="center" color="app.textSubtle" py={4}>
+                                            {isLoading ? "Cargando..." : "Use los filtros y pulse Buscar para listar órdenes."}
+                                        </Text>
                                     )}
-                                </>
-                            ) : (
-                                <Text textAlign="center" color="app.textSubtle" py={4}>
-                                    {isLoading ? "Cargando..." : "Use los filtros y pulse Buscar para listar órdenes."}
-                                </Text>
-                            )}
-                        </Box>
-                    </VStack>
-                </ModalBody>
-                <ModalFooter>
-                    <Button
-                        colorScheme="teal"
-                        mr={3}
-                        onClick={handleConfirm}
-                        isDisabled={selectedOrdenId == null}
-                    >
-                        Seleccionar
-                    </Button>
-                    <Button variant="ghost" onClick={handleCancel}>
-                        Cancelar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                                </Box>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button
+                                colorPalette="teal"
+                                mr={3}
+                                onClick={handleConfirm}
+                                disabled={selectedOrdenId == null}
+                            >
+                                Seleccionar
+                            </Button>
+                            <Button variant="ghost" onClick={handleCancel}>
+                                Cancelar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

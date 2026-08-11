@@ -1,15 +1,29 @@
 // IngresoOCMStep1VerifyQuantities.tsx
 import {
+    Steps,
     Button,
-    Flex, FormControl, FormLabel, GridItem, HStack, Input, Select, SimpleGrid, Textarea, useToast,
-    Spinner, Text, IconButton, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
+    Flex,
+    GridItem,
+    HStack,
+    Input,
+    NativeSelect,
+    SimpleGrid,
+    Textarea,
+    useToast,
+    Spinner,
+    Text,
+    IconButton,
+    useDisclosure,
+    Field,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
-import { QuestionIcon, CheckIcon } from "@chakra-ui/icons";
 import { useState, useEffect } from "react";
 import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL.tsx';
 import { ProductoSemiter, UNIDADES, TIPOS_PRODUCTOS, Categoria } from "../../../types.tsx";
 import { normalizeProductId, validateProductId } from "../../../productIdUtils.ts";
+import { LuCheck, LuHelpCircle } from 'react-icons/lu';
 
 /** Calcula el prefijo de lote a partir del nombre: primera letra de cada palabra en mayuscula. */
 function calcularPrefijoDesdeNombre(nombre: string): string {
@@ -52,7 +66,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
 
     const endPoints = new EndPointsURL();
     const toast = useToast();
-    const { isOpen: isHelpOpen, onOpen: onHelpOpen, onClose: onHelpClose } = useDisclosure();
+    const { open: isHelpOpen, onOpen: onHelpOpen, onClose: onHelpClose } = useDisclosure();
 
     // Funcion para cargar las categorias
     const fetchCategorias = async () => {
@@ -333,81 +347,87 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
             <SimpleGrid w="full" h="full" columns={3} gap="2em">
 
                 <GridItem colSpan={1}>
-                    <FormControl isRequired={true}>
-                        <FormLabel>Codigo Id</FormLabel>
+                    <Field.Root required={true}>
+                        <Field.Label>Codigo Id</Field.Label>
                         <Input
                             value={productoId}
-                            onChange={(e) => setProductoId(normalizeProductId(e.target.value))}
+                            onValueChange={(e) => setProductoId(normalizeProductId(e.target.value))}
                             variant="filled"
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
 
                 <GridItem colSpan={2}>
-                    <FormControl isRequired={true}>
-                        <FormLabel>Nombre</FormLabel>
+                    <Field.Root required={true}>
+                        <Field.Label>Nombre</Field.Label>
                         <Input
                             value={nombre}
-                            onChange={(e) => setNombre(e.target.value)}
+                            onValueChange={(e) => setNombre(e.target.value)}
                             variant="filled"
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
 
                 <GridItem colSpan={1}>
                     <Flex w="full" direction="row" align="flex-end" justify="space-around" gap={4}>
-                        <Select
-                            flex="1"
-                            value={tipoUnidades}
-                            onChange={(e) => setTipoUnidades(e.target.value)}
-                        >
-                            <option value={UNIDADES.KG}>{UNIDADES.KG}</option>
-                            <option value={UNIDADES.L}>{UNIDADES.L}</option>
-                            <option value={UNIDADES.U}>{UNIDADES.U}</option>
-                            <option value={UNIDADES.G}>{UNIDADES.G}</option>
-                        </Select>
-                        <FormControl flex="4" isRequired>
-                            <FormLabel>Contenido por envase</FormLabel>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                flex="1"
+                                value={tipoUnidades}
+                                onValueChange={(e) => setTipoUnidades(e.target.value)}>
+                                <option value={UNIDADES.KG}>{UNIDADES.KG}</option>
+                                <option value={UNIDADES.L}>{UNIDADES.L}</option>
+                                <option value={UNIDADES.U}>{UNIDADES.U}</option>
+                                <option value={UNIDADES.G}>{UNIDADES.G}</option>
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                        <Field.Root flex="4" required>
+                            <Field.Label>Contenido por envase</Field.Label>
                             <Input
                                 value={cantidadUnidad}
-                                onChange={(e) => setCantidadUnidad(e.target.value)}
+                                onValueChange={(e) => setCantidadUnidad(e.target.value)}
                                 variant="filled"
                             />
-                        </FormControl>
+                        </Field.Root>
                     </Flex>
                 </GridItem>
 
                 <GridItem colSpan={1}>
                     <Flex w="full" direction="row" align="flex-end" justify="space-around" gap={4}>
-                        <FormControl>
-                            <FormLabel> Seleccionar Tipo de Producto</FormLabel>
-                            <Select
-                                flex="1"
-                                value={tipo_producto}
-                                onChange={(e) => setTipo_producto(e.target.value)}
-                            >
-                                <option value={TIPOS_PRODUCTOS.semiTerminado}>Semiterminado</option>
-                                <option value={TIPOS_PRODUCTOS.terminado}>Terminado</option>
-                            </Select>
-                        </FormControl>
+                        <Field.Root>
+                            <Field.Label> Seleccionar Tipo de Producto</Field.Label>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    flex="1"
+                                    value={tipo_producto}
+                                    onValueChange={(e) => setTipo_producto(e.target.value)}>
+                                    <option value={TIPOS_PRODUCTOS.semiTerminado}>Semiterminado</option>
+                                    <option value={TIPOS_PRODUCTOS.terminado}>Terminado</option>
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
+                        </Field.Root>
                     </Flex>
                 </GridItem>
 
                 <GridItem colSpan={1} display={tipo_producto === TIPOS_PRODUCTOS.terminado ? "flex" : "none"}>
-                    <FormControl isRequired={tipo_producto === TIPOS_PRODUCTOS.terminado}>
-                        <FormLabel>Categoria</FormLabel>
-                        <Select
-                            value={selectedCategoriaId || ""}
-                            onChange={(e) => setSelectedCategoriaId(Number(e.target.value))}
-                            isDisabled={loadingCategorias || categoriasDisponibles.length === 0}
-                            placeholder="Seleccione una categoria"
-                        >
-                            {categoriasDisponibles.map((categoria) => (
-                                <option key={categoria.categoriaId} value={categoria.categoriaId}>
-                                    {categoria.categoriaNombre}
-                                </option>
-                            ))}
-                        </Select>
+                    <Field.Root required={tipo_producto === TIPOS_PRODUCTOS.terminado}>
+                        <Field.Label>Categoria</Field.Label>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                value={selectedCategoriaId || ""}
+                                onValueChange={(e) => setSelectedCategoriaId(Number(e.target.value))}
+                                disabled={loadingCategorias || categoriasDisponibles.length === 0}
+                                placeholder="Seleccione una categoria">
+                                {categoriasDisponibles.map((categoria) => (
+                                    <option key={categoria.categoriaId} value={categoria.categoriaId}>
+                                        {categoria.categoriaNombre}
+                                    </option>
+                                ))}
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
                         {loadingCategorias && <Spinner size="sm" ml={2} />}
                         {errorCategorias && (
                             <Text color="red.500" fontSize="sm" mt={1}>
@@ -419,67 +439,63 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                                 No hay categorias disponibles. Por favor, cree una categoria primero.
                             </Text>
                         )}
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
 
                 <GridItem colSpan={3} display={tipo_producto === TIPOS_PRODUCTOS.terminado ? "flex" : "none"}>
-                    <FormControl isRequired={tipo_producto === TIPOS_PRODUCTOS.terminado}>
-                        <FormLabel>Prefijo de lote</FormLabel>
-                        <HStack align="center" spacing={2}>
+                    <Field.Root required={tipo_producto === TIPOS_PRODUCTOS.terminado}>
+                        <Field.Label>Prefijo de lote</Field.Label>
+                        <HStack align="center" gap={2}>
                             <Input
                                 value={prefijoLote}
-                                onChange={(e) => {
+                                onValueChange={(e) => {
                                     setPrefijoLote(e.target.value);
                                     setPrefijoVerificado(false);
                                 }}
                                 variant="filled"
                                 placeholder="Ej: TRK, SLA"
                                 maxLength={20}
-                                isReadOnly={modoPrefijoLote === "automatico"}
+                                readOnly={modoPrefijoLote === "automatico"}
                                 flex="1"
                             />
                             <Button
                                 size="sm"
                                 variant={modoPrefijoLote === "automatico" ? "solid" : "outline"}
-                                colorScheme="teal"
+                                colorPalette="teal"
                                 onClick={handleToggleModoPrefijo}
                             >
                                 {modoPrefijoLote === "automatico" ? "Automatico" : "Editar"}
                             </Button>
                             <IconButton
                                 aria-label="Verificar prefijo unico"
-                                icon={<CheckIcon />}
                                 size="sm"
-                                colorScheme={prefijoVerificado ? "green" : "gray"}
+                                colorPalette={prefijoVerificado ? "green" : "gray"}
                                 onClick={handleVerificarPrefijo}
-                                isLoading={verificandoPrefijo}
-                                isDisabled={!prefijoLote?.trim()}
-                            />
+                                loading={verificandoPrefijo}
+                                disabled={!prefijoLote?.trim()}><LuCheck /></IconButton>
                             <IconButton
                                 aria-label="Ayuda prefijo de lote"
-                                icon={<QuestionIcon />}
                                 size="sm"
                                 variant="outline"
-                                onClick={onHelpOpen}
-                            />
+                                onClick={onHelpOpen}><LuHelpCircle /></IconButton>
                         </HStack>
                         {prefijoVerificado && (
                             <Text color="green.600" fontSize="sm" mt={1}>
                                 Prefijo verificado y disponible.
                             </Text>
                         )}
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
 
                 <GridItem colSpan={3}>
-                    <FormControl>
-                        <FormLabel>Observaciones</FormLabel>
+                    <Field.Root>
+                        <Field.Label>Observaciones</Field.Label>
                         <Textarea
                             value={observaciones}
-                            onChange={(e) => setObservaciones(e.target.value)}
+                            onValueChange={(e) => setObservaciones(e.target.value)}
                             variant="filled"
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
 
 
@@ -487,7 +503,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
             <HStack>
                 <Button
                     variant={"solid"}
-                    colorScheme={"red"}
+                    colorPalette={"red"}
                     onClick={onClickBorrarCampos}
                 >
                     Borrar Campos
@@ -495,9 +511,9 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
 
                 <Button
                     variant={"solid"}
-                    colorScheme={"teal"}
+                    colorPalette={"teal"}
                     onClick={onClickSiguiente}
-                    isDisabled={
+                    disabled={
                         tipo_producto === TIPOS_PRODUCTOS.terminado &&
                         (categoriasDisponibles.length === 0 || !selectedCategoriaId || !prefijoVerificado)
                     }
@@ -506,32 +522,42 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                 </Button>
             </HStack>
 
-            <Modal isOpen={isHelpOpen} onClose={onHelpClose} size="md">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Prefijo de lote</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody pb={4}>
-                        <Text mb={2}>
-                            El prefijo de lote identifica de forma unica a cada producto terminado y se usa para generar
-                            los numeros de lote al crear ordenes de produccion (por ejemplo: TRK-0000001-26).
-                        </Text>
-                        <Text mb={2}>
-                            <strong>Modo automatico:</strong> El prefijo se calcula a partir del nombre del producto,
-                            tomando la primera letra de cada palabra en mayuscula. Ejemplo: &quot;Tratamiento Rizo Kids&quot; -&gt; TRK,
-                            &quot;Shampoo Liso Adulto&quot; -&gt; SLA.
-                        </Text>
-                        <Text mb={2}>
-                            <strong>Modo editar:</strong> Puede definir un prefijo propio si lo desea. El prefijo debe ser
-                            unico entre todos los productos terminados.
-                        </Text>
-                        <Text mb={2}>
-                            Use el boton con el simbolo de verificacion para comprobar que el prefijo no este ya
-                            asignado a otro producto. El boton &quot;Siguiente&quot; solo se habilita despues de verificar el prefijo.
-                        </Text>
-                    </ModalBody>
-                </ModalContent>
-            </Modal>
+            <Dialog.Root open={isHelpOpen} size='md' onOpenChange={e => {
+                if (!e.open) {
+                    onHelpClose();
+                }
+            }}>
+                <Portal>
+
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>Prefijo de lote</Dialog.Header>
+                            <Dialog.CloseTrigger />
+                            <Dialog.Body pb={4}>
+                                <Text mb={2}>
+                                    El prefijo de lote identifica de forma unica a cada producto terminado y se usa para generar
+                                    los numeros de lote al crear ordenes de produccion (por ejemplo: TRK-0000001-26).
+                                </Text>
+                                <Text mb={2}>
+                                    <strong>Modo automatico:</strong> El prefijo se calcula a partir del nombre del producto,
+                                    tomando la primera letra de cada palabra en mayuscula. Ejemplo: &quot;Tratamiento Rizo Kids&quot; -&gt; TRK,
+                                    &quot;Shampoo Liso Adulto&quot; -&gt; SLA.
+                                </Text>
+                                <Text mb={2}>
+                                    <strong>Modo editar:</strong> Puede definir un prefijo propio si lo desea. El prefijo debe ser
+                                    unico entre todos los productos terminados.
+                                </Text>
+                                <Text mb={2}>
+                                    Use el boton con el simbolo de verificacion para comprobar que el prefijo no este ya
+                                    asignado a otro producto. El boton &quot;Siguiente&quot; solo se habilita despues de verificar el prefijo.
+                                </Text>
+                            </Dialog.Body>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+
+                </Portal>
+            </Dialog.Root>
         </Flex>
     );
 }

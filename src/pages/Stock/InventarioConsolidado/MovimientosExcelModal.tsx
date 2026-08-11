@@ -1,17 +1,5 @@
 import { useState, useEffect } from 'react';
-import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalFooter,
-    ModalBody,
-    ModalCloseButton,
-    FormControl,
-    FormLabel,
-    Input,
-    Button
-} from '@chakra-ui/react';
+import { Steps, Input, Button, Field, Dialog, Portal } from '@chakra-ui/react';
 
 /**
  * Modal for selecting a date range before exporting product movements.
@@ -45,29 +33,39 @@ function MovimientosExcelModal({ isOpen, onClose, onConfirm }: MovimientosExcelM
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} isCentered>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Seleccionar rango de fechas</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <FormControl>
-                        <FormLabel>Fecha inicio</FormLabel>
-                        <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                    </FormControl>
-                    <FormControl mt={4}>
-                        <FormLabel>Fecha fin</FormLabel>
-                        <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-                    </FormControl>
-                </ModalBody>
-                <ModalFooter>
-                    <Button mr={3} onClick={onClose}>Cancelar</Button>
-                    <Button colorScheme="teal" onClick={handleConfirm} isDisabled={isDownloadDisabled}>
-                        Descargar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+        <Dialog.Root open={isOpen} placement='center' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
+
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Seleccionar rango de fechas</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <Field.Root>
+                                <Field.Label>Fecha inicio</Field.Label>
+                                <Input type="date" value={startDate} onValueChange={(e) => setStartDate(e.target.value)} />
+                            </Field.Root>
+                            <Field.Root mt={4}>
+                                <Field.Label>Fecha fin</Field.Label>
+                                <Input type="date" value={endDate} onValueChange={(e) => setEndDate(e.target.value)} />
+                            </Field.Root>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button mr={3} onClick={onClose}>Cancelar</Button>
+                            <Button colorPalette="teal" onClick={handleConfirm} disabled={isDownloadDisabled}>
+                                Descargar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }
 

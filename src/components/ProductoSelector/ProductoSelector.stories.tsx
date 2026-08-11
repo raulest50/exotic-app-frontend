@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Button, Text, VStack } from '@chakra-ui/react';
+import { Steps, Box, Button, Text, VStack } from '@chakra-ui/react';
 import ProductoSelector, { ProductoMin } from './ProductoSelector';
 
 export const Default = () => {
@@ -8,7 +8,7 @@ export const Default = () => {
 
   return (
     <Box p={6} maxW="900px">
-      <VStack align="stretch" spacing={4}>
+      <VStack align="stretch" gap={4}>
         <Button onClick={() => setIsOpen(true)}>Abrir selector</Button>
         <Text>
           Seleccionado: {selected ? `${selected.productoId} - ${selected.nombre}` : '(ninguno)'}

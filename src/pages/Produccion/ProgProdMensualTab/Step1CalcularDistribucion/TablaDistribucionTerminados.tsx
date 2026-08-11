@@ -1,6 +1,7 @@
 import { memo } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import {
+    Steps,
     NumberInput,
     NumberInputField,
     Table,
@@ -107,22 +108,22 @@ const NecesidadCell = memo(function NecesidadCell({
     };
 
     return (
-        <NumberInput
+        <NumberInput.Root
             size="sm"
             min={0}
             clampValueOnBlur={false}
-            keepWithinRange={false}
-            value={displayValue}
-            onChange={handleChange}
+            allowOverflow={true}
+            value={String(displayValue)}
+            onValueChange={handleChange}
             w="110px"
         >
-            <NumberInputField
+            <NumberInput.Input
                 textAlign="right"
                 placeholder="0"
                 inputMode="decimal"
                 onBlur={handleBlur}
             />
-        </NumberInput>
+        </NumberInput.Root>
     );
 });
 
@@ -138,23 +139,23 @@ function TablaDistribucionTerminadosComponent({
     pageStartIndex,
 }: TablaDistribucionTerminadosProps) {
     return (
-        <TableContainer w="full" minW={0} overflowX="auto">
-            <Table size="sm" variant="simple" colorScheme="teal">
-                <Thead>
-                    <Tr>
-                        {columnVisibility.index && <Th>#</Th>}
-                        {columnVisibility.codigo && <Th>Codigo</Th>}
-                        {columnVisibility.descripcion && <Th>Descripcion</Th>}
-                        {columnVisibility.categoria && <Th>Categoria</Th>}
-                        {columnVisibility.cantidadVendida && <Th isNumeric>Cantidad Vendida</Th>}
-                        {columnVisibility.valorTotal && <Th isNumeric>Valor Total</Th>}
-                        {columnVisibility.porcentajeParticipacion && <Th isNumeric>% Participacion</Th>}
-                        {columnVisibility.porcentajeAcumulado && <Th isNumeric>% Acumulado</Th>}
-                        {columnVisibility.stockActual && <Th isNumeric>Stock Actual</Th>}
-                        {columnVisibility.necesidad && <Th isNumeric>Necesidad</Th>}
-                    </Tr>
-                </Thead>
-                <Tbody>
+        <Table.ScrollArea w="full" minW={0} overflowX="auto">
+            <Table.Root size="sm" variant="simple" colorPalette="teal">
+                <Table.Header>
+                    <Table.Row>
+                        {columnVisibility.index && <Table.ColumnHeader>#</Table.ColumnHeader>}
+                        {columnVisibility.codigo && <Table.ColumnHeader>Codigo</Table.ColumnHeader>}
+                        {columnVisibility.descripcion && <Table.ColumnHeader>Descripcion</Table.ColumnHeader>}
+                        {columnVisibility.categoria && <Table.ColumnHeader>Categoria</Table.ColumnHeader>}
+                        {columnVisibility.cantidadVendida && <Table.ColumnHeader textAlign='end'>Cantidad Vendida</Table.ColumnHeader>}
+                        {columnVisibility.valorTotal && <Table.ColumnHeader textAlign='end'>Valor Total</Table.ColumnHeader>}
+                        {columnVisibility.porcentajeParticipacion && <Table.ColumnHeader textAlign='end'>% Participacion</Table.ColumnHeader>}
+                        {columnVisibility.porcentajeAcumulado && <Table.ColumnHeader textAlign='end'>% Acumulado</Table.ColumnHeader>}
+                        {columnVisibility.stockActual && <Table.ColumnHeader textAlign='end'>Stock Actual</Table.ColumnHeader>}
+                        {columnVisibility.necesidad && <Table.ColumnHeader textAlign='end'>Necesidad</Table.ColumnHeader>}
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {pageData.map((fila, localIdx) => {
                         const globalIdx = pageStartIndex + localIdx;
                         const acum = acumulados[globalIdx];
@@ -163,47 +164,47 @@ function TablaDistribucionTerminadosComponent({
                         const isAbovePareto = acum <= 80;
 
                         return (
-                            <Tr
+                            <Table.Row
                                 key={fila.terminado.productoId}
                                 bg={isAbovePareto ? "teal.50" : undefined}
                                 borderBottom={isParetoRow ? "3px solid" : undefined}
                                 borderBottomColor={isParetoRow ? "orange.400" : undefined}
                             >
                                 {columnVisibility.index && (
-                                    <Td fontWeight={isParetoRow ? "bold" : "normal"}>{globalIdx + 1}</Td>
+                                    <Table.Cell fontWeight={isParetoRow ? "bold" : "normal"}>{globalIdx + 1}</Table.Cell>
                                 )}
-                                {columnVisibility.codigo && <Td>{fila.terminado.productoId}</Td>}
-                                {columnVisibility.descripcion && <Td>{fila.terminado.nombre}</Td>}
-                                {columnVisibility.categoria && <Td>{fila.terminado.categoria?.categoriaNombre ?? "-"}</Td>}
+                                {columnVisibility.codigo && <Table.Cell>{fila.terminado.productoId}</Table.Cell>}
+                                {columnVisibility.descripcion && <Table.Cell>{fila.terminado.nombre}</Table.Cell>}
+                                {columnVisibility.categoria && <Table.Cell>{fila.terminado.categoria?.categoriaNombre ?? "-"}</Table.Cell>}
                                 {columnVisibility.cantidadVendida && (
-                                    <Td isNumeric>{formatCantidad(fila.cantidad_vendida)}</Td>
+                                    <Table.Cell textAlign='end'>{formatCantidad(fila.cantidad_vendida)}</Table.Cell>
                                 )}
                                 {columnVisibility.valorTotal && (
-                                    <Td isNumeric>{formatMoneda(fila.valor_total)}</Td>
+                                    <Table.Cell textAlign='end'>{formatMoneda(fila.valor_total)}</Table.Cell>
                                 )}
                                 {columnVisibility.porcentajeParticipacion && (
-                                    <Td isNumeric>{fila.porcentaje_participacion.toFixed(2)}%</Td>
+                                    <Table.Cell textAlign='end'>{fila.porcentaje_participacion.toFixed(2)}%</Table.Cell>
                                 )}
                                 {columnVisibility.porcentajeAcumulado && (
-                                    <Td
-                                        isNumeric
+                                    <Table.Cell
                                         fontWeight={isParetoRow ? "bold" : "normal"}
                                         color={isParetoRow ? "orange.600" : undefined}
+                                        textAlign='end'
                                     >
                                         {acum.toFixed(2)}%
-                                    </Td>
+                                    </Table.Cell>
                                 )}
                                 {columnVisibility.stockActual && (
-                                    <Td
-                                        isNumeric
+                                    <Table.Cell
                                         color={fila.stockActualConsolidado < 0 ? "red.500" : undefined}
                                         fontWeight={fila.stockActualConsolidado < 0 ? "bold" : "normal"}
+                                        textAlign='end'
                                     >
                                         {formatCantidad(fila.stockActualConsolidado)}
-                                    </Td>
+                                    </Table.Cell>
                                 )}
                                 {columnVisibility.necesidad && (
-                                    <Td isNumeric>
+                                    <Table.Cell textAlign='end'>
                                         <NecesidadCell
                                             productoId={fila.terminado.productoId}
                                             currentValue={necesidades[fila.terminado.productoId]}
@@ -212,14 +213,14 @@ function TablaDistribucionTerminadosComponent({
                                             setNecesidades={setNecesidades}
                                             startNecesidadesTransition={startNecesidadesTransition}
                                         />
-                                    </Td>
+                                    </Table.Cell>
                                 )}
-                            </Tr>
+                            </Table.Row>
                         );
                     })}
-                </Tbody>
-            </Table>
-        </TableContainer>
+                </Table.Body>
+            </Table.Root>
+        </Table.ScrollArea>
     );
 }
 

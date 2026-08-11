@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Text, Alert, AlertIcon, VStack } from '@chakra-ui/react';
+import { Text, Alert, VStack } from '@chakra-ui/react';
 import FiltroTranAlmacenSearch, { FiltroHistorialTransaccionesDTO } from './FiltroTranAlmacenSearch.tsx';
 import BetterPagination from '../../../components/BetterPagination/BetterPagination.tsx';
 import DetalleTransaccionDialog from './DetalleTransaccionDialog.tsx';
 import { TransaccionAlmacen, PaginatedResponse } from '../../TransaccionesAlmacen/HistorialDispensaciones/types';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
-import { useToast } from '@chakra-ui/react';
+import { useToast, Alert } from '@chakra-ui/react';
 import TablaTranAlmacen from "./TablaTranAlmacen.tsx";
 
 const endpoints = new EndPointsURL();
@@ -101,10 +101,10 @@ function HistorialTransaccionesAlmacenTab() {
             />
 
             {error && (
-                <Alert status="error">
-                    <AlertIcon />
+                <Alert.Root status="error">
+                    <Alert.Indicator />
                     {error}
-                </Alert>
+                </Alert.Root>
             )}
 
             {transacciones.length > 0 || loading ? (

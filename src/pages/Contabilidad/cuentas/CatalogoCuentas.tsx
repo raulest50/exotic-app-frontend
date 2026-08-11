@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
+  Steps,
   Box,
   Flex,
   Heading,
@@ -15,13 +17,13 @@ import {
   Badge,
   useToast,
   Button,
-  useColorModeValue
+  Icon,
 } from '@chakra-ui/react';
-import { SearchIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import { CuentaContable, SaldoNormal, TipoCuenta } from '../types';
 import EndPointsURL from '../../../api/EndPointsURL';
 import DetalleAsientosCuenta from './DetalleAsientosCuenta';
+import { LuSearch } from 'react-icons/lu';
 
 const CatalogoCuentas: React.FC = () => {
   const [cuentas, setCuentas] = useState<CuentaContable[]>([]);
@@ -130,43 +132,43 @@ const CatalogoCuentas: React.FC = () => {
 
       <InputGroup mb={4}>
         <InputLeftElement pointerEvents="none">
-          <SearchIcon color={searchIconColor} />
+          <Icon as={LuSearch} color={searchIconColor} />
         </InputLeftElement>
         <Input 
           placeholder="Buscar por código o nombre" 
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onValueChange={(e) => setSearchTerm(e.target.value)}
         />
       </InputGroup>
 
       <Box overflowX="auto">
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>Código</Th>
-              <Th>Nombre</Th>
-              <Th>Tipo</Th>
-              <Th>Saldo Normal</Th>
-              <Th>Cuenta Control</Th>
-              <Th>Acciones</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
+        <Table.Root variant="simple">
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeader>Código</Table.ColumnHeader>
+              <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+              <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+              <Table.ColumnHeader>Saldo Normal</Table.ColumnHeader>
+              <Table.ColumnHeader>Cuenta Control</Table.ColumnHeader>
+              <Table.ColumnHeader>Acciones</Table.ColumnHeader>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
             {isLoading ? (
-              <Tr>
-                <Td colSpan={6} textAlign="center">Cargando...</Td>
-              </Tr>
+              <Table.Row>
+                <Table.Cell colSpan={6} textAlign="center">Cargando...</Table.Cell>
+              </Table.Row>
             ) : !Array.isArray(filteredCuentas) ? (
-              <Tr>
-                <Td colSpan={6} textAlign="center">Error al cargar las cuentas</Td>
-              </Tr>
+              <Table.Row>
+                <Table.Cell colSpan={6} textAlign="center">Error al cargar las cuentas</Table.Cell>
+              </Table.Row>
             ) : filteredCuentas.length === 0 ? (
-              <Tr>
-                <Td colSpan={6} textAlign="center">No se encontraron cuentas</Td>
-              </Tr>
+              <Table.Row>
+                <Table.Cell colSpan={6} textAlign="center">No se encontraron cuentas</Table.Cell>
+              </Table.Row>
             ) : (
               filteredCuentas.map((cuenta) => (
-                <Tr 
+                <Table.Row 
                   key={cuenta.codigo}
                   _hover={{ 
                     bg: rowHoverBg,
@@ -175,18 +177,18 @@ const CatalogoCuentas: React.FC = () => {
                   }}
                   onClick={() => handleVerAsientos(cuenta)}
                 >
-                  <Td>{cuenta.codigo}</Td>
-                  <Td>{cuenta.nombre}</Td>
-                  <Td>
-                    <Badge colorScheme={getTipoBadgeColor(cuenta.tipo)}>
+                  <Table.Cell>{cuenta.codigo}</Table.Cell>
+                  <Table.Cell>{cuenta.nombre}</Table.Cell>
+                  <Table.Cell>
+                    <Badge colorPalette={getTipoBadgeColor(cuenta.tipo)}>
                       {cuenta.tipo}
                     </Badge>
-                  </Td>
-                  <Td>{cuenta.saldoNormal}</Td>
-                  <Td>{cuenta.cuentaControl ? 'Sí' : 'No'}</Td>
-                  <Td>
+                  </Table.Cell>
+                  <Table.Cell>{cuenta.saldoNormal}</Table.Cell>
+                  <Table.Cell>{cuenta.cuentaControl ? 'Sí' : 'No'}</Table.Cell>
+                  <Table.Cell>
                     <Button
-                      colorScheme="blue"
+                      colorPalette="blue"
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -195,12 +197,12 @@ const CatalogoCuentas: React.FC = () => {
                     >
                       Ver asientos
                     </Button>
-                  </Td>
-                </Tr>
+                  </Table.Cell>
+                </Table.Row>
               ))
             )}
-          </Tbody>
-        </Table>
+          </Table.Body>
+        </Table.Root>
       </Box>
     </Box>
   );

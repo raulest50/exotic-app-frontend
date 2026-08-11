@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Box, Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
+import { Steps, Box, Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 
 import MyHeader from "../../components/MyHeader.tsx";
 import { tabAccessRule } from "../../auth/accessHelpers.ts";
@@ -73,14 +73,14 @@ export default function ProduccionPage() {
         <Container minW={["auto", "container.lg", "container.xl"]} w={"full"} h={"full"}>
             <MyHeader title={"Produccion"} />
 
-            <Tabs index={safeTabIndex} onChange={setTabIndex}>
-                <TabList>
+            <Tabs.Root value={safeTabIndex} onValueChange={setTabIndex}>
+                <Tabs.List>
                     {visibleTabs.map((tab) => (
                         <Tab key={tab.key} sx={my_style_tab}>
                             {tab.label}
                         </Tab>
                     ))}
-                </TabList>
+                </Tabs.List>
 
                 <TabPanels>
                     {visibleTabs.map((tab) => (
@@ -98,7 +98,7 @@ export default function ProduccionPage() {
                         </TabPanel>
                     ))}
                 </TabPanels>
-            </Tabs>
+            </Tabs.Root>
         </Container>
     );
 }

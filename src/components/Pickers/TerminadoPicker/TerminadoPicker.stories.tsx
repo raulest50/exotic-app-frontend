@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import TerminadoPicker, { TerminadoPickerResult } from './TerminadoPicker.tsx';
-import { Button, Box, Text, VStack, Badge, HStack } from '@chakra-ui/react';
+import { Steps, Button, Box, Text, VStack, Badge, HStack } from '@chakra-ui/react';
 
 export const Default = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -15,8 +15,8 @@ export const Default = () => {
     };
 
     return (
-        <VStack spacing={4} align="start" p={5}>
-            <Button colorScheme="blue" onClick={handleOpen}>
+        <VStack gap={4} align="start" p={5}>
+            <Button colorPalette="blue" onClick={handleOpen}>
                 Abrir Selector de Producto Terminado
             </Button>
 
@@ -27,7 +27,7 @@ export const Default = () => {
                     <HStack>
                         <Text>Nombre: {selectedTerminado.nombre}</Text>
                         {selectedTerminado.tipo_producto && (
-                            <Badge colorScheme="purple">{selectedTerminado.tipo_producto}</Badge>
+                            <Badge colorPalette="purple">{selectedTerminado.tipo_producto}</Badge>
                         )}
                     </HStack>
                 </Box>

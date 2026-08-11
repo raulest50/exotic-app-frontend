@@ -1,13 +1,11 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Button,
     Container,
     Flex,
-    FormControl,
-    FormLabel,
     Grid,
     GridItem,
     HStack,
@@ -28,6 +26,7 @@ import {
     Tr,
     VStack,
     useToast,
+    Field,
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import MyHeader from "../../components/MyHeader";
@@ -195,10 +194,14 @@ export default function AdministracionGlobalPage() {
         return (
             <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
                 <MyHeader title="Administracion Global" />
-                <Alert status="warning" variant="left-accent">
-                    <AlertIcon />
+                <Alert.Root
+                    status="warning"
+                    variant='subtle'
+                    borderStartWidth='3px'
+                    borderStartColor='colorPalette.solid'>
+                    <Alert.Indicator />
                     No tiene acceso a las tabs de Administracion Global.
-                </Alert>
+                </Alert.Root>
             </Container>
         );
     }
@@ -207,18 +210,18 @@ export default function AdministracionGlobalPage() {
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <MyHeader title="Administracion Global" />
             <Flex direction="column" w="full" h="full">
-                <Tabs>
-                    <TabList>
+                <Tabs.Root>
+                    <Tabs.List>
                         {canSeeIdentidadLegal && <Tab sx={my_style_tab}>Identidad Legal</Tab>}
                         {canSeeJornadaLaboral && <Tab sx={my_style_tab}>Jornada Laboral</Tab>}
-                    </TabList>
+                    </Tabs.List>
                     <TabPanels>
                         {canSeeIdentidadLegal && (
                             <TabPanel px={0}>
                                 {loading ? (
                                     <Spinner />
                                 ) : (
-                                    <VStack align="stretch" spacing={6}>
+                                    <VStack align="stretch" gap={6}>
                                         <Box borderWidth="1px" borderRadius="md" p={4}>
                                             <HStack justify="space-between" align="flex-start" mb={4}>
                                                 <Box>
@@ -227,79 +230,79 @@ export default function AdministracionGlobalPage() {
                                                         {vigente ? `Version ${vigente.version} - ${identificacionVigente}` : "-"}
                                                     </Text>
                                                 </Box>
-                                                {vigente ? <Badge colorScheme="green">{vigente.estado}</Badge> : null}
+                                                {vigente ? <Badge colorPalette="green">{vigente.estado}</Badge> : null}
                                             </HStack>
 
                                             <Grid templateColumns={["1fr", "repeat(2, 1fr)", "repeat(3, 1fr)"]} gap={4}>
                                                 <GridItem colSpan={[1, 2, 2]}>
-                                                    <FormControl isRequired>
-                                                        <FormLabel>{FIELD_LABELS.razonSocial}</FormLabel>
+                                                    <Field.Root required>
+                                                        <Field.Label>{FIELD_LABELS.razonSocial}</Field.Label>
                                                         <Input
                                                             value={form.razonSocial}
-                                                            onChange={(event) => handleChange("razonSocial", event.target.value)}
-                                                            isReadOnly={!canEditIdentidadLegal}
+                                                            onValueChange={(event) => handleChange("razonSocial", event.target.value)}
+                                                            readOnly={!canEditIdentidadLegal}
                                                         />
-                                                    </FormControl>
+                                                    </Field.Root>
                                                 </GridItem>
-                                                <FormControl isRequired>
-                                                    <FormLabel>{FIELD_LABELS.nombreComercial}</FormLabel>
+                                                <Field.Root required>
+                                                    <Field.Label>{FIELD_LABELS.nombreComercial}</Field.Label>
                                                     <Input
                                                         value={form.nombreComercial}
-                                                        onChange={(event) => handleChange("nombreComercial", event.target.value)}
-                                                        isReadOnly={!canEditIdentidadLegal}
+                                                        onValueChange={(event) => handleChange("nombreComercial", event.target.value)}
+                                                        readOnly={!canEditIdentidadLegal}
                                                     />
-                                                </FormControl>
-                                                <FormControl isRequired>
-                                                    <FormLabel>{FIELD_LABELS.tipoIdentificacion}</FormLabel>
+                                                </Field.Root>
+                                                <Field.Root required>
+                                                    <Field.Label>{FIELD_LABELS.tipoIdentificacion}</Field.Label>
                                                     <Input
                                                         value={form.tipoIdentificacion}
-                                                        onChange={(event) => handleChange("tipoIdentificacion", event.target.value)}
-                                                        isReadOnly={!canEditIdentidadLegal}
+                                                        onValueChange={(event) => handleChange("tipoIdentificacion", event.target.value)}
+                                                        readOnly={!canEditIdentidadLegal}
                                                     />
-                                                </FormControl>
-                                                <FormControl isRequired>
-                                                    <FormLabel>{FIELD_LABELS.numeroIdentificacion}</FormLabel>
+                                                </Field.Root>
+                                                <Field.Root required>
+                                                    <Field.Label>{FIELD_LABELS.numeroIdentificacion}</Field.Label>
                                                     <Input
                                                         value={form.numeroIdentificacion}
-                                                        onChange={(event) => handleChange("numeroIdentificacion", event.target.value)}
-                                                        isReadOnly={!canEditIdentidadLegal}
+                                                        onValueChange={(event) => handleChange("numeroIdentificacion", event.target.value)}
+                                                        readOnly={!canEditIdentidadLegal}
                                                     />
-                                                </FormControl>
-                                                <FormControl isRequired>
-                                                    <FormLabel>{FIELD_LABELS.digitoVerificacion}</FormLabel>
+                                                </Field.Root>
+                                                <Field.Root required>
+                                                    <Field.Label>{FIELD_LABELS.digitoVerificacion}</Field.Label>
                                                     <Input
                                                         value={form.digitoVerificacion}
-                                                        onChange={(event) => handleChange("digitoVerificacion", event.target.value)}
-                                                        isReadOnly={!canEditIdentidadLegal}
+                                                        onValueChange={(event) => handleChange("digitoVerificacion", event.target.value)}
+                                                        readOnly={!canEditIdentidadLegal}
                                                     />
-                                                </FormControl>
-                                                <FormControl isRequired>
-                                                    <FormLabel>{FIELD_LABELS.telefonoPrincipal}</FormLabel>
+                                                </Field.Root>
+                                                <Field.Root required>
+                                                    <Field.Label>{FIELD_LABELS.telefonoPrincipal}</Field.Label>
                                                     <Input
                                                         value={form.telefonoPrincipal}
-                                                        onChange={(event) => handleChange("telefonoPrincipal", event.target.value)}
-                                                        isReadOnly={!canEditIdentidadLegal}
+                                                        onValueChange={(event) => handleChange("telefonoPrincipal", event.target.value)}
+                                                        readOnly={!canEditIdentidadLegal}
                                                     />
-                                                </FormControl>
-                                                <FormControl isRequired>
-                                                    <FormLabel>{FIELD_LABELS.emailPrincipal}</FormLabel>
+                                                </Field.Root>
+                                                <Field.Root required>
+                                                    <Field.Label>{FIELD_LABELS.emailPrincipal}</Field.Label>
                                                     <Input
                                                         value={form.emailPrincipal}
-                                                        onChange={(event) => handleChange("emailPrincipal", event.target.value)}
-                                                        isReadOnly={!canEditIdentidadLegal}
+                                                        onValueChange={(event) => handleChange("emailPrincipal", event.target.value)}
+                                                        readOnly={!canEditIdentidadLegal}
                                                         type="email"
                                                     />
-                                                </FormControl>
+                                                </Field.Root>
                                                 <GridItem colSpan={[1, 2, 3]}>
-                                                    <FormControl isRequired>
-                                                        <FormLabel>{FIELD_LABELS.motivoCambio}</FormLabel>
+                                                    <Field.Root required>
+                                                        <Field.Label>{FIELD_LABELS.motivoCambio}</Field.Label>
                                                         <Textarea
                                                             value={form.motivoCambio}
-                                                            onChange={(event) => handleChange("motivoCambio", event.target.value)}
-                                                            isReadOnly={!canEditIdentidadLegal}
+                                                            onValueChange={(event) => handleChange("motivoCambio", event.target.value)}
+                                                            readOnly={!canEditIdentidadLegal}
                                                             minH="90px"
                                                         />
-                                                    </FormControl>
+                                                    </Field.Root>
                                                 </GridItem>
                                             </Grid>
 
@@ -307,15 +310,15 @@ export default function AdministracionGlobalPage() {
                                                 <Button
                                                     variant="outline"
                                                     onClick={() => vigente && setForm(formFromVersion(vigente))}
-                                                    isDisabled={!vigente || saving}
+                                                    disabled={!vigente || saving}
                                                 >
                                                     Restaurar
                                                 </Button>
                                                 <Button
-                                                    colorScheme="teal"
+                                                    colorPalette="teal"
                                                     onClick={handleSubmit}
-                                                    isLoading={saving}
-                                                    isDisabled={!canEditIdentidadLegal}
+                                                    loading={saving}
+                                                    disabled={!canEditIdentidadLegal}
                                                 >
                                                     Guardar nueva version
                                                 </Button>
@@ -329,44 +332,44 @@ export default function AdministracionGlobalPage() {
                                         />
 
                                         <Box overflowX="auto" borderWidth="1px" borderRadius="md">
-                                            <Table size="sm" variant="simple">
-                                                <Thead>
-                                                    <Tr>
-                                                        <Th>Version</Th>
-                                                        <Th>Estado</Th>
-                                                        <Th>Razon social</Th>
-                                                        <Th>Nombre comercial</Th>
-                                                        <Th>Identificacion</Th>
-                                                        <Th>Telefono</Th>
-                                                        <Th>Correo</Th>
-                                                        <Th>Vigente desde</Th>
-                                                        <Th>Vigente hasta</Th>
-                                                        <Th>Creado por</Th>
-                                                        <Th>Motivo</Th>
-                                                    </Tr>
-                                                </Thead>
-                                                <Tbody>
+                                            <Table.Root size="sm" variant="simple">
+                                                <Table.Header>
+                                                    <Table.Row>
+                                                        <Table.ColumnHeader>Version</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Razon social</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Nombre comercial</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Identificacion</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Telefono</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Correo</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Vigente desde</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Vigente hasta</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Creado por</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Motivo</Table.ColumnHeader>
+                                                    </Table.Row>
+                                                </Table.Header>
+                                                <Table.Body>
                                                     {versiones.map((version) => (
-                                                        <Tr key={version.id}>
-                                                            <Td>{version.version}</Td>
-                                                            <Td>
-                                                                <Badge colorScheme={version.estado === "VIGENTE" ? "green" : "gray"}>
+                                                        <Table.Row key={version.id}>
+                                                            <Table.Cell>{version.version}</Table.Cell>
+                                                            <Table.Cell>
+                                                                <Badge colorPalette={version.estado === "VIGENTE" ? "green" : "gray"}>
                                                                     {version.estado}
                                                                 </Badge>
-                                                            </Td>
-                                                            <Td>{version.razonSocial}</Td>
-                                                            <Td>{version.nombreComercial}</Td>
-                                                            <Td>{formatIdentificacion(version)}</Td>
-                                                            <Td>{version.telefonoPrincipal}</Td>
-                                                            <Td>{version.emailPrincipal}</Td>
-                                                            <Td>{formatDateTime(version.vigenteDesde)}</Td>
-                                                            <Td>{formatDateTime(version.vigenteHasta)}</Td>
-                                                            <Td>{version.creadoPor ?? "-"}</Td>
-                                                            <Td>{version.motivoCambio ?? "-"}</Td>
-                                                        </Tr>
+                                                            </Table.Cell>
+                                                            <Table.Cell>{version.razonSocial}</Table.Cell>
+                                                            <Table.Cell>{version.nombreComercial}</Table.Cell>
+                                                            <Table.Cell>{formatIdentificacion(version)}</Table.Cell>
+                                                            <Table.Cell>{version.telefonoPrincipal}</Table.Cell>
+                                                            <Table.Cell>{version.emailPrincipal}</Table.Cell>
+                                                            <Table.Cell>{formatDateTime(version.vigenteDesde)}</Table.Cell>
+                                                            <Table.Cell>{formatDateTime(version.vigenteHasta)}</Table.Cell>
+                                                            <Table.Cell>{version.creadoPor ?? "-"}</Table.Cell>
+                                                            <Table.Cell>{version.motivoCambio ?? "-"}</Table.Cell>
+                                                        </Table.Row>
                                                     ))}
-                                                </Tbody>
-                                            </Table>
+                                                </Table.Body>
+                                            </Table.Root>
                                         </Box>
                                     </VStack>
                                 )}
@@ -378,7 +381,7 @@ export default function AdministracionGlobalPage() {
                             </TabPanel>
                         )}
                     </TabPanels>
-                </Tabs>
+                </Tabs.Root>
             </Flex>
         </Container>
     );

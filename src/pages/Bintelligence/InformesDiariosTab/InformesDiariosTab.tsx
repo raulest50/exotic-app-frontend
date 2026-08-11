@@ -1,22 +1,20 @@
 import { useEffect, useState, type ReactElement } from "react";
+import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
+    Steps,
     Box,
     Button,
     Card,
-    CardBody,
     Flex,
-    FormControl,
-    FormLabel,
     HStack,
     IconButton,
-    Select,
+    NativeSelect,
     Text,
-    Tooltip,
-    useColorModeValue,
     useDisclosure,
     VStack,
+    Field,
 } from "@chakra-ui/react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
+import { Tooltip } from '@/components/ui/tooltip';
 import axios from "axios";
 import { FaShoppingCart } from "react-icons/fa";
 import { GiBuyCard } from "react-icons/gi";
@@ -25,6 +23,7 @@ import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import InformeDiarioAlmacenPanel from "./InformeDiarioAlmacenPanel.tsx";
 import InformeDiarioAjustesAlmacenPanel from "./InformeDiarioAjustesAlmacenPanel.tsx";
 import InformeDiarioComprasPanel from "./InformeDiarioComprasPanel.tsx";
+import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 
 type InformeDiarioKey = "almacen" | "ajustes" | "compras" | "ventas";
 
@@ -37,19 +36,19 @@ const REPORT_OPTIONS: { key: InformeDiarioKey; label: string; icon: ReactElement
 
 function InformePlaceholder({ title }: { title: string }) {
     return (
-        <Card variant="outline">
-            <CardBody>
+        <Card.Root variant="outline">
+            <Card.Body>
                 <Text fontWeight="medium">{title}</Text>
                 <Text fontSize="sm" color="app.textMuted" mt={2}>
                     Contenido del informe (pendiente de implementar).
                 </Text>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
 export default function InformesDiariosTab() {
-    const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
+    const { open, onToggle } = useDisclosure({ defaultIsOpen: true });
     const [selectedReport, setSelectedReport] = useState<InformeDiarioKey>("almacen");
     const [apiReachable, setApiReachable] = useState<boolean | null>(null);
     const selectedReportBg = useColorModeValue("blue.50", "blue.900");
@@ -76,24 +75,26 @@ export default function InformesDiariosTab() {
     return (
         <Flex w="full" minH="60vh" align="stretch" direction={{ base: "column", md: "row" }} gap={{ base: 3, md: 0 }}>
             <Box display={{ base: "block", md: "none" }}>
-                <FormControl>
-                    <FormLabel fontSize="sm">Informe</FormLabel>
-                    <Select
-                        value={selectedReport}
-                        onChange={(event) => setSelectedReport(event.target.value as InformeDiarioKey)}
-                    >
-                        {REPORT_OPTIONS.map((opt) => (
-                            <option key={opt.key} value={opt.key}>
-                                {opt.label}
-                            </option>
-                        ))}
-                    </Select>
-                </FormControl>
+                <Field.Root>
+                    <Field.Label fontSize="sm">Informe</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            value={selectedReport}
+                            onValueChange={(event) => setSelectedReport(event.target.value as InformeDiarioKey)}>
+                            {REPORT_OPTIONS.map((opt) => (
+                                <option key={opt.key} value={opt.key}>
+                                    {opt.label}
+                                </option>
+                            ))}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
             </Box>
 
             <VStack
                 align="stretch"
-                spacing={0}
+                gap={0}
                 bg="app.surface"
                 borderWidth="1px"
                 borderColor="app.border"
@@ -111,47 +112,41 @@ export default function InformesDiariosTab() {
                     borderBottomWidth="1px"
                     borderColor="app.border"
                     justify={isOpen ? "space-between" : "center"}
-                    spacing={2}
+                    gap={2}
                 >
                     {isOpen && (
-                        <Text fontSize="sm" fontWeight="semibold" noOfLines={1}>
+                        <Text fontSize="sm" fontWeight="semibold" lineClamp={1}>
                             Informes diarios
                         </Text>
                     )}
                     <IconButton
                         aria-label={isOpen ? "Colapsar menú" : "Expandir menú"}
-                        icon={isOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
                         size="sm"
                         variant="ghost"
-                        onClick={onToggle}
-                    />
+                        onClick={onToggle}>{isOpen ? <LuChevronLeft /> : <LuChevronRight />}</IconButton>
                 </HStack>
 
-                <VStack align="stretch" spacing={1} p={2} flex={1}>
+                <VStack align="stretch" gap={1} p={2} flex={1}>
                     {REPORT_OPTIONS.map((opt) =>
                         isOpen ? (
                             <Button
                                 key={opt.key}
                                 variant="ghost"
                                 justifyContent="flex-start"
-                                leftIcon={opt.icon}
                                 fontWeight={selectedReport === opt.key ? "semibold" : "normal"}
                                 bg={selectedReport === opt.key ? selectedReportBg : undefined}
                                 color={selectedReport === opt.key ? selectedReportColor : undefined}
-                                onClick={() => setSelectedReport(opt.key)}
-                            >
-                                {opt.label}
-                            </Button>
+                                onClick={() => setSelectedReport(opt.key)}>{opt.icon}{opt.label}</Button>
                         ) : (
-                            <Tooltip key={opt.key} label={opt.label} placement="right" hasArrow>
+                            <Tooltip key={opt.key} content={opt.label} showArrow positioning={{
+                                placement: "right"
+                            }}>
                                 <IconButton
                                     aria-label={opt.label}
-                                    icon={opt.icon}
                                     size="sm"
                                     variant={selectedReport === opt.key ? "solid" : "ghost"}
-                                    colorScheme={selectedReport === opt.key ? "blue" : undefined}
-                                    onClick={() => setSelectedReport(opt.key)}
-                                />
+                                    colorPalette={selectedReport === opt.key ? "blue" : undefined}
+                                    onClick={() => setSelectedReport(opt.key)}>{opt.icon}</IconButton>
                             </Tooltip>
                         ),
                     )}

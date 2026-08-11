@@ -1,4 +1,20 @@
-import {Box, Button, Flex, Table, Tbody, Td, Th, Thead, Tr, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper} from '@chakra-ui/react';
+import {
+  Steps,
+  Box,
+  Button,
+  Flex,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+} from '@chakra-ui/react';
 import {useState} from 'react';
 import {RecursoProduccion} from '../../types.tsx';
 import RecursoProduccionPicker from './RecursoProduccionPicker.tsx';
@@ -43,45 +59,45 @@ export default function PPRPmanager({recursos, onChange, editMode = true}: Props
   return (
     <Box>
       <Flex justify="space-between" mb={2}>
-        <Button colorScheme='teal' size='sm' onClick={()=>setIsPickerOpen(true)} isDisabled={!editMode}>Agregar Recurso</Button>
+        <Button colorPalette='teal' size='sm' onClick={()=>setIsPickerOpen(true)} disabled={!editMode}>Agregar Recurso</Button>
       </Flex>
-      <Table size='sm'>
-        <Thead>
-          <Tr>
-            <Th>ID</Th>
-            <Th>Nombre</Th>
-            <Th>Cantidad</Th>
-            <Th>Disponibles</Th>
-            <Th></Th>
-          </Tr>
-        </Thead>
-        <Tbody>
+      <Table.Root size='sm'>
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeader>ID</Table.ColumnHeader>
+            <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+            <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+            <Table.ColumnHeader>Disponibles</Table.ColumnHeader>
+            <Table.ColumnHeader></Table.ColumnHeader>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
           {recursos.map(r=> (
-            <Tr key={r.id}>
-              <Td>{r.id}</Td>
-              <Td>{r.nombre}</Td>
-              <Td>
-                <NumberInput 
+            <Table.Row key={r.id}>
+              <Table.Cell>{r.id}</Table.Cell>
+              <Table.Cell>{r.nombre}</Table.Cell>
+              <Table.Cell>
+                <NumberInput.Root 
                   size="sm" 
                   min={1} 
                   max={r.cantidadDisponible || 999} 
-                  value={r.cantidad || 1}
-                  onChange={(_, valueAsNumber) => handleCantidadChange(r.id, valueAsNumber)}
-                  isDisabled={!editMode}
+                  value={String(r.cantidad || 1)}
+                  onValueChange={(_, valueAsNumber) => handleCantidadChange(r.id, valueAsNumber)}
+                  disabled={!editMode}
                 >
-                  <NumberInputField />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </Td>
-              <Td>{r.cantidadDisponible || 'N/A'}</Td>
-              <Td><Button size='xs' colorScheme='red' onClick={()=>handleRemove(r)} isDisabled={!editMode}>Remover</Button></Td>
-            </Tr>
+                  <NumberInput.Input />
+                  <NumberInput.Control>
+                    <NumberInput.IncrementTrigger />
+                    <NumberInput.DecrementTrigger />
+                  </NumberInput.Control>
+                </NumberInput.Root>
+              </Table.Cell>
+              <Table.Cell>{r.cantidadDisponible || 'N/A'}</Table.Cell>
+              <Table.Cell><Button size='xs' colorPalette='red' onClick={()=>handleRemove(r)} disabled={!editMode}>Remover</Button></Table.Cell>
+            </Table.Row>
           ))}
-        </Tbody>
-      </Table>
+        </Table.Body>
+      </Table.Root>
       <RecursoProduccionPicker
         isOpen={isPickerOpen}
         onClose={()=>setIsPickerOpen(false)}

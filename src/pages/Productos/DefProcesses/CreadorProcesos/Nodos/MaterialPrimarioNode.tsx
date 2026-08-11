@@ -1,5 +1,5 @@
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { Box, Flex, Text, Icon } from "@chakra-ui/react";
+import { Steps, Box, Flex, Text, Icon } from "@chakra-ui/react";
 
 import { PiCubeFocusThin } from "react-icons/pi";
 
@@ -33,7 +33,7 @@ export default function MaterialPrimarioNode(props: NodeProps) {
           w="full"
           pt="0.3em"
         >
-          <Icon w="3em" h="3em" color="tomato" as={PiCubeFocusThin} />
+          <Icon w="3em" h="3em" color="tomato" asChild><PiCubeFocusThin /></Icon>
           <Text fontWeight="bold">{`${data.cantidad} ${data.tipo_unidad}`}</Text>
         </Flex>
 

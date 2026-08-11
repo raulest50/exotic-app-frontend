@@ -1,18 +1,17 @@
 import React, { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
 import {
+    Steps,
     Box,
     Button,
     ButtonGroup,
     Checkbox,
     Flex,
     Menu,
-    MenuButton,
-    MenuList,
     Spinner,
     Text,
     VStack,
+    Portal,
 } from "@chakra-ui/react";
-import { ChevronDownIcon } from "@chakra-ui/icons";
 import EndPointsURL from "../../../../api/EndPointsURL";
 import BetterPagination from "../../../../components/BetterPagination/BetterPagination";
 import { useAccessSnapshot } from "../../../../auth/usePermissions";
@@ -34,6 +33,7 @@ import {
     type ColumnVisibility,
     type PresetColumnas,
 } from "./step1Distribucion.utils";
+import { LuChevronDown } from 'react-icons/lu';
 
 interface Step1CalcularDistribucionProps {
     excelFile: File | null;
@@ -180,7 +180,7 @@ export default function Step1CalcularDistribucion({
     if (isLoading) {
         return (
             <Flex direction="column" align="center" justify="center" py={16} gap={6}>
-                <Spinner thickness="4px" speed="0.65s" emptyColor="gray.200" color="teal.500" size="xl" />
+                <Spinner borderWidth="4px" animationDuration="0.65s" emptyColor="gray.200" color="teal.500" size="xl" />
                 <Text fontSize="lg" color="gray.600">Procesando informe de ventas...</Text>
             </Flex>
         );
@@ -210,8 +210,8 @@ export default function Step1CalcularDistribucion({
     const paretoIdx = acumulados.findIndex((a) => a >= 80);
 
     return (
-        <VStack spacing={4} align="stretch" px={2} py={4} w="full" minW={0}>
-            <VStack align="stretch" spacing={3}>
+        <VStack gap={4} align="stretch" px={2} py={4} w="full" minW={0}>
+            <VStack align="stretch" gap={3}>
                 <Text fontSize="md" color="gray.700">
                     <strong>{distribucion.length}</strong> productos terminados
                     {paretoIdx >= 0 && (
@@ -220,17 +220,17 @@ export default function Step1CalcularDistribucion({
                 </Text>
 
                 <Flex justify="space-between" align="center" wrap="wrap" gap={3} w="full" minW={0}>
-                    <ButtonGroup size="sm" isAttached variant="outline">
+                    <ButtonGroup size="sm" attached variant="outline">
                         <Button
                             onClick={() => setModo("valor")}
-                            colorScheme={modo === "valor" ? "teal" : "gray"}
+                            colorPalette={modo === "valor" ? "teal" : "gray"}
                             variant={modo === "valor" ? "solid" : "outline"}
                         >
                             Por Valor ($)
                         </Button>
                         <Button
                             onClick={() => setModo("cantidad")}
-                            colorScheme={modo === "cantidad" ? "teal" : "gray"}
+                            colorPalette={modo === "cantidad" ? "teal" : "gray"}
                             variant={modo === "cantidad" ? "solid" : "outline"}
                         >
                             Por Cantidad
@@ -238,42 +238,41 @@ export default function Step1CalcularDistribucion({
                     </ButtonGroup>
 
                     <Flex gap={3} wrap="wrap" align="center">
-                        <ButtonGroup size="sm" isAttached variant="outline">
+                        <ButtonGroup size="sm" attached variant="outline">
                             <Button
                                 onClick={() => handlePresetChange("decision")}
-                                colorScheme={presetColumnas === "decision" ? "teal" : "gray"}
+                                colorPalette={presetColumnas === "decision" ? "teal" : "gray"}
                                 variant={presetColumnas === "decision" ? "solid" : "outline"}
                             >
                                 Decision
                             </Button>
                             <Button
                                 onClick={() => handlePresetChange("analisis")}
-                                colorScheme={presetColumnas === "analisis" ? "teal" : "gray"}
+                                colorPalette={presetColumnas === "analisis" ? "teal" : "gray"}
                                 variant={presetColumnas === "analisis" ? "solid" : "outline"}
                             >
                                 Analisis
                             </Button>
                         </ButtonGroup>
 
-                        <Menu closeOnSelect={false}>
-                            <MenuButton as={Button} size="sm" variant="outline" rightIcon={<ChevronDownIcon />}>
-                                Columnas
-                            </MenuButton>
-                            <MenuList p={3} minW="230px">
-                                <VStack align="stretch" spacing={2}>
-                                    {COLUMN_DEFINITIONS.map((column) => (
-                                        <Checkbox
-                                            key={column.key}
-                                            isChecked={columnVisibility[column.key]}
-                                            isDisabled={column.isLocked}
-                                            onChange={() => handleToggleColumn(column.key)}
-                                        >
-                                            {column.label}
-                                        </Checkbox>
-                                    ))}
-                                </VStack>
-                            </MenuList>
-                        </Menu>
+                        <Menu.Root closeOnSelect={false}>
+                            <Menu.Trigger size="sm" variant="outline" asChild><Button>Columnas
+                                                                </Button><LuChevronDown /></Menu.Trigger>
+                            <Portal><Menu.Positioner><Menu.Content>
+                                        <VStack align="stretch" gap={2}>
+                                            {COLUMN_DEFINITIONS.map((column) => (
+                                                <Checkbox.Root
+                                                    key={column.key}
+                                                    checked={columnVisibility[column.key]}
+                                                    disabled={column.isLocked}
+                                                    onCheckedChange={() => handleToggleColumn(column.key)}
+                                                ><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>
+                                                    {column.label}
+                                                </Checkbox.Label></Checkbox.Root>
+                                            ))}
+                                        </VStack>
+                                    </Menu.Content></Menu.Positioner></Portal>
+                        </Menu.Root>
                     </Flex>
                 </Flex>
             </VStack>
@@ -303,9 +302,9 @@ export default function Step1CalcularDistribucion({
             {showNextButton && (
                 <Flex justify="flex-end" pt={2}>
                     <Button
-                        colorScheme="teal"
+                        colorPalette="teal"
                         onClick={() => setActiveStep(2)}
-                        isDisabled={distribucion.length === 0}
+                        disabled={distribucion.length === 0}
                     >
                         Siguiente
                     </Button>

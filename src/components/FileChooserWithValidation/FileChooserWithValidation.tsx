@@ -1,18 +1,5 @@
 import { useState, useRef } from "react";
-import {
-    Alert,
-    AlertDescription,
-    AlertIcon,
-    AlertTitle,
-    Box,
-    Button,
-    Flex,
-    Icon,
-    Text,
-    VStack,
-    Divider,
-    useToast,
-} from "@chakra-ui/react";
+import { Steps, Alert, Box, Button, Flex, Icon, Text, VStack, useToast, Separator } from "@chakra-ui/react";
 import { FaFileCircleQuestion, FaFileCircleCheck } from "react-icons/fa6";
 import { FaQuestion, FaCheck, FaTimes } from "react-icons/fa";
 
@@ -181,7 +168,7 @@ export default function FileChooserWithValidation({
     };
 
     return (
-        <VStack spacing={5} align="stretch" w="full" p={4}>
+        <VStack gap={5} align="stretch" w="full" p={4}>
             {/* Instruction text */}
             {instructionText && (
                 <Box bg="blue.50" p={4} borderRadius="md" borderLeft="4px solid" borderLeftColor="blue.400">
@@ -191,7 +178,7 @@ export default function FileChooserWithValidation({
                 </Box>
             )}
 
-            <Divider />
+            <Separator />
 
             {/* File upload section */}
             <Flex direction="row" gap="1.5em" p="1em" alignItems="center" justifyContent="center" w="full">
@@ -205,12 +192,12 @@ export default function FileChooserWithValidation({
                         ? `Archivo seleccionado: ${file.name}`
                         : "Ningún archivo cargado"}
                 </Text>
-                <Button colorScheme="teal" onClick={handleCargar}>
+                <Button colorPalette="teal" onClick={handleCargar}>
                     {loadButtonLabel}
                 </Button>
             </Flex>
 
-            <Divider />
+            <Separator />
 
             {/* Validation section */}
             <Flex direction="row" gap="1.5em" p="1em" alignItems="center" justifyContent="center" w="full">
@@ -223,10 +210,10 @@ export default function FileChooserWithValidation({
                     {getValidationText(validationStatus)}
                 </Text>
                 <Button
-                    colorScheme="teal"
+                    colorPalette="teal"
                     onClick={handleValidar}
-                    isDisabled={!file}
-                    isLoading={isValidating}
+                    disabled={!file}
+                    loading={isValidating}
                     loadingText="Validando..."
                 >
                     {validateButtonLabel}
@@ -235,13 +222,13 @@ export default function FileChooserWithValidation({
 
             {/* Validation errors */}
             {validationStatus === "failed" && validationErrors.length > 0 && (
-                <Alert status="error" borderRadius="md" flexDirection="column" alignItems="flex-start">
+                <Alert.Root status="error" borderRadius="md" flexDirection="column" alignItems="flex-start">
                     <Flex alignItems="center" mb={2}>
-                        <AlertIcon />
-                        <AlertTitle>Errores de validación:</AlertTitle>
+                        <Alert.Indicator />
+                        <Alert.Title>Errores de validación:</Alert.Title>
                     </Flex>
-                    <AlertDescription w="full">
-                        <VStack align="stretch" spacing={1}>
+                    <Alert.Description w="full">
+                        <VStack align="stretch" gap={1}>
                             {validationErrors.slice(0, 10).map((error, index) => (
                                 <Text key={index} fontSize="sm">
                                     {error}
@@ -253,20 +240,20 @@ export default function FileChooserWithValidation({
                                 </Text>
                             )}
                         </VStack>
-                    </AlertDescription>
-                </Alert>
+                    </Alert.Description>
+                </Alert.Root>
             )}
 
-            <Divider />
+            <Separator />
 
             {/* Next button */}
             {showNextButton && (
                 <Flex justifyContent="flex-end" p="1em">
                     <Button
-                        colorScheme="blue"
+                        colorPalette="blue"
                         size="lg"
                         onClick={handleSiguiente}
-                        isDisabled={validationStatus !== "passed"}
+                        disabled={validationStatus !== "passed"}
                     >
                         {nextButtonLabel}
                     </Button>

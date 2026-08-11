@@ -1,20 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Steps,
   Box,
   Button,
   Flex,
-  FormControl,
-  FormLabel,
   HStack,
   Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  Select,
+  NativeSelect,
   Table,
   Tbody,
   Td,
@@ -24,6 +16,9 @@ import {
   Tr,
   useToast,
   VStack,
+  Field,
+  Dialog,
+  Portal,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL';
@@ -141,116 +136,128 @@ export default function ProductoSelector({
   }, [isOpen]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>{title}</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <VStack spacing={4} align="stretch">
-            <FormControl>
-              <FormLabel>Buscar producto</FormLabel>
-              <HStack>
-                <Input
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  onKeyDown={onKeyPressBuscar}
-                  placeholder="Ingrese nombre o ID"
-                  isDisabled={isLoading}
-                />
-                <Select
-                  value={tipoBusqueda}
-                  onChange={(e) => setTipoBusqueda(e.target.value as TipoBusqueda)}
-                  width="150px"
-                  isDisabled={isLoading}
-                >
-                  <option value="NOMBRE">Nombre</option>
-                  <option value="ID">ID</option>
-                </Select>
-                <Button
-                  onClick={() => {
-                    setPage(0);
-                    handleSearch(0);
-                  }}
-                  isLoading={isLoading}
-                  loadingText="Buscando"
-                  colorScheme="blue"
-                >
-                  Buscar
-                </Button>
-              </HStack>
-            </FormControl>
+    <Dialog.Root open={isOpen} size='xl' onOpenChange={e => {
+      if (!e.open) {
+        onClose();
+      }
+    }}>
+      <Portal>
 
-            <Box w="full" overflowX="auto">
-              {items.length > 0 ? (
-                <>
-                  <Table variant="simple" size="sm">
-                    <Thead>
-                      <Tr>
-                        <Th>ID</Th>
-                        <Th>Nombre</Th>
-                        <Th>UOM</Th>
-                        <Th>Tipo</Th>
-                        <Th isNumeric>Stock</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {items.map((row) => {
-                        const p = row.producto;
-                        const isSelected = selectedProductoId === p.productoId;
-                        return (
-                          <Tr
-                            key={String(p.productoId)}
-                            onClick={() => setSelectedProductoId(p.productoId)}
-                            bg={isSelected ? 'blue.100' : 'transparent'}
-                            _hover={{ bg: 'gray.100', cursor: 'pointer' }}
-                          >
-                            <Td>{p.productoId}</Td>
-                            <Td>{p.nombre}</Td>
-                            <Td>{p.tipoUnidades ?? ''}</Td>
-                            <Td>{p.tipo_producto ?? ''}</Td>
-                            <Td isNumeric>{row.stock ?? 0}</Td>
-                          </Tr>
-                        );
-                      })}
-                    </Tbody>
-                  </Table>
-
-                  <Flex justify="center" mt={4}>
-                    <BetterPagination
-                      page={page}
-                      size={size}
-                      totalPages={totalPages}
-                      loading={isLoading}
-                      onPageChange={(newPage) => {
-                        setPage(newPage);
-                        handleSearch(newPage, size);
-                      }}
-                      onSizeChange={(newSize) => {
-                        setSize(newSize);
-                        setPage(0);
-                        handleSearch(0, newSize);
-                      }}
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>{title}</Dialog.Header>
+            <Dialog.CloseTrigger />
+            <Dialog.Body>
+              <VStack gap={4} align="stretch">
+                <Field.Root>
+                  <Field.Label>Buscar producto</Field.Label>
+                  <HStack>
+                    <Input
+                      value={searchText}
+                      onValueChange={(e) => setSearchText(e.target.value)}
+                      onKeyDown={onKeyPressBuscar}
+                      placeholder="Ingrese nombre o ID"
+                      disabled={isLoading}
                     />
-                  </Flex>
-                </>
-              ) : (
-                <Text textAlign="center">No hay productos para mostrar</Text>
-              )}
-            </Box>
-          </VStack>
-        </ModalBody>
+                    <NativeSelect.Root>
+                      <NativeSelect.Field
+                        value={tipoBusqueda}
+                        onValueChange={(e) => setTipoBusqueda(e.target.value as TipoBusqueda)}
+                        width="150px"
+                        disabled={isLoading}>
+                        <option value="NOMBRE">Nombre</option>
+                        <option value="ID">ID</option>
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                    <Button
+                      onClick={() => {
+                        setPage(0);
+                        handleSearch(0);
+                      }}
+                      loading={isLoading}
+                      loadingText="Buscando"
+                      colorPalette="blue"
+                    >
+                      Buscar
+                    </Button>
+                  </HStack>
+                </Field.Root>
 
-        <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={handleConfirm} isDisabled={!selectedProducto}>
-            Confirmar
-          </Button>
-          <Button variant="ghost" onClick={onClose}>
-            Cancelar
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+                <Box w="full" overflowX="auto">
+                  {items.length > 0 ? (
+                    <>
+                      <Table.Root variant="simple" size="sm">
+                        <Table.Header>
+                          <Table.Row>
+                            <Table.ColumnHeader>ID</Table.ColumnHeader>
+                            <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                            <Table.ColumnHeader>UOM</Table.ColumnHeader>
+                            <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>Stock</Table.ColumnHeader>
+                          </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                          {items.map((row) => {
+                            const p = row.producto;
+                            const isSelected = selectedProductoId === p.productoId;
+                            return (
+                              <Table.Row
+                                key={String(p.productoId)}
+                                onClick={() => setSelectedProductoId(p.productoId)}
+                                bg={isSelected ? 'blue.100' : 'transparent'}
+                                _hover={{ bg: 'gray.100', cursor: 'pointer' }}
+                              >
+                                <Table.Cell>{p.productoId}</Table.Cell>
+                                <Table.Cell>{p.nombre}</Table.Cell>
+                                <Table.Cell>{p.tipoUnidades ?? ''}</Table.Cell>
+                                <Table.Cell>{p.tipo_producto ?? ''}</Table.Cell>
+                                <Table.Cell textAlign='end'>{row.stock ?? 0}</Table.Cell>
+                              </Table.Row>
+                            );
+                          })}
+                        </Table.Body>
+                      </Table.Root>
+
+                      <Flex justify="center" mt={4}>
+                        <BetterPagination
+                          page={page}
+                          size={size}
+                          totalPages={totalPages}
+                          loading={isLoading}
+                          onPageChange={(newPage) => {
+                            setPage(newPage);
+                            handleSearch(newPage, size);
+                          }}
+                          onSizeChange={(newSize) => {
+                            setSize(newSize);
+                            setPage(0);
+                            handleSearch(0, newSize);
+                          }}
+                        />
+                      </Flex>
+                    </>
+                  ) : (
+                    <Text textAlign="center">No hay productos para mostrar</Text>
+                  )}
+                </Box>
+              </VStack>
+            </Dialog.Body>
+
+            <Dialog.Footer>
+              <Button colorPalette="blue" mr={3} onClick={handleConfirm} disabled={!selectedProducto}>
+                Confirmar
+              </Button>
+              <Button variant="ghost" onClick={onClose}>
+                Cancelar
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+
+      </Portal>
+    </Dialog.Root>
   );
 }
 

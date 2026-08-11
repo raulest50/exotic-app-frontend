@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import {
-    Flex, FormControl, FormLabel, Input, Button, Box, Select, useToast
-} from '@chakra-ui/react';
+import { Steps, Flex, Input, Button, Box, NativeSelect, useToast, Field } from '@chakra-ui/react';
 import MyPagination from '../../../components/MyPagination.tsx';
 import { ListaSearchClientes } from './panel_busqueda_comp/ListaSearchClientes.tsx';
 import axios from 'axios';
@@ -56,31 +54,36 @@ export default function PanelBusqueda({setEstado, setClienteSeleccionado}:Props)
         <Flex direction='column' p={4}>
             <Box p={4} borderWidth='1px' borderRadius='lg' mb={4}>
                 {searchType===SearchType.ID ? (
-                    <FormControl mb={4}>
-                        <FormLabel>ID Cliente</FormLabel>
-                        <Input value={id} onChange={e=>setId(e.target.value)} />
-                    </FormControl>
+                    <Field.Root mb={4}>
+                        <Field.Label>ID Cliente</Field.Label>
+                        <Input value={id} onValueChange={e=>setId(e.target.value)} />
+                    </Field.Root>
                 ) : (
                     <>
-                        <FormControl mb={4}>
-                            <FormLabel>Nombre</FormLabel>
-                            <Input value={nombre} onChange={e=>setNombre(e.target.value)} />
-                        </FormControl>
-                        <FormControl mb={4}>
-                            <FormLabel>Correo Electrónico</FormLabel>
-                            <Input value={email} onChange={e=>setEmail(e.target.value)} />
-                        </FormControl>
+                        <Field.Root mb={4}>
+                            <Field.Label>Nombre</Field.Label>
+                            <Input value={nombre} onValueChange={e=>setNombre(e.target.value)} />
+                        </Field.Root>
+                        <Field.Root mb={4}>
+                            <Field.Label>Correo Electrónico</Field.Label>
+                            <Input value={email} onValueChange={e=>setEmail(e.target.value)} />
+                        </Field.Root>
                     </>
                 )}
                 <Flex gap={4} align='center'>
-                    <FormControl flex={1}>
-                        <FormLabel>Tipo de búsqueda</FormLabel>
-                        <Select value={searchType} onChange={e=>setSearchType(e.target.value as SearchType)}>
-                            <option value={SearchType.ID}>ID</option>
-                            <option value={SearchType.NOMBRE_O_EMAIL}>Nombre o Correo</option>
-                        </Select>
-                    </FormControl>
-                    <Button colorScheme='blue' onClick={()=>handleSearch(0)} isLoading={loading} flex={1} mt={6}>Buscar</Button>
+                    <Field.Root flex={1}>
+                        <Field.Label>Tipo de búsqueda</Field.Label>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                value={searchType}
+                                onValueChange={e=>setSearchType(e.target.value as SearchType)}>
+                                <option value={SearchType.ID}>ID</option>
+                                <option value={SearchType.NOMBRE_O_EMAIL}>Nombre o Correo</option>
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                    </Field.Root>
+                    <Button colorPalette='blue' onClick={()=>handleSearch(0)} loading={loading} flex={1} mt={6}>Buscar</Button>
                 </Flex>
             </Box>
             <Box mb={4}>

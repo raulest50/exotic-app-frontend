@@ -1,13 +1,7 @@
 // src/components/ActualizarEstadoOrdenCompraDialog.tsx
 import React, { useEffect, useState } from 'react';
 import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalCloseButton,
-    ModalBody,
-    ModalFooter,
+    Steps,
     Button,
     Box,
     Text,
@@ -19,7 +13,13 @@ import {
     Td,
     Input,
     useToast,
-    HStack, VStack, FormControl, FormLabel, Flex, Select
+    HStack,
+    VStack,
+    Flex,
+    NativeSelect,
+    Field,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
@@ -298,31 +298,31 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                 {orden.itemsOrdenCompra && orden.itemsOrdenCompra.length > 0 && (
                     <Box>
                         <Text fontWeight="bold" mb={2}>Items de la Orden</Text>
-                        <Table variant="simple" size="sm">
-                            <Thead>
-                                <Tr>
-                                    <Th>ID</Th>
-                                    <Th>Materia Prima</Th>
-                                    <Th>Cantidad</Th>
-                                    <Th>Precio Unitario</Th>
-                                    <Th>IVA</Th>
-                                    <Th>Subtotal</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                        <Table.Root variant="simple" size="sm">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Materia Prima</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Precio Unitario</Table.ColumnHeader>
+                                    <Table.ColumnHeader>IVA</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Subtotal</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {localItems && localItems.map((item) => (
-                                    <Tr key={item.itemOrdenId}>
-                                        <Td>{item.itemOrdenId}</Td>
-                                        <Td>{item.material ? `${item.material.productoId} - ${item.material.nombre} - (${item.material.tipoUnidades}) ` : '-'}</Td>
-                                        <Td >{item.cantidad}</Td>
-                                        <Td >{item.precioUnitario}</Td>
-                                        <Td >{item.ivaCOP}</Td>
-                                        <Td >{item.subTotal}</Td>
-                                        <Td hidden={orden.estado!=2}>{getCantidadCorrectaText(item.cantidadCorrecta)}</Td>
-                                    </Tr>
+                                    <Table.Row key={item.itemOrdenId}>
+                                        <Table.Cell>{item.itemOrdenId}</Table.Cell>
+                                        <Table.Cell>{item.material ? `${item.material.productoId} - ${item.material.nombre} - (${item.material.tipoUnidades}) ` : '-'}</Table.Cell>
+                                        <Table.Cell >{item.cantidad}</Table.Cell>
+                                        <Table.Cell >{item.precioUnitario}</Table.Cell>
+                                        <Table.Cell >{item.ivaCOP}</Table.Cell>
+                                        <Table.Cell >{item.subTotal}</Table.Cell>
+                                        <Table.Cell hidden={orden.estado!=2}>{getCantidadCorrectaText(item.cantidadCorrecta)}</Table.Cell>
+                                    </Table.Row>
                                 ))}
-                            </Tbody>
-                        </Table>
+                            </Table.Body>
+                        </Table.Root>
                     </Box>
                 )}
             </>
@@ -335,7 +335,7 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
             return (
                 <Box textAlign="center" py={4}>
                     <Text>Esta Orden ya ha sido cancelada y no se puede alterar más su estado.</Text>
-                    <Button mt={4} colorScheme="blue" onClick={onClose}>Cerrar</Button>
+                    <Button mt={4} colorPalette="blue" onClick={onClose}>Cerrar</Button>
                 </Box>
             );
         }
@@ -343,7 +343,7 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
             return (
                 <Box textAlign="center" py={4}>
                     <Text>Esta Orden de compra fue cerrada exitosamente y ya no se puede cambiar su estado.</Text>
-                    <Button mt={4} colorScheme="blue" onClick={onClose}>Cerrar</Button>
+                    <Button mt={4} colorPalette="blue" onClick={onClose}>Cerrar</Button>
                 </Box>
             );
         }
@@ -358,16 +358,16 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                         <HStack justifyContent={"center"} alignItems="flex-start" mt={2} >
                             <VStack alignItems="center" mt={2} >
                                 <Text fontWeight="bold">Token dinámico de confirmación: {randomCode}</Text>
-                                <FormControl isRequired>
-                                    <FormLabel>Token Dinamico de Confirmacion:</FormLabel>
+                                <Field.Root required>
+                                    <Field.Label>Token Dinamico de Confirmacion:</Field.Label>
                                     <Input
                                         placeholder="Digite token dinámico"
                                         value={inputCode}
-                                        onChange={(e) => setInputCode(e.target.value)}
+                                        onValueChange={(e) => setInputCode(e.target.value)}
                                         maxW="200px"
                                     />
-                                </FormControl>
-                                <Button colorScheme="green" onClick={handleLiberacion}>
+                                </Field.Root>
+                                <Button colorPalette="green" onClick={handleLiberacion}>
                                     Liberar Orden
                                 </Button>
                             </VStack>
@@ -386,33 +386,33 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                         <Text fontWeight="bold">Código: {randomCode}</Text>
                         <Flex p="1em" direction={"row"} gap={10} alignItems={"center"} justifyContent={"space-between"}>
                             <Box flex={1}>
-                                <FormControl>
-                                    <FormLabel>Tipo Envio Orden Compra</FormLabel>
-                                    <Select
-                                        value={tipoEnvio}
-                                        onChange={(e) => setTipoEnvio(e.target.value)}
-                                    >
-                                        <option value={TipoEnvio.MANUAL}>{TipoEnvio.MANUAL}</option>
-                                        {hasEmail() && (
-                                            <option value={TipoEnvio.EMAIL}>CORREO ELECTRÓNICO</option>
-                                        )}
-                                        {hasPhoneNumber() && (
-                                            <option value={TipoEnvio.WHATSAPP}>WHATSAPP</option>
-                                        )}
-                                    </Select>
-                                </FormControl>
+                                <Field.Root>
+                                    <Field.Label>Tipo Envio Orden Compra</Field.Label>
+                                    <NativeSelect.Root>
+                                        <NativeSelect.Field value={tipoEnvio} onValueChange={(e) => setTipoEnvio(e.target.value)}>
+                                            <option value={TipoEnvio.MANUAL}>{TipoEnvio.MANUAL}</option>
+                                            {hasEmail() && (
+                                                <option value={TipoEnvio.EMAIL}>CORREO ELECTRÓNICO</option>
+                                            )}
+                                            {hasPhoneNumber() && (
+                                                <option value={TipoEnvio.WHATSAPP}>WHATSAPP</option>
+                                            )}
+                                        </NativeSelect.Field>
+                                        <NativeSelect.Indicator />
+                                    </NativeSelect.Root>
+                                </Field.Root>
                             </Box>
                             <Box display={"flex"} gap={5} flex={2} >
                                 <Input
                                 placeholder="Digite el código"
                                 value={inputCode}
-                                onChange={(e) => setInputCode(e.target.value)}
+                                onValueChange={(e) => setInputCode(e.target.value)}
                                 maxW="200px"
                                 />
                                 <Button
-                                    colorScheme="green"
+                                    colorPalette="green"
                                     onClick={handleEnviarProveedor}
-                                    isLoading={isLoadingEnvio}
+                                    loading={isLoadingEnvio}
                                     loadingText="Enviando..."
                                 >
                                     Enviar a Proveedor
@@ -437,13 +437,13 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                             <Input
                                 placeholder="Digite token dinámico"
                                 value={inputCode}
-                                onChange={(e) => setInputCode(e.target.value)}
+                                onValueChange={(e) => setInputCode(e.target.value)}
                                 maxW="200px"
                             />
                             <Button
-                                colorScheme="green"
+                                colorPalette="green"
                                 onClick={handleCerrarOrden}
-                                isDisabled={!allCantidadCorrecta()}
+                                disabled={!allCantidadCorrecta()}
                             >
                                 Cerrar Orden De Compra Exitosamente
                             </Button>
@@ -456,17 +456,27 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size={["auto", "4xl"]} scrollBehavior="inside">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Actualizar Estado de la Orden de Compra</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>{renderContent()}</ModalBody>
-                <ModalFooter>
-                    <Button colorScheme="blue" onClick={onClose}>Cerrar</Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+        <Dialog.Root open={isOpen} size={["auto", "4xl"]} scrollBehavior="inside" onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
+
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Actualizar Estado de la Orden de Compra</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>{renderContent()}</Dialog.Body>
+                        <Dialog.Footer>
+                            <Button colorPalette="blue" onClick={onClose}>Cerrar</Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 };
 

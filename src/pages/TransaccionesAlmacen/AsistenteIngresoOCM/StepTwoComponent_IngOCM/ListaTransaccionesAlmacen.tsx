@@ -1,5 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
+import { useColorModeValue } from "../../../../components/ui/color-mode";
 import {
+    Steps,
     Box,
     Flex,
     Table,
@@ -12,16 +14,15 @@ import {
     Heading,
     Spinner,
     useToast,
-    Collapse,
+    Collapsible,
     IconButton,
     Badge,
-    useColorModeValue,
 } from '@chakra-ui/react';
-import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
-
 import { MovimientoDetalle, TransaccionAlmacen } from '../../types';
+
 import { ListaTransaccionesDataProps } from '../ingresoOcmTypes';
 import { fetchMovimientosTransaccion, fetchTransaccionesOcm } from '../ocmIngresoApi';
+import { LuChevronDown, LuChevronUp } from 'react-icons/lu';
 
 interface ListaTransaccionesAlmacenProps extends ListaTransaccionesDataProps {
     ordenCompraId: number | undefined;
@@ -195,18 +196,18 @@ export function ListaTransaccionesAlmacen({
                 </Box>
             ) : (
                 <Box w="full" bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
-                    <Table size="sm" variant="simple">
-                        <Thead bg="app.tableHeader">
-                            <Tr>
-                                <Th>ID Transaccion</Th>
-                                <Th>Fecha</Th>
-                                <Th># Movimientos</Th>
-                                <Th>Estado Contable</Th>
-                                <Th>Observaciones</Th>
-                                <Th textAlign="center">Accion</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header bg="app.tableHeader">
+                            <Table.Row>
+                                <Table.ColumnHeader>ID Transaccion</Table.ColumnHeader>
+                                <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                                <Table.ColumnHeader># Movimientos</Table.ColumnHeader>
+                                <Table.ColumnHeader>Estado Contable</Table.ColumnHeader>
+                                <Table.ColumnHeader>Observaciones</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign="center">Accion</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {transacciones.map((transaccion) => {
                                 const transaccionId = transaccion.transaccionId || 0;
                                 const isExpanded = expandedTransacciones.has(transaccionId);
@@ -215,13 +216,13 @@ export function ListaTransaccionesAlmacen({
 
                                 return (
                                     <Fragment key={transaccionId}>
-                                        <Tr>
-                                            <Td fontWeight="semibold">
+                                        <Table.Row>
+                                            <Table.Cell fontWeight="semibold">
                                                 {transaccionId}
-                                            </Td>
-                                            <Td>{formatDate(transaccion.fechaTransaccion)}</Td>
-                                            <Td>{transaccion.movimientosTransaccion?.length || 0}</Td>
-                                            <Td>
+                                            </Table.Cell>
+                                            <Table.Cell>{formatDate(transaccion.fechaTransaccion)}</Table.Cell>
+                                            <Table.Cell>{transaccion.movimientosTransaccion?.length || 0}</Table.Cell>
+                                            <Table.Cell>
                                                 <Text
                                                     fontSize="xs"
                                                     px={2}
@@ -245,95 +246,95 @@ export function ListaTransaccionesAlmacen({
                                                 >
                                                     {transaccion.estadoContable || 'N/A'}
                                                 </Text>
-                                            </Td>
-                                            <Td>
+                                            </Table.Cell>
+                                            <Table.Cell>
                                                 <Text
                                                     fontSize="sm"
-                                                    noOfLines={2}
+                                                    lineClamp={2}
                                                     maxW="300px"
                                                 >
                                                     {transaccion.observaciones || '-'}
                                                 </Text>
-                                            </Td>
-                                            <Td textAlign="center">
+                                            </Table.Cell>
+                                            <Table.Cell textAlign="center">
                                                 <IconButton
                                                     aria-label={isExpanded ? "Ocultar detalles" : "Mostrar detalles"}
-                                                    icon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
                                                     size="sm"
                                                     variant="ghost"
                                                     onClick={() => toggleTransaccion(transaccionId)}
-                                                    isLoading={isLoadingMov}
-                                                />
-                                            </Td>
-                                        </Tr>
+                                                    loading={isLoadingMov}>{isExpanded ? <LuChevronUp /> : <LuChevronDown />}</IconButton>
+                                            </Table.Cell>
+                                        </Table.Row>
                                         {isExpanded && (
-                                            <Tr>
-                                                <Td colSpan={6} p={0}>
-                                                    <Collapse in={isExpanded} animateOpacity>
-                                                        <Box p={4} bg="app.surfaceSubtle" borderTopWidth="1px">
-                                                            {isLoadingMov ? (
-                                                                <Flex justify="center" align="center" py={4}>
-                                                                    <Spinner size="md" />
-                                                                </Flex>
-                                                            ) : movimientos.length === 0 ? (
-                                                                <Text fontSize="sm" color="app.textMuted" textAlign="center" py={4}>
-                                                                    No hay movimientos registrados para esta transaccion
-                                                                </Text>
-                                                            ) : (
-                                                                <>
-                                                                    <Text fontWeight="bold" mb={3} fontSize="sm">
-                                                                        Materiales Recibidos en esta Transaccion
+                                            <Table.Row>
+                                                <Table.Cell colSpan={6} p={0}>
+                                                    <Collapsible.Root open={isExpanded}>
+                                                        <Collapsible.Content>
+                                                            <Box p={4} bg="app.surfaceSubtle" borderTopWidth="1px">
+                                                                {isLoadingMov ? (
+                                                                    <Flex justify="center" align="center" py={4}>
+                                                                        <Spinner size="md" />
+                                                                    </Flex>
+                                                                ) : movimientos.length === 0 ? (
+                                                                    <Text fontSize="sm" color="app.textMuted" textAlign="center" py={4}>
+                                                                        No hay movimientos registrados para esta transaccion
                                                                     </Text>
-                                                                    <Table size="sm" variant="simple" bg="app.surface">
-                                                                        <Thead>
-                                                                            <Tr>
-                                                                                <Th>Material</Th>
-                                                                                <Th>ID Producto</Th>
-                                                                                <Th>Lote (Batch)</Th>
-                                                                                <Th>Cantidad</Th>
-                                                                                <Th>Fecha Vencimiento</Th>
-                                                                            </Tr>
-                                                                        </Thead>
-                                                                        <Tbody>
-                                                                            {movimientos.map((movimiento, idx) => (
-                                                                                <Tr key={movimiento.movimientoId || idx}>
-                                                                                    <Td>{movimiento.productoNombre || '-'}</Td>
-                                                                                    <Td>{movimiento.productoId || '-'}</Td>
-                                                                                    <Td>
-                                                                                        {movimiento.batchNumber ? (
-                                                                                            <Badge colorScheme="teal" fontSize="xs">
-                                                                                                {movimiento.batchNumber}
-                                                                                            </Badge>
-                                                                                        ) : (
-                                                                                            <Badge colorScheme="gray" fontSize="xs">
-                                                                                                Sin lote
-                                                                                            </Badge>
-                                                                                        )}
-                                                                                    </Td>
-                                                                                    <Td>
-                                                                                        {movimiento.cantidad} {movimiento.tipoUnidades || ''}
-                                                                                    </Td>
-                                                                                    <Td>
-                                                                                        {movimiento.expirationDate
-                                                                                            ? formatDateShort(movimiento.expirationDate)
-                                                                                            : '-'}
-                                                                                    </Td>
-                                                                                </Tr>
-                                                                            ))}
-                                                                        </Tbody>
-                                                                    </Table>
-                                                                </>
-                                                            )}
-                                                        </Box>
-                                                    </Collapse>
-                                                </Td>
-                                            </Tr>
+                                                                ) : (
+                                                                    <>
+                                                                        <Text fontWeight="bold" mb={3} fontSize="sm">
+                                                                            Materiales Recibidos en esta Transaccion
+                                                                        </Text>
+                                                                        <Table.Root size="sm" variant="simple" bg="app.surface">
+                                                                            <Table.Header>
+                                                                                <Table.Row>
+                                                                                    <Table.ColumnHeader>Material</Table.ColumnHeader>
+                                                                                    <Table.ColumnHeader>ID Producto</Table.ColumnHeader>
+                                                                                    <Table.ColumnHeader>Lote (Batch)</Table.ColumnHeader>
+                                                                                    <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                                                                    <Table.ColumnHeader>Fecha Vencimiento</Table.ColumnHeader>
+                                                                                </Table.Row>
+                                                                            </Table.Header>
+                                                                            <Table.Body>
+                                                                                {movimientos.map((movimiento, idx) => (
+                                                                                    <Table.Row key={movimiento.movimientoId || idx}>
+                                                                                        <Table.Cell>{movimiento.productoNombre || '-'}</Table.Cell>
+                                                                                        <Table.Cell>{movimiento.productoId || '-'}</Table.Cell>
+                                                                                        <Table.Cell>
+                                                                                            {movimiento.batchNumber ? (
+                                                                                                <Badge colorPalette="teal" fontSize="xs">
+                                                                                                    {movimiento.batchNumber}
+                                                                                                </Badge>
+                                                                                            ) : (
+                                                                                                <Badge colorPalette="gray" fontSize="xs">
+                                                                                                    Sin lote
+                                                                                                </Badge>
+                                                                                            )}
+                                                                                        </Table.Cell>
+                                                                                        <Table.Cell>
+                                                                                            {movimiento.cantidad} {movimiento.tipoUnidades || ''}
+                                                                                        </Table.Cell>
+                                                                                        <Table.Cell>
+                                                                                            {movimiento.expirationDate
+                                                                                                ? formatDateShort(movimiento.expirationDate)
+                                                                                                : '-'}
+                                                                                        </Table.Cell>
+                                                                                    </Table.Row>
+                                                                                ))}
+                                                                            </Table.Body>
+                                                                        </Table.Root>
+                                                                    </>
+                                                                )}
+                                                            </Box>
+                                                        </Collapsible.Content>
+                                                    </Collapsible.Root>
+                                                </Table.Cell>
+                                            </Table.Row>
                                         )}
                                     </Fragment>
                                 );
                             })}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 </Box>
             )}
         </Flex>

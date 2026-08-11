@@ -1,6 +1,6 @@
 // DatePicker.tsx
 import React from 'react';
-import { Input, FormControl, FormLabel } from '@chakra-ui/react';
+import { Steps, Input, Field } from '@chakra-ui/react';
 
 interface DatePickerProps {
     date: string;
@@ -27,15 +27,15 @@ const DatePicker: React.FC<DatePickerProps> = ({
     };
 
     return (
-        <FormControl>
-            {label && <FormLabel>{label}</FormLabel>}
+        <Field.Root>
+            {label && <Field.Label>{label}</Field.Label>}
             <Input
                 type="date"
                 value={date}
-                onChange={handleChange}
+                onValueChange={handleChange}
                 onBlur={handleBlur}
             />
-        </FormControl>
+        </Field.Root>
     );
 };
 

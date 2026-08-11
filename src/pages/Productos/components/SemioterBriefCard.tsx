@@ -1,4 +1,4 @@
-import {Card, CardBody, CardHeader, Divider, Flex, Heading, Text, VStack} from "@chakra-ui/react";
+import { Steps, Card, Flex, Heading, Text, VStack, Separator } from "@chakra-ui/react";
 import {ProductoSemiter, TIPOS_PRODUCTOS} from "../types.tsx";
 
 interface props{
@@ -12,9 +12,9 @@ export default function SemioterBriefCard({semioter}:props) {
         return Math.ceil(text.length / maxCharsPerLine);
     };
 
-    return(
-        <Card w={'full'}>
-            <CardHeader>
+    return (
+        <Card.Root w={'full'}>
+            <Card.Header>
                 <VStack>
                     <Heading size="md">
                         Nombre: {semioter.nombre}
@@ -23,9 +23,9 @@ export default function SemioterBriefCard({semioter}:props) {
                         Tipo Producto: {semioter.tipo_producto === TIPOS_PRODUCTOS.terminado ? "Terminado" : "Semiterminado"}
                     </Heading>
                 </VStack>
-            </CardHeader>
-            <Divider color={"gray.400"} />
-            <CardBody>
+            </Card.Header>
+            <Separator color={"gray.400"} />
+            <Card.Body>
                 <Flex direction={"row"} gap={10}>
                     <VStack alignItems="start">
                         <Text pt="2" fontSize="sm">
@@ -40,13 +40,13 @@ export default function SemioterBriefCard({semioter}:props) {
                         <Text pt="2" fontSize="sm">
                             Codigo: {semioter.productoId}
                         </Text>
-                        <Text pt="2" fontSize="sm" noOfLines={calculateNoOfLines(semioter.observaciones as string)}>
+                        <Text pt="2" fontSize="sm" lineClamp={calculateNoOfLines(semioter.observaciones as string)}>
                             Observaciones: {semioter.observaciones}
                         </Text>
                     </VStack>
 
                 </Flex>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }

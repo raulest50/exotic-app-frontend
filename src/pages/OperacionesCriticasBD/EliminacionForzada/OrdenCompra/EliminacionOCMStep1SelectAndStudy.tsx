@@ -1,13 +1,4 @@
-import {
-    Box,
-    Button,
-    Flex,
-    Heading,
-    Text,
-    useDisclosure,
-    useToast,
-    VStack,
-} from "@chakra-ui/react";
+import { Steps, Box, Button, Flex, Heading, Text, useDisclosure, useToast, VStack } from "@chakra-ui/react";
 import axios from "axios";
 import { useMemo, useState } from "react";
 import OrdenCompraPicker from "../../../Compras/components/OrdenCompraPicker";
@@ -28,7 +19,7 @@ export default function EliminacionOCMStep1SelectAndStudy({
     setOrdenSeleccionada,
     setStudyResult,
 }: EliminacionOCMStep1SelectAndStudyProps) {
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const { open, onOpen, onClose } = useDisclosure();
     const [isStudying, setIsStudying] = useState(false);
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const toast = useToast();
@@ -63,7 +54,7 @@ export default function EliminacionOCMStep1SelectAndStudy({
 
     return (
         <Box>
-            <VStack align="stretch" spacing={4}>
+            <VStack align="stretch" gap={4}>
                 <Heading size="md">Orden de compra a eliminar</Heading>
                 <Text color="app.textMuted">
                     Seleccione la orden de compra sobre la cual desea estudiar la eliminación forzada.
@@ -73,7 +64,7 @@ export default function EliminacionOCMStep1SelectAndStudy({
                 <Button
                     w="full"
                     justifyContent="flex-start"
-                    colorScheme="teal"
+                    colorPalette="teal"
                     onClick={onOpen}
                     variant="outline"
                 >
@@ -86,10 +77,10 @@ export default function EliminacionOCMStep1SelectAndStudy({
                         Atrás
                     </Button>
                     <Button
-                        colorScheme="teal"
+                        colorPalette="teal"
                         onClick={handleEstudiarEliminacion}
-                        isDisabled={ordenSeleccionada == null}
-                        isLoading={isStudying}
+                        disabled={ordenSeleccionada == null}
+                        loading={isStudying}
                         loadingText="Estudiando..."
                     >
                         Estudiar eliminación y continuar

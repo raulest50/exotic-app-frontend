@@ -1,16 +1,4 @@
-import {
-    Alert,
-    AlertDescription,
-    AlertIcon,
-    Box,
-    Button,
-    FormControl,
-    FormLabel,
-    Input,
-    Text,
-    useToast,
-    VStack,
-} from "@chakra-ui/react";
+import { Steps, Alert, Box, Button, Input, Text, useToast, VStack, Field } from "@chakra-ui/react";
 import { useEffect, useState, type ChangeEvent } from "react";
 
 interface ImportacionTotalBDStep1PrepararProps {
@@ -59,24 +47,24 @@ export default function ImportacionTotalBDStep1Preparar({
     };
 
     return (
-        <VStack align="stretch" spacing={6}>
-            <Alert status="warning">
-                <AlertIcon />
-                <AlertDescription>
+        <VStack align="stretch" gap={6}>
+            <Alert.Root status="warning">
+                <Alert.Indicator />
+                <Alert.Description>
                     Al avanzar al siguiente paso se iniciara una restauracion total que primero vaciara la base
                     actual. Verifique cuidadosamente el archivo antes de continuar.
-                </AlertDescription>
-            </Alert>
+                </Alert.Description>
+            </Alert.Root>
 
             <Box>
-                <FormControl>
-                    <FormLabel>Archivo de backup total (.dump)</FormLabel>
+                <Field.Root>
+                    <Field.Label>Archivo de backup total (.dump)</Field.Label>
                     <Input
                         type="file"
                         accept=".dump"
-                        onChange={handleFileChange}
+                        onValueChange={handleFileChange}
                     />
-                </FormControl>
+                </Field.Root>
 
                 <Text mt={2} color="app.textMuted" fontSize="sm">
                     {dumpFile ? `Archivo seleccionado: ${dumpFile.name}` : "Aun no ha seleccionado un archivo .dump."}
@@ -88,23 +76,23 @@ export default function ImportacionTotalBDStep1Preparar({
                     Token de confirmacion: <strong>{randomToken}</strong>
                 </Text>
 
-                <FormControl>
-                    <FormLabel>Ingrese el token de 4 digitos</FormLabel>
+                <Field.Root>
+                    <Field.Label>Ingrese el token de 4 digitos</Field.Label>
                     <Input
                         placeholder="Ingrese el token de 4 digitos"
                         value={inputToken}
-                        onChange={(e) => setInputToken(e.target.value)}
+                        onValueChange={(e) => setInputToken(e.target.value)}
                     />
-                </FormControl>
+                </Field.Root>
             </Box>
 
             <Button variant="outline" onClick={() => setActiveStep(0)}>
                 Atras
             </Button>
             <Button
-                colorScheme="red"
+                colorPalette="red"
                 onClick={() => setActiveStep(2)}
-                isDisabled={!dumpFile || inputToken !== randomToken}
+                disabled={!dumpFile || inputToken !== randomToken}
             >
                 Continuar a la ejecucion
             </Button>

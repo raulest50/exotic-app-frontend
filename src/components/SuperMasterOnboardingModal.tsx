@@ -1,19 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    Button,
-    FormControl,
-    FormLabel,
-    Input,
-    Text,
-    Progress,
-    useToast,
-} from "@chakra-ui/react";
+import { Steps, Button, Input, Text, Progress, useToast, Field, Dialog, Portal } from "@chakra-ui/react";
 import axios from "axios";
 import EndPointsURL from "../api/EndPointsURL";
 import { clearUserCache } from "../api/UserApi";
@@ -140,92 +126,105 @@ export default function SuperMasterOnboardingModal({ isOpen, onClose, onSuccess 
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Completar perfil de Super Master</ModalHeader>
-                <ModalBody>
-                    <FormControl isRequired mb={4}>
-                        <FormLabel>Correo electrónico</FormLabel>
-                        <Input
-                            type="email"
-                            placeholder="correo@ejemplo.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            isDisabled={codeSent}
-                        />
-                    </FormControl>
-                    <Button
-                        mb={4}
-                        colorScheme="blue"
-                        onClick={handleSendCode}
-                        isDisabled={!emailValid || sendCodeLoading || sendCodeCooldown > 0}
-                        isLoading={sendCodeLoading}
-                    >
-                        {sendCodeCooldown > 0 ? `Reenviar en ${sendCodeCooldown}s` : "Enviar código de verificación"}
-                    </Button>
+        <Dialog.Root open={isOpen} placement='center' size='md' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                    {codeSent && (
-                        <>
-                            <FormControl isRequired mb={4}>
-                                <FormLabel>Código de 6 dígitos</FormLabel>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Completar perfil de Super Master</Dialog.Header>
+                        <Dialog.Body>
+                            <Field.Root required mb={4}>
+                                <Field.Label>Correo electrónico</Field.Label>
                                 <Input
-                                    type="text"
-                                    placeholder="000000"
-                                    maxLength={6}
-                                    value={code}
-                                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                                    type="email"
+                                    placeholder="correo@ejemplo.com"
+                                    value={email}
+                                    onValueChange={(e) => setEmail(e.target.value)}
+                                    disabled={codeSent}
                                 />
-                            </FormControl>
-                            <FormControl isRequired mb={2}>
-                                <FormLabel>Contraseña</FormLabel>
-                                <Input
-                                    type="password"
-                                    placeholder="Mínimo 8 caracteres"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
-                                <Progress
-                                    value={passwordStrength.strength}
-                                    colorScheme={passwordStrength.color.split(".")[0]}
-                                    size="sm"
-                                    mt={2}
-                                />
-                                <Text fontSize="sm" color={passwordStrength.color} mt={1}>
-                                    {passwordStrength.text}
-                                </Text>
-                            </FormControl>
-                            <FormControl isRequired mb={4}>
-                                <FormLabel>Repetir contraseña</FormLabel>
-                                <Input
-                                    type="password"
-                                    placeholder="Repetir contraseña"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                />
-                                {confirmPassword && !passwordsMatch && (
-                                    <Text fontSize="sm" color="red.500" mt={1}>
-                                        Las contraseñas no coinciden
-                                    </Text>
-                                )}
-                            </FormControl>
-                        </>
-                    )}
-                </ModalBody>
-                <ModalFooter>
-                    <Button variant="ghost" mr={3} onClick={onClose}>
-                        Cerrar
-                    </Button>
-                    <Button
-                        colorScheme="blue"
-                        onClick={handleSubmit}
-                        isDisabled={!canSubmit || submitLoading}
-                        isLoading={submitLoading}
-                    >
-                        Aceptar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                            </Field.Root>
+                            <Button
+                                mb={4}
+                                colorPalette="blue"
+                                onClick={handleSendCode}
+                                disabled={!emailValid || sendCodeLoading || sendCodeCooldown > 0}
+                                loading={sendCodeLoading}
+                            >
+                                {sendCodeCooldown > 0 ? `Reenviar en ${sendCodeCooldown}s` : "Enviar código de verificación"}
+                            </Button>
+
+                            {codeSent && (
+                                <>
+                                    <Field.Root required mb={4}>
+                                        <Field.Label>Código de 6 dígitos</Field.Label>
+                                        <Input
+                                            type="text"
+                                            placeholder="000000"
+                                            maxLength={6}
+                                            value={code}
+                                            onValueChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                                        />
+                                    </Field.Root>
+                                    <Field.Root required mb={2}>
+                                        <Field.Label>Contraseña</Field.Label>
+                                        <Input
+                                            type="password"
+                                            placeholder="Mínimo 8 caracteres"
+                                            value={password}
+                                            onValueChange={(e) => setPassword(e.target.value)}
+                                        />
+                                        <Progress.Root
+                                            value={passwordStrength.strength}
+                                            colorPalette={passwordStrength.color.split(".")[0]}
+                                            size="sm"
+                                            mt={2}>
+                                            <Progress.Track>
+                                                <Progress.Range />
+                                            </Progress.Track>
+                                        </Progress.Root>
+                                        <Text fontSize="sm" color={passwordStrength.color} mt={1}>
+                                            {passwordStrength.text}
+                                        </Text>
+                                    </Field.Root>
+                                    <Field.Root required mb={4}>
+                                        <Field.Label>Repetir contraseña</Field.Label>
+                                        <Input
+                                            type="password"
+                                            placeholder="Repetir contraseña"
+                                            value={confirmPassword}
+                                            onValueChange={(e) => setConfirmPassword(e.target.value)}
+                                        />
+                                        {confirmPassword && !passwordsMatch && (
+                                            <Text fontSize="sm" color="red.500" mt={1}>
+                                                Las contraseñas no coinciden
+                                            </Text>
+                                        )}
+                                    </Field.Root>
+                                </>
+                            )}
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button variant="ghost" mr={3} onClick={onClose}>
+                                Cerrar
+                            </Button>
+                            <Button
+                                colorPalette="blue"
+                                onClick={handleSubmit}
+                                disabled={!canSubmit || submitLoading}
+                                loading={submitLoading}
+                            >
+                                Aceptar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

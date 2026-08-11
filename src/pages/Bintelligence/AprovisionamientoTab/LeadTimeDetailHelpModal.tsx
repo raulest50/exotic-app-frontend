@@ -1,15 +1,8 @@
 import {
+    Steps,
     Box,
     Code,
-    Divider,
     Heading,
-    ListItem,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalHeader,
-    ModalOverlay,
     Stack,
     Table,
     Tbody,
@@ -18,7 +11,10 @@ import {
     Th,
     Thead,
     Tr,
-    UnorderedList,
+    Separator,
+    List,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
 
 type Props = {
@@ -96,159 +92,169 @@ const detailHelpItems = [
 
 export default function LeadTimeDetailHelpModal({ isOpen, onClose }: Props) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "6xl" }} scrollBehavior="inside">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Ayuda del detalle de lead time</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody pb={6}>
-                    <Stack spacing={4}>
-                        <Text color="app.textMuted">
-                            El detalle muestra dos perspectivas complementarias del mismo proveedor-material:
-                            la rapidez con la que empieza a llegar material y el tiempo que toma completar la entrega.
-                        </Text>
+        <Dialog.Root open={isOpen} size={{ base: "full", md: "6xl" }} scrollBehavior="inside" onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                        <Box>
-                            <Heading size="sm" mb={2}>Como interpretar las metricas principales</Heading>
-                            <UnorderedList spacing={2} pl={5}>
-                                <ListItem>
-                                    <b>Lead time representativo</b>: es el valor principal que el sistema propone para analizar
-                                    ese proveedor-material. Busca resumir el comportamiento mas util del historico disponible.
-                                </ListItem>
-                                <ListItem>
-                                    <b>Promedio</b>: es la media aritmetica de todos los casos observados. Sirve como referencia
-                                    general, pero puede moverse mucho si hubo casos atipicos o demoras extremas.
-                                </ListItem>
-                                <ListItem>
-                                    <b>Mediana</b>: es el valor central del historico ordenado. Suele mostrar mejor el comportamiento
-                                    tipico cuando los datos tienen dispersion o valores extremos.
-                                </ListItem>
-                                <ListItem>
-                                    <b>En esta vista</b>, el lead time representativo puede coincidir con promedio o mediana en algunos
-                                    casos, especialmente cuando hay pocas observaciones o cuando todos los casos son muy parecidos.
-                                </ListItem>
-                                <ListItem>
-                                    <b>Confianza</b> no mide rapidez: mide que tan confiable es el calculo segun el historico disponible.
-                                    Por eso un lead time bajo no siempre significa que el dato sea fuerte.
-                                </ListItem>
-                                <ListItem>
-                                    <b>Observaciones validas</b> muestra cuantos casos reales soportan el calculo, mientras que
-                                    <b> ordenes consideradas</b> da el contexto total revisado dentro de la ventana.
-                                </ListItem>
-                            </UnorderedList>
-                        </Box>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Ayuda del detalle de lead time</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body pb={6}>
+                            <Stack gap={4}>
+                                <Text color="app.textMuted">
+                                    El detalle muestra dos perspectivas complementarias del mismo proveedor-material:
+                                    la rapidez con la que empieza a llegar material y el tiempo que toma completar la entrega.
+                                </Text>
 
-                        <Box overflowX="auto">
-                            <Table size="sm" variant="simple">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Campo</Th>
-                                        <Th>Que significa</Th>
-                                        <Th>Por que importa</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
-                                    {detailHelpItems.map((item) => (
-                                        <Tr key={item.field}>
-                                            <Td fontWeight="semibold">{item.field}</Td>
-                                            <Td>{item.meaning}</Td>
-                                            <Td>{item.importance}</Td>
-                                        </Tr>
-                                    ))}
-                                </Tbody>
-                            </Table>
-                        </Box>
-
-                        <Divider />
-
-                        <Box>
-                            <Heading size="sm" mb={3}>Como se calculan los principales indicadores BI</Heading>
-                            <Stack spacing={4}>
-                                <Box p={4} borderWidth="1px" borderRadius="md">
-                                    <Text fontWeight="semibold" mb={2}>Lead time representativo</Text>
-                                    <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
-                                        si n &gt;= 3 usar mediana
-                                        si n &lt; 3 usar promedio
-                                    </Code>
-                                    <Text mt={3}>
-                                        Cuando ya hay al menos tres observaciones validas, se usa la mediana porque suele resistir mejor
-                                        los casos atipicos. Cuando hay pocas observaciones, se usa el promedio como una referencia simple.
-                                    </Text>
-                                    <Text mt={2} fontSize="sm" color="app.textMuted">
-                                        Heuristica interna BI v1: es una regla operativa para resumir el historico de forma util.
-                                    </Text>
+                                <Box>
+                                    <Heading size="sm" mb={2}>Como interpretar las metricas principales</Heading>
+                                    <List.Root as='ul' gap={2} pl={5}>
+                                        <List.Item>
+                                            <b>Lead time representativo</b>: es el valor principal que el sistema propone para analizar
+                                            ese proveedor-material. Busca resumir el comportamiento mas util del historico disponible.
+                                        </List.Item>
+                                        <List.Item>
+                                            <b>Promedio</b>: es la media aritmetica de todos los casos observados. Sirve como referencia
+                                            general, pero puede moverse mucho si hubo casos atipicos o demoras extremas.
+                                        </List.Item>
+                                        <List.Item>
+                                            <b>Mediana</b>: es el valor central del historico ordenado. Suele mostrar mejor el comportamiento
+                                            tipico cuando los datos tienen dispersion o valores extremos.
+                                        </List.Item>
+                                        <List.Item>
+                                            <b>En esta vista</b>, el lead time representativo puede coincidir con promedio o mediana en algunos
+                                            casos, especialmente cuando hay pocas observaciones o cuando todos los casos son muy parecidos.
+                                        </List.Item>
+                                        <List.Item>
+                                            <b>Confianza</b> no mide rapidez: mide que tan confiable es el calculo segun el historico disponible.
+                                            Por eso un lead time bajo no siempre significa que el dato sea fuerte.
+                                        </List.Item>
+                                        <List.Item>
+                                            <b>Observaciones validas</b> muestra cuantos casos reales soportan el calculo, mientras que
+                                            <b> ordenes consideradas</b> da el contexto total revisado dentro de la ventana.
+                                        </List.Item>
+                                    </List.Root>
                                 </Box>
 
-                                <Box p={4} borderWidth="1px" borderRadius="md">
-                                    <Text fontWeight="semibold" mb={2}>Confianza</Text>
-                                    <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
-                                        confianza = 100 * (0.40 * cobertura + 0.35 * muestra + 0.25 * estabilidad)
-                                    </Code>
-                                    <Text mt={3}>
-                                        La confianza no mide rapidez. Mide que tan confiable es el indicador segun cuantas ordenes
-                                        utiles hubo, cuantos casos validos soportan el calculo y que tan variable fue el comportamiento.
-                                    </Text>
-                                    <Text mt={2} fontSize="sm" color="app.textMuted">
-                                        Heuristica interna BI v1: es un score de calidad del historico, no una formula clasica unica.
-                                    </Text>
+                                <Box overflowX="auto">
+                                    <Table.Root size="sm" variant="simple">
+                                        <Table.Header>
+                                            <Table.Row>
+                                                <Table.ColumnHeader>Campo</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Que significa</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Por que importa</Table.ColumnHeader>
+                                            </Table.Row>
+                                        </Table.Header>
+                                        <Table.Body>
+                                            {detailHelpItems.map((item) => (
+                                                <Table.Row key={item.field}>
+                                                    <Table.Cell fontWeight="semibold">{item.field}</Table.Cell>
+                                                    <Table.Cell>{item.meaning}</Table.Cell>
+                                                    <Table.Cell>{item.importance}</Table.Cell>
+                                                </Table.Row>
+                                            ))}
+                                        </Table.Body>
+                                    </Table.Root>
                                 </Box>
 
-                                <Box p={4} borderWidth="1px" borderRadius="md">
-                                    <Text fontWeight="semibold" mb={2}>ROP o punto de reorden</Text>
-                                    <Text mb={3}>
-                                        Aunque ROP no se muestra en este detalle puntual de proveedor-material, si forma parte del mismo
-                                        modelado BI del modulo y usa el lead time historico como uno de sus insumos principales.
-                                    </Text>
-                                    <Stack spacing={3}>
-                                        <Box>
-                                            <Text fontWeight="medium" mb={2}>FULL_STATISTICAL</Text>
+                                <Separator />
+
+                                <Box>
+                                    <Heading size="sm" mb={3}>Como se calculan los principales indicadores BI</Heading>
+                                    <Stack gap={4}>
+                                        <Box p={4} borderWidth="1px" borderRadius="md">
+                                            <Text fontWeight="semibold" mb={2}>Lead time representativo</Text>
                                             <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
-                                                ROP = d * L + z * sqrt(L * sigma_d^2 + d^2 * sigma_L^2)
+                                                si n &gt;= 3 usar mediana
+                                                si n &lt; 3 usar promedio
                                             </Code>
-                                            <Text mt={2}>
-                                                Se usa cuando hay suficiente historia y tambien variabilidad util del lead time.
-                                                Combina demanda esperada durante el lead time con un componente de seguridad.
+                                            <Text mt={3}>
+                                                Cuando ya hay al menos tres observaciones validas, se usa la mediana porque suele resistir mejor
+                                                los casos atipicos. Cuando hay pocas observaciones, se usa el promedio como una referencia simple.
+                                            </Text>
+                                            <Text mt={2} fontSize="sm" color="app.textMuted">
+                                                Heuristica interna BI v1: es una regla operativa para resumir el historico de forma util.
                                             </Text>
                                         </Box>
 
-                                        <Box>
-                                            <Text fontWeight="medium" mb={2}>DEMAND_ONLY_STATISTICAL</Text>
+                                        <Box p={4} borderWidth="1px" borderRadius="md">
+                                            <Text fontWeight="semibold" mb={2}>Confianza</Text>
                                             <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
-                                                ROP = d * L + z * sigma_d * sqrt(L)
+                                                confianza = 100 * (0.40 * cobertura + 0.35 * muestra + 0.25 * estabilidad)
                                             </Code>
-                                            <Text mt={2}>
-                                                Se usa cuando la demanda tiene historia suficiente, pero no hay base robusta para modelar
-                                                la variabilidad del lead time.
+                                            <Text mt={3}>
+                                                La confianza no mide rapidez. Mide que tan confiable es el indicador segun cuantas ordenes
+                                                utiles hubo, cuantos casos validos soportan el calculo y que tan variable fue el comportamiento.
+                                            </Text>
+                                            <Text mt={2} fontSize="sm" color="app.textMuted">
+                                                Heuristica interna BI v1: es un score de calidad del historico, no una formula clasica unica.
                                             </Text>
                                         </Box>
 
-                                        <Box>
-                                            <Text fontWeight="medium" mb={2}>DETERMINISTIC</Text>
-                                            <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
-                                                ROP = d * L
-                                            </Code>
-                                            <Text mt={2}>
-                                                Es el caso mas simple. Solo estima cuanta demanda deberia cubrirse durante el lead time,
-                                                sin agregar componente estadistico de seguridad.
+                                        <Box p={4} borderWidth="1px" borderRadius="md">
+                                            <Text fontWeight="semibold" mb={2}>ROP o punto de reorden</Text>
+                                            <Text mb={3}>
+                                                Aunque ROP no se muestra en este detalle puntual de proveedor-material, si forma parte del mismo
+                                                modelado BI del modulo y usa el lead time historico como uno de sus insumos principales.
+                                            </Text>
+                                            <Stack gap={3}>
+                                                <Box>
+                                                    <Text fontWeight="medium" mb={2}>FULL_STATISTICAL</Text>
+                                                    <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
+                                                        ROP = d * L + z * sqrt(L * sigma_d^2 + d^2 * sigma_L^2)
+                                                    </Code>
+                                                    <Text mt={2}>
+                                                        Se usa cuando hay suficiente historia y tambien variabilidad util del lead time.
+                                                        Combina demanda esperada durante el lead time con un componente de seguridad.
+                                                    </Text>
+                                                </Box>
+
+                                                <Box>
+                                                    <Text fontWeight="medium" mb={2}>DEMAND_ONLY_STATISTICAL</Text>
+                                                    <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
+                                                        ROP = d * L + z * sigma_d * sqrt(L)
+                                                    </Code>
+                                                    <Text mt={2}>
+                                                        Se usa cuando la demanda tiene historia suficiente, pero no hay base robusta para modelar
+                                                        la variabilidad del lead time.
+                                                    </Text>
+                                                </Box>
+
+                                                <Box>
+                                                    <Text fontWeight="medium" mb={2}>DETERMINISTIC</Text>
+                                                    <Code display="block" whiteSpace="pre-wrap" p={3} borderRadius="md">
+                                                        ROP = d * L
+                                                    </Code>
+                                                    <Text mt={2}>
+                                                        Es el caso mas simple. Solo estima cuanta demanda deberia cubrirse durante el lead time,
+                                                        sin agregar componente estadistico de seguridad.
+                                                    </Text>
+                                                </Box>
+                                            </Stack>
+
+                                            <Text mt={3}>
+                                                Donde <b>d</b> es demanda diaria promedio, <b>L</b> es lead time representativo,
+                                                <b> sigma_d</b> es la variabilidad de la demanda, <b>sigma_L</b> es la variabilidad del lead time
+                                                y <b>z</b> es un factor de servicio.
+                                            </Text>
+                                            <Text mt={2} fontSize="sm" color="app.textMuted">
+                                                Formula clasica / modelado de inventarios: estas expresiones vienen de enfoques tradicionales
+                                                de reorder point y safety stock bajo distintos niveles de incertidumbre.
                                             </Text>
                                         </Box>
                                     </Stack>
-
-                                    <Text mt={3}>
-                                        Donde <b>d</b> es demanda diaria promedio, <b>L</b> es lead time representativo,
-                                        <b> sigma_d</b> es la variabilidad de la demanda, <b>sigma_L</b> es la variabilidad del lead time
-                                        y <b>z</b> es un factor de servicio.
-                                    </Text>
-                                    <Text mt={2} fontSize="sm" color="app.textMuted">
-                                        Formula clasica / modelado de inventarios: estas expresiones vienen de enfoques tradicionales
-                                        de reorder point y safety stock bajo distintos niveles de incertidumbre.
-                                    </Text>
                                 </Box>
                             </Stack>
-                        </Box>
-                    </Stack>
-                </ModalBody>
-            </ModalContent>
-        </Modal>
+                        </Dialog.Body>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

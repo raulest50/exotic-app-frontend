@@ -1,9 +1,8 @@
 import {
+    Steps,
     Badge,
     Box,
     Button,
-    FormControl,
-    FormLabel,
     HStack,
     Image,
     Input,
@@ -18,6 +17,7 @@ import {
     Tr,
     VStack,
     useToast,
+    Field,
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
@@ -231,7 +231,7 @@ export default function LogoDocumentalOcmSection({
     }
 
     return (
-        <VStack align="stretch" spacing={4}>
+        <VStack align="stretch" gap={4}>
             <Box borderWidth="1px" borderRadius="md" p={4}>
                 <HStack justify="space-between" align="flex-start" mb={4}>
                     <Box>
@@ -242,10 +242,10 @@ export default function LogoDocumentalOcmSection({
                                 : "-"}
                         </Text>
                     </Box>
-                    {vigente ? <Badge colorScheme="green">{vigente.estado}</Badge> : null}
+                    {vigente ? <Badge colorPalette="green">{vigente.estado}</Badge> : null}
                 </HStack>
 
-                <HStack align="flex-start" spacing={6}>
+                <HStack align="flex-start" gap={6}>
                     <Box minW="120px">
                         <Text fontSize="sm" fontWeight="semibold" mb={2}>Vigente</Text>
                         {vigenteDataUrl ? (
@@ -264,14 +264,14 @@ export default function LogoDocumentalOcmSection({
                         )}
                     </Box>
 
-                    <VStack align="stretch" flex={1} spacing={4}>
-                        <FormControl isDisabled={!canEdit}>
-                            <FormLabel>Nuevo logo PNG</FormLabel>
-                            <Input type="file" accept="image/png" onChange={handleFileChange} p={1} />
-                        </FormControl>
+                    <VStack align="stretch" flex={1} gap={4}>
+                        <Field.Root disabled={!canEdit}>
+                            <Field.Label>Nuevo logo PNG</Field.Label>
+                            <Input type="file" accept="image/png" onValueChange={handleFileChange} p={1} />
+                        </Field.Root>
 
                         {selectedDataUrl ? (
-                            <HStack align="center" spacing={4}>
+                            <HStack align="center" gap={4}>
                                 <Image
                                     src={selectedDataUrl}
                                     alt="Logo documental seleccionado"
@@ -294,29 +294,29 @@ export default function LogoDocumentalOcmSection({
                             </HStack>
                         ) : null}
 
-                        <FormControl isRequired isDisabled={!canEdit}>
-                            <FormLabel>Motivo del cambio</FormLabel>
+                        <Field.Root required disabled={!canEdit}>
+                            <Field.Label>Motivo del cambio</Field.Label>
                             <Textarea
                                 value={motivoCambio}
-                                onChange={(event) => setMotivoCambio(event.target.value)}
+                                onValueChange={(event) => setMotivoCambio(event.target.value)}
                                 minH="80px"
                             />
-                        </FormControl>
+                        </Field.Root>
 
                         <HStack justify="flex-end">
                             <Button
                                 variant="outline"
                                 onClick={handlePreview}
-                                isDisabled={!selectedDataUrl || !canEdit}
-                                isLoading={previewing}
+                                disabled={!selectedDataUrl || !canEdit}
+                                loading={previewing}
                             >
                                 Descargar OCM de prueba
                             </Button>
                             <Button
-                                colorScheme="teal"
+                                colorPalette="teal"
                                 onClick={handleSave}
-                                isDisabled={!canSave}
-                                isLoading={saving}
+                                disabled={!canSave}
+                                loading={saving}
                             >
                                 Guardar logo
                             </Button>
@@ -326,40 +326,40 @@ export default function LogoDocumentalOcmSection({
             </Box>
 
             <Box overflowX="auto" borderWidth="1px" borderRadius="md">
-                <Table size="sm" variant="simple">
-                    <Thead>
-                        <Tr>
-                            <Th>Version</Th>
-                            <Th>Estado</Th>
-                            <Th>Archivo</Th>
-                            <Th>Dimensiones</Th>
-                            <Th>Tamano</Th>
-                            <Th>Vigente desde</Th>
-                            <Th>Vigente hasta</Th>
-                            <Th>Creado por</Th>
-                            <Th>Motivo</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+                <Table.Root size="sm" variant="simple">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Version</Table.ColumnHeader>
+                            <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                            <Table.ColumnHeader>Archivo</Table.ColumnHeader>
+                            <Table.ColumnHeader>Dimensiones</Table.ColumnHeader>
+                            <Table.ColumnHeader>Tamano</Table.ColumnHeader>
+                            <Table.ColumnHeader>Vigente desde</Table.ColumnHeader>
+                            <Table.ColumnHeader>Vigente hasta</Table.ColumnHeader>
+                            <Table.ColumnHeader>Creado por</Table.ColumnHeader>
+                            <Table.ColumnHeader>Motivo</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {versiones.map((version) => (
-                            <Tr key={version.id}>
-                                <Td>{version.version}</Td>
-                                <Td>
-                                    <Badge colorScheme={version.estado === "VIGENTE" ? "green" : "gray"}>
+                            <Table.Row key={version.id}>
+                                <Table.Cell>{version.version}</Table.Cell>
+                                <Table.Cell>
+                                    <Badge colorPalette={version.estado === "VIGENTE" ? "green" : "gray"}>
                                         {version.estado}
                                     </Badge>
-                                </Td>
-                                <Td>{version.nombreArchivoOriginal}</Td>
-                                <Td>{version.anchoPx} x {version.altoPx}</Td>
-                                <Td>{formatBytes(version.tamanoBytes)}</Td>
-                                <Td>{formatDateTime(version.vigenteDesde)}</Td>
-                                <Td>{formatDateTime(version.vigenteHasta)}</Td>
-                                <Td>{version.creadoPor ?? "-"}</Td>
-                                <Td>{version.motivoCambio ?? "-"}</Td>
-                            </Tr>
+                                </Table.Cell>
+                                <Table.Cell>{version.nombreArchivoOriginal}</Table.Cell>
+                                <Table.Cell>{version.anchoPx} x {version.altoPx}</Table.Cell>
+                                <Table.Cell>{formatBytes(version.tamanoBytes)}</Table.Cell>
+                                <Table.Cell>{formatDateTime(version.vigenteDesde)}</Table.Cell>
+                                <Table.Cell>{formatDateTime(version.vigenteHasta)}</Table.Cell>
+                                <Table.Cell>{version.creadoPor ?? "-"}</Table.Cell>
+                                <Table.Cell>{version.motivoCambio ?? "-"}</Table.Cell>
+                            </Table.Row>
                         ))}
-                    </Tbody>
-                </Table>
+                    </Table.Body>
+                </Table.Root>
             </Box>
         </VStack>
     );

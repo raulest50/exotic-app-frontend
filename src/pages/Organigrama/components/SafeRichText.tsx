@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Box, BoxProps } from "@chakra-ui/react";
+import { Steps, Box, BoxProps } from "@chakra-ui/react";
 import DOMPurify from "dompurify";
 
 const ALLOWED_TAGS = ["p", "br", "strong", "em", "u", "ul", "ol", "li", "a"];
@@ -51,12 +51,12 @@ export default function SafeRichText({ html, ...boxProps }: SafeRichTextProps) {
   return (
     <Box
       {...boxProps}
-      sx={{
-        "& p": { mb: 3 },
-        "& p:last-of-type": { mb: 0 },
-        "& ul, & ol": { pl: 6, mb: 3 },
-        "& a": { color: "blue.500", textDecoration: "underline" },
-        ...boxProps.sx,
+      css={{
+        '& & p': { mb: 3 },
+        '& & p:last-of-type': { mb: 0 },
+        '& & ul, & ol': { pl: 6, mb: 3 },
+        '& & a': { color: "blue.500", textDecoration: "underline" },
+        ...boxProps.sx
       }}
       dangerouslySetInnerHTML={{ __html: safeHtml }}
     />

@@ -2,13 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
 import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    ModalCloseButton,
+    Steps,
     Button,
     Input,
     InputGroup,
@@ -24,6 +18,8 @@ import {
     Text,
     useToast,
     Box,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import MyPagination from '../../../../components/MyPagination.tsx';
 import { AreaOperativa } from './types.ts';
@@ -108,105 +104,115 @@ export default function AreaOperativaPicker({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="xl">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Seleccionar Area Operativa</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <Box mb={4}>
-                        <InputGroup>
-                            <Input
-                                value={searchNombre}
-                                onChange={(e) => setSearchNombre(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                placeholder="Buscar por nombre..."
-                            />
-                            <InputRightElement width="auto" px={2}>
-                                <Button
-                                    colorScheme="blue"
-                                    size="sm"
-                                    onClick={handleSearch}
-                                    isLoading={loading}
-                                >
-                                    Buscar
-                                </Button>
-                            </InputRightElement>
-                        </InputGroup>
-                    </Box>
+        <Dialog.Root open={isOpen} size='xl' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                    {loading ? (
-                        <Flex justify="center" py={8}>
-                            <Spinner size="lg" />
-                        </Flex>
-                    ) : areas.length === 0 ? (
-                        <Text textAlign="center" py={4} color="gray.500">
-                            No se encontraron áreas operativas
-                        </Text>
-                    ) : (
-                        <>
-                            <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
-                                <Table variant="simple" size="sm">
-                                    <Thead>
-                                        <Tr>
-                                            <Th>ID</Th>
-                                            <Th>Nombre</Th>
-                                            <Th>Descripcion</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
-                                        {areas.map((area) => {
-                                            const isDisabled = disabledAreaIds.includes(area.areaId);
-                                            return (
-                                                <Tr
-                                                    key={area.areaId}
-                                                    cursor={isDisabled ? 'not-allowed' : 'pointer'}
-                                                    bg={selectedArea?.areaId === area.areaId ? 'purple.100' : 'white'}
-                                                    _hover={isDisabled ? undefined : { bg: 'purple.50' }}
-                                                    opacity={isDisabled ? 0.5 : 1}
-                                                    onClick={() => {
-                                                        if (!isDisabled) {
-                                                            setSelectedArea(area);
-                                                        }
-                                                    }}
-                                                >
-                                                    <Td>{area.areaId}</Td>
-                                                    <Td fontWeight={selectedArea?.areaId === area.areaId ? 'bold' : 'normal'}>
-                                                        {area.nombre}
-                                                    </Td>
-                                                    <Td>{isDisabled ? 'Ya está en la ruta' : area.descripcion || '-'}</Td>
-                                                </Tr>
-                                            );
-                                        })}
-                                    </Tbody>
-                                </Table>
-                            </Box>
-                            {totalPages > 1 && (
-                                <Box mt={4}>
-                                    <MyPagination
-                                        page={page}
-                                        totalPages={totalPages}
-                                        loading={loading}
-                                        handlePageChange={fetchAreas}
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Seleccionar Area Operativa</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <Box mb={4}>
+                                <InputGroup>
+                                    <Input
+                                        value={searchNombre}
+                                        onValueChange={(e) => setSearchNombre(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        placeholder="Buscar por nombre..."
                                     />
-                                </Box>
+                                    <InputRightElement width="auto" px={2}>
+                                        <Button
+                                            colorPalette="blue"
+                                            size="sm"
+                                            onClick={handleSearch}
+                                            loading={loading}
+                                        >
+                                            Buscar
+                                        </Button>
+                                    </InputRightElement>
+                                </InputGroup>
+                            </Box>
+
+                            {loading ? (
+                                <Flex justify="center" py={8}>
+                                    <Spinner size="lg" />
+                                </Flex>
+                            ) : areas.length === 0 ? (
+                                <Text textAlign="center" py={4} color="gray.500">
+                                    No se encontraron áreas operativas
+                                </Text>
+                            ) : (
+                                <>
+                                    <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
+                                        <Table.Root variant="simple" size="sm">
+                                            <Table.Header>
+                                                <Table.Row>
+                                                    <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                                    <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                                    <Table.ColumnHeader>Descripcion</Table.ColumnHeader>
+                                                </Table.Row>
+                                            </Table.Header>
+                                            <Table.Body>
+                                                {areas.map((area) => {
+                                                    const isDisabled = disabledAreaIds.includes(area.areaId);
+                                                    return (
+                                                        <Table.Row
+                                                            key={area.areaId}
+                                                            cursor={isDisabled ? 'not-allowed' : 'pointer'}
+                                                            bg={selectedArea?.areaId === area.areaId ? 'purple.100' : 'white'}
+                                                            _hover={isDisabled ? undefined : { bg: 'purple.50' }}
+                                                            opacity={isDisabled ? 0.5 : 1}
+                                                            onClick={() => {
+                                                                if (!isDisabled) {
+                                                                    setSelectedArea(area);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <Table.Cell>{area.areaId}</Table.Cell>
+                                                            <Table.Cell fontWeight={selectedArea?.areaId === area.areaId ? 'bold' : 'normal'}>
+                                                                {area.nombre}
+                                                            </Table.Cell>
+                                                            <Table.Cell>{isDisabled ? 'Ya está en la ruta' : area.descripcion || '-'}</Table.Cell>
+                                                        </Table.Row>
+                                                    );
+                                                })}
+                                            </Table.Body>
+                                        </Table.Root>
+                                    </Box>
+                                    {totalPages > 1 && (
+                                        <Box mt={4}>
+                                            <MyPagination
+                                                page={page}
+                                                totalPages={totalPages}
+                                                loading={loading}
+                                                handlePageChange={fetchAreas}
+                                            />
+                                        </Box>
+                                    )}
+                                </>
                             )}
-                        </>
-                    )}
-                </ModalBody>
-                <ModalFooter>
-                    <Button variant="ghost" mr={3} onClick={onClose}>
-                        Cancelar
-                    </Button>
-                    <Button
-                        colorScheme="purple"
-                        onClick={handleConfirm}
-                        isDisabled={!selectedArea || disabledAreaIds.includes(selectedArea.areaId)}
-                    >
-                        Confirmar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button variant="ghost" mr={3} onClick={onClose}>
+                                Cancelar
+                            </Button>
+                            <Button
+                                colorPalette="purple"
+                                onClick={handleConfirm}
+                                disabled={!selectedArea || disabledAreaIds.includes(selectedArea.areaId)}
+                            >
+                                Confirmar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

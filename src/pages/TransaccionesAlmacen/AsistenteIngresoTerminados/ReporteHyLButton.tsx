@@ -1,8 +1,8 @@
-import { Button, Checkbox, VStack, useToast } from "@chakra-ui/react";
-import { DownloadIcon } from "@chakra-ui/icons";
+import { Steps, Button, Checkbox, VStack, useToast } from "@chakra-ui/react";
 import axios from "axios";
 import { useMemo, useState } from "react";
 import EndPointsURL from "../../../api/EndPointsURL";
+import { LuDownload } from 'react-icons/lu';
 
 export interface ReporteHyLItem {
     productoId: string;
@@ -147,29 +147,25 @@ export default function ReporteHyLButton({
     };
 
     return (
-        <VStack align="stretch" spacing={2}>
-            <Checkbox
-                isChecked={costosEnCero}
-                onChange={(event) => {
+        <VStack align="stretch" gap={2}>
+            <Checkbox.Root
+                checked={costosEnCero}
+                onCheckedChange={(event) => {
                     setCostosEnCero(event.target.checked);
                     onInvalidated?.();
                 }}
-                isDisabled={isGenerating}
-            >
-                Generar costo en ceros
-            </Checkbox>
+                disabled={isGenerating}
+            ><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Generar costo en ceros
+                                </Checkbox.Label></Checkbox.Root>
             <Button
-                leftIcon={<DownloadIcon />}
-                colorScheme="teal"
+                colorPalette="teal"
                 size="lg"
                 minH="48px"
                 onClick={handleDownloadHyL}
-                isLoading={isGenerating}
+                loading={isGenerating}
                 loadingText="Generando..."
-                isDisabled={productosProducidos.length === 0}
-            >
-                Descargar Reporte HyL
-            </Button>
+                disabled={productosProducidos.length === 0}><LuDownload />Descargar Reporte HyL
+                            </Button>
         </VStack>
     );
 }

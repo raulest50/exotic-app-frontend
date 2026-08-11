@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
+    Steps,
     Box,
     Button,
     Flex,
@@ -7,13 +9,6 @@ import {
     GridItem,
     Heading,
     IconButton,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     Table,
     Tbody,
     Td,
@@ -21,15 +16,16 @@ import {
     Th,
     Thead,
     Tr,
-    useColorModeValue,
     useDisclosure,
     useToast,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
-import { DeleteIcon, InfoIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
 import { User } from '../GestionUsuarios/types.tsx';
+import { LuInfo, LuTrash2 } from 'react-icons/lu';
 
 const endPoints = new EndPointsURL();
 
@@ -124,25 +120,25 @@ export default function GestionNotificacionesTab() {
                         Tipos de Notificación
                     </Heading>
                     <Box border="1px solid" borderColor="app.border" borderRadius="md" overflow="hidden">
-                        <Table variant="simple" size="sm">
-                            <Thead bg="app.tableHeader">
-                                <Tr>
-                                    <Th>Nombre</Th>
-                                    <Th w="50px" textAlign="center">Info</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                        <Table.Root variant="simple" size="sm">
+                            <Table.Header bg="app.tableHeader">
+                                <Table.Row>
+                                    <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                    <Table.ColumnHeader w="50px" textAlign="center">Info</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {notificaciones.length === 0 ? (
-                                    <Tr>
-                                        <Td colSpan={2}>
+                                    <Table.Row>
+                                        <Table.Cell colSpan={2}>
                                             <Text textAlign="center" color="gray.400" py={4}>
                                                 Sin notificaciones
                                             </Text>
-                                        </Td>
-                                    </Tr>
+                                        </Table.Cell>
+                                    </Table.Row>
                                 ) : (
                                     notificaciones.map(notif => (
-                                        <Tr
+                                        <Table.Row
                                             key={notif.id}
                                             onClick={() => setSelected(notif)}
                                             bg={selected?.id === notif.id ? 'app.rowSelectedTeal' : 'transparent'}
@@ -150,24 +146,22 @@ export default function GestionNotificacionesTab() {
                                             borderColor={selected?.id === notif.id ? 'teal.400' : 'transparent'}
                                             _hover={{ bg: 'app.rowHover', cursor: 'pointer' }}
                                         >
-                                            <Td fontWeight={selected?.id === notif.id ? 'semibold' : 'normal'}>
+                                            <Table.Cell fontWeight={selected?.id === notif.id ? 'semibold' : 'normal'}>
                                                 {notif.nombre}
-                                            </Td>
-                                            <Td textAlign="center">
+                                            </Table.Cell>
+                                            <Table.Cell textAlign="center">
                                                 <IconButton
                                                     aria-label="Ver descripción"
-                                                    icon={<InfoIcon />}
                                                     size="xs"
                                                     variant="ghost"
-                                                    colorScheme="blue"
-                                                    onClick={(e) => handleOpenInfo(notif, e)}
-                                                />
-                                            </Td>
-                                        </Tr>
+                                                    colorPalette="blue"
+                                                    onClick={(e) => handleOpenInfo(notif, e)}><LuInfo /></IconButton>
+                                            </Table.Cell>
+                                        </Table.Row>
                                     ))
                                 )}
-                            </Tbody>
-                        </Table>
+                            </Table.Body>
+                        </Table.Root>
                     </Box>
                 </GridItem>
 
@@ -182,52 +176,50 @@ export default function GestionNotificacionesTab() {
                                 </Heading>
                                 <Button
                                     size="sm"
-                                    colorScheme="teal"
+                                    colorPalette="teal"
                                     onClick={pickerModal.onOpen}
-                                    isLoading={isLoadingAction}
+                                    loading={isLoadingAction}
                                 >
                                     + Agregar Usuario
                                 </Button>
                             </Flex>
                             <Box border="1px solid" borderColor="app.border" borderRadius="md" overflow="hidden">
-                                <Table variant="simple" size="sm">
-                                    <Thead bg="app.tableHeader">
-                                        <Tr>
-                                            <Th>Nombre</Th>
-                                            <Th>Correo</Th>
-                                            <Th w="50px" textAlign="center">Quitar</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
+                                <Table.Root variant="simple" size="sm">
+                                    <Table.Header bg="app.tableHeader">
+                                        <Table.Row>
+                                            <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                            <Table.ColumnHeader>Correo</Table.ColumnHeader>
+                                            <Table.ColumnHeader w="50px" textAlign="center">Quitar</Table.ColumnHeader>
+                                        </Table.Row>
+                                    </Table.Header>
+                                    <Table.Body>
                                         {selected.usersGroup.length === 0 ? (
-                                            <Tr>
-                                                <Td colSpan={3}>
+                                            <Table.Row>
+                                                <Table.Cell colSpan={3}>
                                                     <Text textAlign="center" color="gray.400" py={4}>
                                                         No hay usuarios en este grupo
                                                     </Text>
-                                                </Td>
-                                            </Tr>
+                                                </Table.Cell>
+                                            </Table.Row>
                                         ) : (
                                             selected.usersGroup.map(user => (
-                                                <Tr key={user.id} _hover={{ bg: 'app.rowHover' }}>
-                                                    <Td>{user.nombreCompleto || user.username}</Td>
-                                                    <Td color="app.textSubtle">{user.email ?? '—'}</Td>
-                                                    <Td textAlign="center">
+                                                <Table.Row key={user.id} _hover={{ bg: 'app.rowHover' }}>
+                                                    <Table.Cell>{user.nombreCompleto || user.username}</Table.Cell>
+                                                    <Table.Cell color="app.textSubtle">{user.email ?? '—'}</Table.Cell>
+                                                    <Table.Cell textAlign="center">
                                                         <IconButton
                                                             aria-label="Quitar usuario"
-                                                            icon={<DeleteIcon />}
                                                             size="xs"
                                                             variant="ghost"
-                                                            colorScheme="red"
-                                                            isLoading={isLoadingAction}
-                                                            onClick={() => handleRemoveUser(user.id)}
-                                                        />
-                                                    </Td>
-                                                </Tr>
+                                                            colorPalette="red"
+                                                            loading={isLoadingAction}
+                                                            onClick={() => handleRemoveUser(user.id)}><LuTrash2 /></IconButton>
+                                                    </Table.Cell>
+                                                </Table.Row>
                                             ))
                                         )}
-                                    </Tbody>
-                                </Table>
+                                    </Table.Body>
+                                </Table.Root>
                             </Box>
                         </>
                     ) : (
@@ -241,23 +233,33 @@ export default function GestionNotificacionesTab() {
             </Grid>
 
             {/* Modal: descripción de la notificación */}
-            <Modal isOpen={infoModal.isOpen} onClose={infoModal.onClose} isCentered>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>{infoTarget?.nombre}</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <Text>{infoTarget?.descripcion}</Text>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button onClick={infoModal.onClose}>Cerrar</Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+            <Dialog.Root open={infoModal.open} placement='center' onOpenChange={e => {
+                if (!e.open) {
+                    infoModal.onClose();
+                }
+            }}>
+                <Portal>
+
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>{infoTarget?.nombre}</Dialog.Header>
+                            <Dialog.CloseTrigger />
+                            <Dialog.Body>
+                                <Text>{infoTarget?.descripcion}</Text>
+                            </Dialog.Body>
+                            <Dialog.Footer>
+                                <Button onClick={infoModal.onClose}>Cerrar</Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+
+                </Portal>
+            </Dialog.Root>
 
             {/* Modal: seleccionar usuario */}
             <UserGenericPicker
-                isOpen={pickerModal.isOpen}
+                isOpen={pickerModal.open}
                 onClose={pickerModal.onClose}
                 onSelectUser={handleAddUser}
             />

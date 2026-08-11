@@ -1,17 +1,7 @@
 import React from "react";
-import {
-    Box,
-    Text,
-    Flex,
-    HStack,
-    VStack,
-    Tag,
-    Icon,
-    IconButton,
-    Tooltip,
-    Badge,
-    useColorModeValue,
-} from "@chakra-ui/react";
+import { useColorModeValue } from "../../../../../../components/ui/color-mode";
+import { Steps, Box, Text, Flex, HStack, VStack, Tag, Icon, IconButton, Badge } from "@chakra-ui/react";
+import { Tooltip } from '@/components/ui/tooltip';
 import { Producto } from "../../../types.tsx";
 
 // Icons
@@ -72,22 +62,22 @@ const ItemBandejaBusqueda: React.FC<ItemBandejaBusquedaProps> = ({
                     justifyContent="center"
                     _groupHover={{ bg: meta.accentColor }}
                 >
-                    <Icon as={meta.icon} boxSize={5} />
+                    <Icon boxSize={5} asChild><meta.icon /></Icon>
                 </Box>
 
                 {/* Texto */}
-                <VStack align="start" spacing={0} flex="1" minW={0}>
-                    <HStack spacing={2} w="100%">
-                        <Text fontWeight="semibold" noOfLines={1} fontSize="md">
+                <VStack align="start" gap={0} flex="1" minW={0}>
+                    <HStack gap={2} w="100%">
+                        <Text fontWeight="semibold" lineClamp={1} fontSize="md">
                             {producto.nombre}
                         </Text>
-                        <Tag size="sm" colorScheme={meta.scheme} variant="subtle">
+                        <Tag.Root size="sm" colorPalette={meta.scheme} variant="subtle">
                             {meta.label}
-                        </Tag>
+                        </Tag.Root>
                     </HStack>
 
-                    <HStack spacing={3} mt={1} flexWrap="wrap">
-                        <Badge variant="subtle" colorScheme="gray">ID: {producto.productoId}</Badge>
+                    <HStack gap={3} mt={1} flexWrap="wrap">
+                        <Badge variant="subtle" colorPalette="gray">ID: {producto.productoId}</Badge>
                         <Text fontSize="sm" color={muted}>{costoFmt}</Text>
                         <Text fontSize="sm" color={muted}>
                             {producto.tipoUnidades} · {producto.cantidadUnidad}
@@ -96,17 +86,15 @@ const ItemBandejaBusqueda: React.FC<ItemBandejaBusquedaProps> = ({
                 </VStack>
 
                 {/* Acción agregar */}
-                <Tooltip label="Agregar" hasArrow>
+                <Tooltip content="Agregar" showArrow>
                     <IconButton
                         aria-label="Agregar"
-                        icon={<FiPlus />}
-                        colorScheme={meta.scheme}
+                        colorPalette={meta.scheme}
                         variant="solid"
                         size="sm"
                         borderRadius="full"
                         onClick={() => onAddInsumo(producto)}
-                        _active={{ transform: "scale(0.96)" }}
-                    />
+                        _active={{ transform: "scale(0.96)" }}><FiPlus /></IconButton>
                 </Tooltip>
             </Flex>
         </Box>

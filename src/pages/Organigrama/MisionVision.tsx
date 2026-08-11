@@ -1,36 +1,27 @@
 import { useCallback, useEffect, useState } from "react";
+import { useColorModeValue } from "../../components/ui/color-mode";
 import axios from "axios";
 import {
+    Steps,
     Accordion,
-    AccordionButton,
-    AccordionIcon,
-    AccordionItem,
-    AccordionPanel,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Button,
     Container,
-    Divider,
     Flex,
     Heading,
     HStack,
     Icon,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     Spinner,
     Text,
     Textarea,
     VStack,
-    useColorModeValue,
     useDisclosure,
     useToast,
+    Separator,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
 import {
     FaBalanceScale,
@@ -225,13 +216,13 @@ export function MisionVision({ canEdit }: MisionVisionProps) {
     if (error || !vigente) {
         return (
             <Box p={8}>
-                <Alert status="error" borderRadius="md">
-                    <AlertIcon />
+                <Alert.Root status="error" borderRadius="md">
+                    <Alert.Indicator />
                     <Flex flex="1" align="center" justify="space-between" gap={4}>
                         <Text>{error ?? "No existe una versión vigente configurada."}</Text>
                         <Button size="sm" onClick={() => void loadData()}>Reintentar</Button>
                     </Flex>
-                </Alert>
+                </Alert.Root>
             </Box>
         );
     }
@@ -252,12 +243,11 @@ export function MisionVision({ canEdit }: MisionVisionProps) {
                     <Text fontSize="xl" maxW="800px" color="app.textMuted">
                         Conoce los principios que guían nuestro trabajo y definen quiénes somos como organización.
                     </Text>
-                    <HStack mt={5} spacing={3}>
-                        <Badge colorScheme="blue">Versión {vigente.version}</Badge>
+                    <HStack mt={5} gap={3}>
+                        <Badge colorPalette="blue">Versión {vigente.version}</Badge>
                         {canEdit && (
-                            <Button leftIcon={<FaPencilAlt />} colorScheme="blue" size="sm" onClick={editorDisclosure.onOpen}>
-                                Editar
-                            </Button>
+                            <Button colorPalette="blue" size="sm" onClick={editorDisclosure.onOpen}><FaPencilAlt />Editar
+                                                            </Button>
                         )}
                     </HStack>
                 </Flex>
@@ -306,8 +296,8 @@ export function MisionVision({ canEdit }: MisionVisionProps) {
                                         borderColor={borderColor}
                                         width={{ base: "100%", md: "45%", lg: "30%" }}
                                     >
-                                        <VStack align="center" spacing={4}>
-                                            <Icon as={ValueIcon} boxSize={12} color={VALUE_COLORS[index % VALUE_COLORS.length]} />
+                                        <VStack align="center" gap={4}>
+                                            <Icon boxSize={12} color={VALUE_COLORS[index % VALUE_COLORS.length]} asChild><ValueIcon /></Icon>
                                             <Heading as="h3" size="md" textAlign="center">{value.titulo}</Heading>
                                             <SafeRichText html={value.descripcionHtml} textAlign="center" />
                                         </VStack>
@@ -317,68 +307,67 @@ export function MisionVision({ canEdit }: MisionVisionProps) {
                     </Flex>
                 </Box>
 
-                <Accordion allowToggle mb={12} borderColor={borderColor}>
-                    <AccordionItem bg={cardBg} borderRadius="lg" overflow="hidden">
-                        <AccordionButton py={4}>
+                <Accordion.Root collapsible mb={12} borderColor={borderColor}>
+                    <Accordion.Item bg={cardBg} borderRadius="lg" overflow="hidden" value='item-0'>
+                        <Accordion.ItemTrigger py={4}>
                             <HStack flex="1" textAlign="left">
-                                <Icon as={FaHistory} color="blue.500" />
+                                <Icon color="blue.500" asChild><FaHistory /></Icon>
                                 <Text fontWeight="semibold">Historial de versiones</Text>
                                 <Badge>{versiones.length}</Badge>
                             </HStack>
-                            <AccordionIcon />
-                        </AccordionButton>
-                        <AccordionPanel pb={4}>
-                            <VStack align="stretch" spacing={3}>
-                                {versiones.map((version) => (
-                                    <Flex
-                                        key={version.id}
-                                        direction={{ base: "column", md: "row" }}
-                                        align={{ base: "stretch", md: "center" }}
-                                        justify="space-between"
-                                        gap={3}
-                                        p={3}
-                                        borderWidth="1px"
-                                        borderRadius="md"
-                                    >
-                                        <Box>
-                                            <HStack mb={1}>
-                                                <Text fontWeight="semibold">Versión {version.version}</Text>
-                                                <Badge colorScheme={version.estado === "VIGENTE" ? "green" : "gray"}>
-                                                    {version.estado}
-                                                </Badge>
-                                                {version.origenVersion && <Badge colorScheme="purple">Restaurada de v{version.origenVersion}</Badge>}
-                                            </HStack>
-                                            <Text fontSize="sm">{version.motivoCambio}</Text>
-                                            <Text fontSize="xs" color="app.textMuted">
-                                                {version.creadoPor || "Sistema"} · {formatDate(version.creadoEn)}
-                                            </Text>
-                                        </Box>
-                                        <HStack>
-                                            <Button size="sm" variant="outline" onClick={() => void openVersionDetail(version.id)}>
-                                                Ver
-                                            </Button>
-                                            {canEdit && version.estado === "RETIRADA" && (
-                                                <Button size="sm" leftIcon={<FaRecycle />} onClick={() => openRestore(version)}>
-                                                    Restaurar
+                            <Accordion.ItemIndicator />
+                        </Accordion.ItemTrigger>
+                        <Accordion.ItemContent pb={4}><Accordion.ItemBody>
+                                <VStack align="stretch" gap={3}>
+                                    {versiones.map((version) => (
+                                        <Flex
+                                            key={version.id}
+                                            direction={{ base: "column", md: "row" }}
+                                            align={{ base: "stretch", md: "center" }}
+                                            justify="space-between"
+                                            gap={3}
+                                            p={3}
+                                            borderWidth="1px"
+                                            borderRadius="md"
+                                        >
+                                            <Box>
+                                                <HStack mb={1}>
+                                                    <Text fontWeight="semibold">Versión {version.version}</Text>
+                                                    <Badge colorPalette={version.estado === "VIGENTE" ? "green" : "gray"}>
+                                                        {version.estado}
+                                                    </Badge>
+                                                    {version.origenVersion && <Badge colorPalette="purple">Restaurada de v{version.origenVersion}</Badge>}
+                                                </HStack>
+                                                <Text fontSize="sm">{version.motivoCambio}</Text>
+                                                <Text fontSize="xs" color="app.textMuted">
+                                                    {version.creadoPor || "Sistema"} · {formatDate(version.creadoEn)}
+                                                </Text>
+                                            </Box>
+                                            <HStack>
+                                                <Button size="sm" variant="outline" onClick={() => void openVersionDetail(version.id)}>
+                                                    Ver
                                                 </Button>
-                                            )}
-                                        </HStack>
-                                    </Flex>
-                                ))}
-                            </VStack>
-                        </AccordionPanel>
-                    </AccordionItem>
-                </Accordion>
+                                                {canEdit && version.estado === "RETIRADA" && (
+                                                    <Button size="sm" onClick={() => openRestore(version)}><FaRecycle />Restaurar
+                                                                                                            </Button>
+                                                )}
+                                            </HStack>
+                                        </Flex>
+                                    ))}
+                                </VStack>
+                            </Accordion.ItemBody></Accordion.ItemContent>
+                    </Accordion.Item>
+                </Accordion.Root>
 
-                <Divider mb={8} />
+                <Separator mb={8} />
                 <Text textAlign="center" color="app.textSubtle" fontSize="sm">
                     © {new Date().getFullYear()} Exotic Expert. Todos los derechos reservados.
                 </Text>
             </Container>
 
-            {canEdit && editorDisclosure.isOpen && (
+            {canEdit && editorDisclosure.open && (
                 <MisionVisionEditorModal
-                    isOpen={editorDisclosure.isOpen}
+                    isOpen={editorDisclosure.open}
                     vigente={vigente}
                     onClose={editorDisclosure.onClose}
                     onSaved={handleSaved}
@@ -387,64 +376,80 @@ export function MisionVision({ canEdit }: MisionVisionProps) {
                 />
             )}
 
-            <Modal isOpen={detailDisclosure.isOpen} onClose={detailDisclosure.onClose} size="4xl" scrollBehavior="inside">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>
-                        {detailVersion ? `Detalle de la versión ${detailVersion.version}` : "Cargando versión"}
-                    </ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        {detailLoading || !detailVersion ? (
-                            <Flex justify="center" py={12}><Spinner size="lg" /></Flex>
-                        ) : (
-                            <VersionDetail version={detailVersion} />
-                        )}
-                    </ModalBody>
-                    <ModalFooter gap={3}>
-                        {canEdit && detailVersion?.estado === "RETIRADA" && (
-                            <Button
-                                leftIcon={<FaRecycle />}
-                                onClick={() => openRestore(detailVersion)}
-                            >
-                                Restaurar esta versión
-                            </Button>
-                        )}
-                        <Button onClick={detailDisclosure.onClose}>Cerrar</Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+            <Dialog.Root open={detailDisclosure.open} size='xl' scrollBehavior="inside" onOpenChange={e => {
+                if (!e.open) {
+                    detailDisclosure.onClose();
+                }
+            }}>
+                <Portal>
 
-            <Modal isOpen={restoreDisclosure.isOpen} onClose={restoreDisclosure.onClose} isCentered>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Restaurar versión {restoreTarget?.version}</ModalHeader>
-                    <ModalCloseButton isDisabled={restoring} />
-                    <ModalBody>
-                        <Text mb={4}>
-                            Se copiará el contenido seleccionado y se publicará como una nueva versión. El historial no será modificado.
-                        </Text>
-                        <Textarea
-                            value={restoreReason}
-                            onChange={(event) => setRestoreReason(event.target.value)}
-                            maxLength={1000}
-                            rows={4}
-                            placeholder="Motivo de la restauración"
-                        />
-                    </ModalBody>
-                    <ModalFooter gap={3}>
-                        <Button variant="ghost" onClick={restoreDisclosure.onClose} isDisabled={restoring}>Cancelar</Button>
-                        <Button
-                            colorScheme="blue"
-                            onClick={() => void handleRestore()}
-                            isLoading={restoring}
-                            isDisabled={!restoreReason.trim()}
-                        >
-                            Restaurar como nueva versión
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>
+                                {detailVersion ? `Detalle de la versión ${detailVersion.version}` : "Cargando versión"}
+                            </Dialog.Header>
+                            <Dialog.CloseTrigger />
+                            <Dialog.Body>
+                                {detailLoading || !detailVersion ? (
+                                    <Flex justify="center" py={12}><Spinner size="lg" /></Flex>
+                                ) : (
+                                    <VersionDetail version={detailVersion} />
+                                )}
+                            </Dialog.Body>
+                            <Dialog.Footer gap={3}>
+                                {canEdit && detailVersion?.estado === "RETIRADA" && (
+                                    <Button onClick={() => openRestore(detailVersion)}><FaRecycle />Restaurar esta versión
+                                                                    </Button>
+                                )}
+                                <Button onClick={detailDisclosure.onClose}>Cerrar</Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+
+                </Portal>
+            </Dialog.Root>
+
+            <Dialog.Root open={restoreDisclosure.open} placement='center' onOpenChange={e => {
+                if (!e.open) {
+                    restoreDisclosure.onClose();
+                }
+            }}>
+                <Portal>
+
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>Restaurar versión {restoreTarget?.version}</Dialog.Header>
+                            <Dialog.CloseTrigger disabled={restoring} />
+                            <Dialog.Body>
+                                <Text mb={4}>
+                                    Se copiará el contenido seleccionado y se publicará como una nueva versión. El historial no será modificado.
+                                </Text>
+                                <Textarea
+                                    value={restoreReason}
+                                    onValueChange={(event) => setRestoreReason(event.target.value)}
+                                    maxLength={1000}
+                                    rows={4}
+                                    placeholder="Motivo de la restauración"
+                                />
+                            </Dialog.Body>
+                            <Dialog.Footer gap={3}>
+                                <Button variant="ghost" onClick={restoreDisclosure.onClose} disabled={restoring}>Cancelar</Button>
+                                <Button
+                                    colorPalette="blue"
+                                    onClick={() => void handleRestore()}
+                                    loading={restoring}
+                                    disabled={!restoreReason.trim()}
+                                >
+                                    Restaurar como nueva versión
+                                </Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+
+                </Portal>
+            </Dialog.Root>
         </Box>
     );
 }
@@ -502,11 +507,11 @@ function IdentityCard({
 
 function VersionDetail({ version }: { version: MisionVisionVersion }) {
     return (
-        <VStack align="stretch" spacing={6}>
+        <VStack align="stretch" gap={6}>
             <Box>
                 <HStack mb={2}>
-                    <Badge colorScheme={version.estado === "VIGENTE" ? "green" : "gray"}>{version.estado}</Badge>
-                    {version.origenVersion && <Badge colorScheme="purple">Restaurada de v{version.origenVersion}</Badge>}
+                    <Badge colorPalette={version.estado === "VIGENTE" ? "green" : "gray"}>{version.estado}</Badge>
+                    {version.origenVersion && <Badge colorPalette="purple">Restaurada de v{version.origenVersion}</Badge>}
                 </HStack>
                 <Text fontSize="sm"><strong>Motivo:</strong> {version.motivoCambio}</Text>
                 <Text fontSize="sm"><strong>Autor:</strong> {version.creadoPor || "Sistema"}</Text>
@@ -522,7 +527,7 @@ function VersionDetail({ version }: { version: MisionVisionVersion }) {
             </Box>
             <Box>
                 <Heading size="md" mb={3}>Valores</Heading>
-                <VStack align="stretch" spacing={4}>
+                <VStack align="stretch" gap={4}>
                     {version.valores
                         .slice()
                         .sort((a, b) => a.orden - b.orden)

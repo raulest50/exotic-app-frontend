@@ -1,10 +1,17 @@
 import { useState, useEffect } from "react";
 import { Proveedor, DTO_SearchProveedor, TIPO_BUSQUEDA } from "../../types.tsx";
 import {
-    Flex, FormControl, FormLabel, Input,
-    Stack, CheckboxGroup, Checkbox,
-    Button, Box, Select,
-    useToast
+    Steps,
+    Flex,
+    Input,
+    Stack,
+    CheckboxGroup,
+    Checkbox,
+    Button,
+    Box,
+    NativeSelect,
+    useToast,
+    Field,
 } from "@chakra-ui/react";
 
 import MyPagination from "../../../../components/MyPagination.tsx";
@@ -120,32 +127,32 @@ export default function PanelBusqueda({setEstado, setProveedorSeleccionado}: Pro
 
                     <Flex direction={"column"} flex={2} mb={4} gap={2}>
 
-                        <FormControl mb={4} >
-                            <FormLabel>{searchType === 'ID' ? 'ID del Proveedor' : 'Nombre del Proveedor'}</FormLabel>
+                        <Field.Root mb={4} >
+                            <Field.Label>{searchType === 'ID' ? 'ID del Proveedor' : 'Nombre del Proveedor'}</Field.Label>
                             <Input
                                 placeholder={searchType === 'ID' ? "Ingrese el ID del proveedor" : "Ingrese el nombre del proveedor"}
                                 value={searchText}
-                                onChange={(e) => setSearchText(e.target.value)}
+                                onValueChange={(e) => setSearchText(e.target.value)}
                             />
-                        </FormControl>
+                        </Field.Root>
 
                         <Flex direction={"row"} gap={5} alignItems="center">
 
-                            <FormControl mb={4} flex={1} >
-                                <FormLabel>Tipo de Búsqueda</FormLabel>
-                                <Select
-                                    value={searchType}
-                                    onChange={(e) => setSearchType(e.target.value)}
-                                >
-                                    <option value={TIPO_BUSQUEDA.ID}>ID</option>
-                                    <option value={TIPO_BUSQUEDA.NOMBRE_Y_CATEGORIA}>Nombre y Categorías</option>
-                                </Select>
-                            </FormControl>
+                            <Field.Root mb={4} flex={1} >
+                                <Field.Label>Tipo de Búsqueda</Field.Label>
+                                <NativeSelect.Root>
+                                    <NativeSelect.Field value={searchType} onValueChange={(e) => setSearchType(e.target.value)}>
+                                        <option value={TIPO_BUSQUEDA.ID}>ID</option>
+                                        <option value={TIPO_BUSQUEDA.NOMBRE_Y_CATEGORIA}>Nombre y Categorías</option>
+                                    </NativeSelect.Field>
+                                    <NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                            </Field.Root>
 
                             <Button
-                                colorScheme="blue"
+                                colorPalette="blue"
                                 onClick={handleSearch}
-                                isLoading={loading}
+                                loading={loading}
                                 mt={2}
                                 flex={1}
                             >
@@ -155,22 +162,22 @@ export default function PanelBusqueda({setEstado, setProveedorSeleccionado}: Pro
 
                     </Flex>
 
-                    <FormControl mb={4} flex={1} isDisabled={searchType === TIPO_BUSQUEDA.ID} >
-                        <FormLabel>Categorías</FormLabel>
+                    <Field.Root mb={4} flex={1} disabled={searchType === TIPO_BUSQUEDA.ID} >
+                        <Field.Label>Categorías</Field.Label>
                         <CheckboxGroup
-                            colorScheme="green"
+                            colorPalette="green"
                             value={selectedCategories.map(String)}
-                            onChange={handleCategoryChange}
+                            onValueChange={handleCategoryChange}
                         >
-                            <Stack spacing={2}>
+                            <Stack gap={2}>
                                 {categoryOptions.map(category => (
-                                    <Checkbox key={category.id} value={category.id.toString()}>
+                                    <Checkbox.Root key={category.id} value={category.id.toString()}><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>
                                         {category.name}
-                                    </Checkbox>
+                                    </Checkbox.Label></Checkbox.Root>
                                 ))}
                             </Stack>
                         </CheckboxGroup>
-                    </FormControl>
+                    </Field.Root>
 
                 </Flex>
 

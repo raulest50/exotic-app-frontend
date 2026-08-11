@@ -17,18 +17,17 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
+    Steps,
     Badge,
     Box,
     Button,
     Center,
-    Divider,
     Flex,
     Heading,
     Stat,
-    StatLabel,
-    StatNumber,
     Text,
     VStack,
+    Separator,
 } from "@chakra-ui/react";
 import MaterialPrimarioNode from "./Nodos/MaterialPrimarioNode.tsx";
 import ProcesoNode from "./Nodos/ProcesoNode.tsx";
@@ -288,7 +287,7 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
                 </Heading>
             </Flex>
 
-            <Divider />
+            <Separator />
 
             <Box
                 w="fill"
@@ -338,7 +337,7 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
 
             <Flex direction={{ base: "column", xl: "row" }} gap={5} alignItems="stretch">
                 <Flex direction="row" gap={5} alignItems="center" wrap="wrap" flex={2}>
-                    <Button variant="solid" colorScheme="teal" onClick={() => setIsProcesoPickerOpen(true)}>
+                    <Button variant="solid" colorPalette="teal" onClick={() => setIsProcesoPickerOpen(true)}>
                         Agregar Proceso
                     </Button>
 
@@ -346,13 +345,13 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
                         {isFullScreen ? "Salir" : "Pantalla completa"}
                     </Button>
 
-                    <Button variant="solid" colorScheme="red" onClick={removeAllProcessNodes}>
+                    <Button variant="solid" colorPalette="red" onClick={removeAllProcessNodes}>
                         Reset
                     </Button>
 
                     <Button
                         variant="solid"
-                        colorScheme="red"
+                        colorPalette="red"
                         onClick={() => {
                             if (!selectedElement) {
                                 return;
@@ -365,7 +364,7 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
                                 deleteEdgeById(selectedElement.id);
                             }
                         }}
-                        isDisabled={
+                        disabled={
                             !selectedElement ||
                             ("data" in selectedElement && selectedElement.type !== "procesoNode")
                         }
@@ -374,13 +373,13 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
                     </Button>
 
                     <Center height="50px">
-                        <Divider orientation="vertical" />
+                        <Separator orientation="vertical" />
                     </Center>
 
-                    <Stat backgroundColor="app.surfaceSubtle" p="1em" boxShadow="md" minW="260px">
-                        <StatLabel>Total Costo Insumos</StatLabel>
-                        <StatNumber>{semioter2.costo} ( $ COP)</StatNumber>
-                    </Stat>
+                    <Stat.Root backgroundColor="app.surfaceSubtle" p="1em" boxShadow="md" minW="260px">
+                        <Stat.Label>Total Costo Insumos</Stat.Label>
+                        <Stat.ValueText>{semioter2.costo} ( $ COP)</Stat.ValueText>
+                    </Stat.Root>
                 </Flex>
 
                 <Box
@@ -391,19 +390,19 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
                     p={4}
                     minW={{ base: "auto", xl: "340px" }}
                 >
-                    <VStack align="stretch" spacing={3}>
+                    <VStack align="stretch" gap={3}>
                         <Heading size="sm">Nodo seleccionado</Heading>
                         <Text fontWeight="bold">
                             {selectedProcessData?.nombreProceso ?? "Ningun proceso seleccionado"}
                         </Text>
                         <Text>Area operativa</Text>
-                        <Badge colorScheme={selectedProcessData?.areaOperativaId ? "green" : "orange"} w="fit-content">
+                        <Badge colorPalette={selectedProcessData?.areaOperativaId ? "green" : "orange"} w="fit-content">
                             {selectedAreaLabel}
                         </Badge>
                         <Button
-                            colorScheme="blue"
+                            colorPalette="blue"
                             onClick={() => setIsAreaPickerOpen(true)}
-                            isDisabled={!selectedProcessNode}
+                            disabled={!selectedProcessNode}
                         >
                             Asignar area al proceso
                         </Button>

@@ -1,4 +1,4 @@
-import { Button, Container, Flex, SimpleGrid } from "@chakra-ui/react";
+import { Steps, Button, Container, Flex, SimpleGrid } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import { IconType } from "react-icons";
 import { FaArrowLeft, FaBell, FaDatabase, FaKey } from "react-icons/fa";
@@ -117,7 +117,7 @@ export default function CargasMasivasTab({
     if (activeView === "selector") {
         return (
             <Container maxW="container.xl" py={6}>
-                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={6}>
                     {loadOptions.map((opt) => (
                         <OperacionSelectCard
                             key={opt.key}
@@ -143,9 +143,8 @@ export default function CargasMasivasTab({
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <Flex direction="column" gap={4} w="full" h="full">
-                <Button leftIcon={<FaArrowLeft />} w="fit-content" onClick={() => setActiveView("selector")}>
-                    Volver
-                </Button>
+                <Button w="fit-content" onClick={() => setActiveView("selector")}><FaArrowLeft />Volver
+                                    </Button>
                 {activeContent}
             </Flex>
         </Container>

@@ -1,11 +1,4 @@
-import {
-    Box,
-    Button,
-    Flex,
-    Text,
-    useToast,
-    VStack,
-} from "@chakra-ui/react";
+import { Steps, Box, Button, Flex, Text, useToast, VStack } from "@chakra-ui/react";
 import axios from "axios";
 import { useMemo, useState } from "react";
 import EndPointsURL from "../../../../api/EndPointsURL";
@@ -69,7 +62,7 @@ export default function CargaMasivaStep0Informacion({ setActiveStep }: CargaMasi
 
     return (
         <Box p={4}>
-            <VStack align="stretch" spacing={6}>
+            <VStack align="stretch" gap={6}>
                 <Text>
                     Se descargará una plantilla Excel con todos los materiales inventariables (no incluye semiterminados ni terminados).
                     Las columnas son: <strong>productoid</strong>, <strong>nombre</strong>, <strong>costo</strong>, <strong>cantidad_consolidada</strong>,
@@ -77,14 +70,14 @@ export default function CargaMasivaStep0Informacion({ setActiveStep }: CargaMasi
                 </Text>
                 <Flex gap={4} wrap="wrap">
                     <Button
-                        colorScheme="teal"
+                        colorPalette="teal"
                         onClick={handleDownloadTemplate}
-                        isLoading={isDownloading}
+                        loading={isDownloading}
                         loadingText="Descargando…"
                     >
                         Descargar plantilla Excel
                     </Button>
-                    <Button colorScheme="blue" onClick={() => setActiveStep(1)}>
+                    <Button colorPalette="blue" onClick={() => setActiveStep(1)}>
                         Siguiente
                     </Button>
                 </Flex>

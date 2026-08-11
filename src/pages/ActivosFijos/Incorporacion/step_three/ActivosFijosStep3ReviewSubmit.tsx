@@ -1,19 +1,18 @@
 import { useState } from 'react';
+import { useColorModeValue } from "../../../../components/ui/color-mode";
 import {
+    Steps,
     Button,
     Flex,
     Heading,
     Text,
     VStack,
     Box,
-    Divider,
     SimpleGrid,
     Badge,
     useToast,
     Card,
-    CardHeader,
-    CardBody,
-    useColorModeValue,
+    Separator,
 } from '@chakra-ui/react';
 import axios from "axios";
 import EndPointsURL from "../../../../api/EndPointsURL";
@@ -145,7 +144,7 @@ export function ActivosFijosStep3ReviewSubmit({
 
     return (
         <Flex direction="column" gap={6} w="full">
-            <VStack spacing={4} align="stretch" bg="app.stepperBlue" p={6} borderRadius="md">
+            <VStack gap={4} align="stretch" bg="app.stepperBlue" p={6} borderRadius="md">
                 <Heading size="md" textAlign="center">
                     Validar y Finalizar Incorporación
                 </Heading>
@@ -154,17 +153,17 @@ export function ActivosFijosStep3ReviewSubmit({
                     Revise la información de la incorporación antes de finalizar.
                 </Text>
 
-                <Divider />
+                <Separator />
 
-                <Card>
-                    <CardHeader bg={summaryHeaderBg}>
+                <Card.Root>
+                    <Card.Header bg={summaryHeaderBg}>
                         <Heading size="sm">Información General</Heading>
-                    </CardHeader>
-                    <CardBody>
-                        <SimpleGrid columns={2} spacing={4}>
+                    </Card.Header>
+                    <Card.Body>
+                        <SimpleGrid columns={2} gap={4}>
                             <Box>
                                 <Text fontWeight="bold">Tipo de Incorporación:</Text>
-                                <Badge colorScheme={
+                                <Badge colorPalette={
                                     incorporacionActivoDto.tipoIncorporacion === TIPO_INCORPORACION.CON_OC 
                                         ? "green" 
                                         : incorporacionActivoDto.tipoIncorporacion === TIPO_INCORPORACION.SIN_OC 
@@ -183,16 +182,16 @@ export function ActivosFijosStep3ReviewSubmit({
                                 <Text>{incorporacionActivoDto.documentoSoporte?.name || "No disponible"}</Text>
                             </Box>
                         </SimpleGrid>
-                    </CardBody>
-                </Card>
+                    </Card.Body>
+                </Card.Root>
 
                 {incorporacionActivoDto.tipoIncorporacion === TIPO_INCORPORACION.CON_OC && ordenCompraActivo && (
-                    <Card>
-                        <CardHeader bg={summaryHeaderBg}>
+                    <Card.Root>
+                        <Card.Header bg={summaryHeaderBg}>
                             <Heading size="sm">Información de Orden de Compra</Heading>
-                        </CardHeader>
-                        <CardBody>
-                            <SimpleGrid columns={2} spacing={4}>
+                        </Card.Header>
+                        <Card.Body>
+                            <SimpleGrid columns={2} gap={4}>
                                 <Box>
                                     <Text fontWeight="bold">ID Orden:</Text>
                                     <Text>{ordenCompraActivo.ordenCompraActivoId || "No disponible"}</Text>
@@ -210,22 +209,22 @@ export function ActivosFijosStep3ReviewSubmit({
                                     <Text>{ordenCompraActivo.fechaEmision ? new Date(ordenCompraActivo.fechaEmision).toLocaleDateString() : "No disponible"}</Text>
                                 </Box>
                             </SimpleGrid>
-                        </CardBody>
-                    </Card>
+                        </Card.Body>
+                    </Card.Root>
                 )}
 
-                <Divider />
+                <Separator />
 
                 <Flex justifyContent="space-between">
                     <Button 
-                        colorScheme="gray" 
+                        colorPalette="gray" 
                         onClick={() => setActiveStep(2)}
                     >
                         Volver
                     </Button>
                     <Button 
-                        colorScheme="teal" 
-                        isLoading={isSubmitting}
+                        colorPalette="teal" 
+                        loading={isSubmitting}
                         onClick={handleFinalizarIncorporacion}
                     >
                         Finalizar Incorporación

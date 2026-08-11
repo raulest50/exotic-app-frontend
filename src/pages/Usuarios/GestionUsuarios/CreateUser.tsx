@@ -1,18 +1,6 @@
 // src/pages/Usuarios/CreateUser.tsx
 import { useState } from 'react';
-import {
-    Box,
-    Button,
-    FormControl,
-    FormLabel,
-    Input,
-    useToast,
-    Heading,
-    Grid,
-    GridItem,
-    Flex,
-    FormErrorMessage
-} from '@chakra-ui/react';
+import { Steps, Box, Button, Input, useToast, Heading, Grid, GridItem, Flex, Field } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 
@@ -92,102 +80,102 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
             <Heading size="md" mb={4}>Crear Nuevo Usuario</Heading>
             <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                 <GridItem>
-                    <FormControl isRequired>
-                        <FormLabel>Cédula</FormLabel>
+                    <Field.Root required>
+                        <Field.Label>Cédula</Field.Label>
                         <Input autoComplete={"off"}
                                type="number"
                                value={cedula}
-                               onChange={(e) => setCedula(e.target.value)}
+                               onValueChange={(e) => setCedula(e.target.value)}
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
                 <GridItem>
-                    <FormControl isRequired>
-                        <FormLabel>Nombre Completo</FormLabel>
+                    <Field.Root required>
+                        <Field.Label>Nombre Completo</Field.Label>
                         <Input autoComplete={"off"}
                                value={nombreCompleto}
-                               onChange={(e) => setNombreCompleto(e.target.value)}
+                               onValueChange={(e) => setNombreCompleto(e.target.value)}
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
 
                 <GridItem>
-                    <FormControl isRequired>
-                        <FormLabel>Nombre de Usuario</FormLabel>
+                    <Field.Root required>
+                        <Field.Label>Nombre de Usuario</Field.Label>
                         <Input autoComplete={"new-username"}
                                value={username}
-                               onChange={(e) => setUsername(e.target.value)}
+                               onValueChange={(e) => setUsername(e.target.value)}
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
                 <GridItem>
-                    <FormControl isRequired>
-                        <FormLabel>Contraseña</FormLabel>
+                    <Field.Root required>
+                        <Field.Label>Contraseña</Field.Label>
                         <Input autoComplete={"new-password"}
                                type="password"
                                value={password}
-                               onChange={(e) => setPassword(e.target.value)}
+                               onValueChange={(e) => setPassword(e.target.value)}
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
 
                 <GridItem>
-                    <FormControl isRequired isInvalid={!!emailError}>
-                        <FormLabel>Correo Electrónico</FormLabel>
+                    <Field.Root required invalid={!!emailError}>
+                        <Field.Label>Correo Electrónico</Field.Label>
                         <Input
                             autoComplete={"off"}
                             type="email" 
                             value={email} 
-                            onChange={(e) => {
+                            onValueChange={(e) => {
                                 setEmail(e.target.value);
                                 if (emailError) setEmailError('');
                             }} 
                         />
-                        {emailError && <FormErrorMessage>{emailError}</FormErrorMessage>}
-                    </FormControl>
+                        {emailError && <Field.ErrorText>{emailError}</Field.ErrorText>}
+                    </Field.Root>
                 </GridItem>
 
                 <GridItem>
-                    <FormControl>
-                        <FormLabel>Celular</FormLabel>
+                    <Field.Root>
+                        <Field.Label>Celular</Field.Label>
                         <Input autoComplete={"off"}
                                value={cel}
-                               onChange={(e) => setCel(e.target.value)}
+                               onValueChange={(e) => setCel(e.target.value)}
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
                 <GridItem>
-                    <FormControl>
-                        <FormLabel>Dirección</FormLabel>
+                    <Field.Root>
+                        <Field.Label>Dirección</Field.Label>
                         <Input autoComplete={"off"}
                                value={direccion}
-                               onChange={(e) => setDireccion(e.target.value)}
+                               onValueChange={(e) => setDireccion(e.target.value)}
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
 
                 <GridItem>
-                    <FormControl>
-                        <FormLabel>Fecha de Nacimiento</FormLabel>
+                    <Field.Root>
+                        <Field.Label>Fecha de Nacimiento</Field.Label>
                         <Input autoComplete={"off"}
                                type="date"
                                value={fechaNacimiento}
-                               onChange={(e) => setFechaNacimiento(e.target.value)}
+                               onValueChange={(e) => setFechaNacimiento(e.target.value)}
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
             </Grid>
 
             <Flex gap={4} mt={6}>
                 <Button
-                    colorScheme="blue"
+                    colorPalette="blue"
                     onClick={handleCreate}
-                    isLoading={isLoading}
+                    loading={isLoading}
                     loadingText="Creando..."
                 >
                     Crear Usuario
                 </Button>
-                <Button onClick={onCancel} isDisabled={isLoading}>Cancelar</Button>
+                <Button onClick={onCancel} disabled={isLoading}>Cancelar</Button>
             </Flex>
         </Box>
     );

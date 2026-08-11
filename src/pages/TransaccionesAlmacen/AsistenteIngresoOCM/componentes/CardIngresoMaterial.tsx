@@ -1,5 +1,7 @@
 import { type ChangeEvent, useEffect, useState } from 'react';
+import { useColorModeValue } from "../../../../components/ui/color-mode";
 import {
+    Steps,
     Table,
     Thead,
     Tbody,
@@ -14,16 +16,15 @@ import {
     Box,
     Badge,
     useToast,
-    useColorModeValue,
-    Collapse,
-    Checkbox
+    Collapsible,
+    Checkbox,
 } from '@chakra-ui/react';
-import { AddIcon, MinusIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
-
 import {
     IngresoOcmDraftItem,
     IngresoOcmDraftLoteField,
 } from '../ingresoOcmTypes';
+
+import { LuChevronDown, LuChevronUp, LuMinus, LuPlus } from 'react-icons/lu';
 
 interface Props {
     draftItem: IngresoOcmDraftItem;
@@ -112,162 +113,156 @@ export function CardIngresoMaterial({
 
     return (
         <>
-            <Tr bg={!isValid && !excluded ? invalidRowBg : excluded ? "app.surfaceMuted" : "app.surface"}>
-                <Td>
+            <Table.Row bg={!isValid && !excluded ? invalidRowBg : excluded ? "app.surfaceMuted" : "app.surface"}>
+                <Table.Cell>
                     <Flex align="center" gap={2}>
-                        <Checkbox
+                        <Checkbox.Root
                             aria-label={`Excluir material ${item.material.productoId}`}
-                            isChecked={excluded}
-                            onChange={handleExcludedChange}
-                            colorScheme="red"
-                        />
+                            checked={excluded}
+                            onCheckedChange={handleExcludedChange}
+                            colorPalette="red"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control></Checkbox.Root>
                         <Text fontWeight="semibold" as={excluded ? "s" : undefined} color={excluded ? "app.textSubtle" : undefined}>
                             {item.material.nombre}
                         </Text>
                     </Flex>
-                </Td>
-                <Td>{item.material.productoId}</Td>
-                <Td>
+                </Table.Cell>
+                <Table.Cell>{item.material.productoId}</Table.Cell>
+                <Table.Cell>
                     {item.cantidad} {item.material.tipoUnidades}
                     {cantidadYaRecibida > 0 && (
                         <Text fontSize="xs" color="blue.600">
                             (Recibido: {cantidadYaRecibida.toFixed(2)}, Restante: {maxPermitido.toFixed(2)})
                         </Text>
                     )}
-                </Td>
-                <Td>
+                </Table.Cell>
+                <Table.Cell>
                     {excluded ? (
-                        <Badge colorScheme="gray" fontSize="md">
+                        <Badge colorPalette="gray" fontSize="md">
                             Excluido
                         </Badge>
                     ) : (
-                        <Badge colorScheme={isValid ? "green" : "red"} fontSize="md">
+                        <Badge colorPalette={isValid ? "green" : "red"} fontSize="md">
                             {totalCantidad} {item.material.tipoUnidades}
                         </Badge>
                     )}
-                </Td>
-                <Td>
+                </Table.Cell>
+                <Table.Cell>
                     {excluded ? (
-                        <Badge colorScheme="gray">
+                        <Badge colorPalette="gray">
                             No recibido
                         </Badge>
                     ) : (
-                        <Badge colorScheme={isValid ? "green" : "orange"}>
+                        <Badge colorPalette={isValid ? "green" : "orange"}>
                             {isValid ? "Valido" : "Pendiente"}
                         </Badge>
                     )}
-                </Td>
-                <Td textAlign="center">
+                </Table.Cell>
+                <Table.Cell textAlign="center">
                     {!excluded && (
                         <IconButton
                             aria-label={`${isExpanded ? "Ocultar" : "Mostrar"} lotes de ${item.material.productoId}`}
-                            icon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
                             size="sm"
-                            onClick={() => setIsExpanded(!isExpanded)}
-                        />
+                            onClick={() => setIsExpanded(!isExpanded)}>{isExpanded ? <LuChevronUp /> : <LuChevronDown />}</IconButton>
                     )}
-                </Td>
-            </Tr>
+                </Table.Cell>
+            </Table.Row>
             {!excluded && (
-                <Tr>
-                    <Td colSpan={6} p={0}>
-                        <Collapse in={isExpanded} animateOpacity>
-                            <Box p={4} bg="app.surfaceSubtle">
-                                <Flex justifyContent="space-between" alignItems="center" mb={4}>
-                                    <Text fontWeight="semibold">Lotes del Material</Text>
-                                    <Button
-                                        aria-label={`Agregar lote a ${item.material.productoId}`}
-                                        leftIcon={<AddIcon />}
-                                        colorScheme="teal"
-                                        size="sm"
-                                        onClick={handleAddLote}
-                                        isDisabled={lotes.length >= maxLotesPorMaterial}
-                                    >
-                                        Agregar Lote
-                                    </Button>
-                                </Flex>
+                <Table.Row>
+                    <Table.Cell colSpan={6} p={0}>
+                        <Collapsible.Root open={isExpanded}>
+                            <Collapsible.Content>
+                                <Box p={4} bg="app.surfaceSubtle">
+                                    <Flex justifyContent="space-between" alignItems="center" mb={4}>
+                                        <Text fontWeight="semibold">Lotes del Material</Text>
+                                        <Button
+                                            aria-label={`Agregar lote a ${item.material.productoId}`}
+                                            colorPalette="teal"
+                                            size="sm"
+                                            onClick={handleAddLote}
+                                            disabled={lotes.length >= maxLotesPorMaterial}><LuPlus />Agregar Lote
+                                                                                </Button>
+                                    </Flex>
 
-                                <Table size="sm" variant="simple" bg="app.surface">
-                                    <Thead>
-                                        <Tr>
-                                            <Th>Lote #</Th>
-                                            <Th>Lote Interno</Th>
-                                            <Th>Fecha Fabricacion</Th>
-                                            <Th>Fecha Vencimiento</Th>
-                                            <Th>Cantidad</Th>
-                                            <Th textAlign="center">Acciones</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
-                                        {lotes.map((lote, index) => {
-                                            const preview = previewByLineKey[lote.lineKey];
-                                            return (
-                                                <Tr key={lote.lineKey}>
-                                                    <Td fontWeight="semibold">{index + 1}</Td>
-                                                    <Td>
-                                                        <Badge colorScheme={preview ? "blue" : "gray"}>
-                                                            {isPreviewLoading && lote.cantidad > 0
-                                                                ? "Calculando"
-                                                                : preview || "Pendiente"}
-                                                        </Badge>
-                                                    </Td>
-                                                    <Td>
-                                                        <Input
-                                                            aria-label={`Fecha de fabricacion lote ${index + 1} de ${item.material.productoId}`}
-                                                            type="date"
-                                                            size="sm"
-                                                            value={lote.productionDate}
-                                                            onChange={(e) => handleLoteChange(lote.lineKey, 'productionDate', e.target.value)}
-                                                        />
-                                                    </Td>
-                                                    <Td>
-                                                        <Input
-                                                            aria-label={`Fecha de vencimiento lote ${index + 1} de ${item.material.productoId}`}
-                                                            type="date"
-                                                            size="sm"
-                                                            value={lote.expirationDate}
-                                                            onChange={(e) => handleLoteChange(lote.lineKey, 'expirationDate', e.target.value)}
-                                                            isRequired
-                                                        />
-                                                    </Td>
-                                                    <Td>
-                                                        <Input
-                                                            aria-label={`Cantidad lote ${index + 1} de ${item.material.productoId}`}
-                                                            type="number"
-                                                            size="sm"
-                                                            value={lote.cantidad}
-                                                            onChange={(e) => handleLoteChange(lote.lineKey, 'cantidad', parseFloat(e.target.value) || 0)}
-                                                            min={0}
-                                                            max={maxPermitido}
-                                                            w="100px"
-                                                        />
-                                                    </Td>
-                                                    <Td textAlign="center">
-                                                        <IconButton
-                                                            aria-label={`Eliminar lote ${index + 1} de ${item.material.productoId}`}
-                                                            icon={<MinusIcon />}
-                                                            size="sm"
-                                                            colorScheme="red"
-                                                            onClick={() => handleRemoveLote(lote.lineKey)}
-                                                            isDisabled={lotes.length <= 1}
-                                                        />
-                                                    </Td>
-                                                </Tr>
-                                            );
-                                        })}
-                                    </Tbody>
-                                </Table>
+                                    <Table.Root size="sm" variant="simple" bg="app.surface">
+                                        <Table.Header>
+                                            <Table.Row>
+                                                <Table.ColumnHeader>Lote #</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Lote Interno</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Fecha Fabricacion</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Fecha Vencimiento</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                                <Table.ColumnHeader textAlign="center">Acciones</Table.ColumnHeader>
+                                            </Table.Row>
+                                        </Table.Header>
+                                        <Table.Body>
+                                            {lotes.map((lote, index) => {
+                                                const preview = previewByLineKey[lote.lineKey];
+                                                return (
+                                                    <Table.Row key={lote.lineKey}>
+                                                        <Table.Cell fontWeight="semibold">{index + 1}</Table.Cell>
+                                                        <Table.Cell>
+                                                            <Badge colorPalette={preview ? "blue" : "gray"}>
+                                                                {isPreviewLoading && lote.cantidad > 0
+                                                                    ? "Calculando"
+                                                                    : preview || "Pendiente"}
+                                                            </Badge>
+                                                        </Table.Cell>
+                                                        <Table.Cell>
+                                                            <Input
+                                                                aria-label={`Fecha de fabricacion lote ${index + 1} de ${item.material.productoId}`}
+                                                                type="date"
+                                                                size="sm"
+                                                                value={lote.productionDate}
+                                                                onValueChange={(e) => handleLoteChange(lote.lineKey, 'productionDate', e.target.value)}
+                                                            />
+                                                        </Table.Cell>
+                                                        <Table.Cell>
+                                                            <Input
+                                                                aria-label={`Fecha de vencimiento lote ${index + 1} de ${item.material.productoId}`}
+                                                                type="date"
+                                                                size="sm"
+                                                                value={lote.expirationDate}
+                                                                onValueChange={(e) => handleLoteChange(lote.lineKey, 'expirationDate', e.target.value)}
+                                                                required
+                                                            />
+                                                        </Table.Cell>
+                                                        <Table.Cell>
+                                                            <Input
+                                                                aria-label={`Cantidad lote ${index + 1} de ${item.material.productoId}`}
+                                                                type="number"
+                                                                size="sm"
+                                                                value={lote.cantidad}
+                                                                onValueChange={(e) => handleLoteChange(lote.lineKey, 'cantidad', parseFloat(e.target.value) || 0)}
+                                                                min={0}
+                                                                max={maxPermitido}
+                                                                w="100px"
+                                                            />
+                                                        </Table.Cell>
+                                                        <Table.Cell textAlign="center">
+                                                            <IconButton
+                                                                aria-label={`Eliminar lote ${index + 1} de ${item.material.productoId}`}
+                                                                size="sm"
+                                                                colorPalette="red"
+                                                                onClick={() => handleRemoveLote(lote.lineKey)}
+                                                                disabled={lotes.length <= 1}><LuMinus /></IconButton>
+                                                        </Table.Cell>
+                                                    </Table.Row>
+                                                );
+                                            })}
+                                        </Table.Body>
+                                    </Table.Root>
 
-                                {!isValid && (
-                                    <Text color="red.500" mt={2} fontSize="sm">
-                                        La suma de las cantidades debe ser mayor a 0 y no debe exceder {maxPermitido.toFixed(2)}
-                                        {cantidadYaRecibida > 0 && ` (ordenado: ${item.cantidad}, ya recibido: ${cantidadYaRecibida.toFixed(2)})`}.
-                                    </Text>
-                                )}
-                            </Box>
-                        </Collapse>
-                    </Td>
-                </Tr>
+                                    {!isValid && (
+                                        <Text color="red.500" mt={2} fontSize="sm">
+                                            La suma de las cantidades debe ser mayor a 0 y no debe exceder {maxPermitido.toFixed(2)}
+                                            {cantidadYaRecibida > 0 && ` (ordenado: ${item.cantidad}, ya recibido: ${cantidadYaRecibida.toFixed(2)})`}.
+                                        </Text>
+                                    )}
+                                </Box>
+                            </Collapsible.Content>
+                        </Collapsible.Root>
+                    </Table.Cell>
+                </Table.Row>
             )}
         </>
     );

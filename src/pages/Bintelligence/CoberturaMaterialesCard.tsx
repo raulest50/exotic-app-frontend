@@ -1,30 +1,18 @@
 import {
-    ChevronDownIcon,
-    ChevronRightIcon,
-    ChevronUpIcon,
-    DownloadIcon,
-    SearchIcon,
-    WarningTwoIcon,
-} from "@chakra-ui/icons";
-import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
     Badge,
     Box,
     Button,
     ButtonGroup,
     Card,
-    CardBody,
-    Collapse,
-    FormControl,
-    FormLabel,
+    Collapsible,
     HStack,
     IconButton,
     Input,
     Radio,
     RadioGroup,
-    Select,
+    NativeSelect,
     SimpleGrid,
     Spinner,
     Stack,
@@ -39,6 +27,8 @@ import {
     useBreakpointValue,
     useDisclosure,
     useToast,
+    Field,
+    Icon,
 } from "@chakra-ui/react";
 import {
     type KeyboardEvent,
@@ -66,6 +56,14 @@ import type {
     HorizonteCoberturaMaterial,
     OrdenCoberturaMaterial,
 } from "./informesGlobales.types";
+import {
+    LuAlertCircle,
+    LuChevronDown,
+    LuChevronRight,
+    LuChevronUp,
+    LuDownload,
+    LuSearch,
+} from 'react-icons/lu';
 
 type CoverageWindow = 7 | 30 | 90;
 type CoverageMode = "PRIORIDAD" | "EXPLORAR";
@@ -236,9 +234,9 @@ export default function CoberturaMaterialesCard() {
 
     return (
         <>
-            <Card variant="outline">
-                <CardBody p={{ base: 3, md: 5 }}>
-                    <Stack spacing={4}>
+            <Card.Root variant="outline">
+                <Card.Body p={{ base: 3, md: 5 }}>
+                    <Stack gap={4}>
                         <Button
                             variant="ghost"
                             justifyContent="space-between"
@@ -246,14 +244,9 @@ export default function CoberturaMaterialesCard() {
                             px={2}
                             whiteSpace="normal"
                             onClick={toggleExpanded}
-                            rightIcon={expanded
-                                ? <ChevronUpIcon />
-                                : <ChevronDownIcon />}
-                            aria-expanded={expanded}
-                        >
-                            <HStack spacing={2} flexWrap="wrap">
+                            aria-expanded={expanded}><HStack gap={2} flexWrap="wrap">
                                 {report?.confianzaBaja ? (
-                                    <WarningTwoIcon color="yellow.500" />
+                                    <Icon as={LuAlertCircle} color="yellow.500" />
                                 ) : null}
                                 <Text as="span">
                                     {coverageToggleLabel(
@@ -262,120 +255,123 @@ export default function CoberturaMaterialesCard() {
                                     )}
                                 </Text>
                                 {report?.confianzaBaja ? (
-                                    <Badge colorScheme="yellow">
+                                    <Badge colorPalette="yellow">
                                         Confianza baja
                                     </Badge>
                                 ) : null}
                                 {report?.escenarioExploratorio ? (
-                                    <Badge colorScheme="purple">
+                                    <Badge colorPalette="purple">
                                         Escenario ampliado
                                     </Badge>
                                 ) : null}
-                            </HStack>
-                        </Button>
+                            </HStack>{expanded
+                                ? <LuChevronUp />
+                                : <LuChevronDown />}</Button>
 
-                        <Collapse in={expanded} animateOpacity>
-                            <Stack spacing={4} pt={1}>
-                                <Text color="app.textMuted" fontSize="sm">
-                                    Estima cuándo se agotaría el primer material
-                                    si se repitiera el ritmo reciente de la fuente
-                                    de demanda seleccionada y no ingresaran
-                                    materiales. No debe usarse como compromiso de
-                                    abastecimiento.
-                                </Text>
+                        <Collapsible.Root open={expanded}>
+                            <Collapsible.Content>
+                                <Stack gap={4} pt={1}>
+                                    <Text color="app.textMuted" fontSize="sm">
+                                        Estima cuándo se agotaría el primer material
+                                        si se repitiera el ritmo reciente de la fuente
+                                        de demanda seleccionada y no ingresaran
+                                        materiales. No debe usarse como compromiso de
+                                        abastecimiento.
+                                    </Text>
 
-                                <CoverageContextControls
-                                    windowDays={windowDays}
-                                    demandSource={demandSource}
-                                    onWindowChange={changeWindow}
-                                    onDemandSourceChange={changeDemandSource}
-                                />
-
-                                {loading ? (
-                                    <HStack minH="120px" justify="center">
-                                        <Spinner color="green.500" />
-                                        <Text color="app.textMuted">
-                                            Calculando cobertura…
-                                        </Text>
-                                    </HStack>
-                                ) : error ? (
-                                    <Alert status="error" borderRadius="md">
-                                        <AlertIcon />
-                                        <HStack
-                                            justify="space-between"
-                                            align="center"
-                                            flex={1}
-                                        >
-                                            <Text fontSize="sm">{error}</Text>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => setRetryKey(
-                                                    (current) => current + 1,
-                                                )}
-                                            >
-                                                Reintentar
-                                            </Button>
-                                        </HStack>
-                                    </Alert>
-                                ) : report ? (
-                                    <CoverageResult
-                                        report={report}
-                                        mode={mode}
-                                        setMode={setMode}
-                                        horizon={horizon}
-                                        group={group}
-                                        unit={unit}
-                                        order={order}
-                                        draftSearch={draftSearch}
-                                        appliedSearch={appliedSearch}
-                                        size={size}
-                                        downloading={downloading}
-                                        onHorizonChange={(value) => {
-                                            setHorizon(value);
-                                            setPage(0);
-                                        }}
-                                        onGroupChange={(value) => {
-                                            setGroup(value);
-                                            setPage(0);
-                                        }}
-                                        onUnitChange={(value) => {
-                                            setUnit(value);
-                                            if (!value
-                                            && order === "MAYOR_DEMANDA") {
-                                                setOrder("AGOTAMIENTO");
-                                            }
-                                            setPage(0);
-                                        }}
-                                        onOrderChange={(value) => {
-                                            setOrder(value);
-                                            setPage(0);
-                                        }}
-                                        setDraftSearch={setDraftSearch}
-                                        onApplySearch={applySearch}
-                                        onSearchKeyDown={handleSearchKeyDown}
-                                        onSizeChange={(value) => {
-                                            setSize(value);
-                                            setPage(0);
-                                        }}
-                                        onPageChange={setPage}
-                                        onClear={clearFilters}
-                                        onSelect={openDetail}
-                                        onDownload={downloadExcel}
+                                    <CoverageContextControls
+                                        windowDays={windowDays}
+                                        demandSource={demandSource}
+                                        onWindowChange={changeWindow}
+                                        onDemandSourceChange={changeDemandSource}
                                     />
-                                ) : null}
-                            </Stack>
-                        </Collapse>
+
+                                    {loading ? (
+                                        <HStack minH="120px" justify="center">
+                                            <Spinner color="green.500" />
+                                            <Text color="app.textMuted">
+                                                Calculando cobertura…
+                                            </Text>
+                                        </HStack>
+                                    ) : error ? (
+                                        <Alert.Root status="error" borderRadius="md">
+                                            <Alert.Indicator />
+                                            <HStack
+                                                justify="space-between"
+                                                align="center"
+                                                flex={1}
+                                            >
+                                                <Text fontSize="sm">{error}</Text>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => setRetryKey(
+                                                        (current) => current + 1,
+                                                    )}
+                                                >
+                                                    Reintentar
+                                                </Button>
+                                            </HStack>
+                                        </Alert.Root>
+                                    ) : report ? (
+                                        <CoverageResult
+                                            report={report}
+                                            mode={mode}
+                                            setMode={setMode}
+                                            horizon={horizon}
+                                            group={group}
+                                            unit={unit}
+                                            order={order}
+                                            draftSearch={draftSearch}
+                                            appliedSearch={appliedSearch}
+                                            size={size}
+                                            downloading={downloading}
+                                            onHorizonChange={(value) => {
+                                                setHorizon(value);
+                                                setPage(0);
+                                            }}
+                                            onGroupChange={(value) => {
+                                                setGroup(value);
+                                                setPage(0);
+                                            }}
+                                            onUnitChange={(value) => {
+                                                setUnit(value);
+                                                if (!value
+                                                && order === "MAYOR_DEMANDA") {
+                                                    setOrder("AGOTAMIENTO");
+                                                }
+                                                setPage(0);
+                                            }}
+                                            onOrderChange={(value) => {
+                                                setOrder(value);
+                                                setPage(0);
+                                            }}
+                                            setDraftSearch={setDraftSearch}
+                                            onApplySearch={applySearch}
+                                            onSearchKeyDown={handleSearchKeyDown}
+                                            onSizeChange={(value) => {
+                                                setSize(value);
+                                                setPage(0);
+                                            }}
+                                            onPageChange={setPage}
+                                            onClear={clearFilters}
+                                            onSelect={openDetail}
+                                            onDownload={downloadExcel}
+                                        />
+                                    ) : null}
+                                </Stack>
+                            </Collapsible.Content>
+                        </Collapsible.Root>
                     </Stack>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
 
             <CoberturaMaterialDetailDrawer
                 estimate={selectedEstimate}
                 cutoff={report?.fechaHoraCorteStock ?? ""}
                 windowDays={windowDays}
                 demandSource={demandSource}
-                isOpen={detail.isOpen}
+                isOpen={detail.open}
                 onClose={closeDetail}
             />
         </>
@@ -431,40 +427,37 @@ function CoverageContextControls({
             direction={{ base: "column", lg: "row" }}
             align={{ base: "stretch", lg: "flex-end" }}
             justify="space-between"
-            spacing={4}
+            gap={4}
         >
-            <FormControl>
-                <FormLabel fontSize="sm">Fuente de demanda</FormLabel>
-                <RadioGroup
+            <Field.Root>
+                <Field.Label fontSize="sm">Fuente de demanda</Field.Label>
+                <RadioGroup.Root
                     value={demandSource}
-                    onChange={(value) => onDemandSourceChange(
+                    onValueChange={(value) => onDemandSourceChange(
                         value as FuenteDemandaCobertura,
-                    )}
-                >
-                    <Stack spacing={3}>
+                    )}>
+                    <Stack gap={3}>
                         <Box>
-                            <Radio value="SOLO_DISPENSACIONES">
-                                Consumo operativo
-                            </Radio>
+                            <RadioGroup.Item value="SOLO_DISPENSACIONES"><RadioGroup.ItemHiddenInput /><RadioGroup.ItemIndicator /><RadioGroup.ItemText>Consumo operativo
+                                                                </RadioGroup.ItemText></RadioGroup.Item>
                             <Text ml={6} color="app.textMuted" fontSize="xs">
                                 Solo dispensaciones formales.
                             </Text>
                         </Box>
                         <Box>
-                            <Radio value="DISPENSACIONES_MAS_CONTINGENCIAS">
-                                Consumo operativo + contingencias de producción
-                            </Radio>
+                            <RadioGroup.Item value="DISPENSACIONES_MAS_CONTINGENCIAS"><RadioGroup.ItemHiddenInput /><RadioGroup.ItemIndicator /><RadioGroup.ItemText>Consumo operativo + contingencias de producción
+                                                                </RadioGroup.ItemText></RadioGroup.Item>
                             <Text ml={6} color="app.textMuted" fontSize="xs">
                                 Escenario ampliado con ajustes negativos
                                 clasificados como producción por contingencia.
                             </Text>
                         </Box>
                     </Stack>
-                </RadioGroup>
-            </FormControl>
+                </RadioGroup.Root>
+            </Field.Root>
 
             <ButtonGroup
-                isAttached
+                attached
                 size="sm"
                 alignSelf={{ base: "stretch", lg: "flex-end" }}
             >
@@ -473,7 +466,7 @@ function CoverageContextControls({
                         key={days}
                         minH="44px"
                         flex={{ base: 1, md: "initial" }}
-                        colorScheme={windowDays === days ? "green" : undefined}
+                        colorPalette={windowDays === days ? "green" : undefined}
                         variant={windowDays === days ? "solid" : "outline"}
                         onClick={() => onWindowChange(days)}
                         aria-pressed={windowDays === days}
@@ -537,29 +530,29 @@ function CoverageResult({
 }) {
     if (report.estado === "SIN_CONSUMO") {
         return (
-            <Stack spacing={3}>
+            <Stack gap={3}>
                 <CoverageSourceNotices report={report} />
-                <Alert status="info" borderRadius="md">
-                    <AlertIcon />
+                <Alert.Root status="info" borderRadius="md">
+                    <Alert.Indicator />
                     No hubo consumo suficiente para estimar agotamientos en esta
                     ventana.
-                </Alert>
+                </Alert.Root>
             </Stack>
         );
     }
 
     return (
-        <Stack spacing={4}>
+        <Stack gap={4}>
             <CoverageSourceNotices report={report} />
 
             {report.confianzaBaja ? (
-                <Alert
+                <Alert.Root
                     status="warning"
                     alignItems="flex-start"
                     borderRadius="md"
                 >
-                    <AlertIcon mt={0.5} />
-                    <Stack spacing={1}>
+                    <Alert.Indicator mt={0.5} />
+                    <Stack gap={1}>
                         <Text fontWeight="semibold">
                             Estimación de baja confianza
                         </Text>
@@ -567,10 +560,10 @@ function CoverageResult({
                             <Text key={reason} fontSize="sm">{reason}</Text>
                         ))}
                     </Stack>
-                </Alert>
+                </Alert.Root>
             ) : null}
 
-            <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} spacing={3}>
+            <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} gap={3}>
                 <KpiCard
                     label="Primer agotamiento"
                     value={report.fechaPrimerAgotamiento
@@ -598,10 +591,10 @@ function CoverageResult({
                 />
             </SimpleGrid>
 
-            <ButtonGroup isAttached size="sm">
+            <ButtonGroup attached size="sm">
                 <Button
                     minH="40px"
-                    colorScheme={mode === "PRIORIDAD" ? "green" : undefined}
+                    colorPalette={mode === "PRIORIDAD" ? "green" : undefined}
                     variant={mode === "PRIORIDAD" ? "solid" : "outline"}
                     onClick={() => setMode("PRIORIDAD")}
                 >
@@ -609,7 +602,7 @@ function CoverageResult({
                 </Button>
                 <Button
                     minH="40px"
-                    colorScheme={mode === "EXPLORAR" ? "green" : undefined}
+                    colorPalette={mode === "EXPLORAR" ? "green" : undefined}
                     variant={mode === "EXPLORAR" ? "solid" : "outline"}
                     onClick={() => {
                         onPageChange(0);
@@ -669,7 +662,7 @@ function PriorityCoverageView({
     onExplore: () => void;
 }) {
     return (
-        <Stack spacing={3}>
+        <Stack gap={3}>
             <Box>
                 <Text fontWeight="semibold">Próximos agotamientos</Text>
                 <Text color="app.textMuted" fontSize="sm">
@@ -754,7 +747,7 @@ function CoverageExplorationView({
     const hasActiveFilters = activeLabels.length > 0 || size !== 10;
 
     return (
-        <Stack spacing={4}>
+        <Stack gap={4}>
             <Box>
                 <Text fontWeight="semibold">Horizonte de agotamiento</Text>
                 <Text color="app.textMuted" fontSize="xs" mb={2}>
@@ -763,9 +756,9 @@ function CoverageExplorationView({
                 </Text>
                 <ButtonGroup
                     size="sm"
-                    spacing={2}
+                    gap={2}
                     flexWrap="wrap"
-                    isAttached={false}
+                    attached={false}
                 >
                     {HORIZON_OPTIONS.map((option) => (
                         <Button
@@ -774,7 +767,7 @@ function CoverageExplorationView({
                             variant={horizon === option.value
                                 ? "solid"
                                 : "outline"}
-                            colorScheme={horizon === option.value
+                            colorPalette={horizon === option.value
                                 ? option.colorScheme
                                 : undefined}
                             onClick={() => onHorizonChange(option.value)}
@@ -788,107 +781,113 @@ function CoverageExplorationView({
             <Stack
                 direction={{ base: "column", xl: "row" }}
                 align={{ base: "stretch", xl: "flex-end" }}
-                spacing={3}
+                gap={3}
             >
-                <FormControl flex={1}>
-                    <FormLabel fontSize="xs" mb={1}>Buscar material</FormLabel>
+                <Field.Root flex={1}>
+                    <Field.Label fontSize="xs" mb={1}>Buscar material</Field.Label>
                     <HStack>
                         <Input
                             minH="40px"
                             value={draftSearch}
                             maxLength={100}
                             placeholder="Código o nombre"
-                            onChange={(event) => setDraftSearch(event.target.value)}
+                            onValueChange={(event) => setDraftSearch(event.target.value)}
                             onKeyDown={onSearchKeyDown}
                         />
                         <IconButton
                             aria-label="Buscar materiales con cobertura"
-                            icon={<SearchIcon />}
                             minH="40px"
-                            colorScheme="blue"
-                            onClick={onApplySearch}
-                        />
+                            colorPalette="blue"
+                            onClick={onApplySearch}><LuSearch /></IconButton>
                     </HStack>
-                </FormControl>
-                <FormControl maxW={{ xl: "190px" }}>
-                    <FormLabel fontSize="xs" mb={1}>Grupo</FormLabel>
-                    <Select
-                        minH="40px"
-                        value={group}
-                        onChange={(event) => onGroupChange(
-                            event.target.value as FiltroGrupoCoberturaMaterial,
-                        )}
-                    >
-                        <option value="TODOS">Todos</option>
-                        {GROUP_OPTIONS.map((option) => (
-                            <option
-                                key={option.value}
-                                value={option.value}
-                                disabled={!report.facetas.gruposDisponibles
-                                    .includes(option.value)}
-                            >
-                                {option.label}
+                </Field.Root>
+                <Field.Root maxW={{ xl: "190px" }}>
+                    <Field.Label fontSize="xs" mb={1}>Grupo</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            minH="40px"
+                            value={group}
+                            onValueChange={(event) => onGroupChange(
+                                event.target.value as FiltroGrupoCoberturaMaterial,
+                            )}>
+                            <option value="TODOS">Todos</option>
+                            {GROUP_OPTIONS.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={option.value}
+                                    disabled={!report.facetas.gruposDisponibles
+                                        .includes(option.value)}
+                                >
+                                    {option.label}
+                                </option>
+                            ))}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
+                <Field.Root maxW={{ xl: "150px" }}>
+                    <Field.Label fontSize="xs" mb={1}>Unidad</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            minH="40px"
+                            value={unit}
+                            onValueChange={(event) => onUnitChange(event.target.value)}>
+                            <option value="">Todas</option>
+                            {report.facetas.unidadesDisponibles.map((value) => (
+                                <option key={value} value={value}>{value}</option>
+                            ))}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
+                <Field.Root maxW={{ xl: "220px" }}>
+                    <Field.Label fontSize="xs" mb={1}>Ordenar por</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            minH="40px"
+                            value={order}
+                            onValueChange={(event) => onOrderChange(
+                                event.target.value as OrdenCoberturaMaterial,
+                            )}>
+                            <option value="AGOTAMIENTO">
+                                Agotamiento más próximo
                             </option>
-                        ))}
-                    </Select>
-                </FormControl>
-                <FormControl maxW={{ xl: "150px" }}>
-                    <FormLabel fontSize="xs" mb={1}>Unidad</FormLabel>
-                    <Select
-                        minH="40px"
-                        value={unit}
-                        onChange={(event) => onUnitChange(event.target.value)}
-                    >
-                        <option value="">Todas</option>
-                        {report.facetas.unidadesDisponibles.map((value) => (
-                            <option key={value} value={value}>{value}</option>
-                        ))}
-                    </Select>
-                </FormControl>
-                <FormControl maxW={{ xl: "220px" }}>
-                    <FormLabel fontSize="xs" mb={1}>Ordenar por</FormLabel>
-                    <Select
-                        minH="40px"
-                        value={order}
-                        onChange={(event) => onOrderChange(
-                            event.target.value as OrdenCoberturaMaterial,
-                        )}
-                    >
-                        <option value="AGOTAMIENTO">
-                            Agotamiento más próximo
-                        </option>
-                        <option value="MAYOR_DEMANDA" disabled={!unit}>
-                            Mayor demanda (requiere unidad)
-                        </option>
-                        <option value="NOMBRE">Nombre/código</option>
-                    </Select>
-                </FormControl>
-                <FormControl maxW={{ xl: "125px" }}>
-                    <FormLabel fontSize="xs" mb={1}>Mostrar</FormLabel>
-                    <Select
-                        minH="40px"
-                        value={size}
-                        onChange={(event) => onSizeChange(
-                            Number(event.target.value) as PageSize,
-                        )}
-                    >
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                    </Select>
-                </FormControl>
+                            <option value="MAYOR_DEMANDA" disabled={!unit}>
+                                Mayor demanda (requiere unidad)
+                            </option>
+                            <option value="NOMBRE">Nombre/código</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
+                <Field.Root maxW={{ xl: "125px" }}>
+                    <Field.Label fontSize="xs" mb={1}>Mostrar</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field
+                            minH="40px"
+                            value={size}
+                            onValueChange={(event) => onSizeChange(
+                                Number(event.target.value) as PageSize,
+                            )}>
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
             </Stack>
 
             <HStack justify="space-between" align="flex-start" flexWrap="wrap">
-                <Stack spacing={1}>
+                <Stack gap={1}>
                     {activeLabels.length > 0 ? (
-                        <HStack spacing={2} flexWrap="wrap">
+                        <HStack gap={2} flexWrap="wrap">
                             <Text color="app.textMuted" fontSize="sm">
                                 Filtros:
                             </Text>
                             {activeLabels.map((label, index) => (
                                 <Badge
                                     key={`${index}-${label}`}
-                                    colorScheme="blue"
+                                    colorPalette="blue"
                                 >
                                     {label}
                                 </Badge>
@@ -904,7 +903,7 @@ function CoverageExplorationView({
                         encontradas
                     </Text>
                 </Stack>
-                <HStack spacing={2} flexWrap="wrap">
+                <HStack gap={2} flexWrap="wrap">
                     {hasActiveFilters ? (
                         <Button size="sm" variant="ghost" onClick={onClear}>
                             Limpiar filtros
@@ -913,16 +912,13 @@ function CoverageExplorationView({
                     <Button
                         size="sm"
                         variant="outline"
-                        colorScheme="green"
-                        leftIcon={<DownloadIcon />}
-                        isLoading={downloading}
+                        colorPalette="green"
+                        loading={downloading}
                         loadingText="Generando Excel…"
-                        isDisabled={pageData.totalElements === 0}
+                        disabled={pageData.totalElements === 0}
                         title={`Exporta las ${pageData.totalElements} referencias encontradas`}
-                        onClick={onDownload}
-                    >
-                        Descargar Excel
-                    </Button>
+                        onClick={onDownload}><LuDownload />Descargar Excel
+                                            </Button>
                 </HStack>
             </HStack>
 
@@ -943,7 +939,7 @@ function CoverageExplorationView({
                 direction={{ base: "column", md: "row" }}
                 justify="space-between"
                 align={{ base: "stretch", md: "center" }}
-                spacing={3}
+                gap={3}
             >
                 <Text color="app.textMuted" fontSize="sm">
                     Mostrando {firstItem}–{lastItem} de{" "}
@@ -959,7 +955,7 @@ function CoverageExplorationView({
                         minH="44px"
                         w={{ base: "full", sm: "auto" }}
                         variant="outline"
-                        isDisabled={pageData.first}
+                        disabled={pageData.first}
                         onClick={() => onPageChange(
                             Math.max(0, pageData.page - 1),
                         )}
@@ -976,7 +972,7 @@ function CoverageExplorationView({
                         minH="44px"
                         w={{ base: "full", sm: "auto" }}
                         variant="outline"
-                        isDisabled={pageData.last}
+                        disabled={pageData.last}
                         onClick={() => onPageChange(pageData.page + 1)}
                     >
                         Siguiente ›
@@ -1006,11 +1002,11 @@ function CoverageTable({
 
     if (compact) {
         return (
-            <Stack spacing={3}>
+            <Stack gap={3}>
                 {items.map((estimate, index) => (
-                    <Card key={estimate.productoId} variant="outline">
-                        <CardBody p={3}>
-                            <Stack spacing={3}>
+                    <Card.Root key={estimate.productoId} variant="outline">
+                        <Card.Body p={3}>
+                            <Stack gap={3}>
                                 <HStack
                                     justify="space-between"
                                     align="flex-start"
@@ -1029,13 +1025,13 @@ function CoverageTable({
                                     </Box>
                                     <HStack flexWrap="wrap">
                                         {priority && index === 0 ? (
-                                            <Badge colorScheme="red">
+                                            <Badge colorPalette="red">
                                                 Crítico
                                             </Badge>
                                         ) : null}
                                         {showGroup ? (
                                             <Badge
-                                                colorScheme={horizonColor(
+                                                colorPalette={horizonColor(
                                                     estimate,
                                                 )}
                                             >
@@ -1051,12 +1047,12 @@ function CoverageTable({
                                         </Badge>
                                     ) : null}
                                     {estimate.confianzaBaja ? (
-                                        <Badge colorScheme="yellow">
+                                        <Badge colorPalette="yellow">
                                             Confianza baja
                                         </Badge>
                                     ) : null}
                                 </HStack>
-                                <SimpleGrid columns={2} spacing={3}>
+                                <SimpleGrid columns={2} gap={3}>
                                     <CoverageMetric
                                         label="Stock"
                                         value={`${formatQuantity(estimate.stockActual)} ${estimate.unidadMedida}`}
@@ -1091,63 +1087,60 @@ function CoverageTable({
                                 <Button
                                     minH="44px"
                                     variant="outline"
-                                    colorScheme="blue"
-                                    rightIcon={<ChevronRightIcon />}
-                                    onClick={() => onSelect(estimate)}
-                                >
-                                    Ver detalle
-                                </Button>
+                                    colorPalette="blue"
+                                    onClick={() => onSelect(estimate)}>Ver detalle
+                                                                    <LuChevronRight /></Button>
                             </Stack>
-                        </CardBody>
-                    </Card>
+                        </Card.Body>
+                    </Card.Root>
                 ))}
             </Stack>
         );
     }
 
     return (
-        <TableContainer>
-            <Table size="sm">
-                <Thead>
-                    <Tr>
-                        {showGroup ? <Th>Horizonte</Th> : null}
-                        {showGroup ? <Th>Grupo</Th> : null}
-                        <Th>Material</Th>
-                        <Th isNumeric>Stock</Th>
-                        <Th isNumeric>Demanda diaria</Th>
-                        <Th isNumeric>Días restantes</Th>
-                        <Th>Fecha estimada</Th>
-                        <Th textAlign="center">Detalle</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
+        <Table.ScrollArea>
+            <Table.Root size="sm">
+                <Table.Header>
+                    <Table.Row>
+                        {showGroup ? <Table.ColumnHeader>Horizonte</Table.ColumnHeader> : null}
+                        {showGroup ? <Table.ColumnHeader>Grupo</Table.ColumnHeader> : null}
+                        <Table.ColumnHeader>Material</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Stock</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Demanda diaria</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Días restantes</Table.ColumnHeader>
+                        <Table.ColumnHeader>Fecha estimada</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign="center">Detalle</Table.ColumnHeader>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {items.map((estimate, index) => (
-                        <Tr key={estimate.productoId}>
+                        <Table.Row key={estimate.productoId}>
                             {showGroup ? (
-                                <Td>
+                                <Table.Cell>
                                     <Badge
-                                        colorScheme={horizonColor(estimate)}
+                                        colorPalette={horizonColor(estimate)}
                                     >
                                         {horizonLabel(estimate)}
                                     </Badge>
-                                </Td>
+                                </Table.Cell>
                             ) : null}
                             {showGroup ? (
-                                <Td>{groupLabel(estimate.grupo)}</Td>
+                                <Table.Cell>{groupLabel(estimate.grupo)}</Table.Cell>
                             ) : null}
-                            <Td>
-                                <Stack spacing={0}>
+                            <Table.Cell>
+                                <Stack gap={0}>
                                     <HStack flexWrap="wrap">
                                         <Text fontWeight="semibold">
                                             {estimate.nombre}
                                         </Text>
                                         {priority && index === 0 ? (
-                                            <Badge colorScheme="red">
+                                            <Badge colorPalette="red">
                                                 Crítico
                                             </Badge>
                                         ) : null}
                                         {estimate.confianzaBaja ? (
-                                            <Badge colorScheme="yellow">
+                                            <Badge colorPalette="yellow">
                                                 Confianza baja
                                             </Badge>
                                         ) : null}
@@ -1159,13 +1152,13 @@ function CoverageTable({
                                         {estimate.productoId}
                                     </Text>
                                 </Stack>
-                            </Td>
-                            <Td isNumeric>
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>
                                 {formatQuantity(estimate.stockActual)}{" "}
                                 {estimate.unidadMedida}
-                            </Td>
-                            <Td isNumeric>
-                                <Stack spacing={0} align="flex-end">
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>
+                                <Stack gap={0} align="flex-end">
                                     <Text>
                                         {formatQuantity(
                                             estimate.demandaMediaDiaria,
@@ -1191,35 +1184,33 @@ function CoverageTable({
                                         </Text>
                                     ) : null}
                                 </Stack>
-                            </Td>
-                            <Td isNumeric>
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>
                                 {estimate.diasHastaAgotamiento === null
                                 || estimate.diasHastaAgotamiento === undefined
                                     ? "—"
                                     : formatQuantity(
                                         estimate.diasHastaAgotamiento,
                                     )}
-                            </Td>
-                            <Td>
+                            </Table.Cell>
+                            <Table.Cell>
                                 {estimate.fechaAgotamiento
                                     ? formatDate(estimate.fechaAgotamiento)
                                     : "—"}
-                            </Td>
-                            <Td textAlign="center">
+                            </Table.Cell>
+                            <Table.Cell textAlign="center">
                                 <IconButton
                                     aria-label={`Ver cobertura de ${estimate.nombre}`}
-                                    icon={<ChevronRightIcon />}
                                     size="sm"
                                     variant="ghost"
-                                    colorScheme="blue"
-                                    onClick={() => onSelect(estimate)}
-                                />
-                            </Td>
-                        </Tr>
+                                    colorPalette="blue"
+                                    onClick={() => onSelect(estimate)}><LuChevronRight /></IconButton>
+                            </Table.Cell>
+                        </Table.Row>
                     ))}
-                </Tbody>
-            </Table>
-        </TableContainer>
+                </Table.Body>
+            </Table.Root>
+        </Table.ScrollArea>
     );
 }
 
@@ -1238,44 +1229,44 @@ function CoverageSourceNotices({ report }: { report: CoberturaMateriales }) {
     const sources = report.resumenFuentesDemanda;
 
     return (
-        <Stack spacing={3}>
+        <Stack gap={3}>
             {report.escenarioExploratorio
             && sources.ajustesContingenciaIncluidos > 0 ? (
-                <Alert status="info" alignItems="flex-start" borderRadius="md">
-                    <AlertIcon mt={0.5} />
-                    <AlertDescription>
+                <Alert.Root status="info" alignItems="flex-start" borderRadius="md">
+                    <Alert.Indicator mt={0.5} />
+                    <Alert.Description>
                         Esta estimación incluyó{" "}
                         {formatInteger(sources.ajustesContingenciaIncluidos)}{" "}
                         movimiento(s) de producción por contingencia.
-                    </AlertDescription>
-                </Alert>
+                    </Alert.Description>
+                </Alert.Root>
             ) : null}
 
             {sources.ajustesNegativosSinClasificarExcluidos > 0 ? (
-                <Alert
+                <Alert.Root
                     status="warning"
                     alignItems="flex-start"
                     borderRadius="md"
                 >
-                    <AlertIcon mt={0.5} />
-                    <AlertDescription>
+                    <Alert.Indicator mt={0.5} />
+                    <Alert.Description>
                         Se excluyeron{" "}
                         {formatInteger(
                             sources.ajustesNegativosSinClasificarExcluidos,
                         )}{" "}
                         ajuste(s) negativo(s) histórico(s) sin causa
                         estructurada.
-                    </AlertDescription>
-                </Alert>
+                    </Alert.Description>
+                </Alert.Root>
             ) : null}
 
             {report.fuenteDemanda === "DISPENSACIONES_MAS_CONTINGENCIAS"
             && sources.ajustesContingenciaDisponibles === 0 ? (
-                <Alert status="info" borderRadius="md">
-                    <AlertIcon />
+                <Alert.Root status="info" borderRadius="md">
+                    <Alert.Indicator />
                     No hubo contingencias de producción clasificadas en esta
                     ventana; el resultado coincide con el consumo operativo.
-                </Alert>
+                </Alert.Root>
             ) : null}
         </Stack>
     );

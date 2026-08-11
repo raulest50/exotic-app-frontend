@@ -1,28 +1,24 @@
 import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
-    FormControl,
-    FormLabel,
+    Steps,
     Input,
     Textarea,
     Button,
     SimpleGrid,
     VStack,
-    FormErrorMessage,
     useToast,
     Alert,
-    AlertIcon,
-    AlertTitle,
-    AlertDescription,
     Text,
     InputGroup,
     InputRightElement,
     IconButton,
+    Field,
 } from "@chakra-ui/react";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
-import { SearchIcon } from '@chakra-ui/icons';
 import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
 import { User } from '../../../pages/Usuarios/GestionUsuarios/types';
+import { LuSearch } from 'react-icons/lu';
 
 interface VendorFormData {
     cedula: string;
@@ -306,156 +302,146 @@ const CrearVendedor: React.FC<CrearVendedorProps> = ({ onVendorCreated }) => {
     };
 
     return (
-        <VStack
-            as="form"
-            onSubmit={handleSubmit}
-            align="stretch"
-            spacing={6}
-        >
-            <Text fontWeight="semibold" fontSize="lg">
-                Completa los datos del nuevo vendedor
-            </Text>
+        <VStack align="stretch" gap={6} asChild><form onSubmit={handleSubmit}>
+                                            <Text fontWeight="semibold" fontSize="lg">
+                                                Completa los datos del nuevo vendedor
+                                            </Text>
 
-            {apiError && (
-                <Alert status="error" borderRadius="md">
-                    <AlertIcon />
-                    <VStack align="start" spacing={0}>
-                        <AlertTitle>Se produjo un error.</AlertTitle>
-                        <AlertDescription>{apiError}</AlertDescription>
-                    </VStack>
-                </Alert>
-            )}
+                                            {apiError && (
+                                                <Alert.Root status="error" borderRadius="md">
+                                                    <Alert.Indicator />
+                                                    <VStack align="start" gap={0}>
+                                                        <Alert.Title>Se produjo un error.</Alert.Title>
+                                                        <Alert.Description>{apiError}</Alert.Description>
+                                                    </VStack>
+                                                </Alert.Root>
+                                            )}
 
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                <FormControl isRequired isInvalid={touchedFields.cedula && !!formErrors.cedula}>
-                    <FormLabel>Cédula</FormLabel>
-                    <Input
-                        name="cedula"
-                        value={formData.cedula}
-                        onChange={(event) => handleChange('cedula', event.target.value)}
-                        onBlur={() => handleBlur('cedula')}
-                        placeholder="Número de cédula"
-                    />
-                    <FormErrorMessage>{formErrors.cedula}</FormErrorMessage>
-                </FormControl>
+                                            <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                                                <Field.Root required invalid={touchedFields.cedula && !!formErrors.cedula}>
+                                                    <Field.Label>Cédula</Field.Label>
+                                                    <Input
+                                                        name="cedula"
+                                                        value={formData.cedula}
+                                                        onValueChange={(event) => handleChange('cedula', event.target.value)}
+                                                        onBlur={() => handleBlur('cedula')}
+                                                        placeholder="Número de cédula"
+                                                    />
+                                                    <Field.ErrorText>{formErrors.cedula}</Field.ErrorText>
+                                                </Field.Root>
 
-                <FormControl isRequired isInvalid={touchedFields.nombres && !!formErrors.nombres}>
-                    <FormLabel>Nombres</FormLabel>
-                    <Input
-                        name="nombres"
-                        value={formData.nombres}
-                        onChange={(event) => handleChange('nombres', event.target.value)}
-                        onBlur={() => handleBlur('nombres')}
-                        placeholder="Nombres completos"
-                    />
-                    <FormErrorMessage>{formErrors.nombres}</FormErrorMessage>
-                </FormControl>
+                                                <Field.Root required invalid={touchedFields.nombres && !!formErrors.nombres}>
+                                                    <Field.Label>Nombres</Field.Label>
+                                                    <Input
+                                                        name="nombres"
+                                                        value={formData.nombres}
+                                                        onValueChange={(event) => handleChange('nombres', event.target.value)}
+                                                        onBlur={() => handleBlur('nombres')}
+                                                        placeholder="Nombres completos"
+                                                    />
+                                                    <Field.ErrorText>{formErrors.nombres}</Field.ErrorText>
+                                                </Field.Root>
 
-                <FormControl isRequired isInvalid={touchedFields.apellidos && !!formErrors.apellidos}>
-                    <FormLabel>Apellidos</FormLabel>
-                    <Input
-                        name="apellidos"
-                        value={formData.apellidos}
-                        onChange={(event) => handleChange('apellidos', event.target.value)}
-                        onBlur={() => handleBlur('apellidos')}
-                        placeholder="Apellidos completos"
-                    />
-                    <FormErrorMessage>{formErrors.apellidos}</FormErrorMessage>
-                </FormControl>
+                                                <Field.Root required invalid={touchedFields.apellidos && !!formErrors.apellidos}>
+                                                    <Field.Label>Apellidos</Field.Label>
+                                                    <Input
+                                                        name="apellidos"
+                                                        value={formData.apellidos}
+                                                        onValueChange={(event) => handleChange('apellidos', event.target.value)}
+                                                        onBlur={() => handleBlur('apellidos')}
+                                                        placeholder="Apellidos completos"
+                                                    />
+                                                    <Field.ErrorText>{formErrors.apellidos}</Field.ErrorText>
+                                                </Field.Root>
 
-                <FormControl
-                    isRequired
-                    isInvalid={touchedFields.fechaNacimiento && !!formErrors.fechaNacimiento}
-                >
-                    <FormLabel>Fecha de nacimiento</FormLabel>
-                    <Input
-                        type="date"
-                        name="fechaNacimiento"
-                        value={formData.fechaNacimiento}
-                        max={new Date().toISOString().split('T')[0]}
-                        onChange={(event) => handleChange('fechaNacimiento', event.target.value)}
-                        onBlur={() => handleBlur('fechaNacimiento')}
-                    />
-                    <FormErrorMessage>{formErrors.fechaNacimiento}</FormErrorMessage>
-                </FormControl>
+                                                <Field.Root
+                                                    required
+                                                    invalid={touchedFields.fechaNacimiento && !!formErrors.fechaNacimiento}
+                                                >
+                                                    <Field.Label>Fecha de nacimiento</Field.Label>
+                                                    <Input
+                                                        type="date"
+                                                        name="fechaNacimiento"
+                                                        value={formData.fechaNacimiento}
+                                                        max={new Date().toISOString().split('T')[0]}
+                                                        onValueChange={(event) => handleChange('fechaNacimiento', event.target.value)}
+                                                        onBlur={() => handleBlur('fechaNacimiento')}
+                                                    />
+                                                    <Field.ErrorText>{formErrors.fechaNacimiento}</Field.ErrorText>
+                                                </Field.Root>
 
-                <FormControl isRequired isInvalid={touchedFields.email && !!formErrors.email}>
-                    <FormLabel>Correo electrónico</FormLabel>
-                    <Input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={(event) => handleChange('email', event.target.value)}
-                        onBlur={() => handleBlur('email')}
-                        placeholder="correo@dominio.com"
-                    />
-                    <FormErrorMessage>{formErrors.email}</FormErrorMessage>
-                </FormControl>
+                                                <Field.Root required invalid={touchedFields.email && !!formErrors.email}>
+                                                    <Field.Label>Correo electrónico</Field.Label>
+                                                    <Input
+                                                        type="email"
+                                                        name="email"
+                                                        value={formData.email}
+                                                        onValueChange={(event) => handleChange('email', event.target.value)}
+                                                        onBlur={() => handleBlur('email')}
+                                                        placeholder="correo@dominio.com"
+                                                    />
+                                                    <Field.ErrorText>{formErrors.email}</Field.ErrorText>
+                                                </Field.Root>
 
-                <FormControl isInvalid={touchedFields.telefono && !!formErrors.telefono}>
-                    <FormLabel>Teléfono (opcional)</FormLabel>
-                    <Input
-                        name="telefono"
-                        value={formData.telefono}
-                        onChange={(event) => handleChange('telefono', event.target.value)}
-                        onBlur={() => handleBlur('telefono')}
-                        placeholder="Ej. +58 555-1234567"
-                    />
-                    <FormErrorMessage>{formErrors.telefono}</FormErrorMessage>
-                </FormControl>
+                                                <Field.Root invalid={touchedFields.telefono && !!formErrors.telefono}>
+                                                    <Field.Label>Teléfono (opcional)</Field.Label>
+                                                    <Input
+                                                        name="telefono"
+                                                        value={formData.telefono}
+                                                        onValueChange={(event) => handleChange('telefono', event.target.value)}
+                                                        onBlur={() => handleBlur('telefono')}
+                                                        placeholder="Ej. +58 555-1234567"
+                                                    />
+                                                    <Field.ErrorText>{formErrors.telefono}</Field.ErrorText>
+                                                </Field.Root>
 
-                <FormControl isInvalid={touchedFields.direccion && !!formErrors.direccion}>
-                    <FormLabel>Dirección (opcional)</FormLabel>
-                    <Textarea
-                        name="direccion"
-                        value={formData.direccion}
-                        onChange={(event) => handleChange('direccion', event.target.value)}
-                        onBlur={() => handleBlur('direccion')}
-                        placeholder="Dirección de residencia"
-                        rows={3}
-                    />
-                    <FormErrorMessage>{formErrors.direccion}</FormErrorMessage>
-                </FormControl>
+                                                <Field.Root invalid={touchedFields.direccion && !!formErrors.direccion}>
+                                                    <Field.Label>Dirección (opcional)</Field.Label>
+                                                    <Textarea
+                                                        name="direccion"
+                                                        value={formData.direccion}
+                                                        onValueChange={(event) => handleChange('direccion', event.target.value)}
+                                                        onBlur={() => handleBlur('direccion')}
+                                                        placeholder="Dirección de residencia"
+                                                        rows={3}
+                                                    />
+                                                    <Field.ErrorText>{formErrors.direccion}</Field.ErrorText>
+                                                </Field.Root>
 
-                <FormControl isRequired isInvalid={touchedFields.userId && !!formErrors.userId}>
-                    <FormLabel>ID de usuario</FormLabel>
-                    <InputGroup>
-                        <Input
-                            name="userId"
-                            value={formData.userId}
-                            isReadOnly
-                            placeholder="Seleccione un usuario"
-                            bg="app.inputReadonly"
-                        />
-                        <InputRightElement>
-                            <IconButton
-                                aria-label="Buscar usuario"
-                                icon={<SearchIcon />}
-                                size="sm"
-                                onClick={handleOpenUserPicker}
-                            />
-                        </InputRightElement>
-                    </InputGroup>
-                    <FormErrorMessage>{formErrors.userId}</FormErrorMessage>
-                </FormControl>
-            </SimpleGrid>
+                                                <Field.Root required invalid={touchedFields.userId && !!formErrors.userId}>
+                                                    <Field.Label>ID de usuario</Field.Label>
+                                                    <InputGroup>
+                                                        <Input
+                                                            name="userId"
+                                                            value={formData.userId}
+                                                            readOnly
+                                                            placeholder="Seleccione un usuario"
+                                                            bg="app.inputReadonly"
+                                                        />
+                                                        <InputRightElement>
+                                                            <IconButton aria-label="Buscar usuario" size="sm" onClick={handleOpenUserPicker}><LuSearch /></IconButton>
+                                                        </InputRightElement>
+                                                    </InputGroup>
+                                                    <Field.ErrorText>{formErrors.userId}</Field.ErrorText>
+                                                </Field.Root>
+                                            </SimpleGrid>
 
-            <Button
-                type="submit"
-                colorScheme="blue"
-                alignSelf={{ base: 'stretch', md: 'flex-end' }}
-                isLoading={isSubmitting}
-                isDisabled={isSubmitDisabled}
-            >
-                Registrar vendedor
-            </Button>
+                                            <Button
+                                                type="submit"
+                                                colorPalette="blue"
+                                                alignSelf={{ base: 'stretch', md: 'flex-end' }}
+                                                loading={isSubmitting}
+                                                disabled={isSubmitDisabled}
+                                            >
+                                                Registrar vendedor
+                                            </Button>
 
-            <UserGenericPicker
-                isOpen={isUserPickerOpen}
-                onClose={handleCloseUserPicker}
-                onSelectUser={handleSelectUser}
-            />
-        </VStack>
+                                            <UserGenericPicker
+                                                isOpen={isUserPickerOpen}
+                                                onClose={handleCloseUserPicker}
+                                                onSelectUser={handleSelectUser}
+                                            />
+                                        </form></VStack>
     );
 };
 

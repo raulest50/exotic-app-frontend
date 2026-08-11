@@ -1,7 +1,6 @@
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
     Box,
     Button,
     Flex,
@@ -93,26 +92,26 @@ export default function EliminacionPurgaBaseDatosStep2Ejecutar({
     const hasResult = resultPurgaBaseDatos != null;
 
     return (
-        <VStack align="stretch" spacing={6}>
+        <VStack align="stretch" gap={6}>
             <Heading size="md" color="red.700">
                 Ejecutar Purga Total Base de Datos
             </Heading>
 
             {!hasResult && (
-                <Alert status="warning">
-                    <AlertIcon />
-                    <AlertDescription>
+                <Alert.Root status="warning">
+                    <Alert.Indicator />
+                    <Alert.Description>
                         Al ejecutar esta accion se intentara vaciar toda la base de datos y el
                         backend devolvera un resumen con el resultado final o el motivo del bloqueo.
-                    </AlertDescription>
-                </Alert>
+                    </Alert.Description>
+                </Alert.Root>
             )}
 
             {hasResult && (
-                <Alert status={!resultPurgaBaseDatos.permitted ? "error" : resultPurgaBaseDatos.executed ? "success" : "warning"}>
-                    <AlertIcon />
-                    <AlertDescription>{resultPurgaBaseDatos.message}</AlertDescription>
-                </Alert>
+                <Alert.Root status={!resultPurgaBaseDatos.permitted ? "error" : resultPurgaBaseDatos.executed ? "success" : "warning"}>
+                    <Alert.Indicator />
+                    <Alert.Description>{resultPurgaBaseDatos.message}</Alert.Description>
+                </Alert.Root>
             )}
 
             {hasResult && (
@@ -120,32 +119,32 @@ export default function EliminacionPurgaBaseDatosStep2Ejecutar({
                     <Heading size="sm" mb={2}>
                         Resumen de ejecucion
                     </Heading>
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>Campo</Th>
-                                <Th>Valor</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            <Tr>
-                                <Td>Permitido</Td>
-                                <Td>{resultPurgaBaseDatos.permitted ? "Si" : "No"}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Ejecutado</Td>
-                                <Td>{resultPurgaBaseDatos.executed ? "Si" : "No"}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Entorno</Td>
-                                <Td>{resultPurgaBaseDatos.environment}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Tablas truncadas</Td>
-                                <Td>{resultPurgaBaseDatos.truncatedTablesCount}</Td>
-                            </Tr>
-                        </Tbody>
-                    </Table>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>Campo</Table.ColumnHeader>
+                                <Table.ColumnHeader>Valor</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            <Table.Row>
+                                <Table.Cell>Permitido</Table.Cell>
+                                <Table.Cell>{resultPurgaBaseDatos.permitted ? "Si" : "No"}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Ejecutado</Table.Cell>
+                                <Table.Cell>{resultPurgaBaseDatos.executed ? "Si" : "No"}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Entorno</Table.Cell>
+                                <Table.Cell>{resultPurgaBaseDatos.environment}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Tablas truncadas</Table.Cell>
+                                <Table.Cell>{resultPurgaBaseDatos.truncatedTablesCount}</Table.Cell>
+                            </Table.Row>
+                        </Table.Body>
+                    </Table.Root>
                 </Box>
             )}
 
@@ -204,15 +203,15 @@ export default function EliminacionPurgaBaseDatosStep2Ejecutar({
 
                 {!hasResult ? (
                     <Button
-                        colorScheme="red"
+                        colorPalette="red"
                         onClick={handleEjecutarPurga}
-                        isLoading={isExecuting}
+                        loading={isExecuting}
                         loadingText="Ejecutando..."
                     >
                         Ejecutar purga total
                     </Button>
                 ) : (
-                    <Button colorScheme="teal" onClick={onReset}>
+                    <Button colorPalette="teal" onClick={onReset}>
                         Reiniciar flujo
                     </Button>
                 )}

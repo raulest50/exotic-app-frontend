@@ -1,7 +1,16 @@
 // CrearOrdenCompraActivos.tsx
 import {
-    Container, Flex, FormControl, FormLabel, Input, Select,
-    useToast, Button, HStack, Icon, VStack
+    Steps,
+    Container,
+    Flex,
+    Input,
+    NativeSelect,
+    useToast,
+    Button,
+    HStack,
+    Icon,
+    VStack,
+    Field,
 } from "@chakra-ui/react";
 import ProveedorCard from "../../Compras/components/ProveedorCard.tsx";
 import { useState, useRef } from "react";
@@ -217,18 +226,18 @@ export default function CrearOC_AF() {
                     </Flex>
                     <Flex flex={1} w={"full"} direction={"column"} gap={4}>
                         {/* Componente de selección de moneda y TRM */}
-                        <FormControl>
-                            <FormLabel>Moneda y TRM</FormLabel>
+                        <Field.Root>
+                            <Field.Label>Moneda y TRM</Field.Label>
                             <SelectCurrencyTrm
                                 currencyIsUSD={currencyIsUSDTuple}
                                 useCurrentUsd2Cop={handleTrmUpdate}
                             />
-                        </FormControl>
+                        </Field.Root>
 
                         {/* File upload component moved here */}
-                        <FormControl>
-                            <FormLabel>Archivo de Cotización (PDF) (Opcional)</FormLabel>
-                            <VStack spacing={4} align="stretch" alignItems="center">
+                        <Field.Root>
+                            <Field.Label>Archivo de Cotización (PDF) (Opcional)</Field.Label>
+                            <VStack gap={4} align="stretch" alignItems="center">
                                 <Icon
                                     as={cotizacionFile ? FaFileCircleCheck : FaFileCircleQuestion}
                                     boxSize="4em"
@@ -250,7 +259,7 @@ export default function CrearOC_AF() {
                                     <HStack>
                                         <Button 
                                             size="sm" 
-                                            colorScheme="red" 
+                                            colorPalette="red" 
                                             onClick={() => {
                                                 setCotizacionFile(null);
                                                 if (cotizacionInputRef.current) {
@@ -260,7 +269,7 @@ export default function CrearOC_AF() {
                                         >
                                             Eliminar
                                         </Button>
-                                        <FormLabel mb={0}>{cotizacionFile.name}</FormLabel>
+                                        <Field.Label mb={0}>{cotizacionFile.name}</Field.Label>
                                     </HStack>
                                 )}
                             </VStack>
@@ -270,47 +279,49 @@ export default function CrearOC_AF() {
                                 ref={cotizacionInputRef}
                                 style={{ display: 'none' }}
                                 accept="application/pdf"
-                                onChange={handleCotizacionChange}
+                                onValueChange={handleCotizacionChange}
                             />
-                        </FormControl>
+                        </Field.Root>
                     </Flex>
                 </Flex>
 
                 <Flex direction={"column"} mt={"1em"} w="full" h="full" gap={"2"} p={"1em"}>
                     <Flex direction={"row"} gap={"2"} >
-                        <FormControl>
-                            <FormLabel> Condicion de Pago</FormLabel>
-                            <Select
-                                value={condicionPago}
-                                onChange={(e) => {
-                                    setCondicionPago(e.target.value)
-                                    if (e.target.value == "1") setPlazoPago(0);
-                                }
-                                }
-                                ml={4}
-                                width="200px"
-                            >
-                                <option value="0">Credito</option>
-                                <option value="1">Contado</option>
-                                <option value="2">Mixto</option>
-                            </Select>
-                        </FormControl>
+                        <Field.Root>
+                            <Field.Label> Condicion de Pago</Field.Label>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    value={condicionPago}
+                                    onValueChange={(e) => {
+                                        setCondicionPago(e.target.value)
+                                        if (e.target.value == "1") setPlazoPago(0);
+                                    }
+                                    }
+                                    ml={4}
+                                    width="200px">
+                                    <option value="0">Credito</option>
+                                    <option value="1">Contado</option>
+                                    <option value="2">Mixto</option>
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
+                        </Field.Root>
 
-                        <FormControl isRequired={condicionPago == "0"} isDisabled={condicionPago == "1"}>
-                            <FormLabel>Plazo de pago (dias)</FormLabel>
+                        <Field.Root required={condicionPago == "0"} disabled={condicionPago == "1"}>
+                            <Field.Label>Plazo de pago (dias)</Field.Label>
                             <Input
                                 value={plazoPago}
-                                onChange={ (e) => {setPlazoPago(Number(e.target.value))} }
+                                onValueChange={ (e) => {setPlazoPago(Number(e.target.value))} }
                             />
-                        </FormControl>
+                        </Field.Root>
 
-                        <FormControl isRequired>
-                            <FormLabel>Tiempo de entrega (dias)</FormLabel>
+                        <Field.Root required>
+                            <Field.Label>Tiempo de entrega (dias)</Field.Label>
                             <Input
                                 value={tiempoEntrega}
-                                onChange={ (e) => {setTiempoEntrega(e.target.value)} }
+                                onValueChange={ (e) => {setTiempoEntrega(e.target.value)} }
                             />
-                        </FormControl>
+                        </Field.Root>
 
                         <MyDatePicker
                             date = {fechaVencimiento}
@@ -330,7 +341,7 @@ export default function CrearOC_AF() {
 
                 <HStack gap={20}>
                     <Button
-                        colorScheme={"red"}
+                        colorPalette={"red"}
                         variant={"solid"}
                         onClick={clearAll}
                     >
@@ -338,11 +349,11 @@ export default function CrearOC_AF() {
                     </Button>
 
                     <Button
-                        colorScheme={"teal"}
+                        colorPalette={"teal"}
                         variant={"solid"}
                         onClick={crearOCFA}
-                        isDisabled={!isValidOCAF()}
-                        isLoading={isLoading}
+                        disabled={!isValidOCAF()}
+                        loading={isLoading}
                         loadingText="Creando orden..."
                     >
                         Crear Orden de Compra

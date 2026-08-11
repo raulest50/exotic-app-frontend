@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import axios from 'axios';
-import {Flex, Select, Input, IconButton, Spinner} from '@chakra-ui/react';
-import {RepeatIcon} from '@chakra-ui/icons';
+import { Steps, Flex, NativeSelect, Input, IconButton, Spinner } from '@chakra-ui/react';
+import { LuRepeat } from 'react-icons/lu';
 
 type Props = {
     currencyIsUSD : [boolean, React.Dispatch<React.SetStateAction<boolean>>],
@@ -68,37 +68,41 @@ export function SelectCurrencyTrm({
 
     return (
         <Flex direction={"column"} flex={3}>
-            <Select
-                value={currency}
-                onChange={(e) => {
-                    const cur = e.target.value;
-                    setCurrency(cur);
-                    cur == 'USD' ? currencyIsUSD[1](true) : currencyIsUSD[1](false);
-                }}
-            >
-                <option value={'USD'} >USD</option>
-                <option value={'COP'} >COP</option>
-            </Select>
+            <NativeSelect.Root>
+                <NativeSelect.Field
+                    value={currency}
+                    onValueChange={(e) => {
+                        const cur = e.target.value;
+                        setCurrency(cur);
+                        cur == 'USD' ? currencyIsUSD[1](true) : currencyIsUSD[1](false);
+                    }}>
+                    <option value={'USD'} >USD</option>
+                    <option value={'COP'} >COP</option>
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+            </NativeSelect.Root>
 
             <Flex
                 direction={"row"}
                 display={currencyIsUSD[0] ? 'flex' : 'none'}
             >
 
-                <Select
-                    value={tipoTRM}
-                    onChange={(e) => setTipoTRM(e.target.value)}
-                    flex={1}
-                >
-                    <option value={TIPO_TRM.ACTUAL} >{TIPO_TRM.ACTUAL}</option>
-                    <option value={TIPO_TRM.FECHA} >{TIPO_TRM.FECHA}</option>
-                    <option value={TIPO_TRM.ARBITRARIA} >{TIPO_TRM.ARBITRARIA}</option>
-                </Select>
+                <NativeSelect.Root>
+                    <NativeSelect.Field
+                        value={tipoTRM}
+                        onValueChange={(e) => setTipoTRM(e.target.value)}
+                        flex={1}>
+                        <option value={TIPO_TRM.ACTUAL} >{TIPO_TRM.ACTUAL}</option>
+                        <option value={TIPO_TRM.FECHA} >{TIPO_TRM.FECHA}</option>
+                        <option value={TIPO_TRM.ARBITRARIA} >{TIPO_TRM.ARBITRARIA}</option>
+                    </NativeSelect.Field>
+                    <NativeSelect.Indicator />
+                </NativeSelect.Root>
                 {tipoTRM === TIPO_TRM.ACTUAL && (
                     <Flex>
                         <Input
                             value={usd2copState}
-                            onChange={(e) => {
+                            onValueChange={(e) => {
                                 setUsd2copState(e.target.value);
                                 useCurrentUsd2Cop(Number(e.target.value));
                             }}
@@ -106,10 +110,8 @@ export function SelectCurrencyTrm({
                         />
                         <IconButton
                             aria-label='Obtener última TRM'
-                            icon={loadingLatestTRM ? <Spinner size="sm" /> : <RepeatIcon/>}
                             onClick={() => fetchLatestTRM()}
-                            isDisabled={loadingLatestTRM}
-                        />
+                            disabled={loadingLatestTRM}>{loadingLatestTRM ? <Spinner size="sm" /> : <LuRepeat />}</IconButton>
                     </Flex>
                 )}
                 {tipoTRM === TIPO_TRM.FECHA && (
@@ -118,12 +120,12 @@ export function SelectCurrencyTrm({
                             flex={2}
                             type="date"
                             value={date}
-                            onChange={(e) => setDate(e.target.value)}
+                            onValueChange={(e) => setDate(e.target.value)}
                         />
                         <Input
                             flex={2}
                             value={usd2copState}
-                            onChange={(e) => {
+                            onValueChange={(e) => {
                                 setUsd2copState(e.target.value);
                                 useCurrentUsd2Cop(Number(e.target.value));
                             }}
@@ -132,10 +134,8 @@ export function SelectCurrencyTrm({
                         <IconButton
                             flex={1}
                             aria-label='Obtener TRM por fecha'
-                            icon={loadingTRMByDate ? <Spinner size="sm" /> : <RepeatIcon/>}
                             onClick={() => fetchTRMbyDate()}
-                            isDisabled={loadingTRMByDate}
-                        />
+                            disabled={loadingTRMByDate}>{loadingTRMByDate ? <Spinner size="sm" /> : <LuRepeat />}</IconButton>
                     </Flex>
                 )}
                 {tipoTRM === TIPO_TRM.ARBITRARIA && (
@@ -143,7 +143,7 @@ export function SelectCurrencyTrm({
                         <Input
                             autoFocus
                             value={usd2copState}
-                            onChange={(e) => {
+                            onValueChange={(e) => {
                                 setUsd2copState(e.target.value);
                                 useCurrentUsd2Cop(Number(e.target.value));
                             }}

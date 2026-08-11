@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+    Steps,
     Box,
     Flex,
     Table,
@@ -138,43 +139,43 @@ export function ListaMaterialesIngresoDesgloce({
             </Text>
 
             <Box w="full" bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
-                <Table size="sm" variant="simple">
-                    <Thead bg="app.tableHeader">
-                        <Tr>
-                            <Th>Material</Th>
-                            <Th>ID Producto</Th>
-                            <Th>Cantidad Total</Th>
-                            <Th>Unidad</Th>
-                            <Th># Lotes</Th>
-                            <Th>Detalle Lotes</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+                <Table.Root size="sm" variant="simple">
+                    <Table.Header bg="app.tableHeader">
+                        <Table.Row>
+                            <Table.ColumnHeader>Material</Table.ColumnHeader>
+                            <Table.ColumnHeader>ID Producto</Table.ColumnHeader>
+                            <Table.ColumnHeader>Cantidad Total</Table.ColumnHeader>
+                            <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                            <Table.ColumnHeader># Lotes</Table.ColumnHeader>
+                            <Table.ColumnHeader>Detalle Lotes</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {consolidado.materiales.map((material) => (
-                            <Tr key={material.productoId}>
-                                <Td fontWeight="semibold">{material.productoNombre}</Td>
-                                <Td>{material.productoId}</Td>
-                                <Td>
-                                    <Badge colorScheme="green" fontSize="md">
+                            <Table.Row key={material.productoId}>
+                                <Table.Cell fontWeight="semibold">{material.productoNombre}</Table.Cell>
+                                <Table.Cell>{material.productoId}</Table.Cell>
+                                <Table.Cell>
+                                    <Badge colorPalette="green" fontSize="md">
                                         {material.cantidadTotal.toFixed(2)}
                                     </Badge>
-                                </Td>
-                                <Td>{material.tipoUnidades}</Td>
-                                <Td textAlign="center">
-                                    <Badge colorScheme="blue">
+                                </Table.Cell>
+                                <Table.Cell>{material.tipoUnidades}</Table.Cell>
+                                <Table.Cell textAlign="center">
+                                    <Badge colorPalette="blue">
                                         {material.lotes.length}
                                     </Badge>
-                                </Td>
-                                <Td>
+                                </Table.Cell>
+                                <Table.Cell>
                                     <Box>
                                         {material.lotes.map((lote, idx) => (
                                             <Flex key={idx} gap={2} mb={1} fontSize="xs" alignItems="center">
                                                 {lote.batchNumber ? (
-                                                    <Badge colorScheme="teal" fontSize="xs">
+                                                    <Badge colorPalette="teal" fontSize="xs">
                                                         {lote.batchNumber}
                                                     </Badge>
                                                 ) : (
-                                                    <Badge colorScheme="gray" fontSize="xs">
+                                                    <Badge colorPalette="gray" fontSize="xs">
                                                         Sin lote
                                                     </Badge>
                                                 )}
@@ -189,11 +190,11 @@ export function ListaMaterialesIngresoDesgloce({
                                             </Flex>
                                         ))}
                                     </Box>
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         ))}
-                    </Tbody>
-                </Table>
+                    </Table.Body>
+                </Table.Root>
             </Box>
         </Flex>
     );

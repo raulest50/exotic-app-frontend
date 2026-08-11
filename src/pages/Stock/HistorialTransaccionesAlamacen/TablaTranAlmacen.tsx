@@ -1,4 +1,5 @@
 import {
+    Steps,
     Box,
     Table,
     TableContainer,
@@ -96,61 +97,61 @@ export default function TablaTranAlmacen({
 
     return (
         <Box bg='app.surface' borderRadius='md' boxShadow='sm' overflowX='auto'>
-            <TableContainer>
-                <Table variant="simple" size='sm'>
-                    <Thead>
-                        <Tr>
-                            <Th>ID Transacción</Th>
-                            <Th>{getColumnHeader(tipoEntidadCausante)}</Th>
-                            <Th>Tipo</Th>
-                            <Th>Fecha</Th>
-                            <Th>Estado Contable</Th>
-                            {tipoEntidadCausante === 'OAA' && <Th>Causa del ajuste</Th>}
-                            <Th>Observaciones</Th>
-                            <Th textAlign='center'>Acciones</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+            <Table.ScrollArea>
+                <Table.Root variant="simple" size='sm'>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>ID Transacción</Table.ColumnHeader>
+                            <Table.ColumnHeader>{getColumnHeader(tipoEntidadCausante)}</Table.ColumnHeader>
+                            <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                            <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                            <Table.ColumnHeader>Estado Contable</Table.ColumnHeader>
+                            {tipoEntidadCausante === 'OAA' && <Table.ColumnHeader>Causa del ajuste</Table.ColumnHeader>}
+                            <Table.ColumnHeader>Observaciones</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='center'>Acciones</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {transacciones.map((t) => (
-                            <Tr key={t.transaccionId}>
-                                <Td>{t.transaccionId}</Td>
-                                <Td>{getCellValue(t, tipoEntidadCausante)}</Td>
-                                <Td>{formatTipoEntidad(t.tipoEntidadCausante)}</Td>
-                                <Td>{formatFecha(t.fechaTransaccion)}</Td>
-                                <Td>{formatEstadoContable(t.estadoContable)}</Td>
+                            <Table.Row key={t.transaccionId}>
+                                <Table.Cell>{t.transaccionId}</Table.Cell>
+                                <Table.Cell>{getCellValue(t, tipoEntidadCausante)}</Table.Cell>
+                                <Table.Cell>{formatTipoEntidad(t.tipoEntidadCausante)}</Table.Cell>
+                                <Table.Cell>{formatFecha(t.fechaTransaccion)}</Table.Cell>
+                                <Table.Cell>{formatEstadoContable(t.estadoContable)}</Table.Cell>
                                 {tipoEntidadCausante === 'OAA' && (
-                                    <Td>{causaAjusteLabel(t.causaAjuste)}</Td>
+                                    <Table.Cell>{causaAjusteLabel(t.causaAjuste)}</Table.Cell>
                                 )}
-                                <Td>
+                                <Table.Cell>
                                     <Text fontSize="sm">
                                         {truncarTexto(t.observaciones)}
                                     </Text>
-                                </Td>
-                                <Td>
+                                </Table.Cell>
+                                <Table.Cell>
                                     <Flex justify='center'>
                                         <Button
-                                            colorScheme='teal'
+                                            colorPalette='teal'
                                             size='sm'
                                             onClick={() => onVerDetalle(t)}
                                         >
                                             Ver detalle
                                         </Button>
                                     </Flex>
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         ))}
                         {transacciones.length === 0 && (
-                            <Tr>
-                                <Td colSpan={tipoEntidadCausante === 'OAA' ? 8 : 7}>
+                            <Table.Row>
+                                <Table.Cell colSpan={tipoEntidadCausante === 'OAA' ? 8 : 7}>
                                     <Text textAlign='center' py={4}>
                                         No hay transacciones disponibles.
                                     </Text>
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         )}
-                    </Tbody>
-                </Table>
-            </TableContainer>
+                    </Table.Body>
+                </Table.Root>
+            </Table.ScrollArea>
         </Box>
     );
 }

@@ -1,14 +1,8 @@
 import {
+    Steps,
     Box,
     Button,
-    Divider,
     Heading,
-    Modal,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     Table,
     TableContainer,
     Tbody,
@@ -18,8 +12,11 @@ import {
     Thead,
     Tr,
     VStack,
-    useColorModeValue,
+    Separator,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
+import { useColorModeValue } from "./ui/color-mode";
 import type { RefObject } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
@@ -73,7 +70,7 @@ function OrdenesTableWithPaginationBelow({
 
     return (
         <>
-            <TableContainer
+            <Table.ScrollArea
                 maxH="16rem"
                 overflowY="auto"
                 borderRadius="md"
@@ -82,23 +79,23 @@ function OrdenesTableWithPaginationBelow({
                 boxShadow="sm"
                 bg={tableBg}
             >
-                <Table size="sm" variant="simple">
-                    <Thead position="sticky" top={0} bg={theadBg} zIndex={1} boxShadow="sm">
-                        <Tr>
-                            <Th py={3}>ID orden</Th>
-                            <Th py={3}>Fecha de creación</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+                <Table.Root size="sm" variant="simple">
+                    <Table.Header position="sticky" top={0} bg={theadBg} zIndex={1} boxShadow="sm">
+                        <Table.Row>
+                            <Table.ColumnHeader py={3}>ID orden</Table.ColumnHeader>
+                            <Table.ColumnHeader py={3}>Fecha de creación</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {pageRows.map((row) => (
-                            <Tr key={row.ordenCompraId}>
-                                <Td py={2.5}>{row.ordenCompraId}</Td>
-                                <Td py={2.5}>{formatFecha(row.fechaEmision)}</Td>
-                            </Tr>
+                            <Table.Row key={row.ordenCompraId}>
+                                <Table.Cell py={2.5}>{row.ordenCompraId}</Table.Cell>
+                                <Table.Cell py={2.5}>{formatFecha(row.fechaEmision)}</Table.Cell>
+                            </Table.Row>
                         ))}
-                    </Tbody>
-                </Table>
-            </TableContainer>
+                    </Table.Body>
+                </Table.Root>
+            </Table.ScrollArea>
             <Box pt={4} mt={1}>
                 <BetterPagination
                     page={page}
@@ -161,7 +158,7 @@ function AlertaSectionCard({
                     {count === 1 ? "orden en esta categoría" : "órdenes en esta categoría"}
                 </Text>
             </Box>
-            <Divider mb={5} borderColor={borderColor} />
+            <Separator mb={5} borderColor={borderColor} />
             <OrdenesTableWithPaginationBelow
                 rows={rows}
                 page={page}
@@ -202,76 +199,85 @@ export default function AlertaInfoDialogCompras({
     }, [isOpen]);
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            isCentered
+        <Dialog.Root
+            open={isOpen}
+            placement='center'
             scrollBehavior="inside"
-            finalFocusRef={finalFocusRef}
+            finalFocusEl={() => finalFocusRef.current}
+            onOpenChange={e => {
+                if (!e.open) {
+                    onClose();
+                }
+            }}
         >
-            <ModalOverlay bg="blackAlpha.400" backdropFilter="blur(2px)" />
-            <ModalContent maxW="lg" borderRadius="xl" boxShadow="2xl" mx={{ base: 3, md: 0 }}>
-                <ModalHeader pt={8} pb={4} px={{ base: 6, md: 8 }} fontSize="xl" fontWeight="bold">
-                    Órdenes de compra pendientes
-                </ModalHeader>
-                <ModalBody px={{ base: 6, md: 8 }} pt={2} pb={8}>
-                    <VStack align="stretch" spacing={6}>
-                        <Box
-                            borderRadius="lg"
-                            bg={introBg}
-                            borderWidth="1px"
-                            borderColor={introBorder}
-                            px={5}
-                            py={4}
-                            boxShadow="sm"
+            <Portal>
+
+                <Dialog.Backdrop bg="blackAlpha.400" backdropFilter="blur(2px)" />
+                <Dialog.Positioner>
+                    <Dialog.Content maxW="lg" borderRadius="xl" boxShadow="2xl" mx={{ base: 3, md: 0 }}>
+                        <Dialog.Header pt={8} pb={4} px={{ base: 6, md: 8 }} fontSize="xl" fontWeight="bold">
+                            Órdenes de compra pendientes
+                        </Dialog.Header>
+                        <Dialog.Body px={{ base: 6, md: 8 }} pt={2} pb={8}>
+                            <VStack align="stretch" gap={6}>
+                                <Box
+                                    borderRadius="lg"
+                                    bg={introBg}
+                                    borderWidth="1px"
+                                    borderColor={introBorder}
+                                    px={5}
+                                    py={4}
+                                    boxShadow="sm"
+                                >
+                                    <Text fontSize="sm" lineHeight="tall">
+                                        {notification.message}
+                                    </Text>
+                                </Box>
+
+                                {liberarRows.length > 0 && (
+                                    <AlertaSectionCard
+                                        title="Pendientes por liberar"
+                                        count={liberar}
+                                        subtitle="Cantidad de órdenes pendientes por liberar"
+                                        rows={liberarRows}
+                                        page={pageLiberar}
+                                        size={sizeLiberar}
+                                        onPageChange={setPageLiberar}
+                                        onSizeChange={setSizeLiberar}
+                                    />
+                                )}
+
+                                {enviarRows.length > 0 && (
+                                    <AlertaSectionCard
+                                        title="Pendientes por enviar al proveedor"
+                                        count={enviar}
+                                        subtitle="Cantidad de órdenes pendientes de envío al proveedor"
+                                        rows={enviarRows}
+                                        page={pageEnviar}
+                                        size={sizeEnviar}
+                                        onPageChange={setPageEnviar}
+                                        onSizeChange={setSizeEnviar}
+                                    />
+                                )}
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer
+                            gap={3}
+                            px={{ base: 6, md: 8 }}
+                            py={6}
+                            borderTopWidth="1px"
+                            borderColor={footerBorderColor}
                         >
-                            <Text fontSize="sm" lineHeight="tall">
-                                {notification.message}
-                            </Text>
-                        </Box>
+                            <Button variant="ghost" onClick={onClose} px={6}>
+                                Cerrar
+                            </Button>
+                            <Button colorPalette="blue" px={6} asChild><RouterLink to={to} onClick={onClose}>Ir a {name}
+                                </RouterLink></Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
 
-                        {liberarRows.length > 0 && (
-                            <AlertaSectionCard
-                                title="Pendientes por liberar"
-                                count={liberar}
-                                subtitle="Cantidad de órdenes pendientes por liberar"
-                                rows={liberarRows}
-                                page={pageLiberar}
-                                size={sizeLiberar}
-                                onPageChange={setPageLiberar}
-                                onSizeChange={setSizeLiberar}
-                            />
-                        )}
-
-                        {enviarRows.length > 0 && (
-                            <AlertaSectionCard
-                                title="Pendientes por enviar al proveedor"
-                                count={enviar}
-                                subtitle="Cantidad de órdenes pendientes de envío al proveedor"
-                                rows={enviarRows}
-                                page={pageEnviar}
-                                size={sizeEnviar}
-                                onPageChange={setPageEnviar}
-                                onSizeChange={setSizeEnviar}
-                            />
-                        )}
-                    </VStack>
-                </ModalBody>
-                <ModalFooter
-                    gap={3}
-                    px={{ base: 6, md: 8 }}
-                    py={6}
-                    borderTopWidth="1px"
-                    borderColor={footerBorderColor}
-                >
-                    <Button variant="ghost" onClick={onClose} px={6}>
-                        Cerrar
-                    </Button>
-                    <Button as={RouterLink} to={to} colorScheme="blue" onClick={onClose} px={6}>
-                        Ir a {name}
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+            </Portal>
+        </Dialog.Root>
     );
 }

@@ -12,35 +12,25 @@ import {
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import {
-    AddIcon,
-    DeleteIcon,
-    MinusIcon,
-} from "@chakra-ui/icons";
-import {
+    Steps,
     Badge,
     Box,
     Button,
-    Divider,
     Flex,
-    FormControl,
-    FormLabel,
     IconButton,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     NumberInput,
     NumberInputField,
     SimpleGrid,
     Text,
-    Tooltip,
     VStack,
     useDisclosure,
     useToast,
+    Separator,
+    Field,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
+import { Tooltip } from '@/components/ui/tooltip';
 import TerminadoPicker4MPS, {
     type TerminadoPickerResult,
 } from "./TerminadoPicker4MPS/TerminadoPicker4MPS";
@@ -65,6 +55,7 @@ import {
     MPS_SEMANAL_DIAS_BLOQUEO_EDICION_DEFAULT,
     MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO_DEFAULT,
 } from "../../../context/masterDirectiveConstants";
+import { LuMinus, LuPlus, LuTrash2 } from 'react-icons/lu';
 
 interface ProgramacionEntry {
     id: string;
@@ -989,7 +980,7 @@ export default function ProgramacionProduccionSemanalTab() {
         && (isDraftMode || (isApprovedEditMode && hasUnsavedChanges));
 
     return (
-        <VStack align="stretch" spacing={4}>
+        <VStack align="stretch" gap={4}>
             <Box bg="white" borderRadius="md" boxShadow="sm" p={4}>
                 <Flex gap={4} align="end" wrap="wrap">
                     <SemanaMPSPickerModal
@@ -1008,45 +999,45 @@ export default function ProgramacionProduccionSemanalTab() {
                         modalTitle="Seleccionar semana para programacion"
                     />
                     <Button
-                        colorScheme="blue"
+                        colorPalette="blue"
                         onClick={() => void handleSaveDraft()}
-                        isLoading={isSaving}
-                        isDisabled={!canSave}
+                        loading={isSaving}
+                        disabled={!canSave}
                     >
                         {isApprovedEditMode ? "Guardar cambios MPS" : "Guardar borrador"}
                     </Button>
                     <Button
                         variant="outline"
-                        colorScheme="purple"
+                        colorPalette="purple"
                         onClick={() => void handleDownloadPdf()}
-                        isLoading={isDownloadingPdf}
-                        isDisabled={!currentDraft}
+                        loading={isDownloadingPdf}
+                        disabled={!currentDraft}
                     >
                         PDF MPS
                     </Button>
                 </Flex>
 
                 <Flex mt={3} gap={3} align="center" wrap="wrap">
-                    <Badge colorScheme={currentDraft ? "blue" : "orange"}>
+                    <Badge colorPalette={currentDraft ? "blue" : "orange"}>
                         {currentDraft
                             ? `MPS #${currentDraft.mpsId} - ${getMpsSemanaLabel(currentDraft)} - ${currentDraft.estado}`
                             : "Sin MPS guardado - nueva programacion para esta semana"}
                     </Badge>
-                    {isLoadingDraft && <Badge colorScheme="gray">Cargando semana</Badge>}
-                    {hasUnsavedChanges && <Badge colorScheme="orange">Cambios sin guardar</Badge>}
-                    {currentDraft?.fechaGeneracionOdps && <Badge colorScheme="green">ODPs generadas</Badge>}
-                    {isApprovedEditMode && <Badge colorScheme="teal">Edicion controlada</Badge>}
-                    <Badge colorScheme="gray">Editable desde {editableFromDate}</Badge>
-                    {isWeekFullyLocked && <Badge colorScheme="red">Semana bloqueada</Badge>}
-                    <Badge colorScheme="purple">{formatNumber(totals.unidades)} unidades</Badge>
-                    <Badge colorScheme={isIntegerLike(totals.lotes) ? "green" : "orange"}>
+                    {isLoadingDraft && <Badge colorPalette="gray">Cargando semana</Badge>}
+                    {hasUnsavedChanges && <Badge colorPalette="orange">Cambios sin guardar</Badge>}
+                    {currentDraft?.fechaGeneracionOdps && <Badge colorPalette="green">ODPs generadas</Badge>}
+                    {isApprovedEditMode && <Badge colorPalette="teal">Edicion controlada</Badge>}
+                    <Badge colorPalette="gray">Editable desde {editableFromDate}</Badge>
+                    {isWeekFullyLocked && <Badge colorPalette="red">Semana bloqueada</Badge>}
+                    <Badge colorPalette="purple">{formatNumber(totals.unidades)} unidades</Badge>
+                    <Badge colorPalette={isIntegerLike(totals.lotes) ? "green" : "orange"}>
                         {formatNumber(totals.lotes)} lotes
                     </Badge>
                 </Flex>
 
                 {validationIssues.length > 0 && (
                     <Box mt={3} p={3} bg="orange.50" borderWidth="1px" borderColor="orange.200" borderRadius="md">
-                        <VStack align="stretch" spacing={1}>
+                        <VStack align="stretch" gap={1}>
                             {validationIssues.slice(0, 5).map((issue) => (
                                 <Text key={issue} fontSize="sm" color="orange.700">{issue}</Text>
                             ))}
@@ -1061,7 +1052,7 @@ export default function ProgramacionProduccionSemanalTab() {
             </Box>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SimpleGrid columns={[1, 1, 2, 3, 6]} spacing={3}>
+                <SimpleGrid columns={[1, 1, 2, 3, 6]} gap={3}>
                     {DAY_LABELS.map((label, dayIndex) => {
                         const dayEntries = entriesByDay.get(dayIndex) ?? [];
                         const dayDate = addDays(weekStartDate, dayIndex);
@@ -1084,28 +1075,26 @@ export default function ProgramacionProduccionSemanalTab() {
                                     <Box>
                                         <Flex align="center" gap={2} wrap="wrap">
                                             <Text fontWeight="bold">Entrega {label}</Text>
-                                            {!isApprovedEditMode && !isDayEditable && <Badge colorScheme="gray">Bloqueado</Badge>}
+                                            {!isApprovedEditMode && !isDayEditable && <Badge colorPalette="gray">Bloqueado</Badge>}
                                         </Flex>
                                         <Text fontSize="sm" color="gray.600">{dayDate}</Text>
                                     </Box>
-                                    <Tooltip label={addButtonLabel} shouldWrapChildren>
-                                        <IconButton
-                                            aria-label={`Agregar terminado ${label}`}
-                                            icon={<AddIcon />}
-                                            size="sm"
-                                            colorScheme="teal"
-                                            isDisabled={!canAddOnDay}
-                                            onClick={() => {
-                                                setPickerDayIndex(dayIndex);
-                                                pickerDisclosure.onOpen();
-                                            }}
-                                        />
-                                    </Tooltip>
+                                    <Tooltip content={addButtonLabel}><span>
+                                            <IconButton
+                                                aria-label={`Agregar terminado ${label}`}
+                                                size="sm"
+                                                colorPalette="teal"
+                                                disabled={!canAddOnDay}
+                                                onClick={() => {
+                                                    setPickerDayIndex(dayIndex);
+                                                    pickerDisclosure.onOpen();
+                                                }}><LuPlus /></IconButton>
+                                        </span></Tooltip>
                                 </Flex>
 
-                                <Divider my={3} />
+                                <Separator my={3} />
 
-                                <VStack align="stretch" spacing={3}>
+                                <VStack align="stretch" gap={3}>
                                     {dayEntries.length === 0 ? (
                                         <Text fontSize="sm" color="gray.500">Sin terminados programados.</Text>
                                     ) : (
@@ -1133,90 +1122,84 @@ export default function ProgramacionProduccionSemanalTab() {
                                                     >
                                                         <Flex justify="space-between" gap={2} align="start">
                                                             <Box minW={0}>
-                                                                <Text fontWeight="semibold" fontSize="sm" noOfLines={2}>{entry.productoNombre}</Text>
+                                                                <Text fontWeight="semibold" fontSize="sm" lineClamp={2}>{entry.productoNombre}</Text>
                                                                 <Text fontSize="xs" color="gray.600">{entry.productoId}</Text>
                                                                 <Text fontSize="xs" color="gray.600">{entry.categoriaNombre ?? "Sin categoria"}</Text>
                                                             </Box>
                                                             <IconButton
                                                                 aria-label={isApprovedEditMode && entry.mpsItemId != null ? "Cancelar tarjeta MPS" : "Quitar terminado"}
-                                                                icon={<DeleteIcon />}
                                                                 size="xs"
                                                                 variant="ghost"
-                                                                colorScheme="red"
-                                                                isDisabled={!canChangeLotes || minLotes > 0}
-                                                                onClick={() => handleRemoveEntry(entry.id)}
-                                                            />
+                                                                colorPalette="red"
+                                                                disabled={!canChangeLotes || minLotes > 0}
+                                                                onClick={() => handleRemoveEntry(entry.id)}><LuTrash2 /></IconButton>
                                                         </Flex>
-                                                        <FormControl mt={2}>
-                                                            <FormLabel fontSize="xs" mb={1}>Lotes</FormLabel>
+                                                        <Field.Root mt={2}>
+                                                            <Field.Label fontSize="xs" mb={1}>Lotes</Field.Label>
                                                             <Flex gap={1} align="center">
-                                                                <Tooltip label="Restar un lote">
+                                                                <Tooltip content="Restar un lote">
                                                                     <IconButton
                                                                         aria-label={`Restar lote a ${entry.productoNombre}`}
-                                                                        icon={<MinusIcon />}
                                                                         size="sm"
                                                                         variant="outline"
-                                                                        isDisabled={!canChangeLotes || entry.numeroLotes <= minLotes}
-                                                                        onClick={() => adjustEntryLotes(entry.id, -1)}
-                                                                    />
+                                                                        disabled={!canChangeLotes || entry.numeroLotes <= minLotes}
+                                                                        onClick={() => adjustEntryLotes(entry.id, -1)}><LuMinus /></IconButton>
                                                                 </Tooltip>
-                                                                <NumberInput
+                                                                <NumberInput.Root
                                                                     size="sm"
                                                                     min={minLotes}
                                                                     max={maxLotes}
                                                                     step={1}
                                                                     precision={0}
-                                                                    value={entry.numeroLotes}
-                                                                    onChange={(valueAsString) => handleEntryLotesChange(entry.id, valueAsString)}
-                                                                    isDisabled={!canChangeLotes}
+                                                                    value={String(entry.numeroLotes)}
+                                                                    onValueChange={(valueAsString) => handleEntryLotesChange(entry.id, valueAsString)}
+                                                                    disabled={!canChangeLotes}
                                                                     flex="1"
                                                                 >
-                                                                    <NumberInputField />
-                                                                </NumberInput>
-                                                                <Tooltip label="Sumar un lote">
+                                                                    <NumberInput.Input />
+                                                                </NumberInput.Root>
+                                                                <Tooltip content="Sumar un lote">
                                                                     <IconButton
                                                                         aria-label={`Sumar lote a ${entry.productoNombre}`}
-                                                                        icon={<AddIcon />}
                                                                         size="sm"
                                                                         variant="outline"
-                                                                        colorScheme="teal"
-                                                                        isDisabled={!isEntryEditable}
-                                                                        onClick={() => adjustEntryLotes(entry.id, 1)}
-                                                                    />
+                                                                        colorPalette="teal"
+                                                                        disabled={!isEntryEditable}
+                                                                        onClick={() => adjustEntryLotes(entry.id, 1)}><LuPlus /></IconButton>
                                                                 </Tooltip>
                                                             </Flex>
-                                                        </FormControl>
+                                                        </Field.Root>
                                                         <Flex mt={2} gap={2} align="center" wrap="wrap">
-                                                            <Badge colorScheme={entry.loteSize > 0 ? "blue" : "orange"}>
+                                                            <Badge colorPalette={entry.loteSize > 0 ? "blue" : "orange"}>
                                                                 Lote {entry.loteSize || "-"}
                                                             </Badge>
-                                                            <Badge colorScheme={isIntegerLike(lotes) ? "green" : "orange"}>
+                                                            <Badge colorPalette={isIntegerLike(lotes) ? "green" : "orange"}>
                                                                 {formatNumber(lotes)} lotes
                                                             </Badge>
-                                                            <Badge colorScheme="purple">
+                                                            <Badge colorPalette="purple">
                                                                 {formatNumber(unidades)} und
                                                             </Badge>
                                                             {entryCanceled && (
-                                                                <Badge colorScheme="red">
+                                                                <Badge colorPalette="red">
                                                                     {isPendingCancellation(entry) ? "Cancelacion pendiente" : "Cancelada"}
                                                                 </Badge>
                                                             )}
                                                             {(entry.ordenesIniciadas ?? 0) > 0 && (
-                                                                <Badge colorScheme="red">{entry.ordenesIniciadas} OP iniciada(s)</Badge>
+                                                                <Badge colorPalette="red">{entry.ordenesIniciadas} OP iniciada(s)</Badge>
                                                             )}
                                                             {(entry.lotesCancelados ?? 0) > 0 && (
-                                                                <Badge colorScheme="orange">{entry.lotesCancelados} lote(s) cancelado(s)</Badge>
+                                                                <Badge colorPalette="orange">{entry.lotesCancelados} lote(s) cancelado(s)</Badge>
                                                             )}
                                                             {isApprovedEditMode && (entry.ordenesCancelables ?? 0) > 0 && !entryCanceled && (
-                                                                <Badge colorScheme="gray">{entry.ordenesCancelables} OP cancelable(s)</Badge>
+                                                                <Badge colorPalette="gray">{entry.ordenesCancelables} OP cancelable(s)</Badge>
                                                             )}
                                                             {isApprovedEditMode && (entry.lotesNoCancelables ?? 0) > 0 && !entryCanceled && (
-                                                                <Badge colorScheme="red">{entry.lotesNoCancelables} lote(s) no cancelable(s)</Badge>
+                                                                <Badge colorPalette="red">{entry.lotesNoCancelables} lote(s) no cancelable(s)</Badge>
                                                             )}
                                                             {isApprovedEditMode && (entry.lotesCancelables ?? 0) > 0 && !entryCanceled && (
-                                                                <Badge colorScheme="gray">{entry.lotesCancelables} lote(s) cancelable(s)</Badge>
+                                                                <Badge colorPalette="gray">{entry.lotesCancelables} lote(s) cancelable(s)</Badge>
                                                             )}
-                                                            {!isEntryEditable && !canChangeLotes && !entryCanceled && <Badge colorScheme="gray">Solo lectura</Badge>}
+                                                            {!isEntryEditable && !canChangeLotes && !entryCanceled && <Badge colorPalette="gray">Solo lectura</Badge>}
                                                         </Flex>
                                                         {entry.blockedReason && (!isEntryEditable || isPendingCancellation(entry)) && (
                                                             <Text mt={2} fontSize="xs" color={entryCanceled ? "gray.600" : "red.600"}>
@@ -1252,36 +1235,46 @@ export default function ProgramacionProduccionSemanalTab() {
             />
 
             <TerminadoPicker4MPS
-                isOpen={pickerDisclosure.isOpen}
+                isOpen={pickerDisclosure.open}
                 onClose={pickerDisclosure.onClose}
                 onSelectTerminado={handleSelectTerminado}
             />
 
-            <Modal isOpen={weekChangeConfirmDisclosure.isOpen} onClose={handleCancelWeekChange} isCentered>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Descartar cambios sin guardar</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <Text color="gray.700">
-                            La programacion visible tiene cambios sin guardar. Si cambia de semana, esos cambios se descartaran.
-                        </Text>
-                        {pendingSemanaChange && (
-                            <Text mt={2} fontSize="sm" color="gray.600">
-                                Nueva semana: {pendingSemanaChange.codigo}
-                            </Text>
-                        )}
-                    </ModalBody>
-                    <ModalFooter gap={3}>
-                        <Button variant="ghost" onClick={handleCancelWeekChange}>
-                            Cancelar
-                        </Button>
-                        <Button colorScheme="red" onClick={handleConfirmWeekChange}>
-                            Descartar y cambiar semana
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+            <Dialog.Root open={weekChangeConfirmDisclosure.open} placement='center' onOpenChange={e => {
+                if (!e.open) {
+                    handleCancelWeekChange();
+                }
+            }}>
+                <Portal>
+
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>Descartar cambios sin guardar</Dialog.Header>
+                            <Dialog.CloseTrigger />
+                            <Dialog.Body>
+                                <Text color="gray.700">
+                                    La programacion visible tiene cambios sin guardar. Si cambia de semana, esos cambios se descartaran.
+                                </Text>
+                                {pendingSemanaChange && (
+                                    <Text mt={2} fontSize="sm" color="gray.600">
+                                        Nueva semana: {pendingSemanaChange.codigo}
+                                    </Text>
+                                )}
+                            </Dialog.Body>
+                            <Dialog.Footer gap={3}>
+                                <Button variant="ghost" onClick={handleCancelWeekChange}>
+                                    Cancelar
+                                </Button>
+                                <Button colorPalette="red" onClick={handleConfirmWeekChange}>
+                                    Descartar y cambiar semana
+                                </Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+
+                </Portal>
+            </Dialog.Root>
         </VStack>
     );
 }

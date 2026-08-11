@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Badge, Box, Button, Text, VStack } from '@chakra-ui/react';
+import { Steps, Badge, Box, Button, Text, VStack } from '@chakra-ui/react';
 import axios from 'axios';
 import IntegrantePersonalPicker from './IntegrantePersonalPicker.tsx';
 import {
@@ -60,8 +60,8 @@ export const Default = () => {
     }, []);
 
     return (
-        <VStack spacing={4} align="start" p={5}>
-            <Button colorScheme="blue" onClick={() => setIsOpen(true)}>
+        <VStack gap={4} align="start" p={5}>
+            <Button colorPalette="blue" onClick={() => setIsOpen(true)}>
                 Abrir selector de integrante
             </Button>
 
@@ -74,7 +74,7 @@ export const Default = () => {
                     </Text>
                     <Text>Cargo: {selectedIntegrante.cargo ?? '-'}</Text>
                     <Text>Departamento: {selectedIntegrante.departamento ?? '-'}</Text>
-                    <Badge colorScheme="green">{getEstadoIntegranteText(selectedIntegrante.estado)}</Badge>
+                    <Badge colorPalette="green">{getEstadoIntegranteText(selectedIntegrante.estado)}</Badge>
                 </Box>
             ) : (
                 <Text>Sin integrante seleccionado</Text>

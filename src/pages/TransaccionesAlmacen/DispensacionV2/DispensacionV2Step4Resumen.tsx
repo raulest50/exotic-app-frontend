@@ -1,6 +1,6 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Button,
@@ -52,7 +52,7 @@ export default function DispensacionV2Step4Resumen({
     };
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
                 <Flex justify="space-between" align="start" gap={3} wrap="wrap">
                     <Box>
@@ -62,8 +62,8 @@ export default function DispensacionV2Step4Resumen({
                         </Text>
                     </Box>
                     <Flex gap={2} wrap="wrap">
-                        <Badge colorScheme="teal">{asignacion.ordenes.length} OPs</Badge>
-                        <Badge colorScheme={asignacion.warnings.length > 0 ? "orange" : "green"}>
+                        <Badge colorPalette="teal">{asignacion.ordenes.length} OPs</Badge>
+                        <Badge colorPalette={asignacion.warnings.length > 0 ? "orange" : "green"}>
                             {asignacion.warnings.length} warnings
                         </Badge>
                     </Flex>
@@ -71,8 +71,8 @@ export default function DispensacionV2Step4Resumen({
             </Box>
 
             {asignacion.warnings.length > 0 ? (
-                <Alert status="warning" borderRadius="md" alignItems="flex-start">
-                    <AlertIcon />
+                <Alert.Root status="warning" borderRadius="md" alignItems="flex-start">
+                    <Alert.Indicator />
                     <Box>
                         <Text fontWeight="semibold">Advertencias de dispensacion</Text>
                         {asignacion.warnings.slice(0, 8).map((warning) => (
@@ -82,7 +82,7 @@ export default function DispensacionV2Step4Resumen({
                             <Text fontSize="sm">Y {asignacion.warnings.length - 8} advertencias mas.</Text>
                         ) : null}
                     </Box>
-                </Alert>
+                </Alert.Root>
             ) : null}
 
             {asignacion.ordenes.map((orden) => (
@@ -97,15 +97,15 @@ export default function DispensacionV2Step4Resumen({
                             </Text>
                         </Box>
                         <Flex gap={2} wrap="wrap" justify="end">
-                            <Badge colorScheme="purple">
+                            <Badge colorPalette="purple">
                                 {formatDispensacionV2Number(orden.cantidadProducir)} und
                             </Badge>
-                            <Badge colorScheme="teal">{orden.area.nombre}</Badge>
+                            <Badge colorPalette="teal">{orden.area.nombre}</Badge>
                             <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => setDetalleOrden(orden)}
-                                isDisabled={!orden.materiales.some(
+                                disabled={!orden.materiales.some(
                                     (material) => material.checked && material.inventareable,
                                 )}
                             >
@@ -114,126 +114,126 @@ export default function DispensacionV2Step4Resumen({
                         </Flex>
                     </Flex>
 
-                    <TableContainer>
-                        <Table size="sm" variant="simple">
-                            <Thead>
-                                <Tr>
-                                    <Th>Material</Th>
-                                    <Th isNumeric>Actual</Th>
-                                    <Th isNumeric>Historico</Th>
-                                    <Th isNumeric>Total</Th>
-                                    <Th isNumeric>Receta</Th>
-                                    <Th>Lotes</Th>
-                                    <Th>Estado</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                    <Table.ScrollArea>
+                        <Table.Root size="sm" variant="simple">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>Material</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign='end'>Actual</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign='end'>Historico</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign='end'>Total</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign='end'>Receta</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Lotes</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {orden.materiales
                                     .filter((material) => material.checked || material.cantidadHistorica > 0)
                                     .map((material) => {
                                         const cantidadActual = getCantidadActualEfectiva(material);
                                         const lotesCount = material.lotesOrigen?.length ?? 0;
                                         return (
-                                            <Tr key={material.productoId} bg={material.excedeReceta ? "orange.50" : undefined}>
-                                                <Td>
+                                            <Table.Row key={material.productoId} bg={material.excedeReceta ? "orange.50" : undefined}>
+                                                <Table.Cell>
                                                     <Text fontWeight="semibold" fontSize="sm">{material.productoNombre}</Text>
                                                     <Text fontSize="xs" color="app.textMuted">{material.productoId}</Text>
-                                                </Td>
-                                                <Td isNumeric>
+                                                </Table.Cell>
+                                                <Table.Cell textAlign='end'>
                                                     {formatDispensacionV2Number(cantidadActual)} {material.tipoUnidades}
-                                                </Td>
-                                                <Td isNumeric>
+                                                </Table.Cell>
+                                                <Table.Cell textAlign='end'>
                                                     {formatDispensacionV2Number(material.cantidadHistorica)} {material.tipoUnidades}
-                                                </Td>
-                                                <Td isNumeric>
+                                                </Table.Cell>
+                                                <Table.Cell textAlign='end'>
                                                     {formatDispensacionV2Number(material.totalConHistorico)} {material.tipoUnidades}
-                                                </Td>
-                                                <Td isNumeric>
+                                                </Table.Cell>
+                                                <Table.Cell textAlign='end'>
                                                     {formatDispensacionV2Number(material.cantidadReceta)} {material.tipoUnidades}
-                                                </Td>
-                                                <Td>
+                                                </Table.Cell>
+                                                <Table.Cell>
                                                     {material.consumoDirecto && material.checked ? (
-                                                        <Badge colorScheme="purple">Consumo directo</Badge>
+                                                        <Badge colorPalette="purple">Consumo directo</Badge>
                                                     ) : material.inventareable && material.checked ? (
-                                                        <Badge colorScheme={lotesCount > 0 ? "teal" : "orange"}>
+                                                        <Badge colorPalette={lotesCount > 0 ? "teal" : "orange"}>
                                                             {lotesCount} lotes
                                                         </Badge>
                                                     ) : (
-                                                        <Badge colorScheme="gray">No aplica</Badge>
+                                                        <Badge colorPalette="gray">No aplica</Badge>
                                                     )}
-                                                </Td>
-                                                <Td>
+                                                </Table.Cell>
+                                                <Table.Cell>
                                                     {material.consumoDirecto && material.checked ? (
-                                                        <Badge colorScheme="purple">Sin efecto en stock</Badge>
+                                                        <Badge colorPalette="purple">Sin efecto en stock</Badge>
                                                     ) : material.warning ? (
-                                                        <Badge colorScheme={material.excedeReceta ? "orange" : "gray"} whiteSpace="normal">
+                                                        <Badge colorPalette={material.excedeReceta ? "orange" : "gray"} whiteSpace="normal">
                                                             {material.warning}
                                                         </Badge>
                                                     ) : (
-                                                        <Badge colorScheme="green">OK</Badge>
+                                                        <Badge colorPalette="green">OK</Badge>
                                                     )}
-                                                </Td>
-                                            </Tr>
+                                                </Table.Cell>
+                                            </Table.Row>
                                         );
                                     })}
-                            </Tbody>
-                        </Table>
-                    </TableContainer>
+                            </Table.Body>
+                        </Table.Root>
+                    </Table.ScrollArea>
                 </Box>
             ))}
 
             <Box borderWidth="1px" borderRadius="md" bg="app.surface" p={4}>
                 <Heading size="sm" mb={3}>Total por material</Heading>
-                <TableContainer>
-                    <Table size="sm" variant="striped">
-                        <Thead>
-                            <Tr>
-                                <Th>Material</Th>
-                                <Th isNumeric>Actual total</Th>
-                                <Th isNumeric>Historico total</Th>
-                                <Th isNumeric>Total</Th>
-                                <Th isNumeric>Receta total</Th>
-                                <Th>Estado</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                <Table.ScrollArea>
+                    <Table.Root size="sm" variant="striped">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>Material</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Actual total</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Historico total</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Total</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign='end'>Receta total</Table.ColumnHeader>
+                                <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {asignacion.totalesMateriales.map((material) => (
-                                <Tr key={material.productoId} bg={material.excedeReceta ? "orange.50" : undefined}>
-                                    <Td>
+                                <Table.Row key={material.productoId} bg={material.excedeReceta ? "orange.50" : undefined}>
+                                    <Table.Cell>
                                         <Text fontWeight="semibold" fontSize="sm">{material.productoNombre}</Text>
                                         <Text fontSize="xs" color="app.textMuted">{material.productoId}</Text>
-                                    </Td>
-                                    <Td isNumeric>
+                                    </Table.Cell>
+                                    <Table.Cell textAlign='end'>
                                         {formatDispensacionV2Number(material.cantidadADispensarTotal)} {material.tipoUnidades}
-                                    </Td>
-                                    <Td isNumeric>
+                                    </Table.Cell>
+                                    <Table.Cell textAlign='end'>
                                         {formatDispensacionV2Number(material.cantidadHistoricaTotal)} {material.tipoUnidades}
-                                    </Td>
-                                    <Td isNumeric>
+                                    </Table.Cell>
+                                    <Table.Cell textAlign='end'>
                                         {formatDispensacionV2Number(material.totalConHistorico)} {material.tipoUnidades}
-                                    </Td>
-                                    <Td isNumeric>
+                                    </Table.Cell>
+                                    <Table.Cell textAlign='end'>
                                         {formatDispensacionV2Number(material.cantidadRecetaTotal)} {material.tipoUnidades}
-                                    </Td>
-                                    <Td>
+                                    </Table.Cell>
+                                    <Table.Cell>
                                         {material.warning ? (
-                                            <Badge colorScheme="orange" whiteSpace="normal">{material.warning}</Badge>
+                                            <Badge colorPalette="orange" whiteSpace="normal">{material.warning}</Badge>
                                         ) : (
-                                            <Badge colorScheme="green">OK</Badge>
+                                            <Badge colorPalette="green">OK</Badge>
                                         )}
-                                    </Td>
-                                </Tr>
+                                    </Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
-                </TableContainer>
+                        </Table.Body>
+                    </Table.Root>
+                </Table.ScrollArea>
             </Box>
 
             <Flex justify="flex-end" gap={3}>
                 <Button variant="outline" onClick={onBack}>
                     Atrás
                 </Button>
-                <Button colorScheme="teal" onClick={onNext}>
+                <Button colorPalette="teal" onClick={onNext}>
                     Confirmar revisión
                 </Button>
             </Flex>

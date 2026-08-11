@@ -1,11 +1,5 @@
 import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalFooter,
-    ModalBody,
-    ModalCloseButton,
+    Steps,
     Button,
     Box,
     Table,
@@ -21,6 +15,8 @@ import {
     Flex,
     useToast,
     Badge,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
@@ -114,138 +110,148 @@ export default function DetalleDispensacionDialog({
     }
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader fontFamily="Comfortaa Variable">
-                    {transaccion.tipoEntidadCausante === 'OAA'
-                        ? 'Detalle de ajuste de inventario'
-                        : 'Detalle de Dispensación'}
-                </ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <VStack align="stretch" spacing={4}>
-                        {/* Información de la transacción */}
-                        <Box>
-                            <Text fontWeight="bold" mb={2} fontSize="md">Información de la Transacción</Text>
-                            <HStack spacing={4} flexWrap="wrap">
-                                <Box>
-                                    <Text fontSize="sm" color="app.textMuted">ID Transacción:</Text>
-                                    <Text fontSize="md" fontWeight="semibold">{transaccion.transaccionId}</Text>
-                                </Box>
-                                {(transaccion.tipoEntidadCausante === 'OD' || transaccion.tipoEntidadCausante === 'OP') && transaccion.idEntidadCausante > 0 && (
-                                    <Box>
-                                        <Text fontSize="sm" color="app.textMuted">ID Orden de Producción:</Text>
-                                        <Text fontSize="md" fontWeight="semibold">{transaccion.idEntidadCausante}</Text>
-                                    </Box>
-                                )}
-                                {transaccion.loteAsignado && (
-                                    <Box>
-                                        <Text fontSize="sm" color="app.textMuted">Lote de Producción:</Text>
-                                        <Text fontSize="md" fontWeight="semibold">{transaccion.loteAsignado}</Text>
-                                    </Box>
-                                )}
-                                <Box>
-                                    <Text fontSize="sm" color="app.textMuted">Fecha:</Text>
-                                    <Text fontSize="md" fontWeight="semibold">{formatFecha(transaccion.fechaTransaccion)}</Text>
-                                </Box>
-                                <Box>
-                                    <Text fontSize="sm" color="app.textMuted">Estado Contable:</Text>
-                                    <Text fontSize="md" fontWeight="semibold">{formatEstadoContable(transaccion.estadoContable)}</Text>
-                                </Box>
-                                {transaccion.tipoEntidadCausante === 'OAA' && (
-                                    <Box>
-                                        <Text fontSize="sm" color="app.textMuted">Causa del ajuste:</Text>
-                                        <Text fontSize="md" fontWeight="semibold">
-                                            {causaAjusteLabel(transaccion.causaAjuste)}
-                                        </Text>
-                                    </Box>
-                                )}
-                            </HStack>
-                            {transaccion.observaciones && (
-                                <Box mt={2}>
-                                    <Text fontSize="sm" color="app.textMuted">Observaciones:</Text>
-                                    <Text fontSize="sm">{transaccion.observaciones}</Text>
-                                </Box>
-                            )}
-                            {transaccion.usuarioAprobador && (
-                                <Box mt={2}>
-                                    <Text fontSize="sm" color="app.textMuted">Usuario Aprobador:</Text>
-                                    <Text fontSize="sm">{transaccion.usuarioAprobador.nombre || `ID: ${transaccion.usuarioAprobador.userId}`}</Text>
-                                </Box>
-                            )}
-                        </Box>
+        <Dialog.Root open={isOpen} size='xl' placement='center' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                        {/* Tabla de movimientos */}
-                        <Box>
-                            <Text fontWeight="bold" mb={2} fontSize="md">
-                                {transaccion.tipoEntidadCausante === 'OAA'
-                                    ? 'Movimientos del ajuste'
-                                    : 'Materiales Dispensados'}
-                            </Text>
-                            {loading ? (
-                                <Flex justify="center" py={6}>
-                                    <Spinner />
-                                </Flex>
-                            ) : error ? (
-                                <Box p={4} bg="red.50" borderRadius="md">
-                                    <Text color="red.600">{error}</Text>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header fontFamily="Comfortaa Variable">
+                            {transaccion.tipoEntidadCausante === 'OAA'
+                                ? 'Detalle de ajuste de inventario'
+                                : 'Detalle de Dispensación'}
+                        </Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <VStack align="stretch" gap={4}>
+                                {/* Información de la transacción */}
+                                <Box>
+                                    <Text fontWeight="bold" mb={2} fontSize="md">Información de la Transacción</Text>
+                                    <HStack gap={4} flexWrap="wrap">
+                                        <Box>
+                                            <Text fontSize="sm" color="app.textMuted">ID Transacción:</Text>
+                                            <Text fontSize="md" fontWeight="semibold">{transaccion.transaccionId}</Text>
+                                        </Box>
+                                        {(transaccion.tipoEntidadCausante === 'OD' || transaccion.tipoEntidadCausante === 'OP') && transaccion.idEntidadCausante > 0 && (
+                                            <Box>
+                                                <Text fontSize="sm" color="app.textMuted">ID Orden de Producción:</Text>
+                                                <Text fontSize="md" fontWeight="semibold">{transaccion.idEntidadCausante}</Text>
+                                            </Box>
+                                        )}
+                                        {transaccion.loteAsignado && (
+                                            <Box>
+                                                <Text fontSize="sm" color="app.textMuted">Lote de Producción:</Text>
+                                                <Text fontSize="md" fontWeight="semibold">{transaccion.loteAsignado}</Text>
+                                            </Box>
+                                        )}
+                                        <Box>
+                                            <Text fontSize="sm" color="app.textMuted">Fecha:</Text>
+                                            <Text fontSize="md" fontWeight="semibold">{formatFecha(transaccion.fechaTransaccion)}</Text>
+                                        </Box>
+                                        <Box>
+                                            <Text fontSize="sm" color="app.textMuted">Estado Contable:</Text>
+                                            <Text fontSize="md" fontWeight="semibold">{formatEstadoContable(transaccion.estadoContable)}</Text>
+                                        </Box>
+                                        {transaccion.tipoEntidadCausante === 'OAA' && (
+                                            <Box>
+                                                <Text fontSize="sm" color="app.textMuted">Causa del ajuste:</Text>
+                                                <Text fontSize="md" fontWeight="semibold">
+                                                    {causaAjusteLabel(transaccion.causaAjuste)}
+                                                </Text>
+                                            </Box>
+                                        )}
+                                    </HStack>
+                                    {transaccion.observaciones && (
+                                        <Box mt={2}>
+                                            <Text fontSize="sm" color="app.textMuted">Observaciones:</Text>
+                                            <Text fontSize="sm">{transaccion.observaciones}</Text>
+                                        </Box>
+                                    )}
+                                    {transaccion.usuarioAprobador && (
+                                        <Box mt={2}>
+                                            <Text fontSize="sm" color="app.textMuted">Usuario Aprobador:</Text>
+                                            <Text fontSize="sm">{transaccion.usuarioAprobador.nombre || `ID: ${transaccion.usuarioAprobador.userId}`}</Text>
+                                        </Box>
+                                    )}
                                 </Box>
-                            ) : movimientos.length === 0 ? (
-                                <Text fontSize="sm" color="app.textSubtle" py={4}>
-                                    No hay movimientos registrados para esta transacción.
-                                </Text>
-                            ) : (
-                                <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
-                                    <Table size="sm" variant="striped">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>Producto ID</Th>
-                                                <Th>Nombre</Th>
-                                                <Th>Área destino</Th>
-                                                <Th>Cantidad</Th>
-                                                <Th>Unidad</Th>
-                                                <Th>Modalidad</Th>
-                                                <Th>Lote (Batch)</Th>
-                                                <Th>Fecha Vencimiento</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
-                                            {movimientos.map((mov) => (
-                                                <Tr key={mov.movimientoId}>
-                                                    <Td>{mov.productoId || 'N/A'}</Td>
-                                                    <Td>{mov.productoNombre || 'N/A'}</Td>
-                                                    <Td>{mov.areaOperativaNombre || '-'}</Td>
-                                                    <Td>{mov.cantidad.toFixed(2)}</Td>
-                                                    <Td>{mov.tipoUnidades || 'N/A'}</Td>
-                                                    <Td>
-                                                        {mov.afectaInventario === false || mov.tipoMovimiento === 'CONSUMO' ? (
-                                                            <Badge colorScheme="purple">Consumo directo</Badge>
-                                                        ) : (
-                                                            <Badge colorScheme="blue">Salida física</Badge>
-                                                        )}
-                                                    </Td>
-                                                    <Td>{mov.batchNumber || '-'}</Td>
-                                                    <Td>
-                                                        {mov.expirationDate
-                                                            ? new Date(mov.expirationDate).toLocaleDateString('es-ES')
-                                                            : '-'}
-                                                    </Td>
-                                                </Tr>
-                                            ))}
-                                        </Tbody>
-                                    </Table>
+
+                                {/* Tabla de movimientos */}
+                                <Box>
+                                    <Text fontWeight="bold" mb={2} fontSize="md">
+                                        {transaccion.tipoEntidadCausante === 'OAA'
+                                            ? 'Movimientos del ajuste'
+                                            : 'Materiales Dispensados'}
+                                    </Text>
+                                    {loading ? (
+                                        <Flex justify="center" py={6}>
+                                            <Spinner />
+                                        </Flex>
+                                    ) : error ? (
+                                        <Box p={4} bg="red.50" borderRadius="md">
+                                            <Text color="red.600">{error}</Text>
+                                        </Box>
+                                    ) : movimientos.length === 0 ? (
+                                        <Text fontSize="sm" color="app.textSubtle" py={4}>
+                                            No hay movimientos registrados para esta transacción.
+                                        </Text>
+                                    ) : (
+                                        <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
+                                            <Table.Root size="sm" variant="striped">
+                                                <Table.Header>
+                                                    <Table.Row>
+                                                        <Table.ColumnHeader>Producto ID</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Área destino</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Modalidad</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Lote (Batch)</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Fecha Vencimiento</Table.ColumnHeader>
+                                                    </Table.Row>
+                                                </Table.Header>
+                                                <Table.Body>
+                                                    {movimientos.map((mov) => (
+                                                        <Table.Row key={mov.movimientoId}>
+                                                            <Table.Cell>{mov.productoId || 'N/A'}</Table.Cell>
+                                                            <Table.Cell>{mov.productoNombre || 'N/A'}</Table.Cell>
+                                                            <Table.Cell>{mov.areaOperativaNombre || '-'}</Table.Cell>
+                                                            <Table.Cell>{mov.cantidad.toFixed(2)}</Table.Cell>
+                                                            <Table.Cell>{mov.tipoUnidades || 'N/A'}</Table.Cell>
+                                                            <Table.Cell>
+                                                                {mov.afectaInventario === false || mov.tipoMovimiento === 'CONSUMO' ? (
+                                                                    <Badge colorPalette="purple">Consumo directo</Badge>
+                                                                ) : (
+                                                                    <Badge colorPalette="blue">Salida física</Badge>
+                                                                )}
+                                                            </Table.Cell>
+                                                            <Table.Cell>{mov.batchNumber || '-'}</Table.Cell>
+                                                            <Table.Cell>
+                                                                {mov.expirationDate
+                                                                    ? new Date(mov.expirationDate).toLocaleDateString('es-ES')
+                                                                    : '-'}
+                                                            </Table.Cell>
+                                                        </Table.Row>
+                                                    ))}
+                                                </Table.Body>
+                                            </Table.Root>
+                                        </Box>
+                                    )}
                                 </Box>
-                            )}
-                        </Box>
-                    </VStack>
-                </ModalBody>
-                <ModalFooter>
-                    <Button colorScheme="blue" onClick={onClose}>
-                        Cerrar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button colorPalette="blue" onClick={onClose}>
+                                Cerrar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

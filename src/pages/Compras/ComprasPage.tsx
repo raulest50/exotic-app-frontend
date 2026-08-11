@@ -1,4 +1,4 @@
-import { Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
+import { Steps, Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader";
 import { my_style_tab } from "../../styles/styles_general.tsx";
 import CrearOCM from "./CrearOCM.tsx";
@@ -21,18 +21,18 @@ function ComprasPage() {
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w={"full"} h={"full"}>
             <MyHeader title={"Modulo de Compras"} />
-            <Tabs>
-                <TabList>
+            <Tabs.Root>
+                <Tabs.List>
                     {visibleTabs.map((tab) => (
                         <Tab key={tab.key} sx={my_style_tab}>{tab.label}</Tab>
                     ))}
-                </TabList>
+                </Tabs.List>
                 <TabPanels>
                     {visibleTabs.map((tab) => (
                         <TabPanel key={tab.key}>{tab.render()}</TabPanel>
                     ))}
                 </TabPanels>
-            </Tabs>
+            </Tabs.Root>
         </Container>
     );
 }

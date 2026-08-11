@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import {
+    Steps,
     Flex,
     VStack,
     HStack,
     Input,
-    Select,
+    NativeSelect,
     List,
-    ListItem,
     Text,
     Heading,
     Button,
@@ -55,7 +55,7 @@ function HistorialCompras() {
 
     const [selectedCompra, setSelectedCompra] = useState<Compra | null>(null);
     const [itemsCompra, setItemsCompra] = useState([]);
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const { open, onOpen, onClose } = useDisclosure();
 
     const toast = useToast();
 
@@ -175,21 +175,24 @@ function HistorialCompras() {
             <VStack w="50%" p={4} align="start">
                 <Heading size="md">Buscar Proveedor</Heading>
                 <HStack w="full">
-                    <Select value={searchType} onChange={(e) => setSearchType(e.target.value)}>
-                        <option value="nombre">Nombre</option>
-                        <option value="nit">NIT</option>
-                    </Select>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field value={searchType} onValueChange={(e) => setSearchType(e.target.value)}>
+                            <option value="nombre">Nombre</option>
+                            <option value="nit">NIT</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
                     <Input
                         placeholder="Buscar..."
                         value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
+                        onValueChange={(e) => setSearchText(e.target.value)}
                         onKeyDown={handleKeyPress}
                     />
                 </HStack>
                 <Box w="full" h="full" overflowY="auto">
-                    <List spacing={3}>
+                    <List.Root gap={3}>
                         {proveedores.map((proveedor) => (
-                            <ListItem
+                            <List.Item
                                 key={proveedor.id}
                                 cursor="pointer"
                                 onClick={() => setSelectedProveedor(proveedor)}
@@ -201,9 +204,9 @@ function HistorialCompras() {
                                 <Text>
                                     <strong>{proveedor.nombre}</strong> (NIT: {proveedor.id})
                                 </Text>
-                            </ListItem>
+                            </List.Item>
                         ))}
-                    </List>
+                    </List.Root>
                     {/* Pagination for Proveedores */}
                     <MyPagination
                         page={provPage}
@@ -225,14 +228,14 @@ function HistorialCompras() {
                         setDate2={setDate2}
                         flex_direction="row"
                     />
-                    <Button colorScheme="teal" onClick={() => fetchCompras(0)}>
+                    <Button colorPalette="teal" onClick={() => fetchCompras(0)}>
                         Filtrar
                     </Button>
                 </HStack>
                 <Box w="full" h="full" overflowY="auto">
-                    <List spacing={3}>
+                    <List.Root gap={3}>
                         {compras.map((compra) => (
-                            <ListItem
+                            <List.Item
                                 key={compra.compraId}
                                 p={2}
                                 borderRadius="md"
@@ -250,9 +253,9 @@ function HistorialCompras() {
                                 <Text>
                                     <strong>Estado:</strong> {compra.estado === 0 ? 'Abierta' : 'Cerrada'}
                                 </Text>
-                            </ListItem>
+                            </List.Item>
                         ))}
-                    </List>
+                    </List.Root>
                     {/* Pagination for Compras */}
                     <MyPagination
                         page={compraPage}

@@ -1,24 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import {
+    Steps,
     Badge,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     Input,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
-    Select,
+    NativeSelect,
     Spinner,
     Text,
     VStack,
     useToast,
+    Field,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
 import axios from "axios";
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
@@ -205,147 +200,159 @@ export default function TerminadoPicker4MPS({
     }, [page, totalPages]);
 
     return (
-        <Modal isOpen={isOpen} onClose={handleCancel} size="2xl">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Seleccionar producto terminado para MPS</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <Flex direction="column" gap={3}>
-                        <Flex mb={2} gap={4} align="center" wrap="wrap">
-                            <Text fontWeight="medium">Buscar por:</Text>
-                            <Flex>
-                                <Button
-                                    size="sm"
-                                    colorScheme={tipoBusqueda === "NOMBRE" ? "blue" : "gray"}
-                                    mr={2}
-                                    onClick={() => setTipoBusqueda("NOMBRE")}
-                                >
-                                    Nombre
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    colorScheme={tipoBusqueda === "ID" ? "blue" : "gray"}
-                                    onClick={() => setTipoBusqueda("ID")}
-                                >
-                                    ID
-                                </Button>
-                            </Flex>
-                        </Flex>
+        <Dialog.Root open={isOpen} size='xl' onOpenChange={e => {
+            if (!e.open) {
+                handleCancel();
+            }
+        }}>
+            <Portal>
 
-                        <Flex gap={3} direction={["column", "column", "row"]}>
-                            <FormControl>
-                                <FormLabel fontSize="sm">Categoria</FormLabel>
-                                <Select
-                                    value={selectedCategoriaId}
-                                    onChange={(event) => handleCategoriaChange(event.target.value)}
-                                    isDisabled={isLoadingCategorias}
-                                >
-                                    <option value="">Todas las categorias</option>
-                                    {categorias.map((categoria) => (
-                                        <option key={categoria.categoriaId} value={categoria.categoriaId}>
-                                            {categoria.categoriaNombre}
-                                        </option>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                            <FormControl>
-                                <FormLabel fontSize="sm">Texto de busqueda</FormLabel>
-                                <Flex gap={2}>
-                                    <Input
-                                        placeholder={tipoBusqueda === "NOMBRE" ? "Buscar por nombre" : "Buscar por codigo"}
-                                        value={searchText}
-                                        onChange={(event) => setSearchText(event.target.value)}
-                                        onKeyDown={handleKeyDown}
-                                    />
-                                    <Button onClick={handleSearch} isLoading={isLoading} loadingText="Buscando">
-                                        Buscar
-                                    </Button>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Seleccionar producto terminado para MPS</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <Flex direction="column" gap={3}>
+                                <Flex mb={2} gap={4} align="center" wrap="wrap">
+                                    <Text fontWeight="medium">Buscar por:</Text>
+                                    <Flex>
+                                        <Button
+                                            size="sm"
+                                            colorPalette={tipoBusqueda === "NOMBRE" ? "blue" : "gray"}
+                                            mr={2}
+                                            onClick={() => setTipoBusqueda("NOMBRE")}
+                                        >
+                                            Nombre
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            colorPalette={tipoBusqueda === "ID" ? "blue" : "gray"}
+                                            onClick={() => setTipoBusqueda("ID")}
+                                        >
+                                            ID
+                                        </Button>
+                                    </Flex>
                                 </Flex>
-                            </FormControl>
-                        </Flex>
-                    </Flex>
 
-                    <VStack align="stretch" spacing={2} maxH="360px" overflowY="auto" mt={4}>
-                        {isLoading ? (
-                            <Flex justify="center" py={12}>
-                                <Spinner />
+                                <Flex gap={3} direction={["column", "column", "row"]}>
+                                    <Field.Root>
+                                        <Field.Label fontSize="sm">Categoria</Field.Label>
+                                        <NativeSelect.Root>
+                                            <NativeSelect.Field
+                                                value={selectedCategoriaId}
+                                                onValueChange={(event) => handleCategoriaChange(event.target.value)}
+                                                disabled={isLoadingCategorias}>
+                                                <option value="">Todas las categorias</option>
+                                                {categorias.map((categoria) => (
+                                                    <option key={categoria.categoriaId} value={categoria.categoriaId}>
+                                                        {categoria.categoriaNombre}
+                                                    </option>
+                                                ))}
+                                            </NativeSelect.Field>
+                                            <NativeSelect.Indicator />
+                                        </NativeSelect.Root>
+                                    </Field.Root>
+                                    <Field.Root>
+                                        <Field.Label fontSize="sm">Texto de busqueda</Field.Label>
+                                        <Flex gap={2}>
+                                            <Input
+                                                placeholder={tipoBusqueda === "NOMBRE" ? "Buscar por nombre" : "Buscar por codigo"}
+                                                value={searchText}
+                                                onValueChange={(event) => setSearchText(event.target.value)}
+                                                onKeyDown={handleKeyDown}
+                                            />
+                                            <Button onClick={handleSearch} loading={isLoading} loadingText="Buscando">
+                                                Buscar
+                                            </Button>
+                                        </Flex>
+                                    </Field.Root>
+                                </Flex>
                             </Flex>
-                        ) : results.length === 0 ? (
-                            <Text color="gray.500">No se encontraron productos.</Text>
-                        ) : (
-                            results.map((producto) => {
-                                const isSelected = selected?.productoId === producto.productoId;
-                                const categoria = producto.categoria;
-                                return (
-                                    <Box
-                                        key={producto.productoId}
-                                        borderWidth="1px"
-                                        borderRadius="md"
-                                        p={3}
-                                        cursor="pointer"
-                                        bg={isSelected ? "blue.50" : "white"}
-                                        borderColor={isSelected ? "blue.400" : "gray.200"}
-                                        _hover={{ bg: "gray.50" }}
-                                        onClick={() => setSelected(producto)}
-                                    >
-                                        <Flex justify="space-between" align="start" gap={3}>
-                                            <Box minW={0}>
-                                                <Text fontWeight="semibold" noOfLines={2}>{producto.nombre}</Text>
-                                                <Text fontSize="sm" color="gray.600">ID: {producto.productoId}</Text>
-                                                <Text fontSize="sm" color="gray.600">
-                                                    {categoria?.categoriaNombre ?? "Sin categoria"}
-                                                </Text>
+
+                            <VStack align="stretch" gap={2} maxH="360px" overflowY="auto" mt={4}>
+                                {isLoading ? (
+                                    <Flex justify="center" py={12}>
+                                        <Spinner />
+                                    </Flex>
+                                ) : results.length === 0 ? (
+                                    <Text color="gray.500">No se encontraron productos.</Text>
+                                ) : (
+                                    results.map((producto) => {
+                                        const isSelected = selected?.productoId === producto.productoId;
+                                        const categoria = producto.categoria;
+                                        return (
+                                            <Box
+                                                key={producto.productoId}
+                                                borderWidth="1px"
+                                                borderRadius="md"
+                                                p={3}
+                                                cursor="pointer"
+                                                bg={isSelected ? "blue.50" : "white"}
+                                                borderColor={isSelected ? "blue.400" : "gray.200"}
+                                                _hover={{ bg: "gray.50" }}
+                                                onClick={() => setSelected(producto)}
+                                            >
+                                                <Flex justify="space-between" align="start" gap={3}>
+                                                    <Box minW={0}>
+                                                        <Text fontWeight="semibold" lineClamp={2}>{producto.nombre}</Text>
+                                                        <Text fontSize="sm" color="gray.600">ID: {producto.productoId}</Text>
+                                                        <Text fontSize="sm" color="gray.600">
+                                                            {categoria?.categoriaNombre ?? "Sin categoria"}
+                                                        </Text>
+                                                    </Box>
+                                                    {producto.tipo_producto && (
+                                                        <Badge colorPalette="purple">{producto.tipo_producto}</Badge>
+                                                    )}
+                                                </Flex>
+                                                <Flex mt={2} gap={2} wrap="wrap">
+                                                    <Badge colorPalette={categoria?.loteSize && categoria.loteSize > 0 ? "blue" : "orange"}>
+                                                        Lote {categoria?.loteSize ?? "-"}
+                                                    </Badge>
+                                                    <Badge colorPalette="cyan">
+                                                        {categoria?.tiempoDiasFabricacion ?? 0} dias fabricacion
+                                                    </Badge>
+                                                    <Badge colorPalette={producto.prefijoLote ? "green" : "orange"}>
+                                                        Prefijo {producto.prefijoLote || "-"}
+                                                    </Badge>
+                                                </Flex>
                                             </Box>
-                                            {producto.tipo_producto && (
-                                                <Badge colorScheme="purple">{producto.tipo_producto}</Badge>
-                                            )}
-                                        </Flex>
-                                        <Flex mt={2} gap={2} wrap="wrap">
-                                            <Badge colorScheme={categoria?.loteSize && categoria.loteSize > 0 ? "blue" : "orange"}>
-                                                Lote {categoria?.loteSize ?? "-"}
-                                            </Badge>
-                                            <Badge colorScheme="cyan">
-                                                {categoria?.tiempoDiasFabricacion ?? 0} dias fabricacion
-                                            </Badge>
-                                            <Badge colorScheme={producto.prefijoLote ? "green" : "orange"}>
-                                                Prefijo {producto.prefijoLote || "-"}
-                                            </Badge>
-                                        </Flex>
-                                    </Box>
-                                );
-                            })
-                        )}
-                    </VStack>
-                </ModalBody>
-                <ModalFooter justifyContent="space-between">
-                    <Flex align="center" gap={3}>
-                        {paginationLabel && <Text fontSize="sm" color="gray.600">{paginationLabel}</Text>}
-                        {totalPages > 1 && (
-                            <Flex gap={2}>
-                                <Button size="sm" onClick={() => fetchProductos(page - 1)} isDisabled={page <= 0}>
-                                    Anterior
+                                        );
+                                    })
+                                )}
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer justifyContent="space-between">
+                            <Flex align="center" gap={3}>
+                                {paginationLabel && <Text fontSize="sm" color="gray.600">{paginationLabel}</Text>}
+                                {totalPages > 1 && (
+                                    <Flex gap={2}>
+                                        <Button size="sm" onClick={() => fetchProductos(page - 1)} disabled={page <= 0}>
+                                            Anterior
+                                        </Button>
+                                        <Button size="sm" onClick={() => fetchProductos(page + 1)} disabled={page >= totalPages - 1}>
+                                            Siguiente
+                                        </Button>
+                                    </Flex>
+                                )}
+                            </Flex>
+                            <Flex gap={3}>
+                                <Button variant="ghost" onClick={handleCancel}>
+                                    Cancelar
                                 </Button>
-                                <Button size="sm" onClick={() => fetchProductos(page + 1)} isDisabled={page >= totalPages - 1}>
-                                    Siguiente
+                                <Button
+                                    colorPalette="blue"
+                                    onClick={handleConfirm}
+                                    disabled={!selected}
+                                >
+                                    Confirmar
                                 </Button>
                             </Flex>
-                        )}
-                    </Flex>
-                    <Flex gap={3}>
-                        <Button variant="ghost" onClick={handleCancel}>
-                            Cancelar
-                        </Button>
-                        <Button
-                            colorScheme="blue"
-                            onClick={handleConfirm}
-                            isDisabled={!selected}
-                        >
-                            Confirmar
-                        </Button>
-                    </Flex>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

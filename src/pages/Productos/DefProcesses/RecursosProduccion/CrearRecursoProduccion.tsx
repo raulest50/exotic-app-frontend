@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {Box, Button, FormControl, FormLabel, Heading, Input, VStack, useToast} from '@chakra-ui/react';
+import { Steps, Box, Button, Heading, Input, VStack, useToast, Field } from '@chakra-ui/react';
 import axios from 'axios';
 
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
@@ -63,18 +63,18 @@ function CrearRecursoProduccion() {
     return (
         <Box p={4}>
             <Heading size="md" mb={4}>Crear Recurso de Producción</Heading>
-            <VStack spacing={4} align="stretch">
-                <FormControl isRequired>
-                    <FormLabel>Nombre</FormLabel>
-                    <Input value={nombre} onChange={(e) => setNombre(e.target.value)} sx={input_style} />
-                </FormControl>
-                <FormControl isRequired>
-                    <FormLabel>Descripción</FormLabel>
-                    <Input value={descripcion} onChange={(e)=>setDescripcion(e.target.value)} sx={input_style} />
-                </FormControl>
+            <VStack gap={4} align="stretch">
+                <Field.Root required>
+                    <Field.Label>Nombre</Field.Label>
+                    <Input value={nombre} onValueChange={(e) => setNombre(e.target.value)} sx={input_style} />
+                </Field.Root>
+                <Field.Root required>
+                    <Field.Label>Descripción</Field.Label>
+                    <Input value={descripcion} onValueChange={(e)=>setDescripcion(e.target.value)} sx={input_style} />
+                </Field.Root>
                 <RPAFmanager activos={activos} onChange={setActivos} />
-                <Button colorScheme="teal" onClick={handleSubmit}>Guardar</Button>
-                <Button colorScheme="orange" onClick={clearFields}>Limpiar</Button>
+                <Button colorPalette="teal" onClick={handleSubmit}>Guardar</Button>
+                <Button colorPalette="orange" onClick={clearFields}>Limpiar</Button>
             </VStack>
         </Box>
     );

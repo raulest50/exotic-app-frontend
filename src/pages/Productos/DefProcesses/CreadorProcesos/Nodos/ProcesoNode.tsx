@@ -1,6 +1,6 @@
 
 
-import {Box, Flex, Text, Icon, VStack, HStack, Badge} from "@chakra-ui/react";
+import { Steps, Box, Flex, Text, Icon, VStack, HStack, Badge } from "@chakra-ui/react";
 import {Handle, Position, NodeProps} from "@xyflow/react";
 
 import { TbArrowsJoin } from "react-icons/tb";
@@ -40,7 +40,7 @@ export default function ProcesoNode(props: NodeProps) {
                     </Text>
                 </Box>
 
-                <Icon mr={"1em"} ml={"1em"} as={TbArrowsJoin} w="4em" h="4em" color="tomato" />
+                <Icon mr={"1em"} ml={"1em"} w="4em" h="4em" color="tomato" asChild><TbArrowsJoin /></Icon>
 
                 <Handle
                     type={"target"}
@@ -61,14 +61,14 @@ export default function ProcesoNode(props: NodeProps) {
                 <VStack w={"full"} borderTop={"2px solid gray"} background={"app.surfaceSubtle"} pt={"1em"}>
                     {String(data.nombreProceso).trim() !== "" && (
                         <HStack w="full">
-                            <Icon mr="1em" ml="1em" as={BiRename} w="2em" h="2em" color="teal" />
+                            <Icon mr="1em" ml="1em" w="2em" h="2em" color="teal" asChild><BiRename /></Icon>
                             <Text fontWeight="bold">{String(data.nombreProceso)}</Text>
                         </HStack>
                     )}
 
                     {String(data.areaOperativaNombre || "").trim() !== "" && (
                         <HStack w="full">
-                            <Icon mr="1em" ml="1em" as={BiRename} w="2em" h="2em" color="purple.500" />
+                            <Icon mr="1em" ml="1em" w="2em" h="2em" color="purple.500" asChild><BiRename /></Icon>
                             <Text fontWeight="bold">Area: {String(data.areaOperativaNombre)}</Text>
                         </HStack>
                     )}
@@ -76,7 +76,7 @@ export default function ProcesoNode(props: NodeProps) {
                     {/* Setup Time Row */}
                     {String(data.setupTime || "").trim() !== "" && (
                         <HStack w="full">
-                            <Icon mr="1em" ml="1em" as={MdSettings} w="2em" h="2em" color="orange.500" />
+                            <Icon mr="1em" ml="1em" w="2em" h="2em" color="orange.500" asChild><MdSettings /></Icon>
                             <Text fontWeight="bold">Setup: {String(data.setupTime)} seg</Text>
                         </HStack>
                     )}
@@ -84,9 +84,9 @@ export default function ProcesoNode(props: NodeProps) {
                     {/* Modelo de Tiempo Row */}
                     {String(data.model || "").trim() !== "" && (
                         <HStack w="full">
-                            <Icon mr="1em" ml="1em" as={PiClockCountdownFill} w="2em" h="2em" color="teal" />
+                            <Icon mr="1em" ml="1em" w="2em" h="2em" color="teal" asChild><PiClockCountdownFill /></Icon>
                             <Text fontWeight="bold">Modelo: </Text>
-                            <Badge colorScheme="teal">{String(data.model)}</Badge>
+                            <Badge colorPalette="teal">{String(data.model)}</Badge>
                         </HStack>
                     )}
 
@@ -123,7 +123,7 @@ export default function ProcesoNode(props: NodeProps) {
                     {/* Backward compatibility for old data */}
                     {!data.model && (data.constantSeconds || data.secondsPerUnit || data.secondsPerBatch) && (
                         <HStack w="full">
-                            <Icon mr="1em" ml="1em" as={PiClockCountdownFill} w="2em" h="2em" color="teal" />
+                            <Icon mr="1em" ml="1em" w="2em" h="2em" color="teal" asChild><PiClockCountdownFill /></Icon>
                             <Text fontWeight="bold">
                                 Process Time: {data.constantSeconds || data.secondsPerUnit || data.secondsPerBatch} seg
                             </Text>
@@ -141,5 +141,5 @@ export default function ProcesoNode(props: NodeProps) {
 
             </Flex>
         </Box>
-    )
+    );
 }

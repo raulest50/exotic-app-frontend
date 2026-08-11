@@ -1,23 +1,15 @@
 // ./MateriaPrimaPicker.tsx
 import React, { useState } from 'react';
 import {
+    Steps,
     Box,
     Button,
-    FormControl,
-    FormLabel,
     Input,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalFooter,
-    ModalBody,
-    ModalCloseButton,
     useToast,
     VStack,
     HStack,
     Text,
-    Select,
+    NativeSelect,
     Table,
     Thead,
     Tbody,
@@ -25,6 +17,9 @@ import {
     Th,
     Td,
     Flex,
+    Field,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
@@ -128,118 +123,130 @@ const MateriaPrimaPicker: React.FC<MateriaPrimaPickerProps> = ({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="lg">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Seleccionar Materia Prima</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <VStack spacing={4}>
-                        <FormControl>
-                            <FormLabel>Buscar Materia Prima</FormLabel>
-                            <HStack>
-                                <Input
-                                    value={searchText}
-                                    onChange={(e) => setSearchText(e.target.value)}
-                                    onKeyDown={onKeyPress_InputBuscar}
-                                    placeholder="Ingrese nombre o ID"
-                                    isDisabled={isLoading}
-                                />
-                                <Select
-                                    value={tipoBusqueda}
-                                    onChange={(e) => setTipoBusqueda(e.target.value)}
-                                    width="150px"
-                                    isDisabled={isLoading}
-                                >
-                                    <option value="NOMBRE">Nombre</option>
-                                    <option value="ID">ID</option>
-                                </Select>
-                                <Button 
-                                    onClick={() => {
-                                        setCurrentPage(0); // Reset to first page on new search
-                                        handleSearch(0); // Pass page 0 explicitly
-                                    }} 
-                                    isLoading={isLoading}
-                                    loadingText="Buscando"
-                                    colorScheme="blue"
-                                >
-                                    Buscar
-                                </Button>
-                            </HStack>
-                        </FormControl>
-                        <Box w="full" overflowX="auto">
-                            {materiasPrimas.length > 0 ? (
-                                <>
-                                    <Table variant="simple" size="sm">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>ID</Th>
-                                                <Th>Nombre</Th>
-                                                <Th>Categoría</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
-                                            {materiasPrimas.map((materiaPrima) => (
-                                                <Tr 
-                                                    key={materiaPrima.productoId} 
-                                                    onClick={() => setSelectedMateriaPrimaId(materiaPrima.productoId)}
-                                                    bg={selectedMateriaPrimaId === materiaPrima.productoId ? "app.rowSelectedBlue" : "transparent"}
-                                                    _hover={{ bg: "app.rowHoverStrong", cursor: "pointer" }}
-                                                >
-                                                    <Td>{materiaPrima.productoId}</Td>
-                                                    <Td>{materiaPrima.nombre}</Td>
-                                                    <Td>{materiaPrima.tipoMaterial === 1 ? "Materia Prima" : "Material de Empaque"}</Td>
-                                                </Tr>
-                                            ))}
-                                        </Tbody>
-                                    </Table>
+        <Dialog.Root open={isOpen} size='lg' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                                    {/* Pagination controls */}
-                                    {totalPages > 1 && (
-                                        <Flex justifyContent="center" mt={4}>
-                                            <Button 
-                                                size="sm" 
-                                                onClick={() => goToPage(currentPage - 1)} 
-                                                isDisabled={currentPage === 0 || isLoading}
-                                                mr={2}
-                                            >
-                                                Anterior
-                                            </Button>
-                                            <Text alignSelf="center" mx={2}>
-                                                Página {currentPage + 1} de {totalPages}
-                                            </Text>
-                                            <Button 
-                                                size="sm" 
-                                                onClick={() => goToPage(currentPage + 1)} 
-                                                isDisabled={currentPage === totalPages - 1 || isLoading}
-                                                ml={2}
-                                            >
-                                                Siguiente
-                                            </Button>
-                                        </Flex>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Seleccionar Materia Prima</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <VStack gap={4}>
+                                <Field.Root>
+                                    <Field.Label>Buscar Materia Prima</Field.Label>
+                                    <HStack>
+                                        <Input
+                                            value={searchText}
+                                            onValueChange={(e) => setSearchText(e.target.value)}
+                                            onKeyDown={onKeyPress_InputBuscar}
+                                            placeholder="Ingrese nombre o ID"
+                                            disabled={isLoading}
+                                        />
+                                        <NativeSelect.Root>
+                                            <NativeSelect.Field
+                                                value={tipoBusqueda}
+                                                onValueChange={(e) => setTipoBusqueda(e.target.value)}
+                                                width="150px"
+                                                disabled={isLoading}>
+                                                <option value="NOMBRE">Nombre</option>
+                                                <option value="ID">ID</option>
+                                            </NativeSelect.Field>
+                                            <NativeSelect.Indicator />
+                                        </NativeSelect.Root>
+                                        <Button 
+                                            onClick={() => {
+                                                setCurrentPage(0); // Reset to first page on new search
+                                                handleSearch(0); // Pass page 0 explicitly
+                                            }} 
+                                            loading={isLoading}
+                                            loadingText="Buscando"
+                                            colorPalette="blue"
+                                        >
+                                            Buscar
+                                        </Button>
+                                    </HStack>
+                                </Field.Root>
+                                <Box w="full" overflowX="auto">
+                                    {materiasPrimas.length > 0 ? (
+                                        <>
+                                            <Table.Root variant="simple" size="sm">
+                                                <Table.Header>
+                                                    <Table.Row>
+                                                        <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Categoría</Table.ColumnHeader>
+                                                    </Table.Row>
+                                                </Table.Header>
+                                                <Table.Body>
+                                                    {materiasPrimas.map((materiaPrima) => (
+                                                        <Table.Row 
+                                                            key={materiaPrima.productoId} 
+                                                            onClick={() => setSelectedMateriaPrimaId(materiaPrima.productoId)}
+                                                            bg={selectedMateriaPrimaId === materiaPrima.productoId ? "app.rowSelectedBlue" : "transparent"}
+                                                            _hover={{ bg: "app.rowHoverStrong", cursor: "pointer" }}
+                                                        >
+                                                            <Table.Cell>{materiaPrima.productoId}</Table.Cell>
+                                                            <Table.Cell>{materiaPrima.nombre}</Table.Cell>
+                                                            <Table.Cell>{materiaPrima.tipoMaterial === 1 ? "Materia Prima" : "Material de Empaque"}</Table.Cell>
+                                                        </Table.Row>
+                                                    ))}
+                                                </Table.Body>
+                                            </Table.Root>
+
+                                            {/* Pagination controls */}
+                                            {totalPages > 1 && (
+                                                <Flex justifyContent="center" mt={4}>
+                                                    <Button 
+                                                        size="sm" 
+                                                        onClick={() => goToPage(currentPage - 1)} 
+                                                        disabled={currentPage === 0 || isLoading}
+                                                        mr={2}
+                                                    >
+                                                        Anterior
+                                                    </Button>
+                                                    <Text alignSelf="center" mx={2}>
+                                                        Página {currentPage + 1} de {totalPages}
+                                                    </Text>
+                                                    <Button 
+                                                        size="sm" 
+                                                        onClick={() => goToPage(currentPage + 1)} 
+                                                        disabled={currentPage === totalPages - 1 || isLoading}
+                                                        ml={2}
+                                                    >
+                                                        Siguiente
+                                                    </Button>
+                                                </Flex>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <Text textAlign="center">No hay materias primas para mostrar</Text>
                                     )}
-                                </>
-                            ) : (
-                                <Text textAlign="center">No hay materias primas para mostrar</Text>
-                            )}
-                        </Box>
-                    </VStack>
-                </ModalBody>
-                <ModalFooter>
-                    <Button 
-                        colorScheme="blue" 
-                        mr={3} 
-                        onClick={handleConfirm}
-                        isDisabled={selectedMateriaPrimaId === null}
-                    >
-                        Confirmar
-                    </Button>
-                    <Button variant="ghost" onClick={handleCancel}>
-                        Cancelar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                                </Box>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button 
+                                colorPalette="blue" 
+                                mr={3} 
+                                onClick={handleConfirm}
+                                disabled={selectedMateriaPrimaId === null}
+                            >
+                                Confirmar
+                            </Button>
+                            <Button variant="ghost" onClick={handleCancel}>
+                                Cancelar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 };
 

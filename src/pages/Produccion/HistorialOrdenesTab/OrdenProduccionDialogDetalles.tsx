@@ -1,23 +1,17 @@
 import {
+    Steps,
     Box,
     Alert,
-    AlertIcon,
     Badge,
-    Divider,
-    FormControl,
-    FormLabel,
     Input,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     Stack,
     Text,
     Button,
     useToast,
+    Separator,
+    Field,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
@@ -182,115 +176,125 @@ export default function OrdenProduccionDialogDetalles({
     }
 
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} size="4xl" isCentered>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Detalles de Orden #{orden.ordenId}</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <Stack spacing={4} divider={<Divider />}>
-                        <Box>
-                            <Text fontWeight="bold">Producto</Text>
-                            <Text>{orden.productoNombre}</Text>
-                            <Text color="gray.600" fontSize="sm">
-                                ID: {formatValue(orden.productoId)}
-                                {" \u2022 "}
-                                Tipo: {formatValue(orden.productoTipo)}
-                                {" \u2022 "}
-                                Unidad: {formatValue(orden.productoUnidad)}
-                            </Text>
-                            <Text color="gray.600" fontSize="sm">
-                                {"Categor\u00EDa: "}
-                                {formatValue(orden.productoCategoriaNombre ?? orden.productoCategoriaId)}
-                            </Text>
-                        </Box>
+        <Dialog.Root open={isOpen} size='xl' placement='center' onOpenChange={e => {
+            if (!e.open) {
+                handleClose();
+            }
+        }}>
+            <Portal>
 
-                        <Box>
-                            <Text fontWeight="bold">Fechas</Text>
-                            <Text fontSize="sm">{"Fecha de creaci\u00F3n: "}{formatDateTimeValue(orden.fechaCreacion)}</Text>
-                            <Text fontSize="sm">Inicio: {formatDateTimeValue(orden.fechaInicio)}</Text>
-                            <Text fontSize="sm">Lanzamiento: {formatDateTimeValue(orden.fechaLanzamiento)}</Text>
-                            <Text fontSize="sm">Fin planificada: {formatDateTimeValue(orden.fechaFinalPlanificada)}</Text>
-                        </Box>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Detalles de Orden #{orden.ordenId}</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <Stack gap={4} separator={<Separator />}>
+                                <Box>
+                                    <Text fontWeight="bold">Producto</Text>
+                                    <Text>{orden.productoNombre}</Text>
+                                    <Text color="gray.600" fontSize="sm">
+                                        ID: {formatValue(orden.productoId)}
+                                        {" \u2022 "}
+                                        Tipo: {formatValue(orden.productoTipo)}
+                                        {" \u2022 "}
+                                        Unidad: {formatValue(orden.productoUnidad)}
+                                    </Text>
+                                    <Text color="gray.600" fontSize="sm">
+                                        {"Categor\u00EDa: "}
+                                        {formatValue(orden.productoCategoriaNombre ?? orden.productoCategoriaId)}
+                                    </Text>
+                                </Box>
 
-                        <Box>
-                            <Text fontWeight="bold">{"Informaci\u00F3n de Producci\u00F3n"}</Text>
-                            <Text fontSize="sm">Cantidad a producir: {formatValue(orden.cantidadProducir)}</Text>
-                            <Text fontSize="sm">
-                                Estado: <Badge ml={1} colorScheme={orden.estadoOrden === 2 ? "green" : orden.estadoOrden === -1 ? "red" : orden.estadoOrden === 3 ? "blue" : "yellow"}>{getEstadoOrdenLabel(orden.estadoOrden)}</Badge>
-                            </Text>
-                            <Text fontSize="sm">
-                                Materiales: <Badge ml={1} colorScheme={getEstadoDispensacionMaterialesColor(orden.estadoDispensacionMateriales)}>{getEstadoDispensacionMaterialesLabel(orden.estadoDispensacionMateriales)}</Badge>
-                            </Text>
-                            <Text fontSize="sm">
-                                Politica inicio: <Badge ml={1} colorScheme={getPoliticaDispensacionInicioColor(orden.politicaDispensacionInicio)}>{getPoliticaDispensacionInicioLabel(orden.politicaDispensacionInicio)}</Badge>
-                            </Text>
-                            <Text fontSize="sm">Fecha politica: {formatDateTimeValue(orden.fechaAplicacionPoliticaDispensacion)}</Text>
-                            <Text fontSize="sm">Pedido comercial: {formatValue(orden.numeroPedidoComercial)}</Text>
-                            <Text fontSize="sm">{"\u00C1rea operativa: "}{formatValue(orden.areaOperativa)}</Text>
-                            <Text fontSize="sm">Departamento operativo: {formatValue(orden.departamentoOperativo)}</Text>
-                        </Box>
+                                <Box>
+                                    <Text fontWeight="bold">Fechas</Text>
+                                    <Text fontSize="sm">{"Fecha de creaci\u00F3n: "}{formatDateTimeValue(orden.fechaCreacion)}</Text>
+                                    <Text fontSize="sm">Inicio: {formatDateTimeValue(orden.fechaInicio)}</Text>
+                                    <Text fontSize="sm">Lanzamiento: {formatDateTimeValue(orden.fechaLanzamiento)}</Text>
+                                    <Text fontSize="sm">Fin planificada: {formatDateTimeValue(orden.fechaFinalPlanificada)}</Text>
+                                </Box>
 
-                        {orden.origenOrden === "MPS" && (
-                            <Box>
-                                <Text fontWeight="bold">Origen del plan</Text>
-                                <Text fontSize="sm">Origen: MPS</Text>
-                                <Text fontSize="sm">MPS ID: {formatValue(orden.mpsId)}</Text>
-                                <Text fontSize="sm">Semana MPS: {formatValue(orden.mpsWeekStartDate)}</Text>
-                                <Text fontSize="sm">Item MPS: {formatValue(orden.mpsItemId)}</Text>
-                                <Text fontSize="sm">Lote planificado MPS: {formatValue(orden.mpsLotePlanificadoId)}</Text>
-                                <Text fontSize="sm">Lote ordinal: {formatValue(orden.mpsLoteOrdinal)}</Text>
-                            </Box>
-                        )}
+                                <Box>
+                                    <Text fontWeight="bold">{"Informaci\u00F3n de Producci\u00F3n"}</Text>
+                                    <Text fontSize="sm">Cantidad a producir: {formatValue(orden.cantidadProducir)}</Text>
+                                    <Text fontSize="sm">
+                                        Estado: <Badge ml={1} colorPalette={orden.estadoOrden === 2 ? "green" : orden.estadoOrden === -1 ? "red" : orden.estadoOrden === 3 ? "blue" : "yellow"}>{getEstadoOrdenLabel(orden.estadoOrden)}</Badge>
+                                    </Text>
+                                    <Text fontSize="sm">
+                                        Materiales: <Badge ml={1} colorPalette={getEstadoDispensacionMaterialesColor(orden.estadoDispensacionMateriales)}>{getEstadoDispensacionMaterialesLabel(orden.estadoDispensacionMateriales)}</Badge>
+                                    </Text>
+                                    <Text fontSize="sm">
+                                        Politica inicio: <Badge ml={1} colorPalette={getPoliticaDispensacionInicioColor(orden.politicaDispensacionInicio)}>{getPoliticaDispensacionInicioLabel(orden.politicaDispensacionInicio)}</Badge>
+                                    </Text>
+                                    <Text fontSize="sm">Fecha politica: {formatDateTimeValue(orden.fechaAplicacionPoliticaDispensacion)}</Text>
+                                    <Text fontSize="sm">Pedido comercial: {formatValue(orden.numeroPedidoComercial)}</Text>
+                                    <Text fontSize="sm">{"\u00C1rea operativa: "}{formatValue(orden.areaOperativa)}</Text>
+                                    <Text fontSize="sm">Departamento operativo: {formatValue(orden.departamentoOperativo)}</Text>
+                                </Box>
 
-                        <Box>
-                            <Text fontWeight="bold">Observaciones</Text>
-                            <Text whiteSpace="pre-wrap">{formatValue(orden.observaciones)}</Text>
-                        </Box>
+                                {orden.origenOrden === "MPS" && (
+                                    <Box>
+                                        <Text fontWeight="bold">Origen del plan</Text>
+                                        <Text fontSize="sm">Origen: MPS</Text>
+                                        <Text fontSize="sm">MPS ID: {formatValue(orden.mpsId)}</Text>
+                                        <Text fontSize="sm">Semana MPS: {formatValue(orden.mpsWeekStartDate)}</Text>
+                                        <Text fontSize="sm">Item MPS: {formatValue(orden.mpsItemId)}</Text>
+                                        <Text fontSize="sm">Lote planificado MPS: {formatValue(orden.mpsLotePlanificadoId)}</Text>
+                                        <Text fontSize="sm">Lote ordinal: {formatValue(orden.mpsLoteOrdinal)}</Text>
+                                    </Box>
+                                )}
 
-                        {isDeletable && (
-                            <Box>
-                                <Text fontWeight="bold" mb={3} color="red.500">
-                                    {"Cancelar orden de producci\u00F3n"}
-                                </Text>
-                                <Divider mb={4} />
-                                <Stack spacing={4}>
-                                    <Alert status="warning">
-                                        <AlertIcon />
-                                        {"Esta acci\u00F3n no se puede deshacer. La orden ser\u00E1 cancelada definitivamente."}
-                                    </Alert>
+                                <Box>
+                                    <Text fontWeight="bold">Observaciones</Text>
+                                    <Text whiteSpace="pre-wrap">{formatValue(orden.observaciones)}</Text>
+                                </Box>
 
-                                    <Text fontWeight="bold">{"Token de confirmaci\u00F3n: "}{randomToken}</Text>
+                                {isDeletable && (
+                                    <Box>
+                                        <Text fontWeight="bold" mb={3} color="red.500">
+                                            {"Cancelar orden de producci\u00F3n"}
+                                        </Text>
+                                        <Separator mb={4} />
+                                        <Stack gap={4}>
+                                            <Alert.Root status="warning">
+                                                <Alert.Indicator />
+                                                {"Esta acci\u00F3n no se puede deshacer. La orden ser\u00E1 cancelada definitivamente."}
+                                            </Alert.Root>
 
-                                    <FormControl>
-                                        <FormLabel>{"Ingrese el token de confirmaci\u00F3n:"}</FormLabel>
-                                        <Input
-                                            value={inputToken}
-                                            onChange={(e) => setInputToken(e.target.value)}
-                                            placeholder="Ingrese el token de 4 d\u00EDgitos"
-                                        />
-                                    </FormControl>
+                                            <Text fontWeight="bold">{"Token de confirmaci\u00F3n: "}{randomToken}</Text>
 
-                                    <Button
-                                        colorScheme="red"
-                                        onClick={handleCancel}
-                                        isLoading={cancelLoading}
-                                        loadingText="Cancelando..."
-                                        isDisabled={inputToken !== randomToken}
-                                    >
-                                        {"Cancelar orden de producci\u00F3n"}
-                                    </Button>
-                                </Stack>
-                            </Box>
-                        )}
-                    </Stack>
-                </ModalBody>
-                <ModalFooter>
-                    <Button colorScheme="blue" onClick={handleClose}>
-                        Cerrar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                                            <Field.Root>
+                                                <Field.Label>{"Ingrese el token de confirmaci\u00F3n:"}</Field.Label>
+                                                <Input
+                                                    value={inputToken}
+                                                    onValueChange={(e) => setInputToken(e.target.value)}
+                                                    placeholder="Ingrese el token de 4 d\u00EDgitos"
+                                                />
+                                            </Field.Root>
+
+                                            <Button
+                                                colorPalette="red"
+                                                onClick={handleCancel}
+                                                loading={cancelLoading}
+                                                loadingText="Cancelando..."
+                                                disabled={inputToken !== randomToken}
+                                            >
+                                                {"Cancelar orden de producci\u00F3n"}
+                                            </Button>
+                                        </Stack>
+                                    </Box>
+                                )}
+                            </Stack>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button colorPalette="blue" onClick={handleClose}>
+                                Cerrar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

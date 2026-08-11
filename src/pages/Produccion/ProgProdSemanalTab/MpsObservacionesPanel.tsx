@@ -1,18 +1,17 @@
 import { useMemo, useState } from "react";
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
-    Select,
+    NativeSelect,
     Spinner,
     Text,
     Textarea,
     VStack,
+    Field,
 } from "@chakra-ui/react";
 import type {
     MpsSemanalDraftDTO,
@@ -211,54 +210,56 @@ export default function MpsObservacionesPanel({
                     </Text>
                 </Box>
                 <Flex gap={2} wrap="wrap">
-                    <Badge colorScheme={counts.total > 0 ? "teal" : "gray"}>{counts.total} total</Badge>
-                    {counts.abiertas > 0 && <Badge colorScheme="orange">{counts.abiertas} abiertas</Badge>}
-                    {counts.atendidas > 0 && <Badge colorScheme="blue">{counts.atendidas} atendidas</Badge>}
-                    {counts.cerradas > 0 && <Badge colorScheme="green">{counts.cerradas} cerradas</Badge>}
+                    <Badge colorPalette={counts.total > 0 ? "teal" : "gray"}>{counts.total} total</Badge>
+                    {counts.abiertas > 0 && <Badge colorPalette="orange">{counts.abiertas} abiertas</Badge>}
+                    {counts.atendidas > 0 && <Badge colorPalette="blue">{counts.atendidas} atendidas</Badge>}
+                    {counts.cerradas > 0 && <Badge colorPalette="green">{counts.cerradas} cerradas</Badge>}
                 </Flex>
             </Flex>
 
             {!mps ? (
-                <Alert status="info" borderRadius="md">
-                    <AlertIcon />
+                <Alert.Root status="info" borderRadius="md">
+                    <Alert.Indicator />
                     <Text fontSize="sm">Guarde el MPS para recibir observaciones.</Text>
-                </Alert>
+                </Alert.Root>
             ) : (
-                <VStack align="stretch" spacing={4}>
+                <VStack align="stretch" gap={4}>
                     {canCreate && (
                         <Box p={3} bg="gray.50" borderRadius="md" borderWidth="1px" borderColor="gray.200">
-                            <VStack align="stretch" spacing={3}>
-                                <FormControl>
-                                    <FormLabel fontSize="sm">Tipo de observacion</FormLabel>
-                                    <Select
-                                        value={newTipo}
-                                        onChange={(event) => setNewTipo(event.target.value as MpsSemanalObservacionTipo)}
-                                        bg="white"
-                                    >
-                                        {OBSERVACION_TIPO_OPTIONS.map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                                <FormControl>
-                                    <FormLabel fontSize="sm">Nueva observacion</FormLabel>
+                            <VStack align="stretch" gap={3}>
+                                <Field.Root>
+                                    <Field.Label fontSize="sm">Tipo de observacion</Field.Label>
+                                    <NativeSelect.Root>
+                                        <NativeSelect.Field
+                                            value={newTipo}
+                                            onValueChange={(event) => setNewTipo(event.target.value as MpsSemanalObservacionTipo)}
+                                            bg="white">
+                                            {OBSERVACION_TIPO_OPTIONS.map((option) => (
+                                                <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </NativeSelect.Field>
+                                        <NativeSelect.Indicator />
+                                    </NativeSelect.Root>
+                                </Field.Root>
+                                <Field.Root>
+                                    <Field.Label fontSize="sm">Nueva observacion</Field.Label>
                                     <Textarea
                                         value={newMensaje}
-                                        onChange={(event) => setNewMensaje(event.target.value)}
+                                        onValueChange={(event) => setNewMensaje(event.target.value)}
                                         placeholder="Describa el ajuste que debe revisar programacion."
                                         rows={3}
                                         bg="white"
                                     />
-                                </FormControl>
+                                </Field.Root>
                             </VStack>
                             <Flex mt={3} justify="flex-end">
                                 <Button
-                                    colorScheme="orange"
+                                    colorPalette="orange"
                                     onClick={() => void handleCreate()}
-                                    isLoading={pendingAction === "create"}
-                                    isDisabled={!newMensaje.trim()}
+                                    loading={pendingAction === "create"}
+                                    disabled={!newMensaje.trim()}
                                 >
                                     Registrar observacion
                                 </Button>
@@ -267,15 +268,15 @@ export default function MpsObservacionesPanel({
                     )}
 
                     {mode === "aprobacion" && mps.estado !== "BORRADOR" && (
-                        <Alert status="info" borderRadius="md">
-                            <AlertIcon />
+                        <Alert.Root status="info" borderRadius="md">
+                            <Alert.Indicator />
                             <Text fontSize="sm">Este MPS ya no admite nuevas observaciones.</Text>
-                        </Alert>
+                        </Alert.Root>
                     )}
 
                     {error && (
-                        <Alert status="error" borderRadius="md">
-                            <AlertIcon />
+                        <Alert.Root status="error" borderRadius="md">
+                            <Alert.Indicator />
                             <Flex justify="space-between" align="center" gap={3} flex="1" wrap="wrap">
                                 <Text fontSize="sm">{error}</Text>
                                 {onRetry && (
@@ -284,7 +285,7 @@ export default function MpsObservacionesPanel({
                                     </Button>
                                 )}
                             </Flex>
-                        </Alert>
+                        </Alert.Root>
                     )}
 
                     {isLoading ? (
@@ -297,7 +298,7 @@ export default function MpsObservacionesPanel({
                             <Text color="gray.500" fontSize="sm">No hay observaciones registradas para este MPS.</Text>
                         </Box>
                     ) : (
-                        <VStack align="stretch" spacing={3}>
+                        <VStack align="stretch" gap={3}>
                             {observaciones.map((observacion) => {
                                 const responseValue = respuestas[observacion.observacionId] ?? "";
                                 const attendDisabled = hasUnsavedChanges || !responseValue.trim();
@@ -313,13 +314,13 @@ export default function MpsObservacionesPanel({
                                         <Flex justify="space-between" align="start" gap={3} wrap="wrap">
                                             <Box minW={0}>
                                                 <Flex gap={2} wrap="wrap">
-                                                    <Badge colorScheme={getTipoColorScheme(observacion.tipo)}>
+                                                    <Badge colorPalette={getTipoColorScheme(observacion.tipo)}>
                                                         {getTipoLabel(observacion.tipo)}
                                                     </Badge>
-                                                    <Badge colorScheme={getEstadoColorScheme(observacion.estado)}>
+                                                    <Badge colorPalette={getEstadoColorScheme(observacion.estado)}>
                                                         {getEstadoLabel(observacion.estado)}
                                                     </Badge>
-                                                    <Badge colorScheme="purple">Revision {observacion.revisionMps}</Badge>
+                                                    <Badge colorPalette="purple">Revision {observacion.revisionMps}</Badge>
                                                 </Flex>
                                                 <Text mt={2} whiteSpace="pre-line" color="gray.800">
                                                     {observacion.mensaje}
@@ -347,31 +348,31 @@ export default function MpsObservacionesPanel({
                                         {canAttend && observacion.estado === "ABIERTA" && (
                                             <Box mt={3}>
                                                 {hasUnsavedChanges && (
-                                                    <Alert status="warning" borderRadius="md" mb={3}>
-                                                        <AlertIcon />
+                                                    <Alert.Root status="warning" borderRadius="md" mb={3}>
+                                                        <Alert.Indicator />
                                                         <Text fontSize="sm">
                                                             Guarde primero el borrador corregido antes de marcar la observacion como atendida.
                                                         </Text>
-                                                    </Alert>
+                                                    </Alert.Root>
                                                 )}
-                                                <FormControl>
-                                                    <FormLabel fontSize="sm">Respuesta de correccion</FormLabel>
+                                                <Field.Root>
+                                                    <Field.Label fontSize="sm">Respuesta de correccion</Field.Label>
                                                     <Textarea
                                                         value={responseValue}
-                                                        onChange={(event) => setRespuestas((current) => ({
+                                                        onValueChange={(event) => setRespuestas((current) => ({
                                                             ...current,
                                                             [observacion.observacionId]: event.target.value,
                                                         }))}
                                                         placeholder="Describa la correccion realizada."
                                                         rows={3}
                                                     />
-                                                </FormControl>
+                                                </Field.Root>
                                                 <Flex mt={3} justify="flex-end">
                                                     <Button
-                                                        colorScheme="blue"
+                                                        colorPalette="blue"
                                                         onClick={() => void handleAttend(observacion.observacionId)}
-                                                        isLoading={pendingAction === `attend-${observacion.observacionId}`}
-                                                        isDisabled={attendDisabled}
+                                                        loading={pendingAction === `attend-${observacion.observacionId}`}
+                                                        disabled={attendDisabled}
                                                     >
                                                         Marcar atendida
                                                     </Button>
@@ -382,9 +383,9 @@ export default function MpsObservacionesPanel({
                                         {canClose && observacion.estado === "ATENDIDA" && (
                                             <Flex mt={3} justify="flex-end">
                                                 <Button
-                                                    colorScheme="green"
+                                                    colorPalette="green"
                                                     onClick={() => void handleClose(observacion.observacionId)}
-                                                    isLoading={pendingAction === `close-${observacion.observacionId}`}
+                                                    loading={pendingAction === `close-${observacion.observacionId}`}
                                                 >
                                                     Aceptar correccion
                                                 </Button>

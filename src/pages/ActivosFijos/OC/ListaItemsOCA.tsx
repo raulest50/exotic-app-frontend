@@ -1,12 +1,24 @@
 // components/ListaItemsActivos.tsx
 import {
-    Table, Thead, Tbody, Tr, Th, Td,
-    Input, NumberInput, NumberInputField,
-    Button, IconButton, Flex, Text, Tfoot
+    Steps,
+    Table,
+    Thead,
+    Tbody,
+    Tr,
+    Th,
+    Td,
+    Input,
+    NumberInput,
+    NumberInputField,
+    Button,
+    IconButton,
+    Flex,
+    Text,
+    Tfoot,
 } from "@chakra-ui/react";
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import {ItemOrdenCompraActivo} from "../types.tsx"
 import {Dispatch, FC, SetStateAction, useMemo, useState} from "react";
+import { LuPlus, LuTrash2 } from 'react-icons/lu';
 
 interface Props {
     items: ItemOrdenCompraActivo[];
@@ -84,112 +96,109 @@ const ListaItemsOCA: FC<Props> = ({ items, setItems }) => {
         <Flex direction="column" p="1em" boxShadow="sm" mb="4">
             <Flex justify="space-between" mb="2">
                 <Text fontWeight="bold">Items Activos</Text>
-                <Button size="sm" leftIcon={<AddIcon />} onClick={addRow}>
-                    Agregar activo
-                </Button>
+                <Button size="sm" onClick={addRow}><LuPlus />Agregar activo
+                                    </Button>
             </Flex>
 
-            <Table variant="striped" size="sm">
-                <Thead>
-                    <Tr>
-                        <Th w={"35%"}>Descripción</Th>
-                        <Th w={"12%"} isNumeric>Precio</Th>
-                        <Th w={"10%"} isNumeric>IVA (%)</Th>
-                        <Th w={"12%"} isNumeric>IVA ($)</Th>
-                        <Th w={"10%"} isNumeric>Cantidad</Th>
-                        <Th w={"15%"} isNumeric>Subtotal</Th>
-                        <Th w={"5%"}>Acción</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
+            <Table.Root variant="striped" size="sm">
+                <Table.Header>
+                    <Table.Row>
+                        <Table.ColumnHeader w={"35%"}>Descripción</Table.ColumnHeader>
+                        <Table.ColumnHeader w={"12%"} textAlign='end'>Precio</Table.ColumnHeader>
+                        <Table.ColumnHeader w={"10%"} textAlign='end'>IVA (%)</Table.ColumnHeader>
+                        <Table.ColumnHeader w={"12%"} textAlign='end'>IVA ($)</Table.ColumnHeader>
+                        <Table.ColumnHeader w={"10%"} textAlign='end'>Cantidad</Table.ColumnHeader>
+                        <Table.ColumnHeader w={"15%"} textAlign='end'>Subtotal</Table.ColumnHeader>
+                        <Table.ColumnHeader w={"5%"}>Acción</Table.ColumnHeader>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {items.map((item, idx) => (
-                        <Tr key={item.itemOrdenId}>
-                            <Td>
+                        <Table.Row key={item.itemOrdenId}>
+                            <Table.Cell>
                                 <Input
                                     size="sm"
                                     value={item.nombre}
-                                    onChange={e =>
+                                    onValueChange={e =>
                                         updateRow(idx, "nombre", e.target.value)
                                     }
                                 />
-                            </Td>
-                            <Td isNumeric>
-                                <NumberInput
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>
+                                <NumberInput.Root
                                     size="sm"
-                                    value={item.precioUnitario}
-                                    onChange={(_, val) => updateRow(idx, "precioUnitario", val)}
+                                    value={String(item.precioUnitario)}
+                                    onValueChange={(_, val) => updateRow(idx, "precioUnitario", val)}
                                     min={0}
                                 >
-                                    <NumberInputField />
-                                </NumberInput>
-                            </Td>
-                            <Td isNumeric>
-                                <NumberInput
+                                    <NumberInput.Input />
+                                </NumberInput.Root>
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>
+                                <NumberInput.Root
                                     size="sm"
-                                    value={item.ivaPercentage}
-                                    onChange={(_, val) => updateRow(idx, "ivaPercentage", val)}
+                                    value={String(item.ivaPercentage)}
+                                    onValueChange={(_, val) => updateRow(idx, "ivaPercentage", val)}
                                     min={0}
                                     max={100}
                                 >
-                                    <NumberInputField />
-                                </NumberInput>
-                            </Td>
-                            <Td isNumeric>
+                                    <NumberInput.Input />
+                                </NumberInput.Root>
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>
                                 {item.ivaValue.toFixed(2)}
-                            </Td>
-                            <Td isNumeric>
-                                <NumberInput
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>
+                                <NumberInput.Root
                                     size="sm"
-                                    value={item.cantidad}
-                                    onChange={(_, val) => updateRow(idx, "cantidad", val)}
+                                    value={String(item.cantidad)}
+                                    onValueChange={(_, val) => updateRow(idx, "cantidad", val)}
                                     min={1}
                                 >
-                                    <NumberInputField />
-                                </NumberInput>
-                            </Td>
-                            <Td isNumeric>{item.subTotal.toFixed(2)}</Td>
-                            <Td>
+                                    <NumberInput.Input />
+                                </NumberInput.Root>
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>{item.subTotal.toFixed(2)}</Table.Cell>
+                            <Table.Cell>
                                 <IconButton
                                     size="xs"
                                     aria-label="Eliminar"
-                                    icon={<DeleteIcon />}
-                                    onClick={() => removeRow(item.itemOrdenId)}
-                                />
-                            </Td>
-                        </Tr>
+                                    onClick={() => removeRow(item.itemOrdenId)}><LuTrash2 /></IconButton>
+                            </Table.Cell>
+                        </Table.Row>
                     ))}
-                </Tbody>
+                </Table.Body>
 
-                <Tfoot>
+                <Table.Footer>
                     {/* Total before IVA */}
-                    <Tr>
-                        <Td colSpan={5} textAlign="right">
+                    <Table.Row>
+                        <Table.Cell colSpan={5} textAlign="right">
                             <strong>Total antes de IVA</strong>
-                        </Td>
-                        <Td isNumeric fontWeight="bold">
+                        </Table.Cell>
+                        <Table.Cell fontWeight="bold" textAlign='end'>
                             {totalBeforeIva.toFixed(2)}
-                        </Td>
-                        <Td />
-                    </Tr>
+                        </Table.Cell>
+                        <Table.Cell />
+                    </Table.Row>
                     {/* Total IVA row */}
-                    <Tr>
-                        <Td colSpan={5} textAlign={"right"}>
+                    <Table.Row>
+                        <Table.Cell colSpan={5} textAlign={"right"}>
                             <strong>Total IVA</strong>
-                        </Td>
-                        <Td isNumeric fontWeight="bold">
+                        </Table.Cell>
+                        <Table.Cell fontWeight="bold" textAlign='end'>
                             {totalIva.toFixed(2)}
-                        </Td>
-                    </Tr>
+                        </Table.Cell>
+                    </Table.Row>
                     {/* Total with IVA */}
-                    <Tr>
-                        <Td colSpan={5} textAlign={"right"}>
+                    <Table.Row>
+                        <Table.Cell colSpan={5} textAlign={"right"}>
                             <strong>Total despues de IVA</strong>
-                        </Td>
-                        <Td isNumeric fontWeight="bold">{totalAfterIva.toFixed(2)}</Td>
-                        <Td />
-                    </Tr>
-                </Tfoot>
-            </Table>
+                        </Table.Cell>
+                        <Table.Cell fontWeight="bold" textAlign='end'>{totalAfterIva.toFixed(2)}</Table.Cell>
+                        <Table.Cell />
+                    </Table.Row>
+                </Table.Footer>
+            </Table.Root>
         </Flex>
     );
 };

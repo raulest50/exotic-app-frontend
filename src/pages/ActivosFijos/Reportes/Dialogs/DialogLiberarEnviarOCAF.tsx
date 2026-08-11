@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalCloseButton,
-    ModalBody,
-    ModalFooter,
+    Steps,
     Button,
     Box,
     Text,
@@ -17,10 +11,12 @@ import {
     Th,
     Td,
     Input,
-    Select,
+    NativeSelect,
     useToast,
     VStack,
-    HStack
+    HStack,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL';
@@ -207,30 +203,30 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
     const renderItems = () => (
         <Box>
             {orden.itemsOrdenCompra && orden.itemsOrdenCompra.length > 0 && (
-                <Table variant='simple' size='sm'>
-                    <Thead>
-                        <Tr>
-                            <Th>ID</Th>
-                            <Th>Descripción</Th>
-                            <Th isNumeric>Cantidad</Th>
-                            <Th isNumeric>Precio Unitario</Th>
-                            <Th isNumeric>IVA</Th>
-                            <Th isNumeric>Subtotal</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+                <Table.Root variant='simple' size='sm'>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>ID</Table.ColumnHeader>
+                            <Table.ColumnHeader>Descripción</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>Cantidad</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>Precio Unitario</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>IVA</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>Subtotal</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {orden.itemsOrdenCompra.map(item => (
-                            <Tr key={item.itemOrdenId}>
-                                <Td>{item.itemOrdenId}</Td>
-                                <Td>{item.nombre}</Td>
-                                <Td isNumeric>{item.cantidad}</Td>
-                                <Td isNumeric>{item.precioUnitario}</Td>
-                                <Td isNumeric>{item.ivaValue}</Td>
-                                <Td isNumeric>{item.subTotal}</Td>
-                            </Tr>
+                            <Table.Row key={item.itemOrdenId}>
+                                <Table.Cell>{item.itemOrdenId}</Table.Cell>
+                                <Table.Cell>{item.nombre}</Table.Cell>
+                                <Table.Cell textAlign='end'>{item.cantidad}</Table.Cell>
+                                <Table.Cell textAlign='end'>{item.precioUnitario}</Table.Cell>
+                                <Table.Cell textAlign='end'>{item.ivaValue}</Table.Cell>
+                                <Table.Cell textAlign='end'>{item.subTotal}</Table.Cell>
+                            </Table.Row>
                         ))}
-                    </Tbody>
-                </Table>
+                    </Table.Body>
+                </Table.Root>
             )}
         </Box>
     );
@@ -243,8 +239,8 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
                     {renderItems()}
                     <VStack mt={4} align='center'>
                         <Text fontWeight='bold'>Código: {randomCode}</Text>
-                        <Input maxW='200px' value={inputCode} onChange={(e)=>setInputCode(e.target.value)} placeholder='Digite código'/>
-                        <Button colorScheme='green' onClick={handleLiberar}>Liberar Orden</Button>
+                        <Input maxW='200px' value={inputCode} onValueChange={(e)=>setInputCode(e.target.value)} placeholder='Digite código'/>
+                        <Button colorPalette='green' onClick={handleLiberar}>Liberar Orden</Button>
                     </VStack>
                 </>
             );
@@ -257,12 +253,17 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
                     <VStack mt={4} align='center'>
                         <Text fontWeight='bold'>Código: {randomCode}</Text>
                         <HStack>
-                            <Select value={tipoEnvio} onChange={e=>setTipoEnvio(e.target.value as TipoEnvio)}>
-                                <option value={TipoEnvio.MANUAL}>{TipoEnvio.MANUAL}</option>
-                                {hasEmail() && <option value={TipoEnvio.EMAIL}>CORREO ELECTRÓNICO</option>}
-                            </Select>
-                            <Input maxW='200px' value={inputCode} onChange={e=>setInputCode(e.target.value)} placeholder='Digite código'/>
-                            <Button colorScheme='green' onClick={handleEnviar} isLoading={isLoading} loadingText='Enviando'>Enviar a Proveedor</Button>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    value={tipoEnvio}
+                                    onValueChange={e=>setTipoEnvio(e.target.value as TipoEnvio)}>
+                                    <option value={TipoEnvio.MANUAL}>{TipoEnvio.MANUAL}</option>
+                                    {hasEmail() && <option value={TipoEnvio.EMAIL}>CORREO ELECTRÓNICO</option>}
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
+                            <Input maxW='200px' value={inputCode} onValueChange={e=>setInputCode(e.target.value)} placeholder='Digite código'/>
+                            <Button colorPalette='green' onClick={handleEnviar} loading={isLoading} loadingText='Enviando'>Enviar a Proveedor</Button>
                         </HStack>
                     </VStack>
                 </>
@@ -276,17 +277,27 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size={['auto','4xl']} scrollBehavior='inside'>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Actualizar Estado Orden Compra AF</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>{renderContent()}</ModalBody>
-                <ModalFooter>
-                    <Button colorScheme='blue' onClick={onClose}>Cerrar</Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+        <Dialog.Root open={isOpen} size={['auto','4xl']} scrollBehavior='inside' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
+
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Actualizar Estado Orden Compra AF</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>{renderContent()}</Dialog.Body>
+                        <Dialog.Footer>
+                            <Button colorPalette='blue' onClick={onClose}>Cerrar</Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 };
 

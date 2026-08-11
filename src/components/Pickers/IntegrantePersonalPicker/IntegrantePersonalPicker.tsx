@@ -1,20 +1,12 @@
 import { type KeyboardEvent, useEffect, useState } from 'react';
 import {
+    Steps,
     Badge,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     HStack,
     Input,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     Table,
     Tbody,
     Td,
@@ -24,8 +16,10 @@ import {
     Tr,
     useToast,
     VStack,
+    Field,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
-import { SearchIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import {
@@ -33,6 +27,7 @@ import {
     getEstadoIntegranteText,
     IntegrantePersonal,
 } from '../../../pages/Personal/types.tsx';
+import { LuSearch } from 'react-icons/lu';
 
 interface IntegrantePersonalPickerProps {
     isOpen: boolean;
@@ -131,116 +126,123 @@ const IntegrantePersonalPicker = ({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="5xl">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Seleccionar integrante</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <VStack spacing={4}>
-                        <FormControl>
-                            <FormLabel>Buscar integrante</FormLabel>
-                            <HStack>
-                                <Input
-                                    value={searchText}
-                                    onChange={(e) => setSearchText(e.target.value)}
-                                    onKeyDown={onKeyPressInputBuscar}
-                                    placeholder="Ingrese cédula, nombre o apellido"
-                                    isDisabled={isLoading}
-                                />
-                                <Button
-                                    leftIcon={<SearchIcon />}
-                                    colorScheme="blue"
-                                    onClick={handleSearch}
-                                    isLoading={isLoading}
-                                    loadingText="Buscando"
-                                >
-                                    Buscar
-                                </Button>
-                            </HStack>
-                        </FormControl>
-                        <Box w="full" overflowX="auto">
-                            {integrantes.length > 0 ? (
-                                <>
-                                    <Table variant="simple" size="sm">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>Cédula</Th>
-                                                <Th>Nombres</Th>
-                                                <Th>Apellidos</Th>
-                                                <Th>Cargo</Th>
-                                                <Th>Departamento</Th>
-                                                <Th>Estado</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
-                                            {currentIntegrantes.map((integrante) => (
-                                                <Tr
-                                                    key={integrante.id}
-                                                    onClick={() => setSelectedIntegranteId(integrante.id)}
-                                                    bg={selectedIntegranteId === integrante.id ? 'teal.100' : 'transparent'}
-                                                    _hover={{ bg: 'gray.100', cursor: 'pointer' }}
-                                                >
-                                                    <Td>{integrante.id}</Td>
-                                                    <Td>{integrante.nombres}</Td>
-                                                    <Td>{integrante.apellidos}</Td>
-                                                    <Td>{integrante.cargo ?? '-'}</Td>
-                                                    <Td>{integrante.departamento ?? '-'}</Td>
-                                                    <Td>
-                                                        <Badge colorScheme="green">
-                                                            {getEstadoIntegranteText(integrante.estado)}
-                                                        </Badge>
-                                                    </Td>
-                                                </Tr>
-                                            ))}
-                                        </Tbody>
-                                    </Table>
+        <Dialog.Root open={isOpen} size='xl' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                                    {totalPages > 1 && (
-                                        <Flex justifyContent="center" mt={4}>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => goToPage(currentPage - 1)}
-                                                isDisabled={currentPage === 1}
-                                                mr={2}
-                                            >
-                                                Anterior
-                                            </Button>
-                                            <Text alignSelf="center" mx={2}>
-                                                Página {currentPage} de {totalPages}
-                                            </Text>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => goToPage(currentPage + 1)}
-                                                isDisabled={currentPage === totalPages}
-                                                ml={2}
-                                            >
-                                                Siguiente
-                                            </Button>
-                                        </Flex>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Seleccionar integrante</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <VStack gap={4}>
+                                <Field.Root>
+                                    <Field.Label>Buscar integrante</Field.Label>
+                                    <HStack>
+                                        <Input
+                                            value={searchText}
+                                            onValueChange={(e) => setSearchText(e.target.value)}
+                                            onKeyDown={onKeyPressInputBuscar}
+                                            placeholder="Ingrese cédula, nombre o apellido"
+                                            disabled={isLoading}
+                                        />
+                                        <Button
+                                            colorPalette="blue"
+                                            onClick={handleSearch}
+                                            loading={isLoading}
+                                            loadingText="Buscando"><LuSearch />Buscar
+                                                                            </Button>
+                                    </HStack>
+                                </Field.Root>
+                                <Box w="full" overflowX="auto">
+                                    {integrantes.length > 0 ? (
+                                        <>
+                                            <Table.Root variant="simple" size="sm">
+                                                <Table.Header>
+                                                    <Table.Row>
+                                                        <Table.ColumnHeader>Cédula</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Nombres</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Apellidos</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Cargo</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Departamento</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                                    </Table.Row>
+                                                </Table.Header>
+                                                <Table.Body>
+                                                    {currentIntegrantes.map((integrante) => (
+                                                        <Table.Row
+                                                            key={integrante.id}
+                                                            onClick={() => setSelectedIntegranteId(integrante.id)}
+                                                            bg={selectedIntegranteId === integrante.id ? 'teal.100' : 'transparent'}
+                                                            _hover={{ bg: 'gray.100', cursor: 'pointer' }}
+                                                        >
+                                                            <Table.Cell>{integrante.id}</Table.Cell>
+                                                            <Table.Cell>{integrante.nombres}</Table.Cell>
+                                                            <Table.Cell>{integrante.apellidos}</Table.Cell>
+                                                            <Table.Cell>{integrante.cargo ?? '-'}</Table.Cell>
+                                                            <Table.Cell>{integrante.departamento ?? '-'}</Table.Cell>
+                                                            <Table.Cell>
+                                                                <Badge colorPalette="green">
+                                                                    {getEstadoIntegranteText(integrante.estado)}
+                                                                </Badge>
+                                                            </Table.Cell>
+                                                        </Table.Row>
+                                                    ))}
+                                                </Table.Body>
+                                            </Table.Root>
+
+                                            {totalPages > 1 && (
+                                                <Flex justifyContent="center" mt={4}>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => goToPage(currentPage - 1)}
+                                                        disabled={currentPage === 1}
+                                                        mr={2}
+                                                    >
+                                                        Anterior
+                                                    </Button>
+                                                    <Text alignSelf="center" mx={2}>
+                                                        Página {currentPage} de {totalPages}
+                                                    </Text>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => goToPage(currentPage + 1)}
+                                                        disabled={currentPage === totalPages}
+                                                        ml={2}
+                                                    >
+                                                        Siguiente
+                                                    </Button>
+                                                </Flex>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <Text textAlign="center">No hay integrantes activos para mostrar</Text>
                                     )}
-                                </>
-                            ) : (
-                                <Text textAlign="center">No hay integrantes activos para mostrar</Text>
-                            )}
-                        </Box>
-                    </VStack>
-                </ModalBody>
-                <ModalFooter>
-                    <Button
-                        colorScheme="teal"
-                        mr={3}
-                        onClick={handleConfirm}
-                        isDisabled={!selectedIntegrante}
-                    >
-                        Confirmar
-                    </Button>
-                    <Button variant="ghost" onClick={handleCancel}>
-                        Cancelar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                                </Box>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button
+                                colorPalette="teal"
+                                mr={3}
+                                onClick={handleConfirm}
+                                disabled={!selectedIntegrante}
+                            >
+                                Confirmar
+                            </Button>
+                            <Button variant="ghost" onClick={handleCancel}>
+                                Cancelar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 };
 

@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
+    Steps,
     Button,
     Text,
     Input,
@@ -17,7 +12,9 @@ import {
     Tr,
     Th,
     Td,
-    Tfoot
+    Tfoot,
+    Dialog,
+    Portal,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL';
@@ -84,72 +81,82 @@ const DialogCancelarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onOrdenCa
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Confirmar Cancelación</ModalHeader>
-                <ModalBody>
-                    {/* Detalles de la orden */}
-                    <Box mb={4}>
-                        <Text><strong>ID:</strong> {orden.ordenCompraActivoId}</Text>
-                        <Text><strong>Fecha Emisión:</strong> {orden.fechaEmision ? new Date(orden.fechaEmision).toLocaleString() : '-'}</Text>
-                        <Text><strong>Fecha Vencimiento:</strong> {orden.fechaVencimiento ? new Date(orden.fechaVencimiento).toLocaleDateString() : '-'}</Text>
-                        <Text><strong>Proveedor:</strong> {orden.proveedor?.nombre ?? '-'}</Text>
-                        <Text><strong>Total a Pagar:</strong> {formatCOP(orden.totalPagar)}</Text>
-                        <Text><strong>Estado:</strong> {getEstadoOCAFText(orden.estado)}</Text>
-                    </Box>
+        <Dialog.Root open={isOpen} size='xl' scrollBehavior="inside" onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                    {/* Tabla de items */}
-                    {orden.itemsOrdenCompra && orden.itemsOrdenCompra.length > 0 ? (
-                        <Table variant='simple' size='sm' mb={4}>
-                            <Thead>
-                                <Tr>
-                                    <Th>Descripción</Th>
-                                    <Th isNumeric>Cantidad</Th>
-                                    <Th isNumeric>Precio Unitario</Th>
-                                    <Th isNumeric>Subtotal</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
-                                {orden.itemsOrdenCompra.map(item => (
-                                    <Tr key={item.itemOrdenId}>
-                                        <Td>{item.nombre}</Td>
-                                        <Td isNumeric>{item.cantidad}</Td>
-                                        <Td isNumeric>{formatCOP(item.precioUnitario)}</Td>
-                                        <Td isNumeric>{formatCOP(item.subTotal)}</Td>
-                                    </Tr>
-                                ))}
-                            </Tbody>
-                            <Tfoot>
-                                <Tr>
-                                    <Td colSpan={3} textAlign='right'><strong>Total a Pagar:</strong></Td>
-                                    <Td isNumeric>{formatCOP(orden.totalPagar)}</Td>
-                                </Tr>
-                            </Tfoot>
-                        </Table>
-                    ) : (
-                        <Text mb={4}>No hay items en esta orden.</Text>
-                    )}
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Confirmar Cancelación</Dialog.Header>
+                        <Dialog.Body>
+                            {/* Detalles de la orden */}
+                            <Box mb={4}>
+                                <Text><strong>ID:</strong> {orden.ordenCompraActivoId}</Text>
+                                <Text><strong>Fecha Emisión:</strong> {orden.fechaEmision ? new Date(orden.fechaEmision).toLocaleString() : '-'}</Text>
+                                <Text><strong>Fecha Vencimiento:</strong> {orden.fechaVencimiento ? new Date(orden.fechaVencimiento).toLocaleDateString() : '-'}</Text>
+                                <Text><strong>Proveedor:</strong> {orden.proveedor?.nombre ?? '-'}</Text>
+                                <Text><strong>Total a Pagar:</strong> {formatCOP(orden.totalPagar)}</Text>
+                                <Text><strong>Estado:</strong> {getEstadoOCAFText(orden.estado)}</Text>
+                            </Box>
 
-                    {/* Confirmación de cancelación */}
-                    <Text mb={4}>
-                        Para confirmar la cancelación de la orden de compra, digite los 4 dígitos que ve a continuación y presione "Cancelar Orden".
-                    </Text>
-                    <Text fontWeight="bold" mb={4}>Código: {randomCode}</Text>
-                    <Input
-                        placeholder="Ingrese el código"
-                        value={inputCode}
-                        onChange={(e) => setInputCode(e.target.value)}
-                    />
-                </ModalBody>
-                <ModalFooter>
-                    <Button colorScheme='red' mr={3} onClick={handleCancelar}>
-                        Cancelar Orden
-                    </Button>
-                    <Button variant='ghost' onClick={onClose}>Atrás</Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                            {/* Tabla de items */}
+                            {orden.itemsOrdenCompra && orden.itemsOrdenCompra.length > 0 ? (
+                                <Table.Root variant='simple' size='sm' mb={4}>
+                                    <Table.Header>
+                                        <Table.Row>
+                                            <Table.ColumnHeader>Descripción</Table.ColumnHeader>
+                                            <Table.ColumnHeader textAlign='end'>Cantidad</Table.ColumnHeader>
+                                            <Table.ColumnHeader textAlign='end'>Precio Unitario</Table.ColumnHeader>
+                                            <Table.ColumnHeader textAlign='end'>Subtotal</Table.ColumnHeader>
+                                        </Table.Row>
+                                    </Table.Header>
+                                    <Table.Body>
+                                        {orden.itemsOrdenCompra.map(item => (
+                                            <Table.Row key={item.itemOrdenId}>
+                                                <Table.Cell>{item.nombre}</Table.Cell>
+                                                <Table.Cell textAlign='end'>{item.cantidad}</Table.Cell>
+                                                <Table.Cell textAlign='end'>{formatCOP(item.precioUnitario)}</Table.Cell>
+                                                <Table.Cell textAlign='end'>{formatCOP(item.subTotal)}</Table.Cell>
+                                            </Table.Row>
+                                        ))}
+                                    </Table.Body>
+                                    <Table.Footer>
+                                        <Table.Row>
+                                            <Table.Cell colSpan={3} textAlign='right'><strong>Total a Pagar:</strong></Table.Cell>
+                                            <Table.Cell textAlign='end'>{formatCOP(orden.totalPagar)}</Table.Cell>
+                                        </Table.Row>
+                                    </Table.Footer>
+                                </Table.Root>
+                            ) : (
+                                <Text mb={4}>No hay items en esta orden.</Text>
+                            )}
+
+                            {/* Confirmación de cancelación */}
+                            <Text mb={4}>
+                                Para confirmar la cancelación de la orden de compra, digite los 4 dígitos que ve a continuación y presione "Cancelar Orden".
+                            </Text>
+                            <Text fontWeight="bold" mb={4}>Código: {randomCode}</Text>
+                            <Input
+                                placeholder="Ingrese el código"
+                                value={inputCode}
+                                onValueChange={(e) => setInputCode(e.target.value)}
+                            />
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button colorPalette='red' mr={3} onClick={handleCancelar}>
+                                Cancelar Orden
+                            </Button>
+                            <Button variant='ghost' onClick={onClose}>Atrás</Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 };
 

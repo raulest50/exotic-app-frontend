@@ -1,18 +1,12 @@
 import {
+    Steps,
     Badge,
     Box,
     Button,
     Flex,
     Heading,
     IconButton,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
-    Select,
+    NativeSelect,
     Spinner,
     Table,
     TableContainer,
@@ -24,8 +18,9 @@ import {
     Tr,
     VStack,
     useToast,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
-import { DeleteIcon } from "@chakra-ui/icons";
 import { useEffect, useMemo, useState } from "react";
 import CustomDecimalInput from "../../../components/CustomDecimalInput/CustomDecimalInput";
 import { getLotesDisponiblesDispensacionV2 } from "./DispensacionV2Service";
@@ -35,6 +30,7 @@ import type {
     DispensacionV2OrdenDTO,
 } from "./DispensacionV2Types";
 import { formatDispensacionV2Number } from "./DispensacionV2Types";
+import { LuTrash2 } from 'react-icons/lu';
 
 interface DispensacionV2DetalleLotesModalProps {
     orden: DispensacionV2OrdenDTO | null;
@@ -159,168 +155,178 @@ export default function DispensacionV2DetalleLotesModal({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="6xl" isCentered scrollBehavior="inside">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Detalle de lotes origen</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody pb={6}>
-                    {draft ? (
-                        <VStack align="stretch" spacing={5}>
-                            <Box>
-                                <Heading size="sm">
-                                    OP {draft.ordenProduccionId} - {draft.loteAsignado ?? "Sin lote"}
-                                </Heading>
-                                <Text fontSize="sm" color="app.textMuted">
-                                    {draft.productoTerminadoNombre} ({draft.productoTerminadoId})
-                                </Text>
-                            </Box>
+        <Dialog.Root open={isOpen} size='xl' placement='center' scrollBehavior="inside" onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                            {materialesEditables.length === 0 ? (
-                                <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50">
-                                    <Text fontSize="sm" color="app.textMuted">
-                                        Esta OP no tiene materiales inventariables marcados para dispensar.
-                                    </Text>
-                                </Box>
-                            ) : null}
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Detalle de lotes origen</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body pb={6}>
+                            {draft ? (
+                                <VStack align="stretch" gap={5}>
+                                    <Box>
+                                        <Heading size="sm">
+                                            OP {draft.ordenProduccionId} - {draft.loteAsignado ?? "Sin lote"}
+                                        </Heading>
+                                        <Text fontSize="sm" color="app.textMuted">
+                                            {draft.productoTerminadoNombre} ({draft.productoTerminadoId})
+                                        </Text>
+                                    </Box>
 
-                            {materialesEditables.map((material) => {
-                                const disponibles = lotesDisponibles[material.productoId] ?? [];
-                                const lotesSeleccionados = material.lotesOrigen ?? [];
-                                const selectedIds = new Set(lotesSeleccionados.map((lote) => lote.loteId));
-                                const options = disponibles.filter((lote) => !selectedIds.has(lote.loteId));
-                                const totalLotes = lotesSeleccionados.reduce((sum, lote) => sum + lote.cantidadAsignada, 0);
+                                    {materialesEditables.length === 0 ? (
+                                        <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50">
+                                            <Text fontSize="sm" color="app.textMuted">
+                                                Esta OP no tiene materiales inventariables marcados para dispensar.
+                                            </Text>
+                                        </Box>
+                                    ) : null}
 
-                                return (
-                                    <Box key={material.productoId} borderWidth="1px" borderRadius="md" p={4}>
-                                        <Flex justify="space-between" align="start" gap={3} wrap="wrap" mb={3}>
-                                            <Box>
-                                                <Heading size="xs">{material.productoNombre}</Heading>
-                                                <Text fontSize="xs" color="app.textMuted">{material.productoId}</Text>
-                                            </Box>
-                                            <Flex gap={2} wrap="wrap">
-                                                <Badge colorScheme="purple">
-                                                    Objetivo {formatDispensacionV2Number(material.cantidadADispensar)} {material.tipoUnidades}
-                                                </Badge>
-                                                <Badge colorScheme={Math.abs(totalLotes - material.cantidadADispensar) > 0.01 ? "orange" : "green"}>
-                                                    Lotes {formatDispensacionV2Number(totalLotes)} {material.tipoUnidades}
-                                                </Badge>
-                                            </Flex>
-                                        </Flex>
+                                    {materialesEditables.map((material) => {
+                                        const disponibles = lotesDisponibles[material.productoId] ?? [];
+                                        const lotesSeleccionados = material.lotesOrigen ?? [];
+                                        const selectedIds = new Set(lotesSeleccionados.map((lote) => lote.loteId));
+                                        const options = disponibles.filter((lote) => !selectedIds.has(lote.loteId));
+                                        const totalLotes = lotesSeleccionados.reduce((sum, lote) => sum + lote.cantidadAsignada, 0);
 
-                                        <TableContainer>
-                                            <Table size="sm">
-                                                <Thead>
-                                                    <Tr>
-                                                        <Th>Lote</Th>
-                                                        <Th>Vence</Th>
-                                                        <Th isNumeric>Disponible</Th>
-                                                        <Th isNumeric>Cantidad</Th>
-                                                        <Th textAlign="center">Acción</Th>
-                                                    </Tr>
-                                                </Thead>
-                                                <Tbody>
-                                                    {lotesSeleccionados.map((lote) => (
-                                                        <Tr key={lote.loteId}>
-                                                            <Td>
-                                                                <Text fontSize="sm">{lote.batchNumber}</Text>
-                                                                <Badge size="sm" colorScheme={lote.sugerido ? "teal" : "gray"}>
-                                                                    {lote.sugerido ? "Sugerido" : "Manual"}
-                                                                </Badge>
-                                                            </Td>
-                                                            <Td>{formatDate(lote.expirationDate)}</Td>
-                                                            <Td isNumeric>{formatDispensacionV2Number(lote.cantidadDisponible)}</Td>
-                                                            <Td isNumeric>
-                                                                <Flex justify="end">
-                                                                    <CustomDecimalInput
-                                                                        value={lote.cantidadAsignada}
-                                                                        onChange={(value) => handleCantidadLote(material.productoId, lote.loteId, value)}
-                                                                        min={0}
-                                                                        size="sm"
-                                                                        width="110px"
-                                                                        maxDecimals={4}
-                                                                    />
-                                                                </Flex>
-                                                            </Td>
-                                                            <Td>
-                                                                <Flex justify="center">
-                                                                    <IconButton
-                                                                        aria-label="Quitar lote"
-                                                                        icon={<DeleteIcon />}
-                                                                        size="sm"
-                                                                        variant="ghost"
-                                                                        colorScheme="red"
-                                                                        onClick={() => handleRemoveLote(material.productoId, lote.loteId)}
-                                                                    />
-                                                                </Flex>
-                                                            </Td>
-                                                        </Tr>
-                                                    ))}
-                                                    {lotesSeleccionados.length === 0 ? (
-                                                        <Tr>
-                                                            <Td colSpan={5} textAlign="center" color="app.textMuted">
-                                                                Sin lotes origen seleccionados.
-                                                            </Td>
-                                                        </Tr>
-                                                    ) : null}
-                                                </Tbody>
-                                            </Table>
-                                        </TableContainer>
+                                        return (
+                                            <Box key={material.productoId} borderWidth="1px" borderRadius="md" p={4}>
+                                                <Flex justify="space-between" align="start" gap={3} wrap="wrap" mb={3}>
+                                                    <Box>
+                                                        <Heading size="xs">{material.productoNombre}</Heading>
+                                                        <Text fontSize="xs" color="app.textMuted">{material.productoId}</Text>
+                                                    </Box>
+                                                    <Flex gap={2} wrap="wrap">
+                                                        <Badge colorPalette="purple">
+                                                            Objetivo {formatDispensacionV2Number(material.cantidadADispensar)} {material.tipoUnidades}
+                                                        </Badge>
+                                                        <Badge colorPalette={Math.abs(totalLotes - material.cantidadADispensar) > 0.01 ? "orange" : "green"}>
+                                                            Lotes {formatDispensacionV2Number(totalLotes)} {material.tipoUnidades}
+                                                        </Badge>
+                                                    </Flex>
+                                                </Flex>
 
-                                        <Flex mt={3} gap={2} wrap="wrap" align="center">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => handleLoadLotes(material.productoId)}
-                                                isDisabled={loadingProductoId === material.productoId}
-                                            >
-                                                {loadingProductoId === material.productoId ? <Spinner size="xs" mr={2} /> : null}
-                                                Cargar lotes disponibles
-                                            </Button>
-                                            {disponibles.length > 0 ? (
-                                                <>
-                                                    <Select
-                                                        size="sm"
-                                                        maxW="360px"
-                                                        placeholder="Seleccione lote para agregar"
-                                                        value={selectedLoteId[material.productoId] ?? ""}
-                                                        onChange={(event) => setSelectedLoteId((current) => ({
-                                                            ...current,
-                                                            [material.productoId]: event.target.value,
-                                                        }))}
-                                                    >
-                                                        {options.map((lote) => (
-                                                            <option key={lote.loteId} value={lote.loteId}>
-                                                                {lote.batchNumber} - disp. {formatDispensacionV2Number(lote.cantidadDisponible)}
-                                                            </option>
-                                                        ))}
-                                                    </Select>
+                                                <Table.ScrollArea>
+                                                    <Table.Root size="sm">
+                                                        <Table.Header>
+                                                            <Table.Row>
+                                                                <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                                                                <Table.ColumnHeader>Vence</Table.ColumnHeader>
+                                                                <Table.ColumnHeader textAlign='end'>Disponible</Table.ColumnHeader>
+                                                                <Table.ColumnHeader textAlign='end'>Cantidad</Table.ColumnHeader>
+                                                                <Table.ColumnHeader textAlign="center">Acción</Table.ColumnHeader>
+                                                            </Table.Row>
+                                                        </Table.Header>
+                                                        <Table.Body>
+                                                            {lotesSeleccionados.map((lote) => (
+                                                                <Table.Row key={lote.loteId}>
+                                                                    <Table.Cell>
+                                                                        <Text fontSize="sm">{lote.batchNumber}</Text>
+                                                                        <Badge size="sm" colorPalette={lote.sugerido ? "teal" : "gray"}>
+                                                                            {lote.sugerido ? "Sugerido" : "Manual"}
+                                                                        </Badge>
+                                                                    </Table.Cell>
+                                                                    <Table.Cell>{formatDate(lote.expirationDate)}</Table.Cell>
+                                                                    <Table.Cell textAlign='end'>{formatDispensacionV2Number(lote.cantidadDisponible)}</Table.Cell>
+                                                                    <Table.Cell textAlign='end'>
+                                                                        <Flex justify="end">
+                                                                            <CustomDecimalInput
+                                                                                value={lote.cantidadAsignada}
+                                                                                onChange={(value) => handleCantidadLote(material.productoId, lote.loteId, value)}
+                                                                                min={0}
+                                                                                size="sm"
+                                                                                width="110px"
+                                                                                maxDecimals={4}
+                                                                            />
+                                                                        </Flex>
+                                                                    </Table.Cell>
+                                                                    <Table.Cell>
+                                                                        <Flex justify="center">
+                                                                            <IconButton
+                                                                                aria-label="Quitar lote"
+                                                                                size="sm"
+                                                                                variant="ghost"
+                                                                                colorPalette="red"
+                                                                                onClick={() => handleRemoveLote(material.productoId, lote.loteId)}><LuTrash2 /></IconButton>
+                                                                        </Flex>
+                                                                    </Table.Cell>
+                                                                </Table.Row>
+                                                            ))}
+                                                            {lotesSeleccionados.length === 0 ? (
+                                                                <Table.Row>
+                                                                    <Table.Cell colSpan={5} textAlign="center" color="app.textMuted">
+                                                                        Sin lotes origen seleccionados.
+                                                                    </Table.Cell>
+                                                                </Table.Row>
+                                                            ) : null}
+                                                        </Table.Body>
+                                                    </Table.Root>
+                                                </Table.ScrollArea>
+
+                                                <Flex mt={3} gap={2} wrap="wrap" align="center">
                                                     <Button
                                                         size="sm"
-                                                        colorScheme="teal"
-                                                        onClick={() => handleAddLote(material.productoId)}
-                                                        isDisabled={!selectedLoteId[material.productoId]}
+                                                        variant="outline"
+                                                        onClick={() => handleLoadLotes(material.productoId)}
+                                                        disabled={loadingProductoId === material.productoId}
                                                     >
-                                                        Agregar lote
+                                                        {loadingProductoId === material.productoId ? <Spinner size="xs" mr={2} /> : null}
+                                                        Cargar lotes disponibles
                                                     </Button>
-                                                </>
-                                            ) : null}
-                                        </Flex>
-                                    </Box>
-                                );
-                            })}
-                        </VStack>
-                    ) : null}
-                </ModalBody>
-                <ModalFooter>
-                    <Button variant="ghost" mr={3} onClick={onClose}>
-                        Cancelar
-                    </Button>
-                    <Button colorScheme="teal" onClick={handleSave}>
-                        Guardar detalle
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                                                    {disponibles.length > 0 ? (
+                                                        <>
+                                                            <NativeSelect.Root>
+                                                                <NativeSelect.Field
+                                                                    size="sm"
+                                                                    maxW="360px"
+                                                                    placeholder="Seleccione lote para agregar"
+                                                                    value={selectedLoteId[material.productoId] ?? ""}
+                                                                    onValueChange={(event) => setSelectedLoteId((current) => ({
+                                                                        ...current,
+                                                                        [material.productoId]: event.target.value,
+                                                                    }))}>
+                                                                    {options.map((lote) => (
+                                                                        <option key={lote.loteId} value={lote.loteId}>
+                                                                            {lote.batchNumber} - disp. {formatDispensacionV2Number(lote.cantidadDisponible)}
+                                                                        </option>
+                                                                    ))}
+                                                                </NativeSelect.Field>
+                                                                <NativeSelect.Indicator />
+                                                            </NativeSelect.Root>
+                                                            <Button
+                                                                size="sm"
+                                                                colorPalette="teal"
+                                                                onClick={() => handleAddLote(material.productoId)}
+                                                                disabled={!selectedLoteId[material.productoId]}
+                                                            >
+                                                                Agregar lote
+                                                            </Button>
+                                                        </>
+                                                    ) : null}
+                                                </Flex>
+                                            </Box>
+                                        );
+                                    })}
+                                </VStack>
+                            ) : null}
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button variant="ghost" mr={3} onClick={onClose}>
+                                Cancelar
+                            </Button>
+                            <Button colorPalette="teal" onClick={handleSave}>
+                                Guardar detalle
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

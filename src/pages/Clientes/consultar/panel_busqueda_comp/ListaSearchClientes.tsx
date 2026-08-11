@@ -1,4 +1,4 @@
-import { Box, Table, Thead, Tbody, Tr, Th, Td, Button, Text } from '@chakra-ui/react';
+import { Steps, Box, Table, Thead, Tbody, Tr, Th, Td, Button, Text } from '@chakra-ui/react';
 import { Cliente } from '../../types.tsx';
 
 interface Props{
@@ -9,32 +9,32 @@ interface Props{
 export function ListaSearchClientes({clientes,onVerDetalle}:Props){
     return (
         <Box overflowX='auto' width='100%'>
-            <Table variant='simple' size='sm'>
-                <Thead>
-                    <Tr>
-                        <Th>ID</Th>
-                        <Th>Nombre</Th>
-                        <Th>Correo Electrónico</Th>
-                        <Th>Teléfono</Th>
-                        <Th>Ver Detalle</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
+            <Table.Root variant='simple' size='sm'>
+                <Table.Header>
+                    <Table.Row>
+                        <Table.ColumnHeader>ID</Table.ColumnHeader>
+                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                        <Table.ColumnHeader>Correo Electrónico</Table.ColumnHeader>
+                        <Table.ColumnHeader>Teléfono</Table.ColumnHeader>
+                        <Table.ColumnHeader>Ver Detalle</Table.ColumnHeader>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {clientes.length===0 ? (
-                        <Tr><Td colSpan={5} textAlign='center'><Text py={4}>No se encontraron clientes.</Text></Td></Tr>
+                        <Table.Row><Table.Cell colSpan={5} textAlign='center'><Text py={4}>No se encontraron clientes.</Text></Table.Cell></Table.Row>
                     ) : (
                         clientes.map(c=> (
-                            <Tr key={c.clienteId} _hover={{bg:'app.rowHoverStrong'}}>
-                                <Td>{c.clienteId}</Td>
-                                <Td>{c.nombre}</Td>
-                                <Td>{c.email}</Td>
-                                <Td>{c.telefono}</Td>
-                                <Td><Button size='sm' colorScheme='blue' onClick={()=>onVerDetalle&&onVerDetalle(c)}>Ver Detalle</Button></Td>
-                            </Tr>
+                            <Table.Row key={c.clienteId} _hover={{bg:'app.rowHoverStrong'}}>
+                                <Table.Cell>{c.clienteId}</Table.Cell>
+                                <Table.Cell>{c.nombre}</Table.Cell>
+                                <Table.Cell>{c.email}</Table.Cell>
+                                <Table.Cell>{c.telefono}</Table.Cell>
+                                <Table.Cell><Button size='sm' colorPalette='blue' onClick={()=>onVerDetalle&&onVerDetalle(c)}>Ver Detalle</Button></Table.Cell>
+                            </Table.Row>
                         ))
                     )}
-                </Tbody>
-            </Table>
+                </Table.Body>
+            </Table.Root>
         </Box>
     );
 }

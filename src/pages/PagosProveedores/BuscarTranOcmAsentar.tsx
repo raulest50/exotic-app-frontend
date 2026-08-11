@@ -1,10 +1,9 @@
 import {useState} from 'react';
 import {
+  Steps,
   Flex,
-  FormControl,
-  FormLabel,
   Input,
-  Select,
+  NativeSelect,
   Button,
   Table,
   Thead,
@@ -13,7 +12,8 @@ import {
   Th,
   Td,
   Spinner,
-  useToast
+  useToast,
+  Field,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL.tsx';
@@ -69,66 +69,71 @@ export default function BuscarTranOcmAsentar() {
   return (
     <Flex direction="column" w="full" gap={4}>
       <Flex wrap="wrap" gap={4}>
-        <FormControl w={["100%","200px"]}>
-          <FormLabel>Estado contable</FormLabel>
-          <Select value={estadoContable} onChange={e => setEstadoContable(e.target.value as EstadoContable)}>
-            <option value={EstadoContable.PENDIENTE}>Pendiente</option>
-            <option value={EstadoContable.CONTABILIZADA}>Contabilizada</option>
-            <option value={EstadoContable.NO_APLICA}>No aplica</option>
-          </Select>
-        </FormControl>
-        <FormControl w={["100%","200px"]}>
-          <FormLabel>Fecha inicio</FormLabel>
-          <Input type="date" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} />
-        </FormControl>
-        <FormControl w={["100%","200px"]}>
-          <FormLabel>Fecha fin</FormLabel>
-          <Input type="date" value={fechaFin} onChange={e => setFechaFin(e.target.value)} />
-        </FormControl>
+        <Field.Root w={["100%","200px"]}>
+          <Field.Label>Estado contable</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field
+              value={estadoContable}
+              onValueChange={e => setEstadoContable(e.target.value as EstadoContable)}>
+              <option value={EstadoContable.PENDIENTE}>Pendiente</option>
+              <option value={EstadoContable.CONTABILIZADA}>Contabilizada</option>
+              <option value={EstadoContable.NO_APLICA}>No aplica</option>
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
+        <Field.Root w={["100%","200px"]}>
+          <Field.Label>Fecha inicio</Field.Label>
+          <Input type="date" value={fechaInicio} onValueChange={e => setFechaInicio(e.target.value)} />
+        </Field.Root>
+        <Field.Root w={["100%","200px"]}>
+          <Field.Label>Fecha fin</Field.Label>
+          <Input type="date" value={fechaFin} onValueChange={e => setFechaFin(e.target.value)} />
+        </Field.Root>
         <Flex alignItems="flex-end">
-          <Button colorScheme="blue" onClick={() => handleSearch(0)} isLoading={loading}>
+          <Button colorPalette="blue" onClick={() => handleSearch(0)} loading={loading}>
             Buscar
           </Button>
         </Flex>
       </Flex>
 
       <Flex direction="column" w="full">
-        <Table variant="simple" size="sm">
-          <Thead>
-            <Tr>
-              <Th>ID</Th>
-              <Th>Fecha</Th>
-              <Th>Estado</Th>
-              <Th>Entidad</Th>
-              <Th>ID Entidad</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
+        <Table.Root variant="simple" size="sm">
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeader>ID</Table.ColumnHeader>
+              <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+              <Table.ColumnHeader>Estado</Table.ColumnHeader>
+              <Table.ColumnHeader>Entidad</Table.ColumnHeader>
+              <Table.ColumnHeader>ID Entidad</Table.ColumnHeader>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
             {loading && (
-              <Tr>
-                <Td colSpan={5} textAlign="center">
+              <Table.Row>
+                <Table.Cell colSpan={5} textAlign="center">
                   <Spinner />
-                </Td>
-              </Tr>
+                </Table.Cell>
+              </Table.Row>
             )}
             {!loading && transacciones.length === 0 && (
-              <Tr>
-                <Td colSpan={5} textAlign="center">
+              <Table.Row>
+                <Table.Cell colSpan={5} textAlign="center">
                   No hay resultados
-                </Td>
-              </Tr>
+                </Table.Cell>
+              </Table.Row>
             )}
             {transacciones.map(tran => (
-              <Tr key={tran.transaccionId}>
-                <Td>{tran.transaccionId}</Td>
-                <Td>{new Date(tran.fechaTransaccion).toLocaleString()}</Td>
-                <Td>{tran.estadoContable}</Td>
-                <Td>{tran.tipoEntidadCausante}</Td>
-                <Td>{tran.idEntidadCausante}</Td>
-              </Tr>
+              <Table.Row key={tran.transaccionId}>
+                <Table.Cell>{tran.transaccionId}</Table.Cell>
+                <Table.Cell>{new Date(tran.fechaTransaccion).toLocaleString()}</Table.Cell>
+                <Table.Cell>{tran.estadoContable}</Table.Cell>
+                <Table.Cell>{tran.tipoEntidadCausante}</Table.Cell>
+                <Table.Cell>{tran.idEntidadCausante}</Table.Cell>
+              </Table.Row>
             ))}
-          </Tbody>
-        </Table>
+          </Table.Body>
+        </Table.Root>
         <MyPagination page={page} totalPages={totalPages} loading={loading} handlePageChange={handleSearch} />
       </Flex>
     </Flex>

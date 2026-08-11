@@ -1,26 +1,18 @@
-import { CheckIcon } from "@chakra-ui/icons";
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     GridItem,
     HStack,
     Heading,
     IconButton,
     Input,
-    ListItem,
-    OrderedList,
-    Select,
+    NativeSelect,
     SimpleGrid,
     Spinner,
     Stat,
-    StatHelpText,
-    StatLabel,
-    StatNumber,
     Table,
     Tbody,
     Td,
@@ -31,6 +23,8 @@ import {
     Tr,
     VStack,
     useToast,
+    Field,
+    List,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -59,6 +53,7 @@ import SemioterBriefCard from "../../components/SemioterBriefCard.tsx";
 import BandejaBusqueda from "../CodificarSemioTermiTab/StepTwo/BandejaBusqueda.tsx";
 import BandejaSeleccion from "../CodificarSemioTermiTab/StepTwo/BandejaSeleccion.tsx";
 import PackagingTerminadoDefiner from "../consulta/ModSemioTerMFversions/StepThree/PackagingTerminadoDefiner.tsx";
+import { LuCheck } from 'react-icons/lu';
 
 const endPoints = new EndPointsURL();
 
@@ -517,7 +512,7 @@ export default function CrearDesdePlantillaTab() {
     };
 
     const renderStepHeader = () => (
-        <HStack spacing={3} wrap="wrap">
+        <HStack gap={3} wrap="wrap">
             {[
                 "Categoria",
                 "Datos del terminado",
@@ -541,7 +536,7 @@ export default function CrearDesdePlantillaTab() {
     );
 
     const renderCategoriaStep = () => (
-        <VStack align="stretch" spacing={4}>
+        <VStack align="stretch" gap={4}>
             <Heading size="md">Seleccionar categoria con plantilla</Heading>
             {loadingCategorias && (
                 <Flex align="center" gap={3}>
@@ -551,46 +546,46 @@ export default function CrearDesdePlantillaTab() {
             )}
 
             {!loadingCategorias && categoriasConPlantilla.length === 0 && (
-                <Alert status="info">
-                    <AlertIcon />
+                <Alert.Root status="info">
+                    <Alert.Indicator />
                     No hay categorias con plantilla de manufactura definida.
-                </Alert>
+                </Alert.Root>
             )}
 
             {!loadingCategorias && categorias.length > 0 && (
-                <Table variant="simple">
-                    <Thead>
-                        <Tr>
-                            <Th>ID</Th>
-                            <Th>Nombre</Th>
-                            <Th>Estado</Th>
-                            <Th>Accion</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+                <Table.Root variant="simple">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>ID</Table.ColumnHeader>
+                            <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                            <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                            <Table.ColumnHeader>Accion</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {categorias.map((categoria) => {
                             const hasTemplate = templatesExistentes[categoria.categoriaId];
                             return (
-                                <Tr key={categoria.categoriaId}>
-                                    <Td>{categoria.categoriaId}</Td>
-                                    <Td>{categoria.categoriaNombre}</Td>
-                                    <Td>{hasTemplate ? "Con plantilla" : "Sin plantilla"}</Td>
-                                    <Td>
+                                <Table.Row key={categoria.categoriaId}>
+                                    <Table.Cell>{categoria.categoriaId}</Table.Cell>
+                                    <Table.Cell>{categoria.categoriaNombre}</Table.Cell>
+                                    <Table.Cell>{hasTemplate ? "Con plantilla" : "Sin plantilla"}</Table.Cell>
+                                    <Table.Cell>
                                         <Button
                                             size="sm"
-                                            colorScheme="teal"
-                                            isDisabled={!hasTemplate}
-                                            isLoading={loadingTemplateId === categoria.categoriaId}
+                                            colorPalette="teal"
+                                            disabled={!hasTemplate}
+                                            loading={loadingTemplateId === categoria.categoriaId}
                                             onClick={() => handleSelectCategoria(categoria)}
                                         >
                                             Seleccionar
                                         </Button>
-                                    </Td>
-                                </Tr>
+                                    </Table.Cell>
+                                </Table.Row>
                             );
                         })}
-                    </Tbody>
-                </Table>
+                    </Table.Body>
+                </Table.Root>
             )}
         </VStack>
     );
@@ -607,68 +602,73 @@ export default function CrearDesdePlantillaTab() {
             )}
             <SimpleGrid w="full" columns={3} gap="2em">
                 <GridItem colSpan={1}>
-                    <FormControl isRequired>
-                        <FormLabel>Codigo Id</FormLabel>
+                    <Field.Root required>
+                        <Field.Label>Codigo Id</Field.Label>
                         <Input
                             value={productoId}
-                            onChange={(e) => setProductoId(normalizeProductId(e.target.value))}
+                            onValueChange={(e) => setProductoId(normalizeProductId(e.target.value))}
                             variant="filled"
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
                 <GridItem colSpan={2}>
-                    <FormControl isRequired>
-                        <FormLabel>Nombre</FormLabel>
-                        <Input value={nombre} onChange={(e) => setNombre(e.target.value)} variant="filled" />
-                    </FormControl>
+                    <Field.Root required>
+                        <Field.Label>Nombre</Field.Label>
+                        <Input value={nombre} onValueChange={(e) => setNombre(e.target.value)} variant="filled" />
+                    </Field.Root>
                 </GridItem>
                 <GridItem colSpan={1}>
-                    <HStack align="flex-end" spacing={4}>
-                        <Select value={tipoUnidades} onChange={(e) => setTipoUnidades(e.target.value)}>
-                            <option value={UNIDADES.KG}>{UNIDADES.KG}</option>
-                            <option value={UNIDADES.L}>{UNIDADES.L}</option>
-                            <option value={UNIDADES.U}>{UNIDADES.U}</option>
-                            <option value={UNIDADES.G}>{UNIDADES.G}</option>
-                        </Select>
-                        <FormControl isRequired>
-                            <FormLabel>Contenido por envase</FormLabel>
+                    <HStack align="flex-end" gap={4}>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                value={tipoUnidades}
+                                onValueChange={(e) => setTipoUnidades(e.target.value)}>
+                                <option value={UNIDADES.KG}>{UNIDADES.KG}</option>
+                                <option value={UNIDADES.L}>{UNIDADES.L}</option>
+                                <option value={UNIDADES.U}>{UNIDADES.U}</option>
+                                <option value={UNIDADES.G}>{UNIDADES.G}</option>
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                        <Field.Root required>
+                            <Field.Label>Contenido por envase</Field.Label>
                             <Input
                                 value={cantidadUnidad}
-                                onChange={(e) => setCantidadUnidad(e.target.value)}
+                                onValueChange={(e) => setCantidadUnidad(e.target.value)}
                                 variant="filled"
                             />
-                        </FormControl>
+                        </Field.Root>
                     </HStack>
                 </GridItem>
                 <GridItem colSpan={1}>
-                    <FormControl>
-                        <FormLabel>Tipo de producto</FormLabel>
-                        <Input value="Terminado" variant="filled" isReadOnly />
-                    </FormControl>
+                    <Field.Root>
+                        <Field.Label>Tipo de producto</Field.Label>
+                        <Input value="Terminado" variant="filled" readOnly />
+                    </Field.Root>
                 </GridItem>
                 <GridItem colSpan={1}>
-                    <FormControl>
-                        <FormLabel>Categoria</FormLabel>
-                        <Input value={selectedCategoria?.categoriaNombre ?? ""} variant="filled" isReadOnly />
-                    </FormControl>
+                    <Field.Root>
+                        <Field.Label>Categoria</Field.Label>
+                        <Input value={selectedCategoria?.categoriaNombre ?? ""} variant="filled" readOnly />
+                    </Field.Root>
                 </GridItem>
                 <GridItem colSpan={3}>
-                    <FormControl isRequired>
-                        <FormLabel>Prefijo de lote</FormLabel>
+                    <Field.Root required>
+                        <Field.Label>Prefijo de lote</Field.Label>
                         <HStack>
                             <Input
                                 value={prefijoLote}
-                                onChange={(e) => {
+                                onValueChange={(e) => {
                                     setPrefijoLote(e.target.value);
                                     setPrefijoVerificado(false);
                                 }}
                                 variant="filled"
                                 maxLength={20}
-                                isReadOnly={modoPrefijoLote === "automatico"}
+                                readOnly={modoPrefijoLote === "automatico"}
                             />
                             <Button
                                 size="sm"
-                                colorScheme="teal"
+                                colorPalette="teal"
                                 variant={modoPrefijoLote === "automatico" ? "solid" : "outline"}
                                 onClick={() =>
                                     setModoPrefijoLote((prev) => prev === "automatico" ? "editar" : "automatico")
@@ -678,37 +678,35 @@ export default function CrearDesdePlantillaTab() {
                             </Button>
                             <IconButton
                                 aria-label="Verificar prefijo unico"
-                                icon={<CheckIcon />}
                                 size="sm"
-                                colorScheme={prefijoVerificado ? "green" : "gray"}
+                                colorPalette={prefijoVerificado ? "green" : "gray"}
                                 onClick={handleVerificarPrefijo}
-                                isLoading={verificandoPrefijo}
-                                isDisabled={!prefijoLote.trim()}
-                            />
+                                loading={verificandoPrefijo}
+                                disabled={!prefijoLote.trim()}><LuCheck /></IconButton>
                         </HStack>
                         {prefijoVerificado && (
                             <Text color="green.600" fontSize="sm" mt={1}>
                                 Prefijo verificado y disponible.
                             </Text>
                         )}
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
                 <GridItem colSpan={3}>
-                    <FormControl>
-                        <FormLabel>Observaciones</FormLabel>
+                    <Field.Root>
+                        <Field.Label>Observaciones</Field.Label>
                         <Textarea
                             value={observaciones}
-                            onChange={(e) => setObservaciones(e.target.value)}
+                            onValueChange={(e) => setObservaciones(e.target.value)}
                             variant="filled"
                         />
-                    </FormControl>
+                    </Field.Root>
                 </GridItem>
             </SimpleGrid>
             <HStack>
-                <Button colorScheme="yellow" onClick={() => setActiveStep(0)}>
+                <Button colorPalette="yellow" onClick={() => setActiveStep(0)}>
                     Atras
                 </Button>
-                <Button colorScheme="teal" onClick={handleProductNext} isDisabled={!prefijoVerificado}>
+                <Button colorPalette="teal" onClick={handleProductNext} disabled={!prefijoVerificado}>
                     Siguiente
                 </Button>
             </HStack>
@@ -730,11 +728,11 @@ export default function CrearDesdePlantillaTab() {
                 <HStack gap={8} w="full" align="flex-start">
                     <BandejaBusqueda onAddInsumo={handleAddInsumo} />
                     <VStack w="full">
-                        <Stat backgroundColor="app.surfaceSubtle" p="1em" boxShadow="md" w="full">
-                            <StatLabel>Total Costo</StatLabel>
-                            <StatNumber>{totalCost} ( $ COP)</StatNumber>
-                            <StatHelpText>Costo total sumando los insumos</StatHelpText>
-                        </Stat>
+                        <Stat.Root backgroundColor="app.surfaceSubtle" p="1em" boxShadow="md" w="full">
+                            <Stat.Label>Total Costo</Stat.Label>
+                            <Stat.ValueText>{totalCost} ( $ COP)</Stat.ValueText>
+                            <Stat.HelpText>Costo total sumando los insumos</Stat.HelpText>
+                        </Stat.Root>
                         <BandejaSeleccion
                             selectedInsumos={selectedInsumos}
                             onUpdateCantidad={handleUpdateCantidad}
@@ -743,19 +741,19 @@ export default function CrearDesdePlantillaTab() {
                     </VStack>
                 </HStack>
 
-                <HStack spacing={4} alignItems="flex-start" w="full">
-                    <FormControl w="sm">
-                        <FormLabel>Rendimiento Teorico</FormLabel>
+                <HStack gap={4} alignItems="flex-start" w="full">
+                    <Field.Root w="sm">
+                        <Field.Label>Rendimiento Teorico</Field.Label>
                         <CustomDecimalInput
                             value={rendimientoTeorico}
                             onChange={setRendimientoTeorico}
                             min={0}
                             placeholder="0.0000"
                         />
-                    </FormControl>
+                    </Field.Root>
                     <Box>
-                        <FormLabel>Packaging</FormLabel>
-                        <Button colorScheme={casePack ? "green" : "blue"} onClick={() => setIsPackagingDefinerOpen(true)}>
+                        <Field.Label>Packaging</Field.Label>
+                        <Button colorPalette={casePack ? "green" : "blue"} onClick={() => setIsPackagingDefinerOpen(true)}>
                             {casePack ? "Packaging definido" : "Definir packaging"}
                         </Button>
                     </Box>
@@ -768,10 +766,10 @@ export default function CrearDesdePlantillaTab() {
                 />
 
                 <HStack>
-                    <Button colorScheme="yellow" onClick={() => setActiveStep(1)}>
+                    <Button colorPalette="yellow" onClick={() => setActiveStep(1)}>
                         Atras
                     </Button>
-                    <Button colorScheme="teal" onClick={handleManufacturingNext} isDisabled={!canContinueManufacturing}>
+                    <Button colorPalette="teal" onClick={handleManufacturingNext} disabled={!canContinueManufacturing}>
                         Siguiente
                     </Button>
                 </HStack>
@@ -801,8 +799,8 @@ export default function CrearDesdePlantillaTab() {
             <Flex direction="column" align="center" gap={4} w="full">
                 <Heading size="md">Resumen del Producto</Heading>
                 <Box w="full" bg="app.surfaceSubtle" p={4} borderRadius="md" maxH="340px" overflowY="auto">
-                    <VStack align="start" spacing={4} w="full">
-                        <VStack align="start" w="full" spacing={1}>
+                    <VStack align="start" gap={4} w="full">
+                        <VStack align="start" w="full" gap={1}>
                             <Text><b>Codigo:</b> {producto.productoId}</Text>
                             <Text><b>Nombre:</b> {producto.nombre}</Text>
                             <Text><b>Categoria:</b> {producto.categoria?.categoriaNombre}</Text>
@@ -815,33 +813,33 @@ export default function CrearDesdePlantillaTab() {
 
                         <Box w="full">
                             <Heading size="sm" mb={2}>Insumos</Heading>
-                            <Table size="sm" variant="simple">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Nombre</Th>
-                                        <Th isNumeric>Cantidad</Th>
-                                        <Th isNumeric>Subtotal</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                            <Table.Root size="sm" variant="simple">
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Cantidad</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Subtotal</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {(producto.insumos ?? []).map((insumo) => (
-                                        <Tr key={insumo.producto.productoId}>
-                                            <Td>{insumo.producto.nombre}</Td>
-                                            <Td isNumeric>{insumo.cantidadRequerida}</Td>
-                                            <Td isNumeric>{insumo.subtotal}</Td>
-                                        </Tr>
+                                        <Table.Row key={insumo.producto.productoId}>
+                                            <Table.Cell>{insumo.producto.nombre}</Table.Cell>
+                                            <Table.Cell textAlign='end'>{insumo.cantidadRequerida}</Table.Cell>
+                                            <Table.Cell textAlign='end'>{insumo.subtotal}</Table.Cell>
+                                        </Table.Row>
                                     ))}
-                                </Tbody>
-                            </Table>
+                                </Table.Body>
+                            </Table.Root>
                         </Box>
 
                         <Box w="full">
                             <Heading size="sm" mb={2}>Procesos de produccion</Heading>
-                            <OrderedList>
+                            <List.Root as='ol'>
                                 {procesos.map((nombreProceso, index) => (
-                                    <ListItem key={`${nombreProceso}-${index}`}>{nombreProceso}</ListItem>
+                                    <List.Item key={`${nombreProceso}-${index}`}>{nombreProceso}</List.Item>
                                 ))}
-                            </OrderedList>
+                            </List.Root>
                             <Text mt={2}>
                                 <b>Rendimiento teorico:</b> {producto.procesoProduccionCompleto?.rendimientoTeorico}
                             </Text>
@@ -849,10 +847,10 @@ export default function CrearDesdePlantillaTab() {
                     </VStack>
                 </Box>
                 <HStack>
-                    <Button colorScheme="yellow" onClick={() => setActiveStep(2)} isDisabled={saving}>
+                    <Button colorPalette="yellow" onClick={() => setActiveStep(2)} disabled={saving}>
                         Atras
                     </Button>
-                    <Button colorScheme="teal" onClick={handleGuardar} isLoading={saving}>
+                    <Button colorPalette="teal" onClick={handleGuardar} loading={saving}>
                         Guardar
                     </Button>
                 </HStack>

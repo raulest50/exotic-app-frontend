@@ -1,6 +1,7 @@
 // src/pages/LoginPage/CoolDownAnim.tsx
 import React, { useEffect, useState } from 'react';
-import { Box, Flex, Text, Tooltip } from '@chakra-ui/react';
+import { Steps, Box, Flex, Text } from '@chakra-ui/react';
+import { Tooltip } from '@/components/ui/tooltip';
 import { BiTime } from 'react-icons/bi';
 
 interface CoolDownAnimProps {
@@ -62,7 +63,7 @@ const CoolDownAnim: React.FC<CoolDownAnimProps> = ({
   if (!isActive || timeLeft <= 0) return null;
 
   return (
-    <Tooltip label={`Espera ${secondsLeft} segundos para enviar otro correo`}>
+    <Tooltip content={`Espera ${secondsLeft} segundos para enviar otro correo`}>
       <Flex 
         direction="column" 
         align="center" 
@@ -72,13 +73,7 @@ const CoolDownAnim: React.FC<CoolDownAnimProps> = ({
         height="50px"
       >
         {/* Icono de reloj moderno */}
-        <Box 
-          as={BiTime} 
-          size="32px" 
-          color="gray.400"
-          position="absolute"
-          zIndex="1"
-        />
+        <Box size="32px" color="gray.400" position="absolute" zIndex="1" asChild><BiTime /></Box>
 
         {/* Contenedor de la animación de llenado */}
         <Box 

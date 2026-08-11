@@ -1,7 +1,6 @@
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
     Box,
     Button,
     Flex,
@@ -180,20 +179,20 @@ export default function ImportacionTotalBDStep2Ejecutar({
     const hasResult = result != null;
 
     return (
-        <VStack align="stretch" spacing={6}>
+        <VStack align="stretch" gap={6}>
             <Heading size="md" color="red.700">
                 Ejecutar Importacion Total
             </Heading>
 
             {!hasResult && (
-                <Alert status="warning">
-                    <AlertIcon />
-                    <AlertDescription>
+                <Alert.Root status="warning">
+                    <Alert.Indicator />
+                    <Alert.Description>
                         Se eliminara completamente la informacion actual y luego se restaurara el backup seleccionado.
                         Una vez iniciada la restauracion, no debe cerrarse la sesion ni asumir que la base sigue
                         disponible hasta recibir el resultado final.
-                    </AlertDescription>
-                </Alert>
+                    </Alert.Description>
+                </Alert.Root>
             )}
 
             <Box>
@@ -202,11 +201,11 @@ export default function ImportacionTotalBDStep2Ejecutar({
             </Box>
 
             {(isExecuting || hasResult) && result && (
-                <Alert status={result.estado === "LISTO" ? "success" : result.estado === "ERROR" || result.estado === "EXPIRADO" ? "error" : "info"}>
-                    <AlertIcon />
+                <Alert.Root status={result.estado === "LISTO" ? "success" : result.estado === "ERROR" || result.estado === "EXPIRADO" ? "error" : "info"}>
+                    <Alert.Indicator />
                     {(isExecuting && result.estado !== "LISTO" && result.estado !== "ERROR" && result.estado !== "EXPIRADO") ? <Spinner size="sm" mr={2} /> : null}
-                    <AlertDescription>{progressMessageForStatus(result)}</AlertDescription>
-                </Alert>
+                    <Alert.Description>{progressMessageForStatus(result)}</Alert.Description>
+                </Alert.Root>
             )}
 
             {hasResult && result && (
@@ -214,40 +213,40 @@ export default function ImportacionTotalBDStep2Ejecutar({
                     <Heading size="sm" mb={2}>
                         Resumen de ejecucion
                     </Heading>
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>Campo</Th>
-                                <Th>Valor</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            <Tr>
-                                <Td>Estado</Td>
-                                <Td>{result.estado}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Archivo</Td>
-                                <Td>{result.filename}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Solicitado</Td>
-                                <Td>{result.requestedAt}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Iniciado</Td>
-                                <Td>{result.startedAt ?? "-"}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Finalizado</Td>
-                                <Td>{result.finishedAt ?? "-"}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td>Error code</Td>
-                                <Td>{result.errorCode ?? "-"}</Td>
-                            </Tr>
-                        </Tbody>
-                    </Table>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>Campo</Table.ColumnHeader>
+                                <Table.ColumnHeader>Valor</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            <Table.Row>
+                                <Table.Cell>Estado</Table.Cell>
+                                <Table.Cell>{result.estado}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Archivo</Table.Cell>
+                                <Table.Cell>{result.filename}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Solicitado</Table.Cell>
+                                <Table.Cell>{result.requestedAt}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Iniciado</Table.Cell>
+                                <Table.Cell>{result.startedAt ?? "-"}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Finalizado</Table.Cell>
+                                <Table.Cell>{result.finishedAt ?? "-"}</Table.Cell>
+                            </Table.Row>
+                            <Table.Row>
+                                <Table.Cell>Error code</Table.Cell>
+                                <Table.Cell>{result.errorCode ?? "-"}</Table.Cell>
+                            </Table.Row>
+                        </Table.Body>
+                    </Table.Root>
                 </Box>
             )}
 
@@ -255,22 +254,22 @@ export default function ImportacionTotalBDStep2Ejecutar({
                 <Button
                     variant="outline"
                     onClick={() => setActiveStep(1)}
-                    isDisabled={isExecuting}
+                    disabled={isExecuting}
                 >
                     Atras
                 </Button>
 
                 {!hasResult ? (
                     <Button
-                        colorScheme="red"
+                        colorPalette="red"
                         onClick={handleExecute}
-                        isLoading={isExecuting}
+                        loading={isExecuting}
                         loadingText="Ejecutando importacion..."
                     >
                         Ejecutar importacion total
                     </Button>
                 ) : (
-                    <Button colorScheme="teal" onClick={handleReset}>
+                    <Button colorPalette="teal" onClick={handleReset}>
                         Reiniciar flujo
                     </Button>
                 )}

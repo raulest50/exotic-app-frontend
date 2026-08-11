@@ -1,4 +1,4 @@
-import { SimpleGrid, Container } from '@chakra-ui/react';
+import { Steps, SimpleGrid, Container } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { FaDatabase } from 'react-icons/fa';
 import { FaCube, FaCodeBranch, FaTruck } from 'react-icons/fa';
@@ -113,7 +113,7 @@ function ExportacionDatosTab(_props: ExportacionDatosTabProps) {
 
     return (
         <Container maxW="container.xl" py={6}>
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={6}>
                 {exportOptions.map((opt) => (
                     <OperacionSelectCard
                         key={opt.titulo}

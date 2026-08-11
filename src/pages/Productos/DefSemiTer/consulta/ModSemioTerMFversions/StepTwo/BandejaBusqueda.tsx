@@ -1,16 +1,7 @@
 // BandejaBusqueda.tsx
 import React, { useState } from "react";
 import { Producto, TIPOS_PRODUCTOS } from "../../../../types.tsx";
-import {
-    Box,
-    Button,
-    Flex,
-    FormControl,
-    FormLabel,
-    Input,
-    Select,
-    Spinner,
-} from "@chakra-ui/react";
+import { Steps, Box, Button, Flex, Input, NativeSelect, Spinner, Field } from "@chakra-ui/react";
 import axios from "axios";
 import EndPointsURL from "../../../../../../api/EndPointsURL.tsx";
 import ItemBandejaBusqueda from "./ItemBandejaBusqueda.tsx";
@@ -65,11 +56,11 @@ const BandejaBusqueda: React.FC<BandejaBusquedaProps> = ({ onAddInsumo }) => {
             {/* Search Controls */}
             <Flex mb={4} gap={4} alignItems="center" direction="column">
                 <Flex direction="row" gap={4} alignItems="center" w="full">
-                    <FormControl>
-                        <FormLabel>Buscar</FormLabel>
+                    <Field.Root>
+                        <Field.Label>Buscar</Field.Label>
                         <Input
                             value={searchString}
-                            onChange={(e) => setSearchString(e.target.value)}
+                            onValueChange={(e) => setSearchString(e.target.value)}
                             placeholder="Ingrese término de búsqueda..."
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") {
@@ -77,33 +68,37 @@ const BandejaBusqueda: React.FC<BandejaBusquedaProps> = ({ onAddInsumo }) => {
                                 }
                             }}
                         />
-                    </FormControl>
-                    <Button colorScheme="teal" onClick={() => handleSearch(0)}>
+                    </Field.Root>
+                    <Button colorPalette="teal" onClick={() => handleSearch(0)}>
                         Buscar
                     </Button>
                 </Flex>
 
                 <Flex direction="row" gap={4} alignItems="center" w="full">
-                    <FormControl>
-                        <FormLabel>Tipo Búsqueda</FormLabel>
-                        <Select
-                            value={tipoBusqueda}
-                            onChange={(e) => setTipoBusqueda(e.target.value)}
-                        >
-                            <option value="Nombre">Nombre</option>
-                            <option value="ID">ID</option>
-                        </Select>
-                    </FormControl>
-                    <FormControl>
-                        <FormLabel>Clasificación</FormLabel>
-                        <Select
-                            value={clasificacion}
-                            onChange={(e) => setClasificacion(e.target.value)}
-                        >
-                            <option value={TIPOS_PRODUCTOS.materiaPrima}>Materia Prima</option>
-                            <option value={TIPOS_PRODUCTOS.semiTerminado}>Semiterminado</option>
-                        </Select>
-                    </FormControl>
+                    <Field.Root>
+                        <Field.Label>Tipo Búsqueda</Field.Label>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                value={tipoBusqueda}
+                                onValueChange={(e) => setTipoBusqueda(e.target.value)}>
+                                <option value="Nombre">Nombre</option>
+                                <option value="ID">ID</option>
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                    </Field.Root>
+                    <Field.Root>
+                        <Field.Label>Clasificación</Field.Label>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                value={clasificacion}
+                                onValueChange={(e) => setClasificacion(e.target.value)}>
+                                <option value={TIPOS_PRODUCTOS.materiaPrima}>Materia Prima</option>
+                                <option value={TIPOS_PRODUCTOS.semiTerminado}>Semiterminado</option>
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                    </Field.Root>
                 </Flex>
             </Flex>
 

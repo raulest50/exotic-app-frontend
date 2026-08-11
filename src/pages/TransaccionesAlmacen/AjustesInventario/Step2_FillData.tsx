@@ -1,17 +1,10 @@
 import {
+    Steps,
     Accordion,
-    AccordionButton,
-    AccordionIcon,
-    AccordionItem,
-    AccordionPanel,
     Box,
     Button,
-    FormControl,
-    FormErrorMessage,
-    FormHelperText,
-    FormLabel,
     Input,
-    Select,
+    NativeSelect,
     Stack,
     Table,
     Tbody,
@@ -21,6 +14,7 @@ import {
     Th,
     Thead,
     Tr,
+    Field,
 } from "@chakra-ui/react";
 import type { Producto } from "../../Productos/types.tsx";
 import type { AjusteLoteAsignado } from "./types";
@@ -87,7 +81,7 @@ export default function AjustesInventarioStep1SpecifyQuantities({
         if (quantity > 0) {
             const lote = assignments[0];
             return (
-                <Stack spacing={1}>
+                <Stack gap={1}>
                     <Text fontWeight="semibold">{lote.batchNumber}</Text>
                     <Text fontSize="sm" color="app.textMuted">
                         Ajuste al lote seleccionado: {quantity.toFixed(4)}
@@ -100,7 +94,7 @@ export default function AjustesInventarioStep1SpecifyQuantities({
         const exacto = Math.abs(totalAsignado - Math.abs(quantity)) <= DECIMAL_TOLERANCE;
 
         return (
-            <Stack spacing={1}>
+            <Stack gap={1}>
                 {assignments.map((assignment) => (
                     <Text key={assignment.loteId} fontSize="sm">
                         {assignment.batchNumber}: {assignment.cantidadAsignada.toFixed(4)}
@@ -116,47 +110,44 @@ export default function AjustesInventarioStep1SpecifyQuantities({
     const renderAssignmentButton = (producto: Producto, quantity: number | "") => {
         if (quantity === "" || typeof quantity !== "number" || Number.isNaN(quantity) || quantity === 0) {
             return (
-                <Button size="sm" isDisabled>
-                    Define cantidad
-                </Button>
+                <Button size="sm" disabled>Define cantidad
+                                    </Button>
             );
         }
 
         if (quantity > 0) {
             return (
-                <Button size="sm" colorScheme="teal" onClick={() => onOpenPositivePicker(producto)}>
-                    Seleccionar lote
-                </Button>
+                <Button size="sm" colorPalette="teal" onClick={() => onOpenPositivePicker(producto)}>Seleccionar lote
+                                    </Button>
             );
         }
 
         return (
-            <Button size="sm" colorScheme="blue" onClick={() => onOpenNegativePicker(producto)}>
-                Definir lotes
-            </Button>
+            <Button size="sm" colorPalette="blue" onClick={() => onOpenNegativePicker(producto)}>Definir lotes
+                            </Button>
         );
     };
 
     return (
-        <Stack spacing={4}>
+        <Stack gap={4}>
             <Box p={4} borderWidth="1px" borderRadius="md" borderColor="app.border" w="full">
                 <Text fontSize="lg" fontWeight="semibold" mb={3}>
                     Ajustar inventario por lote
                 </Text>
                 {selectedProducts.length > 0 ? (
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>ID</Th>
-                                <Th>Nombre</Th>
-                                <Th>Tipo</Th>
-                                <Th>Stock actual en GENERAL</Th>
-                                <Th>Unidades de ajuste</Th>
-                                <Th>Asignación de lote(s)</Th>
-                                <Th>Acción</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                                <Table.ColumnHeader>Stock actual en GENERAL</Table.ColumnHeader>
+                                <Table.ColumnHeader>Unidades de ajuste</Table.ColumnHeader>
+                                <Table.ColumnHeader>Asignación de lote(s)</Table.ColumnHeader>
+                                <Table.ColumnHeader>Acción</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {selectedProducts.map((producto) => {
                                 const quantityValue = quantities[producto.productoId];
                                 const stock = stockByProduct[producto.productoId];
@@ -167,17 +158,17 @@ export default function AjustesInventarioStep1SpecifyQuantities({
                                     quantityValue === 0;
 
                                 return (
-                                    <Tr key={producto.productoId}>
-                                        <Td>{producto.productoId}</Td>
-                                        <Td>{producto.nombre}</Td>
-                                        <Td textTransform="capitalize">{producto.tipo_producto}</Td>
-                                        <Td>{stock === null || stock === undefined ? "Cargando..." : stock.toFixed(4)}</Td>
-                                        <Td>
+                                    <Table.Row key={producto.productoId}>
+                                        <Table.Cell>{producto.productoId}</Table.Cell>
+                                        <Table.Cell>{producto.nombre}</Table.Cell>
+                                        <Table.Cell textTransform="capitalize">{producto.tipo_producto}</Table.Cell>
+                                        <Table.Cell>{stock === null || stock === undefined ? "Cargando..." : stock.toFixed(4)}</Table.Cell>
+                                        <Table.Cell>
                                             <Input
                                                 type="number"
                                                 step="0.0001"
                                                 value={quantityValue ?? ""}
-                                                onChange={(e) => {
+                                                onValueChange={(e) => {
                                                     const value = e.target.value;
                                                     onChangeQuantity(
                                                         producto.productoId,
@@ -187,64 +178,66 @@ export default function AjustesInventarioStep1SpecifyQuantities({
                                                 size="sm"
                                                 width="130px"
                                                 placeholder="0.0000"
-                                                isInvalid={isInvalidQuantity}
+                                                invalid={isInvalidQuantity}
                                             />
-                                        </Td>
-                                        <Td minW="260px">
+                                        </Table.Cell>
+                                        <Table.Cell minW="260px">
                                             {renderAssignmentSummary(producto.productoId, quantityValue)}
-                                        </Td>
-                                        <Td>{renderAssignmentButton(producto, quantityValue)}</Td>
-                                    </Tr>
+                                        </Table.Cell>
+                                        <Table.Cell>{renderAssignmentButton(producto, quantityValue)}</Table.Cell>
+                                    </Table.Row>
                                 );
                             })}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 ) : (
                     <Text color="app.textSubtle">Selecciona productos para ajustar su inventario.</Text>
                 )}
             </Box>
 
             <Box p={4} borderWidth="1px" borderRadius="md" borderColor="app.border" w="full">
-                <Stack spacing={4}>
-                    <FormControl
-                        isRequired
-                        isInvalid={!causaAjuste || causeIsIncompatible}
+                <Stack gap={4}>
+                    <Field.Root
+                        required
+                        invalid={!causaAjuste || causeIsIncompatible}
                     >
-                        <FormLabel>Causa del ajuste</FormLabel>
-                        <Select
-                            placeholder="Seleccione una causa"
-                            value={causaAjuste}
-                            onChange={(event) => onChangeCausaAjuste(
-                                event.target.value as CausaAjusteInventario | "",
-                            )}
-                        >
-                            {CAUSAS_AJUSTE.map((option) => (
-                                <option
-                                    key={option.value}
-                                    value={option.value}
-                                    disabled={option.onlyNegative && hasPositiveQuantity}
-                                >
-                                    {option.label}
-                                </option>
-                            ))}
-                        </Select>
+                        <Field.Label>Causa del ajuste</Field.Label>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                placeholder="Seleccione una causa"
+                                value={causaAjuste}
+                                onValueChange={(event) => onChangeCausaAjuste(
+                                    event.target.value as CausaAjusteInventario | "",
+                                )}>
+                                {CAUSAS_AJUSTE.map((option) => (
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                        disabled={option.onlyNegative && hasPositiveQuantity}
+                                    >
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
                         {selectedCause && !causeIsIncompatible ? (
-                            <FormHelperText>{selectedCause.description}</FormHelperText>
+                            <Field.HelperText>{selectedCause.description}</Field.HelperText>
                         ) : null}
                         {!causaAjuste ? (
-                            <FormErrorMessage>
+                            <Field.ErrorText>
                                 Seleccione la causa común a toda la transacción.
-                            </FormErrorMessage>
+                            </Field.ErrorText>
                         ) : causeIsIncompatible ? (
-                            <FormErrorMessage>
+                            <Field.ErrorText>
                                 Esta causa solo permite cantidades negativas.
-                            </FormErrorMessage>
+                            </Field.ErrorText>
                         ) : null}
-                    </FormControl>
+                    </Field.Root>
 
-                    <Accordion allowToggle>
-                        <AccordionItem border="0">
-                            <AccordionButton
+                    <Accordion.Root collapsible>
+                        <Accordion.Item border="0" value='item-0'>
+                            <Accordion.ItemTrigger
                                 px={0}
                                 minH="40px"
                                 color="app.textMuted"
@@ -252,43 +245,43 @@ export default function AjustesInventarioStep1SpecifyQuantities({
                                 <Box flex="1" textAlign="left" fontWeight="semibold">
                                     Ver significado de cada opción
                                 </Box>
-                                <AccordionIcon />
-                            </AccordionButton>
-                            <AccordionPanel px={0} pb={0}>
-                                <Stack spacing={3}>
-                                    {CAUSAS_AJUSTE.map((option) => (
-                                        <Box key={option.value}>
-                                            <Text fontWeight="semibold" fontSize="sm">
-                                                {option.label}
-                                            </Text>
-                                            <Text color="app.textMuted" fontSize="sm">
-                                                {option.description}
-                                            </Text>
-                                        </Box>
-                                    ))}
-                                </Stack>
-                            </AccordionPanel>
-                        </AccordionItem>
-                    </Accordion>
+                                <Accordion.ItemIndicator />
+                            </Accordion.ItemTrigger>
+                            <Accordion.ItemContent px={0} pb={0}><Accordion.ItemBody>
+                                    <Stack gap={3}>
+                                        {CAUSAS_AJUSTE.map((option) => (
+                                            <Box key={option.value}>
+                                                <Text fontWeight="semibold" fontSize="sm">
+                                                    {option.label}
+                                                </Text>
+                                                <Text color="app.textMuted" fontSize="sm">
+                                                    {option.description}
+                                                </Text>
+                                            </Box>
+                                        ))}
+                                    </Stack>
+                                </Accordion.ItemBody></Accordion.ItemContent>
+                        </Accordion.Item>
+                    </Accordion.Root>
 
-                    <FormControl
-                        isRequired={observationsAreRequired}
-                        isInvalid={observationsAreMissing}
+                    <Field.Root
+                        required={observationsAreRequired}
+                        invalid={observationsAreMissing}
                     >
-                        <FormLabel>Observaciones</FormLabel>
+                        <Field.Label>Observaciones</Field.Label>
                         <Textarea
                             placeholder={causaAjuste === "PRODUCCION_CONTINGENCIA"
                                 ? "Indique la orden de producción o el motivo de la contingencia"
                                 : "Escribe cualquier detalle relevante para este ajuste"}
                             value={observaciones}
-                            onChange={(e) => onChangeObservaciones(e.target.value)}
+                            onValueChange={(e) => onChangeObservaciones(e.target.value)}
                         />
                         {observationsAreMissing ? (
-                            <FormErrorMessage>
+                            <Field.ErrorText>
                                 Las observaciones son obligatorias para esta causa.
-                            </FormErrorMessage>
+                            </Field.ErrorText>
                         ) : null}
-                    </FormControl>
+                    </Field.Root>
                 </Stack>
             </Box>
         </Stack>

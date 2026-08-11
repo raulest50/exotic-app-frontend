@@ -1,11 +1,10 @@
 import {
+    Steps,
     Box,
     Button,
     Checkbox,
     CheckboxGroup,
     Flex,
-    FormControl,
-    FormLabel,
     IconButton,
     Input,
     Stack,
@@ -16,10 +15,11 @@ import {
     Th,
     Thead,
     Tr,
+    Field,
 } from "@chakra-ui/react";
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import MyPagination from "../../../components/MyPagination.tsx";
 import { Producto } from "../../Productos/types.tsx";
+import { LuPlus, LuTrash2 } from 'react-icons/lu';
 
 interface Step1SelProdProps {
     searchText: string;
@@ -72,52 +72,51 @@ export default function AjustesInventarioStep0SelectProducts({
                         gap={4}
                         w={"full"}
                     >
-                        <FormControl flex={1}>
-                            <FormLabel>Buscar:</FormLabel>
+                        <Field.Root flex={1}>
+                            <Field.Label>Buscar:</Field.Label>
                             <Input
                                 value={searchText}
-                                onChange={(e) => setSearchText(e.target.value)}
+                                onValueChange={(e) => setSearchText(e.target.value)}
                                 placeholder={"Ingresa el nombre del producto"}
-                                isDisabled={chkbox.length === 0}
+                                disabled={chkbox.length === 0}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter") {
                                         handleSearch();
                                     }
                                 }}
                             />
-                        </FormControl>
+                        </Field.Root>
 
-                        <FormControl flex={1}>
-                            <FormLabel>Categorías:</FormLabel>
+                        <Field.Root flex={1}>
+                            <Field.Label>Categorías:</Field.Label>
                             <CheckboxGroup
-                                colorScheme={"green"}
+                                colorPalette={"green"}
                                 value={chkbox}
-                                onChange={(values) => setChkbox(values as string[])}
+                                onValueChange={(values) => setChkbox(values as string[])}
                             >
                                 <Stack
-                                    spacing={[2, 3]}
+                                    gap={[2, 3]}
                                     direction={"column"}
                                     border={"1px solid gray"}
                                     borderRadius={"10px"}
                                     p={"1em"}
                                     w={"full"}
                                 >
-                                    <Checkbox value={"material empaque"}>
-                                        Material de empaque
-                                    </Checkbox>
-                                    <Checkbox value={"materia prima"}>Materia Prima</Checkbox>
-                                    <Checkbox value={"semiterminado"}>SemiTerminado</Checkbox>
-                                    <Checkbox value={"terminado"}>Producto Terminado</Checkbox>
+                                    <Checkbox.Root value={"material empaque"}><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Material de empaque
+                                                                                </Checkbox.Label></Checkbox.Root>
+                                    <Checkbox.Root value={"materia prima"}><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Materia Prima</Checkbox.Label></Checkbox.Root>
+                                    <Checkbox.Root value={"semiterminado"}><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>SemiTerminado</Checkbox.Label></Checkbox.Root>
+                                    <Checkbox.Root value={"terminado"}><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Producto Terminado</Checkbox.Label></Checkbox.Root>
                                 </Stack>
                             </CheckboxGroup>
-                        </FormControl>
+                        </Field.Root>
                     </Flex>
 
                     <Flex justifyContent={{ base: "stretch", xl: "flex-start" }}>
                         <Button
                             onClick={handleSearch}
-                            colorScheme={"blue"}
-                            isLoading={loading}
+                            colorPalette={"blue"}
+                            loading={loading}
                             w={{ base: "full", xl: "auto" }}
                         >
                             Buscar
@@ -128,34 +127,32 @@ export default function AjustesInventarioStep0SelectProducts({
                         {loading ? (
                             <Text color={"app.textSubtle"}>Cargando productos...</Text>
                         ) : productos.length > 0 ? (
-                            <Table size={"sm"} variant={"simple"}>
-                                <Thead>
-                                    <Tr>
-                                        <Th>ID</Th>
-                                        <Th>Nombre</Th>
-                                        <Th>Tipo</Th>
-                                        <Th textAlign={"center"}>Acciones</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                            <Table.Root size={"sm"} variant={"simple"}>
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign={"center"}>Acciones</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {productos.map((producto) => (
-                                        <Tr key={producto.productoId}>
-                                            <Td>{producto.productoId}</Td>
-                                            <Td>{producto.nombre}</Td>
-                                            <Td textTransform={"capitalize"}>{producto.tipo_producto}</Td>
-                                            <Td textAlign={"center"}>
+                                        <Table.Row key={producto.productoId}>
+                                            <Table.Cell>{producto.productoId}</Table.Cell>
+                                            <Table.Cell>{producto.nombre}</Table.Cell>
+                                            <Table.Cell textTransform={"capitalize"}>{producto.tipo_producto}</Table.Cell>
+                                            <Table.Cell textAlign={"center"}>
                                                 <IconButton
                                                     aria-label={"Agregar producto"}
-                                                    icon={<AddIcon />}
                                                     size={"sm"}
                                                     variant={"outline"}
-                                                    onClick={() => handleAddProduct(producto)}
-                                                />
-                                            </Td>
-                                        </Tr>
+                                                    onClick={() => handleAddProduct(producto)}><LuPlus /></IconButton>
+                                            </Table.Cell>
+                                        </Table.Row>
                                     ))}
-                                </Tbody>
-                            </Table>
+                                </Table.Body>
+                            </Table.Root>
                         ) : (
                             <Text color={"app.textSubtle"}>No hay productos para mostrar.</Text>
                         )}
@@ -182,35 +179,33 @@ export default function AjustesInventarioStep0SelectProducts({
                     Items seleccionados
                 </Text>
                 {selectedProducts.length > 0 ? (
-                    <Table size={"sm"} variant={"simple"}>
-                        <Thead>
-                            <Tr>
-                                <Th>ID</Th>
-                                <Th>Nombre</Th>
-                                <Th>Tipo</Th>
-                                <Th textAlign={"center"}>Acciones</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size={"sm"} variant={"simple"}>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign={"center"}>Acciones</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {selectedProducts.map((producto) => (
-                                <Tr key={producto.productoId}>
-                                    <Td>{producto.productoId}</Td>
-                                    <Td>{producto.nombre}</Td>
-                                    <Td textTransform={"capitalize"}>{producto.tipo_producto}</Td>
-                                    <Td textAlign={"center"}>
+                                <Table.Row key={producto.productoId}>
+                                    <Table.Cell>{producto.productoId}</Table.Cell>
+                                    <Table.Cell>{producto.nombre}</Table.Cell>
+                                    <Table.Cell textTransform={"capitalize"}>{producto.tipo_producto}</Table.Cell>
+                                    <Table.Cell textAlign={"center"}>
                                         <IconButton
                                             aria-label={"Remover producto"}
-                                            icon={<DeleteIcon />}
-                                            colorScheme={"red"}
+                                            colorPalette={"red"}
                                             size={"sm"}
                                             variant={"ghost"}
-                                            onClick={() => handleRemoveProduct(producto.productoId)}
-                                        />
-                                    </Td>
-                                </Tr>
+                                            onClick={() => handleRemoveProduct(producto.productoId)}><LuTrash2 /></IconButton>
+                                    </Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 ) : (
                     <Text color={"app.textSubtle"}>Añade productos para verlos aquí.</Text>
                 )}

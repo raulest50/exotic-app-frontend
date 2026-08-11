@@ -1,12 +1,10 @@
-import { ChevronDownIcon, ChevronUpIcon, SearchIcon } from "@chakra-ui/icons";
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Box,
     Button,
     Card,
-    CardBody,
-    Collapse,
+    Collapsible,
     Input,
     InputGroup,
     InputLeftElement,
@@ -14,11 +12,13 @@ import {
     Spinner,
     Stack,
     Text,
+    Icon,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { requestErrorMessage, searchMaterialStock } from "./informesGlobales.api";
 import { formatCurrency, formatQuantity } from "./InformeGlobalUi";
 import type { ResultadoStockMaterial } from "./informesGlobales.types";
+import { LuChevronDown, LuChevronUp, LuSearch } from 'react-icons/lu';
 
 const MIN_SEARCH_LENGTH = 2;
 const SEARCH_DELAY_MS = 350;
@@ -69,84 +69,83 @@ export default function BuscadorStockMaterialCard() {
         && results.length === 0;
 
     return (
-        <Card variant="outline">
-            <CardBody p={{ base: 3, md: 5 }}>
-                <Stack spacing={4}>
+        <Card.Root variant="outline">
+            <Card.Body p={{ base: 3, md: 5 }}>
+                <Stack gap={4}>
                     <Button
                         variant="ghost"
                         justifyContent="space-between"
                         minH="44px"
                         px={2}
                         onClick={() => setExpanded((current) => !current)}
-                        rightIcon={expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                        aria-expanded={expanded}
-                    >
-                        Buscar stock de un material
-                    </Button>
+                        aria-expanded={expanded}>Buscar stock de un material
+                                            {expanded ? <LuChevronUp /> : <LuChevronDown />}</Button>
 
-                    <Collapse in={expanded} animateOpacity>
-                        <Stack spacing={4} pt={1}>
-                            <Text color="app.textMuted" fontSize="sm">
-                                Busque por código o nombre. Se muestran hasta 10 coincidencias del almacén General.
-                            </Text>
-                            <InputGroup>
-                                <InputLeftElement pointerEvents="none">
-                                    {loading
-                                        ? <Spinner size="sm" />
-                                        : <SearchIcon color="app.textMuted" />}
-                                </InputLeftElement>
-                                <Input
-                                    minH="44px"
-                                    aria-label="Buscar material por código o nombre"
-                                    value={search}
-                                    onChange={(event) => setSearch(event.target.value)}
-                                    placeholder="Ej. MP-001 o azúcar"
-                                />
-                            </InputGroup>
-
-                            {error ? (
-                                <Alert status="error" borderRadius="md">
-                                    <AlertIcon />
-                                    {error}
-                                </Alert>
-                            ) : null}
-
-                            {showNoResults ? (
+                    <Collapsible.Root open={expanded}>
+                        <Collapsible.Content>
+                            <Stack gap={4} pt={1}>
                                 <Text color="app.textMuted" fontSize="sm">
-                                    No se encontraron materiales para “{normalizedSearch}”.
+                                    Busque por código o nombre. Se muestran hasta 10 coincidencias del almacén General.
                                 </Text>
-                            ) : null}
+                                <InputGroup>
+                                    <InputLeftElement pointerEvents="none">
+                                        {loading
+                                            ? <Spinner size="sm" />
+                                            : <Icon as={LuSearch} color="app.textMuted" />}
+                                    </InputLeftElement>
+                                    <Input
+                                        minH="44px"
+                                        aria-label="Buscar material por código o nombre"
+                                        value={search}
+                                        onValueChange={(event) => setSearch(event.target.value)}
+                                        placeholder="Ej. MP-001 o azúcar"
+                                    />
+                                </InputGroup>
 
-                            {results.length > 0 ? (
-                                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
-                                    {results.map((material) => (
-                                        <Box
-                                            key={material.productoId}
-                                            borderWidth="1px"
-                                            borderColor="app.border"
-                                            borderRadius="md"
-                                            p={3}
-                                        >
-                                            <Text fontWeight="semibold">{material.nombre}</Text>
-                                            <Text color="app.textMuted" fontSize="sm">
-                                                {material.productoId}
-                                            </Text>
-                                            <Text mt={2}>
-                                                {formatQuantity(material.stockGeneral)} {material.unidadMedida}
-                                            </Text>
-                                            <Text color="app.textMuted" fontSize="sm">
-                                                {material.costoDisponible
-                                                    ? `${formatCurrency(material.costoUnitario)} por ${material.unidadMedida} · ${formatCurrency(material.valorEstimado)} estimados`
-                                                    : "Sin costo vigente"}
-                                            </Text>
-                                        </Box>
-                                    ))}
-                                </SimpleGrid>
-                            ) : null}
-                        </Stack>
-                    </Collapse>
+                                {error ? (
+                                    <Alert.Root status="error" borderRadius="md">
+                                        <Alert.Indicator />
+                                        {error}
+                                    </Alert.Root>
+                                ) : null}
+
+                                {showNoResults ? (
+                                    <Text color="app.textMuted" fontSize="sm">
+                                        No se encontraron materiales para “{normalizedSearch}”.
+                                    </Text>
+                                ) : null}
+
+                                {results.length > 0 ? (
+                                    <SimpleGrid columns={{ base: 1, md: 2 }} gap={3}>
+                                        {results.map((material) => (
+                                            <Box
+                                                key={material.productoId}
+                                                borderWidth="1px"
+                                                borderColor="app.border"
+                                                borderRadius="md"
+                                                p={3}
+                                            >
+                                                <Text fontWeight="semibold">{material.nombre}</Text>
+                                                <Text color="app.textMuted" fontSize="sm">
+                                                    {material.productoId}
+                                                </Text>
+                                                <Text mt={2}>
+                                                    {formatQuantity(material.stockGeneral)} {material.unidadMedida}
+                                                </Text>
+                                                <Text color="app.textMuted" fontSize="sm">
+                                                    {material.costoDisponible
+                                                        ? `${formatCurrency(material.costoUnitario)} por ${material.unidadMedida} · ${formatCurrency(material.valorEstimado)} estimados`
+                                                        : "Sin costo vigente"}
+                                                </Text>
+                                            </Box>
+                                        ))}
+                                    </SimpleGrid>
+                                ) : null}
+                            </Stack>
+                        </Collapsible.Content>
+                    </Collapsible.Root>
                 </Stack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }

@@ -1,10 +1,8 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
-    FormControl,
-    FormLabel,
     HStack,
     Input,
     NumberInput,
@@ -12,6 +10,7 @@ import {
     SimpleGrid,
     Text,
     VStack,
+    Field,
 } from "@chakra-ui/react";
 import type {
     EdicionReporteProduccion,
@@ -39,21 +38,21 @@ export default function IngresoTerminadosStep2Correccion({
     const consolidados = consolidarProductos(reportes, ediciones);
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             {!editable ? (
-                <Alert status="info" borderRadius="md">
-                    <AlertIcon />
+                <Alert.Root status="info" borderRadius="md">
+                    <Alert.Indicator />
                     Su nivel de acceso permite consultar y generar HyL, pero no corregir cantidades.
-                </Alert>
+                </Alert.Root>
             ) : null}
 
-            <SimpleGrid columns={{ base: 1, sm: 2, xl: 3 }} spacing={3}>
+            <SimpleGrid columns={{ base: 1, sm: 2, xl: 3 }} gap={3}>
                 {consolidados.map((producto) => (
                     <Box key={producto.productoId} borderWidth="1px" borderRadius="md" px={4} py={3}>
-                        <Text fontWeight="semibold" noOfLines={1}>{producto.productoNombre}</Text>
+                        <Text fontWeight="semibold" lineClamp={1}>{producto.productoNombre}</Text>
                         <HStack mt={2} justify="space-between">
                             <Text fontSize="sm" color="app.textSubtle">{producto.lotes} lote(s)</Text>
-                            <Badge colorScheme={sameCantidad(producto.cantidadReportada, producto.cantidadConfirmada) ? "gray" : "orange"}>
+                            <Badge colorPalette={sameCantidad(producto.cantidadReportada, producto.cantidadConfirmada) ? "gray" : "orange"}>
                                 {formatCantidad(producto.cantidadConfirmada)} {producto.tipoUnidades || "unidades"}
                             </Badge>
                         </HStack>
@@ -61,7 +60,7 @@ export default function IngresoTerminadosStep2Correccion({
                 ))}
             </SimpleGrid>
 
-            <VStack align="stretch" spacing={3}>
+            <VStack align="stretch" gap={3}>
                 {reportes.map((reporte) => {
                     const edicion = ediciones[reporte.reporteId];
                     const changed = !sameCantidad(edicion.cantidadConfirmada, reporte.cantidadReportada);
@@ -84,36 +83,36 @@ export default function IngresoTerminadosStep2Correccion({
                                 </Text>
                             </HStack>
 
-                            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                                <FormControl isRequired>
-                                    <FormLabel>Cantidad confirmada</FormLabel>
-                                    <NumberInput
-                                        value={edicion.cantidadConfirmada}
+                            <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                                <Field.Root required>
+                                    <Field.Label>Cantidad confirmada</Field.Label>
+                                    <NumberInput.Root
+                                        value={String(edicion.cantidadConfirmada)}
                                         min={0.0001}
                                         precision={4}
                                         clampValueOnBlur={false}
-                                        isDisabled={!editable}
-                                        onChange={(_, value) => onChange(reporte.reporteId, {
+                                        disabled={!editable}
+                                        onValueChange={(_, value) => onChange(reporte.reporteId, {
                                             ...edicion,
                                             cantidadConfirmada: value,
                                         })}
                                     >
-                                        <NumberInputField inputMode="decimal" />
-                                    </NumberInput>
-                                </FormControl>
+                                        <NumberInput.Input inputMode="decimal" />
+                                    </NumberInput.Root>
+                                </Field.Root>
 
-                                <FormControl isRequired={changed} isDisabled={!editable || !changed}>
-                                    <FormLabel>Motivo de corrección</FormLabel>
+                                <Field.Root required={changed} disabled={!editable || !changed}>
+                                    <Field.Label>Motivo de corrección</Field.Label>
                                     <Input
                                         value={edicion.motivoCorreccion}
                                         maxLength={500}
                                         placeholder={changed ? "Describa la diferencia" : "Sin cambios"}
-                                        onChange={(event) => onChange(reporte.reporteId, {
+                                        onValueChange={(event) => onChange(reporte.reporteId, {
                                             ...edicion,
                                             motivoCorreccion: event.target.value,
                                         })}
                                     />
-                                </FormControl>
+                                </Field.Root>
                             </SimpleGrid>
                         </Box>
                     );

@@ -1,18 +1,12 @@
-import { DownloadIcon, QuestionIcon } from "@chakra-ui/icons";
 import {
+    Steps,
     Accordion,
-    AccordionButton,
-    AccordionIcon,
-    AccordionItem,
-    AccordionPanel,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Button,
     ButtonGroup,
     Card,
-    CardBody,
     Center,
     HStack,
     IconButton,
@@ -26,12 +20,12 @@ import {
     Text,
     Th,
     Thead,
-    Tooltip,
     Tr,
     useBreakpointValue,
     useDisclosure,
     useToast,
 } from "@chakra-ui/react";
+import { Tooltip } from '@/components/ui/tooltip';
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
     downloadOpenProductionOrdersMaterialExcel,
@@ -62,6 +56,7 @@ import type {
     PaginaInformeInventario,
     WipMaterialEstimado,
 } from "./informesGlobales.types";
+import { LuDownload, LuHelpCircle } from 'react-icons/lu';
 
 const PAGE_SIZE = 10;
 const EXCEL_MIME =
@@ -177,7 +172,7 @@ function DetailToggle({
             w={{ base: "full", sm: "auto" }}
             alignSelf="flex-start"
             onClick={onClick}
-            isDisabled={disabled}
+            disabled={disabled}
             aria-expanded={expanded}
         >
             {expanded ? "Ocultar detalle" : "Ver detalle"}
@@ -199,13 +194,13 @@ function PageNavigation({
             w={{ base: "full", sm: "auto" }}
             alignSelf="center"
             alignItems="center"
-            spacing={2}
+            gap={2}
         >
             <Button
                 minH="44px"
                 w={{ base: "full", sm: "auto" }}
                 variant="outline"
-                isDisabled={result.first}
+                disabled={result.first}
                 onClick={() => onPageChange(result.page - 1)}
             >
                 Anterior
@@ -217,7 +212,7 @@ function PageNavigation({
                 minH="44px"
                 w={{ base: "full", sm: "auto" }}
                 variant="outline"
-                isDisabled={result.last}
+                disabled={result.last}
                 onClick={() => onPageChange(result.page + 1)}
             >
                 Siguiente
@@ -280,21 +275,21 @@ export function PendingPurchaseOrdersSection({
     };
 
     return (
-        <Card variant="outline">
-            <CardBody p={{ base: 3, md: 5 }}>
-                <Stack spacing={4}>
+        <Card.Root variant="outline">
+            <Card.Body p={{ base: 3, md: 5 }}>
+                <Stack gap={4}>
                     <SectionHeading
                         title="Materiales pendientes de ingreso por OCM"
                         description="Saldo por recibir de OCM activas, calculado como cantidad ordenada menos recepción aplicada."
                     />
-                    <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={3}>
+                    <SimpleGrid columns={{ base: 1, sm: 3 }} gap={3}>
                         <KpiCard label="Órdenes activas" value={formatInteger(report.ordenes)} help={`${formatInteger(report.referencias)} referencias`} />
                         <KpiCard label="Valor pendiente sin IVA" value={formatCurrency(report.valorPendienteSinIva)} help="Sobre las cantidades pendientes" />
                         <KpiCard label="Cantidades pendientes" value={formatQuantities(report.cantidadesPorUnidad)} help="Separadas por unidad de medida" />
                     </SimpleGrid>
                     <Stack
                         direction={{ base: "column", sm: "row" }}
-                        spacing={2}
+                        gap={2}
                         align={{ base: "stretch", sm: "center" }}
                     >
                         <DetailToggle
@@ -304,54 +299,51 @@ export function PendingPurchaseOrdersSection({
                         />
                         <Button
                             variant="outline"
-                            colorScheme="green"
+                            colorPalette="green"
                             minH="44px"
-                            leftIcon={<DownloadIcon />}
-                            isLoading={downloading}
+                            loading={downloading}
                             loadingText="Generando Excel…"
-                            isDisabled={report.ordenes === 0}
+                            disabled={report.ordenes === 0}
                             w={{ base: "full", sm: "auto" }}
                             title={`Exporta las líneas pendientes de ${formatInteger(report.ordenes)} OCM`}
-                            onClick={downloadExcel}
-                        >
-                            Descargar Excel
-                        </Button>
+                            onClick={downloadExcel}><LuDownload />Descargar Excel
+                                                    </Button>
                     </Stack>
                     {detail.expanded ? (
-                        <Stack spacing={3}>
+                        <Stack gap={3}>
                             <DetailState loading={detail.loading} error={detail.error} />
                             {!detail.loading && !detail.error && detail.result ? (
                                 <>
-                                    <Accordion allowMultiple>
+                                    <Accordion.Root multiple>
                                         {detail.result.items.map((order) => (
-                                            <AccordionItem key={order.ocmId}>
+                                            <Accordion.Item key={order.ocmId} value='item-0'>
                                                 <h4>
-                                                    <AccordionButton minH="48px">
+                                                    <Accordion.ItemTrigger minH="48px">
                                                         <Box flex="1" textAlign="left">
                                                             <Text fontWeight="semibold">OCM {order.ocmId} · {order.proveedor}</Text>
                                                             <Text color="app.textMuted" fontSize="sm">
                                                                 {formatDateTime(order.fechaEmision)} · {formatCurrency(order.valorPendienteSinIva)}
                                                             </Text>
                                                         </Box>
-                                                        <AccordionIcon />
-                                                    </AccordionButton>
+                                                        <Accordion.ItemIndicator />
+                                                    </Accordion.ItemTrigger>
                                                 </h4>
-                                                <AccordionPanel px={{ base: 0, md: 4 }}>
-                                                    <PendingOrderLines
-                                                        lines={order.lineas}
-                                                    />
-                                                </AccordionPanel>
-                                            </AccordionItem>
+                                                <Accordion.ItemContent px={{ base: 0, md: 4 }}><Accordion.ItemBody>
+                                                        <PendingOrderLines
+                                                            lines={order.lineas}
+                                                        />
+                                                    </Accordion.ItemBody></Accordion.ItemContent>
+                                            </Accordion.Item>
                                         ))}
-                                    </Accordion>
+                                    </Accordion.Root>
                                     <PageNavigation result={detail.result} onPageChange={detail.setPage} />
                                 </>
                             ) : null}
                         </Stack>
                     ) : null}
                 </Stack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 
@@ -360,11 +352,11 @@ function PendingOrderLines({ lines }: { lines: LineaOcmPendiente[] }) {
 
     if (compact) {
         return (
-            <Stack spacing={3}>
+            <Stack gap={3}>
                 {lines.map((line) => (
-                    <Card key={line.itemId} variant="outline">
-                        <CardBody p={3}>
-                            <Stack spacing={3}>
+                    <Card.Root key={line.itemId} variant="outline">
+                        <Card.Body p={3}>
+                            <Stack gap={3}>
                                 <Box minW={0}>
                                     <Text fontWeight="semibold">
                                         {line.productoNombre}
@@ -373,7 +365,7 @@ function PendingOrderLines({ lines }: { lines: LineaOcmPendiente[] }) {
                                         {line.productoId}
                                     </Text>
                                 </Box>
-                                <SimpleGrid columns={2} spacing={3}>
+                                <SimpleGrid columns={2} gap={3}>
                                     <CompactMetric
                                         label="Ordenado"
                                         value={formatQuantity(line.ordenado)}
@@ -394,52 +386,52 @@ function PendingOrderLines({ lines }: { lines: LineaOcmPendiente[] }) {
                                     />
                                 </SimpleGrid>
                             </Stack>
-                        </CardBody>
-                    </Card>
+                        </Card.Body>
+                    </Card.Root>
                 ))}
             </Stack>
         );
     }
 
     return (
-        <TableContainer>
-            <Table size="sm">
-                <Thead>
-                    <Tr>
-                        <Th>Material</Th>
-                        <Th isNumeric>Ordenado</Th>
-                        <Th isNumeric>Recibido</Th>
-                        <Th isNumeric>Pendiente</Th>
-                        <Th isNumeric>Valor pendiente</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
+        <Table.ScrollArea>
+            <Table.Root size="sm">
+                <Table.Header>
+                    <Table.Row>
+                        <Table.ColumnHeader>Material</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Ordenado</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Recibido</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Pendiente</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Valor pendiente</Table.ColumnHeader>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {lines.map((line) => (
-                        <Tr key={line.itemId}>
-                            <Td>
+                        <Table.Row key={line.itemId}>
+                            <Table.Cell>
                                 <Text fontWeight="semibold">
                                     {line.productoNombre}
                                 </Text>
                                 <Text color="app.textMuted" fontSize="xs">
                                     {line.productoId}
                                 </Text>
-                            </Td>
-                            <Td isNumeric>{formatQuantity(line.ordenado)}</Td>
-                            <Td isNumeric>
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>{formatQuantity(line.ordenado)}</Table.Cell>
+                            <Table.Cell textAlign='end'>
                                 {formatQuantity(line.recibidoAplicado)}
-                            </Td>
-                            <Td isNumeric>
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>
                                 {formatQuantity(line.pendiente)}{" "}
                                 {line.unidadMedida}
-                            </Td>
-                            <Td isNumeric>
+                            </Table.Cell>
+                            <Table.Cell textAlign='end'>
                                 {formatCurrency(line.valorPendienteSinIva)}
-                            </Td>
-                        </Tr>
+                            </Table.Cell>
+                        </Table.Row>
                     ))}
-                </Tbody>
-            </Table>
-        </TableContainer>
+                </Table.Body>
+            </Table.Root>
+        </Table.ScrollArea>
     );
 }
 
@@ -549,10 +541,10 @@ export function OpenProductionOrdersSection({
 
     return (
         <>
-            <Card variant="outline">
-                <CardBody p={{ base: 3, md: 5 }}>
-                    <Stack spacing={4}>
-                        <HStack align="flex-start" spacing={2}>
+            <Card.Root variant="outline">
+                <Card.Body p={{ base: 3, md: 5 }}>
+                    <Stack gap={4}>
+                        <HStack align="flex-start" gap={2}>
                             <Box flex={1} minW={0}>
                                 <SectionHeading
                                     title="Material asociado a OP abiertas"
@@ -560,22 +552,20 @@ export function OpenProductionOrdersSection({
                                 />
                             </Box>
                             <Tooltip
-                                label="Cómo se calculan Material dispensado y WIP"
-                                hasArrow
+                                content="Cómo se calculan Material dispensado y WIP"
+                                showArrow
                             >
                                 <IconButton
                                     aria-label="Cómo se calculan Material dispensado y WIP"
-                                    icon={<QuestionIcon />}
                                     variant="ghost"
                                     minW="44px"
                                     minH="44px"
-                                    onClick={help.onOpen}
-                                />
+                                    onClick={help.onOpen}><LuHelpCircle /></IconButton>
                             </Tooltip>
                         </HStack>
 
                         <ButtonGroup
-                            isAttached
+                            attached
                             size="sm"
                             w={{ base: "full", md: "fit-content" }}
                             aria-label="Vista de materiales asociados a OP"
@@ -586,7 +576,7 @@ export function OpenProductionOrdersSection({
                                 h="auto"
                                 py={2}
                                 whiteSpace="normal"
-                                colorScheme={
+                                colorPalette={
                                     mode === "DISPENSADO" ? "green" : undefined
                                 }
                                 variant={
@@ -602,9 +592,9 @@ export function OpenProductionOrdersSection({
                                 h="auto"
                                 py={2}
                                 whiteSpace="normal"
-                                colorScheme={mode === "WIP" ? "purple" : undefined}
+                                colorPalette={mode === "WIP" ? "purple" : undefined}
                                 variant={mode === "WIP" ? "solid" : "outline"}
-                                isDisabled={!wipAvailable}
+                                disabled={!wipAvailable}
                                 title={!wipAvailable
                                     ? "WIP requiere la versión 5 del informe"
                                     : undefined}
@@ -643,18 +633,18 @@ export function OpenProductionOrdersSection({
                                 onDownload={() => downloadExcel("WIP")}
                             />
                         ) : (
-                            <Alert status="info" borderRadius="md">
-                                <AlertIcon />
+                            <Alert.Root status="info" borderRadius="md">
+                                <Alert.Indicator />
                                 La vista WIP estará disponible con la versión 5
                                 del informe de almacén.
-                            </Alert>
+                            </Alert.Root>
                         )}
                     </Stack>
-                </CardBody>
-            </Card>
+                </Card.Body>
+            </Card.Root>
 
             <MaterialOpHelpModal
-                isOpen={help.isOpen}
+                isOpen={help.open}
                 onClose={help.onClose}
             />
         </>
@@ -708,9 +698,9 @@ function ProductionMaterialView<T extends ProductionOrderRow>({
     onDownload: () => void;
 }) {
     return (
-        <Stack spacing={4}>
+        <Stack gap={4}>
             <Text color="app.textMuted" fontSize="sm">{note}</Text>
-            <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={3}>
+            <SimpleGrid columns={{ base: 1, sm: 3 }} gap={3}>
                 <KpiCard
                     label={orderLabel}
                     value={formatInteger(report.ordenes)}
@@ -730,7 +720,7 @@ function ProductionMaterialView<T extends ProductionOrderRow>({
 
             <Stack
                 direction={{ base: "column", sm: "row" }}
-                spacing={2}
+                gap={2}
                 align={{ base: "stretch", sm: "center" }}
             >
                 <DetailToggle
@@ -740,21 +730,18 @@ function ProductionMaterialView<T extends ProductionOrderRow>({
                 />
                 <Button
                     variant="outline"
-                    colorScheme="green"
+                    colorPalette="green"
                     minH="44px"
                     w={{ base: "full", sm: "auto" }}
-                    leftIcon={<DownloadIcon />}
-                    isLoading={downloading}
+                    loading={downloading}
                     loadingText="Generando Excel…"
-                    isDisabled={report.ordenes === 0}
-                    onClick={onDownload}
-                >
-                    Descargar Excel
-                </Button>
+                    disabled={report.ordenes === 0}
+                    onClick={onDownload}><LuDownload />Descargar Excel
+                                    </Button>
             </Stack>
 
             {detail.expanded ? (
-                <Stack spacing={3}>
+                <Stack gap={3}>
                     <DetailState loading={detail.loading} error={detail.error} />
                     {!detail.loading && !detail.error && detail.result ? (
                         <>
@@ -788,13 +775,13 @@ function ProductionOrdersDataView<T extends ProductionOrderRow>({
 
     if (compact) {
         return (
-            <Stack spacing={3}>
+            <Stack gap={3}>
                 {items.map((order) => {
                     const date = getDate(order);
                     return (
-                        <Card key={order.opId} variant="outline">
-                            <CardBody p={3}>
-                                <Stack spacing={3}>
+                        <Card.Root key={order.opId} variant="outline">
+                            <Card.Body p={3}>
+                                <Stack gap={3}>
                                     <HStack
                                         justify="space-between"
                                         align="flex-start"
@@ -811,11 +798,11 @@ function ProductionOrdersDataView<T extends ProductionOrderRow>({
                                                 Lote {order.lote || "—"}
                                             </Text>
                                         </Box>
-                                        <Badge colorScheme="blue">
+                                        <Badge colorPalette="blue">
                                             {productionOrderState(order.estado)}
                                         </Badge>
                                     </HStack>
-                                    <SimpleGrid columns={2} spacing={3}>
+                                    <SimpleGrid columns={2} gap={3}>
                                         <CompactMetric
                                             label={dateLabel}
                                             value={date
@@ -842,8 +829,8 @@ function ProductionOrdersDataView<T extends ProductionOrderRow>({
                                         />
                                     </SimpleGrid>
                                 </Stack>
-                            </CardBody>
-                        </Card>
+                            </Card.Body>
+                        </Card.Root>
                     );
                 })}
             </Stack>
@@ -851,49 +838,49 @@ function ProductionOrdersDataView<T extends ProductionOrderRow>({
     }
 
     return (
-        <TableContainer>
-            <Table size="sm">
-                <Thead>
-                    <Tr>
-                        <Th>OP</Th>
-                        <Th>Lote</Th>
-                        <Th>{dateLabel}</Th>
-                        <Th>Estado</Th>
-                        <Th isNumeric>Referencias</Th>
-                        <Th>Cantidades</Th>
-                        <Th isNumeric>Valor estimado</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
+        <Table.ScrollArea>
+            <Table.Root size="sm">
+                <Table.Header>
+                    <Table.Row>
+                        <Table.ColumnHeader>OP</Table.ColumnHeader>
+                        <Table.ColumnHeader>Lote</Table.ColumnHeader>
+                        <Table.ColumnHeader>{dateLabel}</Table.ColumnHeader>
+                        <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Referencias</Table.ColumnHeader>
+                        <Table.ColumnHeader>Cantidades</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign='end'>Valor estimado</Table.ColumnHeader>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {items.map((order) => {
                         const date = getDate(order);
                         return (
-                            <Tr key={order.opId}>
-                                <Td fontWeight="semibold">{order.opId}</Td>
-                                <Td>{order.lote || "—"}</Td>
-                                <Td>{date ? formatDateTime(date) : "—"}</Td>
-                                <Td>
-                                    <Badge colorScheme="blue">
+                            <Table.Row key={order.opId}>
+                                <Table.Cell fontWeight="semibold">{order.opId}</Table.Cell>
+                                <Table.Cell>{order.lote || "—"}</Table.Cell>
+                                <Table.Cell>{date ? formatDateTime(date) : "—"}</Table.Cell>
+                                <Table.Cell>
+                                    <Badge colorPalette="blue">
                                         {productionOrderState(order.estado)}
                                     </Badge>
-                                </Td>
-                                <Td isNumeric>
+                                </Table.Cell>
+                                <Table.Cell textAlign='end'>
                                     {formatInteger(order.referencias)}
-                                </Td>
-                                <Td>
+                                </Table.Cell>
+                                <Table.Cell>
                                     {formatQuantities(
                                         order.cantidadesPorUnidad,
                                     )}
-                                </Td>
-                                <Td isNumeric>
+                                </Table.Cell>
+                                <Table.Cell textAlign='end'>
                                     {formatCurrency(order.valorEstimado)}
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         );
                     })}
-                </Tbody>
-            </Table>
-        </TableContainer>
+                </Table.Body>
+            </Table.Root>
+        </Table.ScrollArea>
     );
 }
 

@@ -1,16 +1,16 @@
 import type { Story, StoryDefault } from '@ladle/react';
 import {
+  Steps,
   Box,
   Button,
   Container,
   Flex,
-  FormControl,
-  FormLabel,
   Heading,
   Image,
   Input,
   Link,
   Text,
+  Field,
 } from '@chakra-ui/react';
 
 import BorderGlow from '../BorderGlow/BorderGlow.tsx';
@@ -119,15 +119,15 @@ export const LoginBackground = () => (
                 <Image src="/logo_exotic.svg" alt="Exotic logo" />
               </Box>
               <Heading size="lg">Login Panel</Heading>
-              <FormControl isRequired>
-                <FormLabel>Usuario</FormLabel>
+              <Field.Root required>
+                <Field.Label>Usuario</Field.Label>
                 <Input placeholder="username" />
-              </FormControl>
-              <FormControl isRequired>
-                <FormLabel>Contrasena</FormLabel>
+              </Field.Root>
+              <Field.Root required>
+                <Field.Label>Contrasena</Field.Label>
                 <Input placeholder="password" type="password" />
-              </FormControl>
-              <Button colorScheme="blue" w="full">
+              </Field.Root>
+              <Button colorPalette="blue" w="full">
                 Login
               </Button>
               <Link color="blue.500" href="#">

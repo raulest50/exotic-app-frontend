@@ -1,18 +1,9 @@
 import {
+    Steps,
     Accordion,
-    AccordionButton,
-    AccordionIcon,
-    AccordionItem,
-    AccordionPanel,
     Badge,
     Box,
-    Divider,
     Drawer,
-    DrawerBody,
-    DrawerCloseButton,
-    DrawerContent,
-    DrawerHeader,
-    DrawerOverlay,
     Flex,
     HStack,
     SimpleGrid,
@@ -31,8 +22,10 @@ import {
     Tr,
     VStack,
     Tabs,
-    useColorModeValue,
+    Separator,
+    Portal,
 } from "@chakra-ui/react";
+import { useColorModeValue } from "../../components/ui/color-mode";
 import { Background, BackgroundVariant, Edge, Handle, MiniMap, Node, NodeProps, NodeTypes, Position, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
@@ -148,25 +141,25 @@ function RouteNode({ data }: NodeProps<RouteFlowNode>) {
             overflow="hidden"
         >
             <Box bg={accentColor} px={3} py={2}>
-                <Text fontWeight="bold" color="white" fontSize="sm" noOfLines={2}>
+                <Text fontWeight="bold" color="white" fontSize="sm" lineClamp={2}>
                     {data.label}
                 </Text>
             </Box>
-            <VStack align="stretch" spacing={2} px={3} py={3}>
+            <VStack align="stretch" gap={2} px={3} py={3}>
                 <Text fontSize="sm" color={nodeAreaColor} fontWeight="semibold">
                     {data.areaNombre}
                 </Text>
-                <Badge alignSelf="start" colorScheme={getEstadoBadgeScheme(data.estadoActual)}>
+                <Badge alignSelf="start" colorPalette={getEstadoBadgeScheme(data.estadoActual)}>
                     {data.estadoDescripcion}
                 </Badge>
-                <HStack spacing={2} flexWrap="wrap">
-                    <Badge colorScheme="purple">{formatDurationMinutes(data.duracionEstimadaMinutos)}</Badge>
-                    <Badge colorScheme={data.requiereJornadaLaboral ? "green" : "orange"}>
+                <HStack gap={2} flexWrap="wrap">
+                    <Badge colorPalette="purple">{formatDurationMinutes(data.duracionEstimadaMinutos)}</Badge>
+                    <Badge colorPalette={data.requiereJornadaLaboral ? "green" : "orange"}>
                         {data.requiereJornadaLaboral ? "Jornada" : "Continuo"}
                     </Badge>
                 </HStack>
                 {isCurrentAreaNode ? (
-                    <Badge alignSelf="start" colorScheme="teal">
+                    <Badge alignSelf="start" colorPalette="teal">
                         Tu área
                     </Badge>
                 ) : null}
@@ -241,8 +234,8 @@ function BomTreeNode({ node, depth = 0 }: { node: BomRecetaNodeDTO; depth?: numb
                         {node.productoId} · {node.tipoProducto}
                     </Text>
                 </Box>
-                <VStack align="end" spacing={1}>
-                    <Badge colorScheme={node.inventareable ? "blue" : "gray"}>
+                <VStack align="end" gap={1}>
+                    <Badge colorPalette={node.inventareable ? "blue" : "gray"}>
                         {node.inventareable ? "Inventariable" : "No inventariable"}
                     </Badge>
                     <Text fontWeight="semibold">
@@ -258,27 +251,27 @@ function BomTreeNode({ node, depth = 0 }: { node: BomRecetaNodeDTO; depth?: numb
     }
 
     return (
-        <Accordion allowToggle defaultIndex={[0]}>
-            <AccordionItem border="none">
-                <AccordionButton px={0} py={0} _hover={{ bg: "transparent" }}>
+        <Accordion.Root collapsible defaultValue={['0']}>
+            <Accordion.Item border="none" value='item-0'>
+                <Accordion.ItemTrigger px={0} py={0} _hover={{ bg: "transparent" }}>
                     <Box flex="1" textAlign="left">
                         {content}
                     </Box>
-                    <AccordionIcon />
-                </AccordionButton>
-                <AccordionPanel px={0} pt={3}>
-                    <VStack align="stretch" spacing={3}>
-                        {node.subInsumos.map((subNode) => (
-                            <BomTreeNode
-                                key={`${node.productoId}-${subNode.productoId}-${subNode.insumoId ?? "sub"}`}
-                                node={subNode}
-                                depth={depth + 1}
-                            />
-                        ))}
-                    </VStack>
-                </AccordionPanel>
-            </AccordionItem>
-        </Accordion>
+                    <Accordion.ItemIndicator />
+                </Accordion.ItemTrigger>
+                <Accordion.ItemContent px={0} pt={3}><Accordion.ItemBody>
+                        <VStack align="stretch" gap={3}>
+                            {node.subInsumos.map((subNode) => (
+                                <BomTreeNode
+                                    key={`${node.productoId}-${subNode.productoId}-${subNode.insumoId ?? "sub"}`}
+                                    node={subNode}
+                                    depth={depth + 1}
+                                />
+                            ))}
+                        </VStack>
+                    </Accordion.ItemBody></Accordion.ItemContent>
+            </Accordion.Item>
+        </Accordion.Root>
     );
 }
 
@@ -293,241 +286,251 @@ export default function AreaOperativaOrderDetailDrawer({
     const routeEdges = buildRouteEdges(detail);
 
     return (
-        <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="xl">
-            <DrawerOverlay />
-            <DrawerContent maxW={{ base: "100vw", md: "36rem" }}>
-                <DrawerCloseButton />
-                <DrawerHeader>Detalle operativo de la orden</DrawerHeader>
+        <Drawer.Root open={isOpen} placement='end' size='xl' onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                <DrawerBody>
-                    {loading ? (
-                        <Flex align="center" justify="center" py={10}>
-                            <Spinner />
-                        </Flex>
-                    ) : null}
+                <Drawer.Backdrop />
+                <Drawer.Positioner>
+                    <Drawer.Content maxW={{ base: "100vw", md: "36rem" }}>
+                        <Drawer.CloseTrigger />
+                        <Drawer.Header>Detalle operativo de la orden</Drawer.Header>
 
-                    {!loading && detail ? (
-                        <Tabs variant="enclosed" colorScheme="teal" isLazy>
-                            <TabList>
-                                <Tab minH={12}>Resumen</Tab>
-                                <Tab minH={12}>Ruta</Tab>
-                                <Tab minH={12}>BOM</Tab>
-                            </TabList>
+                        <Drawer.Body>
+                            {loading ? (
+                                <Flex align="center" justify="center" py={10}>
+                                    <Spinner />
+                                </Flex>
+                            ) : null}
 
-                            <TabPanels>
-                                <TabPanel px={0} py={5}>
-                                    <VStack align="stretch" spacing={5}>
-                                        <Box>
-                                            <Text fontWeight="bold">{detail.orden.loteAsignado || `OP-${detail.orden.ordenId}`}</Text>
-                                            <Text color="app.textMuted">
-                                                {detail.orden.productoNombre} · {detail.orden.productoId}
-                                            </Text>
-                                            <Text color="app.textMuted">
-                                                Categoría: {detail.orden.categoriaNombre || "Sin categoría"} · Cantidad: {formatCantidad(detail.orden.cantidadProducir)}
-                                            </Text>
-                                            <HStack mt={2} spacing={2} flexWrap="wrap">
-                                                <Badge colorScheme={getEstadoDispensacionMaterialesColor(detail.orden.estadoDispensacionMateriales)}>
-                                                    {getEstadoDispensacionMaterialesLabel(detail.orden.estadoDispensacionMateriales)}
-                                                </Badge>
-                                                <Badge colorScheme={getPoliticaDispensacionInicioColor(detail.orden.politicaDispensacionInicio)}>
-                                                    {getPoliticaDispensacionInicioLabel(detail.orden.politicaDispensacionInicio)}
-                                                </Badge>
-                                            </HStack>
-                                        </Box>
+                            {!loading && detail ? (
+                                <Tabs.Root variant='enclosed' colorPalette="teal" lazyMount>
+                                    <Tabs.List>
+                                        <Tab minH={12}>Resumen</Tab>
+                                        <Tab minH={12}>Ruta</Tab>
+                                        <Tab minH={12}>BOM</Tab>
+                                    </Tabs.List>
 
-                                        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                                            <Box borderWidth="1px" borderRadius="md" p={3}>
-                                                <Text fontSize="sm" color="app.textSubtle">Politica dispensacion</Text>
-                                                <Text>{getPoliticaDispensacionInicioLabel(detail.orden.politicaDispensacionInicio)}</Text>
-                                                <Text fontSize="xs" color="app.textMuted">
-                                                    {formatDateTime(detail.orden.fechaAplicacionPoliticaDispensacion)}
-                                                </Text>
-                                            </Box>
-                                            <Box borderWidth="1px" borderRadius="md" p={3}>
-                                                <Text fontSize="sm" color="app.textSubtle">Estado materiales</Text>
-                                                <Text>{getEstadoDispensacionMaterialesLabel(detail.orden.estadoDispensacionMateriales)}</Text>
-                                            </Box>
-                                            <Box borderWidth="1px" borderRadius="md" p={3}>
-                                                <Text fontSize="sm" color="app.textSubtle">Creación</Text>
-                                                <Text>{formatDateTime(detail.orden.fechaCreacion)}</Text>
-                                            </Box>
-                                            <Box borderWidth="1px" borderRadius="md" p={3}>
-                                                <Text fontSize="sm" color="app.textSubtle">Fin planificada</Text>
-                                                <Text>{formatDateTime(detail.orden.fechaFinalPlanificada)}</Text>
-                                            </Box>
-                                            <Box borderWidth="1px" borderRadius="md" p={3}>
-                                                <Text fontSize="sm" color="app.textSubtle">Inicio estimado</Text>
-                                                <Text>{formatDateTime(detail.orden.fechaInicioEstimacion)}</Text>
-                                            </Box>
-                                            <Box borderWidth="1px" borderRadius="md" p={3}>
-                                                <Text fontSize="sm" color="app.textSubtle">Fin estimado</Text>
-                                                <Text>{formatDateTime(detail.orden.fechaFinalEstimada)}</Text>
-                                            </Box>
-                                            <Box borderWidth="1px" borderRadius="md" p={3}>
-                                                <Text fontSize="sm" color="app.textSubtle">Duración estimada</Text>
-                                                <Text>{formatDurationMinutes(detail.orden.duracionCalendarioRutaCriticaMinutos)}</Text>
-                                            </Box>
-                                            <Box borderWidth="1px" borderRadius="md" p={3}>
-                                                <Text fontSize="sm" color="app.textSubtle">Inicio real</Text>
-                                                <Text>{formatDateTime(detail.orden.fechaInicio)}</Text>
-                                            </Box>
-                                            <Box borderWidth="1px" borderRadius="md" p={3}>
-                                                <Text fontSize="sm" color="app.textSubtle">Fin real</Text>
-                                                <Text>{formatDateTime(detail.orden.fechaFinal)}</Text>
-                                            </Box>
-                                        </SimpleGrid>
-
-                                        <Box>
-                                            <Text fontWeight="semibold" mb={2}>Observaciones de la orden</Text>
-                                            <Box borderWidth="1px" borderRadius="md" p={3} bg="app.surfaceSubtle">
-                                                <Text whiteSpace="pre-wrap">
-                                                    {detail.orden.ordenObservaciones?.trim() || "Sin observaciones registradas."}
-                                                </Text>
-                                            </Box>
-                                        </Box>
-
-                                        <Box>
-                                            <Text fontWeight="semibold" mb={3}>Seguimiento actual</Text>
-                                            <VStack align="stretch" spacing={3}>
-                                                {detail.seguimiento.map((item, index) => (
-                                                    <Box key={item.seguimientoId} borderWidth="1px" borderRadius="md" p={3}>
-                                                        <HStack justify="space-between" align="start" mb={2}>
-                                                            <Box>
-                                                                <Text fontWeight="bold">
-                                                                    {index + 1}. {item.nodeLabel}
-                                                                </Text>
-                                                                <Text fontSize="sm" color="app.textMuted">
-                                                                    {item.areaNombre}
-                                                                </Text>
-                                                            </Box>
-                                                            <Badge colorScheme={getEstadoBadgeScheme(item.estado)}>
-                                                                {item.estadoDescripcion}
-                                                            </Badge>
-                                                        </HStack>
-
-                                                        <Stack spacing={1} fontSize="sm" color="app.textMuted">
-                                                            <Text>
-                                                                Estimado: {formatDurationMinutes(item.duracionEstimadaMinutos)} · {item.requiereJornadaLaboral ? "Jornada laboral" : "Tiempo continuo"}
-                                                            </Text>
-                                                            <Text>Visible desde: {formatDateTime(item.fechaVisible)}</Text>
-                                                            <Text>Estado actual desde: {formatDateTime(item.fechaEstadoActual)}</Text>
-                                                            <Text>Completado: {formatDateTime(item.fechaCompletado)}</Text>
-                                                            <Text>Último reporte por: {item.usuarioReportaNombre || "Sistema / sin registro"}</Text>
-                                                        </Stack>
-
-                                                        {item.observaciones?.trim() ? (
-                                                            <>
-                                                                <Divider my={3} />
-                                                                <Text fontSize="sm" whiteSpace="pre-wrap">
-                                                                    {item.observaciones}
-                                                                </Text>
-                                                            </>
-                                                        ) : null}
-                                                    </Box>
-                                                ))}
-                                            </VStack>
-                                        </Box>
-                                    </VStack>
-                                </TabPanel>
-
-                                <TabPanel px={0} py={5}>
-                                    <VStack align="stretch" spacing={4}>
-                                        <HStack spacing={3} flexWrap="wrap">
-                                            <Badge colorScheme="teal">Tu área resaltada</Badge>
-                                            <Badge colorScheme="orange">Cola</Badge>
-                                            <Badge colorScheme="yellow">Espera</Badge>
-                                            <Badge colorScheme="blue">En proceso</Badge>
-                                            <Badge colorScheme="green">Completado</Badge>
-                                        </HStack>
-
-                                        {routeNodes.length > 0 ? (
-                                            <Box h="520px" borderWidth="1px" borderRadius="lg" overflow="hidden">
-                                                <ReactFlow
-                                                    nodes={routeNodes}
-                                                    edges={routeEdges}
-                                                    nodeTypes={nodeTypes}
-                                                    fitView
-                                                    nodesDraggable={false}
-                                                    nodesConnectable={false}
-                                                    elementsSelectable={false}
-                                                    zoomOnScroll
-                                                    panOnDrag
-                                                    proOptions={{ hideAttribution: true }}
-                                                >
-                                                    <MiniMap pannable zoomable nodeColor={(node) => getEstadoColor((node.data as RouteNodeData).estadoActual)} />
-                                                    <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-                                                </ReactFlow>
-                                            </Box>
-                                        ) : (
-                                            <Text color="app.textSubtle">La orden no tiene una ruta de proceso visual disponible.</Text>
-                                        )}
-                                    </VStack>
-                                </TabPanel>
-
-                                <TabPanel px={0} py={5}>
-                                    <VStack align="stretch" spacing={6}>
-                                        <Box>
-                                            <Text fontWeight="semibold" mb={3}>Receta jerárquica</Text>
-                                            {detail.bom.receta.length > 0 ? (
-                                                <VStack align="stretch" spacing={3}>
-                                                    {detail.bom.receta.map((node) => (
-                                                        <BomTreeNode
-                                                            key={`${node.productoId}-${node.insumoId ?? "root"}`}
-                                                            node={node}
-                                                        />
-                                                    ))}
-                                                </VStack>
-                                            ) : (
-                                                <Text color="app.textSubtle">No hay receta configurada para este terminado.</Text>
-                                            )}
-                                        </Box>
-
-                                        <Box>
-                                            <Text fontWeight="semibold" mb={3}>Materiales de empaque</Text>
-                                            {detail.bom.empaque.length > 0 ? (
-                                                <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
-                                                    <Table size="sm">
-                                                        <Thead bg="app.tableHeader">
-                                                            <Tr>
-                                                                <Th>Producto</Th>
-                                                                <Th>ID</Th>
-                                                                <Th isNumeric>Cantidad total</Th>
-                                                                <Th>Unidad</Th>
-                                                                <Th>Inventariable</Th>
-                                                            </Tr>
-                                                        </Thead>
-                                                        <Tbody>
-                                                            {detail.bom.empaque.map((item) => (
-                                                                <Tr key={item.productoId}>
-                                                                    <Td>{item.productoNombre}</Td>
-                                                                    <Td>{item.productoId}</Td>
-                                                                    <Td isNumeric>{formatCantidad(item.cantidadTotalRequerida)}</Td>
-                                                                    <Td>{item.tipoUnidades || "-"}</Td>
-                                                                    <Td>
-                                                                        <Badge colorScheme={item.inventareable ? "blue" : "gray"}>
-                                                                            {item.inventareable ? "Sí" : "No"}
-                                                                        </Badge>
-                                                                    </Td>
-                                                                </Tr>
-                                                            ))}
-                                                        </Tbody>
-                                                    </Table>
+                                    <TabPanels>
+                                        <TabPanel px={0} py={5}>
+                                            <VStack align="stretch" gap={5}>
+                                                <Box>
+                                                    <Text fontWeight="bold">{detail.orden.loteAsignado || `OP-${detail.orden.ordenId}`}</Text>
+                                                    <Text color="app.textMuted">
+                                                        {detail.orden.productoNombre} · {detail.orden.productoId}
+                                                    </Text>
+                                                    <Text color="app.textMuted">
+                                                        Categoría: {detail.orden.categoriaNombre || "Sin categoría"} · Cantidad: {formatCantidad(detail.orden.cantidadProducir)}
+                                                    </Text>
+                                                    <HStack mt={2} gap={2} flexWrap="wrap">
+                                                        <Badge colorPalette={getEstadoDispensacionMaterialesColor(detail.orden.estadoDispensacionMateriales)}>
+                                                            {getEstadoDispensacionMaterialesLabel(detail.orden.estadoDispensacionMateriales)}
+                                                        </Badge>
+                                                        <Badge colorPalette={getPoliticaDispensacionInicioColor(detail.orden.politicaDispensacionInicio)}>
+                                                            {getPoliticaDispensacionInicioLabel(detail.orden.politicaDispensacionInicio)}
+                                                        </Badge>
+                                                    </HStack>
                                                 </Box>
-                                            ) : (
-                                                <Text color="app.textSubtle">No hay materiales de empaque asociados a la orden.</Text>
-                                            )}
-                                        </Box>
-                                    </VStack>
-                                </TabPanel>
-                            </TabPanels>
-                        </Tabs>
-                    ) : null}
 
-                    {!loading && !detail ? (
-                        <Text color="app.textSubtle">No se encontró detalle operativo para esta orden.</Text>
-                    ) : null}
-                </DrawerBody>
-            </DrawerContent>
-        </Drawer>
+                                                <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                                                    <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                        <Text fontSize="sm" color="app.textSubtle">Politica dispensacion</Text>
+                                                        <Text>{getPoliticaDispensacionInicioLabel(detail.orden.politicaDispensacionInicio)}</Text>
+                                                        <Text fontSize="xs" color="app.textMuted">
+                                                            {formatDateTime(detail.orden.fechaAplicacionPoliticaDispensacion)}
+                                                        </Text>
+                                                    </Box>
+                                                    <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                        <Text fontSize="sm" color="app.textSubtle">Estado materiales</Text>
+                                                        <Text>{getEstadoDispensacionMaterialesLabel(detail.orden.estadoDispensacionMateriales)}</Text>
+                                                    </Box>
+                                                    <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                        <Text fontSize="sm" color="app.textSubtle">Creación</Text>
+                                                        <Text>{formatDateTime(detail.orden.fechaCreacion)}</Text>
+                                                    </Box>
+                                                    <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                        <Text fontSize="sm" color="app.textSubtle">Fin planificada</Text>
+                                                        <Text>{formatDateTime(detail.orden.fechaFinalPlanificada)}</Text>
+                                                    </Box>
+                                                    <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                        <Text fontSize="sm" color="app.textSubtle">Inicio estimado</Text>
+                                                        <Text>{formatDateTime(detail.orden.fechaInicioEstimacion)}</Text>
+                                                    </Box>
+                                                    <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                        <Text fontSize="sm" color="app.textSubtle">Fin estimado</Text>
+                                                        <Text>{formatDateTime(detail.orden.fechaFinalEstimada)}</Text>
+                                                    </Box>
+                                                    <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                        <Text fontSize="sm" color="app.textSubtle">Duración estimada</Text>
+                                                        <Text>{formatDurationMinutes(detail.orden.duracionCalendarioRutaCriticaMinutos)}</Text>
+                                                    </Box>
+                                                    <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                        <Text fontSize="sm" color="app.textSubtle">Inicio real</Text>
+                                                        <Text>{formatDateTime(detail.orden.fechaInicio)}</Text>
+                                                    </Box>
+                                                    <Box borderWidth="1px" borderRadius="md" p={3}>
+                                                        <Text fontSize="sm" color="app.textSubtle">Fin real</Text>
+                                                        <Text>{formatDateTime(detail.orden.fechaFinal)}</Text>
+                                                    </Box>
+                                                </SimpleGrid>
+
+                                                <Box>
+                                                    <Text fontWeight="semibold" mb={2}>Observaciones de la orden</Text>
+                                                    <Box borderWidth="1px" borderRadius="md" p={3} bg="app.surfaceSubtle">
+                                                        <Text whiteSpace="pre-wrap">
+                                                            {detail.orden.ordenObservaciones?.trim() || "Sin observaciones registradas."}
+                                                        </Text>
+                                                    </Box>
+                                                </Box>
+
+                                                <Box>
+                                                    <Text fontWeight="semibold" mb={3}>Seguimiento actual</Text>
+                                                    <VStack align="stretch" gap={3}>
+                                                        {detail.seguimiento.map((item, index) => (
+                                                            <Box key={item.seguimientoId} borderWidth="1px" borderRadius="md" p={3}>
+                                                                <HStack justify="space-between" align="start" mb={2}>
+                                                                    <Box>
+                                                                        <Text fontWeight="bold">
+                                                                            {index + 1}. {item.nodeLabel}
+                                                                        </Text>
+                                                                        <Text fontSize="sm" color="app.textMuted">
+                                                                            {item.areaNombre}
+                                                                        </Text>
+                                                                    </Box>
+                                                                    <Badge colorPalette={getEstadoBadgeScheme(item.estado)}>
+                                                                        {item.estadoDescripcion}
+                                                                    </Badge>
+                                                                </HStack>
+
+                                                                <Stack gap={1} fontSize="sm" color="app.textMuted">
+                                                                    <Text>
+                                                                        Estimado: {formatDurationMinutes(item.duracionEstimadaMinutos)} · {item.requiereJornadaLaboral ? "Jornada laboral" : "Tiempo continuo"}
+                                                                    </Text>
+                                                                    <Text>Visible desde: {formatDateTime(item.fechaVisible)}</Text>
+                                                                    <Text>Estado actual desde: {formatDateTime(item.fechaEstadoActual)}</Text>
+                                                                    <Text>Completado: {formatDateTime(item.fechaCompletado)}</Text>
+                                                                    <Text>Último reporte por: {item.usuarioReportaNombre || "Sistema / sin registro"}</Text>
+                                                                </Stack>
+
+                                                                {item.observaciones?.trim() ? (
+                                                                    <>
+                                                                        <Separator my={3} />
+                                                                        <Text fontSize="sm" whiteSpace="pre-wrap">
+                                                                            {item.observaciones}
+                                                                        </Text>
+                                                                    </>
+                                                                ) : null}
+                                                            </Box>
+                                                        ))}
+                                                    </VStack>
+                                                </Box>
+                                            </VStack>
+                                        </TabPanel>
+
+                                        <TabPanel px={0} py={5}>
+                                            <VStack align="stretch" gap={4}>
+                                                <HStack gap={3} flexWrap="wrap">
+                                                    <Badge colorPalette="teal">Tu área resaltada</Badge>
+                                                    <Badge colorPalette="orange">Cola</Badge>
+                                                    <Badge colorPalette="yellow">Espera</Badge>
+                                                    <Badge colorPalette="blue">En proceso</Badge>
+                                                    <Badge colorPalette="green">Completado</Badge>
+                                                </HStack>
+
+                                                {routeNodes.length > 0 ? (
+                                                    <Box h="520px" borderWidth="1px" borderRadius="lg" overflow="hidden">
+                                                        <ReactFlow
+                                                            nodes={routeNodes}
+                                                            edges={routeEdges}
+                                                            nodeTypes={nodeTypes}
+                                                            fitView
+                                                            nodesDraggable={false}
+                                                            nodesConnectable={false}
+                                                            elementsSelectable={false}
+                                                            zoomOnScroll
+                                                            panOnDrag
+                                                            proOptions={{ hideAttribution: true }}
+                                                        >
+                                                            <MiniMap pannable zoomable nodeColor={(node) => getEstadoColor((node.data as RouteNodeData).estadoActual)} />
+                                                            <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+                                                        </ReactFlow>
+                                                    </Box>
+                                                ) : (
+                                                    <Text color="app.textSubtle">La orden no tiene una ruta de proceso visual disponible.</Text>
+                                                )}
+                                            </VStack>
+                                        </TabPanel>
+
+                                        <TabPanel px={0} py={5}>
+                                            <VStack align="stretch" gap={6}>
+                                                <Box>
+                                                    <Text fontWeight="semibold" mb={3}>Receta jerárquica</Text>
+                                                    {detail.bom.receta.length > 0 ? (
+                                                        <VStack align="stretch" gap={3}>
+                                                            {detail.bom.receta.map((node) => (
+                                                                <BomTreeNode
+                                                                    key={`${node.productoId}-${node.insumoId ?? "root"}`}
+                                                                    node={node}
+                                                                />
+                                                            ))}
+                                                        </VStack>
+                                                    ) : (
+                                                        <Text color="app.textSubtle">No hay receta configurada para este terminado.</Text>
+                                                    )}
+                                                </Box>
+
+                                                <Box>
+                                                    <Text fontWeight="semibold" mb={3}>Materiales de empaque</Text>
+                                                    {detail.bom.empaque.length > 0 ? (
+                                                        <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
+                                                            <Table.Root size="sm">
+                                                                <Table.Header bg="app.tableHeader">
+                                                                    <Table.Row>
+                                                                        <Table.ColumnHeader>Producto</Table.ColumnHeader>
+                                                                        <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                                                        <Table.ColumnHeader textAlign='end'>Cantidad total</Table.ColumnHeader>
+                                                                        <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                                                                        <Table.ColumnHeader>Inventariable</Table.ColumnHeader>
+                                                                    </Table.Row>
+                                                                </Table.Header>
+                                                                <Table.Body>
+                                                                    {detail.bom.empaque.map((item) => (
+                                                                        <Table.Row key={item.productoId}>
+                                                                            <Table.Cell>{item.productoNombre}</Table.Cell>
+                                                                            <Table.Cell>{item.productoId}</Table.Cell>
+                                                                            <Table.Cell textAlign='end'>{formatCantidad(item.cantidadTotalRequerida)}</Table.Cell>
+                                                                            <Table.Cell>{item.tipoUnidades || "-"}</Table.Cell>
+                                                                            <Table.Cell>
+                                                                                <Badge colorPalette={item.inventareable ? "blue" : "gray"}>
+                                                                                    {item.inventareable ? "Sí" : "No"}
+                                                                                </Badge>
+                                                                            </Table.Cell>
+                                                                        </Table.Row>
+                                                                    ))}
+                                                                </Table.Body>
+                                                            </Table.Root>
+                                                        </Box>
+                                                    ) : (
+                                                        <Text color="app.textSubtle">No hay materiales de empaque asociados a la orden.</Text>
+                                                    )}
+                                                </Box>
+                                            </VStack>
+                                        </TabPanel>
+                                    </TabPanels>
+                                </Tabs.Root>
+                            ) : null}
+
+                            {!loading && !detail ? (
+                                <Text color="app.textSubtle">No se encontró detalle operativo para esta orden.</Text>
+                            ) : null}
+                        </Drawer.Body>
+                    </Drawer.Content>
+                </Drawer.Positioner>
+
+            </Portal>
+        </Drawer.Root>
     );
 }

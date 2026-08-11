@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { QuestionIcon } from "@chakra-ui/icons";
 import {
     closestCenter,
     DndContext,
@@ -10,31 +9,19 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Box,
     Button,
     Flex,
-    FormControl,
-    FormLabel,
     Heading,
     HStack,
     IconButton,
     Input,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
-    Select,
+    NativeSelect,
     SimpleGrid,
     Spinner,
     Stat,
-    StatHelpText,
-    StatLabel,
-    StatNumber,
     Table,
     TableContainer,
     Tbody,
@@ -43,15 +30,18 @@ import {
     Textarea,
     Th,
     Thead,
-    Tooltip,
     Tr,
     VStack,
     useDisclosure,
     useToast,
+    Field,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
+import { Tooltip } from '@/components/ui/tooltip';
 import { FiArrowLeft, FiCalendar, FiEye, FiRefreshCw } from "react-icons/fi";
-
 import EndPointsURL from "../../api/EndPointsURL.tsx";
+
 import { useTabPermission } from "../../auth/usePermissions.ts";
 import { useMasterDirectives } from "../../context/MasterDirectivesContext.tsx";
 import {
@@ -79,6 +69,7 @@ import type {
 } from "./components/seguimientoBoard.types.ts";
 import MetricModeInfoModal from "./MetricModeInfoModal.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
+import { LuHelpCircle } from 'react-icons/lu';
 
 const endPoints = new EndPointsURL();
 
@@ -181,17 +172,17 @@ export default function MonitorearAreasOperativasTab() {
     const toast = useToast();
     const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
     const {
-        isOpen: isDetailOpen,
+        open: isDetailOpen,
         onOpen: onDetailOpen,
         onClose: onDetailClose,
     } = useDisclosure();
     const {
-        isOpen: isMetricInfoOpen,
+        open: isMetricInfoOpen,
         onOpen: onMetricInfoOpen,
         onClose: onMetricInfoClose,
     } = useDisclosure();
     const {
-        isOpen: isCorrectionOpen,
+        open: isCorrectionOpen,
         onOpen: onCorrectionOpen,
         onClose: onCorrectionClose,
     } = useDisclosure();
@@ -568,10 +559,10 @@ export default function MonitorearAreasOperativasTab() {
 
     if (!selectedArea) {
         return (
-            <VStack align="stretch" spacing={4}>
+            <VStack align="stretch" gap={4}>
                 <Box p={6} bg="white" borderRadius="md" boxShadow="sm">
                     <HStack justify="space-between" align="start" flexWrap="wrap" gap={3}>
-                        <VStack align="start" spacing={1}>
+                        <VStack align="start" gap={1}>
                             <Heading size="md">Monitorear Áreas Operativas</Heading>
                             <Text color="gray.600">
                                 Seleccione un área para entrar en modo vista de producción.
@@ -580,24 +571,22 @@ export default function MonitorearAreasOperativasTab() {
                                 Alertas cada {checkIntervalMinutes} min · {formatLastAlertUpdate(alertsLastUpdatedAt)}
                             </Text>
                         </VStack>
-                        <Tooltip label="Refrescar alertas de inactividad" hasArrow>
+                        <Tooltip content="Refrescar alertas de inactividad" showArrow>
                             <IconButton
                                 aria-label="Refrescar alertas de inactividad"
-                                icon={<FiRefreshCw />}
                                 variant="outline"
-                                isLoading={alertsLoading}
-                                isDisabled={alertsLoading}
-                                onClick={() => void refreshAlerts()}
-                            />
+                                loading={alertsLoading}
+                                disabled={alertsLoading}
+                                onClick={() => void refreshAlerts()}><FiRefreshCw /></IconButton>
                         </Tooltip>
                     </HStack>
                 </Box>
 
                 {alertsError ? (
-                    <Alert status="warning" borderRadius="md">
-                        <AlertIcon />
+                    <Alert.Root status="warning" borderRadius="md">
+                        <Alert.Indicator />
                         {alertsError}
-                    </Alert>
+                    </Alert.Root>
                 ) : null}
 
                 {loading ? (
@@ -607,10 +596,10 @@ export default function MonitorearAreasOperativasTab() {
                 ) : null}
 
                 {!loading && error ? (
-                    <Alert status="error" borderRadius="md">
-                        <AlertIcon />
+                    <Alert.Root status="error" borderRadius="md">
+                        <Alert.Indicator />
                         {error}
-                    </Alert>
+                    </Alert.Root>
                 ) : null}
 
                 {!loading && !error && areas.length === 0 ? (
@@ -623,49 +612,46 @@ export default function MonitorearAreasOperativasTab() {
 
                 {!loading && !error && areas.length > 0 ? (
                     <Box bg="white" borderRadius="md" boxShadow="sm" overflowX="auto">
-                        <TableContainer>
-                            <Table variant="simple" size="sm">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Área</Th>
-                                        <Th>Descripción</Th>
-                                        <Th>Líder</Th>
-                                        <Th textAlign="right">Acción</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                        <Table.ScrollArea>
+                            <Table.Root variant="simple" size="sm">
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>Área</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Descripción</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Líder</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign="right">Acción</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {areas.map((area) => (
-                                        <Tr key={area.areaId}>
-                                            <Td>
-                                                <HStack spacing={2}>
+                                        <Table.Row key={area.areaId}>
+                                            <Table.Cell>
+                                                <HStack gap={2}>
                                                     <AreaOperativaInactivityBell alert={alertsByAreaId.get(area.areaId)} />
                                                     <Text>{area.nombre}</Text>
                                                 </HStack>
-                                            </Td>
-                                            <Td>
-                                                <Text noOfLines={2} maxW="320px">
+                                            </Table.Cell>
+                                            <Table.Cell>
+                                                <Text lineClamp={2} maxW="320px">
                                                     {area.descripcion || "Sin descripción"}
                                                 </Text>
-                                            </Td>
-                                            <Td>
+                                            </Table.Cell>
+                                            <Table.Cell>
                                                 {area.responsableArea.nombreCompleto || area.responsableArea.username}
-                                            </Td>
-                                            <Td textAlign="right">
+                                            </Table.Cell>
+                                            <Table.Cell textAlign="right">
                                                 <Button
                                                     size="sm"
-                                                    leftIcon={<FiEye />}
-                                                    colorScheme="teal"
+                                                    colorPalette="teal"
                                                     variant="outline"
-                                                    onClick={() => openMonitoringView(area)}
-                                                >
-                                                    Ver monitoreo
-                                                </Button>
-                                            </Td>
-                                        </Tr>
+                                                    onClick={() => openMonitoringView(area)}><FiEye />Ver monitoreo
+                                                                                                    </Button>
+                                            </Table.Cell>
+                                        </Table.Row>
                                     ))}
-                                </Tbody>
-                            </Table>
-                        </TableContainer>
+                                </Table.Body>
+                            </Table.Root>
+                        </Table.ScrollArea>
                     </Box>
                 ) : null}
             </VStack>
@@ -673,12 +659,12 @@ export default function MonitorearAreasOperativasTab() {
     }
 
     return (
-        <VStack align="stretch" spacing={4}>
+        <VStack align="stretch" gap={4}>
             <Box p={6} bg="white" borderRadius="md" boxShadow="sm">
-                <VStack align="stretch" spacing={4}>
+                <VStack align="stretch" gap={4}>
                     <HStack justify="space-between" flexWrap="wrap" gap={3}>
                         <Box>
-                            <HStack spacing={2}>
+                            <HStack gap={2}>
                                 <Heading size="md">{selectedArea.nombre}</Heading>
                                 <AreaOperativaInactivityBell alert={selectedAreaAlert} />
                             </HStack>
@@ -689,53 +675,45 @@ export default function MonitorearAreasOperativasTab() {
                                 Alertas cada {checkIntervalMinutes} min · {formatLastAlertUpdate(alertsLastUpdatedAt)}
                             </Text>
                         </Box>
-                        <HStack spacing={3}>
-                            <Tooltip label="Refrescar alertas de inactividad" hasArrow>
+                        <HStack gap={3}>
+                            <Tooltip content="Refrescar alertas de inactividad" showArrow>
                                 <IconButton
                                     aria-label="Refrescar alertas de inactividad"
-                                    icon={<FiRefreshCw />}
                                     variant="outline"
-                                    isLoading={alertsLoading}
-                                    isDisabled={alertsLoading}
-                                    onClick={() => void refreshAlerts()}
-                                />
+                                    loading={alertsLoading}
+                                    disabled={alertsLoading}
+                                    onClick={() => void refreshAlerts()}><FiRefreshCw /></IconButton>
                             </Tooltip>
                             <Button
                                 variant="outline"
-                                leftIcon={<FiArrowLeft />}
                                 onClick={() => {
                                     setSelectedArea(null);
                                     setTablero(null);
                                     setTableroError(null);
                                     setMetricas(null);
                                     setMetricasError(null);
-                                }}
-                            >
-                                Volver
-                            </Button>
+                                }}><FiArrowLeft />Volver
+                                                            </Button>
                             <Button
                                 variant="outline"
-                                leftIcon={<FiRefreshCw />}
                                 onClick={() => {
                                     void fetchTableroArea(selectedArea, fechaConsulta);
                                     void fetchMetricasArea(selectedArea, metricMode, fechaConsulta, rangoDesde, rangoHasta);
                                 }}
-                                isLoading={tableroLoading || metricasLoading}
-                            >
-                                Refrescar
-                            </Button>
+                                loading={tableroLoading || metricasLoading}><FiRefreshCw />Refrescar
+                                                            </Button>
                         </HStack>
                     </HStack>
 
                     {alertsError ? (
-                        <Alert status="warning" borderRadius="md">
-                            <AlertIcon />
+                        <Alert.Root status="warning" borderRadius="md">
+                            <Alert.Indicator />
                             {alertsError}
-                        </Alert>
+                        </Alert.Root>
                     ) : null}
 
                     <HStack flexWrap="wrap" gap={3}>
-                        <HStack spacing={2}>
+                        <HStack gap={2}>
                             <FiCalendar />
                             <Text fontWeight="medium">Fecha de monitoreo</Text>
                         </HStack>
@@ -743,7 +721,7 @@ export default function MonitorearAreasOperativasTab() {
                             type="date"
                             value={fechaConsulta}
                             max={getTodayIsoDate()}
-                            onChange={(event) => setFechaConsulta(event.target.value)}
+                            onValueChange={(event) => setFechaConsulta(event.target.value)}
                             w={{ base: "full", md: "220px" }}
                             bg="white"
                         />
@@ -752,30 +730,30 @@ export default function MonitorearAreasOperativasTab() {
                         </Text>
                     </HStack>
 
-                    <VStack align="stretch" spacing={3}>
+                    <VStack align="stretch" gap={3}>
                         <HStack justify="space-between" flexWrap="wrap" gap={3}>
-                            <HStack spacing={2}>
+                            <HStack gap={2}>
                                 <Text fontWeight="medium">Modo de promedio</Text>
-                                <Tooltip label="Cómo se calcula cada modo" hasArrow>
+                                <Tooltip content="Cómo se calcula cada modo" showArrow>
                                     <IconButton
                                         aria-label="Ayuda sobre modos de promedio"
-                                        icon={<QuestionIcon />}
                                         size="sm"
                                         variant="ghost"
-                                        onClick={onMetricInfoOpen}
-                                    />
+                                        onClick={onMetricInfoOpen}><LuHelpCircle /></IconButton>
                                 </Tooltip>
                             </HStack>
-                            <Select
-                                value={metricMode}
-                                onChange={(event) => handleMetricModeChange(event.target.value as MetricMode)}
-                                w={{ base: "full", md: "260px" }}
-                                bg="white"
-                            >
-                                <option value="actual">Actual</option>
-                                <option value="historico">Histórico</option>
-                                <option value="rango">Rango de fechas</option>
-                            </Select>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    value={metricMode}
+                                    onValueChange={(event) => handleMetricModeChange(event.target.value as MetricMode)}
+                                    w={{ base: "full", md: "260px" }}
+                                    bg="white">
+                                    <option value="actual">Actual</option>
+                                    <option value="historico">Histórico</option>
+                                    <option value="rango">Rango de fechas</option>
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
                         </HStack>
 
                         {metricMode === "rango" ? (
@@ -788,7 +766,7 @@ export default function MonitorearAreasOperativasTab() {
                                         type="date"
                                         value={rangoDesde}
                                         max={getTodayIsoDate()}
-                                        onChange={(event) => setRangoDesde(event.target.value)}
+                                        onValueChange={(event) => setRangoDesde(event.target.value)}
                                         w={{ base: "full", md: "220px" }}
                                         bg="white"
                                     />
@@ -801,7 +779,7 @@ export default function MonitorearAreasOperativasTab() {
                                         type="date"
                                         value={rangoHasta}
                                         max={getTodayIsoDate()}
-                                        onChange={(event) => setRangoHasta(event.target.value)}
+                                        onValueChange={(event) => setRangoHasta(event.target.value)}
                                         w={{ base: "full", md: "220px" }}
                                         bg="white"
                                     />
@@ -810,10 +788,10 @@ export default function MonitorearAreasOperativasTab() {
                         ) : null}
 
                         {metricasError ? (
-                            <Alert status="warning" borderRadius="md">
-                                <AlertIcon />
+                            <Alert.Root status="warning" borderRadius="md">
+                                <Alert.Indicator />
                                 {metricasError}
-                            </Alert>
+                            </Alert.Root>
                         ) : null}
                     </VStack>
                 </VStack>
@@ -826,10 +804,10 @@ export default function MonitorearAreasOperativasTab() {
             ) : null}
 
             {!tableroLoading && tableroError ? (
-                <Alert status="error" borderRadius="md">
-                    <AlertIcon />
+                <Alert.Root status="error" borderRadius="md">
+                    <Alert.Indicator />
                     {tableroError}
-                </Alert>
+                </Alert.Root>
             ) : null}
 
             {!tableroLoading && tablero ? (
@@ -842,21 +820,21 @@ export default function MonitorearAreasOperativasTab() {
                         completado={tablero.resumen.completado}
                     />
 
-                    <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
+                    <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={4}>
                         {metricCards.map((metric) => (
                             <Box key={metric.label} borderWidth="1px" borderRadius="lg" bg="white" p={4}>
-                                <Stat>
-                                    <StatLabel>{metric.label}</StatLabel>
-                                    <StatNumber fontSize="lg">{metric.value}</StatNumber>
-                                    <StatHelpText mb={0}>{metric.helpText}</StatHelpText>
-                                </Stat>
+                                <Stat.Root>
+                                    <Stat.Label>{metric.label}</Stat.Label>
+                                    <Stat.ValueText fontSize="lg">{metric.value}</Stat.ValueText>
+                                    <Stat.HelpText mb={0}>{metric.helpText}</Stat.HelpText>
+                                </Stat.Root>
                             </Box>
                         ))}
                     </SimpleGrid>
 
                     {(() => {
                         const boardColumns = (
-                            <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
+                            <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={4}>
                                 {(Object.keys(BOARD_COLUMN_META) as EstadoTableroKey[]).map((estadoKey) => (
                                     <SeguimientoBoardColumn
                                         key={estadoKey}
@@ -895,83 +873,95 @@ export default function MonitorearAreasOperativasTab() {
                 detail={detail}
                 loading={detailLoading}
             />
-            <Modal isOpen={isCorrectionOpen} onClose={handleCloseCorrection} isCentered>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Corregir estado</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <VStack align="stretch" spacing={4}>
-                            {correctionCard ? (
-                                <Box>
-                                    <Text fontWeight="bold">
-                                        {correctionCard.loteAsignado || `OP-${correctionCard.ordenId}`}
-                                    </Text>
-                                    <Text color="app.textMuted" fontSize="sm">
-                                        {correctionCard.productoNombre}
-                                    </Text>
-                                    <Text color="app.textMuted" fontSize="sm">
-                                        Estado actual: {correctionCard.estadoDescripcion}
-                                    </Text>
-                                </Box>
-                            ) : null}
+            <Dialog.Root open={isCorrectionOpen} placement='center' onOpenChange={e => {
+                if (!e.open) {
+                    handleCloseCorrection();
+                }
+            }}>
+                <Portal>
 
-                            {correctionError ? (
-                                <Alert status="error" borderRadius="md">
-                                    <AlertIcon />
-                                    {correctionError}
-                                </Alert>
-                            ) : null}
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>Corregir estado</Dialog.Header>
+                            <Dialog.CloseTrigger />
+                            <Dialog.Body>
+                                <VStack align="stretch" gap={4}>
+                                    {correctionCard ? (
+                                        <Box>
+                                            <Text fontWeight="bold">
+                                                {correctionCard.loteAsignado || `OP-${correctionCard.ordenId}`}
+                                            </Text>
+                                            <Text color="app.textMuted" fontSize="sm">
+                                                {correctionCard.productoNombre}
+                                            </Text>
+                                            <Text color="app.textMuted" fontSize="sm">
+                                                Estado actual: {correctionCard.estadoDescripcion}
+                                            </Text>
+                                        </Box>
+                                    ) : null}
 
-                            <FormControl>
-                                <FormLabel>Nuevo estado</FormLabel>
-                                <Select
-                                    value={correctionTarget}
-                                    onChange={(event) => setCorrectionTarget(event.target.value)}
-                                    isDisabled={correctionSaving}
-                                >
-                                    {CORRECTION_STATE_OPTIONS
-                                        .filter((option) => option.value !== correctionCard?.estado)
-                                        .map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                </Select>
-                            </FormControl>
+                                    {correctionError ? (
+                                        <Alert.Root status="error" borderRadius="md">
+                                            <Alert.Indicator />
+                                            {correctionError}
+                                        </Alert.Root>
+                                    ) : null}
 
-                            <FormControl>
-                                <FormLabel>Motivo</FormLabel>
-                                <Textarea
-                                    value={correctionMotivo}
-                                    onChange={(event) => setCorrectionMotivo(event.target.value)}
-                                    maxLength={500}
-                                    rows={4}
-                                    isDisabled={correctionSaving}
-                                />
-                                <Text fontSize="xs" color="app.textMuted" mt={1}>
-                                    {correctionMotivo.length}/500
-                                </Text>
-                            </FormControl>
-                        </VStack>
-                    </ModalBody>
-                    <ModalFooter>
-                        <HStack spacing={3}>
-                            <Button variant="ghost" onClick={handleCloseCorrection} isDisabled={correctionSaving}>
-                                Cancelar
-                            </Button>
-                            <Button
-                                colorScheme="purple"
-                                onClick={handleSubmitCorrection}
-                                isLoading={correctionSaving}
-                                isDisabled={!correctionTarget || !correctionMotivo.trim()}
-                            >
-                                Aplicar
-                            </Button>
-                        </HStack>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+                                    <Field.Root>
+                                        <Field.Label>Nuevo estado</Field.Label>
+                                        <NativeSelect.Root>
+                                            <NativeSelect.Field
+                                                value={correctionTarget}
+                                                onValueChange={(event) => setCorrectionTarget(event.target.value)}
+                                                disabled={correctionSaving}>
+                                                {CORRECTION_STATE_OPTIONS
+                                                    .filter((option) => option.value !== correctionCard?.estado)
+                                                    .map((option) => (
+                                                        <option key={option.value} value={option.value}>
+                                                            {option.label}
+                                                        </option>
+                                                    ))}
+                                            </NativeSelect.Field>
+                                            <NativeSelect.Indicator />
+                                        </NativeSelect.Root>
+                                    </Field.Root>
+
+                                    <Field.Root>
+                                        <Field.Label>Motivo</Field.Label>
+                                        <Textarea
+                                            value={correctionMotivo}
+                                            onValueChange={(event) => setCorrectionMotivo(event.target.value)}
+                                            maxLength={500}
+                                            rows={4}
+                                            disabled={correctionSaving}
+                                        />
+                                        <Text fontSize="xs" color="app.textMuted" mt={1}>
+                                            {correctionMotivo.length}/500
+                                        </Text>
+                                    </Field.Root>
+                                </VStack>
+                            </Dialog.Body>
+                            <Dialog.Footer>
+                                <HStack gap={3}>
+                                    <Button variant="ghost" onClick={handleCloseCorrection} disabled={correctionSaving}>
+                                        Cancelar
+                                    </Button>
+                                    <Button
+                                        colorPalette="purple"
+                                        onClick={handleSubmitCorrection}
+                                        loading={correctionSaving}
+                                        disabled={!correctionTarget || !correctionMotivo.trim()}
+                                    >
+                                        Aplicar
+                                    </Button>
+                                </HStack>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+
+                </Portal>
+            </Dialog.Root>
             <MetricModeInfoModal
                 isOpen={isMetricInfoOpen}
                 onClose={onMetricInfoClose}

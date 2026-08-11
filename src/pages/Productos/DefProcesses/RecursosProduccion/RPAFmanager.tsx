@@ -1,4 +1,4 @@
-import {Box, Button, Flex, Table, Tbody, Td, Th, Thead, Tr, useToast} from '@chakra-ui/react';
+import { Steps, Box, Button, Flex, Table, Tbody, Td, Th, Thead, Tr, useToast } from '@chakra-ui/react';
 import {useState} from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
@@ -59,26 +59,26 @@ export default function RPAFmanager({recursoId, activos, onChange, editMode = tr
   return (
     <Box>
       <Flex justify="space-between" mb={2}>
-        <Button colorScheme='teal' size='sm' onClick={()=>setIsPickerOpen(true)} isDisabled={!editMode}>Agregar Activo Fijo</Button>
+        <Button colorPalette='teal' size='sm' onClick={()=>setIsPickerOpen(true)} disabled={!editMode}>Agregar Activo Fijo</Button>
       </Flex>
-      <Table size='sm'>
-        <Thead>
-          <Tr>
-            <Th>ID</Th>
-            <Th>Nombre</Th>
-            <Th></Th>
-          </Tr>
-        </Thead>
-        <Tbody>
+      <Table.Root size='sm'>
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeader>ID</Table.ColumnHeader>
+            <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+            <Table.ColumnHeader></Table.ColumnHeader>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
           {activos.map(af=> (
-            <Tr key={af.id}>
-              <Td>{af.id}</Td>
-              <Td>{af.nombre}</Td>
-              <Td><Button size='xs' colorScheme='red' onClick={()=>handleRemove(af)} isDisabled={!editMode}>Remover</Button></Td>
-            </Tr>
+            <Table.Row key={af.id}>
+              <Table.Cell>{af.id}</Table.Cell>
+              <Table.Cell>{af.nombre}</Table.Cell>
+              <Table.Cell><Button size='xs' colorPalette='red' onClick={()=>handleRemove(af)} disabled={!editMode}>Remover</Button></Table.Cell>
+            </Table.Row>
           ))}
-        </Tbody>
-      </Table>
+        </Table.Body>
+      </Table.Root>
       <AFpickerRP
         isOpen={isPickerOpen}
         onClose={()=>setIsPickerOpen(false)}

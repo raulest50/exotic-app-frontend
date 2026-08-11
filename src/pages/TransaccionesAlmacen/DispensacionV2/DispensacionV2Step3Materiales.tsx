@@ -1,6 +1,6 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Button,
@@ -250,7 +250,7 @@ export default function DispensacionV2Step3Materiales({
     };
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
                 <Flex justify="space-between" align="start" gap={3} wrap="wrap">
                     <Box>
@@ -265,26 +265,23 @@ export default function DispensacionV2Step3Materiales({
                         </Button>
                         <Button
                             variant="outline"
-                            leftIcon={<FiRefreshCw />}
                             onClick={() => void cargarReceta(true)}
-                            isLoading={loading}
-                        >
-                            Recalcular receta
-                        </Button>
+                            loading={loading}><FiRefreshCw />Recalcular receta
+                                                    </Button>
                     </Flex>
                 </Flex>
 
                 {materialesReceta ? (
                     <Flex mt={4} gap={2} wrap="wrap">
-                        <Badge colorScheme="teal">{selectedOrdenes.length} OPs</Badge>
-                        <Badge colorScheme="purple">
+                        <Badge colorPalette="teal">{selectedOrdenes.length} OPs</Badge>
+                        <Badge colorPalette="purple">
                             {formatDispensacionV2Number(materialesReceta.cantidadBase)} und por OP
                         </Badge>
-                        <Badge colorScheme="blue">{totalMateriales} materiales</Badge>
-                        <Badge colorScheme={totalMaterialesSeleccionados > 0 ? "green" : "gray"}>
+                        <Badge colorPalette="blue">{totalMateriales} materiales</Badge>
+                        <Badge colorPalette={totalMaterialesSeleccionados > 0 ? "green" : "gray"}>
                             {totalMaterialesSeleccionados} chuleados
                         </Badge>
-                        <Badge colorScheme={totalWarnings > 0 ? "orange" : "green"}>
+                        <Badge colorPalette={totalWarnings > 0 ? "orange" : "green"}>
                             {totalWarnings} warnings
                         </Badge>
                     </Flex>
@@ -292,15 +289,15 @@ export default function DispensacionV2Step3Materiales({
             </Box>
 
             {cantidadesPlanificadasDiferentes ? (
-                <Alert status="warning" borderRadius="md" alignItems="flex-start">
-                    <AlertIcon />
+                <Alert.Root status="warning" borderRadius="md" alignItems="flex-start">
+                    <Alert.Indicator />
                     <Box>
                         <Text fontWeight="semibold">Cantidades planificadas diferentes</Text>
                         <Text fontSize="sm">
                             La selección global se aplicará con una misma cantidad por OP. Revise las cantidades antes de preparar el resumen.
                         </Text>
                     </Box>
-                </Alert>
+                </Alert.Root>
             ) : null}
 
             {loading ? (
@@ -311,56 +308,55 @@ export default function DispensacionV2Step3Materiales({
             ) : null}
 
             {error ? (
-                <Alert status="error" borderRadius="md" alignItems="flex-start">
-                    <AlertIcon />
+                <Alert.Root status="error" borderRadius="md" alignItems="flex-start">
+                    <Alert.Indicator />
                     <Box>
                         <Text fontWeight="semibold">No se pudo preparar la dispensacion</Text>
                         <Text fontSize="sm">{error}</Text>
                     </Box>
-                </Alert>
+                </Alert.Root>
             ) : null}
 
             {!loading && materialesReceta ? (
-                <VStack align="stretch" spacing={4}>
+                <VStack align="stretch" gap={4}>
                     <Box borderWidth="1px" borderRadius="md" bg="app.surface" p={4}>
-                        <TableContainer>
-                            <Table size="sm" variant="simple">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Dispensar</Th>
-                                        <Th>Material</Th>
-                                        <Th isNumeric>Receta por OP</Th>
-                                        <Th isNumeric>Cantidad por OP</Th>
-                                        <Th>Estado</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                        <Table.ScrollArea>
+                            <Table.Root size="sm" variant="simple">
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>Dispensar</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Material</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Receta por OP</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Cantidad por OP</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {materialesReceta.materiales.map((material) => (
-                                        <Tr key={material.productoId} bg={material.excedeReceta ? "orange.50" : undefined}>
-                                            <Td>
-                                                <Checkbox
-                                                    colorScheme="teal"
-                                                    isChecked={material.checked}
-                                                    isDisabled={!material.inventareable && !material.consumoDirecto}
-                                                    onChange={(event) => updateMaterial(
+                                        <Table.Row key={material.productoId} bg={material.excedeReceta ? "orange.50" : undefined}>
+                                            <Table.Cell>
+                                                <Checkbox.Root
+                                                    colorPalette="teal"
+                                                    checked={material.checked}
+                                                    disabled={!material.inventareable && !material.consumoDirecto}
+                                                    onCheckedChange={(event) => updateMaterial(
                                                         material.productoId,
                                                         (current) => ({ ...current, checked: event.target.checked }),
-                                                    )}
-                                                />
-                                            </Td>
-                                            <Td>
+                                                    )}><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control></Checkbox.Root>
+                                            </Table.Cell>
+                                            <Table.Cell>
                                                 <Text fontWeight="semibold" fontSize="sm">{material.productoNombre}</Text>
                                                 <Text fontSize="xs" color="app.textMuted">
                                                     {material.productoId} · {material.tipoProducto}
                                                 </Text>
                                                 {material.consumoDirecto ? (
-                                                    <Badge mt={1} colorScheme="purple">Consumo directo</Badge>
+                                                    <Badge mt={1} colorPalette="purple">Consumo directo</Badge>
                                                 ) : null}
-                                            </Td>
-                                            <Td isNumeric>
+                                            </Table.Cell>
+                                            <Table.Cell textAlign='end'>
                                                 {formatDispensacionV2Number(material.cantidadReceta)} {material.tipoUnidades}
-                                            </Td>
-                                            <Td isNumeric>
+                                            </Table.Cell>
+                                            <Table.Cell textAlign='end'>
                                                 <Flex justify="end">
                                                     <CustomDecimalInput
                                                         value={material.cantidadADispensar}
@@ -378,30 +374,30 @@ export default function DispensacionV2Step3Materiales({
                                                         }
                                                     />
                                                 </Flex>
-                                            </Td>
-                                            <Td>
+                                            </Table.Cell>
+                                            <Table.Cell>
                                                 {material.consumoDirecto && material.checked ? (
-                                                    <Badge colorScheme="purple">Consumo directo</Badge>
+                                                    <Badge colorPalette="purple">Consumo directo</Badge>
                                                 ) : material.warning ? (
-                                                    <Badge colorScheme={material.excedeReceta ? "orange" : "gray"} whiteSpace="normal">
+                                                    <Badge colorPalette={material.excedeReceta ? "orange" : "gray"} whiteSpace="normal">
                                                         {material.warning}
                                                     </Badge>
                                                 ) : material.checked ? (
-                                                    <Badge colorScheme="green">Seleccionado</Badge>
+                                                    <Badge colorPalette="green">Seleccionado</Badge>
                                                 ) : (
-                                                    <Badge colorScheme="gray">Sin dispensar</Badge>
+                                                    <Badge colorPalette="gray">Sin dispensar</Badge>
                                                 )}
-                                            </Td>
-                                        </Tr>
+                                            </Table.Cell>
+                                        </Table.Row>
                                     ))}
-                                </Tbody>
-                            </Table>
-                        </TableContainer>
+                                </Table.Body>
+                            </Table.Root>
+                        </Table.ScrollArea>
                     </Box>
 
                     {materialesReceta.warnings.length > 0 ? (
-                        <Alert status="warning" borderRadius="md" alignItems="flex-start">
-                            <AlertIcon />
+                        <Alert.Root status="warning" borderRadius="md" alignItems="flex-start">
+                            <Alert.Indicator />
                             <Box>
                                 <Text fontWeight="semibold">Advertencias de la receta</Text>
                                 {materialesReceta.warnings.slice(0, 6).map((warning) => (
@@ -411,7 +407,7 @@ export default function DispensacionV2Step3Materiales({
                                     <Text fontSize="sm">Y {materialesReceta.warnings.length - 6} advertencias mas.</Text>
                                 ) : null}
                             </Box>
-                        </Alert>
+                        </Alert.Root>
                     ) : null}
 
                     <Flex justify="flex-end" gap={3}>
@@ -419,10 +415,10 @@ export default function DispensacionV2Step3Materiales({
                             Atrás
                         </Button>
                         <Button
-                            colorScheme="teal"
+                            colorPalette="teal"
                             onClick={handlePrepararResumen}
-                            isLoading={assigning}
-                            isDisabled={totalMaterialesSeleccionados === 0}
+                            loading={assigning}
+                            disabled={totalMaterialesSeleccionados === 0}
                         >
                             Preparar resumen
                         </Button>

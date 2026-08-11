@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Box,
     Button,
     Flex,
@@ -228,7 +228,7 @@ export default function AreaOperativaMpsSemanalTab() {
         && !odpsError;
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
                 <Flex justify="space-between" align="start" gap={3} wrap="wrap">
                     <Box>
@@ -239,15 +239,12 @@ export default function AreaOperativaMpsSemanalTab() {
                     </Box>
                     <Button
                         variant="outline"
-                        leftIcon={<FiRefreshCw />}
                         onClick={() => void fetchMpsForWeek(selectedWeek.weekStartDate)}
-                        isLoading={loading}
-                    >
-                        Refrescar
-                    </Button>
+                        loading={loading}><FiRefreshCw />Refrescar
+                                            </Button>
                 </Flex>
 
-                <SimpleGrid columns={{ base: 1, md: 3 }} spacing={3} mt={4}>
+                <SimpleGrid columns={{ base: 1, md: 3 }} gap={3} mt={4}>
                     {weekOptions.map((option) => {
                         const isSelected = option.key === selectedWeek.key;
                         return (
@@ -255,11 +252,11 @@ export default function AreaOperativaMpsSemanalTab() {
                                 key={option.key}
                                 minH="64px"
                                 py={3}
-                                colorScheme={isSelected ? "teal" : "gray"}
+                                colorPalette={isSelected ? "teal" : "gray"}
                                 variant={isSelected ? "solid" : "outline"}
                                 onClick={() => handleSelectWeek(option.key)}
                             >
-                                <VStack as="span" spacing={0}>
+                                <VStack as="span" gap={0}>
                                     <Text as="span" fontWeight="bold" lineHeight="1.2">
                                         {option.code}
                                     </Text>
@@ -286,23 +283,23 @@ export default function AreaOperativaMpsSemanalTab() {
             ) : null}
 
             {!loading && error ? (
-                <Alert status={getAlertStatus(errorStatus)} borderRadius="md" alignItems="flex-start">
-                    <AlertIcon />
+                <Alert.Root status={getAlertStatus(errorStatus)} borderRadius="md" alignItems="flex-start">
+                    <Alert.Indicator />
                     <Box>
                         <Text fontWeight="semibold">MPS semanal no disponible</Text>
                         <Text fontSize="sm">{error}</Text>
                     </Box>
-                </Alert>
+                </Alert.Root>
             ) : null}
 
             {!loading && mps && mps.totalOdpsGeneradas > 0 && odpsError ? (
-                <Alert status="error" borderRadius="md" alignItems="flex-start">
-                    <AlertIcon />
+                <Alert.Root status="error" borderRadius="md" alignItems="flex-start">
+                    <Alert.Indicator />
                     <Box>
                         <Text fontWeight="semibold">ODPs no disponibles</Text>
                         <Text fontSize="sm">{odpsError}</Text>
                     </Box>
-                </Alert>
+                </Alert.Root>
             ) : null}
 
             {!loading && mps ? (

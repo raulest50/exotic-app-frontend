@@ -1,5 +1,5 @@
 import {IoArrowBack} from "react-icons/io5";
-import {Flex, Spacer, Heading, IconButton, Box, HStack} from '@chakra-ui/react'
+import { Steps, Flex, Spacer, Heading, IconButton, Box, HStack } from '@chakra-ui/react';
 import {NavLink} from "react-router-dom";
 
 interface HeaderHexEfProps {
@@ -53,14 +53,19 @@ export function HeaderHexEf({title}: HeaderHexEfProps) {
         <Flex pb={'0.2em'} direction={'row'} mb={'1em'} borderBottom={'0.04em solid'} align={'center'}>
             <NavLink to={'/'}>
                 <IconButton
-                    ml={'1em'} mr={'2em'} my={'0.2em'}
-                    flex={1} colorScheme={'teal'}
-                    aria-label='atrás' fontSize={'3xl'} boxSize={'2em'} icon={<IoArrowBack/>}/>
+                    ml={'1em'}
+                    mr={'2em'}
+                    my={'0.2em'}
+                    flex={1}
+                    colorPalette={'teal'}
+                    aria-label='atrás'
+                    fontSize={'3xl'}
+                    boxSize={'2em'}><IoArrowBack/></IconButton>
             </NavLink>
             <Heading flex={2} as={'h2'} size={'xl'} fontFamily={'Comfortaa Variable'}>{title}</Heading>
 
             {/* Hexagon grids horizontally after the title */}
-            <HStack spacing={6} ml={4} align="center">
+            <HStack gap={6} ml={4} align="center">
                 <HexagonGrid />
                 <HexagonGrid />
             </HStack>

@@ -1,18 +1,5 @@
-import {
-    Box,
-    Button,
-    Flex,
-    Text,
-    useToast,
-    VStack,
-    Alert,
-    AlertIcon,
-    AlertDescription,
-    AlertTitle,
-    Spinner,
-    Heading,
-    useColorModeValue,
-} from "@chakra-ui/react";
+import { Steps, Box, Button, Flex, Text, useToast, VStack, Alert, Spinner, Heading } from "@chakra-ui/react";
+import { useColorModeValue } from "../../../../components/ui/color-mode";
 import { useState } from "react";
 import axios, { AxiosError } from "axios";
 import { useMemo } from "react";
@@ -153,7 +140,7 @@ export default function CargaMasivaStep2Ejecutar({
                 />
                 <Button
                     variant="solid"
-                    colorScheme="green"
+                    colorPalette="green"
                     onClick={() => {
                         setExecutionSuccess(false);
                         setActiveStep(0);
@@ -168,7 +155,7 @@ export default function CargaMasivaStep2Ejecutar({
 
     return (
         <Box p={4}>
-            <VStack align="stretch" spacing={6}>
+            <VStack align="stretch" gap={6}>
                 <Text fontSize="lg" fontWeight="semibold">
                     Ejecutar carga masiva
                 </Text>
@@ -180,13 +167,13 @@ export default function CargaMasivaStep2Ejecutar({
                     </Text>
 
                     {executionError && (
-                        <Alert status="error" mb={4}>
-                            <AlertIcon />
+                        <Alert.Root status="error" mb={4}>
+                            <Alert.Indicator />
                             <Box>
-                                <AlertTitle>Error</AlertTitle>
-                                <AlertDescription>{executionError}</AlertDescription>
+                                <Alert.Title>Error</Alert.Title>
+                                <Alert.Description>{executionError}</Alert.Description>
                             </Box>
-                        </Alert>
+                        </Alert.Root>
                     )}
 
                     {isExecuting && (
@@ -197,15 +184,15 @@ export default function CargaMasivaStep2Ejecutar({
                     )}
 
                     <Flex gap={4} justify="flex-end" mt={4}>
-                        <Button variant="outline" onClick={() => setActiveStep(1)} isDisabled={isExecuting}>
+                        <Button variant="outline" onClick={() => setActiveStep(1)} disabled={isExecuting}>
                             Atrás
                         </Button>
                         <Button
-                            colorScheme="teal"
+                            colorPalette="teal"
                             onClick={handleExecute}
-                            isLoading={isExecuting}
+                            loading={isExecuting}
                             loadingText="Ejecutando..."
-                            isDisabled={isExecuting || !excelFile}
+                            disabled={isExecuting || !excelFile}
                         >
                             Ejecutar carga masiva
                         </Button>

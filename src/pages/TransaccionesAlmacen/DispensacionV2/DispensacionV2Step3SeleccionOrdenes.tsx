@@ -1,6 +1,6 @@
 import {
+    Steps,
     Alert,
-    AlertIcon,
     Badge,
     Box,
     Button,
@@ -144,7 +144,7 @@ export default function DispensacionV2Step3SeleccionOrdenes({
     };
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
                 <Flex justify="space-between" align="start" gap={3} wrap="wrap">
                     <Box>
@@ -158,9 +158,9 @@ export default function DispensacionV2Step3SeleccionOrdenes({
                             Volver al MPS
                         </Button>
                         <Button
-                            colorScheme="teal"
+                            colorPalette="teal"
                             onClick={onNext}
-                            isDisabled={selectedOrdenesInCard.length === 0}
+                            disabled={selectedOrdenesInCard.length === 0}
                         >
                             Continuar a materiales
                         </Button>
@@ -168,94 +168,93 @@ export default function DispensacionV2Step3SeleccionOrdenes({
                 </Flex>
 
                 <Flex mt={4} gap={2} wrap="wrap">
-                    <Badge colorScheme="teal">{formatNumber(item.numeroLotes)} lotes</Badge>
-                    <Badge colorScheme="purple">{formatNumber(item.cantidadTotal)} und</Badge>
-                    <Badge colorScheme="gray">{selectedArea.nombre}</Badge>
-                    <Badge colorScheme={selectedOrdenesInCard.length > 0 ? "green" : "gray"}>
+                    <Badge colorPalette="teal">{formatNumber(item.numeroLotes)} lotes</Badge>
+                    <Badge colorPalette="purple">{formatNumber(item.cantidadTotal)} und</Badge>
+                    <Badge colorPalette="gray">{selectedArea.nombre}</Badge>
+                    <Badge colorPalette={selectedOrdenesInCard.length > 0 ? "green" : "gray"}>
                         {selectedOrdenesInCard.length} OPs seleccionadas
                     </Badge>
                     {selectedOrdenesInCard.length > 0 ? (
-                        <Badge colorScheme="purple">{formatNumber(totalCantidadSeleccionada)} und seleccionadas</Badge>
+                        <Badge colorPalette="purple">{formatNumber(totalCantidadSeleccionada)} und seleccionadas</Badge>
                     ) : null}
                 </Flex>
             </Box>
 
             {lotes.length === 0 ? (
-                <Alert status="warning" borderRadius="md" alignItems="flex-start">
-                    <AlertIcon />
+                <Alert.Root status="warning" borderRadius="md" alignItems="flex-start">
+                    <Alert.Indicator />
                     <Box>
                         <Text fontWeight="semibold">Sin lotes disponibles</Text>
                         <Text fontSize="sm">Este card no tiene lotes MPS para seleccionar.</Text>
                     </Box>
-                </Alert>
+                </Alert.Root>
             ) : (
                 <Box borderWidth="1px" borderRadius="md" bg="app.surface" p={4}>
-                    <TableContainer>
-                        <Table size="sm" variant="simple">
-                            <Thead>
-                                <Tr>
-                                    <Th>Lote planificado</Th>
-                                    <Th>OP</Th>
-                                    <Th>Lote real</Th>
-                                    <Th>Producto</Th>
-                                    <Th isNumeric>Cantidad</Th>
-                                    <Th>Estado</Th>
-                                    <Th textAlign="center">
-                                        <Checkbox
-                                            isChecked={allCardOrdenesSelected}
-                                            isIndeterminate={someCardOrdenesSelected}
-                                            isDisabled={selectableOrdenes.length === 0}
-                                            onChange={handleToggleAll}
-                                        >
-                                            Seleccionar
-                                        </Checkbox>
-                                    </Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                    <Table.ScrollArea>
+                        <Table.Root size="sm" variant="simple">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>Lote planificado</Table.ColumnHeader>
+                                    <Table.ColumnHeader>OP</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Lote real</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Producto</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign='end'>Cantidad</Table.ColumnHeader>
+                                    <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign="center">
+                                        <Checkbox.Root
+                                            checked={allCardOrdenesSelected}
+                                            indeterminate={someCardOrdenesSelected}
+                                            disabled={selectableOrdenes.length === 0}
+                                            onCheckedChange={handleToggleAll}
+                                        ><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Seleccionar
+                                                                                        </Checkbox.Label></Checkbox.Root>
+                                    </Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {lotes.map((lote) => {
                                     const isSelected = lote.ordenProduccionId != null && selectedOrdenIds.has(lote.ordenProduccionId);
                                     const isSelectable = Boolean(lote.ordenProduccionId);
                                     return (
-                                        <Tr
+                                        <Table.Row
                                             key={lote.id}
                                             bg={isSelected ? "app.rowSelectedTeal" : undefined}
                                             opacity={isSelectable ? 1 : 0.65}
                                         >
-                                            <Td>
+                                            <Table.Cell>
                                                 Lote {lote.loteOrdinal}
                                                 <Text fontSize="xs" color="gray.500">#{lote.id}</Text>
-                                            </Td>
-                                            <Td>{lote.ordenProduccionId ?? "-"}</Td>
-                                            <Td>{lote.loteAsignado ?? "-"}</Td>
-                                            <Td>
+                                            </Table.Cell>
+                                            <Table.Cell>{lote.ordenProduccionId ?? "-"}</Table.Cell>
+                                            <Table.Cell>{lote.loteAsignado ?? "-"}</Table.Cell>
+                                            <Table.Cell>
                                                 <Text fontSize="sm">{item.terminadoNombre}</Text>
                                                 <Text fontSize="xs" color="gray.500">{item.terminadoId}</Text>
-                                            </Td>
-                                            <Td isNumeric>{formatNumber(lote.cantidadPlanificada)}</Td>
-                                            <Td>
-                                                <Badge colorScheme={estadoLoteColor(lote.estado)}>
+                                            </Table.Cell>
+                                            <Table.Cell textAlign='end'>{formatNumber(lote.cantidadPlanificada)}</Table.Cell>
+                                            <Table.Cell>
+                                                <Badge colorPalette={estadoLoteColor(lote.estado)}>
                                                     {estadoLoteLabel(lote.estado)}
                                                 </Badge>
-                                            </Td>
-                                            <Td>
+                                            </Table.Cell>
+                                            <Table.Cell>
                                                 <Flex justify="center">
-                                                    <Checkbox
-                                                        colorScheme="teal"
-                                                        isChecked={isSelected}
-                                                        isDisabled={!isSelectable}
-                                                        onChange={() => handleToggle(lote)}
-                                                    >
+                                                    <Checkbox.Root
+                                                        colorPalette="teal"
+                                                        checked={isSelected}
+                                                        disabled={!isSelectable}
+                                                        onCheckedChange={() => handleToggle(lote)}
+                                                    ><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>
                                                         {isSelected ? "Seleccionada" : "Seleccionar OP"}
-                                                    </Checkbox>
+                                                    </Checkbox.Label></Checkbox.Root>
                                                 </Flex>
-                                            </Td>
-                                        </Tr>
+                                            </Table.Cell>
+                                        </Table.Row>
                                     );
                                 })}
-                            </Tbody>
-                        </Table>
-                    </TableContainer>
+                            </Table.Body>
+                        </Table.Root>
+                    </Table.ScrollArea>
                 </Box>
             )}
 
@@ -263,7 +262,7 @@ export default function DispensacionV2Step3SeleccionOrdenes({
                 <Button variant="outline" onClick={onBack}>
                     Atrás
                 </Button>
-                <Button colorScheme="teal" onClick={onNext} isDisabled={selectedOrdenesInCard.length === 0}>
+                <Button colorPalette="teal" onClick={onNext} disabled={selectedOrdenesInCard.length === 0}>
                     Continuar a materiales
                 </Button>
             </Flex>

@@ -1,7 +1,6 @@
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
     Box,
     Button,
     Flex,
@@ -101,32 +100,32 @@ export default function EliminacionOPStep2StudyResult({
     } = studyResultOP;
 
     return (
-        <VStack align="stretch" spacing={6}>
+        <VStack align="stretch" gap={6}>
             <Heading size="md">
                 Resultado del estudio - Orden de producción #{ordenProduccionId}
             </Heading>
 
             {!eliminable && (
-                <Alert status="warning">
-                    <AlertIcon />
-                    <AlertDescription>
+                <Alert.Root status="warning">
+                    <Alert.Indicator />
+                    <Alert.Description>
                         No se puede eliminar esta orden de producción porque tiene
                         transacciones de almacén asociadas (dispensaciones u otras).
                         Solo se permite eliminación forzada cuando no hay
                         transacciones vinculadas.
-                    </AlertDescription>
-                </Alert>
+                    </Alert.Description>
+                </Alert.Root>
             )}
 
             {eliminable && (
-                <Alert status="info">
-                    <AlertIcon />
-                    <AlertDescription>
+                <Alert.Root status="info">
+                    <Alert.Indicator />
+                    <Alert.Description>
                         Esta orden no tiene transacciones de almacén. Se puede
                         ejecutar la eliminación (se eliminarán los lotes
                         reservados y la orden).
-                    </AlertDescription>
-                </Alert>
+                    </Alert.Description>
+                </Alert.Root>
             )}
 
             <Text color="app.textMuted">
@@ -139,34 +138,34 @@ export default function EliminacionOPStep2StudyResult({
                     Lotes ({lotes.length})
                 </Heading>
                 {lotes.length > 0 ? (
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>ID</Th>
-                                <Th>Batch</Th>
-                                <Th>Fecha prod.</Th>
-                                <Th>Fecha venc.</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Batch</Table.ColumnHeader>
+                                <Table.ColumnHeader>Fecha prod.</Table.ColumnHeader>
+                                <Table.ColumnHeader>Fecha venc.</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {lotes.map((lote) => (
-                                <Tr key={lote.id}>
-                                    <Td>{lote.id}</Td>
-                                    <Td>{lote.batchNumber}</Td>
-                                    <Td>
+                                <Table.Row key={lote.id}>
+                                    <Table.Cell>{lote.id}</Table.Cell>
+                                    <Table.Cell>{lote.batchNumber}</Table.Cell>
+                                    <Table.Cell>
                                         {lote.productionDate
                                             ? formatDate(lote.productionDate)
                                             : "-"}
-                                    </Td>
-                                    <Td>
+                                    </Table.Cell>
+                                    <Table.Cell>
                                         {lote.expirationDate
                                             ? formatDate(lote.expirationDate)
                                             : "-"}
-                                    </Td>
-                                </Tr>
+                                    </Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 ) : (
                     <Text color="app.textSubtle">Ningún lote.</Text>
                 )}
@@ -178,7 +177,7 @@ export default function EliminacionOPStep2StudyResult({
                     Transacciones de almacén ({transaccionesAlmacen.length})
                 </Heading>
                 {transaccionesAlmacen.length > 0 ? (
-                    <VStack align="stretch" spacing={3}>
+                    <VStack align="stretch" gap={3}>
                         {transaccionesAlmacen.map((ta) => (
                             <Box
                                 key={ta.transaccionId}
@@ -197,32 +196,32 @@ export default function EliminacionOPStep2StudyResult({
                                     </Text>
                                 )}
                                 {ta.movimientos && ta.movimientos.length > 0 && (
-                                    <Table size="sm" mt={2} variant="simple">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>Mov. ID</Th>
-                                                <Th>Producto</Th>
-                                                <Th>Cantidad</Th>
-                                                <Th>Tipo</Th>
-                                                <Th>Almacén</Th>
-                                                <Th>Fecha</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
+                                    <Table.Root size="sm" mt={2} variant="simple">
+                                        <Table.Header>
+                                            <Table.Row>
+                                                <Table.ColumnHeader>Mov. ID</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Producto</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Cantidad</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Almacén</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                                            </Table.Row>
+                                        </Table.Header>
+                                        <Table.Body>
                                             {ta.movimientos.map((m) => (
-                                                <Tr key={m.movimientoId}>
-                                                    <Td>{m.movimientoId}</Td>
-                                                    <Td>{m.productId ?? "-"}</Td>
-                                                    <Td>{m.cantidad}</Td>
-                                                    <Td>{m.tipoMovimiento ?? "-"}</Td>
-                                                    <Td>{m.almacen ?? "-"}</Td>
-                                                    <Td>
+                                                <Table.Row key={m.movimientoId}>
+                                                    <Table.Cell>{m.movimientoId}</Table.Cell>
+                                                    <Table.Cell>{m.productId ?? "-"}</Table.Cell>
+                                                    <Table.Cell>{m.cantidad}</Table.Cell>
+                                                    <Table.Cell>{m.tipoMovimiento ?? "-"}</Table.Cell>
+                                                    <Table.Cell>{m.almacen ?? "-"}</Table.Cell>
+                                                    <Table.Cell>
                                                         {formatDate(m.fechaMovimiento)}
-                                                    </Td>
-                                                </Tr>
+                                                    </Table.Cell>
+                                                </Table.Row>
                                             ))}
-                                        </Tbody>
-                                    </Table>
+                                        </Table.Body>
+                                    </Table.Root>
                                 )}
                             </Box>
                         ))}
@@ -238,28 +237,28 @@ export default function EliminacionOPStep2StudyResult({
                     Asientos contables ({asientosContables.length})
                 </Heading>
                 {asientosContables.length > 0 ? (
-                    <Table size="sm" variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>ID</Th>
-                                <Th>Fecha</Th>
-                                <Th>Descripción</Th>
-                                <Th>Módulo</Th>
-                                <Th>Estado</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                    <Table.Root size="sm" variant="simple">
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                                <Table.ColumnHeader>Descripción</Table.ColumnHeader>
+                                <Table.ColumnHeader>Módulo</Table.ColumnHeader>
+                                <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {asientosContables.map((a) => (
-                                <Tr key={a.id}>
-                                    <Td>{a.id}</Td>
-                                    <Td>{formatDate(a.fecha)}</Td>
-                                    <Td>{a.descripcion ?? "-"}</Td>
-                                    <Td>{a.modulo ?? "-"}</Td>
-                                    <Td>{a.estado ?? "-"}</Td>
-                                </Tr>
+                                <Table.Row key={a.id}>
+                                    <Table.Cell>{a.id}</Table.Cell>
+                                    <Table.Cell>{formatDate(a.fecha)}</Table.Cell>
+                                    <Table.Cell>{a.descripcion ?? "-"}</Table.Cell>
+                                    <Table.Cell>{a.modulo ?? "-"}</Table.Cell>
+                                    <Table.Cell>{a.estado ?? "-"}</Table.Cell>
+                                </Table.Row>
                             ))}
-                        </Tbody>
-                    </Table>
+                        </Table.Body>
+                    </Table.Root>
                 ) : (
                     <Text color="app.textSubtle">Ningún asiento contable.</Text>
                 )}
@@ -271,9 +270,9 @@ export default function EliminacionOPStep2StudyResult({
                 </Button>
                 {eliminable && (
                     <Button
-                        colorScheme="teal"
+                        colorPalette="teal"
                         onClick={handleEjecutarEliminacion}
-                        isLoading={isExecuting}
+                        loading={isExecuting}
                         loadingText="Ejecutando..."
                     >
                         Ejecutar eliminación

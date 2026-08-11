@@ -1,17 +1,9 @@
 import {
+    Steps,
     Box,
     Button,
-    FormControl,
-    FormLabel,
     Input,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
-    Select,
+    NativeSelect,
     Stack,
     Table,
     Tbody,
@@ -22,6 +14,9 @@ import {
     Tr,
     useToast,
     VStack,
+    Field,
+    Dialog,
+    Portal,
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
@@ -99,133 +94,145 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
     }, [isOpen]);
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "4xl" }} scrollBehavior="inside">
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Seleccionar material</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <VStack align="stretch" spacing={4}>
-                        <FormControl>
-                            <FormLabel>Buscar material</FormLabel>
-                            <Stack direction={{ base: "column", md: "row" }} align={{ base: "stretch", md: "end" }}>
-                                <Input
-                                    value={searchText}
-                                    onChange={(e) => setSearchText(e.target.value)}
-                                    placeholder="Ingrese nombre o ID"
-                                    isDisabled={loading}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter" && !loading) {
-                                            setPage(0);
-                                            fetchMateriales(0, size);
-                                        }
-                                    }}
-                                />
-                                <Select
-                                    value={searchType}
-                                    onChange={(e) => setSearchType(e.target.value as BiSearchType)}
-                                    width={{ base: "full", md: "150px" }}
-                                    isDisabled={loading}
-                                >
-                                    <option value="NOMBRE">Nombre</option>
-                                    <option value="ID">ID</option>
-                                </Select>
-                                <Button
-                                    colorScheme="blue"
-                                    onClick={() => {
-                                        setPage(0);
-                                        fetchMateriales(0, size);
-                                    }}
-                                    isLoading={loading}
-                                    w={{ base: "full", md: "auto" }}
-                                >
-                                    Buscar
-                                </Button>
-                            </Stack>
-                        </FormControl>
+        <Dialog.Root open={isOpen} size={{ base: "full", md: "4xl" }} scrollBehavior="inside" onOpenChange={e => {
+            if (!e.open) {
+                onClose();
+            }
+        }}>
+            <Portal>
 
-                        <Box w="full" overflowX="auto">
-                            {items.length > 0 ? (
-                                <>
-                                    <Table variant="striped" size="sm">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>ID</Th>
-                                                <Th>Nombre</Th>
-                                                <Th>Tipo</Th>
-                                                <Th>UOM</Th>
-                                                <Th isNumeric>Punto reorden</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
-                                            {items.map((item) => {
-                                                const isSelected = item.productoId === selectedMaterialId;
-                                                return (
-                                                    <Tr
-                                                        key={item.productoId}
-                                                        onClick={() => setSelectedMaterialId(item.productoId)}
-                                                        bg={isSelected ? "app.rowSelectedBlue" : undefined}
-                                                        _hover={{ bg: "app.rowHoverStrong", cursor: "pointer" }}
-                                                    >
-                                                        <Td>{item.productoId}</Td>
-                                                        <Td>{item.nombre}</Td>
-                                                        <Td>{formatTipoMaterial(item.tipoMaterial)}</Td>
-                                                        <Td>{item.tipoUnidades}</Td>
-                                                        <Td isNumeric>{formatNumber(item.puntoReorden, 2)}</Td>
-                                                    </Tr>
-                                                );
-                                            })}
-                                        </Tbody>
-                                    </Table>
-
-                                    <Box mt={4}>
-                                        <BetterPagination
-                                            page={page}
-                                            size={size}
-                                            totalPages={totalPages}
-                                            loading={loading}
-                                            onPageChange={(newPage) => {
-                                                setPage(newPage);
-                                                fetchMateriales(newPage, size);
-                                            }}
-                                            onSizeChange={(newSize) => {
-                                                setSize(newSize);
-                                                setPage(0);
-                                                fetchMateriales(0, newSize);
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>Seleccionar material</Dialog.Header>
+                        <Dialog.CloseTrigger />
+                        <Dialog.Body>
+                            <VStack align="stretch" gap={4}>
+                                <Field.Root>
+                                    <Field.Label>Buscar material</Field.Label>
+                                    <Stack direction={{ base: "column", md: "row" }} align={{ base: "stretch", md: "end" }}>
+                                        <Input
+                                            value={searchText}
+                                            onValueChange={(e) => setSearchText(e.target.value)}
+                                            placeholder="Ingrese nombre o ID"
+                                            disabled={loading}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter" && !loading) {
+                                                    setPage(0);
+                                                    fetchMateriales(0, size);
+                                                }
                                             }}
                                         />
-                                    </Box>
-                                </>
-                            ) : (
-                                <Text textAlign="center" color="app.textMuted">
-                                    No hay materiales para mostrar.
-                                </Text>
-                            )}
-                        </Box>
-                    </VStack>
-                </ModalBody>
-                <ModalFooter
-                    gap={3}
-                    flexDirection={{ base: "column", sm: "row" }}
-                    alignItems={{ base: "stretch", sm: "center" }}
-                >
-                    <Button
-                        colorScheme="blue"
-                        onClick={() => {
-                            if (selectedMaterial) {
-                                onSelectMaterial(selectedMaterial);
-                            }
-                        }}
-                        isDisabled={!selectedMaterial}
-                        w={{ base: "full", sm: "auto" }}
-                    >
-                        Confirmar
-                    </Button>
-                    <Button variant="ghost" onClick={onClose} w={{ base: "full", sm: "auto" }}>
-                        Cancelar
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                                        <NativeSelect.Root>
+                                            <NativeSelect.Field
+                                                value={searchType}
+                                                onValueChange={(e) => setSearchType(e.target.value as BiSearchType)}
+                                                width={{ base: "full", md: "150px" }}
+                                                disabled={loading}>
+                                                <option value="NOMBRE">Nombre</option>
+                                                <option value="ID">ID</option>
+                                            </NativeSelect.Field>
+                                            <NativeSelect.Indicator />
+                                        </NativeSelect.Root>
+                                        <Button
+                                            colorPalette="blue"
+                                            onClick={() => {
+                                                setPage(0);
+                                                fetchMateriales(0, size);
+                                            }}
+                                            loading={loading}
+                                            w={{ base: "full", md: "auto" }}
+                                        >
+                                            Buscar
+                                        </Button>
+                                    </Stack>
+                                </Field.Root>
+
+                                <Box w="full" overflowX="auto">
+                                    {items.length > 0 ? (
+                                        <>
+                                            <Table.Root variant="striped" size="sm">
+                                                <Table.Header>
+                                                    <Table.Row>
+                                                        <Table.ColumnHeader>ID</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>Tipo</Table.ColumnHeader>
+                                                        <Table.ColumnHeader>UOM</Table.ColumnHeader>
+                                                        <Table.ColumnHeader textAlign='end'>Punto reorden</Table.ColumnHeader>
+                                                    </Table.Row>
+                                                </Table.Header>
+                                                <Table.Body>
+                                                    {items.map((item) => {
+                                                        const isSelected = item.productoId === selectedMaterialId;
+                                                        return (
+                                                            <Table.Row
+                                                                key={item.productoId}
+                                                                onClick={() => setSelectedMaterialId(item.productoId)}
+                                                                bg={isSelected ? "app.rowSelectedBlue" : undefined}
+                                                                _hover={{ bg: "app.rowHoverStrong", cursor: "pointer" }}
+                                                            >
+                                                                <Table.Cell>{item.productoId}</Table.Cell>
+                                                                <Table.Cell>{item.nombre}</Table.Cell>
+                                                                <Table.Cell>{formatTipoMaterial(item.tipoMaterial)}</Table.Cell>
+                                                                <Table.Cell>{item.tipoUnidades}</Table.Cell>
+                                                                <Table.Cell textAlign='end'>{formatNumber(item.puntoReorden, 2)}</Table.Cell>
+                                                            </Table.Row>
+                                                        );
+                                                    })}
+                                                </Table.Body>
+                                            </Table.Root>
+
+                                            <Box mt={4}>
+                                                <BetterPagination
+                                                    page={page}
+                                                    size={size}
+                                                    totalPages={totalPages}
+                                                    loading={loading}
+                                                    onPageChange={(newPage) => {
+                                                        setPage(newPage);
+                                                        fetchMateriales(newPage, size);
+                                                    }}
+                                                    onSizeChange={(newSize) => {
+                                                        setSize(newSize);
+                                                        setPage(0);
+                                                        fetchMateriales(0, newSize);
+                                                    }}
+                                                />
+                                            </Box>
+                                        </>
+                                    ) : (
+                                        <Text textAlign="center" color="app.textMuted">
+                                            No hay materiales para mostrar.
+                                        </Text>
+                                    )}
+                                </Box>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer
+                            gap={3}
+                            flexDirection={{ base: "column", sm: "row" }}
+                            alignItems={{ base: "stretch", sm: "center" }}
+                        >
+                            <Button
+                                colorPalette="blue"
+                                onClick={() => {
+                                    if (selectedMaterial) {
+                                        onSelectMaterial(selectedMaterial);
+                                    }
+                                }}
+                                disabled={!selectedMaterial}
+                                w={{ base: "full", sm: "auto" }}
+                            >
+                                Confirmar
+                            </Button>
+                            <Button variant="ghost" onClick={onClose} w={{ base: "full", sm: "auto" }}>
+                                Cancelar
+                            </Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+
+            </Portal>
+        </Dialog.Root>
     );
 }

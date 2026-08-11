@@ -1,8 +1,6 @@
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
-    AlertTitle,
     Box,
     Button,
     HStack,
@@ -229,7 +227,7 @@ export default function SoloInsumosStep2SubirValidar({
 
     return (
         <Box p={4}>
-            <VStack align="stretch" spacing={6}>
+            <VStack align="stretch" gap={6}>
                 <Text fontSize="lg" fontWeight="semibold">Subir y validar archivo JSON</Text>
 
                 <Text>
@@ -241,19 +239,19 @@ export default function SoloInsumosStep2SubirValidar({
                 </Text>
 
                 <Box p={5} borderWidth="1px" borderRadius="lg">
-                    <VStack spacing={4} align="stretch">
-                        <HStack spacing={4} alignItems="center">
+                    <VStack gap={4} align="stretch">
+                        <HStack gap={4} alignItems="center">
                             <Button onClick={() => inputRef.current?.click()}>Subir JSON</Button>
-                            <Input type="file" ref={inputRef} style={{ display: "none" }} accept=".json,application/json" onChange={handleFileChange} />
+                            <Input type="file" ref={inputRef} style={{ display: "none" }} accept=".json,application/json" onValueChange={handleFileChange} />
                             <Icon as={jsonFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize="2em" color={jsonFile ? "green" : "orange.500"} />
-                            {jsonFile && <Text fontSize="sm" noOfLines={1} flex={1}>{jsonFile.name}</Text>}
+                            {jsonFile && <Text fontSize="sm" lineClamp={1} flex={1}>{jsonFile.name}</Text>}
                         </HStack>
 
                         <Button
-                            colorScheme="blue"
+                            colorPalette="blue"
                             onClick={() => jsonFile && validateJsonFile(jsonFile)}
-                            isDisabled={!jsonFile || isValidating}
-                            isLoading={isValidating}
+                            disabled={!jsonFile || isValidating}
+                            loading={isValidating}
                             loadingText="Validando..."
                         >
                             Validar JSON
@@ -262,83 +260,83 @@ export default function SoloInsumosStep2SubirValidar({
                 </Box>
 
                 {httpErrorType === "session" && (
-                    <Alert status="error">
-                        <AlertIcon />
+                    <Alert.Root status="error">
+                        <Alert.Indicator />
                         <Box>
-                            <AlertTitle>Sesion expirada</AlertTitle>
-                            <AlertDescription>Su sesion ha expirado o no tiene permisos. Por favor inicie sesion nuevamente.</AlertDescription>
+                            <Alert.Title>Sesion expirada</Alert.Title>
+                            <Alert.Description>Su sesion ha expirado o no tiene permisos. Por favor inicie sesion nuevamente.</Alert.Description>
                         </Box>
-                    </Alert>
+                    </Alert.Root>
                 )}
 
                 {httpErrorType === "server" && (
-                    <Alert status="error">
-                        <AlertIcon />
+                    <Alert.Root status="error">
+                        <Alert.Indicator />
                         <Box>
-                            <AlertTitle>Error interno del servidor</AlertTitle>
-                            <AlertDescription>Intente mas tarde o contacte al administrador.</AlertDescription>
+                            <Alert.Title>Error interno del servidor</Alert.Title>
+                            <Alert.Description>Intente mas tarde o contacte al administrador.</Alert.Description>
                         </Box>
-                    </Alert>
+                    </Alert.Root>
                 )}
 
                 {tableErrors.length > 0 && httpErrorType === null && (
-                    <Alert status="error">
-                        <AlertIcon />
+                    <Alert.Root status="error">
+                        <Alert.Indicator />
                         <Box width="100%">
-                            <AlertTitle>Errores de validacion encontrados:</AlertTitle>
-                            <AlertDescription as="div" mt={3}>
-                                <TableContainer maxH="300px" overflowY="auto">
-                                    <Table size="sm" variant="simple">
-                                        <Thead>
-                                            <Tr>
-                                                <Th>Fila</Th>
-                                                <Th>Campo</Th>
-                                                <Th>Producto ID</Th>
-                                                <Th>Descripcion del error</Th>
-                                            </Tr>
-                                        </Thead>
-                                        <Tbody>
+                            <Alert.Title>Errores de validacion encontrados:</Alert.Title>
+                            <Alert.Description as="div" mt={3}>
+                                <Table.ScrollArea maxH="300px" overflowY="auto">
+                                    <Table.Root size="sm" variant="simple">
+                                        <Table.Header>
+                                            <Table.Row>
+                                                <Table.ColumnHeader>Fila</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Campo</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Producto ID</Table.ColumnHeader>
+                                                <Table.ColumnHeader>Descripcion del error</Table.ColumnHeader>
+                                            </Table.Row>
+                                        </Table.Header>
+                                        <Table.Body>
                                             {tableErrors.slice(0, 20).map((error, idx) => (
-                                                <Tr key={idx}>
-                                                    <Td>{error.rowNumber}</Td>
-                                                    <Td>{error.columnName || "-"}</Td>
-                                                    <Td>{error.productoId || "-"}</Td>
-                                                    <Td>{error.message}</Td>
-                                                </Tr>
+                                                <Table.Row key={idx}>
+                                                    <Table.Cell>{error.rowNumber}</Table.Cell>
+                                                    <Table.Cell>{error.columnName || "-"}</Table.Cell>
+                                                    <Table.Cell>{error.productoId || "-"}</Table.Cell>
+                                                    <Table.Cell>{error.message}</Table.Cell>
+                                                </Table.Row>
                                             ))}
-                                        </Tbody>
-                                    </Table>
-                                </TableContainer>
+                                        </Table.Body>
+                                    </Table.Root>
+                                </Table.ScrollArea>
                                 {tableErrors.length > 20 && <Text fontSize="sm" fontStyle="italic" mt={2}>... y {tableErrors.length - 20} errores mas</Text>}
-                            </AlertDescription>
+                            </Alert.Description>
                         </Box>
-                    </Alert>
+                    </Alert.Root>
                 )}
 
                 {validationErrors.length > 0 && tableErrors.length === 0 && httpErrorType === null && (
-                    <Alert status="error">
-                        <AlertIcon />
+                    <Alert.Root status="error">
+                        <Alert.Indicator />
                         <Box>
-                            <AlertTitle>Error de validacion</AlertTitle>
-                            <AlertDescription>
-                                <VStack align="stretch" spacing={1} mt={2}>
+                            <Alert.Title>Error de validacion</Alert.Title>
+                            <Alert.Description>
+                                <VStack align="stretch" gap={1} mt={2}>
                                     {validationErrors.map((error, index) => <Text key={index} fontSize="sm">{error}</Text>)}
                                 </VStack>
-                            </AlertDescription>
+                            </Alert.Description>
                         </Box>
-                    </Alert>
+                    </Alert.Root>
                 )}
 
                 {jsonIsValid && jsonData && (
-                    <Alert status="success">
-                        <AlertIcon />
-                        <AlertDescription>Archivo validado correctamente. Se encontraron {jsonData.terminados.length} terminado(s) para registrar.</AlertDescription>
-                    </Alert>
+                    <Alert.Root status="success">
+                        <Alert.Indicator />
+                        <Alert.Description>Archivo validado correctamente. Se encontraron {jsonData.terminados.length} terminado(s) para registrar.</Alert.Description>
+                    </Alert.Root>
                 )}
 
                 <HStack justify="flex-end">
                     <Button variant="outline" onClick={() => setActiveStep(0)}>Atras</Button>
-                    <Button colorScheme="blue" onClick={() => setActiveStep(2)} isDisabled={!jsonIsValid}>Siguiente</Button>
+                    <Button colorPalette="blue" onClick={() => setActiveStep(2)} disabled={!jsonIsValid}>Siguiente</Button>
                 </HStack>
             </VStack>
         </Box>

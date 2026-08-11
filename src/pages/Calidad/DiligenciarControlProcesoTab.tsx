@@ -1,10 +1,11 @@
 import {
+    Steps,
     Badge,
     Box,
     Button,
     HStack,
     Input,
-    Select,
+    NativeSelect,
     Table,
     Tbody,
     Td,
@@ -180,53 +181,55 @@ export default function DiligenciarControlProcesoTab() {
                     {caracteristica.cantidadMuestras} muestras x {caracteristica.unidadesPorMuestra} unidades
                 </Text>
             </HStack>
-            <Table size="sm">
-                <Thead>
-                    <Tr>
-                        <Th>Unidad</Th>
+            <Table.Root size="sm">
+                <Table.Header>
+                    <Table.Row>
+                        <Table.ColumnHeader>Unidad</Table.ColumnHeader>
                         {numberRange(caracteristica.cantidadMuestras).map((muestra) => (
-                            <Th key={muestra}>Muestra {muestra}</Th>
+                            <Table.ColumnHeader key={muestra}>Muestra {muestra}</Table.ColumnHeader>
                         ))}
-                    </Tr>
-                </Thead>
-                <Tbody>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {numberRange(caracteristica.unidadesPorMuestra).map((unidad) => (
-                        <Tr key={unidad}>
-                            <Td>{unidad}</Td>
+                        <Table.Row key={unidad}>
+                            <Table.Cell>{unidad}</Table.Cell>
                             {numberRange(caracteristica.cantidadMuestras).map((muestra) => {
                                 const key = valueKey(caracteristica.id, muestra, unidad);
                                 return (
-                                    <Td key={key}>
+                                    <Table.Cell key={key}>
                                         {caracteristica.tipo === "NUMERICA" ? (
                                             <Input
                                                 size="sm"
                                                 type="number"
                                                 value={values[key] ?? ""}
-                                                onChange={(event) => updateValue(key, event.target.value)}
+                                                onValueChange={(event) => updateValue(key, event.target.value)}
                                             />
                                         ) : (
-                                            <Select
-                                                size="sm"
-                                                value={values[key] ?? ""}
-                                                onChange={(event) => updateValue(key, event.target.value)}
-                                            >
-                                                <option value="">Seleccionar</option>
-                                                <option value="true">Cumple</option>
-                                                <option value="false">No cumple</option>
-                                            </Select>
+                                            <NativeSelect.Root>
+                                                <NativeSelect.Field
+                                                    size="sm"
+                                                    value={values[key] ?? ""}
+                                                    onValueChange={(event) => updateValue(key, event.target.value)}>
+                                                    <option value="">Seleccionar</option>
+                                                    <option value="true">Cumple</option>
+                                                    <option value="false">No cumple</option>
+                                                </NativeSelect.Field>
+                                                <NativeSelect.Indicator />
+                                            </NativeSelect.Root>
                                         )}
-                                    </Td>
+                                    </Table.Cell>
                                 );
                             })}
-                        </Tr>
+                        </Table.Row>
                     ))}
-                </Tbody>
-            </Table>
+                </Table.Body>
+            </Table.Root>
         </Box>
     );
 
     return (
-        <VStack align="stretch" spacing={5}>
+        <VStack align="stretch" gap={5}>
             <CalidadAreaOperativaPicker
                 value={selectedArea}
                 onChange={handleAreaChange}
@@ -234,27 +237,27 @@ export default function DiligenciarControlProcesoTab() {
             />
 
             <Box borderWidth="1px" borderRadius="md" p={4}>
-                <HStack align="end" spacing={3}>
+                <HStack align="end" gap={3}>
                     <Box flex="1">
                         <Text fontWeight="semibold" mb={1}>Lote de produccion</Text>
                         <Input
                             value={loteSearch}
-                            onChange={(event) => setLoteSearch(event.target.value)}
+                            onValueChange={(event) => setLoteSearch(event.target.value)}
                             onKeyDown={(event) => event.key === "Enter" && buscarLotes()}
                             placeholder="Buscar por lote o producto"
                         />
                     </Box>
-                    <Button onClick={buscarLotes} isLoading={loadingLotes}>Buscar</Button>
+                    <Button onClick={buscarLotes} loading={loadingLotes}>Buscar</Button>
                 </HStack>
                 {lotes.length > 0 && (
-                    <VStack align="stretch" mt={3} spacing={2}>
+                    <VStack align="stretch" mt={3} gap={2}>
                         {lotes.map((lote) => (
                             <Button
                                 key={lote.id}
                                 size="sm"
                                 justifyContent="flex-start"
                                 variant={selectedLote?.id === lote.id ? "solid" : "outline"}
-                                colorScheme={selectedLote?.id === lote.id ? "teal" : "gray"}
+                                colorPalette={selectedLote?.id === lote.id ? "teal" : "gray"}
                                 onClick={() => {
                                     setSelectedLote(lote);
                                     setPreparacion(null);
@@ -269,17 +272,17 @@ export default function DiligenciarControlProcesoTab() {
 
             <HStack justify="flex-end">
                 <Button
-                    colorScheme="teal"
+                    colorPalette="teal"
                     onClick={preparar}
-                    isLoading={loadingPreparacion}
-                    isDisabled={!selectedArea || !selectedLote}
+                    loading={loadingPreparacion}
+                    disabled={!selectedArea || !selectedLote}
                 >
                     Preparar control
                 </Button>
             </HStack>
 
             {preparacion && (
-                <VStack align="stretch" spacing={4}>
+                <VStack align="stretch" gap={4}>
                     <Box borderWidth="1px" borderRadius="md" p={4}>
                         <HStack justify="space-between">
                             <Text fontWeight="semibold">
@@ -293,9 +296,9 @@ export default function DiligenciarControlProcesoTab() {
 
                     <Box borderWidth="1px" borderRadius="md" p={4}>
                         <Text fontWeight="semibold" mb={2}>Observaciones</Text>
-                        <Textarea value={observaciones} onChange={(event) => setObservaciones(event.target.value)} />
+                        <Textarea value={observaciones} onValueChange={(event) => setObservaciones(event.target.value)} />
                         <HStack justify="flex-end" mt={4}>
-                            <Button colorScheme="teal" onClick={guardar} isLoading={saving}>
+                            <Button colorPalette="teal" onClick={guardar} loading={saving}>
                                 Guardar control
                             </Button>
                         </HStack>

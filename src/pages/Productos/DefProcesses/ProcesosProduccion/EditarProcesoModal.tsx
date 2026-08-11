@@ -1,28 +1,22 @@
 import { useState, useEffect } from 'react';
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
+  Steps,
   Button,
-  FormControl,
-  FormLabel,
   Input,
-  Select,
+  NativeSelect,
   NumberInput,
   NumberInputField,
   Stack,
   useToast,
   Flex,
   Heading,
-  Divider,
   Box,
   Text,
   Alert,
-  AlertIcon
+  Separator,
+  Field,
+  Dialog,
+  Portal,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
@@ -190,228 +184,240 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
   if (!procesoEditado) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Editar Proceso de Producción</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <Stack spacing={6}>
-            {/* Sección: Información General */}
-            <Box>
-              <Heading size="sm" mb={3}>Información General</Heading>
-              <Divider mb={4} />
-              <Stack spacing={4}>
-                <FormControl isRequired>
-                  <FormLabel>Nombre</FormLabel>
-                  <Input 
-                    name="nombre" 
-                    value={procesoEditado.nombre} 
-                    onChange={handleChange} 
-                  />
-                </FormControl>
+    <Dialog.Root open={isOpen} size='xl' onOpenChange={e => {
+      if (!e.open) {
+        onClose();
+      }
+    }}>
+      <Portal>
 
-                <FormControl>
-                  <FormLabel>Nivel de Acceso</FormLabel>
-                  <NumberInput 
-                    min={0} 
-                    max={10}
-                    value={procesoEditado.nivelAcceso || 0}
-                    onChange={(_, value) => handleNumberChange('nivelAcceso', value)}
-                  >
-                    <NumberInputField />
-                  </NumberInput>
-                </FormControl>
-
-                <FormControl isRequired>
-                  <FormLabel>Tiempo de Preparación (Setup Time) en segundos</FormLabel>
-                  <NumberInput 
-                    min={0}
-                    value={procesoEditado.setUpTime}
-                    onChange={(_, value) => handleNumberChange('setUpTime', value)}
-                  >
-                    <NumberInputField />
-                  </NumberInput>
-                </FormControl>
-              </Stack>
-            </Box>
-
-            {/* Sección: Modelo de Tiempo */}
-            <Box>
-              <Heading size="sm" mb={3}>Modelo de Tiempo</Heading>
-              <Divider mb={4} />
-              <Stack spacing={4}>
-                <FormControl isRequired>
-                  <FormLabel>Modelo de Tiempo</FormLabel>
-                  <Select 
-                    name="model" 
-                    value={procesoEditado.model} 
-                    onChange={handleModelChange}
-                  >
-                    <option value={TimeModelType.CONSTANT}>Constante</option>
-                    <option value={TimeModelType.THROUGHPUT_RATE}>Tasa</option>
-                    <option value={TimeModelType.PER_UNIT}>Por Unidad</option>
-                    <option value={TimeModelType.PER_BATCH}>Por Lote</option>
-                  </Select>
-                </FormControl>
-
-                {procesoEditado.model === TimeModelType.CONSTANT && (
-                  <FormControl isRequired>
-                    <FormLabel>Tiempo Constante (segundos)</FormLabel>
-                    <NumberInput 
-                      min={0}
-                      value={procesoEditado.constantSeconds || 0}
-                      onChange={(_, value) => handleNumberChange('constantSeconds', value)}
-                    >
-                      <NumberInputField />
-                    </NumberInput>
-                  </FormControl>
-                )}
-
-                {procesoEditado.model === TimeModelType.THROUGHPUT_RATE && (
-                  <FormControl isRequired>
-                    <FormLabel>Tasa de Producción (unidades/segundo)</FormLabel>
-                    <CustomDecimalInput
-                      min={0}
-                      maxDecimals={2}
-                      value={procesoEditado.throughputUnitsPerSec || 0}
-                      onChange={(value) => handleNumberChange('throughputUnitsPerSec', value)}
-                    />
-                  </FormControl>
-                )}
-
-                {procesoEditado.model === TimeModelType.PER_UNIT && (
-                  <FormControl isRequired>
-                    <FormLabel>Segundos por Unidad</FormLabel>
-                    <NumberInput 
-                      min={0}
-                      value={procesoEditado.secondsPerUnit || 0}
-                      onChange={(_, value) => handleNumberChange('secondsPerUnit', value)}
-                    >
-                      <NumberInputField />
-                    </NumberInput>
-                  </FormControl>
-                )}
-
-                {procesoEditado.model === TimeModelType.PER_BATCH && (
-                  <>
-                    <FormControl isRequired>
-                      <FormLabel>Segundos por Lote</FormLabel>
-                      <NumberInput 
-                        min={0}
-                        value={procesoEditado.secondsPerBatch || 0}
-                        onChange={(_, value) => handleNumberChange('secondsPerBatch', value)}
-                      >
-                        <NumberInputField />
-                      </NumberInput>
-                    </FormControl>
-
-                    <FormControl isRequired>
-                      <FormLabel>Tamaño del Lote</FormLabel>
-                      <NumberInput 
-                        min={1}
-                        value={procesoEditado.batchSize || 1}
-                        onChange={(_, value) => handleNumberChange('batchSize', value)}
-                      >
-                        <NumberInputField />
-                      </NumberInput>
-                    </FormControl>
-                  </>
-                )}
-              </Stack>
-            </Box>
-
-            {/* Sección: Recursos */}
-            <Box>
-              <Heading size="sm" mb={3}>Recursos</Heading>
-              <Divider mb={4} />
-              <Flex direction="column" gap={4}>
-                {/* Aquí iría la gestión de recursos requeridos */}
-                <Button colorScheme="teal" size="sm">
-                  Agregar Recurso
-                </Button>
-              </Flex>
-            </Box>
-
-            <Divider />
-            {procesoEditado.procesoId ? (
-              <ProcesoDocumentosSection
-                procesoId={procesoEditado.procesoId}
-                isOpen={isOpen}
-                onDocumentVersionCreated={() => {
-                  setIsDeletable(false);
-                  setShowDeleteSection(false);
-                }}
-              />
-            ) : null}
-
-            {/* Sección: Eliminar Proceso (solo visible si es eliminable) */}
-            {isDeletable && (
-              <Box>
-                <Heading size="sm" mb={3} color="red.500">Eliminar Proceso</Heading>
-                <Divider mb={4} />
-
-                {!showDeleteSection ? (
-                  <Button 
-                    colorScheme="red" 
-                    size="sm" 
-                    onClick={toggleDeleteSection}
-                  >
-                    Mostrar Opciones de Eliminación
-                  </Button>
-                ) : (
-                  <Stack spacing={4}>
-                    <Alert status="warning">
-                      <AlertIcon />
-                      Esta acción no se puede deshacer. El proceso será eliminado permanentemente.
-                    </Alert>
-
-                    <Text fontWeight="bold">Token de confirmación: {randomToken}</Text>
-
-                    <FormControl>
-                      <FormLabel>Ingrese el token de confirmación:</FormLabel>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>Editar Proceso de Producción</Dialog.Header>
+            <Dialog.CloseTrigger />
+            <Dialog.Body>
+              <Stack gap={6}>
+                {/* Sección: Información General */}
+                <Box>
+                  <Heading size="sm" mb={3}>Información General</Heading>
+                  <Separator mb={4} />
+                  <Stack gap={4}>
+                    <Field.Root required>
+                      <Field.Label>Nombre</Field.Label>
                       <Input 
-                        value={inputToken}
-                        onChange={(e) => setInputToken(e.target.value)}
-                        placeholder="Ingrese el token de 4 dígitos"
+                        name="nombre" 
+                        value={procesoEditado.nombre} 
+                        onValueChange={handleChange} 
                       />
-                    </FormControl>
+                    </Field.Root>
 
-                    <Flex justify="space-between">
+                    <Field.Root>
+                      <Field.Label>Nivel de Acceso</Field.Label>
+                      <NumberInput.Root 
+                        min={0} 
+                        max={10}
+                        value={String(procesoEditado.nivelAcceso || 0)}
+                        onValueChange={(_, value) => handleNumberChange('nivelAcceso', value)}
+                      >
+                        <NumberInput.Input />
+                      </NumberInput.Root>
+                    </Field.Root>
+
+                    <Field.Root required>
+                      <Field.Label>Tiempo de Preparación (Setup Time) en segundos</Field.Label>
+                      <NumberInput.Root 
+                        min={0}
+                        value={String(procesoEditado.setUpTime)}
+                        onValueChange={(_, value) => handleNumberChange('setUpTime', value)}
+                      >
+                        <NumberInput.Input />
+                      </NumberInput.Root>
+                    </Field.Root>
+                  </Stack>
+                </Box>
+
+                {/* Sección: Modelo de Tiempo */}
+                <Box>
+                  <Heading size="sm" mb={3}>Modelo de Tiempo</Heading>
+                  <Separator mb={4} />
+                  <Stack gap={4}>
+                    <Field.Root required>
+                      <Field.Label>Modelo de Tiempo</Field.Label>
+                      <NativeSelect.Root>
+                        <NativeSelect.Field
+                          name="model"
+                          value={procesoEditado.model}
+                          onValueChange={handleModelChange}>
+                          <option value={TimeModelType.CONSTANT}>Constante</option>
+                          <option value={TimeModelType.THROUGHPUT_RATE}>Tasa</option>
+                          <option value={TimeModelType.PER_UNIT}>Por Unidad</option>
+                          <option value={TimeModelType.PER_BATCH}>Por Lote</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                      </NativeSelect.Root>
+                    </Field.Root>
+
+                    {procesoEditado.model === TimeModelType.CONSTANT && (
+                      <Field.Root required>
+                        <Field.Label>Tiempo Constante (segundos)</Field.Label>
+                        <NumberInput.Root 
+                          min={0}
+                          value={String(procesoEditado.constantSeconds || 0)}
+                          onValueChange={(_, value) => handleNumberChange('constantSeconds', value)}
+                        >
+                          <NumberInput.Input />
+                        </NumberInput.Root>
+                      </Field.Root>
+                    )}
+
+                    {procesoEditado.model === TimeModelType.THROUGHPUT_RATE && (
+                      <Field.Root required>
+                        <Field.Label>Tasa de Producción (unidades/segundo)</Field.Label>
+                        <CustomDecimalInput
+                          min={0}
+                          maxDecimals={2}
+                          value={procesoEditado.throughputUnitsPerSec || 0}
+                          onChange={(value) => handleNumberChange('throughputUnitsPerSec', value)}
+                        />
+                      </Field.Root>
+                    )}
+
+                    {procesoEditado.model === TimeModelType.PER_UNIT && (
+                      <Field.Root required>
+                        <Field.Label>Segundos por Unidad</Field.Label>
+                        <NumberInput.Root 
+                          min={0}
+                          value={String(procesoEditado.secondsPerUnit || 0)}
+                          onValueChange={(_, value) => handleNumberChange('secondsPerUnit', value)}
+                        >
+                          <NumberInput.Input />
+                        </NumberInput.Root>
+                      </Field.Root>
+                    )}
+
+                    {procesoEditado.model === TimeModelType.PER_BATCH && (
+                      <>
+                        <Field.Root required>
+                          <Field.Label>Segundos por Lote</Field.Label>
+                          <NumberInput.Root 
+                            min={0}
+                            value={String(procesoEditado.secondsPerBatch || 0)}
+                            onValueChange={(_, value) => handleNumberChange('secondsPerBatch', value)}
+                          >
+                            <NumberInput.Input />
+                          </NumberInput.Root>
+                        </Field.Root>
+
+                        <Field.Root required>
+                          <Field.Label>Tamaño del Lote</Field.Label>
+                          <NumberInput.Root 
+                            min={1}
+                            value={String(procesoEditado.batchSize || 1)}
+                            onValueChange={(_, value) => handleNumberChange('batchSize', value)}
+                          >
+                            <NumberInput.Input />
+                          </NumberInput.Root>
+                        </Field.Root>
+                      </>
+                    )}
+                  </Stack>
+                </Box>
+
+                {/* Sección: Recursos */}
+                <Box>
+                  <Heading size="sm" mb={3}>Recursos</Heading>
+                  <Separator mb={4} />
+                  <Flex direction="column" gap={4}>
+                    {/* Aquí iría la gestión de recursos requeridos */}
+                    <Button colorPalette="teal" size="sm">
+                      Agregar Recurso
+                    </Button>
+                  </Flex>
+                </Box>
+
+                <Separator />
+                {procesoEditado.procesoId ? (
+                  <ProcesoDocumentosSection
+                    procesoId={procesoEditado.procesoId}
+                    isOpen={isOpen}
+                    onDocumentVersionCreated={() => {
+                      setIsDeletable(false);
+                      setShowDeleteSection(false);
+                    }}
+                  />
+                ) : null}
+
+                {/* Sección: Eliminar Proceso (solo visible si es eliminable) */}
+                {isDeletable && (
+                  <Box>
+                    <Heading size="sm" mb={3} color="red.500">Eliminar Proceso</Heading>
+                    <Separator mb={4} />
+
+                    {!showDeleteSection ? (
                       <Button 
-                        colorScheme="gray" 
+                        colorPalette="red" 
+                        size="sm" 
                         onClick={toggleDeleteSection}
                       >
-                        Cancelar
+                        Mostrar Opciones de Eliminación
                       </Button>
-                      <Button 
-                        colorScheme="red" 
-                        onClick={handleDelete}
-                        isLoading={deleteLoading}
-                        loadingText="Eliminando..."
-                      >
-                        Eliminar Proceso
-                      </Button>
-                    </Flex>
-                  </Stack>
+                    ) : (
+                      <Stack gap={4}>
+                        <Alert.Root status="warning">
+                          <Alert.Indicator />
+                          Esta acción no se puede deshacer. El proceso será eliminado permanentemente.
+                        </Alert.Root>
+
+                        <Text fontWeight="bold">Token de confirmación: {randomToken}</Text>
+
+                        <Field.Root>
+                          <Field.Label>Ingrese el token de confirmación:</Field.Label>
+                          <Input 
+                            value={inputToken}
+                            onValueChange={(e) => setInputToken(e.target.value)}
+                            placeholder="Ingrese el token de 4 dígitos"
+                          />
+                        </Field.Root>
+
+                        <Flex justify="space-between">
+                          <Button 
+                            colorPalette="gray" 
+                            onClick={toggleDeleteSection}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button 
+                            colorPalette="red" 
+                            onClick={handleDelete}
+                            loading={deleteLoading}
+                            loadingText="Eliminando..."
+                          >
+                            Eliminar Proceso
+                          </Button>
+                        </Flex>
+                      </Stack>
+                    )}
+                  </Box>
                 )}
-              </Box>
-            )}
-          </Stack>
-        </ModalBody>
-        <ModalFooter>
-          <Button mr={3} onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button 
-            colorScheme="blue" 
-            onClick={handleSubmit}
-            isLoading={loading}
-          >
-            Guardar Cambios
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+              </Stack>
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Button mr={3} onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button 
+                colorPalette="blue" 
+                onClick={handleSubmit}
+                loading={loading}
+              >
+                Guardar Cambios
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+
+      </Portal>
+    </Dialog.Root>
   );
 }

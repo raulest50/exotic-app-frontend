@@ -1,16 +1,14 @@
+/*
+ MIGRATION NOTE: The following Chakra UI hooks have been removed.
+ Please replace them with the suggested alternatives:
+
+//   - useOutsideClick: Use react-use: useClickAway
+
+ See: https://chakra-ui.com/docs/get-started/migration#hooks
+*/
 // src/components/ListaOrdenesCompra.tsx
 import React, { useState } from 'react';
-import {
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Box,
-    useOutsideClick,
-    useToast,
-} from '@chakra-ui/react';
+import { Steps, Table, Thead, Tbody, Tr, Th, Td, Box, useToast } from '@chakra-ui/react';
 import {getEstadoText, OrdenCompraMateriales} from '../types';
 import OrdenCompraDetails from './OrdenCompraDetails';
 import axios from 'axios';
@@ -142,43 +140,43 @@ const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClos
     return (
         <>
             <Box overflowX="auto" mt={4}>
-                <Table variant="simple">
-                    <Thead>
-                        <Tr>
-                            <Th>ID</Th>
-                            <Th>Fecha Emisión</Th>
-                            <Th>Fecha Vencimiento</Th>
-                            <Th>Proveedor</Th>
-                            <Th>Total a Pagar</Th>
-                            <Th>Estado</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+                <Table.Root variant="simple">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>ID</Table.ColumnHeader>
+                            <Table.ColumnHeader>Fecha Emisión</Table.ColumnHeader>
+                            <Table.ColumnHeader>Fecha Vencimiento</Table.ColumnHeader>
+                            <Table.ColumnHeader>Proveedor</Table.ColumnHeader>
+                            <Table.ColumnHeader>Total a Pagar</Table.ColumnHeader>
+                            <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {ordenes.map((orden) => (
-                            <Tr
+                            <Table.Row
                                 key={orden.ordenCompraId}
                                 onContextMenu={(e) => handleContextMenu(e, orden)}
                                 bg={getBackgroundColorByEstado(orden.estado)}
                                 _hover={{ bg: 'app.rowSelectedBlue', cursor: 'pointer' }}
                             >
-                                <Td>{orden.ordenCompraId}</Td>
-                                <Td>
+                                <Table.Cell>{orden.ordenCompraId}</Table.Cell>
+                                <Table.Cell>
                                     {orden.fechaEmision
                                         ? new Date(orden.fechaEmision).toLocaleString()
                                         : '-'}
-                                </Td>
-                                <Td>
+                                </Table.Cell>
+                                <Table.Cell>
                                     {orden.fechaVencimiento
                                         ? new Date(orden.fechaVencimiento).toLocaleDateString()
                                         : '-'}
-                                </Td>
-                                <Td>{orden.proveedor ? orden.proveedor.nombre : '-'}</Td>
-                                <Td>{formatCOP(orden.totalPagar)}</Td>
-                                <Td>{getEstadoText(orden.estado)}</Td>
-                            </Tr>
+                                </Table.Cell>
+                                <Table.Cell>{orden.proveedor ? orden.proveedor.nombre : '-'}</Table.Cell>
+                                <Table.Cell>{formatCOP(orden.totalPagar)}</Table.Cell>
+                                <Table.Cell>{getEstadoText(orden.estado)}</Table.Cell>
+                            </Table.Row>
                         ))}
-                    </Tbody>
-                </Table>
+                    </Table.Body>
+                </Table.Root>
             </Box>
 
             {/* Custom Context Menu */}

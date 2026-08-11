@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
+import { useColorModeValue } from "../../components/ui/color-mode";
 import {
+  Steps,
   Container,
   Box,
   Spinner,
@@ -12,11 +14,9 @@ import {
   Tab,
   TabPanels,
   TabPanel,
-  Collapse,
+  Collapsible,
   useDisclosure,
-  useColorModeValue,
 } from "@chakra-ui/react";
-import { ChevronRightIcon, ChevronLeftIcon } from "@chakra-ui/icons";
 import MyHeader from "../../components/MyHeader.tsx";
 import OrganizationChart from "./components/OrganizationChart";
 import { MisionVision } from "./MisionVision";
@@ -24,6 +24,7 @@ import { AccessLevel } from "./types";
 import { useAuth } from "../../context/AuthContext";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
 import { useTabPermission } from "../../auth/usePermissions";
+import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 
 export default function OrganigramaPage() {
   const { accesosReady, isMasterLike } = useAuth();
@@ -38,7 +39,7 @@ export default function OrganigramaPage() {
 
   const isLoading = !accesosReady;
   const organizationChartId = "org-1";
-  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
+  const { open, onToggle } = useDisclosure({ defaultIsOpen: true });
   const [tabIndex, setTabIndex] = useState(0);
   const [organigramaDirty, setOrganigramaDirty] = useState(false);
   const tabHoverBg = useColorModeValue("blue.50", "blue.900");
@@ -105,7 +106,6 @@ export default function OrganigramaPage() {
           <Flex direction="column" bg="app.surface" borderRight="1px" borderColor="app.border" position="relative">
             <IconButton
               aria-label={isOpen ? "Colapsar panel" : "Expandir panel"}
-              icon={isOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
               position="absolute"
               right="-16px"
               top="50%"
@@ -114,45 +114,46 @@ export default function OrganigramaPage() {
               size="sm"
               onClick={onToggle}
               borderRadius="full"
-              boxShadow="md"
-            />
+              boxShadow="md">{isOpen ? <LuChevronLeft /> : <LuChevronRight />}</IconButton>
 
-            <Collapse in={isOpen} animateOpacity>
-              <Box w="250px" p={4}>
-                <Tabs variant="unstyled" colorScheme="blue" orientation="vertical" index={safeTabIndex} onChange={handleTabChange}>
-                  <TabList mb="1em" spacing={3}>
-                    {visibleTabs.map((tab) => (
-                      <Tab
-                        key={tab.key}
-                        py={3}
-                        px={4}
-                        borderRadius="md"
-                        fontWeight="medium"
-                        _hover={{ bg: tabHoverBg, color: tabHoverColor }}
-                        _selected={{ bg: tabSelectedBg, color: tabSelectedColor, fontWeight: "bold" }}
-                        transition="all 0.2s"
-                      >
-                        {tab.label}
-                      </Tab>
-                    ))}
-                  </TabList>
-                  <TabPanels>
-                    {visibleTabs.map((tab) => (
-                      <TabPanel key={tab.key} p={0}></TabPanel>
-                    ))}
-                  </TabPanels>
-                </Tabs>
-              </Box>
-            </Collapse>
+            <Collapsible.Root open={isOpen}>
+              <Collapsible.Content>
+                <Box w="250px" p={4}>
+                  <Tabs.Root unstyled colorPalette="blue" orientation="vertical" value={safeTabIndex} onValueChange={handleTabChange}>
+                    <Tabs.List mb="1em" gap={3}>
+                      {visibleTabs.map((tab) => (
+                        <Tab
+                          key={tab.key}
+                          py={3}
+                          px={4}
+                          borderRadius="md"
+                          fontWeight="medium"
+                          _hover={{ bg: tabHoverBg, color: tabHoverColor }}
+                          _selected={{ bg: tabSelectedBg, color: tabSelectedColor, fontWeight: "bold" }}
+                          transition="all 0.2s"
+                        >
+                          {tab.label}
+                        </Tab>
+                      ))}
+                    </Tabs.List>
+                    <TabPanels>
+                      {visibleTabs.map((tab) => (
+                        <TabPanel key={tab.key} p={0}></TabPanel>
+                      ))}
+                    </TabPanels>
+                  </Tabs.Root>
+                </Box>
+              </Collapsible.Content>
+            </Collapsible.Root>
           </Flex>
 
           <Box flex="1" ml={isOpen ? 4 : 0}>
-            <Tabs variant="enclosed" colorScheme="blue" isLazy index={safeTabIndex} onChange={handleTabChange}>
-              <TabList display="none">
+            <Tabs.Root variant='enclosed' colorPalette="blue" lazyMount value={safeTabIndex} onValueChange={handleTabChange}>
+              <Tabs.List display="none">
                 {visibleTabs.map((tab) => (
                   <Tab key={tab.key}>{tab.label}</Tab>
                 ))}
-              </TabList>
+              </Tabs.List>
               <TabPanels>
                 {visibleTabs.map((tab) => (
                   <TabPanel key={tab.key} p={0}>
@@ -160,7 +161,7 @@ export default function OrganigramaPage() {
                   </TabPanel>
                 ))}
               </TabPanels>
-            </Tabs>
+            </Tabs.Root>
           </Box>
         </Flex>
       )}

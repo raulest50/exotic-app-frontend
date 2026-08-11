@@ -1,7 +1,7 @@
 // ReporteOrdenesCompras.tsx
 import { useState } from "react";
-import { Button, Container, Flex, Select, Spinner, IconButton, Tooltip } from "@chakra-ui/react";
-import { QuestionIcon } from "@chakra-ui/icons";
+import { Steps, Button, Container, Flex, NativeSelect, Spinner, IconButton } from "@chakra-ui/react";
+import { Tooltip } from '@/components/ui/tooltip';
 import { OrdenCompraMateriales, Proveedor } from "./types";
 import { format } from "date-fns";
 import DateRangePicker from "../../components/DateRangePicker";
@@ -13,6 +13,7 @@ import { EditarOcmSeleccionada } from "./components/EditarOCMSeleccionada";
 import ProveedorPicker from "./components/ProveedorPicker";
 import ProveedorFilterOCM from "./components/ProveedorFilterOCM";
 import ColorLegendModal from "./components/ColorLegendModal";
+import { LuHelpCircle } from 'react-icons/lu';
 
 export default function ReporteOrdenesCompras() {
     const [listaOrdenesCompras, setListaOrdenesCompras] = useState<OrdenCompraMateriales[]>([]);
@@ -92,30 +93,30 @@ export default function ReporteOrdenesCompras() {
                             onOpenPicker={() => setIsProveedorPickerOpen(true)}
                             onClearFilter={() => setSelectedProveedor(null)}
                         />
-                        <Select
-                            value={estadoOrden_search}
-                            onChange={(e) => setEstadoOrdenSearch(e.target.value)}
-                            ml={4}
-                            width="200px"
-                        >
-                            <option value="0,1,2">Pendientes</option>
-                            <option value="3">Cerradas</option>
-                            <option value="-1">Canceladas</option>
-                            <option value="-1,0,1,2,3">Todas</option>
-                        </Select>
-                        <Button variant="solid" colorScheme="teal" onClick={() => onClickBuscar()}>
+                        <NativeSelect.Root>
+                            <NativeSelect.Field
+                                value={estadoOrden_search}
+                                onValueChange={(e) => setEstadoOrdenSearch(e.target.value)}
+                                ml={4}
+                                width="200px">
+                                <option value="0,1,2">Pendientes</option>
+                                <option value="3">Cerradas</option>
+                                <option value="-1">Canceladas</option>
+                                <option value="-1,0,1,2,3">Todas</option>
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                        <Button variant="solid" colorPalette="teal" onClick={() => onClickBuscar()}>
                             Buscar
                         </Button>
-                        <Tooltip label="Ver convención de colores">
+                        <Tooltip content="Ver convención de colores">
                             <IconButton
                                 aria-label="Ayuda"
-                                icon={<QuestionIcon />}
                                 size="sm"
                                 variant="outline"
-                                colorScheme="blue"
+                                colorPalette="blue"
                                 onClick={() => setIsColorLegendOpen(true)}
-                                ml={2}
-                            />
+                                ml={2}><LuHelpCircle /></IconButton>
                         </Tooltip>
                     </Flex>
 

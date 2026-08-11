@@ -1,4 +1,5 @@
 import {
+    Steps,
     Box,
     Table,
     TableContainer,
@@ -71,51 +72,51 @@ export default function TablaDispensaciones({
 
     return (
         <Box bg='app.surface' borderRadius='md' boxShadow='sm' overflowX='auto'>
-            <TableContainer>
-                <Table variant="simple" size='sm'>
-                    <Thead>
-                        <Tr>
-                            <Th>ID Transacción</Th>
-                            <Th>ID Orden Producción</Th>
-                            <Th>Lote Producción</Th>
-                            <Th>Fecha</Th>
-                            <Th>Estado Contable</Th>
-                            <Th>Observaciones</Th>
-                            <Th textAlign='center'>Acciones</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+            <Table.ScrollArea>
+                <Table.Root variant="simple" size='sm'>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>ID Transacción</Table.ColumnHeader>
+                            <Table.ColumnHeader>ID Orden Producción</Table.ColumnHeader>
+                            <Table.ColumnHeader>Lote Producción</Table.ColumnHeader>
+                            <Table.ColumnHeader>Fecha</Table.ColumnHeader>
+                            <Table.ColumnHeader>Estado Contable</Table.ColumnHeader>
+                            <Table.ColumnHeader>Observaciones</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='center'>Acciones</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {dispensaciones.map((dispensacion) => (
-                            <Tr key={dispensacion.transaccionId}>
-                                <Td>{dispensacion.transaccionId}</Td>
-                                <Td>
+                            <Table.Row key={dispensacion.transaccionId}>
+                                <Table.Cell>{dispensacion.transaccionId}</Table.Cell>
+                                <Table.Cell>
                                     {(dispensacion.tipoEntidadCausante === 'OD' || dispensacion.tipoEntidadCausante === 'OP') && dispensacion.idEntidadCausante > 0
                                         ? dispensacion.idEntidadCausante 
                                         : '-'}
-                                </Td>
-                                <Td>{dispensacion.loteAsignado || '-'}</Td>
-                                <Td>{formatFecha(dispensacion.fechaTransaccion)}</Td>
-                                <Td>{formatEstadoContable(dispensacion.estadoContable)}</Td>
-                                <Td>
+                                </Table.Cell>
+                                <Table.Cell>{dispensacion.loteAsignado || '-'}</Table.Cell>
+                                <Table.Cell>{formatFecha(dispensacion.fechaTransaccion)}</Table.Cell>
+                                <Table.Cell>{formatEstadoContable(dispensacion.estadoContable)}</Table.Cell>
+                                <Table.Cell>
                                     <Text fontSize="sm">
                                         {truncarTexto(dispensacion.observaciones)}
                                     </Text>
-                                </Td>
-                                <Td>
+                                </Table.Cell>
+                                <Table.Cell>
                                     <Flex justify='center' gap={2}>
                                         {(dispensacion.tipoEntidadCausante === 'OD' || dispensacion.tipoEntidadCausante === 'OP') && dispensacion.idEntidadCausante > 0 ? (
                                             <>
                                                 <Button
-                                                    colorScheme='blue'
+                                                    colorPalette='blue'
                                                     size='sm'
                                                     onClick={() => onGenerarPDF(dispensacion)}
-                                                    isDisabled={generandoPDF}
-                                                    isLoading={generandoPDF}
+                                                    disabled={generandoPDF}
+                                                    loading={generandoPDF}
                                                 >
                                                     Generar PDF
                                                 </Button>
                                                 <Button
-                                                    colorScheme='teal'
+                                                    colorPalette='teal'
                                                     size='sm'
                                                     onClick={() => onVerDetalle(dispensacion)}
                                                 >
@@ -126,21 +127,21 @@ export default function TablaDispensaciones({
                                             <Text fontSize="sm" color="app.textSubtle">-</Text>
                                         )}
                                     </Flex>
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         ))}
                         {dispensaciones.length === 0 && (
-                            <Tr>
-                                <Td colSpan={7}>
+                            <Table.Row>
+                                <Table.Cell colSpan={7}>
                                     <Text textAlign='center' py={4}>
                                         No hay dispensaciones disponibles.
                                     </Text>
-                                </Td>
-                            </Tr>
+                                </Table.Cell>
+                            </Table.Row>
                         )}
-                    </Tbody>
-                </Table>
-            </TableContainer>
+                    </Table.Body>
+                </Table.Root>
+            </Table.ScrollArea>
         </Box>
     );
 }

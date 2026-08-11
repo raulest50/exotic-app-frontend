@@ -1,11 +1,10 @@
 import { useState } from "react";
 import {
+    Steps,
     Box,
     Button,
     Flex,
     Heading,
-    ListItem,
-    OrderedList,
     Table,
     Tbody,
     Td,
@@ -15,6 +14,7 @@ import {
     Tr,
     VStack,
     useToast,
+    List,
 } from "@chakra-ui/react";
 import axios from "axios";
 import EndPointsURL from "../../../../../../api/EndPointsURL.tsx";
@@ -83,8 +83,8 @@ export default function StepFour_ModProdMF({ setActiveStep, semioter3, onReset, 
         <Flex direction="column" align="center" gap={4} w="full">
             <Heading size="md">Resumen de la modificacion</Heading>
             <Box w="full" bg="app.surfaceSubtle" p={4} borderRadius="md" maxH="300px" overflowY="auto">
-                <VStack align="start" spacing={4} w="full">
-                    <VStack align="start" w="full" spacing={1}>
+                <VStack align="start" gap={4} w="full">
+                    <VStack align="start" w="full" gap={1}>
                         <Text><b>Codigo:</b> {semioter3.productoId}</Text>
                         <Text><b>Nombre:</b> {semioter3.nombre}</Text>
                         <Text><b>Tipo de producto:</b> {semioter3.tipo_producto === TIPOS_PRODUCTOS.terminado ? "Terminado" : "Semiterminado"}</Text>
@@ -98,45 +98,45 @@ export default function StepFour_ModProdMF({ setActiveStep, semioter3, onReset, 
                     {semioter3.insumos && semioter3.insumos.length > 0 && (
                         <Box w="full">
                             <Heading size="sm" mb={2}>Insumos</Heading>
-                            <Table size="sm" variant="simple">
-                                <Thead>
-                                    <Tr>
-                                        <Th>Nombre</Th>
-                                        <Th isNumeric>Cantidad</Th>
-                                        <Th isNumeric>Subtotal</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
+                            <Table.Root size="sm" variant="simple">
+                                <Table.Header>
+                                    <Table.Row>
+                                        <Table.ColumnHeader>Nombre</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Cantidad</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Subtotal</Table.ColumnHeader>
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
                                     {semioter3.insumos.map((insumo, idx) => (
-                                        <Tr key={idx}>
-                                            <Td>{insumo.producto.nombre}</Td>
-                                            <Td isNumeric>{insumo.cantidadRequerida}</Td>
-                                            <Td isNumeric>{insumo.subtotal}</Td>
-                                        </Tr>
+                                        <Table.Row key={idx}>
+                                            <Table.Cell>{insumo.producto.nombre}</Table.Cell>
+                                            <Table.Cell textAlign='end'>{insumo.cantidadRequerida}</Table.Cell>
+                                            <Table.Cell textAlign='end'>{insumo.subtotal}</Table.Cell>
+                                        </Table.Row>
                                     ))}
-                                </Tbody>
-                            </Table>
+                                </Table.Body>
+                            </Table.Root>
                         </Box>
                     )}
 
                     {semioter3.procesoProduccionCompleto && (
                         <Box w="full">
                             <Heading size="sm" mb={2}>Procesos de produccion</Heading>
-                            <OrderedList>
+                            <List.Root as='ol'>
                                 {procesos.map((nombreProceso, index) => (
-                                    <ListItem key={`${nombreProceso}-${index}`}>{nombreProceso}</ListItem>
+                                    <List.Item key={`${nombreProceso}-${index}`}>{nombreProceso}</List.Item>
                                 ))}
-                            </OrderedList>
+                            </List.Root>
                             <Text mt={2}><b>Rendimiento teorico:</b> {semioter3.procesoProduccionCompleto.rendimientoTeorico}</Text>
                         </Box>
                     )}
                 </VStack>
             </Box>
             <Flex gap={10}>
-                <Button variant="solid" colorScheme="yellow" onClick={() => setActiveStep(2)} isDisabled={loading}>
+                <Button variant="solid" colorPalette="yellow" onClick={() => setActiveStep(2)} disabled={loading}>
                     Volver al proceso
                 </Button>
-                <Button variant="solid" colorScheme="teal" onClick={handleGuardar} isLoading={loading}>
+                <Button variant="solid" colorPalette="teal" onClick={handleGuardar} loading={loading}>
                     Guardar modificacion
                 </Button>
             </Flex>

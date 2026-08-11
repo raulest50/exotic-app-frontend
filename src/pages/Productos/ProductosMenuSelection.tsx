@@ -1,4 +1,4 @@
-import { Card, CardBody, CardHeader, Flex, Heading, Icon, SimpleGrid, Text } from '@chakra-ui/react';
+import { Steps, Card, Flex, Heading, Icon, SimpleGrid, Text } from '@chakra-ui/react';
 import { FaTools, FaBoxOpen, FaCogs } from 'react-icons/fa';
 import { Modulo } from '../Usuarios/GestionUsuarios/types.tsx';
 import { moduleAccessRule } from '../../auth/accessHelpers.ts';
@@ -68,9 +68,9 @@ export function ProductosMenuSelection({ setViewMode }: Props) {
                 Seleccione una opcion
             </Heading>
 
-            <SimpleGrid columns={3} spacing={8} w="full">
+            <SimpleGrid columns={3} gap={8} w="full">
                 {visibleCards.map((card) => (
-                    <Card
+                    <Card.Root
                         key={card.key}
                         h="250px"
                         cursor="pointer"
@@ -84,16 +84,16 @@ export function ProductosMenuSelection({ setViewMode }: Props) {
                         transition="all 0.3s ease"
                         onClick={card.onClick}
                     >
-                        <CardHeader borderBottom="0.1em solid" p={4}>
+                        <Card.Header borderBottom="0.1em solid" p={4}>
                             <Heading as="h3" size="md" fontFamily="Comfortaa Variable">
                                 {card.title}
                             </Heading>
-                        </CardHeader>
-                        <CardBody display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
-                            <Icon as={card.icon} boxSize="5em" mb={4} />
+                        </Card.Header>
+                        <Card.Body display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
+                            <Icon boxSize="5em" mb={4} asChild><card.icon /></Icon>
                             <Text textAlign="center">{card.description}</Text>
-                        </CardBody>
-                    </Card>
+                        </Card.Body>
+                    </Card.Root>
                 ))}
             </SimpleGrid>
         </Flex>

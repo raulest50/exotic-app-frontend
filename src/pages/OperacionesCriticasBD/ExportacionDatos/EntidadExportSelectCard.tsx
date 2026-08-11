@@ -1,6 +1,7 @@
 
 import {IconType} from "react-icons";
-import {Card, Text, CardBody, Circle, Heading, Icon, VStack, useColorModeValue} from "@chakra-ui/react";
+import { useColorModeValue } from "../../../components/ui/color-mode";
+import { Steps, Card, Text, Circle, Heading, Icon, VStack } from "@chakra-ui/react";
 import '@fontsource-variable/comfortaa';
 
 interface EntidadExportSelectCardProps {
@@ -28,7 +29,7 @@ function EntidadExportSelectCard(
     const textColor = useColorModeValue("gray.600", "gray.400");
 
     return (
-        <Card
+        <Card.Root
             bg={bg}
             borderRadius="xl"
             boxShadow="md"
@@ -37,8 +38,8 @@ function EntidadExportSelectCard(
             cursor="pointer"
             onClick={onClick}
         >
-            <CardBody>
-                <VStack spacing={4} align="start">
+            <Card.Body>
+                <VStack gap={4} align="start">
                     <Circle size="48px" bg={circleBg} color="white">
                         <Icon as={icono} boxSize={'2em'} />
                     </Circle>
@@ -49,8 +50,8 @@ function EntidadExportSelectCard(
                         {descripcion}
                     </Text>
                 </VStack>
-            </CardBody>
-        </Card>
+            </Card.Body>
+        </Card.Root>
     );
 }
 

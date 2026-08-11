@@ -1,7 +1,6 @@
 import {
+    Steps,
     Alert,
-    AlertDescription,
-    AlertIcon,
     Box,
     Button,
     Flex,
@@ -98,45 +97,45 @@ export default function EliminacionPurgaModuloStep2Ejecutar({
     const { permitido } = studyResultPurga;
 
     return (
-        <VStack align="stretch" spacing={6}>
+        <VStack align="stretch" gap={6}>
             <Heading size="md" color="red.700">
                 Confirmar ejecución de la purga
             </Heading>
 
-            <Alert status="warning">
-                <AlertIcon />
-                <AlertDescription>
+            <Alert.Root status="warning">
+                <Alert.Indicator />
+                <Alert.Description>
                     Está a punto de eliminar <strong>permanentemente</strong> todas las entidades
                     listadas a continuación. Esta acción no se puede deshacer. Asegúrese de que está
                     en un entorno de desarrollo o pruebas.
-                </AlertDescription>
-            </Alert>
+                </Alert.Description>
+            </Alert.Root>
 
             <Box>
                 <Heading size="sm" mb={2}>
                     Resumen de entidades a eliminar
                 </Heading>
-                <Table size="sm" variant="simple">
-                    <Thead>
-                        <Tr>
-                            <Th>Entidad</Th>
-                            <Th isNumeric>Cantidad</Th>
-                        </Tr>
-                    </Thead>
-                    <Tbody>
+                <Table.Root size="sm" variant="simple">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Entidad</Table.ColumnHeader>
+                            <Table.ColumnHeader textAlign='end'>Cantidad</Table.ColumnHeader>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
                         {ENTITY_LABELS.map(({ key, label }) => {
                             const val = studyResultPurga[key];
                             return (
-                                <Tr key={key}>
-                                    <Td>{label}</Td>
-                                    <Td isNumeric>
+                                <Table.Row key={key}>
+                                    <Table.Cell>{label}</Table.Cell>
+                                    <Table.Cell textAlign='end'>
                                         {typeof val === "number" ? val.toLocaleString() : "-"}
-                                    </Td>
-                                </Tr>
+                                    </Table.Cell>
+                                </Table.Row>
                             );
                         })}
-                    </Tbody>
-                </Table>
+                    </Table.Body>
+                </Table.Root>
             </Box>
 
             <Flex gap={3} w="full" justify="space-between">
@@ -144,10 +143,10 @@ export default function EliminacionPurgaModuloStep2Ejecutar({
                     Atrás
                 </Button>
                 <Button
-                    colorScheme="red"
+                    colorPalette="red"
                     onClick={handleEjecutarPurga}
-                    isDisabled={!permitido}
-                    isLoading={isExecuting}
+                    disabled={!permitido}
+                    loading={isExecuting}
                     loadingText="Ejecutando purga..."
                 >
                     Ejecutar purga completa
