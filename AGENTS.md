@@ -6,7 +6,7 @@ Estas instrucciones aplican a todo el repositorio `exotic-app-frontend`.
 
 - Este repositorio contiene únicamente el frontend. El backend Spring Boot está
   en un repositorio separado.
-- La aplicación usa React 18, TypeScript, Vite, Chakra UI v2 y Bun.
+- La aplicación usa React 19.2.8, TypeScript, Vite, Chakra UI v3 y Bun.
 - El frontend de producción se despliega actualmente como un Static Site de
   Render. Render ejecuta `vite build` y publica el directorio `dist`.
 - El `Dockerfile` no participa en el despliegue actual del Static Site. No usar

@@ -41,21 +41,65 @@ removed React API or private React internal was found in the installed code.
 The warning is accepted only if Ladle builds and all characterization stories
 render and interact successfully. No dependency override will be added.
 
+## Mechanical preparation
+
+- `codemod@1.13.19 react/19/migration-recipe --dry-run` reported zero source
+  transformations.
+- `types-react-codemod@3.5.3 preset-19 --dry` proposed 23 changes and was not
+  applied because its scope exceeded the required JSX namespace migration.
+- `types-react-codemod@3.5.3 scoped-jsx --dry` identified exactly 21 files.
+  Applying that transform added only local `JSX` type imports and preserved all
+  existing `JSX.Element` contracts.
+- The scoped JSX change was validated under React 18 before the runtime upgrade
+  and stored in commit `932e894`.
+
+## React 19 result
+
+- The four target packages are pinned exactly, without `^` or `~`.
+- `bun why react` and `bun why react-dom` resolve a single
+  `react@19.2.8`/`react-dom@19.2.8` pair.
+- The lockfile changes are limited to React, React DOM, their type packages,
+  `scheduler@0.27.0`, and removal of the now-orphaned `@types/prop-types` entry.
+  React and scheduler no longer reference `loose-envify`, which remains in the
+  lockfile for unrelated consumers.
+- The source audit found no removed React APIs, legacy roots, global JSX
+  namespace usage, zero-argument `useRef`, problematic callback-ref returns,
+  legacy context, string refs, or private React internals.
+- No additional post-upgrade compatibility source correction was required.
+  `main.tsx`, StrictMode, provider order, routes, permissions, lazy loading, and
+  public component contracts remain unchanged.
+- The dependency upgrade was stored in commit `331a030`.
+
 ## Validation record
 
-This section is completed at each green checkpoint. Historical Chakra snapshot
-names remain unchanged and snapshots are never regenerated to accept a React
-migration difference.
+Historical Chakra snapshot names remain unchanged and snapshots were not
+regenerated to accept a React migration difference.
 
 | Check | React 18 baseline | React 19 result |
 |---|---|---|
-| Frozen Bun install | Pass; 1079 packages, no changes | Pending |
-| Chakra v3 typegen/static check | Pass; no tracked changes | Pending |
-| Vite production build | Pass; 4121 modules | Pending |
-| Ladle build | Pass; 3327 modules | Pending |
-| TypeScript normalized delta | 92 diagnostics / 82 signatures | Pending |
-| E2E project typecheck | Pass | Pending |
-| Visual launcher tests | Pass; 6/6 | Pending |
-| Historical visual comparisons | Pass; 24/24, no updates | Pending |
-| React integration characterization | Pass; 14/14, light/dark | Pending |
-| Authenticated local platform E2E | Blocked: `.env.e2e.local` absent | Pending |
+| Frozen Bun install | Pass; 1079 packages, no changes | Pass; 1078 packages, no changes |
+| Chakra v3 typegen/static check | Pass; no tracked changes | Pass; no tracked changes |
+| Vite production build | Pass; 4121 modules | Pass; 4122 modules |
+| Ladle build | Pass; 3327 modules | Pass; 3329 modules |
+| TypeScript normalized delta | 92 diagnostics / 82 signatures | Pass; same 92/82, zero new or removed signatures, same SHA-256 |
+| E2E project typecheck | Pass | Pass |
+| Visual launcher tests | Pass; 6/6 | Pass; 6/6 |
+| Historical visual comparisons | Pass; 24/24, no updates | Pass; 24/24, no updates |
+| React integration characterization | Pass; 14/14, light/dark | Pass; 14/14, light/dark |
+| Authenticated local platform E2E | Blocked: `.env.e2e.local` absent | Blocked: `.env.e2e.local` absent |
+
+The React 19 visual/characterization Playwright suite completed 38/38 tests.
+Runtime guards reported no unexpected `console.error`, `pageerror`,
+React/Chakra warning, failed request, or HTTP 5xx. The intentional
+`window.reportError` characterization was observed as `pageerror` and isolated
+from the runtime guard as designed.
+
+## Acceptance boundary
+
+The isolated build, type, visual, mounting, interaction, resize, and unmount
+gates are green. Authenticated platform acceptance remains pending because no
+unversioned `.env.e2e.local` with the required roles is available. Consequently,
+Home, protected routes, BI/Suspense, permissions, and Transacciones de Almacén
+were not asserted against a live backend in this checkpoint. The mutating OCM
+test was not run. No push, deployment, Render change, or snapshot update was
+performed.
