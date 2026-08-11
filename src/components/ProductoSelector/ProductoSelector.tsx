@@ -14,12 +14,12 @@ import {
   Th,
   Thead,
   Tr,
-  useToast,
   VStack,
   Field,
   Dialog,
   Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL';
 import BetterPagination from '../BetterPagination/BetterPagination';
@@ -61,7 +61,7 @@ export default function ProductoSelector({
   onSelectProducto,
   title = 'Seleccionar Producto',
 }: ProductoSelectorProps) {
-  const toast = useToast();
+  const toast = useAppToast();
 
   const [searchText, setSearchText] = useState('');
   const [tipoBusqueda, setTipoBusqueda] = useState<TipoBusqueda>('NOMBRE');

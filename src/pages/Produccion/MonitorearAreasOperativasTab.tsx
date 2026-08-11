@@ -33,11 +33,11 @@ import {
     Tr,
     VStack,
     useDisclosure,
-    useToast,
     Field,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 import { FiArrowLeft, FiCalendar, FiEye, FiRefreshCw } from "react-icons/fi";
 import EndPointsURL from "../../api/EndPointsURL.tsx";
@@ -169,7 +169,7 @@ function formatLastAlertUpdate(value: Date | null): string {
 }
 
 export default function MonitorearAreasOperativasTab() {
-    const toast = useToast();
+    const toast = useAppToast();
     const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
     const {
         open: isDetailOpen,

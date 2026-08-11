@@ -25,8 +25,8 @@ import {
     Thead,
     Tr,
     Box,
-    useToast,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import DateRangePicker from "../../../components/DateRangePicker.tsx";
 import MyPagination from "../../../components/MyPagination.tsx";
 import axios from "axios";
@@ -155,7 +155,7 @@ interface ContextMenuState {
 }
 
 export default function HistorialOrdenesTab() {
-    const toast = useToast();
+    const toast = useAppToast();
     const [date1, setDate1] = useState(format(new Date(), "yyyy-MM-dd"));
     const [date2, setDate2] = useState(format(new Date(), "yyyy-MM-dd"));
 

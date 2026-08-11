@@ -9,9 +9,9 @@ import {
     IconButton,
     VStack,
     Heading,
-    useToast,
     Card,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { ActivoFijo, IncorporacionActivoDto, OrdenCompraActivo, ItemOrdenCompraActivo, TIPO_INCORPORACION, GrupoActivos, TipoActivo } from '../../types.tsx';
 import { ActivoGroup } from './ActivoGroup/ActivoGroup.tsx';
 import { LuPlus, LuTrash2 } from 'react-icons/lu';
@@ -30,7 +30,7 @@ export function ActivosFijosStep1Form({
     ordenCompraActivo 
 }: Props) {
     const [grupos, setGrupos] = useState<GrupoActivos[]>([]);
-    const toast = useToast();
+    const toast = useAppToast();
 
     // Inicializar grupos basados en el tipo de incorporación
     useEffect(() => {

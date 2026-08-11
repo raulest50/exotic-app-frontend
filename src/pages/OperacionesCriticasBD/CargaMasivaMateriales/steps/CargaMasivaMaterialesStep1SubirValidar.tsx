@@ -4,13 +4,13 @@ import {
     Button,
     Flex,
     Text,
-    useToast,
     VStack,
     HStack,
     Icon,
     Input,
     Alert,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useRef, useState, useMemo } from "react";
 import { FaFileCircleCheck, FaFileCircleQuestion } from "react-icons/fa6";
 import ExcelJS from "exceljs";
@@ -43,7 +43,7 @@ export default function CargaMasivaMaterialesStep1SubirValidar({
     setExcelFile,
     setExcelData,
 }: CargaMasivaMaterialesStep1SubirValidarProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const inputRef = useRef<HTMLInputElement>(null);
     const [excelFile, setLocalExcelFile] = useState<File | null>(null);

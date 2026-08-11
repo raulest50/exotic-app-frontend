@@ -14,12 +14,12 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     VStack,
     Field,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import {
@@ -54,7 +54,7 @@ const IntegrantePersonalPicker = ({
     const [isLoading, setIsLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const resultsPerPage = 10;
-    const toast = useToast();
+    const toast = useAppToast();
 
     useEffect(() => {
         if (isOpen) {

@@ -8,9 +8,9 @@ import {
     Stack,
     Text,
     VStack,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import EndPointsURL, { type ExcelDecimalSeparator, type ExcelExportMode } from "../../../api/EndPointsURL.tsx";
 import ExcelDecimalSeparatorSelector, {
@@ -21,7 +21,7 @@ type TipoReporteAlmacen = "ingreso_materiales" | "dispensacion_materiales" | "in
 type ModoFechaInforme = "fecha_unica" | "rango";
 
 export default function InformeDiarioAlmacenPanel() {
-    const toast = useToast();
+    const toast = useAppToast();
     const [tipoReporte, setTipoReporte] = useState<TipoReporteAlmacen>("ingreso_materiales");
     const [modoFecha, setModoFecha] = useState<ModoFechaInforme>("fecha_unica");
     const [fecha, setFecha] = useState("");

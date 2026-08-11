@@ -6,12 +6,12 @@ import {
     Heading,
     Box,
     Text,
-    useToast,
     Input,
     NativeSelect,
     Textarea,
     Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { OrdenCompraMateriales, ItemOrdenCompra, Material, DIVISAS } from "../types.tsx";
 import MateriaPrimaPicker from './MateriaPrimaPicker.tsx';
 import ListaItemsOCM from './ListaItemsOCM.tsx';
@@ -70,7 +70,7 @@ export function EditarOcmSeleccionada({ ocm, onVolver }: Props) {
         }));
     };
 
-    const toast = useToast();
+    const toast = useAppToast();
     const endPoints = new EndPointsURL();
 
     // Función personalizada para comparar objetos de forma profunda

@@ -8,10 +8,10 @@ import {
   Flex,
   Spinner,
   Text,
-  useToast,
   Dialog,
   Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import {
   Background,
   BackgroundVariant,
@@ -55,7 +55,7 @@ export default function OrganizationChart({
   organizationChartId,
   onDirtyChange,
 }: Props) {
-  const toast = useToast();
+  const toast = useAppToast();
   const leaveCancelRef = useRef<HTMLButtonElement>(null);
   const editor = useOrganigramaEditor({ accessLevel, isMaster, organizationChartId });
 

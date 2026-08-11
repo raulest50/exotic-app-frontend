@@ -17,9 +17,9 @@ import {
   Thead,
   Tr,
   VStack,
-  useToast,
   Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import type {ChangeEvent} from 'react';
 import {
@@ -43,7 +43,7 @@ export default function ProcesoDocumentosSection({
   isOpen,
   onDocumentVersionCreated,
 }: ProcesoDocumentosSectionProps) {
-  const toast = useToast();
+  const toast = useAppToast();
   const [versiones, setVersiones] = useState<ProcesoDocumentoVersion[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [motivoCambio, setMotivoCambio] = useState('');

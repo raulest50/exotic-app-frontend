@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { VStack, Alert, Text } from '@chakra-ui/react';
-import { useToast, Alert } from '@chakra-ui/react';
+import { Alert } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import BetterPagination from '../../../components/BetterPagination/BetterPagination.tsx';
@@ -12,7 +13,7 @@ import { AreaOperativa, SearchAreaOperativaDTO, PaginatedResponse } from './type
 const endpoints = new EndPointsURL();
 
 export default function ConsultaAreasOperativasTab() {
-    const toast = useToast();
+    const toast = useAppToast();
     const [areas, setAreas] = useState<AreaOperativa[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);

@@ -15,9 +15,9 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     VStack,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useMemo, useRef, useState } from "react";
 import { FaFileCircleCheck, FaFileCircleQuestion } from "react-icons/fa6";
 import ExcelJS from "exceljs";
@@ -62,7 +62,7 @@ export default function SinInsumosStep2SubirValidar({
     setExcelFile,
     setExcelData,
 }: SinInsumosStep2SubirValidarProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const inputRef = useRef<HTMLInputElement>(null);
     const [excelFile, setLocalExcelFile] = useState<File | null>(null);

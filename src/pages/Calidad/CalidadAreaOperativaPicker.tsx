@@ -17,12 +17,12 @@ import {
     Tr,
     VStack,
     useDisclosure,
-    useToast,
     Field,
     Icon,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useMemo, useState } from "react";
 import { extractApiError, searchAreasOperativas } from "./calidadApi";
 import type { AreaOperativaOption } from "./types";
@@ -51,7 +51,7 @@ export default function CalidadAreaOperativaPicker({
     helperText,
     isDisabled = false,
 }: CalidadAreaOperativaPickerProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const { open, onOpen, onClose } = useDisclosure();
     const [searchText, setSearchText] = useState("");
     const [areas, setAreas] = useState<AreaOperativaOption[]>([]);

@@ -10,11 +10,11 @@ import {
     NativeSelect,
     Spinner,
     useDisclosure,
-    useToast,
     Field,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios, { AxiosError } from 'axios';
 import EndPointsURL from '../../api/EndPointsURL';
 import MyPagination from '../../components/MyPagination';
@@ -89,7 +89,7 @@ export function ConsultaDePersonal() {
 
     const endPoints = useMemo(() => new EndPointsURL(), []);
     const detalleModal = useDisclosure();
-    const toast = useToast();
+    const toast = useAppToast();
 
     const onBuscar = async (page = 0) => {
         setLoading(true);

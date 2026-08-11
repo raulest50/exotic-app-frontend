@@ -25,9 +25,9 @@ import {
     Thead,
     Tr,
     VStack,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import MyHeader from "../../components/MyHeader";
 import { my_style_tab } from "../../styles/styles_general";
@@ -69,7 +69,7 @@ const EMPTY_FORM: EmpresaIdentidadLegalVersionPayload = {
 };
 
 export default function AdministracionGlobalPage() {
-    const toast = useToast();
+    const toast = useAppToast();
     const {
         canSee: canSeeIdentidadLegal,
         nivel: nivelIdentidadLegal,

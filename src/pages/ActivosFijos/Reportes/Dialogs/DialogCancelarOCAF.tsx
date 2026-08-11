@@ -4,7 +4,6 @@ import {
     Button,
     Text,
     Input,
-    useToast,
     Box,
     Table,
     Thead,
@@ -16,6 +15,7 @@ import {
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL';
 import { OrdenCompraActivo, getEstadoOCAFText } from '../../types';
@@ -31,7 +31,7 @@ interface Props {
 const DialogCancelarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onOrdenCancelada }) => {
     const [randomCode, setRandomCode] = useState('');
     const [inputCode, setInputCode] = useState('');
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = new EndPointsURL();
 
     useEffect(() => {

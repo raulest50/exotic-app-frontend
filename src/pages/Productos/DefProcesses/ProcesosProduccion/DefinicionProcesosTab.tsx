@@ -6,13 +6,13 @@ import {
   Input,
   VStack,
   Button,
-  useToast,
   NativeSelect,
   Text,
   Textarea,
   HStack,
   Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
 import {input_style} from '../../../../styles/styles_general.tsx';
@@ -43,7 +43,7 @@ function DefinicionProcesosTab() {
   const [fileInputKey, setFileInputKey] = useState(0);
   const [saving, setSaving] = useState(false);
 
-  const toast = useToast();
+  const toast = useAppToast();
   const endPoints = new EndPointsURL();
 
   const clearFields = () => {

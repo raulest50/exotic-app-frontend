@@ -14,9 +14,9 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     VStack,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useMemo, useRef, useState } from "react";
 import { FaFileCircleCheck, FaFileCircleQuestion } from "react-icons/fa6";
 import Ajv, { ErrorObject } from "ajv";
@@ -40,7 +40,7 @@ export default function SoloInsumosStep2SubirValidar({
     setActiveStep,
     setJsonFile,
 }: SoloInsumosStep2SubirValidarProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const inputRef = useRef<HTMLInputElement>(null);
     const [jsonFile, setLocalJsonFile] = useState<File | null>(null);

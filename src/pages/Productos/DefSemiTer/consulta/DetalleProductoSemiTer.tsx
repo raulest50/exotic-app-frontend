@@ -27,13 +27,13 @@ import {
     Input,
     Textarea,
     IconButton,
-    useToast,
     useDisclosure,
     Field,
     Icon,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useState, useEffect, useRef } from 'react';
 import { CasePack, Categoria, Insumo, Material, Producto, ProductoBasicUpdatePayload } from "../../types.tsx";
 import axios from 'axios';
@@ -76,7 +76,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     const [categoriaEditability, setCategoriaEditability] = useState<CategoriaEditability | null>(null);
     const [loadingCategoriaEditability, setLoadingCategoriaEditability] = useState<boolean>(false);
     const [categoriaStatusError, setCategoriaStatusError] = useState<string | null>(null);
-    const toast = useToast();
+    const toast = useAppToast();
     const endPoints = new EndPointsURL();
     const { nivel: productosAccessLevel } = useModuleAccessLevel(Modulo.PRODUCTOS);
     const { open: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();

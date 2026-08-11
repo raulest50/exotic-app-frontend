@@ -23,9 +23,9 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 import { FaCircleExclamation } from "react-icons/fa6";
 import axios from "axios";
@@ -276,7 +276,7 @@ export default function MasterDirectivesPage() {
     const [loading, setLoading] = useState<boolean>(true);
     const [updating, setUpdating] = useState<boolean>(false);
     const endPoints = useMemo(() => new EndPointsURL(), []);
-    const toast = useToast();
+    const toast = useAppToast();
     const { refreshDirectives } = useMasterDirectives();
     const { user } = useAuth();
     const normalizedUser = user?.trim().toLowerCase();

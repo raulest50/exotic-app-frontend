@@ -1,4 +1,5 @@
-import { Steps, Box, Button, Flex, Heading, Spinner, Text, useToast } from "@chakra-ui/react";
+import { Steps, Box, Button, Flex, Heading, Spinner, Text } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import ModificarSemiTerMFWizard from "./ModSemioTerMFversions/ModificarSemiTerMFWizard.tsx";
@@ -15,7 +16,7 @@ type Props = {
 
 export default function ModSemiTerMFWizard({ producto, onClose, refreshSearch }: Props) {
     const endPoints = new EndPointsURL();
-    const toast = useToast();
+    const toast = useAppToast();
     const [productoSemiter, setProductoSemiter] = useState<ProductoSemiter | null>(null);
     const [loading, setLoading] = useState(true);
 

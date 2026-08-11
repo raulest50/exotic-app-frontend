@@ -26,7 +26,6 @@ import {
     NativeSelect,
     Input,
     Textarea,
-    useToast,
     useDisclosure,
     Badge,
     Switch,
@@ -34,6 +33,7 @@ import {
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useState, useEffect } from 'react';
 import {Material, Producto, ProductoBasicUpdatePayload, ProductoInventareableUpdatePayload} from "../../types.tsx";
 import axios from 'axios';
@@ -64,7 +64,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
     const [materialPuntoReordenInput, setMaterialPuntoReordenInput] = useState(() =>
         producto.tipo_producto === 'M' ? String((producto as Material).puntoReorden ?? 0) : ''
     );
-    const toast = useToast();
+    const toast = useAppToast();
     const endPoints = new EndPointsURL();
     const { nivel: productosAccessLevel } = useModuleAccessLevel(Modulo.PRODUCTOS);
     const { open: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();

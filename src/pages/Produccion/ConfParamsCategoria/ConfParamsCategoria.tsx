@@ -22,9 +22,9 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { RiSave3Fill } from "react-icons/ri";
 import CustomIntegerInput from "../../../components/CustomIntegerInput/CustomIntegerInput.tsx";
 import type { Categoria } from "../types.tsx";
@@ -59,7 +59,7 @@ export default function ConfParamsCategoria() {
     const [loadingRutas, setLoadingRutas] = useState(false);
 
     const endPoints = useMemo(() => new EndPointsURL(), []);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const buildFieldKey = (categoriaId: number, field: EditableCategoriaField) => `${categoriaId}-${field}`;
 

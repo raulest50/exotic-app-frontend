@@ -10,11 +10,11 @@ import {
   Th,
   Thead,
   Tr,
-  useToast,
   Badge,
   Dialog,
   Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 import {useEffect, useState} from 'react';
 import axios from 'axios';
@@ -31,7 +31,7 @@ interface Props {
 
 export function ProcesoProduccionPicker({isOpen, onClose, onConfirm, alreadySelected}: Props) {
   const endPoints = new EndPointsURL();
-  const toast = useToast();
+  const toast = useAppToast();
 
   // Helper function to format time model information
   const getTimeModelInfo = (proceso: ProcesoProduccionEntity): { label: string, details: string } => {

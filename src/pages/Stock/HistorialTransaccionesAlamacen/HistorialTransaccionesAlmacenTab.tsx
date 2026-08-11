@@ -6,13 +6,14 @@ import DetalleTransaccionDialog from './DetalleTransaccionDialog.tsx';
 import { TransaccionAlmacen, PaginatedResponse } from '../../TransaccionesAlmacen/HistorialDispensaciones/types';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
-import { useToast, Alert } from '@chakra-ui/react';
+import { Alert } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import TablaTranAlmacen from "./TablaTranAlmacen.tsx";
 
 const endpoints = new EndPointsURL();
 
 function HistorialTransaccionesAlmacenTab() {
-    const toast = useToast();
+    const toast = useAppToast();
     const [transacciones, setTransacciones] = useState<TransaccionAlmacen[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);

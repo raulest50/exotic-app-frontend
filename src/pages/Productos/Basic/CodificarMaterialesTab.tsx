@@ -7,7 +7,6 @@ import {
     Input,
     Textarea,
     Button,
-    useToast,
     NativeSelect,
     Flex,
     HStack,
@@ -15,6 +14,7 @@ import {
     Switch,
     Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios, { AxiosError } from 'axios';
 
 import { input_style } from "../../../styles/styles_general.tsx";
@@ -42,7 +42,7 @@ function CodificarMaterialesTab() {
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-    const toast = useToast();
+    const toast = useAppToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const clearMP_Cod_Fields = () => {

@@ -17,10 +17,10 @@ import {
     Thead,
     Tr,
     VStack,
-    useToast,
     Field,
     Icon,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import EndPointsURL from "../../../api/EndPointsURL";
@@ -79,7 +79,7 @@ export default function DispensacionV2Step1SelectArea({
     onNext,
 }: DispensacionV2Step1SelectAreaProps) {
     const endpoints = useMemo(() => new EndPointsURL(), []);
-    const toast = useToast();
+    const toast = useAppToast();
     const [searchText, setSearchText] = useState("");
     const [areas, setAreas] = useState<AreaOperativaDispensacionV2[]>([]);
     const [loading, setLoading] = useState(false);

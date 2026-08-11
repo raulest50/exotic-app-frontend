@@ -5,13 +5,13 @@ import {
     Flex,
     Input,
     NativeSelect,
-    useToast,
     Button,
     HStack,
     Icon,
     VStack,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import ProveedorCard from "../../Compras/components/ProveedorCard.tsx";
 import { useState, useRef } from "react";
 import { FaFileCircleQuestion, FaFileCircleCheck } from "react-icons/fa6";
@@ -53,7 +53,7 @@ export default function CrearOC_AF() {
     const [currentUsd2Cop, setCurrentUsd2Cop] = useState<number>(0);
     const [isLoading, setIsLoading] = useState(false);
 
-    const toast = useToast();
+    const toast = useAppToast();
 
     // Handle file selection for cotización
     const handleCotizacionChange = (e: React.ChangeEvent<HTMLInputElement>) => {

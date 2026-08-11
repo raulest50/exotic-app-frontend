@@ -35,11 +35,11 @@ import {
     Textarea,
     VStack,
     useDisclosure,
-    useToast,
     Field,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     FiArchive,
     FiCalendar,
@@ -275,7 +275,7 @@ function CompletedPaginationControls({
 export default function AreaOperativaPanel() {
     const { meProfile, logout, areaResponsable } = useAuth();
     const { loading: directivesLoading, getBooleanDirective, refreshDirectives } = useMasterDirectives();
-    const toast = useToast();
+    const toast = useAppToast();
     const emptyTitleColor = useColorModeValue("gray.700", "gray.200");
     const dndSensors = useSensors(
         useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),

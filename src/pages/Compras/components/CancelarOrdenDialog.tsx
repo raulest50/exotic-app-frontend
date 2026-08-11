@@ -1,6 +1,7 @@
 // src/components/CancelarOrdenDialog.tsx
 import React, { useEffect, useState } from 'react';
-import { Steps, Button, Text, Input, useToast, Dialog, Portal } from '@chakra-ui/react';
+import { Steps, Button, Text, Input, Dialog, Portal } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import { OrdenCompraMateriales } from '../types.tsx';
@@ -16,7 +17,7 @@ const CancelarOrdenDialog: React.FC<CancelarOrdenDialogProps> = ({ isOpen, onClo
     const [randomCode, setRandomCode] = useState<string>('');
     const [inputCode, setInputCode] = useState<string>('');
     const [isCancelling, setIsCancelling] = useState<boolean>(false);
-    const toast = useToast();
+    const toast = useAppToast();
 
 
     useEffect(() => {

@@ -7,11 +7,11 @@ import {
     GridItem,
     Input,
     NativeSelect,
-    useToast,
     Box,
     Container,
     Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios, { AxiosError } from 'axios';
 import {
     DepartamentoIntegrante,
@@ -46,7 +46,7 @@ export function IncorporarPersonal() {
     const [numeroCuentaBancaria, setNumeroCuentaBancaria] = useState('');
     const [banco, setBanco] = useState('');
 
-    const toast = useToast();
+    const toast = useAppToast();
 
     /**
      * retorna true si todos los datos en el formulario son validos.

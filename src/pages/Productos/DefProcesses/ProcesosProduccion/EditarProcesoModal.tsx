@@ -7,7 +7,6 @@ import {
   NumberInput,
   NumberInputField,
   Stack,
-  useToast,
   Flex,
   Heading,
   Box,
@@ -18,6 +17,7 @@ import {
   Dialog,
   Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
 import { ProcesoProduccionEntity, TimeModelType, RecursoProduccion } from '../../types.tsx';
@@ -40,7 +40,7 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
   const [inputToken, setInputToken] = useState('');
   const [showDeleteSection, setShowDeleteSection] = useState(false);
 
-  const toast = useToast();
+  const toast = useAppToast();
   const endPoints = new EndPointsURL();
 
   // Inicializar el estado cuando se abre el modal con un proceso

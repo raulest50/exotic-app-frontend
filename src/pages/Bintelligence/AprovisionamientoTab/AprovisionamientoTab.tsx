@@ -9,9 +9,9 @@ import {
     Stack,
     Text,
     useDisclosure,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useMemo, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
@@ -27,7 +27,7 @@ import { formatTipoMaterial, getTodayIsoDate } from "./utils.ts";
 const endPoints = new EndPointsURL();
 
 export default function AprovisionamientoTab() {
-    const toast = useToast();
+    const toast = useAppToast();
     const materialPicker = useDisclosure();
     const proveedorPicker = useDisclosure();
     const { nivel: biAccessLevel } = useModuleAccessLevel(Modulo.BINTELLIGENCE);

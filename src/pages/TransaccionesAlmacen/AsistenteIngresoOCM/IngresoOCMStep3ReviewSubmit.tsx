@@ -9,10 +9,10 @@ import {
     Image,
     Text,
     Textarea,
-    useToast,
     Separator,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 
 import { IngresoOCM_DTA } from "../types";
 import { submitIngresoOcm } from "./ocmIngresoApi";
@@ -47,7 +47,7 @@ export default function IngresoOCMStep3ReviewSubmit({
     const [observaciones, setObservaciones] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [supportPreviewUrl, setSupportPreviewUrl] = useState("");
-    const toast = useToast();
+    const toast = useAppToast();
     const supportFile = docIngresoDTA?.file;
     const isImageSupport = supportFile?.type.startsWith("image/");
 

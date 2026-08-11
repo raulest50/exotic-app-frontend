@@ -16,11 +16,11 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     Field,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
 import CustomDecimalInput from "../../../components/CustomDecimalInput/CustomDecimalInput";
@@ -46,7 +46,7 @@ export default function AjusteSalidaLotePicker({
     cantidadRequerida,
     initialSelection = [],
 }: Props) {
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const [lotesDisponibles, setLotesDisponibles] = useState<AjusteLoteOption[]>([]);
     const [lotesSeleccionados, setLotesSeleccionados] = useState<AjusteLoteAsignado[]>([]);

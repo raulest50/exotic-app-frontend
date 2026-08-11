@@ -15,8 +15,8 @@ import {
     Thead,
     Tr,
     VStack,
-    useToast,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useState } from "react";
 import {
     extractApiError,
@@ -48,7 +48,7 @@ function loteLabel(lote: LoteProduccionResumen) {
 }
 
 export default function DiligenciarControlProcesoTab() {
-    const toast = useToast();
+    const toast = useAppToast();
     const [selectedArea, setSelectedArea] = useState<AreaOperativaOption | null>(null);
     const [loteSearch, setLoteSearch] = useState("");
     const [lotes, setLotes] = useState<LoteProduccionResumen[]>([]);

@@ -20,11 +20,11 @@ import {
     Thead,
     Tr,
     useDisclosure,
-    useToast,
     Field,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 import axios, { AxiosError } from 'axios';
 import EndPointsURL from '../../api/EndPointsURL';
@@ -49,7 +49,7 @@ interface DecisionState {
 
 export function HorasExtraPersonal() {
     const endpoints = useMemo(() => new EndPointsURL(), []);
-    const toast = useToast();
+    const toast = useAppToast();
     const decisionModal = useDisclosure();
     const integrantePicker = useDisclosure();
 

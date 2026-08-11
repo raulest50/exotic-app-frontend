@@ -13,11 +13,11 @@ import {
     Image,
     Box,
     Link,
-    useToast,
     Spinner,
     Text,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL.tsx';
 import BorderGlow from '../../components/BorderGlow/BorderGlow.tsx';
@@ -167,7 +167,7 @@ const FormularioForgot: React.FC<FormularioForgotProps> = ({
 export default function LoginPanel() {
     const { login } = useAuth();
     const navigate = useNavigate();
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = new EndPointsURL();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');

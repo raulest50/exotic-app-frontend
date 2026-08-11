@@ -6,7 +6,6 @@ import {
     Box,
     Button,
     Input,
-    useToast,
     VStack,
     HStack,
     Text,
@@ -22,6 +21,7 @@ import {
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import { User } from "../../../pages/Usuarios/GestionUsuarios/types.tsx";
@@ -53,7 +53,7 @@ const UserGenericPicker: React.FC<UserGenericPickerProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const resultsPerPage = 10;
-    const toast = useToast();
+    const toast = useAppToast();
 
     const handleSearch = async () => {
         setIsLoading(true);

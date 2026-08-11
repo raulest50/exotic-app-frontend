@@ -12,7 +12,6 @@ import {
     Th,
     Td,
     Input,
-    useToast,
     HStack,
     VStack,
     Flex,
@@ -21,6 +20,7 @@ import {
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
 import { OrdenCompraMateriales, getEstadoText, getCondicionPagoText, getCantidadCorrectaText, TipoEnvio } from '../types';
@@ -44,7 +44,7 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                                                                                                  orden,
                                                                                                  onEstadoUpdated
                                                                                              }) => {
-    const toast = useToast();
+    const toast = useAppToast();
 
     // Generate a random 7-digit code and hold the user input.
     const [randomCode, setRandomCode] = useState<string>('');

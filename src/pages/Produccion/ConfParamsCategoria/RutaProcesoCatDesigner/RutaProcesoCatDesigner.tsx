@@ -19,11 +19,11 @@ import {
     Thead,
     Tr,
     Switch,
-    useToast,
     Separator,
     Field,
     List,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     ReactFlow,
     Node,
@@ -181,7 +181,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     );
 
     const endPoints = useMemo(() => new EndPointsURL(), []);
-    const toast = useToast();
+    const toast = useAppToast();
     const isReadOnly = viewingHistorical;
     const selectedNode = useMemo(() => {
         if (!selectedElement || !('position' in selectedElement)) {

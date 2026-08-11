@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-import { Steps, Alert, Box, Button, Flex, Icon, Text, VStack, useToast, Separator } from "@chakra-ui/react";
+import { Steps, Alert, Box, Button, Flex, Icon, Text, VStack, Separator } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { FaFileCircleQuestion, FaFileCircleCheck } from "react-icons/fa6";
 import { FaQuestion, FaCheck, FaTimes } from "react-icons/fa";
 
@@ -94,7 +95,7 @@ export default function FileChooserWithValidation({
     const [validationErrors, setValidationErrors] = useState<string[]>([]);
     const [isValidating, setIsValidating] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const normalizedExts = allowedExtensions.map(normalizeExt);
     const acceptString = normalizedExts.join(",");

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Steps, Flex, useToast } from '@chakra-ui/react';
+import { Steps, Flex } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL';
 import { IncorporacionActivoDto, OrdenCompraActivo } from "../../types.tsx";
@@ -31,7 +32,7 @@ export function ActivosFijosStep0SelectType({
   const [viewMode, setViewMode] = useState<number>(VIEW_MODES.SEL_TFI);
   const [ocNumber, setOcNumber] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
-  const toast = useToast();
+  const toast = useAppToast();
 
 
     /**

@@ -16,9 +16,9 @@ import {
     Text,
     useBreakpointValue,
     useDisclosure,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 import ReactECharts from "echarts-for-react";
 import axios from "axios";
@@ -48,7 +48,7 @@ const estadoColors: Record<EstadoRegistroHoraExtra, string> = {
 };
 
 export default function HorasExtraBiPanel() {
-    const toast = useToast();
+    const toast = useAppToast();
     const integrantePicker = useDisclosure();
     const [fechaDesde, setFechaDesde] = useState(getCurrentMonthStartIsoDate());
     const [fechaHasta, setFechaHasta] = useState(getTodayIsoDate());

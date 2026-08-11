@@ -6,7 +6,8 @@ import BetterPagination from '../../../components/BetterPagination/BetterPaginat
 import { TransaccionAlmacen, PaginatedResponse, FiltroHistDispensacionDTO } from './types';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
-import { useToast, Alert } from '@chakra-ui/react';
+import { Alert } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import DetalleDispensacionDialog from './DetalleDispensacionDialog.tsx';
 import DispensacionPDF_Generator_Class from '../AsistenteDispensacion/AsistenteDispensacionComponents/DispensacionPDF_Generator';
 import { MovimientoDetalle } from '../types';
@@ -15,7 +16,7 @@ const endpoints = new EndPointsURL();
 const DispensacionPDF_Generator = new DispensacionPDF_Generator_Class();
 
 export function HistorialDispensaciones() {
-    const toast = useToast();
+    const toast = useAppToast();
     const [dispensaciones, setDispensaciones] = useState<TransaccionAlmacen[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);

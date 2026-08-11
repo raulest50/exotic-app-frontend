@@ -13,8 +13,8 @@ import {
     Stat,
     Text,
     useDisclosure,
-    useToast,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -36,7 +36,7 @@ type Props = {
 const endPoints = new EndPointsURL();
 
 export default function LeadTimesView({ selectedMaterial, selectedProveedor, fechaCorte, ventanaDias }: Props) {
-    const toast = useToast();
+    const toast = useAppToast();
     const { open: isHelpOpen, onOpen: onHelpOpen, onClose: onHelpClose } = useDisclosure();
     const [metric, setMetric] = useState<ProveedorMaterialLeadTimeMetricDTO | null>(null);
     const [loading, setLoading] = useState(false);

@@ -11,11 +11,11 @@ import {
   Text,
   Textarea,
   VStack,
-  useToast,
   Field,
   Dialog,
   Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 import {
   DndContext,
@@ -87,7 +87,7 @@ export default function MisionVisionEditorModal({
   onReloadCurrent,
   onForbidden,
 }: MisionVisionEditorModalProps) {
-  const toast = useToast();
+  const toast = useAppToast();
   const [versionBase, setVersionBase] = useState(vigente.version);
   const [misionHtml, setMisionHtml] = useState(vigente.misionHtml);
   const [visionHtml, setVisionHtml] = useState(vigente.visionHtml);

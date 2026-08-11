@@ -1,4 +1,5 @@
-import { Steps, Button, Checkbox, VStack, useToast } from "@chakra-ui/react";
+import { Steps, Button, Checkbox, VStack } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useMemo, useState } from "react";
 import EndPointsURL from "../../../api/EndPointsURL";
@@ -81,7 +82,7 @@ export default function ReporteHyLButton({
     onGenerated,
     onInvalidated,
 }: ReporteHyLButtonProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const [isGenerating, setIsGenerating] = useState(false);
     const [costosEnCero, setCostosEnCero] = useState(false);

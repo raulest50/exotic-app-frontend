@@ -12,9 +12,9 @@ import {
     Text,
     Heading,
     Spinner,
-    useToast,
     Badge,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 
 import { ConsolidadoOCMResponse } from '../../types';
 import { ListaConsolidadoDataProps } from '../ingresoOcmTypes';
@@ -33,7 +33,7 @@ export function ListaMaterialesIngresoDesgloce({
     const [localConsolidado, setLocalConsolidado] = useState<ConsolidadoOCMResponse | null>(null);
     const [localLoading, setLocalLoading] = useState(false);
     const [localError, setLocalError] = useState<string | null>(null);
-    const toast = useToast();
+    const toast = useAppToast();
     const usingExternalData = consolidadoProp !== undefined;
     const consolidado = usingExternalData ? consolidadoProp : localConsolidado;
     const loading = usingExternalData ? Boolean(loadingProp) : localLoading;

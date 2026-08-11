@@ -12,9 +12,9 @@ import {
   Th,
   Thead,
   Tr,
-  useToast,
   Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
 import MyPagination from '../../../../components/MyPagination.tsx';
@@ -48,7 +48,7 @@ function PanelBusqueda({setEstado,setRecursoSel,setRefreshFn}:PanelProps){
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 10;
-  const toast = useToast();
+  const toast = useAppToast();
   const endpoints = new EndPointsURL();
 
   const fetchRecursos = async (pageNumber:number) => {

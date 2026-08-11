@@ -18,11 +18,11 @@ import {
     Textarea,
     VStack,
     useDisclosure,
-    useToast,
     Separator,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     FaBalanceScale,
     FaEye,
@@ -54,7 +54,7 @@ const VALUE_ICONS = [FaHandshake, FaBalanceScale, FaLeaf, FaUsers];
 const VALUE_COLORS = ["blue.500", "teal.500", "green.500", "purple.500"];
 
 export function MisionVision({ canEdit }: MisionVisionProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const { refreshAccesos } = useAuth();
     const editorDisclosure = useDisclosure();
     const detailDisclosure = useDisclosure();

@@ -13,8 +13,8 @@ import {
     Thead,
     Tr,
     VStack,
-    useToast,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useMemo, useState } from "react";
 import {
     buscarEjecuciones,
@@ -54,7 +54,7 @@ function resumenMuestra(muestra: MuestraResponse) {
 }
 
 export default function HistorialControlProcesoTab() {
-    const toast = useToast();
+    const toast = useAppToast();
     const [selectedArea, setSelectedArea] = useState<AreaOperativaOption | null>(null);
     const [producto, setProducto] = useState("");
     const [fechaDesde, setFechaDesde] = useState("");

@@ -11,10 +11,10 @@ import {
     SimpleGrid,
     Spinner,
     Text,
-    useToast,
     VStack,
     Separator,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     AprobarMpsSemanal,
     CerrarObservacionMpsSemanal,
@@ -154,7 +154,7 @@ function SummaryLine({ label, value }: { label: string; value: number }) {
 }
 
 export default function AprobacionMPSWeekTab() {
-    const toast = useToast();
+    const toast = useAppToast();
     const [items, setItems] = useState<MpsSemanalListItemDTO[]>([]);
     const [selectedSemana, setSelectedSemana] = useState<SemanaMPSDTO | null>(null);
     const [selectedWeekStartDate, setSelectedWeekStartDate] = useState(getCurrentIsoWeekMonday());

@@ -15,8 +15,8 @@ import {
     Thead,
     Tr,
     VStack,
-    useToast,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useState } from "react";
 import {
     extractApiError,
@@ -96,7 +96,7 @@ function estadoColor(estado: PlantillaResponse["estado"]) {
 }
 
 export default function VersionadoControlProcesoTab() {
-    const toast = useToast();
+    const toast = useAppToast();
     const [selectedArea, setSelectedArea] = useState<AreaOperativaOption | null>(null);
     const [plantillas, setPlantillas] = useState<PlantillaResponse[]>([]);
     const [rows, setRows] = useState<DraftCaracteristica[]>([newDraftRow()]);

@@ -12,12 +12,12 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     VStack,
     Field,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import BetterPagination from "../../../components/BetterPagination/BetterPagination.tsx";
@@ -37,7 +37,7 @@ type Props = {
 };
 
 export default function MaterialSelectorModal({ isOpen, onClose, onSelectMaterial }: Props) {
-    const toast = useToast();
+    const toast = useAppToast();
     const [searchText, setSearchText] = useState("");
     const [searchType, setSearchType] = useState<BiSearchType>("NOMBRE");
     const [loading, setLoading] = useState(false);

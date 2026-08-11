@@ -12,12 +12,12 @@ import {
     Thead,
     Tr,
     useDisclosure,
-    useToast,
     VStack,
     IconButton,
     HStack,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 import {useMemo, useRef, useState} from "react";
 import ProveedorFilterOCM from "../../Compras/components/ProveedorFilterOCM";
@@ -38,7 +38,7 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
     setActiveStep,
     setSelectedOrder,
 }: StepOneComponentProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const [isLoading, setIsLoading] = useState(false);
     const [proveedor, setProveedor] = useState<Proveedor | null>(null);
     const [ordenCompraId, setOrdenCompraId] = useState("");

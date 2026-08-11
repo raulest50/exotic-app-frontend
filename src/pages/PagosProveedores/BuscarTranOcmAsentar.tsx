@@ -12,9 +12,9 @@ import {
   Th,
   Td,
   Spinner,
-  useToast,
   Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL.tsx';
 import MyPagination from '../../components/MyPagination.tsx';
@@ -35,7 +35,7 @@ export default function BuscarTranOcmAsentar() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
-  const toast = useToast();
+  const toast = useAppToast();
   const pageSize = 10;
 
   const handleSearch = async (pageNumber = 0) => {

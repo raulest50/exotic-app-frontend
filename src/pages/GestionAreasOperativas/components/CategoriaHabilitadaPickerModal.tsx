@@ -24,12 +24,12 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     VStack,
     Field,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import MyPagination from '../../../components/MyPagination.tsx';
@@ -67,7 +67,7 @@ export default function CategoriaHabilitadaPickerModal({
     const [selectedById, setSelectedById] = useState<Record<number, CategoriaHabilitada>>({});
 
     const endPoints = new EndPointsURL();
-    const toast = useToast();
+    const toast = useAppToast();
     const selectedRowHoverBg = useColorModeValue('teal.100', 'teal.800');
 
     useEffect(() => {

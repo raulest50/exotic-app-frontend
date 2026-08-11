@@ -5,7 +5,6 @@ import {
     Input,
     Button,
     Textarea,
-    useToast,
     NativeSelect,
     Box,
     Card,
@@ -18,6 +17,7 @@ import {
     CheckboxGroup,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios, { AxiosError } from 'axios';
 import EndPointsURL from "../../api/EndPointsURL.tsx";
 import { Proveedor, Contacto } from './types';
@@ -71,7 +71,7 @@ function CodificarProveedor() {
     const rutInputRef = useRef<HTMLInputElement>(null);
     const camaraInputRef = useRef<HTMLInputElement>(null);
 
-    const toast = useToast();
+    const toast = useAppToast();
     const { getNumberDirective } = useMasterDirectives();
     const limiteRecepcionesParcialesOcmMax = getNumberDirective(
         MASTER_DIRECTIVE_KEYS.LIMITE_RECEPCIONES_PARCIALES_OCM,

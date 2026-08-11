@@ -20,11 +20,11 @@ import {
   Td,
   Box,
   Text,
-  useToast,
   Field,
   Dialog,
   Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import EndPointsURL from "../../../../../../api/EndPointsURL";
 import CustomDecimalInput from "../../../../../../components/CustomDecimalInput/CustomDecimalInput.tsx";
 import { LuSearch, LuTrash2 } from 'react-icons/lu';
@@ -63,7 +63,7 @@ interface Props {
 
 const PackagingTerminadoDefiner: React.FC<Props> = ({ isOpen, onClose, onSave, initialCasePack }) => {
   const endpoints = new EndPointsURL();
-  const toast = useToast();
+  const toast = useAppToast();
 
   // State for CasePack data
   const [casePack, setCasePack] = useState<CasePack>({

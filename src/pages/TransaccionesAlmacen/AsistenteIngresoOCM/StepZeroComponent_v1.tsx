@@ -1,6 +1,7 @@
 // StepZeroComponent.tsx
 import { useState } from "react";
-import { Steps, Button, Flex, Heading, Input, Text, useToast, Field } from "@chakra-ui/react";
+import { Steps, Button, Flex, Heading, Input, Text, Field } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { OrdenCompra } from "../types";
 import EndPointsURL from "../../../api/EndPointsURL";
@@ -14,7 +15,7 @@ export default function StepZeroComponent_v1({
                                               setActiveStep,
                                               setSelectedOrder,
                                           }: StepZeroComponentProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const [ordenCompraId, setOrdenCompraId] = useState("");
 
     const handleOnClickBuscarOrdenByFacturaId = async () => {

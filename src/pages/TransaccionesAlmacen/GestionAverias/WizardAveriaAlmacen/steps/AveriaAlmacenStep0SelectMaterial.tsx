@@ -13,8 +13,8 @@ import {
     Td,
     Text,
     VStack,
-    useToast,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { FiX } from 'react-icons/fi';
 import MaterialByLotePicker, {
     MaterialByLoteItem,
@@ -33,7 +33,7 @@ export default function AveriaAlmacenStep0SelectMaterial({
     setSelectedItems,
 }: AveriaAlmacenStep0SelectMaterialProps) {
     const [isPickerOpen, setIsPickerOpen] = useState(false);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const itemKey = (item: AveriaAlmacenItem) => `${item.productoId}|${item.loteId}`;
 

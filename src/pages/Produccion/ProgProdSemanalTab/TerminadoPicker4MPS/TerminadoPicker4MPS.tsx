@@ -10,11 +10,11 @@ import {
     Spinner,
     Text,
     VStack,
-    useToast,
     Field,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
 import type { Categoria } from "../../types.tsx";
@@ -46,7 +46,7 @@ export default function TerminadoPicker4MPS({
     onClose,
     onSelectTerminado,
 }: TerminadoPicker4MPSProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const [searchText, setSearchText] = useState("");
     const [results, setResults] = useState<TerminadoPickerResult[]>([]);
     const [selected, setSelected] = useState<TerminadoPickerResult | null>(null);

@@ -24,12 +24,12 @@ import {
     Text,
     VStack,
     useDisclosure,
-    useToast,
     Separator,
     Field,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 import TerminadoPicker4MPS, {
     type TerminadoPickerResult,
@@ -406,7 +406,7 @@ export default function ProgramacionProduccionSemanalTab() {
     const [editableFromDate, setEditableFromDate] = useState(() => getMpsEditableFromDate(lockedDaysAhead));
     const pickerDisclosure = useDisclosure();
     const weekChangeConfirmDisclosure = useDisclosure();
-    const toast = useToast();
+    const toast = useAppToast();
 
     const isApprovedEditMode = isApprovedEditEstado(currentDraft?.estado);
     const isDraftMode = currentDraft === null || currentDraft.estado === "BORRADOR";

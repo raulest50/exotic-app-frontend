@@ -13,9 +13,9 @@ import {
     Thead,
     Tr,
     VStack,
-    useToast,
     List,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import EndPointsURL from "../../../../../../api/EndPointsURL.tsx";
 import { ProductoSemiter, TIPOS_PRODUCTOS } from "../../../../types.tsx";
@@ -41,7 +41,7 @@ function getAxiosErrorMessage(error: unknown, fallback: string): string {
 }
 
 export default function StepFour_ModProdMF({ setActiveStep, semioter3, onReset, onClose, refreshSearch }: Props) {
-    const toast = useToast();
+    const toast = useAppToast();
     const [loading, setLoading] = useState(false);
     const endPoints = new EndPointsURL();
 

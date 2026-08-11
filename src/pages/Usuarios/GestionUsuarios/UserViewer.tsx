@@ -16,9 +16,9 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import axios from 'axios';
 import { tabsForModule } from '../../../auth/moduleTabDefinitions.ts';
@@ -60,7 +60,7 @@ export default function UserViewer({
 
     const isLoading = isCreatingUser || isDeletingUser || isActivatingUser || isDeactivatingUser;
 
-    const toast = useToast();
+    const toast = useAppToast();
     const endPoints = new EndPointsURL();
 
     const fetchUsers = async () => {

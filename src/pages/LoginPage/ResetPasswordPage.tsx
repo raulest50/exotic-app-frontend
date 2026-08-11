@@ -11,9 +11,9 @@ import {
     Box,
     Text,
     Progress,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL.tsx';
 
@@ -62,7 +62,7 @@ export default function ResetPasswordPage() {
 
     const location = useLocation();
     const navigate = useNavigate();
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = new EndPointsURL();
 
     // Extract token from URL on component mount

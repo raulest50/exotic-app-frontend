@@ -8,10 +8,10 @@ import {
     Input,
     NativeSelect,
     Textarea,
-    useToast,
     Text,
     Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import { Proveedor, Material, ItemOrdenCompra, OrdenCompraMateriales, DIVISAS, LeadTimeProveedorKpiDTO } from './types';
 import EndPointsURL from '../../api/EndPointsURL';
@@ -34,7 +34,7 @@ export default function CrearOCM() {
     const [leadTimeKpi, setLeadTimeKpi] = useState<LeadTimeProveedorKpiDTO | null>(null);
     const [isLeadTimeKpiLoading, setIsLeadTimeKpiLoading] = useState(false);
     const [leadTimeKpiError, setLeadTimeKpiError] = useState(false);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const [plazoPago, setPlazoPago] = useState(30);
     const [condicionPago, setCondicionPago] = useState("0");

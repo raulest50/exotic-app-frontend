@@ -13,12 +13,12 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     VStack,
     Field,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
 import type { OrdenCompraMateriales } from "../types";
@@ -45,7 +45,7 @@ export default function OrdenCompraPicker({
     const [isLoading, setIsLoading] = useState(false);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const handleSearch = async (pageNum = 0) => {
         setIsLoading(true);

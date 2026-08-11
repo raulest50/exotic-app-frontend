@@ -9,10 +9,10 @@ import {
     Spinner,
     Text,
     VStack,
-    useToast,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import {Producto, ProductoWithInsumos, InsumoWithStock, ProductoStockDTO, Terminado} from '../types.tsx';
@@ -39,7 +39,7 @@ type InsumoWithStockResponse = Omit<InsumoWithStock, 'tipo_producto' | 'subInsum
 };
 
 export default function TerminadoSemiterminadoPicker({isOpen, onClose, onConfirm}: TerminadoSemiterminadoPickerProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const [searchText, setSearchText] = useState('');
     const [results, setResults] = useState<ProductoStockDTO[]>([]);
     const [selected, setSelected] = useState<ProductoStockDTO | null>(null);

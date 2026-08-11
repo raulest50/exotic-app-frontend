@@ -11,9 +11,9 @@ import {
     Heading,
     Button,
     Box,
-    useToast,
     useDisclosure,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import DateRangePicker from '../../components/DateRangePicker';
 import CompraItemsDialog from './components/CompraItemsDialog.tsx';
@@ -57,7 +57,7 @@ function HistorialCompras() {
     const [itemsCompra, setItemsCompra] = useState([]);
     const { open, onOpen, onClose } = useDisclosure();
 
-    const toast = useToast();
+    const toast = useAppToast();
 
     // Function to search Proveedores with pagination
     const searchProveedores = async (pageNumber = 0) => {

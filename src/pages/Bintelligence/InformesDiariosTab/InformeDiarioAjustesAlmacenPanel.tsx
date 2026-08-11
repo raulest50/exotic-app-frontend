@@ -8,9 +8,9 @@ import {
     Stack,
     Text,
     VStack,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import EndPointsURL, { type ExcelDecimalSeparator, type ExcelExportMode } from "../../../api/EndPointsURL.tsx";
 import ExcelDecimalSeparatorSelector, {
@@ -20,7 +20,7 @@ import ExcelDecimalSeparatorSelector, {
 type SentidoAjuste = "ENTRADAS" | "SALIDAS" | "MIXTA";
 
 export default function InformeDiarioAjustesAlmacenPanel() {
-    const toast = useToast();
+    const toast = useAppToast();
     const [fechaDesde, setFechaDesde] = useState("");
     const [fechaHasta, setFechaHasta] = useState("");
     const [sentido, setSentido] = useState<SentidoAjuste>("MIXTA");

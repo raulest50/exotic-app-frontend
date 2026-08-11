@@ -15,9 +15,9 @@ import {
     Td,
     Text,
     VStack,
-    useToast,
     Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL.tsx';
 import BetterPagination from '../../../../../components/BetterPagination/BetterPagination';
@@ -46,7 +46,7 @@ export default function AveriaProduccionStep0SelectArea({
     const [isLoading, setIsLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
-    const toast = useToast();
+    const toast = useAppToast();
     const selectedRowBg = useColorModeValue('teal.100', 'teal.900');
     const selectedRowHoverBg = useColorModeValue('teal.200', 'teal.800');
     const selectedPanelBorder = useColorModeValue('teal.200', 'teal.600');

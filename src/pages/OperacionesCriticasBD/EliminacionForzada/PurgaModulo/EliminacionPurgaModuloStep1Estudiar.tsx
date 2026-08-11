@@ -12,9 +12,9 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     VStack,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import EndPointsURL from "../../../../api/EndPointsURL";
@@ -47,7 +47,7 @@ export default function EliminacionPurgaModuloStep1Estudiar({
 }: EliminacionPurgaModuloStep1EstudiarProps) {
     const [isLoading, setIsLoading] = useState(true);
     const endpoints = useMemo(() => new EndPointsURL(), []);
-    const toast = useToast();
+    const toast = useAppToast();
 
     useEffect(() => {
         const fetchStudy = async () => {

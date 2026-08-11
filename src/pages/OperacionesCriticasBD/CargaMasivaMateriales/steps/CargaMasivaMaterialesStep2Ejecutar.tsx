@@ -1,4 +1,5 @@
-import { Steps, Box, Button, Flex, Text, useToast, VStack, Alert, Spinner, Heading } from "@chakra-ui/react";
+import { Steps, Box, Button, Flex, Text, VStack, Alert, Spinner, Heading } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useColorModeValue } from "../../../../components/ui/color-mode";
 import { useState, useMemo } from "react";
 import axios, { AxiosError } from "axios";
@@ -24,7 +25,7 @@ export default function CargaMasivaMaterialesStep2Ejecutar({
     excelFile,
     onSuccess,
 }: CargaMasivaMaterialesStep2EjecutarProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const [isExecuting, setIsExecuting] = useState(false);
     const [executionSuccess, setExecutionSuccess] = useState(false);

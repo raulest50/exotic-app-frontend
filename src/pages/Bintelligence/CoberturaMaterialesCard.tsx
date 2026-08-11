@@ -26,10 +26,10 @@ import {
     Tr,
     useBreakpointValue,
     useDisclosure,
-    useToast,
     Field,
     Icon,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     type KeyboardEvent,
     useEffect,
@@ -71,7 +71,7 @@ type PageSize = 10 | 20;
 
 export default function CoberturaMaterialesCard() {
     const detail = useDisclosure();
-    const toast = useToast();
+    const toast = useAppToast();
     const [expanded, setExpanded] = useState(false);
     const [mode, setMode] = useState<CoverageMode>("PRIORIDAD");
     const [windowDays, setWindowDays] = useState<CoverageWindow>(90);

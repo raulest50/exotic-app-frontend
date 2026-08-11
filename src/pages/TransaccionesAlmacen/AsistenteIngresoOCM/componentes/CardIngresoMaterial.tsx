@@ -15,10 +15,10 @@ import {
     Input,
     Box,
     Badge,
-    useToast,
     Collapsible,
     Checkbox,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     IngresoOcmDraftItem,
     IngresoOcmDraftLoteField,
@@ -56,7 +56,7 @@ export function CardIngresoMaterial({
     onRemoveLote,
     onToggleExcluded,
 }: Props) {
-    const toast = useToast();
+    const toast = useAppToast();
     const [isExpanded, setIsExpanded] = useState(false);
     const { item, itemIndex, excluded, lotes } = draftItem;
     const totalCantidad = lotes.reduce((sum, lote) => sum + lote.cantidad, 0);

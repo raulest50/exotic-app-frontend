@@ -13,11 +13,11 @@ import {
     HStack,
     Spinner,
     Flex,
-    useToast,
     Badge,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
@@ -65,7 +65,7 @@ export default function DetalleDispensacionDialog({
     const [movimientos, setMovimientos] = useState<MovimientoDetalle[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
 
     useEffect(() => {

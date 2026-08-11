@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Steps, Button, Input, Text, useToast, Field, Dialog, Portal } from '@chakra-ui/react';
+import { Steps, Button, Input, Text, Field, Dialog, Portal } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { OrdenCompra } from '../../types';
 import { closeOrdenCompraOcm } from '../ocmIngresoApi';
 
@@ -11,7 +12,7 @@ interface CerrarOrdenDialogProps {
 }
 
 export function CerrarOrdenDialog({ isOpen, onClose, orden, setActiveStep }: CerrarOrdenDialogProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const [token, setToken] = useState<string>('');
     const [inputToken, setInputToken] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);

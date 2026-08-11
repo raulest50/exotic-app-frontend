@@ -6,7 +6,6 @@ import {
     Heading,
     Box,
     Text,
-    useToast,
     Input,
     NativeSelect,
     Table,
@@ -18,6 +17,7 @@ import {
     Tfoot,
     Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { OrdenCompraActivo, ItemOrdenCompraActivo, DIVISAS, getEstadoOCAFText } from "../types";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
@@ -52,7 +52,7 @@ export function EditarOCAFSeleccionada({ ocaf, onVolver, accessLevel }: Props) {
     const currencyIsUSDTuple: [boolean, React.Dispatch<React.SetStateAction<boolean>>] = [isUSD, setIsUSD];
     const [currentUsd2Cop, setCurrentUsd2Cop] = useState<number>(ocaf.trm || (isUSD ? 0 : 1));
 
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = new EndPointsURL();
 
     // Verificar si el usuario tiene permisos para editar

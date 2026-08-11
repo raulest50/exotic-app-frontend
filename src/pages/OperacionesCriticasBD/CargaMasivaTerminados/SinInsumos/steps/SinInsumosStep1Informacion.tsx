@@ -11,9 +11,9 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     VStack,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useMemo, useState } from "react";
 import EndPointsURL from "../../../../../api/EndPointsURL";
@@ -37,7 +37,7 @@ const EXAMPLE_ROWS = [
 ];
 
 export default function SinInsumosStep1Informacion({ setActiveStep }: SinInsumosStep1InformacionProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const [isDownloading, setIsDownloading] = useState(false);
 

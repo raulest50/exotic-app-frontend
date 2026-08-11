@@ -1,4 +1,5 @@
-import { Steps, useToast } from "@chakra-ui/react";
+import { Steps } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import EndPointsURL from "../../../api/EndPointsURL";
 import {
@@ -19,7 +20,7 @@ export const CARGA_COSTOS_PAGE_SIZE = 25;
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 export function useCargaMasivaCostos(onBackToSelector: () => void) {
-    const toast = useToast();
+    const toast = useAppToast();
     const api = useMemo(() => new CargaMasivaCostosApi(new EndPointsURL()), []);
     const [activeStep, setActiveStep] = useState(0);
     const [file, setFile] = useState<File | null>(null);

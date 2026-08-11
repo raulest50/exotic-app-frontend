@@ -13,10 +13,10 @@ import {
     HStack,
     Spinner,
     Flex,
-    useToast,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
@@ -65,7 +65,7 @@ export default function DetalleTransaccionDialog({
     const [movimientos, setMovimientos] = useState<MovimientoDetalle[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const errorBg = useColorModeValue('red.50', 'red.900');
     const errorText = useColorModeValue('red.600', 'red.200');

@@ -23,11 +23,11 @@ import {
     Text,
     Textarea,
     VStack,
-    useToast,
     Field,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { FiEdit, FiLayers, FiSave } from 'react-icons/fi';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -117,7 +117,7 @@ export default function DetalleAreaOperativaDialog({
     area,
     onAreaUpdated,
 }: DetalleAreaOperativaDialogProps) {
-    const toast = useToast();
+    const toast = useAppToast();
 
     const [isEditing, setIsEditing] = useState(false);
     const [editNombre, setEditNombre] = useState('');

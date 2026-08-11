@@ -15,10 +15,10 @@ import {
   InputGroup,
   InputLeftElement,
   Badge,
-  useToast,
   Button,
   Icon,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import { CuentaContable, SaldoNormal, TipoCuenta } from '../types';
 import EndPointsURL from '../../../api/EndPointsURL';
@@ -31,7 +31,7 @@ const CatalogoCuentas: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCuenta, setSelectedCuenta] = useState<CuentaContable | null>(null);
-  const toast = useToast();
+  const toast = useAppToast();
   const endpoints = new EndPointsURL();
   const rowHoverBg = useColorModeValue("blue.50", "blue.900");
   const searchIconColor = useColorModeValue("gray.300", "gray.500");

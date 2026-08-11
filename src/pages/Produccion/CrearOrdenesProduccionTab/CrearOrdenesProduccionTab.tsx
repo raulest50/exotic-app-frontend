@@ -6,7 +6,6 @@ import {
     Textarea,
     Button,
     VStack,
-    useToast,
     Input,
     HStack,
     NumberInput,
@@ -26,6 +25,7 @@ import {
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { FaQuestionCircle } from 'react-icons/fa';
 import axios from 'axios';
 import {ProductoWithInsumos, Vendedor} from "../types.tsx";
@@ -80,7 +80,7 @@ function addDaysToDateString(baseDate: string, daysToAdd: number): string {
 }
 
 export default function CrearOrdenesProduccionTab() {
-    const toast = useToast();
+    const toast = useAppToast();
     const { meProfile } = useAuth();
     const { nivel: crearOdpAccessLevel } = useTabPermission(Modulo.PRODUCCION, "CREAR_ODP_MANUALMENTE");
 

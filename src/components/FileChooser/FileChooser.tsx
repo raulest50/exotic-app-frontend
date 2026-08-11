@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-import { Steps, Box, Button, HStack, Icon, Input, Text, useToast, Field } from "@chakra-ui/react";
+import { Steps, Box, Button, HStack, Icon, Input, Text, Field } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { FaFileCircleCheck, FaFileCircleQuestion } from "react-icons/fa6";
 import axios from "axios";
 
@@ -30,7 +31,7 @@ export function FileChooser({
   const [link, setLink] = useState("");
   const [file, setLocalFile] = useState<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const toast = useToast();
+  const toast = useAppToast();
 
   const exts = Object.keys(allowedExtensions)
     .filter((e) => allowedExtensions[e])

@@ -13,9 +13,9 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     VStack,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useMemo, useState } from "react";
 import EndPointsURL from "../../../../api/EndPointsURL";
@@ -63,7 +63,7 @@ export default function ImportacionTotalBDStep2Ejecutar({
     const [currentJobId, setCurrentJobId] = useState<string | null>(null);
     const [result, setResult] = useState<BackupTotalImportJobResponse | null>(null);
     const endpoints = useMemo(() => new EndPointsURL(), []);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const cleanupTerminalJob = async (jobIdOverride?: string) => {
         const jobId = jobIdOverride ?? currentJobId;

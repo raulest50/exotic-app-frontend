@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Steps, Flex, Input, Button, Box, NativeSelect, useToast, Field } from '@chakra-ui/react';
+import { Steps, Flex, Input, Button, Box, NativeSelect, Field } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import MyPagination from '../../../components/MyPagination.tsx';
 import { ListaSearchClientes } from './panel_busqueda_comp/ListaSearchClientes.tsx';
 import axios from 'axios';
@@ -21,7 +22,7 @@ export default function PanelBusqueda({setEstado, setClienteSeleccionado}:Props)
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
     const endPoints = new EndPointsURL();
-    const toast = useToast();
+    const toast = useAppToast();
     const pageSize = 10;
 
     const handleSearch = async (pageNumber:number) => {

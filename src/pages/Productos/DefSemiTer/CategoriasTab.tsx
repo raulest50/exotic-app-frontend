@@ -16,12 +16,12 @@ import {
     Tr,
     Th,
     Td,
-    useToast,
     Spinner,
     Alert,
     Text,
     Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 
 import {Categoria} from '../types.tsx';
 import CategoriaManufacturingTemplateDesigner from './Templates/CategoriaManufacturingTemplateDesigner.tsx';
@@ -40,7 +40,7 @@ export function CategoriasTab() {
     });
 
     const [submitting, setSubmitting] = useState<boolean>(false);
-    const toast = useToast();
+    const toast = useAppToast();
     const endPoints = new EndPointsURL();
 
     const fetchTemplatesExistentes = async (categoriasActuales: Categoria[]) => {

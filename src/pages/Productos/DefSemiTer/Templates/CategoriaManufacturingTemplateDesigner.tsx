@@ -10,9 +10,9 @@ import {
     Stat,
     Text,
     VStack,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
 import CustomDecimalInput from "../../../../components/CustomDecimalInput/CustomDecimalInput.tsx";
@@ -75,7 +75,7 @@ function getAxiosErrorMessage(error: unknown, fallback: string): string {
 }
 
 export default function CategoriaManufacturingTemplateDesigner({ categoria, onBack, onSaved }: Props) {
-    const toast = useToast();
+    const toast = useAppToast();
     const procesoRef = useRef<ProcesoProduccionCompleto>(emptyProceso());
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);

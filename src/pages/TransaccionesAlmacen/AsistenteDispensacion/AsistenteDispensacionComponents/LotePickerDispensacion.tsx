@@ -13,7 +13,6 @@ import {
     Text,
     Box,
     HStack,
-    useToast,
     Spinner,
     Alert,
     NativeSelect,
@@ -21,6 +20,7 @@ import {
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL';
 import {LoteSeleccionado} from '../../types';
@@ -70,7 +70,7 @@ export function LotePickerDispensacion({
     const [totalElements, setTotalElements] = useState(0);
     const [loading, setLoading] = useState(false);
     const [size, setSize] = useState(10);
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = new EndPointsURL();
 
     // Cargar lotes disponibles cuando se abre el modal

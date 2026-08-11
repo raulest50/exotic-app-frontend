@@ -1,4 +1,5 @@
-import { Steps, Alert, Box, Button, Input, Text, useToast, VStack, Field } from "@chakra-ui/react";
+import { Steps, Alert, Box, Button, Input, Text, VStack, Field } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useState, type ChangeEvent } from "react";
 
 interface ImportacionTotalBDStep1PrepararProps {
@@ -14,7 +15,7 @@ export default function ImportacionTotalBDStep1Preparar({
 }: ImportacionTotalBDStep1PrepararProps) {
     const [randomToken, setRandomToken] = useState("");
     const [inputToken, setInputToken] = useState("");
-    const toast = useToast();
+    const toast = useAppToast();
 
     useEffect(() => {
         const token = Math.floor(1000 + Math.random() * 9000).toString();

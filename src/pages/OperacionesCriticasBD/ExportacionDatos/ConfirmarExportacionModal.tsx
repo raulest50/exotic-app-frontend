@@ -5,11 +5,11 @@ import {
     Input,
     Spinner,
     Text,
-    useToast,
     Field,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { descargarArchivoExportacion } from "./exportacionBlobService";
@@ -62,7 +62,7 @@ export default function ConfirmarExportacionModal({
     const [currentJobId, setCurrentJobId] = useState<string | null>(null);
     const [progressMessage, setProgressMessage] = useState<string | null>(null);
 
-    const toast = useToast();
+    const toast = useAppToast();
 
     useEffect(() => {
         if (isOpen) {

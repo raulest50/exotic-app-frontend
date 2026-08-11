@@ -7,9 +7,9 @@ import {
     SimpleGrid,
     Text,
     VStack,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import EndPointsURL from "../../../api/EndPointsURL";
@@ -42,7 +42,7 @@ function resolveErrorMessage(error: unknown): string {
 
 export default function ResetPasswordsNoProductivoTab() {
     const endpoints = useMemo(() => new EndPointsURL(), []);
-    const toast = useToast();
+    const toast = useAppToast();
     const [randomToken, setRandomToken] = useState("");
     const [inputToken, setInputToken] = useState("");
     const [isExecuting, setIsExecuting] = useState(false);

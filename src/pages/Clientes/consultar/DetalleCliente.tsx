@@ -12,8 +12,8 @@ import {
     Input,
     Icon,
     HStack,
-    useToast,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { FaFileCircleQuestion, FaFileCircleCheck } from 'react-icons/fa6';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -36,7 +36,7 @@ export function DetalleCliente({cliente,setEstado,setClienteSeleccionado,refresh
     const [camaraFile,setCamaraFile] = useState<File|null>(null);
     const rutInputRef = useRef<HTMLInputElement>(null);
     const camaraInputRef = useRef<HTMLInputElement>(null);
-    const toast = useToast();
+    const toast = useAppToast();
     const endPoints = new EndPointsURL();
     const {user} = useAuth();
     const { nivel: clientesAccessLevel } = useModuleAccessLevel(Modulo.CLIENTES);

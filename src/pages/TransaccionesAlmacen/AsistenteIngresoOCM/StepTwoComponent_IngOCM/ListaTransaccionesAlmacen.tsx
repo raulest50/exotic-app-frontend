@@ -13,11 +13,11 @@ import {
     Text,
     Heading,
     Spinner,
-    useToast,
     Collapsible,
     IconButton,
     Badge,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { MovimientoDetalle, TransaccionAlmacen } from '../../types';
 
 import { ListaTransaccionesDataProps } from '../ingresoOcmTypes';
@@ -40,7 +40,7 @@ export function ListaTransaccionesAlmacen({
     const [expandedTransacciones, setExpandedTransacciones] = useState<Set<number>>(new Set());
     const [movimientosPorTransaccion, setMovimientosPorTransaccion] = useState<Map<number, MovimientoDetalle[]>>(new Map());
     const [loadingMovimientos, setLoadingMovimientos] = useState<Set<number>>(new Set());
-    const toast = useToast();
+    const toast = useAppToast();
     const usingExternalData = transaccionesProp !== undefined;
     const transacciones = usingExternalData ? transaccionesProp : localTransacciones;
     const loading = usingExternalData ? Boolean(loadingProp) : localLoading;

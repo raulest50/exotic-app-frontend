@@ -9,7 +9,6 @@ import {
     NativeSelect,
     SimpleGrid,
     Textarea,
-    useToast,
     Spinner,
     Text,
     IconButton,
@@ -18,6 +17,7 @@ import {
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useState, useEffect } from "react";
 import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL.tsx';
@@ -65,7 +65,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
     const [errorCategorias, setErrorCategorias] = useState<string | null>(null);
 
     const endPoints = new EndPointsURL();
-    const toast = useToast();
+    const toast = useAppToast();
     const { open: isHelpOpen, onOpen: onHelpOpen, onClose: onHelpClose } = useDisclosure();
 
     // Funcion para cargar las categorias

@@ -12,9 +12,9 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     VStack,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useMemo, useState } from "react";
 import EndPointsURL from "../../../../api/EndPointsURL";
@@ -42,7 +42,7 @@ export default function EliminacionOPStep2StudyResult({
 }: EliminacionOPStep2StudyResultProps) {
     const [isExecuting, setIsExecuting] = useState(false);
     const endpoints = useMemo(() => new EndPointsURL(), []);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const handleEjecutarEliminacion = async () => {
         if (!studyResultOP || !studyResultOP.eliminable) return;

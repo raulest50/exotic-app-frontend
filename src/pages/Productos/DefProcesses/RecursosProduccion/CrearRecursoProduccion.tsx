@@ -1,5 +1,6 @@
 import {useState} from 'react';
-import { Steps, Box, Button, Heading, Input, VStack, useToast, Field } from '@chakra-ui/react';
+import { Steps, Box, Button, Heading, Input, VStack, Field } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
@@ -13,7 +14,7 @@ function CrearRecursoProduccion() {
     const [descripcion, setDescripcion] = useState('');
     const [activos, setActivos] = useState<ActivoFijo[]>([]);
 
-    const toast = useToast();
+    const toast = useAppToast();
     const endPoints = new EndPointsURL();
 
     const clearFields = () => {

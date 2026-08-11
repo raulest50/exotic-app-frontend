@@ -17,10 +17,10 @@ import {
     Thead,
     Tr,
     VStack,
-    useToast,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useMemo, useState } from "react";
 import CustomDecimalInput from "../../../components/CustomDecimalInput/CustomDecimalInput";
 import { getLotesDisponiblesDispensacionV2 } from "./DispensacionV2Service";
@@ -66,7 +66,7 @@ export default function DispensacionV2DetalleLotesModal({
     const [lotesDisponibles, setLotesDisponibles] = useState<Record<string, DispensacionV2LoteDisponibleDTO[]>>({});
     const [selectedLoteId, setSelectedLoteId] = useState<Record<string, string>>({});
     const [dirtyProductoIds, setDirtyProductoIds] = useState<Set<string>>(new Set());
-    const toast = useToast();
+    const toast = useAppToast();
 
     useEffect(() => {
         setDraft(orden);

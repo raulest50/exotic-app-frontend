@@ -16,11 +16,11 @@ import {
     Spinner,
     Flex,
     Text,
-    useToast,
     Box,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import MyPagination from '../../../../components/MyPagination.tsx';
 import { AreaOperativa } from './types.ts';
 
@@ -46,7 +46,7 @@ export default function AreaOperativaPicker({
     const [loading, setLoading] = useState(false);
     const [selectedArea, setSelectedArea] = useState<AreaOperativa | null>(null);
     const endPoints = new EndPointsURL();
-    const toast = useToast();
+    const toast = useAppToast();
 
     const fetchAreas = useCallback(
         async (pageNumber: number) => {

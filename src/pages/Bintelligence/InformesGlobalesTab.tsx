@@ -11,9 +11,9 @@ import {
     SimpleGrid,
     Stack,
     Text,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import InformeAlmacenPage from "./InformeAlmacenPage";
 import InformeProduccionPage from "./InformeProduccionPage";
@@ -48,7 +48,7 @@ interface ReportState<T> {
 const MAX_RANGE_DAYS = 31;
 
 export default function InformesGlobalesTab() {
-    const toast = useToast();
+    const toast = useAppToast();
     const today = useMemo(getTodayIsoDate, []);
     const monthStart = useMemo(getCurrentMonthStartIsoDate, []);
     const [activePage, setActivePage] = useState<ReportPage>("almacen");

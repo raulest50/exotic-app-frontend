@@ -9,9 +9,9 @@ import {
     VStack,
     Textarea,
     Icon,
-    useToast,
     Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { FaFileCircleQuestion, FaFileCircleCheck } from 'react-icons/fa6';
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL.tsx';
@@ -34,7 +34,7 @@ export default function CodificarCliente(){
 
     const rutInputRef = useRef<HTMLInputElement>(null);
     const camaraInputRef = useRef<HTMLInputElement>(null);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const handleChange = (field: keyof ClienteFormData, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));

@@ -8,7 +8,8 @@
 */
 // src/components/ListaOrdenesCompra.tsx
 import React, { useState } from 'react';
-import { Steps, Table, Thead, Tbody, Tr, Th, Td, Box, useToast } from '@chakra-ui/react';
+import { Steps, Table, Thead, Tbody, Tr, Th, Td, Box } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import {getEstadoText, OrdenCompraMateriales} from '../types';
 import OrdenCompraDetails from './OrdenCompraDetails';
 import axios from 'axios';
@@ -54,7 +55,7 @@ interface ContextMenuState {
 }
 
 const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClose4Dialogs, page, onEditarOrden }) => {
-    const toast = useToast();
+    const toast = useAppToast();
     const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
     const [selectedOrden, setSelectedOrden] = useState<OrdenCompraMateriales | null>(null);
     const [ordenToCancel, setOrdenToCancel] = useState<OrdenCompraMateriales | null>(null);

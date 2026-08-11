@@ -10,9 +10,9 @@ import {
     Button,
     Box,
     NativeSelect,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 
 import MyPagination from "../../../../components/MyPagination.tsx";
 import { ListaSearchProveedores } from "./ListaSearchProveedores.tsx";
@@ -26,7 +26,7 @@ type Props = {
 
 
 export default function PanelBusqueda({setEstado, setProveedorSeleccionado}: Props) {
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = new EndPointsURL();
 
     // Search states

@@ -11,9 +11,9 @@ import {
     Box,
     Menu,
     IconButton,
-    useToast,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { FiMoreVertical, FiEye, FiXCircle, FiEdit, FiDownload } from 'react-icons/fi';
 import { OrdenCompraActivo, getEstadoOCAFText } from '../types';
 import { formatCOP } from '../../../utils/formatters';
@@ -35,7 +35,7 @@ const ListaOrdenesOCAF: React.FC<Props> = ({ ordenes, onEditarOrden, onEstadoAct
     const [ordenToUpdate, setOrdenToUpdate] = useState<OrdenCompraActivo | null>(null);
     const [downloadingId, setDownloadingId] = useState<number | null>(null);
     const { nivel: accessLevel } = useModuleAccessLevel(Modulo.ACTIVOS);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const handleDownloadPdf = async (orden: OrdenCompraActivo) => {
         if (!orden.ordenCompraActivoId || orden.estado === -1) return;

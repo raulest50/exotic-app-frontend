@@ -11,8 +11,8 @@ import {
     Spinner,
     Text,
     VStack,
-    useToast,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     ListarSemanasMps,
     type SemanaMPSDTO,
@@ -136,7 +136,7 @@ export default function SemanaMPSCarouselPicker({
     onChange,
     isDisabled = false,
 }: SemanaMPSCarouselPickerProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const currentWeekStartDate = useMemo(() => getCurrentIsoWeekMonday(), []);
     const [focusedStartDate, setFocusedStartDate] = useState(value || currentWeekStartDate);
     const [weeksByYear, setWeeksByYear] = useState<Record<number, SemanaMPSDTO[]>>({});

@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-import { Steps, Box, Flex, IconButton, Icon, Text, useToast, VStack, Separator } from "@chakra-ui/react";
+import { Steps, Box, Flex, IconButton, Icon, Text, VStack, Separator } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { MdAddAPhoto } from "react-icons/md";
 import { FaFolderOpen } from "react-icons/fa";
 import { FaFileCircleQuestion, FaFileCircleCheck } from "react-icons/fa6";
@@ -28,7 +29,7 @@ export function DocSuppUploader({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const toast = useToast();
+  const toast = useAppToast();
 
   const exts = Object.keys(allowedExtensions)
     .filter((e) => allowedExtensions[e])

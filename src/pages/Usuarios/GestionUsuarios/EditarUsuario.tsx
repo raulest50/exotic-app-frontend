@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Steps, Box, Button, Input, useToast, Heading, Grid, GridItem, Flex, Field } from '@chakra-ui/react';
+import { Steps, Box, Button, Input, Heading, Grid, GridItem, Flex, Field } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import { User } from './types.tsx';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -36,7 +37,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default function EditarUsuario({ user, onBack }: Props) {
     const [form, setForm] = useState<FormState>(toFormState(user));
     const [isLoading, setIsLoading] = useState(false);
-    const toast = useToast();
+    const toast = useAppToast();
     const endPoints = new EndPointsURL();
 
     const original = useMemo(() => toFormState(user), [user]);

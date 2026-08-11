@@ -14,9 +14,9 @@ import {
     Thead,
     Tr,
     useDisclosure,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from "react";
 
 import { IngresoOCM_DTA, OrdenCompra } from "../types";
@@ -51,7 +51,7 @@ export default function IngresoOCMStep1VerifyQuantities({
     orden,
     setIngresoOCM_DTA,
 }: StepOneComponentProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const { open: isDialogOpen, onOpen: onDialogOpen, onClose: onDialogClose } = useDisclosure();
     const [token, setToken] = useState("");
     const [inputToken, setInputToken] = useState("");

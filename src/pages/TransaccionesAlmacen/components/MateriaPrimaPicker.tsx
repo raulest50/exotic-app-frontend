@@ -5,7 +5,6 @@ import {
     Box,
     Button,
     Input,
-    useToast,
     VStack,
     HStack,
     Text,
@@ -21,6 +20,7 @@ import {
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from "../../../api/EndPointsURL";
 import { Material } from '../types';
@@ -47,7 +47,7 @@ const MateriaPrimaPicker: React.FC<MateriaPrimaPickerProps> = ({
     const [totalPages, setTotalPages] = useState(0);
     const [, setTotalElements] = useState(0);
     const size = 10; // Results per page
-    const toast = useToast();
+    const toast = useAppToast();
 
     const handleSearch = async (pageParam?: number) => {
         setIsLoading(true);

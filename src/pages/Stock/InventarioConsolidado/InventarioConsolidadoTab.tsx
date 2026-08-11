@@ -13,12 +13,12 @@ import {
     Stack,
     Text,
     useDisclosure,
-    useToast,
     VStack,
     Wrap,
     WrapItem,
     Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import '@fontsource-variable/league-spartan';
 
@@ -93,7 +93,7 @@ function formatFechaHoraCorte(fechaHoraCorte: string | null): string {
 }
 
 function InventarioConsolidadoTab() {
-    const toast = useToast();
+    const toast = useAppToast();
     const helpModal = useDisclosure();
 
     const [searchTerm, setSearchTerm] = useState('');

@@ -18,9 +18,9 @@ import {
     Thead,
     Tr,
     VStack,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -77,7 +77,7 @@ const DEFAULT_WORKDAY_BLOCKS: BlockDraft[] = [
 ];
 
 export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSectionProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const [vigente, setVigente] = useState<JornadaLaboralVersion | null>(null);
     const [versiones, setVersiones] = useState<JornadaLaboralVersion[]>([]);
     const [draft, setDraft] = useState<JornadaDraft>(() => createDefaultDraft());

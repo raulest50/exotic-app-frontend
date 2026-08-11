@@ -1,4 +1,5 @@
-import { Steps, Box, Button, Flex, Heading, Text, useDisclosure, useToast, VStack } from "@chakra-ui/react";
+import { Steps, Box, Button, Flex, Heading, Text, useDisclosure, VStack } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useMemo, useState } from "react";
 import OrdenProduccionPicker, {
@@ -25,7 +26,7 @@ export default function EliminacionOPStep1SelectAndStudy({
     const { open, onOpen, onClose } = useDisclosure();
     const [isStudying, setIsStudying] = useState(false);
     const endpoints = useMemo(() => new EndPointsURL(), []);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const handleEstudiarEliminacion = async () => {
         const ordenId = ordenProduccionSeleccionada?.ordenId;

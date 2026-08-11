@@ -10,10 +10,10 @@ import {
     Box,
     SimpleGrid,
     Badge,
-    useToast,
     Card,
     Separator,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import EndPointsURL from "../../../../api/EndPointsURL";
 import {
@@ -36,7 +36,7 @@ export function ActivosFijosStep3ReviewSubmit({
     ordenCompraActivo
 }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const toast = useToast();
+    const toast = useAppToast();
     const summaryHeaderBg = useColorModeValue("teal.100", "teal.800");
 
     // Elimina propiedades no soportadas por el backend

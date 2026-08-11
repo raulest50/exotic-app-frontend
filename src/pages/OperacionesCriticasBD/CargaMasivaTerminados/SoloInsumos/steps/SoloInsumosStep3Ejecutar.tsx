@@ -1,4 +1,5 @@
-import { Steps, Alert, Box, Button, Flex, Heading, Spinner, Text, useToast, VStack } from "@chakra-ui/react";
+import { Steps, Alert, Box, Button, Flex, Heading, Spinner, Text, VStack } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useColorModeValue } from "../../../../../components/ui/color-mode";
 import { useMemo, useState } from "react";
 import axios, { AxiosError } from "axios";
@@ -19,7 +20,7 @@ export default function SoloInsumosStep3Ejecutar({
     jsonFile,
     onSuccess,
 }: SoloInsumosStep3EjecutarProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const [isExecuting, setIsExecuting] = useState(false);
     const [executionSuccess, setExecutionSuccess] = useState(false);

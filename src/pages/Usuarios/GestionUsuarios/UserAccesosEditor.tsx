@@ -21,11 +21,11 @@ import {
     Thead,
     Tr,
     useDisclosure,
-    useToast,
     VStack,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import { fetchUserAssignmentStatus, type UserAssignmentStatus } from "../../../api/userAssignmentStatus.ts";
@@ -54,7 +54,7 @@ function tabLabel(modulo: Modulo, tabId: string): string {
 }
 
 export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
-    const toast = useToast();
+    const toast = useAppToast();
     const discardDialog = useDisclosure();
     const cancelRef = useRef<HTMLButtonElement | null>(null);
     const endPoints = useMemo(() => new EndPointsURL(), []);

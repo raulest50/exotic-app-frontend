@@ -6,7 +6,6 @@ import {
     Button,
     SimpleGrid,
     VStack,
-    useToast,
     Alert,
     Text,
     InputGroup,
@@ -14,6 +13,7 @@ import {
     IconButton,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
 import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
@@ -59,7 +59,7 @@ interface CrearVendedorProps {
 
 const CrearVendedor: React.FC<CrearVendedorProps> = ({ onVendorCreated }) => {
     const endPoints = new EndPointsURL();
-    const toast = useToast();
+    const toast = useAppToast();
 
     const [formData, setFormData] = useState<VendorFormData>(initialVendorFormState);
     const [formErrors, setFormErrors] = useState<VendorFormErrors>({});

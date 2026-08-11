@@ -7,13 +7,13 @@ import {
   HStack,
   Input,
   Text,
-  useToast,
   VStack,
   Separator,
   Field,
   Dialog,
   Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import type { Cargo } from "../types";
 
 interface ManualFuncionesDialogProps {
@@ -41,7 +41,7 @@ export default function ManualFuncionesDialog({
   onSaveUrl,
   onRemove,
 }: ManualFuncionesDialogProps) {
-  const toast = useToast();
+  const toast = useAppToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [manualUrl, setManualUrl] = useState("");
 

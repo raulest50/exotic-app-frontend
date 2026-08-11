@@ -14,9 +14,9 @@ import {
     VStack,
     Wrap,
     WrapItem,
-    useToast,
     Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
@@ -38,7 +38,7 @@ function CrearAreaProduccionTab() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isValidatingResponsable, setIsValidatingResponsable] = useState(false);
 
-    const toast = useToast();
+    const toast = useAppToast();
     const endPoints = new EndPointsURL();
 
     const validateForm = () => {

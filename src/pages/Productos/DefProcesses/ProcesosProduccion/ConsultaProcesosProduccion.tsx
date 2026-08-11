@@ -22,10 +22,10 @@ import {
   Th,
   Thead,
   Tr,
-  useToast,
   Badge,
   Heading,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
@@ -35,7 +35,7 @@ import { EditarProcesoModal } from './EditarProcesoModal.tsx';
 
 export function ConsultaProcesosProduccion() {
   const endPoints = new EndPointsURL();
-  const toast = useToast();
+  const toast = useAppToast();
 
   const [searchText, setSearchText] = useState('');
   const [procesos, setProcesos] = useState<ProcesoProduccionEntity[]>([]);

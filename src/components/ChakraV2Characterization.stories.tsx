@@ -31,11 +31,11 @@ import {
   Tr,
   VStack,
   useDisclosure,
-  useToast,
   Portal,
   Field,
   Dialog,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 
 import { Tooltip } from '@/components/ui/tooltip';
 
@@ -245,7 +245,7 @@ export const FormsV2 = () => {
 const CHARACTERIZATION_TOAST_ID = 'chakra-v2-characterization-toast';
 
 export const ToastV2 = () => {
-  const toast = useToast();
+  const toast = useAppToast();
 
   const showToast = () => {
     if (toast.isActive(CHARACTERIZATION_TOAST_ID)) return;

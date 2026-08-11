@@ -14,11 +14,11 @@ import {
     Td,
     Text,
     VStack,
-    useToast,
     Field,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 
@@ -50,7 +50,7 @@ const MaterialByLotePicker: React.FC<MaterialByLotePickerProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const resultsPerPage = 10;
-    const toast = useToast();
+    const toast = useAppToast();
 
     const itemKey = (item: MaterialByLoteItem) => `${item.productoId}|${item.loteId}`;
 

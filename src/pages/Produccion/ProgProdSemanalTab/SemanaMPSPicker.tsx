@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { Steps, Badge, Flex, NativeSelect, Spinner, Text, VStack, useToast, Field } from "@chakra-ui/react";
+import { Steps, Badge, Flex, NativeSelect, Spinner, Text, VStack, Field } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     ListarSemanasMps,
     type SemanaMPSDTO,
@@ -62,7 +63,7 @@ export default function SemanaMPSPicker({
     onChange,
     isDisabled = false,
 }: SemanaMPSPickerProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const [anioSemana, setAnioSemana] = useState(() => getIsoWeekYear(value || getCurrentDateString()));
     const [semanas, setSemanas] = useState<SemanaMPSDTO[]>([]);
     const [isLoading, setIsLoading] = useState(false);

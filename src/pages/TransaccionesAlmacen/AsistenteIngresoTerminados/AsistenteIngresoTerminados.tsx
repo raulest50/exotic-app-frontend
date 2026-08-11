@@ -11,10 +11,10 @@ import {
     SimpleGrid,
     Spinner,
     Text,
-    useToast,
     VStack,
     Separator,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTabPermission } from "../../../auth/usePermissions";
@@ -64,7 +64,7 @@ function formatFecha(fecha: string): string {
 }
 
 export function AsistenteIngresoTerminados() {
-    const toast = useToast();
+    const toast = useAppToast();
     const { nivel, ready } = useTabPermission(
         Modulo.TRANSACCIONES_ALMACEN,
         "INGRESO_PRODUCTO_TERMINADO",

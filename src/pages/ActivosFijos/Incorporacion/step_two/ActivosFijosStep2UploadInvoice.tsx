@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Steps, Button, Flex, Heading, Text, useToast, VStack, Separator } from '@chakra-ui/react';
+import { Steps, Button, Flex, Heading, Text, VStack, Separator } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 
 import { IncorporacionActivoDto } from '../../types.tsx';
 import { useAuth } from '../../../../context/AuthContext.tsx';
@@ -18,7 +19,7 @@ export function ActivosFijosStep2UploadInvoice({
 }: Props) {
     const { user } = useAuth();
     const [file, setFile] = useState<File | null>(null);
-    const toast = useToast();
+    const toast = useAppToast();
 
     // When continuing, update the incorporacionActivoDto with the file and proceed
     const onClickContinuar = () => {

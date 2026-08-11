@@ -1,6 +1,7 @@
 // src/pages/Usuarios/CreateUser.tsx
 import { useState } from 'react';
-import { Steps, Box, Button, Input, useToast, Heading, Grid, GridItem, Flex, Field } from '@chakra-ui/react';
+import { Steps, Box, Button, Input, Heading, Grid, GridItem, Flex, Field } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 
@@ -21,7 +22,7 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
     const [fechaNacimiento, setFechaNacimiento] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const toast = useToast();
+    const toast = useAppToast();
 
     const validateEmail = (email: string) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

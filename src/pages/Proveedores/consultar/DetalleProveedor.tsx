@@ -13,9 +13,9 @@ import {
     NativeSelect,
     Input,
     Icon,
-    useToast,
     Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useState, useEffect, useRef } from 'react';
 import { Proveedor, Contacto } from "../types.tsx";
 import { FaFileCircleQuestion, FaFileCircleCheck } from "react-icons/fa6";
@@ -54,7 +54,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
     const [hasChanges, setHasChanges] = useState<boolean>(false);
     const rutInputRef = useRef<HTMLInputElement>(null);
     const camaraInputRef = useRef<HTMLInputElement>(null);
-    const toast = useToast();
+    const toast = useAppToast();
     const endPoints = new EndPointsURL();
     const { nivel: proveedoresAccessLevel } = useModuleAccessLevel(Modulo.PROVEEDORES);
     const { getNumberDirective } = useMasterDirectives();

@@ -21,9 +21,9 @@ import {
     Thead,
     Tr,
     VStack,
-    useToast,
     Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import {
@@ -74,7 +74,7 @@ export default function AreaOperativaUnidadMedidaConfig({
     onUnidadesLoaded,
 }: AreaOperativaUnidadMedidaConfigProps) {
     const endpoints = useMemo(() => new EndPointsURL(), []);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const [unidades, setUnidades] = useState<UnidadMedidaAreaOperativa[]>([]);
     const [unidadDrafts, setUnidadDrafts] = useState<Record<number, UnidadMedidaAreaOperativaRequest>>({});

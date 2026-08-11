@@ -12,12 +12,12 @@ import {
     Td,
     Input,
     NativeSelect,
-    useToast,
     VStack,
     HStack,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL';
 import {
@@ -45,7 +45,7 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
     const [inputCode, setInputCode] = useState('');
     const [tipoEnvio, setTipoEnvio] = useState<TipoEnvio>(TipoEnvio.MANUAL);
     const [isLoading, setIsLoading] = useState(false);
-    const toast = useToast();
+    const toast = useAppToast();
 
     useEffect(() => {
         if (isOpen) {

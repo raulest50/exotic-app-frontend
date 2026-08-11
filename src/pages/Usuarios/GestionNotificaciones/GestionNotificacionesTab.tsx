@@ -17,10 +17,10 @@ import {
     Thead,
     Tr,
     useDisclosure,
-    useToast,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
@@ -44,7 +44,7 @@ export default function GestionNotificacionesTab() {
 
     const infoModal = useDisclosure();
     const pickerModal = useDisclosure();
-    const toast = useToast();
+    const toast = useAppToast();
     const selectedNameColor = useColorModeValue('teal.600', 'teal.300');
 
     const fetchNotificaciones = useCallback(async () => {

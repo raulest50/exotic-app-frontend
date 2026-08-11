@@ -1,7 +1,8 @@
 // SemiterminadosStep1DefineInputs.tsx
 import React, { useState, useEffect } from "react";
 import { Producto, Insumo, ProductoSemiter } from "../../../../types.tsx";
-import { Steps, Button, Flex, HStack, Stat, useToast, VStack } from "@chakra-ui/react";
+import { Steps, Button, Flex, HStack, Stat, VStack } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import SemioterBriefCard from "../../../../components/SemioterBriefCard.tsx";
 import BandejaBusqueda from "./BandejaBusqueda.tsx";
 import BandejaSeleccion from "./BandejaSeleccion.tsx";
@@ -14,7 +15,7 @@ interface Props {
 }
 
 const StepTwo_ModProdMF: React.FC<Props> = ({ setActiveStep, semioter, setSemioter2 }) => {
-    const toast = useToast();
+    const toast = useAppToast();
     const [selectedInsumos, setSelectedInsumos] = useState<Insumo[]>([]);
     const [costo, setCosto] = useState(0);
 

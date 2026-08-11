@@ -22,12 +22,12 @@ import {
     Tr,
     useDisclosure,
     useSteps,
-    useToast,
     VStack,
     Field,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { LuCheck } from 'react-icons/lu';
 import axios from "axios";
 import { ChangeEvent, useMemo, useState } from "react";
@@ -70,7 +70,7 @@ export default function CargaMasivaPuntosReordenTab({
     onBackToSelector,
 }: CargaMasivaPuntosReordenTabProps) {
     const endpoints = useMemo(() => new EndPointsURL(), []);
-    const toast = useToast();
+    const toast = useAppToast();
     const confirmModal = useDisclosure();
     const stepsApi = useSteps({
         defaultStep: 0,

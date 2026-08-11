@@ -15,11 +15,11 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
     VStack,
     Tag,
     Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import {useEffect, useMemo, useState} from 'react';
 import {AreaOperativaDestinoOption, DispensacionDTO, InsumoDesglosado, ItemPendienteReposicion, LoteSeleccionado} from '../types';
 import UserPickerGeneric from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric';
@@ -72,7 +72,7 @@ export default function DispensacionStep3ReviewSubmit({
     const [isLoading, setIsLoading] = useState(false);
     const [loadingAreasDestino, setLoadingAreasDestino] = useState(false);
     const [areasDestinoDisponibles, setAreasDestinoDisponibles] = useState<AreaOperativaDestinoOption[]>([]);
-    const toast = useToast();
+    const toast = useAppToast();
     const endPoints = useMemo(() => new EndPointsURL(), []);
 
     useEffect(() => {

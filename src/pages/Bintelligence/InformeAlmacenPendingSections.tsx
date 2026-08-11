@@ -23,8 +23,8 @@ import {
     Tr,
     useBreakpointValue,
     useDisclosure,
-    useToast,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -250,7 +250,7 @@ export function PendingPurchaseOrdersSection({
         fetchPage: fetchPendingPurchaseOrdersPage,
     });
     const [downloading, setDownloading] = useState(false);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const downloadExcel = async () => {
         if (report.ordenes === 0 || downloading) return;
@@ -484,7 +484,7 @@ export function OpenProductionOrdersSection({
         "DISPENSADO" | "WIP" | null
     >(null);
     const help = useDisclosure();
-    const toast = useToast();
+    const toast = useAppToast();
     const materialDetail = usePagedDetail<OpMaterial>({
         contractVersion,
         cutoff,

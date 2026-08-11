@@ -22,10 +22,10 @@ import {
     Thead,
     Tr,
     VStack,
-    useToast,
     Field,
     List,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
@@ -93,7 +93,7 @@ function totalCostFromInsumos(insumos: Insumo[]): number {
 }
 
 export default function CrearDesdePlantillaTab() {
-    const toast = useToast();
+    const toast = useAppToast();
     const procesoRef = useRef<ProcesoProduccionCompleto>(emptyProceso());
 
     const [activeStep, setActiveStep] = useState<WizardStep>(0);

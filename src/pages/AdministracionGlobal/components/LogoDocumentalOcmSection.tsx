@@ -16,9 +16,9 @@ import {
     Thead,
     Tr,
     VStack,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
 import {
@@ -51,7 +51,7 @@ export default function LogoDocumentalOcmSection({
     identidadLegalPreview,
     identidadLegalVigente,
 }: LogoDocumentalOcmSectionProps) {
-    const toast = useToast();
+    const toast = useAppToast();
     const [vigente, setVigente] = useState<EmpresaLogoDocumentalVersion | null>(null);
     const [versiones, setVersiones] = useState<EmpresaLogoDocumentalVersion[]>([]);
     const [vigenteDataUrl, setVigenteDataUrl] = useState<string | null>(null);

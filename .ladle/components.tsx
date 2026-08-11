@@ -1,15 +1,13 @@
-import '@fontsource/arimo';
-import '../src/index.css';
+import "@fontsource/arimo"
+import type { GlobalProvider } from "@ladle/react"
 
-import { Steps, ChakraProvider } from '@chakra-ui/react';
-import type { GlobalProvider } from '@ladle/react';
-import { theme } from '../src/theme';
+import { Provider as AppProvider } from "../src/components/ui/provider"
+import { Toaster } from "../src/components/ui/toaster"
+import "../src/index.css"
 
-export const Provider: GlobalProvider = ({ children }) => {
-  return (
-    <>
-
-      <ChakraProvider value={theme}>{children}</ChakraProvider>
-    </>
-  );
-};
+export const Provider: GlobalProvider = ({ children }) => (
+  <AppProvider>
+    {children}
+    <Toaster />
+  </AppProvider>
+)

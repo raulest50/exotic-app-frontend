@@ -10,9 +10,9 @@ import {
     Stack,
     Stat,
     Text,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
@@ -37,7 +37,7 @@ export default function ReorderPointView({
     canSave,
     onMaterialUpdated,
 }: Props) {
-    const toast = useToast();
+    const toast = useAppToast();
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [estimate, setEstimate] = useState<PuntoReordenEstimadoDTO | null>(null);

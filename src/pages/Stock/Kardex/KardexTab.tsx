@@ -14,9 +14,9 @@ import {
   Thead,
   Tr,
   VStack,
-  useToast,
   Field,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import { format } from 'date-fns';
 import EndPointsURL from '../../../api/EndPointsURL';
@@ -33,7 +33,7 @@ type Props = {};
 type ModoFecha = 'UNICA' | 'RANGO';
 
 export function KardexTab(_: Props) {
-  const toast = useToast();
+  const toast = useAppToast();
   const today = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
 
   const [isProductoSelectorOpen, setIsProductoSelectorOpen] = useState(false);

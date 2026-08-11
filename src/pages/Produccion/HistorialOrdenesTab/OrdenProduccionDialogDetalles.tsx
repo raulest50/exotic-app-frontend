@@ -7,12 +7,12 @@ import {
     Stack,
     Text,
     Button,
-    useToast,
     Separator,
     Field,
     Dialog,
     Portal,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
@@ -95,7 +95,7 @@ export default function OrdenProduccionDialogDetalles({
     const [inputToken, setInputToken] = useState("");
     const [cancelLoading, setCancelLoading] = useState(false);
 
-    const toast = useToast();
+    const toast = useAppToast();
     const endPoints = useMemo(() => new EndPointsURL(), []);
 
     useEffect(() => {

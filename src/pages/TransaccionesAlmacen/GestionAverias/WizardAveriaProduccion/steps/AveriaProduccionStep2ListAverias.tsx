@@ -20,9 +20,9 @@ import {
     Td,
     Text,
     VStack,
-    useToast,
     Separator,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import { FiArrowRight, FiX } from 'react-icons/fi';
 import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL.tsx';
@@ -69,7 +69,7 @@ export default function AveriaProduccionStep2ListAverias({
     const [isLoading, setIsLoading] = useState(false);
     const [historialAverias, setHistorialAverias] = useState<HistorialAveria[]>([]);
     const [isLoadingHistorial, setIsLoadingHistorial] = useState(false);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const itemKey = (i: { productoId: string; loteId: number }) => `${i.productoId}|${i.loteId}`;
     const selectedKeys = new Set(averiaItems.map((i) => itemKey(i)));

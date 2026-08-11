@@ -1,4 +1,5 @@
-import { Steps, Box, Button, Flex, Heading, Input, useToast, Field } from '@chakra-ui/react';
+import { Steps, Box, Button, Flex, Heading, Input, Field } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import {useState} from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
@@ -15,7 +16,7 @@ interface Props {
 export default function DetalleModRecProd({recurso, setEstado, refreshSearch}:Props){
   const [editMode, setEditMode] = useState(false);
   const [recursoData, setRecursoData] = useState<RecursoProduccion>({...recurso});
-  const toast = useToast();
+  const toast = useAppToast();
   const endpoints = new EndPointsURL();
 
   const handleSave = async () => {

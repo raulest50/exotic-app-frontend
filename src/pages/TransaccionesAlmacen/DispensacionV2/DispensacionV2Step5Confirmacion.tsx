@@ -16,9 +16,9 @@ import {
     Thead,
     Tr,
     VStack,
-    useToast,
     Field,
 } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { finalizarDispensacionV2 } from "./DispensacionV2Service";
@@ -54,7 +54,7 @@ export default function DispensacionV2Step5Confirmacion({
     const [inputToken, setInputToken] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const toast = useToast();
+    const toast = useAppToast();
 
     const asignacionKey = useMemo(
         () => asignacion.ordenes.map((orden) => orden.ordenProduccionId).join("-"),

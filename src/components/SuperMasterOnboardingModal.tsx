@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Steps, Button, Input, Text, Progress, useToast, Field, Dialog, Portal } from "@chakra-ui/react";
+import { Steps, Button, Input, Text, Progress, Field, Dialog, Portal } from "@chakra-ui/react";
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import EndPointsURL from "../api/EndPointsURL";
 import { clearUserCache } from "../api/UserApi";
@@ -45,7 +46,7 @@ export default function SuperMasterOnboardingModal({ isOpen, onClose, onSuccess 
     const [confirmPassword, setConfirmPassword] = useState("");
     const [passwordStrength, setPasswordStrength] = useState({ strength: 0, color: "gray.200", text: "" });
     const [submitLoading, setSubmitLoading] = useState(false);
-    const toast = useToast();
+    const toast = useAppToast();
     const endPoints = new EndPointsURL();
 
     useEffect(() => {

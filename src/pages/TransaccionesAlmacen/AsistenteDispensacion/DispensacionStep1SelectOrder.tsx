@@ -14,8 +14,8 @@ import {
     Th,
     Thead,
     Tr,
-    useToast,
 } from '@chakra-ui/react';
+import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
 import {CasePackResponseDTO, DispensacionDTO, DispensacionResumenResponse, InsumoDesglosado, ItemPendienteReposicion, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
@@ -73,7 +73,7 @@ interface PaginatedResponse<T> {
 }
 
 export default function DispensacionStep1SelectOrder({setActiveStep, setDispensacion, setInsumosDesglosados, setOrdenProduccionId, setInsumosAnidados, setProductoId, setInsumosEmpaque, setCasePack, setCantidadProducir, setHistorialDispensaciones, setLotesPorMaterial, setLotesPorMaterialEmpaque, setItemsPendientesReposicion, setLotesPorReposicionAveria, refreshToken}: Props){
-    const toast = useToast();
+    const toast = useAppToast();
     const [ordenes, setOrdenes] = useState<OrdenDispensacionResumen[]>([]);
     const [page, setPage] = useState(0);
     const [size, setSize] = useState(10);
