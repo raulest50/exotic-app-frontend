@@ -20,8 +20,8 @@ if (unknownFlags.length > 0) {
   process.exit(2);
 }
 
-// During the migration, package.json opts into --allow-v2 explicitly. Remove
-// that flag once the final v3 cleanup is ready to make this check a strict gate.
+// Strict mode is the default and is also selected explicitly by package.json.
+// --allow-v2 and --baseline remain available only for historical comparison.
 const strict = flags.has("--strict") || (!flags.has("--allow-v2") && !flags.has("--baseline"));
 const showAll = flags.has("--all");
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -66,6 +66,10 @@ const legacyNamedImports = new Set([
   "FormErrorMessage",
   "FormHelperText",
   "FormLabel",
+  "InputLeftAddon",
+  "InputLeftElement",
+  "InputRightAddon",
+  "InputRightElement",
   "LightMode",
   "MenuButton",
   "MenuDivider",
@@ -136,7 +140,7 @@ const legacyNamedImports = new Set([
   "extendTheme",
   "useColorMode",
   "useColorModeValue",
-  "useSteps",
+  "useOutsideClick",
   "useToast",
 ]);
 
@@ -175,10 +179,14 @@ const legacyProps = new Set([
   "isIndeterminate",
   "isInvalid",
   "isLoaded",
+  "isLoading",
   "isOpen",
   "isReadOnly",
   "isRequired",
   "noOfLines",
+  "precision",
+  "spacingX",
+  "spacingY",
   "sx",
   "truncated",
 ]);
@@ -277,7 +285,8 @@ async function inspectFile(relativePath: string) {
             continue;
           }
           const propName = property.name.getText(sourceFile);
-          if (legacyProps.has(propName)) {
+          const isNativeCssColorScheme = propName === "colorScheme" && chakraComponent === "Span";
+          if (legacyProps.has(propName) && !isNativeCssColorScheme) {
             addFinding(
               sourceFile,
               property.name,

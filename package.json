@@ -12,7 +12,7 @@
     "serve": "serve -s dist",
     "ladle": "ladle serve",
     "chakra:typegen": "chakra typegen ./src/theme.ts",
-    "check:chakra-v3": "bun scripts/check-chakra-v3.ts --allow-v2"
+    "check:chakra-v3": "bun scripts/check-chakra-v3.ts --strict"
   },
   "dependencies": {
     "@chakra-ui/react": "3.36.1",
