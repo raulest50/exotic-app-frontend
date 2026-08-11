@@ -10,7 +10,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "serve": "serve -s dist",
-    "ladle": "ladle serve"
+    "ladle": "ladle serve",
+    "check:chakra-v3": "bun scripts/check-chakra-v3.ts --allow-v2"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",

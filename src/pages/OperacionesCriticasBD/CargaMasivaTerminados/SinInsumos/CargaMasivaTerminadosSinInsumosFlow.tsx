@@ -2,13 +2,17 @@ import {
     Box,
     Container,
     Flex,
+    Step,
     StepDescription,
+    StepIcon,
+    StepIndicator,
     StepNumber,
     StepSeparator,
     StepStatus,
+    Stepper,
+    StepTitle,
     useSteps,
 } from "@chakra-ui/react";
-import { Step, StepIcon, StepIndicator, Stepper, StepTitle } from "@chakra-ui/icons";
 import { useState } from "react";
 import SinInsumosStep1Informacion from "./steps/SinInsumosStep1Informacion";
 import SinInsumosStep2SubirValidar from "./steps/SinInsumosStep2SubirValidar";

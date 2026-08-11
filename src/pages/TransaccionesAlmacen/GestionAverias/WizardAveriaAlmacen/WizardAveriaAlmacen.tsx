@@ -4,13 +4,17 @@ import {
     Button,
     Container,
     Flex,
+    Step,
     StepDescription,
+    StepIcon,
+    StepIndicator,
     StepNumber,
     StepSeparator,
     StepStatus,
+    Stepper,
+    StepTitle,
     useSteps,
 } from '@chakra-ui/react';
-import { Step, StepIcon, StepIndicator, Stepper, StepTitle } from '@chakra-ui/icons';
 import AveriaAlmacenStep0SelectMaterial from './steps/AveriaAlmacenStep0SelectMaterial';
 import AveriaAlmacenStep1Quantities from './steps/AveriaAlmacenStep1Quantities';
 import AveriaAlmacenStep2ReviewSubmit from './steps/AveriaAlmacenStep2ReviewSubmit';

@@ -1,7 +1,6 @@
 import {useState} from 'react';
-import {Box, Flex, StepDescription, StepNumber, StepSeparator, StepStatus, useSteps} from '@chakra-ui/react';
+import {Box, Flex, Step, StepDescription, StepIcon, StepIndicator, StepNumber, StepSeparator, StepStatus, Stepper, StepTitle, useSteps} from '@chakra-ui/react';
 import {IncorporacionActivoDto, OrdenCompraActivo} from "../types.tsx";
-import {Step, StepIcon, StepIndicator, Stepper, StepTitle} from "@chakra-ui/icons";
 import {ActivosFijosStep0SelectType} from "./step_zero/ActivosFijosStep0SelectType.tsx";
 import {ActivosFijosStep1Form} from "./step_one/ActivosFijosStep1Form.tsx";
 import {ActivosFijosStep2UploadInvoice} from "./step_two/ActivosFijosStep2UploadInvoice.tsx";

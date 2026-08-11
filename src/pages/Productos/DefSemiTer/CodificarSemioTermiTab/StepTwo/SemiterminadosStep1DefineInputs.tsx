@@ -1,12 +1,11 @@
 // SemiterminadosStep1DefineInputs.tsx
 import React, { useState, useEffect } from "react";
 import { Producto, Insumo, ProductoSemiter } from "../../../types.tsx";
-import {Button, Flex, HStack, StatHelpText, useToast, VStack} from "@chakra-ui/react";
+import {Button, Flex, HStack, Stat, StatHelpText, StatLabel, StatNumber, useToast, VStack} from "@chakra-ui/react";
 import SemioterBriefCard from "../../../components/SemioterBriefCard.tsx";
 import BandejaBusqueda from "./BandejaBusqueda.tsx";
 import BandejaSeleccion from "./BandejaSeleccion.tsx";
 import cloneDeep from "lodash/cloneDeep";
-import {Stat, StatLabel, StatNumber} from "@chakra-ui/icons";
 
 interface Props {
     setActiveStep: (step: number) => void;

@@ -1,5 +1,4 @@
-import {Box, Container, Flex, StepDescription, StepNumber, StepSeparator, StepStatus, useSteps} from '@chakra-ui/react';
-import {Step, StepIcon, StepIndicator, Stepper, StepTitle} from '@chakra-ui/icons';
+import {Box, Container, Flex, Step, StepDescription, StepIcon, StepIndicator, StepNumber, StepSeparator, StepStatus, Stepper, StepTitle, useSteps} from '@chakra-ui/react';
 import {useState} from 'react';
 import DispensacionStep1SelectOrder from './DispensacionStep1SelectOrder.tsx';
 import DispensacionStep2EditItems from './DispensacionStep2EditItems.tsx';

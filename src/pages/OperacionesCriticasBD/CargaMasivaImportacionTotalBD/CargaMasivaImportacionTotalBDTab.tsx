@@ -3,14 +3,18 @@ import {
     Button,
     Container,
     Flex,
+    Step,
     StepDescription,
+    StepIcon,
+    StepIndicator,
     StepNumber,
     StepSeparator,
     StepStatus,
+    Stepper,
+    StepTitle,
     useColorModeValue,
     useSteps,
 } from "@chakra-ui/react";
-import { Step, StepIcon, StepIndicator, Stepper, StepTitle } from "@chakra-ui/icons";
 import { useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import ImportacionTotalBDStep0Informacion from "./steps/ImportacionTotalBDStep0Informacion";

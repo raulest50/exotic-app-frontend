@@ -25,10 +25,15 @@ import {
     Stat,
     StatLabel,
     StatNumber,
+    Step,
     StepDescription,
+    StepIcon,
+    StepIndicator,
     StepNumber,
     StepSeparator,
     StepStatus,
+    Stepper,
+    StepTitle,
     Table,
     TableContainer,
     Tbody,
@@ -42,7 +47,6 @@ import {
     useToast,
     VStack,
 } from "@chakra-ui/react";
-import { Step, StepIcon, StepIndicator, Stepper, StepTitle } from "@chakra-ui/icons";
 import axios from "axios";
 import { ChangeEvent, useMemo, useState } from "react";
 import { FaArrowLeft, FaDownload, FaFileExcel, FaRedo } from "react-icons/fa";
