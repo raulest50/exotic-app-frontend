@@ -1,0 +1,91 @@
+# Command: bunx tsc --noEmit --project tsconfig.json --pretty false
+# Baseline commit: 26cf8260e4d5b8180fa855a85893c0633c2ea97b
+# Diagnostics: 92
+# Unique normalized signatures: 82
+# Normalization: relative paths use /; absolute repository-root occurrences in messages become <repo>.
+# Multiline messages: trim each continuation line and join all message parts with one ASCII space.
+# Ordering and encoding: deduplicate and sort with ordinal comparison; encode as UTF-8 with LF endings.
+# Hash scope: the 82 signature lines below, excluding this header and including the final LF.
+# SHA-256: 6c9ec3382ff01d14743e21f862e8c710355db967b607a1ed03941c3bbc6b23fb
+src/components/BetterPagination/BetterPagination.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/components/CustomDecimalInput/CustomDecimalInput.stories.tsx|TS6133|'HStack' is declared but its value is never read.
+src/components/CustomDecimalInput/CustomDecimalInput.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/components/CustomDecimalInput/CustomDecimalInput.tsx|TS6133|'useColorModeValue' is declared but its value is never read.
+src/components/DocSuppUploader/DocSuppUploader.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/components/DocSuppUploader/DocSuppUploader.tsx|TS6133|'Box' is declared but its value is never read.
+src/components/FileChooser/FileChooser.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/components/HeaderHexEf/HeaderHexEf.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/components/Pickers/AreaPickerGeneric/AreaPickerGeneric.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/components/Pickers/MaterialByLotePicker/MaterialByLotePicker.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/components/Pickers/ProveedorPicker/ProveedorPicker.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/components/Pickers/UserPickerGeneric/UserPickerGeneric.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/components/Pickers/VendedorPicker/VendedorPicker.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/components/ProductoSelector/ProductoSelector.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/components/SplitText.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/components/reactbits/Metaballs.tsx|TS6133|'React' is declared but its value is never read.
+src/context/NotificationsContext.tsx|TS6133|'React' is declared but its value is never read.
+src/pages/ActivosFijos/Incorporacion/IncorporacionActivosFijos.tsx|TS2345|Argument of type '{}' is not assignable to parameter of type 'OrdenCompraActivo | (() => OrdenCompraActivo)'.
+src/pages/ActivosFijos/Incorporacion/step_one/ActivoGroup/ActivoGroup.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/pages/ActivosFijos/Incorporacion/step_one/ActivoGroup/ActivoGroup.tsx|TS6133|'DIVISAS' is declared but its value is never read.
+src/pages/ActivosFijos/Incorporacion/step_one/ActivoGroup/ActivoGroup.tsx|TS6133|'calcularSubtotal' is declared but its value is never read.
+src/pages/ActivosFijos/Incorporacion/step_one/ActivoGroup/ActivoGroup.tsx|TS7006|Parameter 'depreciacion' implicitly has an 'any' type.
+src/pages/ActivosFijos/Incorporacion/step_one/MetodoDepreciacion/MetodoDepreciacion.stories.tsx|TS6133|'React' is declared but its value is never read.
+src/pages/ActivosFijos/OC/ListaItemsOCA.tsx|TS2345|Argument of type 'number | undefined' is not assignable to parameter of type 'number'. Type 'undefined' is not assignable to type 'number'.
+src/pages/ActivosFijos/Reportes/EditarOCAFSeleccionada.tsx|TS2345|Argument of type '(prev: OrdenCompraActivo) => { fechaVencimiento: string; ordenCompraActivoId?: number | undefined; fechaEmision: Date; proveedor: Proveedor; ... 14 more ...; itemsOrdenCompra: ItemOrdenCompraActivo[]; }' is not assignable to parameter of type 'SetStateAction<OrdenCompraActivo>'. Type '(prev: OrdenCompraActivo) => { fechaVencimiento: string; ordenCompraActivoId?: number | undefined; fechaEmision: Date; proveedor: Proveedor; ... 14 more ...; itemsOrdenCompra: ItemOrdenCompraActivo[]; }' is not assignable to type '(prevState: OrdenCompraActivo) => OrdenCompraActivo'. Call signature return types '{ fechaVencimiento: string; ordenCompraActivoId?: number | undefined; fechaEmision: Date; proveedor: Proveedor; subTotal: number; iva: number; totalPagar: number; condicionPago: string; ... 10 more ...; itemsOrdenCompra: ItemOrdenCompraActivo[]; }' and 'OrdenCompraActivo' are incompatible. The types of 'fechaVencimiento' are incompatible between these types. Type 'string' is not assignable to type 'Date'.
+src/pages/ActivosFijos/Reportes/EditarOCAFSeleccionada.tsx|TS2345|Argument of type 'boolean | 0' is not assignable to parameter of type 'SetStateAction<boolean>'. Type '0' is not assignable to type 'SetStateAction<boolean>'.
+src/pages/ActivosFijos/Reportes/EditarOCAFSeleccionada.tsx|TS6133|'DIVISAS' is declared but its value is never read.
+src/pages/ActivosFijos/Reportes/EditarOCAFSeleccionada.tsx|TS6133|'setListaItemsOrdenCompra' is declared but its value is never read.
+src/pages/AreaOperativaPanel/AreaOperativaMpsSemanalTab.tsx|TS18047|'mps' is possibly 'null'.
+src/pages/Clientes/consultar/DetalleCliente.tsx|TS2304|Cannot find name 'useAuth'.
+src/pages/Clientes/consultar/DetalleCliente.tsx|TS6133|'useEffect' is declared but its value is never read.
+src/pages/Clientes/consultar/DetalleCliente.tsx|TS6133|'user' is declared but its value is never read.
+src/pages/Compras/CrearOCM.tsx|TS6133|'response' is declared but its value is never read.
+src/pages/Compras/ExcelOCGenerator.tsx|TS2322|Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BlobPart'. Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'ArrayBufferView<ArrayBuffer>'. Types of property 'buffer' are incompatible. Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'. Type 'SharedArrayBuffer' is not assignable to type 'ArrayBuffer'. Types of property '[Symbol.toStringTag]' are incompatible. Type '"SharedArrayBuffer"' is not assignable to type '"ArrayBuffer"'.
+src/pages/Compras/OCM_PDF_Generator.tsx|TS6133|'formatCOP' is declared but its value is never read.
+src/pages/Compras/components/EditarOCMSeleccionada.tsx|TS2345|Argument of type 'boolean | 0' is not assignable to parameter of type 'SetStateAction<boolean>'. Type '0' is not assignable to type 'SetStateAction<boolean>'.
+src/pages/Compras/components/EditarOCMSeleccionada.tsx|TS6133|'response' is declared but its value is never read.
+src/pages/Compras/components/EditarOCMSeleccionada.tsx|TS7006|Parameter 'item' implicitly has an 'any' type.
+src/pages/Compras/components/ListaOrdenesCompra.tsx|TS6133|'axios' is declared but its value is never read.
+src/pages/Compras/components/ListaOrdenesCompra.tsx|TS6133|'endPoints' is declared but its value is never read.
+src/pages/Compras/components/OrdenCompraPicker.tsx|TS6133|'React' is declared but its value is never read.
+src/pages/Home.tsx|TS2345|Argument of type '{ moduloAccesos: ModuloAccesoFE[]; isMasterLike: boolean; }' is not assignable to parameter of type 'AccessSnapshot'. Type '{ moduloAccesos: ModuloAccesoFE[]; isMasterLike: boolean; }' is missing the following properties from type 'AccessSnapshot': isAreaResponsable, areaResponsable
+src/pages/OperacionesCriticasBD/EliminacionForzada/PurgaModulo/EliminacionPurgaModuloStep1Estudiar.tsx|TS2305|Module '"../types"' has no exported member 'PurgaModuloProductosSummaryDTO'.
+src/pages/OperacionesCriticasBD/EliminacionForzada/PurgaModulo/EliminacionPurgaModuloStep1Estudiar.tsx|TS2322|Type 'string | number | symbol' is not assignable to type 'Key | null | undefined'. Type 'symbol' is not assignable to type 'Key | null | undefined'.
+src/pages/OperacionesCriticasBD/EliminacionForzada/PurgaModulo/EliminacionPurgaModuloStep1Estudiar.tsx|TS2339|Property 'estudiar_purga_modulo_productos' does not exist on type 'EndPointsURL'.
+src/pages/OperacionesCriticasBD/EliminacionForzada/PurgaModulo/EliminacionPurgaModuloStep2Ejecutar.tsx|TS2305|Module '"../types"' has no exported member 'PurgaModuloProductosSummaryDTO'.
+src/pages/OperacionesCriticasBD/EliminacionForzada/PurgaModulo/EliminacionPurgaModuloStep2Ejecutar.tsx|TS2322|Type 'string | number | symbol' is not assignable to type 'Key | null | undefined'. Type 'symbol' is not assignable to type 'Key | null | undefined'.
+src/pages/OperacionesCriticasBD/EliminacionForzada/PurgaModulo/EliminacionPurgaModuloStep2Ejecutar.tsx|TS2339|Property 'ejecutar_purga_modulo_productos' does not exist on type 'EndPointsURL'.
+src/pages/Organigrama/components/OrganizationChart.tsx|TS2322|Type '{ children: Element[]; nodes: OrganigramaNode[]; edges: Edge[]; nodeTypes: NodeTypes; onNodesChange: (changes: NodeChange<OrganigramaNode>[]) => void; ... 7 more ...; fitView: true; }' is not assignable to type 'IntrinsicAttributes & ReactFlowProps<OrganigramaNode, Edge> & RefAttributes<HTMLDivElement>'. Property 'nodesDeletable' does not exist on type 'IntrinsicAttributes & ReactFlowProps<OrganigramaNode, Edge> & RefAttributes<HTMLDivElement>'. Did you mean 'onNodesDelete'?
+src/pages/Produccion/CrearOrdenesProduccionTab/TerSemiTerCard.tsx|TS2345|Argument of type 'number' is not assignable to parameter of type 'string'.
+src/pages/Produccion/CrearOrdenesProduccionTab/TerSemiTerCard.tsx|TS6133|'axios' is declared but its value is never read.
+src/pages/Produccion/CrearOrdenesProduccionTab/TerSemiTerCard.tsx|TS6133|'e' is declared but its value is never read.
+src/pages/Produccion/CrearOrdenesProduccionTab/TerSemiTerCard.tsx|TS6133|'endPoints' is declared but its value is never read.
+src/pages/Produccion/CrearOrdenesProduccionTab/TerSemiTerCard.tsx|TS6133|'insumoFinal' is declared but its value is never read.
+src/pages/Produccion/CrearOrdenesProduccionTab/TerSemiTerCard.tsx|TS6133|'nuevoEstado' is declared but its value is never read.
+src/pages/Produccion/CrearOrdenesProduccionTab/TerSemiTerCard.tsx|TS6133|'useEffect' is declared but its value is never read.
+src/pages/Produccion/CrearOrdenesProduccionTab/TerSemiTerCard.tsx|TS6196|'InsumoWithStockResponse' is declared but never used.
+src/pages/Produccion/components/TerminadoSemiterminadoPicker.tsx|TS6133|'Producto' is declared but its value is never read.
+src/pages/Productos/DefProcesses/CreadorProcesos/Nodos/ProcesoNode.tsx|TS2322|Type 'unknown' is not assignable to type 'ReactNode'.
+src/pages/Productos/DefProcesses/CreadorProcesos/Nodos/ProcesoNode.tsx|TS2322|Type '{}' is not assignable to type 'ReactNode'.
+src/pages/Productos/DefProcesses/CreadorProcesos/components/ProcesoProduccionPicker/ProcesoProduccionPicker.stories.tsx|TS2554|Expected 0 arguments, but got 1.
+src/pages/Productos/DefProcesses/CreadorProcesos/components/ProcesoProduccionPicker/ProcesoProduccionPicker.stories.tsx|TS6133|'selectedProcesos' is declared but its value is never read.
+src/pages/Productos/DefProcesses/CreadorProcesos/components/ProcesoProduccionPicker/ProcesoProduccionPicker.stories.tsx|TS6133|'url' is declared but its value is never read.
+src/pages/Productos/DefProcesses/CreadorProcesos/components/ProcesoProduccionPicker/ProcesoProduccionPicker.stories.tsx|TS7009|'new' expression, whose target lacks a construct signature, implicitly has an 'any' type.
+src/pages/Productos/DefProcesses/ProcesosProduccion/ConsultaProcesosProduccion.tsx|TS6133|'Tooltip' is declared but its value is never read.
+src/pages/Productos/DefProcesses/ProcesosProduccion/EditarProcesoModal.tsx|TS6133|'RecursoProduccion' is declared but its value is never read.
+src/pages/Productos/DefSemiTer/CodificarSemioTermiTab/StepThree/PackagingTerminadoDefiner.tsx|TS6133|'useEffect' is declared but its value is never read.
+src/pages/Productos/DefSemiTer/consulta/DetalleProductoSemiTer.tsx|TS2345|Argument of type '"tipoMaterial"' is not assignable to parameter of type '"productoId" | "nombre" | "tipoUnidades" | "tipo_producto" | "observaciones" | "costo" | "inventareable" | "cantidadUnidad" | "fechaCreacion" | "ivaPercentual" | "prefijoLote" | "casePack" | "categoria" | "insumos"'.
+src/pages/Productos/DefSemiTer/consulta/ModSemioTerMFversions/ModificarSemiTerMFWizard.tsx|TS2307|Cannot find module '../../types.tsx' or its corresponding type declarations.
+src/pages/Productos/DefSemiTer/consulta/ModSemioTerMFversions/StepThree/StepThree_ModProdMF.tsx|TS2322|Type 'CasePack | undefined' is not assignable to type 'CasePack | null | undefined'. Type 'import("<repo>/src/pages/Productos/types").CasePack' is not assignable to type 'CasePack'. Types of property 'insumosEmpaque' are incompatible. Type 'CasePackInsumo[] | undefined' is not assignable to type 'InsumoEmpaque[]'. Type 'undefined' is not assignable to type 'InsumoEmpaque[]'.
+src/pages/Productos/DefSemiTer/consulta/ModSemioTerMFversions/StepTwo/BandejaSeleccion.tsx|TS2307|Cannot find module '../../../types.tsx' or its corresponding type declarations.
+src/pages/Productos/DefSemiTer/consulta/ModSemioTerMFversions/StepTwo/ItemBandejaBusqueda.tsx|TS2307|Cannot find module '../../../types.tsx' or its corresponding type declarations.
+src/pages/Productos/DefSemiTer/consulta/ModSemioTerMFversions/StepTwo/ItemBandejaSeleccion.tsx|TS2307|Cannot find module '../../../types.tsx' or its corresponding type declarations.
+src/pages/Stock/Kardex/KardexTab.tsx|TS6133|'KardexMovimientoRowDTO' is declared but its value is never read.
+src/pages/TransaccionesAlmacen/AsistenteDispensacion/DispensacionStep2EditItems.tsx|TS6133|'React' is declared but its value is never read.
+src/pages/TransaccionesAlmacen/AsistenteDispensacion/DispensacionStep2EditItems.tsx|TS6133|'productoId' is declared but its value is never read.
+src/pages/TransaccionesAlmacen/AsistenteDispensacion/DispensacionStep2EditItems.tsx|TS6133|'setDispensacion' is declared but its value is never read.
+src/pages/TransaccionesAlmacen/AsistenteDispensacion/DispensacionStep2EditItems.tsx|TS6133|'useEffect' is declared but its value is never read.
+src/pages/TransaccionesAlmacen/AsistenteDispensacion/DispensacionStep3ReviewSubmit.tsx|TS18048|'lotesPorMaterial' is possibly 'undefined'.
+src/pages/TransaccionesAlmacen/AsistenteDispensacion/ResumenHistorialDispensaciones.tsx|TS2322|Type 'MovimientoDetalle[] | readonly []' is not assignable to type 'MovimientoDetalle[]'. The type 'readonly []' is 'readonly' and cannot be assigned to the mutable type 'MovimientoDetalle[]'.
+src/pages/TransaccionesAlmacen/AsistenteIngresoOCM/ingresoOcmMappers.ts|TS2352|Conversion of type 'Record<string, unknown>' to type 'ItemOrdenCompra' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first. Type 'Record<string, unknown>' is missing the following properties from type 'ItemOrdenCompra': material, cantidad, precioUnitario, ivaCOP, and 3 more.
+src/pages/Ventas/TabsContent/CrearVendedor.tsx|TS6133|'selectedUser' is declared but its value is never read.
