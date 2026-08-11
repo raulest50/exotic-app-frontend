@@ -5,11 +5,6 @@ import {
   NativeSelect,
   Button,
   Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Spinner,
   Field,
 } from '@chakra-ui/react';
@@ -97,7 +92,7 @@ export default function BuscarTranOcmAsentar() {
       </Flex>
 
       <Flex direction="column" w="full">
-        <Table.Root variant="simple" size="sm">
+        <Table.Root variant="line" size="sm">
           <Table.Header>
             <Table.Row>
               <Table.ColumnHeader>ID</Table.ColumnHeader>

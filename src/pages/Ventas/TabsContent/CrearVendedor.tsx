@@ -8,7 +8,6 @@ import {
     Alert,
     Text,
     InputGroup,
-    InputRightElement,
     IconButton,
     Field,
 } from "@chakra-ui/react";
@@ -409,7 +408,17 @@ const CrearVendedor: React.FC<CrearVendedorProps> = ({ onVendorCreated }) => {
 
                                                 <Field.Root required invalid={touchedFields.userId && !!formErrors.userId}>
                                                     <Field.Label>ID de usuario</Field.Label>
-                                                    <InputGroup>
+                                                    <InputGroup
+                                                        endElement={(
+                                                            <IconButton
+                                                                aria-label="Buscar usuario"
+                                                                size="sm"
+                                                                onClick={handleOpenUserPicker}
+                                                            >
+                                                                <LuSearch />
+                                                            </IconButton>
+                                                        )}
+                                                    >
                                                         <Input
                                                             name="userId"
                                                             value={formData.userId}
@@ -417,9 +426,6 @@ const CrearVendedor: React.FC<CrearVendedorProps> = ({ onVendorCreated }) => {
                                                             placeholder="Seleccione un usuario"
                                                             bg="app.inputReadonly"
                                                         />
-                                                        <InputRightElement>
-                                                            <IconButton aria-label="Buscar usuario" size="sm" onClick={handleOpenUserPicker}><LuSearch /></IconButton>
-                                                        </InputRightElement>
                                                     </InputGroup>
                                                     <Field.ErrorText>{formErrors.userId}</Field.ErrorText>
                                                 </Field.Root>

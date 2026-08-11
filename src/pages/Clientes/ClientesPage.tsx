@@ -1,6 +1,6 @@
-import { Container, Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
+import { useState } from "react";
+import { Container, Tabs } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader.tsx";
-import { my_style_tab } from "../../styles/styles_general.tsx";
 import CodificarCliente from "./CodificarCliente.tsx";
 import { ConsultarClientes } from "./consultar/ConsultarClientes.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
@@ -10,6 +10,7 @@ import type { AccessRule } from "../../auth/accessModel.ts";
 
 const ClientesPage: React.FC = () => {
     const access = useAccessSnapshot();
+    const [selectedTab, setSelectedTab] = useState("");
 
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
         {
@@ -27,21 +28,38 @@ const ClientesPage: React.FC = () => {
     ];
 
     const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));
+    const activeTab = visibleTabs.some((tab) => tab.key === selectedTab)
+        ? selectedTab
+        : (visibleTabs[0]?.key ?? "");
 
     return (
         <Container minW={['auto', 'container.lg', 'container.xl']} w={'full'} h={'full'}>
             <MyHeader title={'Gestión de Clientes'} />
-            <Tabs.Root fitted gap="1em" variant='line'>
+            <Tabs.Root
+                fitted
+                gap="1em"
+                variant="line"
+                value={activeTab}
+                onValueChange={({ value }) => setSelectedTab(value)}
+            >
                 <Tabs.List>
                     {visibleTabs.map((tab) => (
-                        <Tab key={tab.key} sx={my_style_tab}>{tab.label}</Tab>
+                        <Tabs.Trigger
+                            key={tab.key}
+                            value={tab.key}
+                            borderRadius={0}
+                            _active={{ bg: "app.tabSelected" }}
+                            _selected={{ bg: "app.tabSelected" }}
+                        >
+                            {tab.label}
+                        </Tabs.Trigger>
                     ))}
                 </Tabs.List>
-                <TabPanels>
-                    {visibleTabs.map((tab) => (
-                        <TabPanel key={tab.key}>{tab.render()}</TabPanel>
-                    ))}
-                </TabPanels>
+                {visibleTabs.map((tab) => (
+                    <Tabs.Content key={tab.key} value={tab.key}>
+                        {tab.render()}
+                    </Tabs.Content>
+                ))}
             </Tabs.Root>
         </Container>
     );

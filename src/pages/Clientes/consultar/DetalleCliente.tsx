@@ -11,6 +11,7 @@ import {
     Input,
     Icon,
     HStack,
+    chakra,
 } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { FaFileCircleQuestion, FaFileCircleCheck } from 'react-icons/fa6';
@@ -166,19 +167,19 @@ export function DetalleCliente({cliente,setEstado,setClienteSeleccionado,refresh
                 <Grid templateColumns='repeat(2,1fr)' gap={6} mt={6}>
                     <GridItem>
                         <VStack gap={4} align='center'>
-                            <Field.Label>RUT</Field.Label>
+                            <chakra.label htmlFor='cliente-rut-file' fontWeight='medium'>RUT</chakra.label>
                             <Icon as={rutFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize='4em' color={rutFile ? 'green' : 'orange.500'} />
                             <Button onClick={()=>rutInputRef.current?.click()}>Seleccionar archivo</Button>
-                            <Input type='file' ref={rutInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleRutChange}/>
+                            <Input id='cliente-rut-file' type='file' ref={rutInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleRutChange}/>
                             {rutFile && <Text>{rutFile.name}</Text>}
                         </VStack>
                     </GridItem>
                     <GridItem>
                         <VStack gap={4} align='center'>
-                            <Field.Label>Cámara y Comercio</Field.Label>
+                            <chakra.label htmlFor='cliente-camara-file' fontWeight='medium'>Cámara y Comercio</chakra.label>
                             <Icon as={camaraFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize='4em' color={camaraFile ? 'green' : 'orange.500'} />
                             <Button onClick={()=>camaraInputRef.current?.click()}>Seleccionar archivo</Button>
-                            <Input type='file' ref={camaraInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleCamaraChange}/>
+                            <Input id='cliente-camara-file' type='file' ref={camaraInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleCamaraChange}/>
                             {camaraFile && <Text>{camaraFile.name}</Text>}
                         </VStack>
                     </GridItem>

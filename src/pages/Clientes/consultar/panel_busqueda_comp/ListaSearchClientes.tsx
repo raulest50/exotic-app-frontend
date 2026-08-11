@@ -1,4 +1,4 @@
-import { Box, Table, Thead, Tbody, Tr, Th, Td, Button, Text } from '@chakra-ui/react';
+import { Box, Table, Button, Text } from '@chakra-ui/react';
 import { Cliente } from '../../types.tsx';
 
 interface Props{
@@ -9,7 +9,7 @@ interface Props{
 export function ListaSearchClientes({clientes,onVerDetalle}:Props){
     return (
         <Box overflowX='auto' width='100%'>
-            <Table.Root variant='simple' size='sm'>
+            <Table.Root variant='line' size='sm'>
                 <Table.Header>
                     <Table.Row>
                         <Table.ColumnHeader>ID</Table.ColumnHeader>
