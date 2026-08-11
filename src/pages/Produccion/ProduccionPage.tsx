@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type JSX } from "react";
 import { Box, Container, Tabs } from "@chakra-ui/react";
 
 import MyHeader from "../../components/MyHeader.tsx";

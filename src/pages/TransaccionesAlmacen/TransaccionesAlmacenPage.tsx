@@ -4,7 +4,7 @@ import AsistenteIngresoMercancia from "./AsistenteIngresoOCM/AsistenteIngresoMer
 import { AsistenteDispensacion } from "./AsistenteDispensacion/AsistenteDispensacion.tsx";
 import AjustesInventarioTab from "./AjustesInventario/AjustesInventarioTab";
 import { HistorialDispensaciones } from "./HistorialDispensaciones/HistorialDispensaciones.tsx";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type JSX } from "react";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
 import { useAuth } from "../../context/AuthContext";

@@ -8,6 +8,8 @@ import { tabAccessRule } from "../../auth/accessHelpers.ts";
 import { useAccessSnapshot } from "../../auth/usePermissions";
 import type { AccessRule } from "../../auth/accessModel.ts";
 
+import type { JSX } from "react";
+
 export default function GestionAreasOperativasPage() {
     const access = useAccessSnapshot();
 

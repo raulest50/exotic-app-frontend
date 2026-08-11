@@ -5,7 +5,7 @@ import {
     Spinner,
     Text,
 } from "@chakra-ui/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type JSX } from "react";
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
 import MyHeader from "../../components/MyHeader";

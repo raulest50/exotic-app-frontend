@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type JSX } from 'react';
 import { Button, Flex, Tabs } from '@chakra-ui/react';
 import { FaArrowLeft } from 'react-icons/fa';
 import CodificarMaterialesTab from './CodificarMaterialesTab.tsx';

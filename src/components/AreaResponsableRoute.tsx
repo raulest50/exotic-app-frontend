@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type JSX } from "react";
 import { Navigate } from "react-router-dom";
 import { Center, Spinner, Text } from "@chakra-ui/react";
 import { useAuth } from "../context/AuthContext.tsx";

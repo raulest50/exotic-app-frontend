@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type JSX } from "react";
 import { Container, Flex, Tabs } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader.tsx";
 import { IncorporarPersonal } from "./IncorporarPersonal.tsx";

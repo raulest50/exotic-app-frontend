@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, type JSX } from "react";
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import { Box, ButtonGroup, IconButton } from "@chakra-ui/react";
 import { Tooltip } from '@/components/ui/tooltip';

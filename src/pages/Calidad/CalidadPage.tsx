@@ -9,6 +9,8 @@ import VersionadoControlProcesoTab from "./VersionadoControlProcesoTab";
 import DiligenciarControlProcesoTab from "./DiligenciarControlProcesoTab";
 import HistorialControlProcesoTab from "./HistorialControlProcesoTab";
 
+import type { JSX } from "react";
+
 export default function CalidadPage() {
     const access = useAccessSnapshot();
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, type JSX } from 'react';
 import { Container, Tabs } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader.tsx";
 import CrearVendedor from './TabsContent/CrearVendedor';
