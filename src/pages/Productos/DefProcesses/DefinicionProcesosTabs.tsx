@@ -10,7 +10,7 @@
  * de producción.
  */
 
-import { Button, Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
+import { Button, Flex, Tabs } from '@chakra-ui/react';
 import {FaArrowLeft} from 'react-icons/fa';
 import DefinicionProcesosTab from './ProcesosProduccion/DefinicionProcesosTab.tsx';
 import CrearRecursoProduccion from './RecursosProduccion/CrearRecursoProduccion.tsx';
@@ -27,27 +27,27 @@ export function DefinicionProcesosTabs({onBack}: Props) {
         <Flex direction={'column'} gap={4} w="full" h="full">
             <Button w="fit-content" onClick={onBack}><FaArrowLeft />Volver
                             </Button>
-            <Tabs.Root fitted gap="1em" variant='line'>
+            <Tabs.Root fitted gap="1em" variant='line' defaultValue="definicion-procesos">
                 <Tabs.List>
-                    <Tab sx={my_style_tab}>Definición de Procesos</Tab>
-                    <Tab sx={my_style_tab}>Consultar Procesos de Produccion</Tab>
-                    <Tab sx={my_style_tab}>Crear Recurso Producción</Tab>
-                    <Tab sx={my_style_tab}>Consulta Recursos Producción</Tab>
+                    <Tabs.Trigger value="definicion-procesos" css={my_style_tab}>Definición de Procesos</Tabs.Trigger>
+                    <Tabs.Trigger value="consultar-procesos" css={my_style_tab}>Consultar Procesos de Produccion</Tabs.Trigger>
+                    <Tabs.Trigger value="crear-recurso" css={my_style_tab}>Crear Recurso Producción</Tabs.Trigger>
+                    <Tabs.Trigger value="consultar-recursos" css={my_style_tab}>Consulta Recursos Producción</Tabs.Trigger>
                 </Tabs.List>
-                <TabPanels>
-                    <TabPanel>
+                <Tabs.ContentGroup>
+                    <Tabs.Content value="definicion-procesos">
                         <DefinicionProcesosTab />
-                    </TabPanel>
-                    <TabPanel>
+                    </Tabs.Content>
+                    <Tabs.Content value="consultar-procesos">
                         <ConsultaProcesosProduccion />
-                    </TabPanel>
-                    <TabPanel>
+                    </Tabs.Content>
+                    <Tabs.Content value="crear-recurso">
                         <CrearRecursoProduccion />
-                    </TabPanel>
-                    <TabPanel>
+                    </Tabs.Content>
+                    <Tabs.Content value="consultar-recursos">
                         <ConsultaRecursosProduccion />
-                    </TabPanel>
-                </TabPanels>
+                    </Tabs.Content>
+                </Tabs.ContentGroup>
             </Tabs.Root>
         </Flex>
     );

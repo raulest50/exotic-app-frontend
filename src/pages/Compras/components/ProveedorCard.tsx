@@ -22,7 +22,7 @@ import {
     Proveedor,
 } from "../types.tsx"; // Adjust path if needed
 import ProveedorLeadTimeKpiHelpModal from "./ProveedorLeadTimeKpiHelpModal.tsx";
-import { LuHelpCircle } from 'react-icons/lu';
+import { LuCircleHelp } from 'react-icons/lu';
 
 interface ProveedorCardProps {
     selectedProveedor: Proveedor | null;
@@ -124,7 +124,7 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
                                     aria-label="Información del KPI de lead time proveedor"
                                     onClick={onOpen}
                                     size="sm"
-                                    variant="ghost"><LuHelpCircle /></IconButton>
+                                    variant="ghost"><LuCircleHelp /></IconButton>
                             </Tooltip>
                         </HStack>
                     </HStack>
@@ -165,7 +165,7 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
                     </HStack>
                 </Card.Body>
             </Card.Root>
-            <ProveedorLeadTimeKpiHelpModal isOpen={isOpen} onClose={onClose} />
+            <ProveedorLeadTimeKpiHelpModal isOpen={open} onClose={onClose} />
         </>
     );
 };

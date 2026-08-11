@@ -18,7 +18,7 @@ const ProveedorLeadTimeKpiHelpModal: React.FC<ProveedorLeadTimeKpiHelpModalProps
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>KPI de lead time del proveedor</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>KPI de lead time del proveedor</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <VStack align="stretch" gap={4}>

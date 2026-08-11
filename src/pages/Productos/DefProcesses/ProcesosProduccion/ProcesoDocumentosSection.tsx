@@ -8,13 +8,8 @@ import {
   Input,
   Spinner,
   Table,
-  Tbody,
-  Td,
   Text,
   Textarea,
-  Th,
-  Thead,
-  Tr,
   VStack,
   Field,
 } from '@chakra-ui/react';

@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Badge, Box, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr } from "@chakra-ui/react";
+import { Badge, Box, Table, Text } from "@chakra-ui/react";
 import type { ResumenCapacidadCategoriaRow } from "./step1Distribucion.utils";
 import { formatCantidad } from "./step1Distribucion.utils";
 
@@ -33,7 +33,7 @@ function ResumenCapacidadProductivaComponent({ rows }: ResumenCapacidadProductiv
                 Capacidad productiva por categoria
             </Text>
             <Table.ScrollArea w="full" overflowX="auto">
-                <Table.Root size="sm" variant="simple">
+                <Table.Root size="sm" variant="line">
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>Categoria</Table.ColumnHeader>

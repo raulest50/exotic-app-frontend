@@ -5,12 +5,6 @@ import {
     Input,
     Box,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Tfoot,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
@@ -90,7 +84,7 @@ const DialogCancelarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onOrdenCa
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Confirmar Cancelación</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Confirmar Cancelación</Dialog.Title></Dialog.Header>
                         <Dialog.Body>
                             {/* Detalles de la orden */}
                             <Box mb={4}>
@@ -104,7 +98,7 @@ const DialogCancelarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onOrdenCa
 
                             {/* Tabla de items */}
                             {orden.itemsOrdenCompra && orden.itemsOrdenCompra.length > 0 ? (
-                                <Table.Root variant='simple' size='sm' mb={4}>
+                                <Table.Root variant='line' size='sm' mb={4}>
                                     <Table.Header>
                                         <Table.Row>
                                             <Table.ColumnHeader>Descripción</Table.ColumnHeader>

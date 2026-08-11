@@ -5,13 +5,7 @@ import {
     Button,
     Input,
     InputGroup,
-    InputRightElement,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
     Spinner,
     Flex,
     Text,
@@ -113,18 +107,12 @@ export default function AreaOperativaPicker({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Seleccionar Area Operativa</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Seleccionar Area Operativa</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <Box mb={4}>
-                                <InputGroup>
-                                    <Input
-                                        value={searchNombre}
-                                        onChange={(e) => setSearchNombre(e.target.value)}
-                                        onKeyDown={handleKeyDown}
-                                        placeholder="Buscar por nombre..."
-                                    />
-                                    <InputRightElement width="auto" px={2}>
+                                <InputGroup
+                                    endElement={(
                                         <Button
                                             colorPalette="blue"
                                             size="sm"
@@ -133,7 +121,16 @@ export default function AreaOperativaPicker({
                                         >
                                             Buscar
                                         </Button>
-                                    </InputRightElement>
+                                    )}
+                                    endElementProps={{ width: "auto", px: 2 }}
+                                >
+                                    <Input
+                                        value={searchNombre}
+                                        onChange={(e) => setSearchNombre(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        placeholder="Buscar por nombre..."
+                                        pe="5rem"
+                                    />
                                 </InputGroup>
                             </Box>
 
@@ -148,7 +145,7 @@ export default function AreaOperativaPicker({
                             ) : (
                                 <>
                                     <Box borderWidth="1px" borderRadius="lg" overflow="hidden">
-                                        <Table.Root variant="simple" size="sm">
+                                        <Table.Root variant="line" size="sm">
                                             <Table.Header>
                                                 <Table.Row>
                                                     <Table.ColumnHeader>ID</Table.ColumnHeader>

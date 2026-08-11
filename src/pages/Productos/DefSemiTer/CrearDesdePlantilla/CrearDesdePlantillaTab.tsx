@@ -13,13 +13,8 @@ import {
     Spinner,
     Stat,
     Table,
-    Tbody,
-    Td,
     Text,
     Textarea,
-    Th,
-    Thead,
-    Tr,
     VStack,
     Field,
     List,
@@ -552,7 +547,7 @@ export default function CrearDesdePlantillaTab() {
             )}
 
             {!loadingCategorias && categorias.length > 0 && (
-                <Table.Root variant="simple">
+                <Table.Root variant="line">
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>ID</Table.ColumnHeader>
@@ -606,14 +601,14 @@ export default function CrearDesdePlantillaTab() {
                         <Input
                             value={productoId}
                             onChange={(e) => setProductoId(normalizeProductId(e.target.value))}
-                            variant="filled"
+                            variant="subtle"
                         />
                     </Field.Root>
                 </GridItem>
                 <GridItem colSpan={2}>
                     <Field.Root required>
                         <Field.Label>Nombre</Field.Label>
-                        <Input value={nombre} onChange={(e) => setNombre(e.target.value)} variant="filled" />
+                        <Input value={nombre} onChange={(e) => setNombre(e.target.value)} variant="subtle" />
                     </Field.Root>
                 </GridItem>
                 <GridItem colSpan={1}>
@@ -634,7 +629,7 @@ export default function CrearDesdePlantillaTab() {
                             <Input
                                 value={cantidadUnidad}
                                 onChange={(e) => setCantidadUnidad(e.target.value)}
-                                variant="filled"
+                                variant="subtle"
                             />
                         </Field.Root>
                     </HStack>
@@ -642,13 +637,13 @@ export default function CrearDesdePlantillaTab() {
                 <GridItem colSpan={1}>
                     <Field.Root>
                         <Field.Label>Tipo de producto</Field.Label>
-                        <Input value="Terminado" variant="filled" readOnly />
+                        <Input value="Terminado" variant="subtle" readOnly />
                     </Field.Root>
                 </GridItem>
                 <GridItem colSpan={1}>
                     <Field.Root>
                         <Field.Label>Categoria</Field.Label>
-                        <Input value={selectedCategoria?.categoriaNombre ?? ""} variant="filled" readOnly />
+                        <Input value={selectedCategoria?.categoriaNombre ?? ""} variant="subtle" readOnly />
                     </Field.Root>
                 </GridItem>
                 <GridItem colSpan={3}>
@@ -661,7 +656,7 @@ export default function CrearDesdePlantillaTab() {
                                     setPrefijoLote(e.target.value);
                                     setPrefijoVerificado(false);
                                 }}
-                                variant="filled"
+                                variant="subtle"
                                 maxLength={20}
                                 readOnly={modoPrefijoLote === "automatico"}
                             />
@@ -696,7 +691,7 @@ export default function CrearDesdePlantillaTab() {
                         <Textarea
                             value={observaciones}
                             onChange={(e) => setObservaciones(e.target.value)}
-                            variant="filled"
+                            variant="subtle"
                         />
                     </Field.Root>
                 </GridItem>
@@ -812,7 +807,7 @@ export default function CrearDesdePlantillaTab() {
 
                         <Box w="full">
                             <Heading size="sm" mb={2}>Insumos</Heading>
-                            <Table.Root size="sm" variant="simple">
+                            <Table.Root size="sm" variant="line">
                                 <Table.Header>
                                     <Table.Row>
                                         <Table.ColumnHeader>Nombre</Table.ColumnHeader>

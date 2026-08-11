@@ -16,11 +16,6 @@ import {
   Flex,
   Input,
   Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
   Badge,
   Heading,
 } from '@chakra-ui/react';
@@ -155,7 +150,7 @@ export function ConsultaProcesosProduccion() {
 
       {/* Tabla de resultados */}
       <Box overflowX="auto">
-        <Table.Root size='sm' variant="simple">
+        <Table.Root size='sm' variant="line">
           <Table.Header>
             <Table.Row>
               <Table.ColumnHeader>ID</Table.ColumnHeader>

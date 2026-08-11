@@ -2,11 +2,6 @@ import React, { useState } from 'react';
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
     Box,
     Menu,
     IconButton,
@@ -61,7 +56,7 @@ const ListaOrdenesOCAF: React.FC<Props> = ({ ordenes, onEditarOrden, onEstadoAct
     return (
         <>
             <Box overflowX="auto" mt={4}>
-                <Table.Root variant="simple">
+                <Table.Root variant="line">
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>ID</Table.ColumnHeader>
@@ -95,41 +90,38 @@ const ListaOrdenesOCAF: React.FC<Props> = ({ ordenes, onEditarOrden, onEstadoAct
                                 <Table.Cell>{getEstadoOCAFText(orden.estado)}</Table.Cell>
                                 <Table.Cell onClick={(e) => e.stopPropagation()}>
                                     <Menu.Root>
-                                        <Menu.Trigger
-                                            aria-label='Opciones'
-                                            icon={<FiMoreVertical />}
-                                            variant='ghost'
-                                            size='sm'
-                                            asChild><IconButton /></Menu.Trigger>
+                                        <Menu.Trigger asChild>
+                                            <IconButton aria-label='Opciones' variant='ghost' size='sm'>
+                                                <FiMoreVertical />
+                                            </IconButton>
+                                        </Menu.Trigger>
                                         <Portal><Menu.Positioner><Menu.Content>
                                                     <Menu.Item
-                                                        icon={<FiEye />}
                                                         onSelect={() => onEditarOrden && onEditarOrden(orden)}
                                                         value='item-0'>
-                                                        Ver detalle
+                                                        <FiEye /> Ver detalle
                                                     </Menu.Item>
                                                     {orden.estado !== -1 && (
                                                         <Menu.Item
-                                                            icon={<FiDownload />}
                                                             disabled={downloadingId !== null}
                                                             onSelect={() => handleDownloadPdf(orden)}
                                                             value='item-1'>
+                                                            <FiDownload />
                                                             {downloadingId === orden.ordenCompraActivoId
                                                                 ? 'Generando PDF...'
                                                                 : 'Descargar PDF'}
                                                         </Menu.Item>
                                                     )}
                                                     {accessLevel >= 2 && (
-                                                        <Menu.Item icon={<FiEdit />} onSelect={() => setOrdenToUpdate(orden)} value='item-2'>
-                                                            Liberar / Enviar
+                                                        <Menu.Item onSelect={() => setOrdenToUpdate(orden)} value='item-2'>
+                                                            <FiEdit /> Liberar / Enviar
                                                         </Menu.Item>
                                                     )}
                                                     {accessLevel >= 2 && (
                                                         <Menu.Item
-                                                            icon={<FiXCircle />}
                                                             onSelect={() => setOrdenToCancel(orden)}
                                                             value='item-3'>
-                                                            Cancelar orden de compra AF
+                                                            <FiXCircle /> Cancelar orden de compra AF
                                                         </Menu.Item>
                                                     )}
                                                 </Menu.Content></Menu.Positioner></Portal>

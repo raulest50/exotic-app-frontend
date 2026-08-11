@@ -5,12 +5,7 @@ import {
     GridItem,
     Heading,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
 } from '@chakra-ui/react';
 import type { CasePack, Insumo, Material, Producto } from '../../types.tsx';
 

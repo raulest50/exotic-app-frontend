@@ -2,12 +2,6 @@
 import React from 'react';
 import {
     Table,
-    Thead,
-    Tbody,
-    Tfoot,
-    Tr,
-    Th,
-    Td,
     Input,
     Button,
     Box,
@@ -52,7 +46,7 @@ const ListaItemsOCM: React.FC<OrdenCompraItemsProps> = ({
 
     return (
         <Box overflowX="auto" mt={4}>
-            <Table.Root variant="simple">
+            <Table.Root variant="line">
                 <Table.Header>
                     <Table.Row>
                         <Table.ColumnHeader>ID Materia Prima</Table.ColumnHeader>
@@ -63,11 +57,16 @@ const ListaItemsOCM: React.FC<OrdenCompraItemsProps> = ({
                         <Table.ColumnHeader textAlign='end'>
                             <Flex alignItems="center" justifyContent="flex-end">
                                 <Text mr={2}>IVA ({currency})</Text>
-                                <Switch 
+                                <Switch.Root
                                     checked={ivaEnabled} 
-                                    onValueChange={(e) => onToggleIva(e.target.checked)}
+                                    onCheckedChange={({ checked }) => onToggleIva(checked)}
                                     colorPalette="teal"
-                                />
+                                >
+                                    <Switch.HiddenInput />
+                                    <Switch.Control>
+                                        <Switch.Thumb />
+                                    </Switch.Control>
+                                </Switch.Root>
                             </Flex>
                         </Table.ColumnHeader>
                         <Table.ColumnHeader textAlign='end'>Subtotal ({currency})</Table.ColumnHeader>

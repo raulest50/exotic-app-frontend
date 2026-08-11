@@ -26,7 +26,7 @@ const ColorLegendModal: React.FC<ColorLegendModalProps> = ({ isOpen, onClose }) 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Convención de Colores</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Convención de Colores</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <Text mb={4}>

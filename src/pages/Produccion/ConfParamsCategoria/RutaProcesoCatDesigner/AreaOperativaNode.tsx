@@ -18,21 +18,21 @@ export default function AreaOperativaNode(props: NodeProps) {
         : 0;
     const requiereJornadaLaboral = data.requiereJornadaLaboral !== false;
 
-    const handleLeftHandleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleLeftHandleChange = (checked: boolean) => {
         setNodes((nodes) =>
             nodes.map((node) =>
                 node.id === props.id
-                    ? { ...node, data: { ...node.data, hasLeftHandle: e.target.checked } }
+                    ? { ...node, data: { ...node.data, hasLeftHandle: checked } }
                     : node
             )
         );
     };
 
-    const handleRightHandleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleRightHandleChange = (checked: boolean) => {
         setNodes((nodes) =>
             nodes.map((node) =>
                 node.id === props.id
-                    ? { ...node, data: { ...node.data, hasRightHandle: e.target.checked } }
+                    ? { ...node, data: { ...node.data, hasRightHandle: checked } }
                     : node
             )
         );
@@ -51,7 +51,7 @@ export default function AreaOperativaNode(props: NodeProps) {
                 >
                     <Checkbox.Root
                         checked={hasLeftHandle}
-                        onCheckedChange={handleLeftHandleChange}
+                        onCheckedChange={({ checked }) => handleLeftHandleChange(checked === true)}
                         colorPalette="purple"
                         size="lg"
                         title="Handle izquierdo"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control></Checkbox.Root>
@@ -69,7 +69,7 @@ export default function AreaOperativaNode(props: NodeProps) {
                 >
                     <Checkbox.Root
                         checked={hasRightHandle}
-                        onCheckedChange={handleRightHandleChange}
+                        onCheckedChange={({ checked }) => handleRightHandleChange(checked === true)}
                         colorPalette="purple"
                         size="lg"
                         title="Handle derecho"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control></Checkbox.Root>

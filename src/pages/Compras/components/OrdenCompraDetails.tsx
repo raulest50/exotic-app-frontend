@@ -5,12 +5,6 @@ import {
     Box,
     Text,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Tfoot,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
@@ -51,7 +45,7 @@ const OrdenCompraDetails: React.FC<OrdenCompraDetailsProps> = ({ isOpen, onClose
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Detalles de la Orden de Compra</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Detalles de la Orden de Compra</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <Box mb={4}>
@@ -81,7 +75,7 @@ const OrdenCompraDetails: React.FC<OrdenCompraDetailsProps> = ({ isOpen, onClose
                             <Box>
                                 <Text fontWeight="bold" mb={2}>Items de la Orden</Text>
                                 {orden.itemsOrdenCompra && orden.itemsOrdenCompra.length > 0 ? (
-                                    <Table.Root variant="simple" size="sm">
+                                    <Table.Root variant="line" size="sm">
                                         <Table.Header>
                                             <Table.Row>
                                                 <Table.ColumnHeader>ID</Table.ColumnHeader>

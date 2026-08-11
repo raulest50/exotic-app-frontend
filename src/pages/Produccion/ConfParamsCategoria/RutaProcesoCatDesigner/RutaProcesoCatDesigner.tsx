@@ -10,13 +10,7 @@ import {
     Input,
     Spinner,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     Switch,
     Separator,
     Field,
@@ -735,12 +729,17 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
 
                         <Field.Root display="flex" alignItems="center" gap={3} maxW={{ base: "full", md: "260px" }}>
                             <Field.Label mb={0}>Requiere jornada laboral</Field.Label>
-                            <Switch
+                            <Switch.Root
                                 colorPalette="purple"
                                 checked={selectedNode.data.requiereJornadaLaboral !== false}
-                                onValueChange={(event) => handleSelectedNodeJornadaChange(event.target.checked)}
+                                onCheckedChange={({ checked }) => handleSelectedNodeJornadaChange(checked)}
                                 disabled={isReadOnly}
-                            />
+                            >
+                                <Switch.HiddenInput />
+                                <Switch.Control>
+                                    <Switch.Thumb />
+                                </Switch.Control>
+                            </Switch.Root>
                         </Field.Root>
                     </Flex>
                 </Box>

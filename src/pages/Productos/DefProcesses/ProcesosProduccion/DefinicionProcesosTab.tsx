@@ -14,7 +14,6 @@ import {
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
-import {input_style} from '../../../../styles/styles_general.tsx';
 import {RecursoProduccion, ProcesoProduccionEntity, TimeModelType} from '../../types.tsx';
 import PPRPmanager from './PPRPmanager.tsx';
 import {
@@ -217,7 +216,7 @@ function DefinicionProcesosTab() {
               type="number"
               value={constantSeconds}
               onChange={(e) => setConstantSeconds(Number(e.target.value))}
-              sx={input_style}
+              bg="app.inputFilled" variant="subtle" borderRadius={0}
             />
             <Field.HelperText>
               Tiempo total = Setup Time + Tiempo Constante
@@ -233,7 +232,7 @@ function DefinicionProcesosTab() {
               value={throughputUnitsPerSec}
               onChange={(e) => setThroughputUnitsPerSec(Number(e.target.value))}
               step="any"
-              sx={input_style}
+              bg="app.inputFilled" variant="subtle" borderRadius={0}
             />
             <Field.HelperText>
               Tiempo total = Setup Time + (Unidades / Tasa de Rendimiento)
@@ -248,7 +247,7 @@ function DefinicionProcesosTab() {
               type="number"
               value={secondsPerUnit}
               onChange={(e) => setSecondsPerUnit(Number(e.target.value))}
-              sx={input_style}
+              bg="app.inputFilled" variant="subtle" borderRadius={0}
             />
             <Field.HelperText>
               Tiempo total = Setup Time + (Unidades * Tiempo por Unidad)
@@ -264,7 +263,7 @@ function DefinicionProcesosTab() {
                 type="number"
                 value={secondsPerBatch}
                 onChange={(e) => setSecondsPerBatch(Number(e.target.value))}
-                sx={input_style}
+                bg="app.inputFilled" variant="subtle" borderRadius={0}
               />
             </Field.Root>
             <Field.Root required>
@@ -273,7 +272,7 @@ function DefinicionProcesosTab() {
                 type="number"
                 value={batchSize}
                 onChange={(e) => setBatchSize(Number(e.target.value))}
-                sx={input_style}
+                bg="app.inputFilled" variant="subtle" borderRadius={0}
               />
               <Field.HelperText>
                 Tiempo total = Setup Time + Math.ceil(Unidades / Tamaño del Lote) * Tiempo por Lote
@@ -292,7 +291,7 @@ function DefinicionProcesosTab() {
       <VStack gap={4} align="stretch">
         <Field.Root required>
           <Field.Label>Nombre</Field.Label>
-          <Input value={nombre} onChange={(e) => setNombre(e.target.value)} sx={input_style} />
+          <Input value={nombre} onChange={(e) => setNombre(e.target.value)} bg="app.inputFilled" variant="subtle" borderRadius={0} />
         </Field.Root>
         <Field.Root>
           <Field.Label>Set-up Time (segundos)</Field.Label>
@@ -300,18 +299,18 @@ function DefinicionProcesosTab() {
             type="number"
             value={setUpTime}
             onChange={(e) => setSetUpTime(Number(e.target.value))}
-            sx={input_style}
+            bg="app.inputFilled" variant="subtle" borderRadius={0}
           />
         </Field.Root>
 
         {/* Selector de modelo de tiempo */}
         <Field.Root required>
           <Field.Label>Modelo de Tiempo</Field.Label>
-          <NativeSelect.Root>
+          <NativeSelect.Root variant="subtle">
             <NativeSelect.Field
               value={model}
               onChange={(e) => setModel(e.target.value as TimeModelType)}
-              sx={input_style}>
+              bg="app.inputFilled" borderRadius={0}>
               <option value={TimeModelType.CONSTANT}>Tiempo Constante</option>
               <option value={TimeModelType.THROUGHPUT_RATE}>Tasa de Rendimiento</option>
               <option value={TimeModelType.PER_UNIT}>Por Unidad</option>
@@ -333,7 +332,7 @@ function DefinicionProcesosTab() {
             type="number"
             value={nivelAcceso}
             onChange={(e) => setNivelAcceso(Number(e.target.value))}
-            sx={input_style}
+            bg="app.inputFilled" variant="subtle" borderRadius={0}
           />
           <Field.HelperText>
             Define qué usuarios pueden ver este proceso según su nivel de acceso

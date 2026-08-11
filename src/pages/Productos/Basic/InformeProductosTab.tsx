@@ -22,12 +22,6 @@ import {
     Button,
     NativeSelect,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    TableContainer,
     Field,
 } from "@chakra-ui/react";
 import { useRef, useState } from "react";
@@ -199,7 +193,7 @@ export default function InformeProductosTab() {
             </Flex>
 
             <Table.ScrollArea>
-                <Table.Root variant="striped" colorPalette="gray">
+                <Table.Root variant="line" striped colorPalette="gray">
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>ID</Table.ColumnHeader>

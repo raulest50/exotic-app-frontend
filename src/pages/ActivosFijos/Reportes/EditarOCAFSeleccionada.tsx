@@ -8,12 +8,6 @@ import {
     Input,
     NativeSelect,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Tfoot,
     Field,
 } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
@@ -271,7 +265,7 @@ export function EditarOCAFSeleccionada({ ocaf, onVolver, accessLevel }: Props) {
 
             {/* Tabla de items */}
             <Box overflowX="auto">
-                <Table.Root variant="simple" size="sm">
+                <Table.Root variant="line" size="sm">
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>ID</Table.ColumnHeader>

@@ -5,18 +5,11 @@ import {
   Flex,
   Input,
   NumberInput,
-  NumberInputField,
   Grid,
   GridItem,
   InputGroup,
-  InputRightElement,
   IconButton,
   Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Box,
   Text,
   Field,
@@ -210,7 +203,7 @@ const PackagingTerminadoDefiner: React.FC<Props> = ({ isOpen, onClose, onSave, i
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>Definir Packaging de Terminado</Dialog.Header>
+            <Dialog.Header><Dialog.Title>Definir Packaging de Terminado</Dialog.Title></Dialog.Header>
             <Dialog.CloseTrigger />
             <Dialog.Body>
               <Grid templateColumns="repeat(2, 1fr)" gap={6}>
@@ -224,19 +217,23 @@ const PackagingTerminadoDefiner: React.FC<Props> = ({ isOpen, onClose, onSave, i
                     {/* Search Input */}
                     <Field.Root mb={4}>
                       <Field.Label>Buscar Material</Field.Label>
-                      <InputGroup>
+                      <InputGroup
+                        endElement={(
+                          <IconButton
+                            aria-label="Buscar material"
+                            size="sm"
+                            onClick={searchMaterials}
+                            loading={isSearching}
+                          >
+                            <LuSearch />
+                          </IconButton>
+                        )}
+                      >
                         <Input
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                           placeholder="Nombre del material"
                         />
-                        <InputRightElement>
-                          <IconButton
-                            aria-label="Buscar material"
-                            size="sm"
-                            onClick={searchMaterials}
-                            loading={isSearching}><LuSearch /></IconButton>
-                        </InputRightElement>
                       </InputGroup>
                     </Field.Root>
                     
@@ -330,7 +327,7 @@ const PackagingTerminadoDefiner: React.FC<Props> = ({ isOpen, onClose, onSave, i
                       <NumberInput.Root
                         min={1}
                         value={String(casePack.unitsPerCase)}
-                        onValueChange={(_, value) => handleInputChange('unitsPerCase', value)}
+                        onValueChange={({ valueAsNumber }) => handleInputChange('unitsPerCase', valueAsNumber)}
                       >
                         <NumberInput.Input />
                       </NumberInput.Root>
@@ -356,7 +353,7 @@ const PackagingTerminadoDefiner: React.FC<Props> = ({ isOpen, onClose, onSave, i
                         <NumberInput.Root
                           min={0}
                           value={String(casePack.largoCm || "")}
-                          onValueChange={(_, value) => handleInputChange('largoCm', value)}
+                          onValueChange={({ valueAsNumber }) => handleInputChange('largoCm', valueAsNumber)}
                         >
                           <NumberInput.Input />
                         </NumberInput.Root>
@@ -367,7 +364,7 @@ const PackagingTerminadoDefiner: React.FC<Props> = ({ isOpen, onClose, onSave, i
                         <NumberInput.Root
                           min={0}
                           value={String(casePack.anchoCm || "")}
-                          onValueChange={(_, value) => handleInputChange('anchoCm', value)}
+                          onValueChange={({ valueAsNumber }) => handleInputChange('anchoCm', valueAsNumber)}
                         >
                           <NumberInput.Input />
                         </NumberInput.Root>
@@ -378,7 +375,7 @@ const PackagingTerminadoDefiner: React.FC<Props> = ({ isOpen, onClose, onSave, i
                         <NumberInput.Root
                           min={0}
                           value={String(casePack.altoCm || "")}
-                          onValueChange={(_, value) => handleInputChange('altoCm', value)}
+                          onValueChange={({ valueAsNumber }) => handleInputChange('altoCm', valueAsNumber)}
                         >
                           <NumberInput.Input />
                         </NumberInput.Root>
@@ -391,7 +388,7 @@ const PackagingTerminadoDefiner: React.FC<Props> = ({ isOpen, onClose, onSave, i
                       <NumberInput.Root
                         min={0}
                         value={String(casePack.grossWeightKg || "")}
-                        onValueChange={(_, value) => handleInputChange('grossWeightKg', value)}
+                        onValueChange={({ valueAsNumber }) => handleInputChange('grossWeightKg', valueAsNumber)}
                       >
                         <NumberInput.Input />
                       </NumberInput.Root>

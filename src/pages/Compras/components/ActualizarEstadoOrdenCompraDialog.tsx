@@ -5,11 +5,6 @@ import {
     Box,
     Text,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
     Input,
     HStack,
     VStack,
@@ -297,7 +292,7 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                 {orden.itemsOrdenCompra && orden.itemsOrdenCompra.length > 0 && (
                     <Box>
                         <Text fontWeight="bold" mb={2}>Items de la Orden</Text>
-                        <Table.Root variant="simple" size="sm">
+                        <Table.Root variant="line" size="sm">
                             <Table.Header>
                                 <Table.Row>
                                     <Table.ColumnHeader>ID</Table.ColumnHeader>
@@ -455,7 +450,7 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
     };
 
     return (
-        <Dialog.Root open={isOpen} size={["auto", "4xl"]} scrollBehavior="inside" onOpenChange={e => {
+        <Dialog.Root open={isOpen} size="xl" scrollBehavior="inside" onOpenChange={e => {
             if (!e.open) {
                 onClose();
             }
@@ -465,7 +460,7 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Actualizar Estado de la Orden de Compra</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Actualizar Estado de la Orden de Compra</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>{renderContent()}</Dialog.Body>
                         <Dialog.Footer>

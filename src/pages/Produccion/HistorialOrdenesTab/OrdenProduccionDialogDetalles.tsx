@@ -185,7 +185,7 @@ export default function OrdenProduccionDialogDetalles({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Detalles de Orden #{orden.ordenId}</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Detalles de Orden #{orden.ordenId}</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <Stack gap={4} separator={<Separator />}>

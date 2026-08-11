@@ -9,15 +9,7 @@ import {
     Box,
     Tag,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    TableContainer,
-    Spinner,
     Collapsible,
-    Button,
     Separator,
 } from '@chakra-ui/react';
 import { FaSearch, FaChevronDown, FaChevronUp, FaList } from 'react-icons/fa';
@@ -247,7 +239,7 @@ const TerSemiTerCard = ({ productoSeleccionado, canProduce, onSearchClick, canti
                                         </Text>
                                     </Flex>
 
-                                    <Table.Root variant="simple" size="sm" colorPalette="purple">
+                                    <Table.Root variant="line" size="sm" colorPalette="purple">
                                         <Table.Header bg="purple.100">
                                             <Table.Row>
                                                 <Table.ColumnHeader>Código</Table.ColumnHeader>
@@ -323,7 +315,7 @@ const TerSemiTerCard = ({ productoSeleccionado, canProduce, onSearchClick, canti
                                 </Text>
                             ) : (
                                 <Table.ScrollArea>
-                                    <Table.Root variant="simple" size="sm">
+                                    <Table.Root variant="line" size="sm">
                                         <Table.Header>
                                             <Table.Row>
                                                 <Table.ColumnHeader>Código</Table.ColumnHeader>

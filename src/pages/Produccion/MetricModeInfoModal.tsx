@@ -41,7 +41,7 @@ export default function MetricModeInfoModal({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Cómo interpretar los promedios</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Cómo interpretar los promedios</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <VStack align="stretch" gap={4}>

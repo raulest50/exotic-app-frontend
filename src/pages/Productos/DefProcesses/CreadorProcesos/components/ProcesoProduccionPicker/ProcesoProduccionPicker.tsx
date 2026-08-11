@@ -4,11 +4,6 @@ import {
   Flex,
   Input,
   Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
   Badge,
   Dialog,
   Portal,
@@ -155,7 +150,7 @@ export function ProcesoProduccionPicker({isOpen, onClose, onConfirm, alreadySele
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>Seleccionar Procesos de Producción</Dialog.Header>
+            <Dialog.Header><Dialog.Title>Seleccionar Procesos de Producción</Dialog.Title></Dialog.Header>
             <Dialog.CloseTrigger />
             <Dialog.Body>
               <Flex gap={4}>

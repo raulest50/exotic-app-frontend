@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import {
     Button,
     Flex,
-    SimpleGrid,
     Box,
     Text,
     IconButton,

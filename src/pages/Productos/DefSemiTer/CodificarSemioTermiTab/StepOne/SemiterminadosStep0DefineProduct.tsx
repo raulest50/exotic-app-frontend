@@ -22,7 +22,7 @@ import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL.tsx';
 import { ProductoSemiter, UNIDADES, TIPOS_PRODUCTOS, Categoria } from "../../../types.tsx";
 import { normalizeProductId, validateProductId } from "../../../productIdUtils.ts";
-import { LuCheck, LuHelpCircle } from 'react-icons/lu';
+import { LuCheck, LuCircleHelp } from 'react-icons/lu';
 
 /** Calcula el prefijo de lote a partir del nombre: primera letra de cada palabra en mayuscula. */
 function calcularPrefijoDesdeNombre(nombre: string): string {
@@ -351,7 +351,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                         <Input
                             value={productoId}
                             onChange={(e) => setProductoId(normalizeProductId(e.target.value))}
-                            variant="filled"
+                            variant="subtle"
                         />
                     </Field.Root>
                 </GridItem>
@@ -362,14 +362,14 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                         <Input
                             value={nombre}
                             onChange={(e) => setNombre(e.target.value)}
-                            variant="filled"
+                            variant="subtle"
                         />
                     </Field.Root>
                 </GridItem>
 
                 <GridItem colSpan={1}>
                     <Flex w="full" direction="row" align="flex-end" justify="space-around" gap={4}>
-                        <NativeSelect.Root>
+                        <NativeSelect.Root disabled={loadingCategorias || categoriasDisponibles.length === 0}>
                             <NativeSelect.Field
                                 flex="1"
                                 value={tipoUnidades}
@@ -386,7 +386,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                             <Input
                                 value={cantidadUnidad}
                                 onChange={(e) => setCantidadUnidad(e.target.value)}
-                                variant="filled"
+                                variant="subtle"
                             />
                         </Field.Root>
                     </Flex>
@@ -417,7 +417,6 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                             <NativeSelect.Field
                                 value={selectedCategoriaId || ""}
                                 onChange={(e) => setSelectedCategoriaId(Number(e.target.value))}
-                                disabled={loadingCategorias || categoriasDisponibles.length === 0}
                                 placeholder="Seleccione una categoria">
                                 {categoriasDisponibles.map((categoria) => (
                                     <option key={categoria.categoriaId} value={categoria.categoriaId}>
@@ -451,7 +450,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                                     setPrefijoLote(e.target.value);
                                     setPrefijoVerificado(false);
                                 }}
-                                variant="filled"
+                                variant="subtle"
                                 placeholder="Ej: TRK, SLA"
                                 maxLength={20}
                                 readOnly={modoPrefijoLote === "automatico"}
@@ -476,7 +475,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                                 aria-label="Ayuda prefijo de lote"
                                 size="sm"
                                 variant="outline"
-                                onClick={onHelpOpen}><LuHelpCircle /></IconButton>
+                                onClick={onHelpOpen}><LuCircleHelp /></IconButton>
                         </HStack>
                         {prefijoVerificado && (
                             <Text color="green.600" fontSize="sm" mt={1}>
@@ -492,7 +491,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                         <Textarea
                             value={observaciones}
                             onChange={(e) => setObservaciones(e.target.value)}
-                            variant="filled"
+                            variant="subtle"
                         />
                     </Field.Root>
                 </GridItem>
@@ -531,7 +530,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header>Prefijo de lote</Dialog.Header>
+                            <Dialog.Header><Dialog.Title>Prefijo de lote</Dialog.Title></Dialog.Header>
                             <Dialog.CloseTrigger />
                             <Dialog.Body pb={4}>
                                 <Text mb={2}>

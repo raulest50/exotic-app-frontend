@@ -179,7 +179,7 @@ export default function Step1CalcularDistribucion({
     if (isLoading) {
         return (
             <Flex direction="column" align="center" justify="center" py={16} gap={6}>
-                <Spinner borderWidth="4px" animationDuration="0.65s" emptyColor="gray.200" color="teal.500" size="xl" />
+                            <Spinner borderWidth="4px" animationDuration="0.65s" color="teal.500" size="xl" />
                 <Text fontSize="lg" color="gray.600">Procesando informe de ventas...</Text>
             </Flex>
         );
@@ -255,8 +255,11 @@ export default function Step1CalcularDistribucion({
                         </ButtonGroup>
 
                         <Menu.Root closeOnSelect={false}>
-                            <Menu.Trigger size="sm" variant="outline" asChild><Button>Columnas
-                                                                </Button><LuChevronDown /></Menu.Trigger>
+                            <Menu.Trigger asChild>
+                                <Button size="sm" variant="outline">
+                                    Columnas <LuChevronDown />
+                                </Button>
+                            </Menu.Trigger>
                             <Portal><Menu.Positioner><Menu.Content>
                                         <VStack align="stretch" gap={2}>
                                             {COLUMN_DEFINITIONS.map((column) => (

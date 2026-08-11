@@ -6,12 +6,7 @@ import {
     Input,
     NativeSelect,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
     Field,
     Dialog,
@@ -103,7 +98,7 @@ export default function OrdenCompraPicker({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Seleccionar orden de compra</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Seleccionar orden de compra</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <VStack gap={4} align="stretch">
@@ -149,7 +144,7 @@ export default function OrdenCompraPicker({
                                 <Box w="full" overflowX="auto">
                                     {ordenes.length > 0 ? (
                                         <>
-                                            <Table.Root variant="simple" size="sm">
+                                            <Table.Root variant="line" size="sm">
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>ID</Table.ColumnHeader>

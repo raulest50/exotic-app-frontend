@@ -135,11 +135,10 @@ export default function SemanaMPSPicker({
             <Flex gap={3} align="end" wrap="wrap">
                 <Field.Root maxW="150px">
                     <Field.Label>Anio ISO</Field.Label>
-                    <NativeSelect.Root>
+                    <NativeSelect.Root disabled={isDisabled || isLoading}>
                         <NativeSelect.Field
                             value={anioSemana}
-                            onChange={(event) => setAnioSemana(Number(event.target.value))}
-                            disabled={isDisabled || isLoading}>
+                            onChange={(event) => setAnioSemana(Number(event.target.value))}>
                             {yearOptions.map((year) => (
                                 <option key={year} value={year}>
                                     {year}
@@ -152,12 +151,11 @@ export default function SemanaMPSPicker({
 
                 <Field.Root minW={["100%", "360px"]} maxW="560px">
                     <Field.Label>Semana MPS</Field.Label>
-                    <NativeSelect.Root>
+                    <NativeSelect.Root disabled={isDisabled || isLoading}>
                         <NativeSelect.Field
                             value={value}
                             placeholder={isLoading ? "Cargando semanas..." : "Seleccione una semana"}
-                            onChange={(event) => handleWeekChange(event.target.value)}
-                            disabled={isDisabled || isLoading}>
+                            onChange={(event) => handleWeekChange(event.target.value)}>
                             {semanas.map((semana) => (
                                 <option key={semana.codigo} value={semana.startDate}>
                                     {buildSemanaOptionLabel(semana)}

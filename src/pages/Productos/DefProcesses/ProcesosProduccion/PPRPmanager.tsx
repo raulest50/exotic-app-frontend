@@ -3,16 +3,7 @@ import {
   Button,
   Flex,
   Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
   NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
 } from '@chakra-ui/react';
 import {useState} from 'react';
 import {RecursoProduccion} from '../../types.tsx';
@@ -81,7 +72,7 @@ export default function PPRPmanager({recursos, onChange, editMode = true}: Props
                   min={1} 
                   max={r.cantidadDisponible || 999} 
                   value={String(r.cantidad || 1)}
-                  onValueChange={(_, valueAsNumber) => handleCantidadChange(r.id, valueAsNumber)}
+                  onValueChange={({ valueAsNumber }) => handleCantidadChange(r.id, valueAsNumber)}
                   disabled={!editMode}
                 >
                   <NumberInput.Input />

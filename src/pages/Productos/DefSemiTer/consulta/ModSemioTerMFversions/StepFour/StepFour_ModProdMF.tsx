@@ -5,12 +5,7 @@ import {
     Flex,
     Heading,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
     List,
 } from "@chakra-ui/react";
@@ -97,7 +92,7 @@ export default function StepFour_ModProdMF({ setActiveStep, semioter3, onReset, 
                     {semioter3.insumos && semioter3.insumos.length > 0 && (
                         <Box w="full">
                             <Heading size="sm" mb={2}>Insumos</Heading>
-                            <Table.Root size="sm" variant="simple">
+                            <Table.Root size="sm" variant="line">
                                 <Table.Header>
                                     <Table.Row>
                                         <Table.ColumnHeader>Nombre</Table.ColumnHeader>

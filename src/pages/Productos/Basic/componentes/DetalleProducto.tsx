@@ -690,7 +690,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header>Configurar inventario y consumo</Dialog.Header>
+                            <Dialog.Header><Dialog.Title>Configurar inventario y consumo</Dialog.Title></Dialog.Header>
                             <Dialog.CloseTrigger />
                             <Dialog.Body>
                                 <VStack align="stretch" gap={4}>
@@ -702,16 +702,21 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                                     Usa almacén, stock y lotes en la dispensación.
                                                 </Text>
                                             </Box>
-                                            <Switch
+                                            <Switch.Root
                                                 checked={inventareableDraft}
-                                                onValueChange={(event) => {
-                                                    const nextValue = event.target.checked;
+                                                onCheckedChange={({ checked }) => {
+                                                    const nextValue = checked;
                                                     setInventareableDraft(nextValue);
                                                     if (nextValue) {
                                                         setConsumoDirectoDraft(false);
                                                     }
                                                 }}
-                                            />
+                                            >
+                                                <Switch.HiddenInput />
+                                                <Switch.Control>
+                                                    <Switch.Thumb />
+                                                </Switch.Control>
+                                            </Switch.Root>
                                         </HStack>
                                     </Field.Root>
                                     {!inventareableDraft && (
@@ -723,10 +728,15 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                                         Registra cantidad contra la OP sin modificar stock ni exigir lote.
                                                     </Text>
                                                 </Box>
-                                                <Switch
+                                                <Switch.Root
                                                     checked={consumoDirectoDraft}
-                                                    onValueChange={(event) => setConsumoDirectoDraft(event.target.checked)}
-                                                />
+                                                    onCheckedChange={({ checked }) => setConsumoDirectoDraft(checked)}
+                                                >
+                                                    <Switch.HiddenInput />
+                                                    <Switch.Control>
+                                                        <Switch.Thumb />
+                                                    </Switch.Control>
+                                                </Switch.Root>
                                             </HStack>
                                         </Field.Root>
                                     )}

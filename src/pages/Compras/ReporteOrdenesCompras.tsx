@@ -13,7 +13,7 @@ import { EditarOcmSeleccionada } from "./components/EditarOCMSeleccionada";
 import ProveedorPicker from "./components/ProveedorPicker";
 import ProveedorFilterOCM from "./components/ProveedorFilterOCM";
 import ColorLegendModal from "./components/ColorLegendModal";
-import { LuHelpCircle } from 'react-icons/lu';
+import { LuCircleHelp } from 'react-icons/lu';
 
 export default function ReporteOrdenesCompras() {
     const [listaOrdenesCompras, setListaOrdenesCompras] = useState<OrdenCompraMateriales[]>([]);
@@ -116,7 +116,7 @@ export default function ReporteOrdenesCompras() {
                                 variant="outline"
                                 colorPalette="blue"
                                 onClick={() => setIsColorLegendOpen(true)}
-                                ml={2}><LuHelpCircle /></IconButton>
+                                ml={2}><LuCircleHelp /></IconButton>
                         </Tooltip>
                     </Flex>
 

@@ -4,7 +4,6 @@ import {
   Input,
   NativeSelect,
   NumberInput,
-  NumberInputField,
   Stack,
   Flex,
   Heading,
@@ -193,7 +192,7 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>Editar Proceso de Producción</Dialog.Header>
+            <Dialog.Header><Dialog.Title>Editar Proceso de Producción</Dialog.Title></Dialog.Header>
             <Dialog.CloseTrigger />
             <Dialog.Body>
               <Stack gap={6}>
@@ -217,7 +216,7 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
                         min={0} 
                         max={10}
                         value={String(procesoEditado.nivelAcceso || 0)}
-                        onValueChange={(_, value) => handleNumberChange('nivelAcceso', value)}
+                        onValueChange={({ valueAsNumber }) => handleNumberChange('nivelAcceso', valueAsNumber)}
                       >
                         <NumberInput.Input />
                       </NumberInput.Root>
@@ -228,7 +227,7 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
                       <NumberInput.Root 
                         min={0}
                         value={String(procesoEditado.setUpTime)}
-                        onValueChange={(_, value) => handleNumberChange('setUpTime', value)}
+                        onValueChange={({ valueAsNumber }) => handleNumberChange('setUpTime', valueAsNumber)}
                       >
                         <NumberInput.Input />
                       </NumberInput.Root>
@@ -263,7 +262,7 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
                         <NumberInput.Root 
                           min={0}
                           value={String(procesoEditado.constantSeconds || 0)}
-                          onValueChange={(_, value) => handleNumberChange('constantSeconds', value)}
+                          onValueChange={({ valueAsNumber }) => handleNumberChange('constantSeconds', valueAsNumber)}
                         >
                           <NumberInput.Input />
                         </NumberInput.Root>
@@ -288,7 +287,7 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
                         <NumberInput.Root 
                           min={0}
                           value={String(procesoEditado.secondsPerUnit || 0)}
-                          onValueChange={(_, value) => handleNumberChange('secondsPerUnit', value)}
+                          onValueChange={({ valueAsNumber }) => handleNumberChange('secondsPerUnit', valueAsNumber)}
                         >
                           <NumberInput.Input />
                         </NumberInput.Root>
@@ -302,7 +301,7 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
                           <NumberInput.Root 
                             min={0}
                             value={String(procesoEditado.secondsPerBatch || 0)}
-                            onValueChange={(_, value) => handleNumberChange('secondsPerBatch', value)}
+                            onValueChange={({ valueAsNumber }) => handleNumberChange('secondsPerBatch', valueAsNumber)}
                           >
                             <NumberInput.Input />
                           </NumberInput.Root>
@@ -313,7 +312,7 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
                           <NumberInput.Root 
                             min={1}
                             value={String(procesoEditado.batchSize || 1)}
-                            onValueChange={(_, value) => handleNumberChange('batchSize', value)}
+                            onValueChange={({ valueAsNumber }) => handleNumberChange('batchSize', valueAsNumber)}
                           >
                             <NumberInput.Input />
                           </NumberInput.Root>

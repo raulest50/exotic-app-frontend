@@ -22,14 +22,8 @@ import {
     Spinner,
     Stat,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
     Textarea,
-    Th,
-    Thead,
-    Tr,
     VStack,
     useDisclosure,
     Field,
@@ -68,7 +62,7 @@ import type {
 } from "./components/seguimientoBoard.types.ts";
 import MetricModeInfoModal from "./MetricModeInfoModal.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
-import { LuHelpCircle } from 'react-icons/lu';
+import { LuCircleHelp } from 'react-icons/lu';
 
 const endPoints = new EndPointsURL();
 
@@ -612,7 +606,7 @@ export default function MonitorearAreasOperativasTab() {
                 {!loading && !error && areas.length > 0 ? (
                     <Box bg="white" borderRadius="md" boxShadow="sm" overflowX="auto">
                         <Table.ScrollArea>
-                            <Table.Root variant="simple" size="sm">
+                            <Table.Root variant="line" size="sm">
                                 <Table.Header>
                                     <Table.Row>
                                         <Table.ColumnHeader>Área</Table.ColumnHeader>
@@ -738,7 +732,7 @@ export default function MonitorearAreasOperativasTab() {
                                         aria-label="Ayuda sobre modos de promedio"
                                         size="sm"
                                         variant="ghost"
-                                        onClick={onMetricInfoOpen}><LuHelpCircle /></IconButton>
+                                        onClick={onMetricInfoOpen}><LuCircleHelp /></IconButton>
                                 </Tooltip>
                             </HStack>
                             <NativeSelect.Root>
@@ -882,7 +876,7 @@ export default function MonitorearAreasOperativasTab() {
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header>Corregir estado</Dialog.Header>
+                            <Dialog.Header><Dialog.Title>Corregir estado</Dialog.Title></Dialog.Header>
                             <Dialog.CloseTrigger />
                             <Dialog.Body>
                                 <VStack align="stretch" gap={4}>
@@ -909,11 +903,10 @@ export default function MonitorearAreasOperativasTab() {
 
                                     <Field.Root>
                                         <Field.Label>Nuevo estado</Field.Label>
-                                        <NativeSelect.Root>
+                                        <NativeSelect.Root disabled={correctionSaving}>
                                             <NativeSelect.Field
                                                 value={correctionTarget}
-                                                onChange={(event) => setCorrectionTarget(event.target.value)}
-                                                disabled={correctionSaving}>
+                                                onChange={(event) => setCorrectionTarget(event.target.value)}>
                                                 {CORRECTION_STATE_OPTIONS
                                                     .filter((option) => option.value !== correctionCard?.estado)
                                                     .map((option) => (

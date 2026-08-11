@@ -9,11 +9,6 @@ import {
     Text,
     NativeSelect,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
     Flex,
     Field,
     Dialog,
@@ -132,7 +127,7 @@ const MateriaPrimaPicker: React.FC<MateriaPrimaPickerProps> = ({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Seleccionar Materia Prima</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Seleccionar Materia Prima</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <VStack gap={4}>
@@ -146,12 +141,11 @@ const MateriaPrimaPicker: React.FC<MateriaPrimaPickerProps> = ({
                                             placeholder="Ingrese nombre o ID"
                                             disabled={isLoading}
                                         />
-                                        <NativeSelect.Root>
+                                        <NativeSelect.Root disabled={isLoading}>
                                             <NativeSelect.Field
                                                 value={tipoBusqueda}
                                                 onChange={(e) => setTipoBusqueda(e.target.value)}
-                                                width="150px"
-                                                disabled={isLoading}>
+                                                width="150px">
                                                 <option value="NOMBRE">Nombre</option>
                                                 <option value="ID">ID</option>
                                             </NativeSelect.Field>
@@ -173,7 +167,7 @@ const MateriaPrimaPicker: React.FC<MateriaPrimaPickerProps> = ({
                                 <Box w="full" overflowX="auto">
                                     {materiasPrimas.length > 0 ? (
                                         <>
-                                            <Table.Root variant="simple" size="sm">
+                                            <Table.Root variant="line" size="sm">
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>ID</Table.ColumnHeader>

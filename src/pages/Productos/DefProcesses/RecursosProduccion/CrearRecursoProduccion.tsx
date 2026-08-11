@@ -4,7 +4,6 @@ import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
-import {input_style} from '../../../../styles/styles_general.tsx';
 import {RecursoProduccion} from '../../types.tsx';
 import RPAFmanager from './RPAFmanager.tsx';
 import {ActivoFijo} from '../../../ActivosFijos/types.tsx';
@@ -67,11 +66,11 @@ function CrearRecursoProduccion() {
             <VStack gap={4} align="stretch">
                 <Field.Root required>
                     <Field.Label>Nombre</Field.Label>
-                    <Input value={nombre} onChange={(e) => setNombre(e.target.value)} sx={input_style} />
+                    <Input value={nombre} onChange={(e) => setNombre(e.target.value)} bg="app.inputFilled" variant="subtle" borderRadius={0} />
                 </Field.Root>
                 <Field.Root required>
                     <Field.Label>Descripción</Field.Label>
-                    <Input value={descripcion} onChange={(e)=>setDescripcion(e.target.value)} sx={input_style} />
+                    <Input value={descripcion} onChange={(e)=>setDescripcion(e.target.value)} bg="app.inputFilled" variant="subtle" borderRadius={0} />
                 </Field.Root>
                 <RPAFmanager activos={activos} onChange={setActivos} />
                 <Button colorPalette="teal" onClick={handleSubmit}>Guardar</Button>

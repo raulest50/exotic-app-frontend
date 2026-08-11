@@ -4,12 +4,6 @@ import {
     Box,
     Text,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Tfoot,
     Dialog,
     Portal,
 } from '@chakra-ui/react';
@@ -34,7 +28,7 @@ const DetailsOCAF: React.FC<Props> = ({ isOpen, onClose, orden }) => {
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Detalles Orden Compra AF</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Detalles Orden Compra AF</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <Box mb={4}>
@@ -49,7 +43,7 @@ const DetailsOCAF: React.FC<Props> = ({ isOpen, onClose, orden }) => {
                                 <Text><strong>Plazo de Pago:</strong> {orden.plazoPago}</Text>
                             </Box>
                             {orden.itemsOrdenCompra && orden.itemsOrdenCompra.length > 0 ? (
-                                <Table.Root variant='simple' size='sm'>
+                                <Table.Root variant='line' size='sm'>
                                     <Table.Header>
                                         <Table.Row>
                                             <Table.ColumnHeader>ID</Table.ColumnHeader>

@@ -17,11 +17,6 @@ import {
     NativeSelect,
     Spinner,
     Table,
-    Tbody,
-    Td,
-    Th,
-    Thead,
-    Tr,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import { format } from 'date-fns';
@@ -121,7 +116,7 @@ export default function ReportesActivosFijosTab() {
                     </NativeSelect.Root>
                     <Checkbox.Root
                         checked={soloActivos}
-                        onCheckedChange={(e) => setSoloActivos(e.target.checked)}
+                        onCheckedChange={({ checked }) => setSoloActivos(checked === true)}
                     ><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Solo activos
                                                 </Checkbox.Label></Checkbox.Root>
                     <Button

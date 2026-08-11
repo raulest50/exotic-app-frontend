@@ -1,14 +1,6 @@
-/*
- MIGRATION NOTE: The following Chakra UI hooks have been removed.
- Please replace them with the suggested alternatives:
-
-//   - useOutsideClick: Use react-use: useClickAway
-
- See: https://chakra-ui.com/docs/get-started/migration#hooks
-*/
 // src/components/ListaOrdenesCompra.tsx
-import React, { useState } from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td, Box } from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
+import { Table, Box } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import {getEstadoText, OrdenCompraMateriales} from '../types';
 import OrdenCompraDetails from './OrdenCompraDetails';
@@ -72,10 +64,20 @@ const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClos
     const endPoints = new EndPointsURL();
 
     const contextMenuRef = React.useRef<HTMLDivElement>(null);
-    useOutsideClick({
-        ref: contextMenuRef,
-        handler: () => setContextMenu(null),
-    });
+    useEffect(() => {
+        if (!contextMenu) {
+            return;
+        }
+
+        const handlePointerDown = (event: PointerEvent) => {
+            if (!contextMenuRef.current?.contains(event.target as Node)) {
+                setContextMenu(null);
+            }
+        };
+
+        document.addEventListener('pointerdown', handlePointerDown);
+        return () => document.removeEventListener('pointerdown', handlePointerDown);
+    }, [contextMenu]);
 
     const handleContextMenu = (event: React.MouseEvent, orden: OrdenCompraMateriales) => {
         event.preventDefault();
@@ -141,7 +143,7 @@ const ListaOrdenesCompra: React.FC<ListaOrdenesCompraProps> = ({ ordenes, onClos
     return (
         <>
             <Box overflowX="auto" mt={4}>
-                <Table.Root variant="simple">
+                <Table.Root variant="line">
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>ID</Table.ColumnHeader>

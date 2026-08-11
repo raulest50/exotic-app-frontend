@@ -713,7 +713,7 @@ export function SeguimientoOrdenDetailDrawer({
                 <Drawer.Positioner>
                     <Drawer.Content>
                         <Drawer.CloseTrigger />
-                        <Drawer.Header>Detalle de seguimiento</Drawer.Header>
+                        <Drawer.Header><Drawer.Title>Detalle de seguimiento</Drawer.Title></Drawer.Header>
 
                         <Drawer.Body>
                             {loading ? (

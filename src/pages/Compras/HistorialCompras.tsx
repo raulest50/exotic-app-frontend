@@ -267,7 +267,7 @@ function HistorialCompras() {
 
             {/* Dialog to show itemsCompra */}
             {selectedCompra && (
-                <CompraItemsDialog isOpen={isOpen} onClose={onClose} itemsCompra={itemsCompra} />
+                <CompraItemsDialog isOpen={open} onClose={onClose} itemsCompra={itemsCompra} />
             )}
         </Flex>
     );

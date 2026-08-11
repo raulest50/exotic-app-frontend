@@ -80,7 +80,7 @@ const CancelarOrdenDialog: React.FC<CancelarOrdenDialogProps> = ({ isOpen, onClo
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Confirmar Cancelación de Orden de Compra</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Confirmar Cancelación de Orden de Compra</Dialog.Title></Dialog.Header>
                         <Dialog.Body>
                             <Text mb={4}>
                                 Para confirmar la cancelación de la orden de compra, digite los 7 dígitos que ve en pantalla y de click en "Anular Orden de Compra".

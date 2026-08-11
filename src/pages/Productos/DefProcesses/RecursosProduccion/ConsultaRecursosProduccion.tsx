@@ -6,11 +6,6 @@ import {
   Input,
   NativeSelect,
   Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
   Field,
 } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";

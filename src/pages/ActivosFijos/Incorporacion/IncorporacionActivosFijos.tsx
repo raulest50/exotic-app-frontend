@@ -26,6 +26,7 @@ export function IncorporacionActivosFijos() {
         defaultStep: 0,
         count: steps.length
     });
+    const { value: activeStep, setStep: setActiveStep } = stepsApi;
 
 
     function ConditionalRender(){
@@ -72,24 +73,26 @@ export function IncorporacionActivosFijos() {
     return (
         <Flex direction={"column"} gap={4}>
             <Steps.RootProvider p={'1em'} backgroundColor="app.stepperTeal" w={'full'} value={stepsApi} >
-                {steps.map((step, index) => (
-                    <Steps.Item key={index}>
-                        <Steps.Indicator>
-                            <Steps.Status
-                                complete={<LuCheck />}
-                                incomplete={<Steps.Number />}
-                                current={<Steps.Number />}
-                            />
-                        </Steps.Indicator>
+                <Steps.List>
+                    {steps.map((step, index) => (
+                        <Steps.Item key={index} index={index}>
+                            <Steps.Indicator>
+                                <Steps.Status
+                                    complete={<LuCheck />}
+                                    incomplete={<Steps.Number />}
+                                    current={<Steps.Number />}
+                                />
+                            </Steps.Indicator>
 
-                        <Box flexShrink='0'>
-                            <Steps.Title>{step.title}</Steps.Title>
-                            <Steps.Description>{step.description}</Steps.Description>
-                        </Box>
+                            <Box flexShrink='0'>
+                                <Steps.Title>{step.title}</Steps.Title>
+                                <Steps.Description>{step.description}</Steps.Description>
+                            </Box>
 
-                        <Steps.Separator />
-                    </Steps.Item>
-                ))}
+                            <Steps.Separator />
+                        </Steps.Item>
+                    ))}
+                </Steps.List>
             </Steps.RootProvider>
 
             <ConditionalRender />

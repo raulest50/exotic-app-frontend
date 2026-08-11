@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Button, Text, ChakraProvider } from '@chakra-ui/react';
+import { Box, Button, Text } from '@chakra-ui/react';
+import { Provider } from '@/components/ui/provider';
 import axios from 'axios';
 import { ProcesoProduccionPicker } from './ProcesoProduccionPicker';
 import { ProcesoProduccionEntity, TimeModelType } from '../../../../types.tsx';
@@ -110,7 +111,7 @@ export const Default = () => {
   };
 
   return (
-    <ChakraProvider>
+    <Provider>
       <Box p={4} maxW="600px">
         <Button onClick={handleOpen} colorPalette="blue" mb={4}>
           Abrir Selector de Procesos
@@ -134,7 +135,7 @@ export const Default = () => {
           </Box>
         )}
       </Box>
-    </ChakraProvider>
+    </Provider>
   );
 };
 
@@ -149,7 +150,7 @@ export const Loading = () => {
   }, []);
 
   return (
-    <ChakraProvider>
+    <Provider>
       <Box p={4}>
         <ProcesoProduccionPicker 
           isOpen={isOpen}
@@ -158,7 +159,7 @@ export const Loading = () => {
           alreadySelected={[]}
         />
       </Box>
-    </ChakraProvider>
+    </Provider>
   );
 };
 
@@ -175,7 +176,7 @@ export const Error = () => {
   }, []);
 
   return (
-    <ChakraProvider>
+    <Provider>
       <Box p={4}>
         <ProcesoProduccionPicker 
           isOpen={isOpen}
@@ -184,7 +185,7 @@ export const Error = () => {
           alreadySelected={[]}
         />
       </Box>
-    </ChakraProvider>
+    </Provider>
   );
 };
 
@@ -207,7 +208,7 @@ export const WithPreselected = () => {
   }, []);
 
   return (
-    <ChakraProvider>
+    <Provider>
       <Box p={4}>
         <ProcesoProduccionPicker 
           isOpen={isOpen}
@@ -227,7 +228,7 @@ export const WithPreselected = () => {
           </Box>
         )}
       </Box>
-    </ChakraProvider>
+    </Provider>
   );
 };
 
@@ -279,7 +280,7 @@ export const WithPagination = () => {
   }, []);
 
   return (
-    <ChakraProvider>
+    <Provider>
       <Box p={4}>
         <ProcesoProduccionPicker 
           isOpen={isOpen}
@@ -288,6 +289,6 @@ export const WithPagination = () => {
           alreadySelected={[]}
         />
       </Box>
-    </ChakraProvider>
+    </Provider>
   );
 };

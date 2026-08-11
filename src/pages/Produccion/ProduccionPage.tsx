@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Box, Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
+import { Box, Container, Tabs } from "@chakra-ui/react";
 
 import MyHeader from "../../components/MyHeader.tsx";
 import { tabAccessRule } from "../../auth/accessHelpers.ts";
@@ -68,24 +68,33 @@ export default function ProduccionPage() {
     const safeTabIndex = useMemo(() => (
         tabIndex >= 0 && tabIndex < visibleTabs.length ? tabIndex : 0
     ), [tabIndex, visibleTabs.length]);
+    const activeTabKey = visibleTabs[safeTabIndex]?.key;
+
+    const handleTabChange = ({ value }: { value: string }) => {
+        const nextIndex = visibleTabs.findIndex((tab) => tab.key === value);
+        if (nextIndex >= 0) {
+            setTabIndex(nextIndex);
+        }
+    };
 
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w={"full"} h={"full"}>
             <MyHeader title={"Produccion"} />
 
-            <Tabs.Root value={safeTabIndex} onValueChange={setTabIndex}>
+            <Tabs.Root value={activeTabKey} onValueChange={handleTabChange}>
                 <Tabs.List>
                     {visibleTabs.map((tab) => (
-                        <Tab key={tab.key} sx={my_style_tab}>
+                        <Tabs.Trigger key={tab.key} value={tab.key} css={my_style_tab}>
                             {tab.label}
-                        </Tab>
+                        </Tabs.Trigger>
                     ))}
                 </Tabs.List>
 
-                <TabPanels>
+                <Tabs.ContentGroup>
                     {visibleTabs.map((tab) => (
-                        <TabPanel
+                        <Tabs.Content
                             key={tab.key}
+                            value={tab.key}
                             p={tab.key === "planeacion" || tab.key === "programacion" || tab.key === "aprobacion-mps" ? 0 : 4}
                         >
                             {tab.key === "planeacion" || tab.key === "programacion" || tab.key === "aprobacion-mps" ? (
@@ -95,9 +104,9 @@ export default function ProduccionPage() {
                             ) : (
                                 tab.render()
                             )}
-                        </TabPanel>
+                        </Tabs.Content>
                     ))}
-                </TabPanels>
+                </Tabs.ContentGroup>
             </Tabs.Root>
         </Container>
     );

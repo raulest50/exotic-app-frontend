@@ -11,16 +11,9 @@ import {
     IconButton,
     Input,
     InputGroup,
-    InputRightElement,
     Spinner,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     Field,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
@@ -28,7 +21,7 @@ import { RiSave3Fill } from "react-icons/ri";
 import CustomIntegerInput from "../../../components/CustomIntegerInput/CustomIntegerInput.tsx";
 import type { Categoria } from "../types.tsx";
 import { RutaProcesoCatDesigner } from "./RutaProcesoCatDesigner";
-import { LuLock, LuUnlock } from 'react-icons/lu';
+import { LuLock, LuLockOpen } from 'react-icons/lu';
 
 const PAGE_SIZE = 10;
 
@@ -245,18 +238,21 @@ export default function ConfParamsCategoria() {
             <Box p={4} borderWidth="1px" borderRadius="lg" mb={4}>
                 <Field.Root>
                     <Field.Label>Buscar por nombre</Field.Label>
-                    <InputGroup>
+                    <InputGroup
+                        endElement={(
+                            <Button colorPalette="blue" size="sm" onClick={handleSearch} loading={loading}>
+                                Buscar
+                            </Button>
+                        )}
+                        endElementProps={{ width: "auto", px: 2 }}
+                    >
                         <Input
                             value={searchNombre}
                             onChange={(e) => setSearchNombre(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder="Coincidencia parcial (vacio = todas)"
+                            pe="5rem"
                         />
-                        <InputRightElement width="auto" px={2}>
-                            <Button colorPalette="blue" size="sm" onClick={handleSearch} loading={loading}>
-                                Buscar
-                            </Button>
-                        </InputRightElement>
                     </InputGroup>
                 </Field.Root>
             </Box>
@@ -286,7 +282,7 @@ export default function ConfParamsCategoria() {
                 <>
                     <Box borderWidth="1px" borderRadius="lg" overflow="hidden" mb={4}>
                         <Table.ScrollArea w="full" overflowX="auto">
-                            <Table.Root variant="simple" size="sm" minW="900px">
+                            <Table.Root variant="line" size="sm" minW="900px">
                                 <Table.Header>
                                     <Table.Row>
                                         <Table.ColumnHeader>ID</Table.ColumnHeader>
@@ -316,11 +312,11 @@ export default function ConfParamsCategoria() {
                                                             variant="ghost"
                                                             size="sm"
                                                             boxSize={10}
-                                                            onClick={() => toggleLock(catId, "loteSize")}>{unlockedFields[loteFieldKey] ? <Icon as={LuUnlock} boxSize={5} /> : <Icon as={LuLock} boxSize={5} />}</IconButton>
+                                                            onClick={() => toggleLock(catId, "loteSize")}>{unlockedFields[loteFieldKey] ? <Icon as={LuLockOpen} boxSize={5} /> : <Icon as={LuLock} boxSize={5} />}</IconButton>
                                                         <CustomIntegerInput
                                                             value={currentLote}
                                                             onChange={(v) => handleLoteSizeChange(catId, v)}
-                                                            isDisabled={!unlockedFields[loteFieldKey]}
+                                                            disabled={!unlockedFields[loteFieldKey]}
                                                             min={0}
                                                             placeholder="0"
                                                             width="100px"
@@ -343,11 +339,11 @@ export default function ConfParamsCategoria() {
                                                             variant="ghost"
                                                             size="sm"
                                                             boxSize={10}
-                                                            onClick={() => toggleLock(catId, "tiempoDiasFabricacion")}>{unlockedFields[tiempoFieldKey] ? <Icon as={LuUnlock} boxSize={5} /> : <Icon as={LuLock} boxSize={5} />}</IconButton>
+                                                            onClick={() => toggleLock(catId, "tiempoDiasFabricacion")}>{unlockedFields[tiempoFieldKey] ? <Icon as={LuLockOpen} boxSize={5} /> : <Icon as={LuLock} boxSize={5} />}</IconButton>
                                                         <CustomIntegerInput
                                                             value={currentTiempo}
                                                             onChange={(v) => handleTiempoDiasFabricacionChange(catId, v)}
-                                                            isDisabled={!unlockedFields[tiempoFieldKey]}
+                                                            disabled={!unlockedFields[tiempoFieldKey]}
                                                             min={0}
                                                             placeholder="0"
                                                             width="120px"

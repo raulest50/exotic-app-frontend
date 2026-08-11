@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
+import { Box, Button, Flex, Table } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import {useState} from 'react';
 import axios from 'axios';

@@ -18,7 +18,6 @@ import {
     Flex,
     IconButton,
     NumberInput,
-    NumberInputField,
     SimpleGrid,
     Text,
     VStack,
@@ -1149,9 +1148,9 @@ export default function ProgramacionProduccionSemanalTab() {
                                                                     min={minLotes}
                                                                     max={maxLotes}
                                                                     step={1}
-                                                                    precision={0}
+                                                                    formatOptions={{ maximumFractionDigits: 0 }}
                                                                     value={String(entry.numeroLotes)}
-                                                                    onValueChange={(valueAsString) => handleEntryLotesChange(entry.id, valueAsString)}
+                                                                    onValueChange={({ value }) => handleEntryLotesChange(entry.id, value)}
                                                                     disabled={!canChangeLotes}
                                                                     flex="1"
                                                                 >
@@ -1249,7 +1248,7 @@ export default function ProgramacionProduccionSemanalTab() {
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header>Descartar cambios sin guardar</Dialog.Header>
+                            <Dialog.Header><Dialog.Title>Descartar cambios sin guardar</Dialog.Title></Dialog.Header>
                             <Dialog.CloseTrigger />
                             <Dialog.Body>
                                 <Text color="gray.700">

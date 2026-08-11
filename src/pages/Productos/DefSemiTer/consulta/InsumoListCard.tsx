@@ -4,12 +4,7 @@ import {
     Heading,
     IconButton,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
 } from '@chakra-ui/react';
 import {useState} from 'react';
 import type {ReactNode} from 'react';
@@ -91,7 +86,7 @@ function InsumoRow({
                 <Table.Row>
                     <Table.Cell colSpan={4} p={0}>
                         <Box pl={(nivelActual + 1) * 4} py={2}>
-                            <Table.Root size="sm" variant="simple">
+                            <Table.Root size="sm" variant="line">
                                 <Table.Body>{renderSubRows(subInsumos ?? [], nivelActual + 1)}</Table.Body>
                             </Table.Root>
                         </Box>
@@ -138,7 +133,7 @@ export default function InsumoListCard({ insumos, nivel = 0, titulo }: Props) {
                     Sin insumos para mostrar.
                 </Text>
             ) : (
-                <Table.Root variant="simple">
+                <Table.Root variant="line">
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>Producto</Table.ColumnHeader>

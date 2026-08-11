@@ -6,13 +6,7 @@ import {
     Heading,
     Spinner,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
     Dialog,
     Portal,
@@ -107,7 +101,7 @@ export default function MpsItemOrdersModal({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>OPs generadas del item MPS</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>OPs generadas del item MPS</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body pb={6}>
                             {item && context && (
@@ -141,7 +135,7 @@ export default function MpsItemOrdersModal({
                                         </Box>
                                     ) : (
                                         <Table.ScrollArea>
-                                            <Table.Root size="sm" variant="simple">
+                                            <Table.Root size="sm" variant="line">
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>Orden</Table.ColumnHeader>

@@ -209,7 +209,7 @@ export default function TerminadoPicker4MPS({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Seleccionar producto terminado para MPS</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Seleccionar producto terminado para MPS</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <Flex direction="column" gap={3}>
@@ -237,11 +237,10 @@ export default function TerminadoPicker4MPS({
                                 <Flex gap={3} direction={["column", "column", "row"]}>
                                     <Field.Root>
                                         <Field.Label fontSize="sm">Categoria</Field.Label>
-                                        <NativeSelect.Root>
+                                        <NativeSelect.Root disabled={isLoadingCategorias}>
                                             <NativeSelect.Field
                                                 value={selectedCategoriaId}
-                                                onChange={(event) => handleCategoriaChange(event.target.value)}
-                                                disabled={isLoadingCategorias}>
+                                                onChange={(event) => handleCategoriaChange(event.target.value)}>
                                                 <option value="">Todas las categorias</option>
                                                 {categorias.map((categoria) => (
                                                     <option key={categoria.categoriaId} value={categoria.categoriaId}>

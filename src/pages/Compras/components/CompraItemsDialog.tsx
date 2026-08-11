@@ -28,7 +28,7 @@ function CompraItemsDialog({ isOpen, onClose, itemsCompra }: CompraItemsDialogPr
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Items de la Compra</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Items de la Compra</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <List.Root gap={3}>

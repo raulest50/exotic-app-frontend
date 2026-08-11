@@ -8,12 +8,7 @@ import {
     Input,
     HStack,
     NumberInput,
-    NumberInputField,
-    NumberInputStepper,
-    NumberIncrementStepper,
-    NumberDecrementStepper,
     InputGroup,
-    InputRightElement,
     IconButton,
     Box,
     Text,
@@ -37,7 +32,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { Modulo } from '../../Usuarios/GestionUsuarios/types.tsx';
 import { useTabPermission } from '../../../auth/usePermissions';
 import { selectNumericInputContentsOnFocus } from '../../../utils/selectNumericInputContentsOnFocus';
-import { LuCheck, LuLock, LuSearch, LuUnlock } from 'react-icons/lu';
+import { LuCheck, LuLock, LuLockOpen, LuSearch } from 'react-icons/lu';
 
 type LoteValidationStatus = 'idle' | 'valid' | 'invalid' | 'checking';
 
@@ -519,7 +514,17 @@ export default function CrearOrdenesProduccionTab() {
                 <HStack gap={4} mt="4">
                     <Field.Root>
                         <Field.Label>Asesor</Field.Label>
-                        <InputGroup>
+                        <InputGroup
+                            endElement={(
+                                <IconButton
+                                    aria-label="Buscar vendedor"
+                                    size="sm"
+                                    onClick={handleOpenVendedorPicker}
+                                >
+                                    <LuSearch />
+                                </IconButton>
+                            )}
+                        >
                             <Input
                                 value={selectedVendedor
                                     ? `${selectedVendedor.cedula} - ${selectedVendedor.nombres} ${selectedVendedor.apellidos}`
@@ -527,9 +532,6 @@ export default function CrearOrdenesProduccionTab() {
                                 placeholder="Seleccione un vendedor"
                                 readOnly
                             />
-                            <InputRightElement>
-                                <IconButton aria-label="Buscar vendedor" size="sm" onClick={handleOpenVendedorPicker}><LuSearch /></IconButton>
-                            </InputRightElement>
                         </InputGroup>
                     </Field.Root>
 
@@ -575,9 +577,9 @@ export default function CrearOrdenesProduccionTab() {
                     <Field.Label>Cantidad de lotes</Field.Label>
                     <NumberInput.Root
                         min={1}
-                        precision={0}
+                        formatOptions={{ maximumFractionDigits: 0 }}
                         value={String(cantidadLotes)}
-                        onValueChange={handleCantidadLotesChange}
+                        onValueChange={({ value }) => handleCantidadLotesChange(value)}
                         disabled={!selectedProducto || noLoteSize}
                     >
                         <NumberInput.Input onFocus={selectNumericInputContentsOnFocus} />
@@ -665,12 +667,44 @@ export default function CrearOrdenesProduccionTab() {
                                     w="100%"
                                 >
                                     <Field.Label fontSize="sm">Lote {i + 1}</Field.Label>
-                                    <InputGroup>
+                                    <InputGroup
+                                        endElement={canEditLote ? (
+                                            <HStack gap={1}>
+                                                <IconButton
+                                                    aria-label={isLotesEditable[i]
+                                                        ? 'Bloquear edición de lote'
+                                                        : 'Desbloquear edición de lote'}
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => handleToggleLoteEdit(i)}
+                                                >
+                                                    {isLotesEditable[i] ? <LuLockOpen /> : <LuLock />}
+                                                </IconButton>
+                                                {isLotesEditable[i] && (
+                                                    <IconButton
+                                                        aria-label="Verificar disponibilidad del lote"
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        colorPalette={
+                                                            loteValidations[i] === 'valid' ? 'green' :
+                                                            loteValidations[i] === 'invalid' ? 'red' : 'gray'
+                                                        }
+                                                        onClick={() => handleCheckLoteDisponible(i)}
+                                                        disabled={!lote.trim() || isCheckingLotes[i]}
+                                                    >
+                                                        {isCheckingLotes[i] ? <Spinner size="sm" /> : <LuCheck />}
+                                                    </IconButton>
+                                                )}
+                                            </HStack>
+                                        ) : undefined}
+                                        endElementProps={{ width: "auto" }}
+                                    >
                                         <Input
                                             placeholder="Número de lote"
                                             value={lote}
                                             readOnly={!isLotesEditable[i] || !canEditLote}
                                             bg={isLotesEditable[i] && canEditLote ? 'white' : 'gray.100'}
+                                            pe={canEditLote ? (isLotesEditable[i] ? "5rem" : "2.5rem") : undefined}
                                             onChange={(e) => {
                                                 setLoteBatchNumbers(prev => {
                                                     const updated = [...prev];
@@ -686,37 +720,6 @@ export default function CrearOrdenesProduccionTab() {
                                                 }
                                             }}
                                         />
-                                        <InputRightElement width="auto">
-                                            <HStack gap={1}>
-                                                {canEditLote && (
-                                                    <>
-                                                        <IconButton
-                                                            aria-label={isLotesEditable[i]
-                                                                ? 'Bloquear edición de lote'
-                                                                : 'Desbloquear edición de lote'}
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            onClick={() => handleToggleLoteEdit(i)}>{isLotesEditable[i]
-                                                                ? <LuUnlock />
-                                                                : <LuLock />}</IconButton>
-                                                        {isLotesEditable[i] && (
-                                                            <IconButton
-                                                                aria-label="Verificar disponibilidad del lote"
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                colorPalette={
-                                                                    loteValidations[i] === 'valid' ? 'green' :
-                                                                    loteValidations[i] === 'invalid' ? 'red' : 'gray'
-                                                                }
-                                                                onClick={() => handleCheckLoteDisponible(i)}
-                                                                disabled={!lote.trim() || isCheckingLotes[i]}>{isCheckingLotes[i]
-                                                                    ? <Spinner size="sm" />
-                                                                    : <LuCheck />}</IconButton>
-                                                        )}
-                                                    </>
-                                                )}
-                                            </HStack>
-                                        </InputRightElement>
                                     </InputGroup>
                                     {loteValidations[i] === 'invalid' && (
                                         <Field.ErrorText>El número de lote ya está en uso</Field.ErrorText>
@@ -770,7 +773,7 @@ export default function CrearOrdenesProduccionTab() {
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header>Edición Manual de Números de Lote</Dialog.Header>
+                            <Dialog.Header><Dialog.Title>Edición Manual de Números de Lote</Dialog.Title></Dialog.Header>
                             <Dialog.CloseTrigger />
                             <Dialog.Body>
                                 <VStack align="stretch" gap={4}>

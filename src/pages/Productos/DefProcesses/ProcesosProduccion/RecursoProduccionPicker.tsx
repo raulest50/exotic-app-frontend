@@ -4,11 +4,6 @@ import {
   Flex,
   Input,
   Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
   Dialog,
   Portal,
 } from '@chakra-ui/react';
@@ -85,7 +80,7 @@ export default function RecursoProduccionPicker({isOpen, onClose, onConfirm, alr
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>Seleccionar Recursos de Producción</Dialog.Header>
+            <Dialog.Header><Dialog.Title>Seleccionar Recursos de Producción</Dialog.Title></Dialog.Header>
             <Dialog.CloseTrigger />
             <Dialog.Body>
               <Flex gap={4}>

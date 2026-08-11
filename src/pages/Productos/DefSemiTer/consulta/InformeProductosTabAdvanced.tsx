@@ -22,12 +22,6 @@ import {
     Input,
     Button,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    TableContainer,
     Badge,
     NativeSelect,
     Field,
@@ -193,7 +187,7 @@ export default function InformeProductosTabAdvanced() {
             </Flex>
 
             <Table.ScrollArea>
-                <Table.Root variant="striped" colorPalette="blue">
+                <Table.Root variant="line" striped colorPalette="blue">
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>ID</Table.ColumnHeader>

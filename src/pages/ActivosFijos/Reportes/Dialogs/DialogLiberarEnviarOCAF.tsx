@@ -4,11 +4,6 @@ import {
     Box,
     Text,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
     Input,
     NativeSelect,
     VStack,
@@ -202,7 +197,7 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
     const renderItems = () => (
         <Box>
             {orden.itemsOrdenCompra && orden.itemsOrdenCompra.length > 0 && (
-                <Table.Root variant='simple' size='sm'>
+                <Table.Root variant='line' size='sm'>
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>ID</Table.ColumnHeader>
@@ -276,7 +271,7 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
     };
 
     return (
-        <Dialog.Root open={isOpen} size={['auto','4xl']} scrollBehavior='inside' onOpenChange={e => {
+        <Dialog.Root open={isOpen} size="xl" scrollBehavior='inside' onOpenChange={e => {
             if (!e.open) {
                 onClose();
             }
@@ -286,7 +281,7 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Actualizar Estado Orden Compra AF</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Actualizar Estado Orden Compra AF</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>{renderContent()}</Dialog.Body>
                         <Dialog.Footer>

@@ -50,7 +50,7 @@ export default function DeleteProductoDialog({ isOpen, onClose, onConfirm }: Del
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Confirmar Eliminación</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Confirmar Eliminación</Dialog.Title></Dialog.Header>
                         <Dialog.Body>
                             <Text mb={4}>
                                 Para confirmar la eliminación del producto, ingrese el siguiente código:

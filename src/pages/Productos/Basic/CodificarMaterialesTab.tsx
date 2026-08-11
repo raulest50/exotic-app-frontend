@@ -16,7 +16,6 @@ import {
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios, { AxiosError } from 'axios';
 
-import { input_style } from "../../../styles/styles_general.tsx";
 import {Material, UNIDADES, TIPOS_PRODUCTOS, TIPOS_MATERIALES} from "../types.tsx";
 import { normalizeProductId, validateProductId } from "../productIdUtils.ts";
 
@@ -276,7 +275,7 @@ function CodificarMaterialesTab() {
                             <Input
                                 value={codigo}
                                 onChange={(e) => setCodigo(normalizeProductId(e.target.value))}
-                                sx={input_style}
+                                bg="app.inputFilled" variant="subtle" borderRadius={0}
                             />
                         </Field.Root>
                     </GridItem>
@@ -288,7 +287,7 @@ function CodificarMaterialesTab() {
                                 value={prefijoLote}
                                 onChange={(e) => setPrefijoLote(e.target.value.toUpperCase())}
                                 disabled={!inventareable}
-                                sx={input_style}
+                                bg="app.inputFilled" variant="subtle" borderRadius={0}
                             />
                             <Field.HelperText fontSize="xs">
                                 {inventareable
@@ -304,7 +303,7 @@ function CodificarMaterialesTab() {
                             <Input
                                 value={nombre}
                                 onChange={(e) => setNombre(e.target.value)}
-                                sx={input_style}
+                                bg="app.inputFilled" variant="subtle" borderRadius={0}
                             />
                         </Field.Root>
                     </GridItem>
@@ -323,7 +322,7 @@ function CodificarMaterialesTab() {
                                 <Input
                                     readOnly
                                     value={url_ftecnica}
-                                    sx={input_style}
+                                    bg="app.inputFilled" variant="subtle" borderRadius={0}
                                 />
                             </Field.Root>
                         </HStack>
@@ -348,7 +347,7 @@ function CodificarMaterialesTab() {
                                 <Input
                                     value={cantidad_unidad}
                                     onChange={(e) => setCantidad_unidad(e.target.value)}
-                                    variant="filled"
+                                    variant="subtle"
                                 />
                             </Field.Root>
                         </Flex>
@@ -396,10 +395,10 @@ function CodificarMaterialesTab() {
                         <Field.Root>
                             <Flex align="center">
                                 <Field.Label mb="0">Mantiene existencias</Field.Label>
-                                <Switch
+                                <Switch.Root
                                     checked={inventareable}
-                                    onValueChange={(e) => {
-                                        const nextInventareable = e.target.checked;
+                                    onCheckedChange={({ checked }) => {
+                                        const nextInventareable = checked;
                                         setInventareable(nextInventareable);
                                         if (nextInventareable) {
                                             setConsumoDirecto(false);
@@ -408,7 +407,12 @@ function CodificarMaterialesTab() {
                                             setPrefijoLote('');
                                         }
                                     }}
-                                />
+                                >
+                                    <Switch.HiddenInput />
+                                    <Switch.Control>
+                                        <Switch.Thumb />
+                                    </Switch.Control>
+                                </Switch.Root>
                             </Flex>
                             <Field.HelperText fontSize="xs">
                                 Requiere stock, almacén y lotes durante la dispensación.
@@ -421,10 +425,15 @@ function CodificarMaterialesTab() {
                             <Field.Root>
                                 <Flex align="center">
                                     <Field.Label mb="0">Registrar consumo directo</Field.Label>
-                                    <Switch
+                                    <Switch.Root
                                         checked={consumoDirecto}
-                                        onValueChange={(e) => setConsumoDirecto(e.target.checked)}
-                                    />
+                                        onCheckedChange={({ checked }) => setConsumoDirecto(checked)}
+                                    >
+                                        <Switch.HiddenInput />
+                                        <Switch.Control>
+                                            <Switch.Thumb />
+                                        </Switch.Control>
+                                    </Switch.Root>
                                 </Flex>
                                 <Field.HelperText fontSize="xs">
                                     Registra el consumo contra la OP sin modificar stock ni exigir lote.
@@ -442,7 +451,7 @@ function CodificarMaterialesTab() {
                                 value={puntoReordenStr}
                                 onChange={(e) => setPuntoReordenStr(e.target.value)}
                                 disabled={!inventareable}
-                                sx={input_style}
+                                bg="app.inputFilled" variant="subtle" borderRadius={0}
                             />
                             <Field.HelperText fontSize="xs">
                                 -1 sin alertas; 0 sin umbral definido; mayor a 0 alerta si stock es menor o igual.
@@ -456,7 +465,7 @@ function CodificarMaterialesTab() {
                             <Textarea
                                 value={observaciones}
                                 onChange={(e) => setObservaciones(e.target.value)}
-                                variant="filled"
+                                variant="subtle"
                             />
                         </Field.Root>
                     </GridItem>

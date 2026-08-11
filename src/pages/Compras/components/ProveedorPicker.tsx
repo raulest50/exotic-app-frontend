@@ -9,11 +9,6 @@ import {
     HStack,
     Text,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
     Flex,
     Field,
     Dialog,
@@ -116,7 +111,7 @@ const ProveedorPicker: React.FC<ProveedorPickerProps> = ({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Seleccionar Proveedor</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Seleccionar Proveedor</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <VStack gap={4}>
@@ -143,7 +138,7 @@ const ProveedorPicker: React.FC<ProveedorPickerProps> = ({
                                 <Box w="full" overflowX="auto">
                                     {proveedores.length > 0 ? (
                                         <>
-                                            <Table.Root variant="simple" size="sm">
+                                            <Table.Root variant="line" size="sm">
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>NIT</Table.ColumnHeader>

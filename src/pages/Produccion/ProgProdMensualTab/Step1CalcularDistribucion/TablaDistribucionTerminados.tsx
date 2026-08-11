@@ -2,14 +2,7 @@ import { memo } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import {
     NumberInput,
-    NumberInputField,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
-    Th,
-    Thead,
-    Tr,
 } from "@chakra-ui/react";
 import type { TerminadoConVentas } from "../PlaneacionProduccionService";
 import type { ColumnVisibility } from "./step1Distribucion.utils";
@@ -113,7 +106,7 @@ const NecesidadCell = memo(function NecesidadCell({
             clampValueOnBlur={false}
             allowOverflow={true}
             value={String(displayValue)}
-            onValueChange={handleChange}
+            onValueChange={({ value }) => handleChange(value)}
             w="110px"
         >
             <NumberInput.Input
@@ -139,7 +132,7 @@ function TablaDistribucionTerminadosComponent({
 }: TablaDistribucionTerminadosProps) {
     return (
         <Table.ScrollArea w="full" minW={0} overflowX="auto">
-            <Table.Root size="sm" variant="simple" colorPalette="teal">
+            <Table.Root size="sm" variant="line" colorPalette="teal">
                 <Table.Header>
                     <Table.Row>
                         {columnVisibility.index && <Table.ColumnHeader>#</Table.ColumnHeader>}

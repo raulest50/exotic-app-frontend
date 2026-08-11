@@ -1,14 +1,6 @@
-/*
- MIGRATION NOTE: The following Chakra UI hooks have been removed.
- Please replace them with the suggested alternatives:
-
-//   - useOutsideClick: Use react-use: useClickAway
-
- See: https://chakra-ui.com/docs/get-started/migration#hooks
-*/
 // src/components/HistorialOrdenesSeguimiento.tsx
 
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     Badge,
     Button,
@@ -17,12 +9,6 @@ import {
     Spinner,
     Text,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
-    Th,
-    Thead,
-    Tr,
     Box,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
@@ -177,10 +163,20 @@ export default function HistorialOrdenesTab() {
     const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
     const contextMenuRef = useRef<HTMLDivElement>(null);
 
-    useOutsideClick({
-        ref: contextMenuRef,
-        handler: () => setContextMenu(null),
-    });
+    useEffect(() => {
+        if (!contextMenu) {
+            return;
+        }
+
+        const handlePointerDown = (event: PointerEvent) => {
+            if (!contextMenuRef.current?.contains(event.target as Node)) {
+                setContextMenu(null);
+            }
+        };
+
+        document.addEventListener("pointerdown", handlePointerDown);
+        return () => document.removeEventListener("pointerdown", handlePointerDown);
+    }, [contextMenu]);
 
     const productoIdParam = selectedProducto?.producto?.productoId ?? undefined;
 
@@ -339,7 +335,7 @@ export default function HistorialOrdenesTab() {
 
             {/* Display List of Ordenes ProduccionPage */}
             <Table.ScrollArea>
-                <Table.Root variant="simple">
+                <Table.Root variant="line">
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>Lote</Table.ColumnHeader>

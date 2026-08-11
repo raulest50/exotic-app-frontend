@@ -2,10 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   NativeSelect,
   NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   VStack,
   Text,
   Box,
@@ -230,10 +226,7 @@ export function MetodoDepreciacionComponent(props: Props) {
             <Field.Label>Valor Residual</Field.Label>
             <NumberInput.Root
               value={String(valorResidual)}
-              onValueChange={(
-                _valueAsString: string,
-                valueAsNumber: number
-              ) => setValorResidual(valueAsNumber)}
+              onValueChange={({ valueAsNumber }) => setValorResidual(valueAsNumber)}
               min={0}
               max={valorInicial}
             >
@@ -249,10 +242,7 @@ export function MetodoDepreciacionComponent(props: Props) {
             <Field.Label>Tiempo de Vida (meses)</Field.Label>
             <NumberInput.Root
               value={String(tiempoDeVida)}
-              onValueChange={(
-                _valueAsString: string,
-                valueAsNumber: number
-              ) => setTiempoDeVida(valueAsNumber)}
+              onValueChange={({ valueAsNumber }) => setTiempoDeVida(valueAsNumber)}
               min={1}
             >
               <NumberInput.Input />
@@ -268,10 +258,7 @@ export function MetodoDepreciacionComponent(props: Props) {
               <Field.Label>Porcentaje (%)</Field.Label>
               <NumberInput.Root
                 value={String(porcentajeDB)}
-                onValueChange={(
-                  _valueAsString: string,
-                  valueAsNumber: number
-                ) => setPorcentajeDB(valueAsNumber)}
+                onValueChange={({ valueAsNumber }) => setPorcentajeDB(valueAsNumber)}
                 min={0}
                 max={100}
               >

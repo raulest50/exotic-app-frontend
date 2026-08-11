@@ -1,4 +1,4 @@
-import { Container, Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
+import { Container, Flex, Tabs } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader.tsx";
 import { IncorporacionActivosFijos } from "./Incorporacion/IncorporacionActivosFijos.tsx";
 import { my_style_tab } from "../../styles/styles_general.tsx";
@@ -26,17 +26,21 @@ export default function ActivosFijosPage() {
         <Container minW={["auto", "container.lg", "container.xl"]} w={"full"} h={"full"}>
             <MyHeader title={"Activos"} />
             <Flex direction="column" w="full" h="full">
-                <Tabs.Root>
+                <Tabs.Root defaultValue={visibleTabs[0]?.key}>
                     <Tabs.List>
                         {visibleTabs.map((tab) => (
-                            <Tab key={tab.key} sx={my_style_tab}>{tab.label}</Tab>
+                            <Tabs.Trigger key={tab.key} value={tab.key} css={my_style_tab}>
+                                {tab.label}
+                            </Tabs.Trigger>
                         ))}
                     </Tabs.List>
-                    <TabPanels>
+                    <Tabs.ContentGroup>
                         {visibleTabs.map((tab) => (
-                            <TabPanel key={tab.key}>{tab.render()}</TabPanel>
+                            <Tabs.Content key={tab.key} value={tab.key}>
+                                {tab.render()}
+                            </Tabs.Content>
                         ))}
-                    </TabPanels>
+                    </Tabs.ContentGroup>
                 </Tabs.Root>
             </Flex>
         </Container>

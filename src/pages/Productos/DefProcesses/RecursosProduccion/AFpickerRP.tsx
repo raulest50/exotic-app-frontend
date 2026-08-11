@@ -4,11 +4,6 @@ import {
   Flex,
   Input,
   Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
   Dialog,
   Portal,
 } from '@chakra-ui/react';
@@ -85,7 +80,7 @@ export default function AFpickerRP({isOpen, onClose, onConfirm, alreadySelected}
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>Seleccionar Activos Fijos</Dialog.Header>
+            <Dialog.Header><Dialog.Title>Seleccionar Activos Fijos</Dialog.Title></Dialog.Header>
             <Dialog.CloseTrigger />
             <Dialog.Body>
               <Flex gap={4}>

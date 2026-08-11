@@ -1,19 +1,12 @@
 // components/ListaItemsActivos.tsx
 import {
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
     Input,
     NumberInput,
-    NumberInputField,
     Button,
     IconButton,
     Flex,
     Text,
-    Tfoot,
 } from "@chakra-ui/react";
 import {ItemOrdenCompraActivo} from "../types.tsx"
 import {Dispatch, FC, SetStateAction, useMemo, useState} from "react";
@@ -99,7 +92,7 @@ const ListaItemsOCA: FC<Props> = ({ items, setItems }) => {
                                     </Button>
             </Flex>
 
-            <Table.Root variant="striped" size="sm">
+            <Table.Root variant="line" striped size="sm">
                 <Table.Header>
                     <Table.Row>
                         <Table.ColumnHeader w={"35%"}>Descripción</Table.ColumnHeader>
@@ -127,7 +120,7 @@ const ListaItemsOCA: FC<Props> = ({ items, setItems }) => {
                                 <NumberInput.Root
                                     size="sm"
                                     value={String(item.precioUnitario)}
-                                    onValueChange={(_, val) => updateRow(idx, "precioUnitario", val)}
+                                    onValueChange={({ valueAsNumber }) => updateRow(idx, "precioUnitario", valueAsNumber)}
                                     min={0}
                                 >
                                     <NumberInput.Input />
@@ -137,7 +130,7 @@ const ListaItemsOCA: FC<Props> = ({ items, setItems }) => {
                                 <NumberInput.Root
                                     size="sm"
                                     value={String(item.ivaPercentage)}
-                                    onValueChange={(_, val) => updateRow(idx, "ivaPercentage", val)}
+                                    onValueChange={({ valueAsNumber }) => updateRow(idx, "ivaPercentage", valueAsNumber)}
                                     min={0}
                                     max={100}
                                 >
@@ -151,7 +144,7 @@ const ListaItemsOCA: FC<Props> = ({ items, setItems }) => {
                                 <NumberInput.Root
                                     size="sm"
                                     value={String(item.cantidad)}
-                                    onValueChange={(_, val) => updateRow(idx, "cantidad", val)}
+                                    onValueChange={({ valueAsNumber }) => updateRow(idx, "cantidad", valueAsNumber)}
                                     min={1}
                                 >
                                     <NumberInput.Input />

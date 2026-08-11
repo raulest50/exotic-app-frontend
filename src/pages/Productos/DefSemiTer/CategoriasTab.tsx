@@ -10,11 +10,6 @@ import {
     Box,
     Heading,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
     Spinner,
     Alert,
     Text,
@@ -229,7 +224,7 @@ export function CategoriasTab() {
                 )}
 
                 {!loading && !error && categorias.length > 0 && (
-                    <Table.Root variant="simple">
+                    <Table.Root variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>ID</Table.ColumnHeader>

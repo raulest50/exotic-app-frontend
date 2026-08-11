@@ -5,7 +5,6 @@ import {
     IconButton,
     Button,
     InputGroup,
-    InputRightElement,
     Heading,
     Text,
     Field,
@@ -87,8 +86,25 @@ export function PanelBusquedaOCFA({
 
                         <Field.Root mb={8}>
                             <Field.Label fontWeight="medium" color={labelColor} fontSize="md" mb={2}>Número de OC-AF</Field.Label>
-                            <InputGroup size="lg">
+                            <InputGroup
+                                endElement={(
+                                    <Button
+                                        h="2rem"
+                                        size="sm"
+                                        bg="blue.600"
+                                        color="white"
+                                        _hover={{ bg: "blue.700" }}
+                                        _active={{ bg: "blue.800" }}
+                                        onClick={onSearch}
+                                        borderRadius="md"
+                                    >
+                                        <LuSearch />
+                                    </Button>
+                                )}
+                                endElementProps={{ width: "4.5rem", h: "full", pr: 1 }}
+                            >
                                 <Input
+                                    size="lg"
                                     placeholder="Ej: 12345"
                                     value={ocNumber}
                                     onChange={(e) => setOcNumber(e.target.value)}
@@ -102,21 +118,9 @@ export function PanelBusquedaOCFA({
                                     borderColor="app.border"
                                     _hover={{ borderColor: inputHoverBorderColor }}
                                     fontSize="md"
-                                    py={6} />
-                                <InputRightElement width="4.5rem" h="full" pr={1}>
-                                    <Button 
-                                        h="2rem" 
-                                        size="sm" 
-                                        bg="blue.600"
-                                        color="white"
-                                        _hover={{ bg: "blue.700" }}
-                                        _active={{ bg: "blue.800" }}
-                                        onClick={onSearch}
-                                        borderRadius="md"
-                                    >
-                                        <LuSearch />
-                                    </Button>
-                                </InputRightElement>
+                                    py={6}
+                                    pe="4.5rem"
+                                />
                             </InputGroup>
                         </Field.Root>
 

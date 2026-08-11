@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
+import { Button, Flex, Tabs } from '@chakra-ui/react';
 import { FaArrowLeft } from 'react-icons/fa';
 import CodificarMaterialesTab from './CodificarMaterialesTab.tsx';
 import InformeProductosTab from './InformeProductosTab.tsx';
@@ -40,25 +40,35 @@ export function BasicOperationsTabs({ onBack }: Props) {
     ];
 
     const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));
+    const activeTabKey = visibleTabs[tabIndex]?.key ?? visibleTabs[0]?.key;
+
+    const handleTabChange = ({ value }: { value: string }) => {
+        const nextIndex = visibleTabs.findIndex((tab) => tab.key === value);
+        if (nextIndex >= 0) {
+            setTabIndex(nextIndex);
+        }
+    };
 
     return (
         <Flex direction={'column'} gap={4} w="full" h="full">
             <Button w="fit-content" onClick={onBack}><FaArrowLeft />Volver
                             </Button>
-            <Tabs.Root fitted gap="1em" variant='line' value={tabIndex} onValueChange={setTabIndex}>
+            <Tabs.Root fitted gap="1em" variant='line' value={activeTabKey} onValueChange={handleTabChange}>
                 <Tabs.List>
                     {visibleTabs.map((tab) => (
-                        <Tab key={tab.key} sx={my_style_tab}>
+                        <Tabs.Trigger key={tab.key} value={tab.key} css={my_style_tab}>
                             {tab.label}
-                        </Tab>
+                        </Tabs.Trigger>
                     ))}
                 </Tabs.List>
 
-                <TabPanels>
+                <Tabs.ContentGroup>
                     {visibleTabs.map((tab) => (
-                        <TabPanel key={tab.key}>{tab.render()}</TabPanel>
+                        <Tabs.Content key={tab.key} value={tab.key}>
+                            {tab.render()}
+                        </Tabs.Content>
                     ))}
-                </TabPanels>
+                </Tabs.ContentGroup>
             </Tabs.Root>
         </Flex>
     );

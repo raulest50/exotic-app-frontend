@@ -164,7 +164,7 @@ export default function SemanaMPSPickerModal({
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header>{modalTitle}</Dialog.Header>
+                            <Dialog.Header><Dialog.Title>{modalTitle}</Dialog.Title></Dialog.Header>
                             <Dialog.CloseTrigger />
                             <Dialog.Body pb={6}>
                                 <VStack align="stretch" gap={4}>

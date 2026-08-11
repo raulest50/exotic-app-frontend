@@ -44,7 +44,7 @@ import { Modulo } from '../../../Usuarios/GestionUsuarios/types.tsx';
 import { useModuleAccessLevel } from '../../../../auth/usePermissions';
 import InsumoListCard from './InsumoListCard.tsx';
 import CardPackagingInfo from './CardPackagingInfo.tsx';
-import { LuAlertTriangle, LuArrowLeft, LuCheck, LuHelpCircle, LuPencil } from 'react-icons/lu';
+import { LuArrowLeft, LuCheck, LuCircleHelp, LuPencil, LuTriangleAlert } from 'react-icons/lu';
 
 type ProductoDetalle = (Producto | Material) & { insumos?: Insumo[]; casePack?: CasePack; categoria?: Categoria };
 
@@ -679,7 +679,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                     </HStack>
                     {guardarDisabledReason && (
                         <Flex align="center" gap={2} fontSize="sm" color="orange.600">
-                            <Icon as={LuAlertTriangle} boxSize={4} flexShrink={0} />
+                            <Icon as={LuTriangleAlert} boxSize={4} flexShrink={0} />
                             <Text>{guardarDisabledReason}</Text>
                         </Flex>
                     )}
@@ -742,7 +742,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                         <Text fontWeight="bold">Tipo de Material:</Text>
                                         {editMode ? (
                                             <Field.Root mt={2}>
-                                                <NativeSelect.Root>
+                                                <NativeSelect.Root disabled={!categoriaEditable}>
                                                     <NativeSelect.Field
                                                         value={(productoData as Material).tipoMaterial}
                                                         onChange={(e) => handleInputChange('tipoMaterial', Number(e.target.value))}>
@@ -765,8 +765,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                                 <NativeSelect.Root>
                                                     <NativeSelect.Field
                                                         value={categoriaActualId}
-                                                        onChange={(e) => handleCategoriaChange(Number(e.target.value))}
-                                                        disabled={!categoriaEditable}>
+                                                        onChange={(e) => handleCategoriaChange(Number(e.target.value))}>
                                                         <option value="" disabled>
                                                             {loadingCategorias || loadingCategoriaEditability
                                                                 ? 'Cargando categorías...'
@@ -814,7 +813,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                                         aria-label="Ayuda prefijo de lote"
                                                         size="sm"
                                                         variant="outline"
-                                                        onClick={onHelpPrefijoOpen}><LuHelpCircle /></IconButton>
+                                                        onClick={onHelpPrefijoOpen}><LuCircleHelp /></IconButton>
                                                 </HStack>
                                                 {prefijoVerificado && (
                                                     <Text color="green.600" fontSize="sm" mt={1}>
@@ -961,7 +960,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header>Prefijo de lote</Dialog.Header>
+                            <Dialog.Header><Dialog.Title>Prefijo de lote</Dialog.Title></Dialog.Header>
                             <Dialog.CloseTrigger />
                             <Dialog.Body pb={4}>
                                 <Text mb={2}>
