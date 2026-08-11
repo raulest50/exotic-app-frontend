@@ -268,15 +268,61 @@ async function inspectFile(relativePath: string) {
   }
 
   function visit(node: ts.Node) {
+    if (ts.isJsxElement(node)) {
+      const chakraComponent = getJsxBinding(node.openingElement.tagName, chakraBindings);
+      const compoundPart = ts.isPropertyAccessExpression(node.openingElement.tagName)
+        ? node.openingElement.tagName.name.text
+        : undefined;
+      const hasRenderableChild = node.children.some((child) => {
+        if (ts.isJsxText(child)) {
+          return child.getText(sourceFile).trim().length > 0;
+        }
+        if (ts.isJsxExpression(child)) {
+          return child.expression !== undefined;
+        }
+        return true;
+      });
+
+      if (
+        (chakraComponent === "Dialog" || chakraComponent === "Drawer") &&
+        compoundPart === "CloseTrigger" &&
+        !hasRenderableChild
+      ) {
+        addFinding(
+          sourceFile,
+          node.openingElement.tagName,
+          "empty-close-trigger",
+          `${chakraComponent}.CloseTrigger must render an accessible CloseButton child`,
+        );
+      }
+    }
+
     if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
       const chakraComponent = getJsxBinding(node.tagName, chakraBindings);
       if (chakraComponent) {
+        const compoundPart = ts.isPropertyAccessExpression(node.tagName)
+          ? node.tagName.name.text
+          : undefined;
+
         if (ts.isIdentifier(node.tagName) && legacyDirectCompoundComponents.has(chakraComponent)) {
           addFinding(
             sourceFile,
             node.tagName,
             "legacy-component-shape",
             `${chakraComponent} must use the Chakra UI v3 compound API`,
+          );
+        }
+
+        if (
+          ts.isJsxSelfClosingElement(node) &&
+          (chakraComponent === "Dialog" || chakraComponent === "Drawer") &&
+          compoundPart === "CloseTrigger"
+        ) {
+          addFinding(
+            sourceFile,
+            node.tagName,
+            "empty-close-trigger",
+            `${chakraComponent}.CloseTrigger must render an accessible CloseButton child`,
           );
         }
 
@@ -329,7 +375,7 @@ findings.sort((left, right) =>
 );
 
 if (findings.length === 0) {
-  console.log("Chakra UI v3 check passed: no known v2 APIs were found in src/.");
+  console.log("Chakra UI v3 check passed: no known v2 APIs or invalid overlay structures were found in src/.");
   process.exit(0);
 }
 
@@ -346,7 +392,7 @@ if (findings.length > detailLimit) {
   console.log(`... ${findings.length - detailLimit} additional finding(s); rerun with --all for full detail.`);
 }
 
-console.log("\nChakra UI v2 findings by rule:");
+console.log("\nChakra migration findings by rule:");
 for (const [rule, count] of [...countsByRule.entries()].sort(([left], [right]) => left.localeCompare(right))) {
   console.log(`- ${rule}: ${count}`);
 }

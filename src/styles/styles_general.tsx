@@ -3,10 +3,10 @@
 const my_style_tab={
     borderRadius:0,
 //    border:0,
-    ':active':{
+    _active:{
         bg:'app.tabSelected',
     },
-    ':selected':{
+    _selected:{
         bg:'app.tabSelected',
     },
 }

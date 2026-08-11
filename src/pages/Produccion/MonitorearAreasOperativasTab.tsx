@@ -9,6 +9,7 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import {
+    CloseButton,
     Alert,
     Box,
     Button,
@@ -875,9 +876,11 @@ export default function MonitorearAreasOperativasTab() {
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content>
+                        <Dialog.Content maxW="md">
                             <Dialog.Header><Dialog.Title>Corregir estado</Dialog.Title></Dialog.Header>
-                            <Dialog.CloseTrigger />
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton aria-label="Cerrar" size="sm" />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body>
                                 <VStack align="stretch" gap={4}>
                                     {correctionCard ? (

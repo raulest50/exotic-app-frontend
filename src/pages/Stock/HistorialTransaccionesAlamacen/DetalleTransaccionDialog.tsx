@@ -1,4 +1,4 @@
-import { Button, Box, Table, Text, VStack, HStack, Spinner, Flex, Dialog, Portal } from '@chakra-ui/react';
+import { CloseButton, Button, Box, Table, Text, VStack, HStack, Spinner, Flex, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import { useEffect, useState, useMemo } from 'react';
@@ -104,11 +104,13 @@ export default function DetalleTransaccionDialog({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="xl">
                         <Dialog.Header fontFamily="Comfortaa Variable">
                             <Dialog.Title>Detalle de Transacción</Dialog.Title>
                         </Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <VStack align="stretch" gap={4}>
                                 <Box>

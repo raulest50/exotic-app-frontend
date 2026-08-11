@@ -1,6 +1,7 @@
 // OrdenCompraDetails.tsx
 import React from 'react';
 import {
+    CloseButton,
     Button,
     Box,
     Text,
@@ -44,9 +45,11 @@ const OrdenCompraDetails: React.FC<OrdenCompraDetailsProps> = ({ isOpen, onClose
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="xl">
                         <Dialog.Header><Dialog.Title>Detalles de la Orden de Compra</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <Box mb={4}>
                                 <Text><strong>ID:</strong> {orden.ordenCompraId}</Text>

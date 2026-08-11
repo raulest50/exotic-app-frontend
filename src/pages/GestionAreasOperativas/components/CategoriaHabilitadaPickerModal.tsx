@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useColorModeValue } from "../../../components/ui/color-mode";
-import { Badge, Box, Button, Checkbox, Flex, Grid, Heading, HStack, Input, InputGroup, SimpleGrid, Spinner, NativeSelect, Table, Text, VStack, Field, Dialog, Portal } from '@chakra-ui/react';
+import { CloseButton, Badge, Box, Button, Checkbox, Flex, Grid, Heading, HStack, Input, InputGroup, SimpleGrid, Spinner, NativeSelect, Table, Text, VStack, Field, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -208,7 +208,9 @@ export default function CategoriaHabilitadaPickerModal({
                                 </Text>
                             </Box>
                         </Dialog.Header>
-                        <Dialog.CloseTrigger top={4} right={4} />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" top={4} right={4} />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body p={0} overflow="hidden" minH={0}>
                             <Grid
                                 h="full"

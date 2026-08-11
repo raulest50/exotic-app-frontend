@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+    CloseButton,
     Badge,
     Box,
     Button,
@@ -165,7 +166,9 @@ export default function SemanaMPSPickerModal({
                     <Dialog.Positioner>
                         <Dialog.Content>
                             <Dialog.Header><Dialog.Title>{modalTitle}</Dialog.Title></Dialog.Header>
-                            <Dialog.CloseTrigger />
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton aria-label="Cerrar" size="sm" />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body pb={6}>
                                 <VStack align="stretch" gap={4}>
                                     <Box>

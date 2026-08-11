@@ -1,4 +1,5 @@
 import {
+    CloseButton,
     Badge,
     Box,
     Button,
@@ -100,9 +101,11 @@ export default function MpsItemOrdersModal({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="5xl">
                         <Dialog.Header><Dialog.Title>OPs generadas del item MPS</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body pb={6}>
                             {item && context && (
                                 <VStack align="stretch" gap={4}>

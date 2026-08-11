@@ -1,4 +1,4 @@
-import { Badge, Box, Button, Flex, Heading, IconButton, NativeSelect, Spinner, Table, Text, VStack, Dialog, Portal } from "@chakra-ui/react";
+import { CloseButton, Badge, Box, Button, Flex, Heading, IconButton, NativeSelect, Spinner, Table, Text, VStack, Dialog, Portal } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useMemo, useState } from "react";
 import CustomDecimalInput from "../../../components/CustomDecimalInput/CustomDecimalInput";
@@ -143,9 +143,11 @@ export default function DispensacionV2DetalleLotesModal({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="6xl">
                         <Dialog.Header><Dialog.Title>Detalle de lotes origen</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body pb={6}>
                             {draft ? (
                                 <VStack align="stretch" gap={5}>

@@ -562,7 +562,7 @@ export default function CargaMasivaPuntosReordenTab({
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content>
+                        <Dialog.Content maxW="md">
                             <Dialog.Header>
                                 <Dialog.Title>Confirmar actualización masiva</Dialog.Title>
                             </Dialog.Header>

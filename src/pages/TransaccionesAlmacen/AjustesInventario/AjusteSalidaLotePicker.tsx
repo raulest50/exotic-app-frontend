@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Box, Button, Flex, HStack, IconButton, NativeSelect, Spinner, Table, Text, Field, Dialog, Portal } from "@chakra-ui/react";
+import { CloseButton, Alert, Box, Button, Flex, HStack, IconButton, NativeSelect, Spinner, Table, Text, Field, Dialog, Portal } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
@@ -128,9 +128,11 @@ export default function AjusteSalidaLotePicker({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="6xl">
                         <Dialog.Header><Dialog.Title>Ajuste de salida por lotes - {productoNombre}</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <Flex direction="column" gap={4}>
                                 <Text fontSize="sm" color="app.textMuted">

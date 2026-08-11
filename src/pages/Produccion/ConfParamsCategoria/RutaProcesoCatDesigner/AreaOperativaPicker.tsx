@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
 import {
+    CloseButton,
     Button,
     Input,
     InputGroup,
@@ -106,9 +107,11 @@ export default function AreaOperativaPicker({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="xl">
                         <Dialog.Header><Dialog.Title>Seleccionar Area Operativa</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <Box mb={4}>
                                 <InputGroup

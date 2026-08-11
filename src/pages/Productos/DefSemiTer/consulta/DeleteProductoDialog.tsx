@@ -49,7 +49,7 @@ export default function DeleteProductoDialog({ isOpen, onClose, onConfirm }: Del
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="md">
                         <Dialog.Header><Dialog.Title>Confirmar Eliminación</Dialog.Title></Dialog.Header>
                         <Dialog.Body>
                             <Text mb={4}>

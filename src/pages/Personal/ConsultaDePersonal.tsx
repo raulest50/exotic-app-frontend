@@ -293,7 +293,7 @@ export function ConsultaDePersonal() {
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content>
+                        <Dialog.Content maxW="5xl">
                             <Dialog.Header>
                                 <Dialog.Title>Detalle de integrante</Dialog.Title>
                             </Dialog.Header>

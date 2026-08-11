@@ -17,7 +17,7 @@ export default function InventarioAlertasHelpModal({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="lg">
                         <Dialog.Header>
                             <Dialog.Title>Cómo se clasifican las alertas</Dialog.Title>
                         </Dialog.Header>

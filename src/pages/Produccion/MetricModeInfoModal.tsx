@@ -1,4 +1,4 @@
-import { Box, SimpleGrid, Text, VStack, Button, Dialog, Portal } from "@chakra-ui/react";
+import { CloseButton, Box, SimpleGrid, Text, VStack, Button, Dialog, Portal } from "@chakra-ui/react";
 
 interface MetricModeInfoModalProps {
     isOpen: boolean;
@@ -42,7 +42,9 @@ export default function MetricModeInfoModal({
                 <Dialog.Positioner>
                     <Dialog.Content>
                         <Dialog.Header><Dialog.Title>Cómo interpretar los promedios</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <VStack align="stretch" gap={4}>
                                 <Text color="gray.600">

@@ -1,5 +1,5 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Avatar, Badge, Box, Button, Flex, Heading, HStack, Icon, IconButton, Input, InputGroup, Tabs, SimpleGrid, Text, Textarea, VStack, Field, Dialog, Portal } from '@chakra-ui/react';
+import { CloseButton, Alert, Avatar, Badge, Box, Button, Flex, Heading, HStack, Icon, IconButton, Input, InputGroup, Tabs, SimpleGrid, Text, Textarea, VStack, Field, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { FiEdit, FiLayers, FiSave } from 'react-icons/fi';
 import axios from 'axios';
@@ -383,7 +383,7 @@ export default function DetalleAreaOperativaDialog({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content
+                    <Dialog.Content maxW="5xl"
                         w="calc(100% - 24px)"
                         h={{ base: 'calc(100dvh - 24px)', md: 'min(780px, calc(100dvh - 48px))' }}
                         maxH={{ base: 'calc(100dvh - 24px)', md: 'calc(100dvh - 48px)' }}
@@ -418,7 +418,9 @@ export default function DetalleAreaOperativaDialog({
                                 </HStack>
                             </Flex>
                         </Dialog.Header>
-                        <Dialog.CloseTrigger disabled={isSaving} top={4} right={4} />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" disabled={isSaving} top={4} right={4} />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body p={0} overflow="hidden" display="flex" flexDirection="column" minH={0}>
                             {isSpecialSystemArea && (
                                 <Alert.Root

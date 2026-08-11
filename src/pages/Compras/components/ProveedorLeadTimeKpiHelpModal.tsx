@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert, Button, Text, VStack, Dialog, Portal } from "@chakra-ui/react";
+import { CloseButton, Alert, Button, Text, VStack, Dialog, Portal } from "@chakra-ui/react";
 
 interface ProveedorLeadTimeKpiHelpModalProps {
     isOpen: boolean;
@@ -17,9 +17,11 @@ const ProveedorLeadTimeKpiHelpModal: React.FC<ProveedorLeadTimeKpiHelpModalProps
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="lg">
                         <Dialog.Header><Dialog.Title>KPI de lead time del proveedor</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <VStack align="stretch" gap={4}>
                                 <Alert.Root status="info" borderRadius="md">

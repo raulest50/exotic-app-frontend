@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  CloseButton,
   Box,
   Button,
   Flex,
@@ -139,11 +140,13 @@ export default function ProductoSelector({
 
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content>
+          <Dialog.Content maxW="xl">
             <Dialog.Header>
               <Dialog.Title>{title}</Dialog.Title>
             </Dialog.Header>
-            <Dialog.CloseTrigger />
+            <Dialog.CloseTrigger asChild>
+                <CloseButton aria-label="Cerrar" size="sm" />
+            </Dialog.CloseTrigger>
             <Dialog.Body>
               <VStack gap={4} align="stretch">
                 <Field.Root>

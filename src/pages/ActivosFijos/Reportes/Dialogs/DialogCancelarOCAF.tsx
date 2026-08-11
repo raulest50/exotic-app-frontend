@@ -83,7 +83,7 @@ const DialogCancelarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onOrdenCa
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="xl">
                         <Dialog.Header><Dialog.Title>Confirmar Cancelación</Dialog.Title></Dialog.Header>
                         <Dialog.Body>
                             {/* Detalles de la orden */}

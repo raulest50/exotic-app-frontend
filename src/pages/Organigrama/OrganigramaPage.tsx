@@ -142,7 +142,7 @@ export default function OrganigramaPage() {
           </Flex>
 
           <Box flex="1" ml={open ? 4 : 0}>
-            <Tabs.Root variant='enclosed' colorPalette="blue" lazyMount value={activeTabKey} onValueChange={handleTabChange}>
+            <Tabs.Root variant='outline' colorPalette="blue" lazyMount value={activeTabKey} onValueChange={handleTabChange}>
               <Tabs.List display="none">
                 {visibleTabs.map((tab) => (
                   <Tabs.Trigger key={tab.key} value={tab.key}>{tab.label}</Tabs.Trigger>

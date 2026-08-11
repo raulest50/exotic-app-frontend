@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button, Input, Text, Field, Dialog, Portal } from '@chakra-ui/react';
+import { CloseButton, Button, Input, Text, Field, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { OrdenCompra } from '../../types';
 import { closeOrdenCompraOcm } from '../ocmIngresoApi';
@@ -101,11 +101,13 @@ export function CerrarOrdenDialog({ isOpen, onClose, orden, setActiveStep }: Cer
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="md">
                         <Dialog.Header fontFamily="Comfortaa Variable">
                             <Dialog.Title>Cerrar Orden de Compra</Dialog.Title>
                         </Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <Text fontFamily="Comfortaa Variable" mb={4}>
                                 Está a punto de cerrar la orden de compra <strong>#{orden?.ordenCompraId}</strong>.

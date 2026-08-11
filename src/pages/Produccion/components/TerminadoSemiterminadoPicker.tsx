@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useMemo, useState, type KeyboardEvent} from 'react';
 import {
+    CloseButton,
     Badge,
     Box,
     Button,
@@ -198,9 +199,11 @@ export default function TerminadoSemiterminadoPicker({isOpen, onClose, onConfirm
 
                 <Dialog.Backdrop/>
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="xl">
                         <Dialog.Header><Dialog.Title>Seleccionar producto terminado</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger/>
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <Flex direction="column" gap={3}>
                                 <Flex mb={2} gap={4} align="center">

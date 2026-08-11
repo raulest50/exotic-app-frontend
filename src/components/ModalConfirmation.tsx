@@ -1,6 +1,6 @@
 
 
-import { Button, Input, Flex, HStack, Dialog, Portal } from "@chakra-ui/react";
+import { CloseButton, Button, Input, Flex, HStack, Dialog, Portal } from "@chakra-ui/react";
   
   import {useState, useEffect} from "react";
   
@@ -44,11 +44,13 @@ import { Button, Input, Flex, HStack, Dialog, Portal } from "@chakra-ui/react";
 
               <Dialog.Backdrop />
               <Dialog.Positioner>
-                <Dialog.Content>
+                <Dialog.Content maxW="md">
                   <Dialog.Header>
                     <Dialog.Title>Ventana de Confirmacion</Dialog.Title>
                   </Dialog.Header>
-                  <Dialog.CloseTrigger />
+                  <Dialog.CloseTrigger asChild>
+                      <CloseButton aria-label="Cerrar" size="sm" />
+                  </Dialog.CloseTrigger>
                   <Dialog.Body p={'1em'}>
                     <Flex direction={'column'} gap={'1em'}>
                       <p>Para confirmar que esta seguro de hacer esta accion digite porfavor este numero: {randomNum}  y seleccione aceptar</p>

@@ -1,4 +1,4 @@
-import { Accordion, Badge, Box, Drawer, Flex, HStack, SimpleGrid, Spinner, Stack, Table, Text, VStack, Tabs, Separator, Portal } from "@chakra-ui/react";
+import { CloseButton, Accordion, Badge, Box, Drawer, Flex, HStack, SimpleGrid, Spinner, Stack, Table, Text, VStack, Tabs, Separator, Portal } from "@chakra-ui/react";
 import { useColorModeValue } from "../../components/ui/color-mode";
 import { Background, BackgroundVariant, Edge, Handle, MiniMap, Node, NodeProps, NodeTypes, Position, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -270,7 +270,9 @@ export default function AreaOperativaOrderDetailDrawer({
                 <Drawer.Backdrop />
                 <Drawer.Positioner>
                     <Drawer.Content maxW={{ base: "100vw", md: "36rem" }}>
-                        <Drawer.CloseTrigger />
+                        <Drawer.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Drawer.CloseTrigger>
                         <Drawer.Header><Drawer.Title>Detalle operativo de la orden</Drawer.Title></Drawer.Header>
 
                         <Drawer.Body>
@@ -281,7 +283,7 @@ export default function AreaOperativaOrderDetailDrawer({
                             ) : null}
 
                             {!loading && detail ? (
-                                <Tabs.Root defaultValue="resumen" variant='enclosed' colorPalette="teal" lazyMount>
+                                <Tabs.Root defaultValue="resumen" variant='outline' colorPalette="teal" lazyMount>
                                     <Tabs.List>
                                         <Tabs.Trigger value="resumen" minH={12}>Resumen</Tabs.Trigger>
                                         <Tabs.Trigger value="ruta" minH={12}>Ruta</Tabs.Trigger>

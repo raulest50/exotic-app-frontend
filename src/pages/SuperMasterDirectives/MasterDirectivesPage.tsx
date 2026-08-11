@@ -599,7 +599,7 @@ export default function MasterDirectivesPage() {
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <MyHeader title="Directivas Maestras" />
 
-            <Tabs.Root defaultValue="general" variant="enclosed" colorPalette="teal">
+            <Tabs.Root defaultValue="general" variant="outline" colorPalette="teal">
                 <Tabs.List>
                     <Tabs.Trigger value="general">General</Tabs.Trigger>
                     <Tabs.Trigger value="produccion">Produccion</Tabs.Trigger>

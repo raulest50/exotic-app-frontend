@@ -12,6 +12,7 @@ import {
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import {
+    CloseButton,
     Badge,
     Box,
     Button,
@@ -1247,9 +1248,11 @@ export default function ProgramacionProduccionSemanalTab() {
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content>
+                        <Dialog.Content maxW="md">
                             <Dialog.Header><Dialog.Title>Descartar cambios sin guardar</Dialog.Title></Dialog.Header>
-                            <Dialog.CloseTrigger />
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton aria-label="Cerrar" size="sm" />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body>
                                 <Text color="gray.700">
                                     La programacion visible tiene cambios sin guardar. Si cambia de semana, esos cambios se descartaran.

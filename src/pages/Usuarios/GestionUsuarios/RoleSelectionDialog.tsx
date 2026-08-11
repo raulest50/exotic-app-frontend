@@ -31,7 +31,7 @@ const RoleSelectionDialog: React.FC<RoleSelectionDialogProps> = ({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="md">
                         <Dialog.Header>
                             <Dialog.Title>Seleccionar Rol</Dialog.Title>
                         </Dialog.Header>

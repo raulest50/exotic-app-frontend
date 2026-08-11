@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+    CloseButton,
     Button,
     Box,
     Text,
@@ -27,9 +28,11 @@ const DetailsOCAF: React.FC<Props> = ({ isOpen, onClose, orden }) => {
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="xl">
                         <Dialog.Header><Dialog.Title>Detalles Orden Compra AF</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <Box mb={4}>
                                 <Text><strong>ID:</strong> {orden.ordenCompraActivoId}</Text>

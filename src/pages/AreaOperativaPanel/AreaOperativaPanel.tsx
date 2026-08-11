@@ -9,7 +9,7 @@ import {
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
-import { Alert, Box, Button, ButtonGroup, Flex, Grid, HStack, Heading, Input, InputGroup, NumberInput, SimpleGrid, Spinner, Tabs, Text, Textarea, VStack, useDisclosure, Field, Dialog, Portal } from "@chakra-ui/react";
+import { CloseButton, Alert, Box, Button, ButtonGroup, Flex, Grid, HStack, Heading, Input, InputGroup, NumberInput, SimpleGrid, Spinner, Tabs, Text, Textarea, VStack, useDisclosure, Field, Dialog, Portal } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     FiArchive,
@@ -693,7 +693,7 @@ export default function AreaOperativaPanel() {
                 </HStack>
             </Box>
 
-            <Tabs.Root defaultValue="tablero" variant='enclosed' colorPalette="teal" lazyMount>
+            <Tabs.Root defaultValue="tablero" variant='outline' colorPalette="teal" lazyMount>
                 <Tabs.List>
                     <Tabs.Trigger value="tablero" minH={12}>Tablero operativo</Tabs.Trigger>
                     <Tabs.Trigger value="mps-semanal" minH={12}>MPS semanal</Tabs.Trigger>
@@ -883,9 +883,11 @@ export default function AreaOperativaPanel() {
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content mx={{ base: 2, md: 4 }} maxH="calc(100dvh - 2rem)">
+                        <Dialog.Content maxW="lg" mx={{ base: 2, md: 4 }} maxH="calc(100dvh - 2rem)">
                             <Dialog.Header><Dialog.Title>{actionMeta.title}</Dialog.Title></Dialog.Header>
-                            <Dialog.CloseTrigger />
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton aria-label="Cerrar" size="sm" />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body>
                                 {selectedOrden ? (
                                     <VStack align="stretch" gap={4}>

@@ -1,4 +1,5 @@
 import {
+    CloseButton,
     Badge,
     Box,
     Button,
@@ -140,9 +141,11 @@ export default function CalidadAreaOperativaPicker({
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content>
+                        <Dialog.Content maxW="3xl">
                             <Dialog.Header><Dialog.Title>Seleccionar area operativa</Dialog.Title></Dialog.Header>
-                            <Dialog.CloseTrigger />
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton aria-label="Cerrar" size="sm" />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body>
                                 <VStack align="stretch" gap={4}>
                                     <HStack>

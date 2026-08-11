@@ -59,7 +59,7 @@ export interface CustomDecimalInputProps extends Omit<InputProps, 'value' | 'onC
  * Para "cantidad a dispensar" esto es deseado: 0 = no ingresado; use el botón
  * Eliminar para quitar un lote en lugar de poner 0.
  */
-const CustomDecimalInput: React.FC<CustomDecimalInputProps> = ({
+const CustomDecimalInput = React.forwardRef<HTMLInputElement, CustomDecimalInputProps>(({
     value,
     onChange,
     min = 0,
@@ -69,7 +69,7 @@ const CustomDecimalInput: React.FC<CustomDecimalInputProps> = ({
     isDisabled,
     disabled,
     ...inputProps
-}) => {
+}, ref) => {
     // Estado local para el valor del input (permite strings vacíos y decimales parciales)
     const [inputValue, setInputValue] = useState<string>(
         value > min ? String(value) : ""
@@ -162,6 +162,7 @@ const CustomDecimalInput: React.FC<CustomDecimalInputProps> = ({
 
     return (
         <Input
+            ref={ref}
             type="text"
             inputMode="decimal"
             value={inputValue}
@@ -173,7 +174,9 @@ const CustomDecimalInput: React.FC<CustomDecimalInputProps> = ({
             {...inputProps}
         />
     );
-};
+});
+
+CustomDecimalInput.displayName = "CustomDecimalInput";
 
 export default CustomDecimalInput;
 

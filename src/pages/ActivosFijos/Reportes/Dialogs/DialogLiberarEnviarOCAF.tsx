@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+    CloseButton,
     Button,
     Box,
     Text,
@@ -282,7 +283,9 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
                 <Dialog.Positioner>
                     <Dialog.Content>
                         <Dialog.Header><Dialog.Title>Actualizar Estado Orden Compra AF</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>{renderContent()}</Dialog.Body>
                         <Dialog.Footer>
                             <Button colorPalette='blue' onClick={onClose}>Cerrar</Button>

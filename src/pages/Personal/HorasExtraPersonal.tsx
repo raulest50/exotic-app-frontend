@@ -459,7 +459,7 @@ export function HorasExtraPersonal() {
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content>
+                        <Dialog.Content maxW="md">
                             <Dialog.Header>
                                 <Dialog.Title>
                                     {decisionState?.accion === 'rechazar' ? 'Rechazar hora extra' : 'Anular hora extra'}

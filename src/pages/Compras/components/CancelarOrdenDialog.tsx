@@ -79,7 +79,7 @@ const CancelarOrdenDialog: React.FC<CancelarOrdenDialogProps> = ({ isOpen, onClo
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="md">
                         <Dialog.Header><Dialog.Title>Confirmar Cancelación de Orden de Compra</Dialog.Title></Dialog.Header>
                         <Dialog.Body>
                             <Text mb={4}>

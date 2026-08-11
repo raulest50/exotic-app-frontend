@@ -1,6 +1,6 @@
 // ./MateriaPrimaPicker.tsx
 import React, { useState } from 'react';
-import { Box, Button, Input, VStack, HStack, Text, NativeSelect, Table, Flex, Field, Dialog, Portal } from '@chakra-ui/react';
+import { CloseButton, Box, Button, Input, VStack, HStack, Text, NativeSelect, Table, Flex, Field, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from "../../../api/EndPointsURL";
@@ -113,9 +113,11 @@ const MateriaPrimaPicker: React.FC<MateriaPrimaPickerProps> = ({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="lg">
                         <Dialog.Header><Dialog.Title>Seleccionar Materia Prima</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <VStack gap={4}>
                                 <Field.Root>

@@ -1,5 +1,6 @@
 // IngresoOCMStep1VerifyQuantities.tsx
 import {
+    CloseButton,
     Button,
     Flex,
     GridItem,
@@ -529,9 +530,11 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content>
+                        <Dialog.Content maxW="md">
                             <Dialog.Header><Dialog.Title>Prefijo de lote</Dialog.Title></Dialog.Header>
-                            <Dialog.CloseTrigger />
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton aria-label="Cerrar" size="sm" />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body pb={4}>
                                 <Text mb={2}>
                                     El prefijo de lote identifica de forma unica a cada producto terminado y se usa para generar

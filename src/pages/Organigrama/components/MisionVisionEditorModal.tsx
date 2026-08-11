@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
+  CloseButton,
   Alert,
   Box,
   Button,
@@ -226,9 +227,11 @@ export default function MisionVisionEditorModal({
 
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content>
+          <Dialog.Content maxW="6xl">
             <Dialog.Header><Dialog.Title>Editar identidad corporativa · versión base {versionBase}</Dialog.Title></Dialog.Header>
-            <Dialog.CloseTrigger disabled={saving} />
+            <Dialog.CloseTrigger asChild>
+                <CloseButton aria-label="Cerrar" size="sm" disabled={saving} />
+            </Dialog.CloseTrigger>
             <Dialog.Body>
               <VStack gap={7} align="stretch">
                 {error && (

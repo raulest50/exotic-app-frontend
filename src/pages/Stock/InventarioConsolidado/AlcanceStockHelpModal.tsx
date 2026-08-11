@@ -1,4 +1,4 @@
-import { Box, Text, VStack, Separator, Dialog, Portal } from '@chakra-ui/react';
+import { CloseButton, Box, Text, VStack, Separator, Dialog, Portal } from '@chakra-ui/react';
 
 type AlcanceStockHelpModalProps = {
     isOpen: boolean;
@@ -24,9 +24,11 @@ export default function AlcanceStockHelpModal({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW={{ md: 'lg' }}>
                         <Dialog.Header><Dialog.Title>¿Qué stock estoy viendo?</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body pb={6}>
                             <VStack align="stretch" gap={4}>
                                 <Text>

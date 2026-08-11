@@ -12,6 +12,7 @@
  */
 
 import {
+    CloseButton,
     Flex,
     Box,
     Heading,
@@ -689,9 +690,11 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content>
+                        <Dialog.Content maxW="md">
                             <Dialog.Header><Dialog.Title>Configurar inventario y consumo</Dialog.Title></Dialog.Header>
-                            <Dialog.CloseTrigger />
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton aria-label="Cerrar" size="sm" />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body>
                                 <VStack align="stretch" gap={4}>
                                     <Field.Root>

@@ -108,7 +108,7 @@ export default function OrdenProduccionPicker({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="xl">
                         <Dialog.Header>
                             <Dialog.Title>Seleccionar orden de producción</Dialog.Title>
                         </Dialog.Header>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useColorModeValue } from "../../components/ui/color-mode";
 import axios from "axios";
 import {
+    CloseButton,
     Accordion,
     Alert,
     Badge,
@@ -388,7 +389,9 @@ export function MisionVision({ canEdit }: MisionVisionProps) {
                             <Dialog.Header>
                                 <Dialog.Title>{detailVersion ? `Detalle de la versión ${detailVersion.version}` : "Cargando versión"}</Dialog.Title>
                             </Dialog.Header>
-                            <Dialog.CloseTrigger />
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton aria-label="Cerrar" size="sm" />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body>
                                 {detailLoading || !detailVersion ? (
                                     <Flex justify="center" py={12}><Spinner size="lg" /></Flex>
@@ -418,9 +421,11 @@ export function MisionVision({ canEdit }: MisionVisionProps) {
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content>
+                        <Dialog.Content maxW="md">
                             <Dialog.Header><Dialog.Title>Restaurar versión {restoreTarget?.version}</Dialog.Title></Dialog.Header>
-                            <Dialog.CloseTrigger disabled={restoring} />
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton aria-label="Cerrar" size="sm" disabled={restoring} />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body>
                                 <Text mb={4}>
                                     Se copiará el contenido seleccionado y se publicará como una nueva versión. El historial no será modificado.

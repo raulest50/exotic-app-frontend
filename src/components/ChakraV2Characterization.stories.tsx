@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { LuCheck } from 'react-icons/lu';
 import {
+  CloseButton,
   Steps,
   Box,
   Button,
@@ -59,11 +60,13 @@ export const ModalV2 = () => {
 
           <Dialog.Backdrop />
           <Dialog.Positioner>
-            <Dialog.Content>
+            <Dialog.Content maxW="md">
               <Dialog.Header>
                 <Dialog.Title>Confirmar operación</Dialog.Title>
               </Dialog.Header>
-              <Dialog.CloseTrigger />
+              <Dialog.CloseTrigger asChild>
+                  <CloseButton aria-label="Cerrar" size="sm" />
+              </Dialog.CloseTrigger>
               <Dialog.Body>
                 <Text>La información permanecerá sin cambios hasta confirmar.</Text>
               </Dialog.Body>
@@ -103,7 +106,9 @@ export const DrawerV2 = () => {
           <Drawer.Backdrop />
           <Drawer.Positioner>
             <Drawer.Content>
-              <Drawer.CloseTrigger />
+              <Drawer.CloseTrigger asChild>
+                  <CloseButton aria-label="Cerrar" size="sm" />
+              </Drawer.CloseTrigger>
               <Drawer.Header borderBottomWidth="1px">
                 <Drawer.Title>Filtros del inventario</Drawer.Title>
               </Drawer.Header>
@@ -150,7 +155,7 @@ export const TabsV2 = () => {
         value={tabValue}
         onValueChange={({ value }) => setTabValue(value)}
         colorPalette="blue"
-        variant='enclosed'
+        variant='outline'
         lazyMount>
         <Tabs.List overflowX="auto">
           <Tabs.Trigger value="summary">Resumen</Tabs.Trigger>

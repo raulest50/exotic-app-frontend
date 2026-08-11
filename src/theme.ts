@@ -1,4 +1,20 @@
-import { createSystem, defaultConfig, defineConfig } from "@chakra-ui/react";
+import {
+  createSystem,
+  defaultConfig,
+  defineConfig,
+} from "@chakra-ui/react";
+import {
+  buttonRecipe,
+  checkboxSlotRecipe,
+  dialogSlotRecipe,
+  drawerSlotRecipe,
+  fieldSlotRecipe,
+  inputRecipe,
+  nativeSelectSlotRecipe,
+  numberInputSlotRecipe,
+  tableSlotRecipe,
+  tabsSlotRecipe,
+} from "@chakra-ui/react/theme";
 
 const palette = (values: readonly [
   string,
@@ -27,8 +43,337 @@ const palette = (values: readonly [
   950: { value: values[9] },
 });
 
+const v2ColorPalette = (name: string) => ({
+  contrast: {
+    value: {
+      _light: "{colors.white}",
+      _dark: "{colors.gray.800}",
+    },
+  },
+  fg: {
+    value: {
+      _light: `{colors.${name}.600}`,
+      _dark: `{colors.${name}.200}`,
+    },
+  },
+  subtle: {
+    value: {
+      _light: `{colors.${name}.100}`,
+      _dark: `{colors.${name}.900}`,
+    },
+  },
+  muted: {
+    value: {
+      _light: `{colors.${name}.200}`,
+      _dark: `{colors.${name}.800}`,
+    },
+  },
+  emphasized: {
+    value: {
+      _light: `{colors.${name}.300}`,
+      _dark: `{colors.${name}.700}`,
+    },
+  },
+  solid: {
+    value: {
+      _light: `{colors.${name}.500}`,
+      _dark: `{colors.${name}.200}`,
+    },
+  },
+  focusRing: {
+    value: {
+      _light: `{colors.${name}.500}`,
+      _dark: `{colors.${name}.200}`,
+    },
+  },
+  border: {
+    value: {
+      _light: `{colors.${name}.500}`,
+      _dark: `{colors.${name}.200}`,
+    },
+  },
+});
+
+const appButtonRecipe = {
+  ...buttonRecipe,
+  variants: {
+    ...buttonRecipe.variants,
+    size: {
+      ...buttonRecipe.variants?.size,
+      md: {
+        ...buttonRecipe.variants?.size?.md,
+        textStyle: "md",
+      },
+    },
+  },
+} as unknown as typeof buttonRecipe;
+
+const appInputRecipe = {
+  ...inputRecipe,
+  base: {
+    ...inputRecipe.base,
+    borderRadius: "md",
+  },
+  variants: {
+    ...inputRecipe.variants,
+    size: {
+      ...inputRecipe.variants?.size,
+      md: {
+        ...inputRecipe.variants?.size?.md,
+        textStyle: "md",
+        px: "4",
+      },
+    },
+    variant: {
+      ...inputRecipe.variants?.variant,
+      outline: {
+        ...inputRecipe.variants?.variant?.outline,
+        _invalid: {
+          boxShadow: "0 0 0 1px var(--error-color)",
+        },
+      },
+    },
+  },
+} as unknown as typeof inputRecipe;
+
+const appFieldSlotRecipe = {
+  ...fieldSlotRecipe,
+  base: {
+    ...fieldSlotRecipe.base,
+    root: {
+      ...fieldSlotRecipe.base?.root,
+      gap: "2",
+    },
+    label: {
+      ...fieldSlotRecipe.base?.label,
+      textStyle: "md",
+    },
+    helperText: {
+      ...fieldSlotRecipe.base?.helperText,
+      textStyle: "sm",
+      lineHeight: "normal",
+    },
+    errorText: {
+      ...fieldSlotRecipe.base?.errorText,
+      textStyle: "sm",
+      lineHeight: "normal",
+      fontWeight: "normal",
+    },
+  },
+} as unknown as typeof fieldSlotRecipe;
+
+const appNativeSelectSlotRecipe = {
+  ...nativeSelectSlotRecipe,
+  variants: {
+    ...nativeSelectSlotRecipe.variants,
+    size: {
+      ...nativeSelectSlotRecipe.variants?.size,
+      md: {
+        ...nativeSelectSlotRecipe.variants?.size?.md,
+        field: {
+          ...nativeSelectSlotRecipe.variants?.size?.md?.field,
+          textStyle: "md",
+          ps: "4",
+          borderRadius: "md",
+        },
+      },
+    },
+  },
+} as unknown as typeof nativeSelectSlotRecipe;
+
+const appNumberInputSlotRecipe = {
+  ...numberInputSlotRecipe,
+  base: {
+    ...numberInputSlotRecipe.base,
+    root: {
+      ...numberInputSlotRecipe.base?.root,
+      width: "full",
+    },
+    input: {
+      ...numberInputSlotRecipe.base?.input,
+      borderRadius: "md",
+    },
+    incrementTrigger: {
+      ...numberInputSlotRecipe.base?.incrementTrigger,
+      borderTopEndRadius: "md",
+    },
+    decrementTrigger: {
+      ...numberInputSlotRecipe.base?.decrementTrigger,
+      borderBottomEndRadius: "md",
+    },
+  },
+  variants: {
+    ...numberInputSlotRecipe.variants,
+    size: {
+      ...numberInputSlotRecipe.variants?.size,
+      md: {
+        ...numberInputSlotRecipe.variants?.size?.md,
+        input: {
+          ...numberInputSlotRecipe.variants?.size?.md?.input,
+          textStyle: "md",
+          px: "4",
+        },
+      },
+    },
+  },
+} as unknown as typeof numberInputSlotRecipe;
+
+const appCheckboxSlotRecipe = {
+  ...checkboxSlotRecipe,
+  variants: {
+    ...checkboxSlotRecipe.variants,
+    size: {
+      ...checkboxSlotRecipe.variants?.size,
+      md: {
+        ...checkboxSlotRecipe.variants?.size?.md,
+        root: { gap: "2" },
+        label: { textStyle: "md", fontWeight: "normal" },
+        control: { boxSize: "4" },
+      },
+    },
+  },
+} as unknown as typeof checkboxSlotRecipe;
+
+const appTableSlotRecipe = {
+  ...tableSlotRecipe,
+  variants: {
+    ...tableSlotRecipe.variants,
+    variant: {
+      ...tableSlotRecipe.variants?.variant,
+      line: {
+        ...tableSlotRecipe.variants?.variant?.line,
+        row: {
+          ...tableSlotRecipe.variants?.variant?.line?.row,
+          bg: "transparent",
+        },
+      },
+    },
+    size: {
+      ...tableSlotRecipe.variants?.size,
+      sm: {
+        ...tableSlotRecipe.variants?.size?.sm,
+        columnHeader: {
+          ...tableSlotRecipe.variants?.size?.sm?.columnHeader,
+          px: "4",
+          py: "1",
+          textStyle: "xs",
+          fontWeight: "bold",
+          textTransform: "uppercase",
+          letterSpacing: "wider",
+        },
+        cell: {
+          ...tableSlotRecipe.variants?.size?.sm?.cell,
+          px: "4",
+          py: "1.5",
+          lineHeight: "4",
+        },
+      },
+    },
+  },
+} as unknown as typeof tableSlotRecipe;
+
+const appDialogSlotRecipe = {
+  ...dialogSlotRecipe,
+  base: {
+    ...dialogSlotRecipe.base,
+    backdrop: {
+      ...dialogSlotRecipe.base?.backdrop,
+      bg: "blackAlpha.600",
+    },
+    content: {
+      ...dialogSlotRecipe.base?.content,
+      textStyle: "md",
+    },
+    header: {
+      ...dialogSlotRecipe.base?.header,
+      pt: "4",
+    },
+    body: {
+      ...dialogSlotRecipe.base?.body,
+      pb: "4",
+    },
+    title: {
+      ...dialogSlotRecipe.base?.title,
+      textStyle: "xl",
+    },
+  },
+} as unknown as typeof dialogSlotRecipe;
+
+const appDrawerSlotRecipe = {
+  ...drawerSlotRecipe,
+  base: {
+    ...drawerSlotRecipe.base,
+    backdrop: {
+      ...drawerSlotRecipe.base?.backdrop,
+      bg: "blackAlpha.600",
+    },
+    content: {
+      ...drawerSlotRecipe.base?.content,
+      textStyle: "md",
+    },
+    header: {
+      ...drawerSlotRecipe.base?.header,
+      pt: "4",
+    },
+    footer: {
+      ...drawerSlotRecipe.base?.footer,
+      pt: "4",
+    },
+    title: {
+      ...drawerSlotRecipe.base?.title,
+      textStyle: "xl",
+    },
+  },
+} as unknown as typeof drawerSlotRecipe;
+
+const appTabsSlotRecipe = {
+  ...tabsSlotRecipe,
+  base: {
+    ...tabsSlotRecipe.base,
+    content: {
+      ...tabsSlotRecipe.base?.content,
+      px: "4",
+      pb: "4",
+    },
+  },
+} as unknown as typeof tabsSlotRecipe;
+
 const appConfig = defineConfig({
+  globalCss: {
+    // When CloseTrigger composes a CloseButton with asChild, Button's
+    // position:relative otherwise wins over the overlay slot recipe.
+    ".chakra-dialog__closeTrigger, .chakra-drawer__closeTrigger": {
+      position: "absolute !important",
+      width: "32px !important",
+      minWidth: "32px !important",
+      height: "32px !important",
+    },
+    ".chakra-field__label[data-required]::after": {
+      content: '"*"',
+      color: "fg.error",
+    },
+    '.chakra-toast__root[data-type="success"]': {
+      bg: {
+        _light: "green.600",
+        _dark: "green.200",
+      },
+    },
+  },
   theme: {
+    recipes: {
+      button: appButtonRecipe,
+      input: appInputRecipe,
+    },
+    slotRecipes: {
+      checkbox: appCheckboxSlotRecipe,
+      dialog: appDialogSlotRecipe,
+      drawer: appDrawerSlotRecipe,
+      field: appFieldSlotRecipe,
+      nativeSelect: appNativeSelectSlotRecipe,
+      numberInput: appNumberInputSlotRecipe,
+      table: appTableSlotRecipe,
+      tabs: appTabsSlotRecipe,
+    },
     tokens: {
       sizes: {
         container: {
@@ -187,6 +532,143 @@ const appConfig = defineConfig({
     },
     semanticTokens: {
       colors: {
+        bg: {
+          DEFAULT: {
+            value: {
+              _light: "{colors.white}",
+              _dark: "{colors.gray.800}",
+            },
+          },
+          subtle: {
+            value: {
+              _light: "{colors.gray.50}",
+              _dark: "{colors.gray.700}",
+            },
+          },
+          muted: {
+            value: {
+              _light: "{colors.gray.100}",
+              _dark: "{colors.gray.600}",
+            },
+          },
+          emphasized: {
+            value: {
+              _light: "{colors.gray.200}",
+              _dark: "{colors.gray.500}",
+            },
+          },
+          panel: {
+            value: {
+              _light: "{colors.white}",
+              _dark: "{colors.gray.700}",
+            },
+          },
+        },
+        fg: {
+          DEFAULT: {
+            value: {
+              _light: "{colors.gray.800}",
+              _dark: "{colors.gray.100}",
+            },
+          },
+          muted: {
+            value: {
+              _light: "{colors.gray.600}",
+              _dark: "{colors.gray.400}",
+            },
+          },
+          subtle: {
+            value: {
+              _light: "{colors.gray.500}",
+              _dark: "{colors.gray.400}",
+            },
+          },
+        },
+        border: {
+          DEFAULT: {
+            value: {
+              _light: "{colors.gray.200}",
+              _dark: "{colors.gray.600}",
+            },
+          },
+          muted: {
+            value: {
+              _light: "{colors.gray.100}",
+              _dark: "{colors.gray.700}",
+            },
+          },
+          subtle: {
+            value: {
+              _light: "{colors.gray.50}",
+              _dark: "{colors.gray.700}",
+            },
+          },
+          emphasized: {
+            value: {
+              _light: "{colors.gray.300}",
+              _dark: "{colors.gray.500}",
+            },
+          },
+        },
+        gray: {
+          contrast: {
+            value: {
+              _light: "{colors.gray.800}",
+              _dark: "{colors.gray.100}",
+            },
+          },
+          fg: {
+            value: {
+              _light: "{colors.gray.800}",
+              _dark: "{colors.gray.100}",
+            },
+          },
+          subtle: {
+            value: {
+              _light: "{colors.gray.100}",
+              _dark: "{colors.whiteAlpha.200}",
+            },
+          },
+          muted: {
+            value: {
+              _light: "{colors.gray.200}",
+              _dark: "{colors.whiteAlpha.300}",
+            },
+          },
+          emphasized: {
+            value: {
+              _light: "{colors.gray.300}",
+              _dark: "{colors.whiteAlpha.400}",
+            },
+          },
+          solid: {
+            value: {
+              _light: "{colors.gray.100}",
+              _dark: "{colors.whiteAlpha.200}",
+            },
+          },
+          focusRing: {
+            value: {
+              _light: "{colors.blue.500}",
+              _dark: "{colors.blue.300}",
+            },
+          },
+          border: {
+            value: {
+              _light: "{colors.gray.200}",
+              _dark: "{colors.gray.600}",
+            },
+          },
+        },
+        red: v2ColorPalette("red"),
+        orange: v2ColorPalette("orange"),
+        yellow: v2ColorPalette("yellow"),
+        green: v2ColorPalette("green"),
+        teal: v2ColorPalette("teal"),
+        blue: v2ColorPalette("blue"),
+        cyan: v2ColorPalette("cyan"),
+        purple: v2ColorPalette("purple"),
+        pink: v2ColorPalette("pink"),
         app: {
           surface: {
             value: {

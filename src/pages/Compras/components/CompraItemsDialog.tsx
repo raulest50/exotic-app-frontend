@@ -1,5 +1,5 @@
 
-import { Button, List, Text, Dialog, Portal } from '@chakra-ui/react';
+import { CloseButton, Button, List, Text, Dialog, Portal } from '@chakra-ui/react';
 
 interface ItemCompra {
     itemCompraId: number;
@@ -27,9 +27,11 @@ function CompraItemsDialog({ isOpen, onClose, itemsCompra }: CompraItemsDialogPr
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="lg">
                         <Dialog.Header><Dialog.Title>Items de la Compra</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <List.Root gap={3}>
                                 {itemsCompra.map((item) => (

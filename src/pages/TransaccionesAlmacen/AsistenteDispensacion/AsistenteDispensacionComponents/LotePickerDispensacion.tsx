@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import { Button, Flex, Table, IconButton, Text, Box, HStack, Spinner, Alert, NativeSelect, Field, Dialog, Portal } from '@chakra-ui/react';
+import { CloseButton, Button, Flex, Table, IconButton, Text, Box, HStack, Spinner, Alert, NativeSelect, Field, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL';
@@ -177,9 +177,11 @@ export function LotePickerDispensacion({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="6xl">
                         <Dialog.Header><Dialog.Title>Definir Lotes - {productoNombre}</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <Flex direction="column" gap={4}>
                                 <Text fontSize="sm" color="app.textMuted">

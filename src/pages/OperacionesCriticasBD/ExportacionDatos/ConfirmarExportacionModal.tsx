@@ -199,7 +199,7 @@ export default function ConfirmarExportacionModal({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="md">
                         <Dialog.Header>
                             <Dialog.Title>{config?.tituloModal}</Dialog.Title>
                         </Dialog.Header>

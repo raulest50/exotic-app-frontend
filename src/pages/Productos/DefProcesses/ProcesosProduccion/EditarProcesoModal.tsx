@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
+  CloseButton,
   Button,
   Input,
   NativeSelect,
@@ -191,9 +192,11 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
 
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content>
+          <Dialog.Content maxW="xl">
             <Dialog.Header><Dialog.Title>Editar Proceso de Producción</Dialog.Title></Dialog.Header>
-            <Dialog.CloseTrigger />
+            <Dialog.CloseTrigger asChild>
+                <CloseButton aria-label="Cerrar" size="sm" />
+            </Dialog.CloseTrigger>
             <Dialog.Body>
               <Stack gap={6}>
                 {/* Sección: Información General */}

@@ -237,7 +237,7 @@ export default function GestionNotificacionesTab() {
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content>
+                        <Dialog.Content maxW="md">
                             <Dialog.Header>
                                 <Dialog.Title>{infoTarget?.nombre}</Dialog.Title>
                             </Dialog.Header>

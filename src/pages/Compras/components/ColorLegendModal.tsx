@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Box, Text, Flex, Dialog, Portal } from '@chakra-ui/react';
+import { CloseButton, Button, Box, Text, Flex, Dialog, Portal } from '@chakra-ui/react';
 
 interface ColorLegendModalProps {
     isOpen: boolean;
@@ -25,9 +25,11 @@ const ColorLegendModal: React.FC<ColorLegendModalProps> = ({ isOpen, onClose }) 
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="md">
                         <Dialog.Header><Dialog.Title>Convención de Colores</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <Text mb={4}>
                                 La siguiente convención de colores se utiliza para identificar visualmente el estado de las órdenes de compra:

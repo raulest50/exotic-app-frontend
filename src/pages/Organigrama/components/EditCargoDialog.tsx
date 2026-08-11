@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  CloseButton,
   Button,
   Input,
   NumberInput,
@@ -63,9 +64,11 @@ export default function EditCargoDialog({
 
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content>
+          <Dialog.Content maxW="md">
             <Dialog.Header><Dialog.Title>Editar cargo</Dialog.Title></Dialog.Header>
-            <Dialog.CloseTrigger />
+            <Dialog.CloseTrigger asChild>
+                <CloseButton aria-label="Cerrar" size="sm" />
+            </Dialog.CloseTrigger>
             <Dialog.Body>
               <Field.Root mb={4}>
                 <Field.Label>ID del cargo</Field.Label>

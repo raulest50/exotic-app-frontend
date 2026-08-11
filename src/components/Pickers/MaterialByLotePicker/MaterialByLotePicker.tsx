@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+    CloseButton,
     Box,
     Button,
     Flex,
@@ -112,7 +113,9 @@ const MaterialByLotePicker: React.FC<MaterialByLotePickerProps> = ({
                         <Dialog.Header>
                             <Dialog.Title>Buscar Material por Lote</Dialog.Title>
                         </Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <VStack gap={4}>
                                 <Field.Root>

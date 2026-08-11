@@ -1,4 +1,5 @@
 import {
+    CloseButton,
     Box,
     Alert,
     Badge,
@@ -186,7 +187,9 @@ export default function OrdenProduccionDialogDetalles({
                 <Dialog.Positioner>
                     <Dialog.Content>
                         <Dialog.Header><Dialog.Title>Detalles de Orden #{orden.ordenId}</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <Stack gap={4} separator={<Separator />}>
                                 <Box>

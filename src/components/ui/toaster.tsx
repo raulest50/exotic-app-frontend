@@ -45,6 +45,7 @@ export const appToasters = Object.fromEntries(
       placement: positionMap[position],
       duration: 5_000,
       pauseOnPageIdle: true,
+      offsets: "8px",
     }),
   ]),
 ) as Record<AppToastPosition, CreateToasterReturn>
@@ -59,16 +60,29 @@ export function getAppToaster(position: AppToastPosition = "bottom") {
 }
 
 const renderToast = (toast: ToastOptions) => (
-  <Toast.Root width={{ md: "sm" }}>
+  <Toast.Root
+    style={{
+      width: "336px",
+      maxWidth: "calc(100vw - 16px)",
+      paddingTop: "10px",
+      paddingBottom: "10px",
+    }}
+  >
     {toast.type === "loading" ? (
       <Spinner size="sm" color="blue.solid" />
     ) : (
       <Toast.Indicator />
     )}
     <Stack gap="1" flex="1" maxWidth="100%">
-      {toast.title && <Toast.Title>{toast.title}</Toast.Title>}
+      {toast.title && (
+        <Toast.Title textStyle="md" fontWeight="semibold">
+          {toast.title}
+        </Toast.Title>
+      )}
       {toast.description && (
-        <Toast.Description>{toast.description}</Toast.Description>
+        <Toast.Description textStyle="md">
+          {toast.description}
+        </Toast.Description>
       )}
     </Stack>
     {toast.action && (
@@ -84,7 +98,7 @@ export const Toaster = () => (
       <Portal key={position}>
         <ChakraToaster
           toaster={appToasters[position]}
-          insetInline={{ mdDown: "4" }}
+          insetInline={{ mdDown: "2" }}
         >
           {renderToast}
         </ChakraToaster>

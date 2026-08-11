@@ -140,7 +140,7 @@ export default function SuperMasterOnboardingModal({ isOpen, onClose, onSuccess 
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="md">
                         <Dialog.Header>
                             <Dialog.Title>Completar perfil de Super Master</Dialog.Title>
                         </Dialog.Header>

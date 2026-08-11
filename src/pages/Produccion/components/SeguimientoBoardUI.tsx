@@ -1,4 +1,5 @@
 import {
+    CloseButton,
     Badge,
     Box,
     Button,
@@ -438,7 +439,7 @@ export function SeguimientoBoardColumn({
                 containerRef={containerRef}
                 totalItems={totalItems}
                 footer={footer}
-                loading={isLoading}
+                isLoading={isLoading}
                 touchOptimized={touchOptimized}
             />
         );
@@ -712,7 +713,9 @@ export function SeguimientoOrdenDetailDrawer({
                 <Drawer.Backdrop />
                 <Drawer.Positioner>
                     <Drawer.Content>
-                        <Drawer.CloseTrigger />
+                        <Drawer.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Drawer.CloseTrigger>
                         <Drawer.Header><Drawer.Title>Detalle de seguimiento</Drawer.Title></Drawer.Header>
 
                         <Drawer.Body>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import {
+    CloseButton,
     Textarea,
     Button,
     VStack,
@@ -772,9 +773,11 @@ export default function CrearOrdenesProduccionTab() {
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content>
+                        <Dialog.Content maxW="lg">
                             <Dialog.Header><Dialog.Title>Edición Manual de Números de Lote</Dialog.Title></Dialog.Header>
-                            <Dialog.CloseTrigger />
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton aria-label="Cerrar" size="sm" />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body>
                                 <VStack align="stretch" gap={4}>
                                     <Text>

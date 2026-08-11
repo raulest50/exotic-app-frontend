@@ -1,4 +1,5 @@
 import {
+  CloseButton,
   Box,
   Button,
   Flex,
@@ -79,9 +80,11 @@ export default function RecursoProduccionPicker({isOpen, onClose, onConfirm, alr
 
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content>
+          <Dialog.Content maxW="6xl">
             <Dialog.Header><Dialog.Title>Seleccionar Recursos de Producción</Dialog.Title></Dialog.Header>
-            <Dialog.CloseTrigger />
+            <Dialog.CloseTrigger asChild>
+                <CloseButton aria-label="Cerrar" size="sm" />
+            </Dialog.CloseTrigger>
             <Dialog.Body>
               <Flex gap={4}>
                 <Box flex={1}>

@@ -1,4 +1,4 @@
-import { Button, Box, Table, Text, VStack, HStack, Spinner, Flex, Badge, Dialog, Portal } from '@chakra-ui/react';
+import { CloseButton, Button, Box, Table, Text, VStack, HStack, Spinner, Flex, Badge, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
@@ -101,7 +101,7 @@ export default function DetalleDispensacionDialog({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="xl">
                         <Dialog.Header fontFamily="Comfortaa Variable">
                             <Dialog.Title>
                                 {transaccion.tipoEntidadCausante === 'OAA'
@@ -109,7 +109,9 @@ export default function DetalleDispensacionDialog({
                                     : 'Detalle de Dispensación'}
                             </Dialog.Title>
                         </Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <VStack align="stretch" gap={4}>
                                 {/* Información de la transacción */}

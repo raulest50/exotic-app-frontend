@@ -1,6 +1,7 @@
 // ./MateriaPrimaPicker.tsx
 import React, { useState } from 'react';
 import {
+    CloseButton,
     Box,
     Button,
     Input,
@@ -126,9 +127,11 @@ const MateriaPrimaPicker: React.FC<MateriaPrimaPickerProps> = ({
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content maxW="lg">
                         <Dialog.Header><Dialog.Title>Seleccionar Materia Prima</Dialog.Title></Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton aria-label="Cerrar" size="sm" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <VStack gap={4}>
                                 <Field.Root>
