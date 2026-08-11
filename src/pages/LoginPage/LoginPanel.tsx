@@ -205,14 +205,14 @@ export default function LoginPanel() {
         if (!reason || reason === "MANUAL_LOGOUT") return;
 
         const descriptions: Record<Exclude<SessionEndReason, "MANUAL_LOGOUT">, string> = {
-            TOKEN_EXPIRED: "Tu sesiÛn expirÛ. Inicia sesiÛn nuevamente.",
-            INVALID_TOKEN: "Tu sesiÛn ya no es v·lida. Inicia sesiÛn nuevamente.",
-            AUTHENTICATION_REQUIRED: "Debes iniciar sesiÛn nuevamente para continuar.",
-            SESSION_VALIDATION_FAILED: "No fue posible validar tu sesiÛn. Inicia sesiÛn nuevamente.",
+            TOKEN_EXPIRED: "Tu sesi√≥n expir√≥. Inicia sesi√≥n nuevamente.",
+            INVALID_TOKEN: "Tu sesi√≥n ya no es v√°lida. Inicia sesi√≥n nuevamente.",
+            AUTHENTICATION_REQUIRED: "Debes iniciar sesi√≥n nuevamente para continuar.",
+            SESSION_VALIDATION_FAILED: "No fue posible validar tu sesi√≥n. Inicia sesi√≥n nuevamente.",
         };
 
         toast({
-            title: "SesiÛn finalizada",
+            title: "Sesi√≥n finalizada",
             description: descriptions[reason],
             status: "warning",
             duration: 6000,

@@ -4,9 +4,6 @@ import { Center, Spinner } from '@chakra-ui/react'
 import './App.css'
 import EndPointsURL from './api/EndPointsURL'
 
-// Silenciar advertencias de deprecación de React Router
-window.REACT_ROUTER_SILENT_DEPRECATIONS = true;
-
 import RootLayout from "./pages/RootLayout.tsx";
 import { NotificationsProvider } from "./context/NotificationsContext.tsx";
 import { MasterDirectivesProvider } from "./context/MasterDirectivesContext.tsx";
