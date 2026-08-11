@@ -1,21 +1,4 @@
-import {
-    Box,
-    Button,
-    Checkbox,
-    CheckboxGroup,
-    Flex,
-    IconButton,
-    Input,
-    Stack,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    Field,
-} from "@chakra-ui/react";
+import { Box, Button, Checkbox, CheckboxGroup, Flex, IconButton, Input, Stack, Table, Text, Field } from "@chakra-ui/react";
 import MyPagination from "../../../components/MyPagination.tsx";
 import { Producto } from "../../Productos/types.tsx";
 import { LuPlus, LuTrash2 } from 'react-icons/lu';
@@ -126,7 +109,7 @@ export default function AjustesInventarioStep0SelectProducts({
                         {loading ? (
                             <Text color={"app.textSubtle"}>Cargando productos...</Text>
                         ) : productos.length > 0 ? (
-                            <Table.Root size={"sm"} variant={"simple"}>
+                            <Table.Root size={"sm"} variant={"line"}>
                                 <Table.Header>
                                     <Table.Row>
                                         <Table.ColumnHeader>ID</Table.ColumnHeader>
@@ -178,7 +161,7 @@ export default function AjustesInventarioStep0SelectProducts({
                     Items seleccionados
                 </Text>
                 {selectedProducts.length > 0 ? (
-                    <Table.Root size={"sm"} variant={"simple"}>
+                    <Table.Root size={"sm"} variant={"line"}>
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>ID</Table.ColumnHeader>

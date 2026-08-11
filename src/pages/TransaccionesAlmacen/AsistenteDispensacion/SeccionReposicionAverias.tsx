@@ -1,20 +1,5 @@
 import React, {useState} from 'react';
-import {
-    Alert,
-    Box,
-    Button,
-    Flex,
-    Heading,
-    IconButton,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    Tag,
-} from '@chakra-ui/react';
+import { Alert, Box, Button, Flex, Heading, IconButton, Table, Text, Tag } from '@chakra-ui/react';
 import {ItemPendienteReposicion, LoteSeleccionado} from '../types';
 import {LotePickerDispensacion} from './AsistenteDispensacionComponents/LotePickerDispensacion';
 import { LuTrash2 } from 'react-icons/lu';
@@ -100,7 +85,7 @@ export default function SeccionReposicionAverias({
                     </Alert.Root>
 
                     <Box w='full' overflowX='auto'>
-                        <Table.Root size='sm' variant='simple'>
+                        <Table.Root size='sm' variant='line'>
                             <Table.Header>
                                 <Table.Row bg='orange.100'>
                                     <Table.ColumnHeader>Producto</Table.ColumnHeader>

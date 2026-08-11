@@ -1,24 +1,5 @@
 import {useState, useEffect} from 'react';
-import {
-    Button,
-    Flex,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    IconButton,
-    Text,
-    Box,
-    HStack,
-    Spinner,
-    Alert,
-    NativeSelect,
-    Field,
-    Dialog,
-    Portal,
-} from '@chakra-ui/react';
+import { Button, Flex, Table, IconButton, Text, Box, HStack, Spinner, Alert, NativeSelect, Field, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL';
@@ -197,7 +178,7 @@ export function LotePickerDispensacion({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Definir Lotes - {productoNombre}</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Definir Lotes - {productoNombre}</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <Flex direction="column" gap={4}>
@@ -219,9 +200,8 @@ export function LotePickerDispensacion({
                                             <Text fontWeight="bold">Lotes Disponibles</Text>
                                             <HStack gap={2}>
                                                 <Field.Root width="auto" minW="120px">
-                                                    <NativeSelect.Root>
+                                                    <NativeSelect.Root size="sm">
                                                         <NativeSelect.Field
-                                                            size="sm"
                                                             value={size}
                                                             onChange={(e) => handleSizeChange(parseInt(e.target.value))}>
                                                             <option value={5}>5 por página</option>

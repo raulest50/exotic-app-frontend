@@ -96,7 +96,7 @@ export default function ConsultaAreasOperativasTab() {
     };
 
     return (
-        <VStack w="full" spacing={4} align="stretch">
+        <VStack w="full" gap={4} align="stretch">
             <FiltroAreasOperativas
                 onBuscar={handleBuscar}
                 loading={loading}

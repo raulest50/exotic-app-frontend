@@ -113,10 +113,10 @@ export default function DispensacionV2Tab() {
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <Flex direction="column" gap={4}>
-                <Steps.Root step={activeStep} p="1em" backgroundColor="app.stepperTeal" w="full">
+                <Steps.Root step={activeStep} count={steps.length} p="1em" backgroundColor="app.stepperTeal" w="full">
                       <Steps.List>
                         {steps.map((step, index) => (
-                            <Steps.Item key={step.title}>
+                            <Steps.Item key={step.title} index={index}>
                                 <Steps.Indicator>
                                     <Steps.Status complete={<LuCheck />} incomplete={<Steps.Number />} current={<Steps.Number />} />
                                 </Steps.Indicator>

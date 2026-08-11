@@ -151,8 +151,8 @@ export default function ReporteHyLButton({
         <VStack align="stretch" gap={2}>
             <Checkbox.Root
                 checked={costosEnCero}
-                onCheckedChange={(event) => {
-                    setCostosEnCero(event.target.checked);
+                onCheckedChange={({ checked }) => {
+                    setCostosEnCero(checked === true);
                     onInvalidated?.();
                 }}
                 disabled={isGenerating}

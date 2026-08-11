@@ -30,6 +30,8 @@ export default function WizardAveriaAlmacen({ onBack }: WizardAveriaAlmacenProps
         defaultStep: 0,
         count: steps.length
     });
+    const activeStep = stepsApi.value;
+    const setActiveStep = stepsApi.setStep;
 
     const [selectedItems, setSelectedItems] = useState<AveriaAlmacenItem[]>([]);
 
@@ -78,8 +80,9 @@ export default function WizardAveriaAlmacen({ onBack }: WizardAveriaAlmacenProps
                     </Button>
                 </Flex>
                 <Steps.RootProvider p="1em" backgroundColor="app.stepperTeal" w="full" value={stepsApi}>
+                    <Steps.List>
                     {steps.map((step, index) => (
-                        <Steps.Item key={index}>
+                        <Steps.Item key={index} index={index}>
                             <Steps.Indicator>
                                 <Steps.Status
                                     complete={<LuCheck />}
@@ -94,6 +97,7 @@ export default function WizardAveriaAlmacen({ onBack }: WizardAveriaAlmacenProps
                             <Steps.Separator />
                         </Steps.Item>
                     ))}
+                    </Steps.List>
                 </Steps.RootProvider>
                 {ConditionalRenderStep()}
             </Flex>

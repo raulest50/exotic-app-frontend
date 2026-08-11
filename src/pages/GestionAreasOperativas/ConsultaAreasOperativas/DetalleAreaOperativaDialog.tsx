@@ -1,31 +1,5 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
-import {
-    Alert,
-    Avatar,
-    Badge,
-    Box,
-    Button,
-    Flex,
-    Heading,
-    HStack,
-    Icon,
-    IconButton,
-    Input,
-    InputGroup,
-    InputRightElement,
-    Tab,
-    TabList,
-    TabPanel,
-    TabPanels,
-    Tabs,
-    SimpleGrid,
-    Text,
-    Textarea,
-    VStack,
-    Field,
-    Dialog,
-    Portal,
-} from '@chakra-ui/react';
+import { Alert, Avatar, Badge, Box, Button, Flex, Heading, HStack, Icon, IconButton, Input, InputGroup, Tabs, SimpleGrid, Text, Textarea, VStack, Field, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { FiEdit, FiLayers, FiSave } from 'react-icons/fi';
 import axios from 'axios';
@@ -431,14 +405,12 @@ export default function DetalleAreaOperativaDialog({
                                     >
                                         Área operativa #{area.areaId}
                                     </Text>
-                                    <Heading
-                                        as="h2"
-                                        size="md"
+                                    <Dialog.Title
                                         fontFamily="Comfortaa Variable"
                                         lineClamp={1}
                                     >
                                         {area.nombre}
-                                    </Heading>
+                                    </Dialog.Title>
                                 </Box>
                                 <HStack gap={2} flexWrap="wrap" justify="flex-end">
                                     {isEditing && <Badge colorPalette="teal">Editando</Badge>}
@@ -466,6 +438,7 @@ export default function DetalleAreaOperativaDialog({
                             )}
 
                             <Tabs.Root
+                                defaultValue="informacion"
                                 variant='line'
                                 colorPalette="teal"
                                 lazyMount
@@ -475,12 +448,12 @@ export default function DetalleAreaOperativaDialog({
                                 minH={0}
                             >
                                 <Tabs.List px={{ base: 2, md: 6 }} flexShrink={0} bg="app.surface">
-                                    <Tab flex="1" whiteSpace="nowrap" py={3}>Información</Tab>
-                                    <Tab flex="1" whiteSpace="nowrap" py={3}>Categorías</Tab>
-                                    <Tab flex="1" whiteSpace="nowrap" py={3}>Unidades</Tab>
+                                    <Tabs.Trigger value="informacion" flex="1" whiteSpace="nowrap" py={3}>Información</Tabs.Trigger>
+                                    <Tabs.Trigger value="categorias" flex="1" whiteSpace="nowrap" py={3}>Categorías</Tabs.Trigger>
+                                    <Tabs.Trigger value="unidades" flex="1" whiteSpace="nowrap" py={3}>Unidades</Tabs.Trigger>
                                 </Tabs.List>
-                                <TabPanels flex="1" minH={0} overflowY="auto" bg="app.surfaceSubtle">
-                                        <TabPanel px={{ base: 4, md: 6 }} py={5} minH="100%">
+                                <Box flex="1" minH={0} overflowY="auto" bg="app.surfaceSubtle">
+                                        <Tabs.Content value="informacion" px={{ base: 4, md: 6 }} py={5} minH="100%">
                                             <VStack align="stretch" gap={4}>
                                                 <Box>
                                                     <Heading as="h3" size="sm">Información del área</Heading>
@@ -596,7 +569,16 @@ export default function DetalleAreaOperativaDialog({
                                                         {isEditing && (
                                                             <Field.Root required invalid={Boolean(responsableError)}>
                                                                 <Field.Label>Seleccionar responsable</Field.Label>
-                                                                <InputGroup>
+                                                                <InputGroup
+                                                                    endElement={(
+                                                                        <IconButton
+                                                                            aria-label="Buscar usuario"
+                                                                            size="sm"
+                                                                            onClick={() => setIsUserPickerOpen(true)}
+                                                                            disabled={isSaving || isValidatingResponsable}
+                                                                        ><LuSearch /></IconButton>
+                                                                    )}
+                                                                >
                                                                     <Input
                                                                         value={editResponsable ? `${editResponsable.cedula} - ${editResponsable.nombreCompleto || editResponsable.username}` : ''}
                                                                         placeholder="Seleccione un responsable"
@@ -604,13 +586,6 @@ export default function DetalleAreaOperativaDialog({
                                                                         bg="app.inputReadonly"
                                                                         pr={12}
                                                                     />
-                                                                    <InputRightElement>
-                                                                        <IconButton
-                                                                            aria-label="Buscar usuario"
-                                                                            size="sm"
-                                                                            onClick={() => setIsUserPickerOpen(true)}
-                                                                            disabled={isSaving || isValidatingResponsable}><LuSearch /></IconButton>
-                                                                    </InputRightElement>
                                                                 </InputGroup>
                                                                 {responsableError && <Field.ErrorText>{responsableError}</Field.ErrorText>}
                                                             </Field.Root>
@@ -618,9 +593,9 @@ export default function DetalleAreaOperativaDialog({
                                                     </Box>
                                                 </SimpleGrid>
                                             </VStack>
-                                        </TabPanel>
+                                        </Tabs.Content>
 
-                                        <TabPanel px={{ base: 4, md: 6 }} py={5} minH="100%">
+                                        <Tabs.Content value="categorias" px={{ base: 4, md: 6 }} py={5} minH="100%">
                                             <VStack align="stretch" gap={4}>
                                                 <Flex
                                                     direction={{ base: 'column', sm: 'row' }}
@@ -651,16 +626,16 @@ export default function DetalleAreaOperativaDialog({
                                                 </Flex>
                                                 {renderCategoriasConUnidades(categoriasVisibles)}
                                             </VStack>
-                                        </TabPanel>
+                                        </Tabs.Content>
 
-                                        <TabPanel px={{ base: 4, md: 6 }} py={5} minH="100%">
+                                        <Tabs.Content value="unidades" px={{ base: 4, md: 6 }} py={5} minH="100%">
                                             <AreaOperativaUnidadMedidaConfig
                                                 areaId={area.areaId}
                                                 isReadOnly={isSpecialSystemArea}
                                                 onUnidadesLoaded={handleUnidadesLoaded}
                                             />
-                                        </TabPanel>
-                                </TabPanels>
+                                        </Tabs.Content>
+                                </Box>
                             </Tabs.Root>
                         </Dialog.Body>
                         <Dialog.Footer

@@ -1,17 +1,4 @@
-import {
-    Box,
-    Button,
-    Flex,
-    Spinner,
-    Table,
-    TableContainer,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-} from '@chakra-ui/react';
+import { Box, Button, Flex, Spinner, Table, Text } from '@chakra-ui/react';
 import { AreaOperativa } from './types';
 
 interface TablaAreasOperativasProps {
@@ -36,7 +23,7 @@ export default function TablaAreasOperativas({ areas, loading, onVerDetalle }: T
     return (
         <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
             <Table.ScrollArea>
-                <Table.Root variant="simple" size="sm">
+                <Table.Root variant="line" size="sm">
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>ID</Table.ColumnHeader>

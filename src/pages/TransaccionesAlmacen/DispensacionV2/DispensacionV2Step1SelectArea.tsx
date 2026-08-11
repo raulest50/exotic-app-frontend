@@ -1,24 +1,4 @@
-import {
-    Badge,
-    Box,
-    Button,
-    Flex,
-    HStack,
-    Input,
-    InputGroup,
-    InputLeftElement,
-    Spinner,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-    Field,
-    Icon,
-} from "@chakra-ui/react";
+import { Badge, Box, Button, Flex, HStack, Input, InputGroup, Spinner, Table, Text, VStack, Field, Icon } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
@@ -134,10 +114,7 @@ export default function DispensacionV2Step1SelectArea({
                 <Field.Root>
                     <Field.Label>Área operativa</Field.Label>
                     <HStack>
-                        <InputGroup>
-                            <InputLeftElement pointerEvents="none">
-                                <Icon as={LuSearch} color="gray.400" />
-                            </InputLeftElement>
+                        <InputGroup startElement={<Icon as={LuSearch} color="gray.400" />}>
                             <Input
                                 value={searchText}
                                 onChange={(event) => setSearchText(event.target.value)}

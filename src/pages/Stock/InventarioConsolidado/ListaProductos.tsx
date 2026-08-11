@@ -1,19 +1,4 @@
-import {
-    Box,
-    Spinner,
-    Text,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Flex,
-    Menu,
-    Button,
-    useDisclosure,
-    Portal,
-} from "@chakra-ui/react";
+import { Box, Spinner, Text, Table, Flex, Menu, Button, useDisclosure, Portal } from "@chakra-ui/react";
 import { useState } from 'react';
 import axios from 'axios';
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
@@ -99,7 +84,7 @@ function ListaProductos({
                     <Spinner />
                 ) : (
                     <Box w={"full"}>
-                        <Table.Root variant="striped" colorPalette="gray" size="sm" width="100%">
+                        <Table.Root variant="line" striped colorPalette="gray" size="sm" width="100%">
                             <Table.Header position="sticky" top={0} bg="app.tableHeaderSticky" zIndex={1}>
                                 <Table.Row>
                                     <Table.ColumnHeader>ID</Table.ColumnHeader>
@@ -125,7 +110,7 @@ function ListaProductos({
                                             <Table.Cell>{item.producto.tipoUnidades}</Table.Cell>
                                             <Table.Cell>
                                                 <Menu.Root>
-                                                    <Menu.Trigger size="sm" colorPalette="teal" asChild><Button>Menu</Button></Menu.Trigger>
+                                                    <Menu.Trigger asChild><Button size="sm" colorPalette="teal">Menu</Button></Menu.Trigger>
                                                     <Portal><Menu.Positioner><Menu.Content>
                                                                 <Menu.Item
                                                                     onSelect={() => {
@@ -157,7 +142,7 @@ function ListaProductos({
                 </Box>
             </Flex>
             <MovimientosExcelModal
-                isOpen={isOpen}
+                isOpen={open}
                 onClose={onClose}
                 onConfirm={handleConfirmDownload}
             />

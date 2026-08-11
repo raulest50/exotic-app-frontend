@@ -1,20 +1,4 @@
-import {
-    Alert,
-    Badge,
-    Box,
-    Button,
-    Flex,
-    Heading,
-    Table,
-    TableContainer,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-} from "@chakra-ui/react";
+import { Alert, Badge, Box, Button, Flex, Heading, Table, Text, VStack } from "@chakra-ui/react";
 import { useState } from "react";
 import { getCantidadActualEfectiva, recalcularDispensacionV2 } from "./DispensacionV2Calculations";
 import DispensacionV2DetalleLotesModal from "./DispensacionV2DetalleLotesModal";
@@ -114,7 +98,7 @@ export default function DispensacionV2Step4Resumen({
                     </Flex>
 
                     <Table.ScrollArea>
-                        <Table.Root size="sm" variant="simple">
+                        <Table.Root size="sm" variant="line">
                             <Table.Header>
                                 <Table.Row>
                                     <Table.ColumnHeader>Material</Table.ColumnHeader>
@@ -184,7 +168,7 @@ export default function DispensacionV2Step4Resumen({
             <Box borderWidth="1px" borderRadius="md" bg="app.surface" p={4}>
                 <Heading size="sm" mb={3}>Total por material</Heading>
                 <Table.ScrollArea>
-                    <Table.Root size="sm" variant="striped">
+                    <Table.Root size="sm" variant="line" striped>
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>Material</Table.ColumnHeader>

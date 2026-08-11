@@ -94,7 +94,7 @@ function HistorialTransaccionesAlmacenTab() {
     };
 
     return (
-        <VStack w="full" spacing={4} align="stretch">
+        <VStack w="full" gap={4} align="stretch">
             <FiltroTranAlmacenSearch
                 onBuscar={handleBuscar}
                 loading={loading}

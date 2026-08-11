@@ -103,7 +103,7 @@ export function CerrarOrdenDialog({ isOpen, onClose, orden, setActiveStep }: Cer
                 <Dialog.Positioner>
                     <Dialog.Content>
                         <Dialog.Header fontFamily="Comfortaa Variable">
-                            Cerrar Orden de Compra
+                            <Dialog.Title>Cerrar Orden de Compra</Dialog.Title>
                         </Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>

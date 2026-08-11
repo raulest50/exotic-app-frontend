@@ -1,18 +1,4 @@
-import {
-    Box,
-    Button,
-    Collapsible,
-    Flex,
-    Heading,
-    Spinner,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-} from '@chakra-ui/react';
+import { Box, Button, Collapsible, Flex, Heading, Spinner, Table, Text } from '@chakra-ui/react';
 import {Fragment, useEffect, useMemo, useState} from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';
@@ -157,7 +143,7 @@ export default function ResumenHistorialDispensaciones({
                                             <Collapsible.Root open={!!expanded[disp.transaccionId]}>
                                                 <Collapsible.Content>
                                                     <Box p={3} bg="app.surfaceSubtle">
-                                                        <Table.Root size="xs">
+                                                        <Table.Root size="sm">
                                                             <Table.Header>
                                                                 <Table.Row>
                                                                     <Table.ColumnHeader>Producto</Table.ColumnHeader>

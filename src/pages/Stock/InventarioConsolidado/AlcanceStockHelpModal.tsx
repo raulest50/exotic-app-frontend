@@ -25,7 +25,7 @@ export default function AlcanceStockHelpModal({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>¿Qué stock estoy viendo?</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>¿Qué stock estoy viendo?</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body pb={6}>
                             <VStack align="stretch" gap={4}>

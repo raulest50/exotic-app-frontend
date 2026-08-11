@@ -1,27 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-    Alert,
-    Badge,
-    Box,
-    Button,
-    Flex,
-    Heading,
-    HStack,
-    Input,
-    NativeSelect,
-    SimpleGrid,
-    Spinner,
-    Table,
-    TableContainer,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-    Field,
-} from '@chakra-ui/react';
+import { Alert, Badge, Box, Button, Flex, Heading, HStack, Input, NativeSelect, SimpleGrid, Spinner, Table, Text, VStack, Field } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -275,9 +253,8 @@ export default function AreaOperativaUnidadMedidaConfig({
                         </Field.Root>
                         <Field.Root>
                             <Field.Label>Unidad relación</Field.Label>
-                            <NativeSelect.Root>
+                            <NativeSelect.Root size="sm">
                                 <NativeSelect.Field
-                                    size="sm"
                                     value={createUnidadDraft.unidadRelacion}
                                     onChange={(event) => setCreateUnidadDraft((prev) => ({
                                         ...prev,
@@ -388,11 +365,9 @@ export default function AreaOperativaUnidadMedidaConfig({
                                                 />
                                             </Table.Cell>
                                             <Table.Cell>
-                                                <NativeSelect.Root>
+                                                <NativeSelect.Root size="sm" disabled={isReadOnly}>
                                                     <NativeSelect.Field
-                                                        size="sm"
                                                         value={draft.unidadRelacion}
-                                                        disabled={isReadOnly}
                                                         bg={isReadOnly ? 'app.inputReadonly' : undefined}
                                                         onChange={(event) => setUnidadDraftField(
                                                             unidad.id,
@@ -486,11 +461,9 @@ export default function AreaOperativaUnidadMedidaConfig({
                                                 </Field.Root>
                                                 <Field.Root>
                                                     <Field.Label fontSize="sm">Unidad relación</Field.Label>
-                                                    <NativeSelect.Root>
+                                                    <NativeSelect.Root size="sm" disabled={isReadOnly}>
                                                         <NativeSelect.Field
-                                                            size="sm"
                                                             value={draft.unidadRelacion}
-                                                            disabled={isReadOnly}
                                                             bg={isReadOnly ? 'app.inputReadonly' : undefined}
                                                             onChange={(event) => setUnidadDraftField(
                                                                 unidad.id,

@@ -1,21 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useColorModeValue } from "../../../../components/ui/color-mode";
-import {
-    Box,
-    Flex,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Text,
-    Heading,
-    Spinner,
-    Collapsible,
-    IconButton,
-    Badge,
-} from '@chakra-ui/react';
+import { Box, Flex, Table, Text, Heading, Spinner, Collapsible, IconButton, Badge } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { MovimientoDetalle, TransaccionAlmacen } from '../../types';
 
@@ -195,7 +180,7 @@ export function ListaTransaccionesAlmacen({
                 </Box>
             ) : (
                 <Box w="full" bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header bg="app.tableHeader">
                             <Table.Row>
                                 <Table.ColumnHeader>ID Transaccion</Table.ColumnHeader>
@@ -283,7 +268,7 @@ export function ListaTransaccionesAlmacen({
                                                                         <Text fontWeight="bold" mb={3} fontSize="sm">
                                                                             Materiales Recibidos en esta Transaccion
                                                                         </Text>
-                                                                        <Table.Root size="sm" variant="simple" bg="app.surface">
+                                                                        <Table.Root size="sm" variant="line" bg="app.surface">
                                                                             <Table.Header>
                                                                                 <Table.Row>
                                                                                     <Table.ColumnHeader>Material</Table.ColumnHeader>

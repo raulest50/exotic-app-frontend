@@ -1,22 +1,6 @@
-import { type ChangeEvent, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useColorModeValue } from "../../../../components/ui/color-mode";
-import {
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Text,
-    Flex,
-    Button,
-    IconButton,
-    Input,
-    Box,
-    Badge,
-    Collapsible,
-    Checkbox,
-} from '@chakra-ui/react';
+import { Table, Text, Flex, Button, IconButton, Input, Box, Badge, Collapsible, Checkbox } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     IngresoOcmDraftItem,
@@ -68,8 +52,8 @@ export function CardIngresoMaterial({
         }
     }, [excluded]);
 
-    const handleExcludedChange = (e: ChangeEvent<HTMLInputElement>) => {
-        onToggleExcluded(itemIndex, e.target.checked);
+    const handleExcludedChange = ({ checked }: Checkbox.CheckedChangeDetails) => {
+        onToggleExcluded(itemIndex, checked === true);
     };
 
     const handleAddLote = () => {
@@ -182,7 +166,7 @@ export function CardIngresoMaterial({
                                                                                 </Button>
                                     </Flex>
 
-                                    <Table.Root size="sm" variant="simple" bg="app.surface">
+                                    <Table.Root size="sm" variant="line" bg="app.surface">
                                         <Table.Header>
                                             <Table.Row>
                                                 <Table.ColumnHeader>Lote #</Table.ColumnHeader>

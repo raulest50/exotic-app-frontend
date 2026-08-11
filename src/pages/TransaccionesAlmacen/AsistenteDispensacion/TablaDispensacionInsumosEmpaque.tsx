@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, IconButton, Table, Tbody, Td, Text, Th, Thead, Tr, Tag } from '@chakra-ui/react';
+import { Box, Button, IconButton, Table, Text, Tag } from '@chakra-ui/react';
 import {InsumoDesglosado, LoteSeleccionado} from '../types';
 import { LuTrash2 } from 'react-icons/lu';
 

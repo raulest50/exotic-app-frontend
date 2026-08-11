@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Table, Thead, Tbody, Tr, Th, Td, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, Flex, Table, Text, VStack } from '@chakra-ui/react';
 import CustomDecimalInput from '../../../../../components/CustomDecimalInput/CustomDecimalInput';
 import { AveriaAlmacenItem } from '../WizardAveriaAlmacen';
 
@@ -43,7 +43,7 @@ export default function AveriaAlmacenStep1Quantities({
 
             <VStack gap={4} align="stretch">
                 <Box w="full" overflowX="auto">
-                    <Table.Root variant="simple" size="sm">
+                    <Table.Root variant="line" size="sm">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>Código</Table.ColumnHeader>

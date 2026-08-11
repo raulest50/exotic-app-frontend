@@ -1,20 +1,4 @@
-import {
-    Alert,
-    Box,
-    Button,
-    Flex,
-    Heading,
-    Icon,
-    Stack,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    Separator,
-} from "@chakra-ui/react";
+import { Alert, Box, Button, Flex, Heading, Icon, Stack, Table, Text, Separator } from "@chakra-ui/react";
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import { keyframes } from "@emotion/react";
 import { ImCheckboxChecked } from "react-icons/im";
@@ -131,7 +115,7 @@ export default function AjustesInventarioStep2ReviewSubmit({
                 </Stack>
 
                 <Box overflowX="auto">
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>ID</Table.ColumnHeader>

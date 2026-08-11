@@ -1,22 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-    Alert,
-    Box,
-    Button,
-    Flex,
-    Heading,
-    Input,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Textarea,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-    Field,
-} from '@chakra-ui/react';
+import { Alert, Box, Button, Flex, Heading, Input, Table, Text, Textarea, VStack, Field } from '@chakra-ui/react';
 import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL';
 import { useAuth } from '../../../../../context/AuthContext';
@@ -102,7 +85,7 @@ export default function AveriaAlmacenStep2ReviewSubmit({
                 <Box>
                     <Text fontWeight="bold" mb={2}>Materiales a Reportar como Avería</Text>
                     <Box overflowX="auto">
-                        <Table.Root size="sm" variant="simple">
+                        <Table.Root size="sm" variant="line">
                             <Table.Header>
                                 <Table.Row>
                                     <Table.ColumnHeader>Código</Table.ColumnHeader>

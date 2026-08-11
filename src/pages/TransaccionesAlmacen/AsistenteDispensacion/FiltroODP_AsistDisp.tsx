@@ -38,12 +38,11 @@ export default function FiltroODP_AsistDisp({onRefresh, onSearchByLote, isLoadin
 
     return (
         <HStack gap={3}>
-            <NativeSelect.Root>
+            <NativeSelect.Root size='md'>
                 <NativeSelect.Field
                     value={tipoFiltro}
                     onChange={(e) => handleFiltroChange(e.target.value)}
-                    width='170px'
-                    size='md'>
+                    width='170px'>
                     <option value='sin_filtro'>Sin filtro</option>
                     <option value='filtro_por_lote'>Filtro por Lote</option>
                 </NativeSelect.Field>

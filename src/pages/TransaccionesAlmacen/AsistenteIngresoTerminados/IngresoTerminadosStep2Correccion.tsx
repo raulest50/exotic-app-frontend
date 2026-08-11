@@ -1,16 +1,4 @@
-import {
-    Alert,
-    Badge,
-    Box,
-    HStack,
-    Input,
-    NumberInput,
-    NumberInputField,
-    SimpleGrid,
-    Text,
-    VStack,
-    Field,
-} from "@chakra-ui/react";
+import { Alert, Badge, Box, HStack, Input, NumberInput, SimpleGrid, Text, VStack, Field } from "@chakra-ui/react";
 import type {
     EdicionReporteProduccion,
     ReporteProduccionPendiente,
@@ -88,12 +76,12 @@ export default function IngresoTerminadosStep2Correccion({
                                     <NumberInput.Root
                                         value={String(edicion.cantidadConfirmada)}
                                         min={0.0001}
-                                        precision={4}
+                                        formatOptions={{ maximumFractionDigits: 4 }}
                                         clampValueOnBlur={false}
                                         disabled={!editable}
-                                        onValueChange={(_, value) => onChange(reporte.reporteId, {
+                                        onValueChange={({ valueAsNumber }) => onChange(reporte.reporteId, {
                                             ...edicion,
-                                            cantidadConfirmada: value,
+                                            cantidadConfirmada: valueAsNumber,
                                         })}
                                     >
                                         <NumberInput.Input inputMode="decimal" />

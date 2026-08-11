@@ -1,18 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-    Box,
-    Flex,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Text,
-    Heading,
-    Spinner,
-    Badge,
-} from '@chakra-ui/react';
+import { Box, Flex, Table, Text, Heading, Spinner, Badge } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 
 import { ConsolidadoOCMResponse } from '../../types';
@@ -138,7 +125,7 @@ export function ListaMaterialesIngresoDesgloce({
             </Text>
 
             <Box w="full" bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
-                <Table.Root size="sm" variant="simple">
+                <Table.Root size="sm" variant="line">
                     <Table.Header bg="app.tableHeader">
                         <Table.Row>
                             <Table.ColumnHeader>Material</Table.ColumnHeader>

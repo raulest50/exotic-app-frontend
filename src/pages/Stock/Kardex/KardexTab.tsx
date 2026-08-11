@@ -1,20 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  Box,
-  Button,
-  Flex,
-  HStack,
-  NativeSelect,
-  Table,
-  Tbody,
-  Td,
-  Text,
-  Th,
-  Thead,
-  Tr,
-  VStack,
-  Field,
-} from '@chakra-ui/react';
+import { Box, Button, Flex, HStack, NativeSelect, Table, Text, VStack, Field } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import { format } from 'date-fns';
@@ -254,7 +239,7 @@ export function KardexTab(_: Props) {
             </Box>
           ) : (
             <Box borderWidth="1px" borderRadius="md" overflowX="auto">
-              <Table.Root size="sm" variant="simple">
+              <Table.Root size="sm" variant="line">
                 <Table.Header>
                   <Table.Row>
                     <Table.ColumnHeader>Fecha</Table.ColumnHeader>

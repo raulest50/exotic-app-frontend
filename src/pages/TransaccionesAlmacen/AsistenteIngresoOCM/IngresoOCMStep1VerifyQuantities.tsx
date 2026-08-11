@@ -1,20 +1,4 @@
-import {
-    Alert,
-    Box,
-    Button,
-    Flex,
-    Heading,
-    HStack,
-    Input,
-    Table,
-    Tbody,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    useDisclosure,
-    Field,
-} from "@chakra-ui/react";
+import { Alert, Box, Button, Flex, Heading, HStack, Input, Table, Text, useDisclosure, Field } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from "react";
 
@@ -244,7 +228,7 @@ export default function IngresoOCMStep1VerifyQuantities({
                 )}
 
                 <Box w="full" bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header bg="app.tableHeader">
                             <Table.Row>
                                 <Table.ColumnHeader>Material</Table.ColumnHeader>

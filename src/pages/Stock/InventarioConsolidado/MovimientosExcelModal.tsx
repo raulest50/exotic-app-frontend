@@ -43,7 +43,7 @@ function MovimientosExcelModal({ isOpen, onClose, onConfirm }: MovimientosExcelM
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Seleccionar rango de fechas</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Seleccionar rango de fechas</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <Field.Root>

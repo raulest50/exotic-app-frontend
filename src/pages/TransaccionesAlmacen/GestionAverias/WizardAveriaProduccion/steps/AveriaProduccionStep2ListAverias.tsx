@@ -1,26 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-    Box,
-    Button,
-    Flex,
-    Heading,
-    IconButton,
-    NumberDecrementStepper,
-    NumberIncrementStepper,
-    NumberInput,
-    NumberInputField,
-    NumberInputStepper,
-    SimpleGrid,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Text,
-    VStack,
-    Separator,
-} from '@chakra-ui/react';
+import { Box, Button, Flex, Heading, IconButton, NumberInput, SimpleGrid, Table, Text, VStack, Separator } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { FiArrowRight, FiX } from 'react-icons/fi';
 import axios from 'axios';
@@ -174,7 +153,7 @@ export default function AveriaProduccionStep2ListAverias({
                         <Text color="app.textSubtle" textAlign="center">Cargando...</Text>
                     ) : itemsDispensados.length > 0 ? (
                         <Box overflowX="auto">
-                            <Table.Root variant="simple" size="sm">
+                            <Table.Root variant="line" size="sm">
                                 <Table.Header>
                                     <Table.Row>
                                         <Table.ColumnHeader>Producto</Table.ColumnHeader>
@@ -267,9 +246,9 @@ export default function AveriaProduccionStep2ListAverias({
                                                 min={0.01}
                                                 max={item.cantidadDisponibleAveria}
                                                 step={0.01}
-                                                precision={2}
+                                                formatOptions={{ maximumFractionDigits: 2 }}
                                                 value={String(item.cantidadAveria || '')}
-                                                onValueChange={(_, val) => handleCantidadChange(key, val)}
+                                                onValueChange={({ valueAsNumber }) => handleCantidadChange(key, valueAsNumber)}
                                             >
                                                 <NumberInput.Input />
                                                 <NumberInput.Control>
@@ -323,7 +302,7 @@ export default function AveriaProduccionStep2ListAverias({
                                     )}
                                 </Flex>
                                 <Box overflowX="auto">
-                                    <Table.Root size="sm" variant="simple">
+                                    <Table.Root size="sm" variant="line">
                                         <Table.Header>
                                             <Table.Row>
                                                 <Table.ColumnHeader>Producto</Table.ColumnHeader>

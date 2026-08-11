@@ -61,6 +61,8 @@ export default function WizardAveriaProduccion({ onBack }: WizardAveriaProduccio
         defaultStep: 0,
         count: steps.length
     });
+    const activeStep = stepsApi.value;
+    const setActiveStep = stepsApi.setStep;
 
     const [selectedArea, setSelectedArea] = useState<AreaProduccion | null>(null);
     const [selectedOrden, setSelectedOrden] = useState<OrdenProduccionDTO | null>(null);
@@ -127,8 +129,9 @@ export default function WizardAveriaProduccion({ onBack }: WizardAveriaProduccio
                     </Button>
                 </Flex>
                 <Steps.RootProvider p="1em" backgroundColor="app.stepperBlue" w="full" value={stepsApi}>
+                    <Steps.List>
                     {steps.map((step, index) => (
-                        <Steps.Item key={index}>
+                        <Steps.Item key={index} index={index}>
                             <Steps.Indicator>
                                 <Steps.Status
                                     complete={<LuCheck />}
@@ -143,6 +146,7 @@ export default function WizardAveriaProduccion({ onBack }: WizardAveriaProduccio
                             <Steps.Separator />
                         </Steps.Item>
                     ))}
+                    </Steps.List>
                 </Steps.RootProvider>
                 {ConditionalRenderStep()}
             </Flex>

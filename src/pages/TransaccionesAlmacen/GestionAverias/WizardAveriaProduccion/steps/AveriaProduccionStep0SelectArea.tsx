@@ -1,21 +1,6 @@
 import { useState } from 'react';
 import { useColorModeValue } from "../../../../../components/ui/color-mode";
-import {
-    Box,
-    Button,
-    Flex,
-    HStack,
-    Input,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Text,
-    VStack,
-    Field,
-} from '@chakra-ui/react';
+import { Box, Button, Flex, HStack, Input, Table, Text, VStack, Field } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../../../api/EndPointsURL.tsx';
@@ -129,7 +114,7 @@ export default function AveriaProduccionStep0SelectArea({
                 <Box w="full" overflowX="auto">
                     {areas.length > 0 ? (
                         <>
-                            <Table.Root variant="simple" size="sm">
+                            <Table.Root variant="line" size="sm">
                                 <Table.Header>
                                     <Table.Row>
                                         <Table.ColumnHeader>ID</Table.ColumnHeader>

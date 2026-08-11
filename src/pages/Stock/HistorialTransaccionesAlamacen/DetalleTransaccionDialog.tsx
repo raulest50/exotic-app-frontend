@@ -1,20 +1,4 @@
-import {
-    Button,
-    Box,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-    HStack,
-    Spinner,
-    Flex,
-    Dialog,
-    Portal,
-} from '@chakra-ui/react';
+import { Button, Box, Table, Text, VStack, HStack, Spinner, Flex, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import { useEffect, useState, useMemo } from 'react';
@@ -122,7 +106,7 @@ export default function DetalleTransaccionDialog({
                 <Dialog.Positioner>
                     <Dialog.Content>
                         <Dialog.Header fontFamily="Comfortaa Variable">
-                            Detalle de Transacción
+                            <Dialog.Title>Detalle de Transacción</Dialog.Title>
                         </Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
@@ -187,7 +171,7 @@ export default function DetalleTransaccionDialog({
                                         </Text>
                                     ) : (
                                         <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
-                                            <Table.Root size="sm" variant="striped">
+                                            <Table.Root size="sm" variant="line" striped>
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>Producto ID</Table.ColumnHeader>

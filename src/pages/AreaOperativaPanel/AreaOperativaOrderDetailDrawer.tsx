@@ -1,29 +1,4 @@
-import {
-    Accordion,
-    Badge,
-    Box,
-    Drawer,
-    Flex,
-    HStack,
-    SimpleGrid,
-    Spinner,
-    Stack,
-    Tab,
-    TabList,
-    TabPanel,
-    TabPanels,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-    Tabs,
-    Separator,
-    Portal,
-} from "@chakra-ui/react";
+import { Accordion, Badge, Box, Drawer, Flex, HStack, SimpleGrid, Spinner, Stack, Table, Text, VStack, Tabs, Separator, Portal } from "@chakra-ui/react";
 import { useColorModeValue } from "../../components/ui/color-mode";
 import { Background, BackgroundVariant, Edge, Handle, MiniMap, Node, NodeProps, NodeTypes, Position, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -250,7 +225,7 @@ function BomTreeNode({ node, depth = 0 }: { node: BomRecetaNodeDTO; depth?: numb
     }
 
     return (
-        <Accordion.Root collapsible defaultValue={['0']}>
+        <Accordion.Root collapsible defaultValue={['item-0']}>
             <Accordion.Item border="none" value='item-0'>
                 <Accordion.ItemTrigger px={0} py={0} _hover={{ bg: "transparent" }}>
                     <Box flex="1" textAlign="left">
@@ -296,7 +271,7 @@ export default function AreaOperativaOrderDetailDrawer({
                 <Drawer.Positioner>
                     <Drawer.Content maxW={{ base: "100vw", md: "36rem" }}>
                         <Drawer.CloseTrigger />
-                        <Drawer.Header>Detalle operativo de la orden</Drawer.Header>
+                        <Drawer.Header><Drawer.Title>Detalle operativo de la orden</Drawer.Title></Drawer.Header>
 
                         <Drawer.Body>
                             {loading ? (
@@ -306,15 +281,13 @@ export default function AreaOperativaOrderDetailDrawer({
                             ) : null}
 
                             {!loading && detail ? (
-                                <Tabs.Root variant='enclosed' colorPalette="teal" lazyMount>
+                                <Tabs.Root defaultValue="resumen" variant='enclosed' colorPalette="teal" lazyMount>
                                     <Tabs.List>
-                                        <Tab minH={12}>Resumen</Tab>
-                                        <Tab minH={12}>Ruta</Tab>
-                                        <Tab minH={12}>BOM</Tab>
+                                        <Tabs.Trigger value="resumen" minH={12}>Resumen</Tabs.Trigger>
+                                        <Tabs.Trigger value="ruta" minH={12}>Ruta</Tabs.Trigger>
+                                        <Tabs.Trigger value="bom" minH={12}>BOM</Tabs.Trigger>
                                     </Tabs.List>
-
-                                    <TabPanels>
-                                        <TabPanel px={0} py={5}>
+                                        <Tabs.Content value="resumen" px={0} py={5}>
                                             <VStack align="stretch" gap={5}>
                                                 <Box>
                                                     <Text fontWeight="bold">{detail.orden.loteAsignado || `OP-${detail.orden.ordenId}`}</Text>
@@ -427,9 +400,9 @@ export default function AreaOperativaOrderDetailDrawer({
                                                     </VStack>
                                                 </Box>
                                             </VStack>
-                                        </TabPanel>
+                                        </Tabs.Content>
 
-                                        <TabPanel px={0} py={5}>
+                                        <Tabs.Content value="ruta" px={0} py={5}>
                                             <VStack align="stretch" gap={4}>
                                                 <HStack gap={3} flexWrap="wrap">
                                                     <Badge colorPalette="teal">Tu área resaltada</Badge>
@@ -461,9 +434,9 @@ export default function AreaOperativaOrderDetailDrawer({
                                                     <Text color="app.textSubtle">La orden no tiene una ruta de proceso visual disponible.</Text>
                                                 )}
                                             </VStack>
-                                        </TabPanel>
+                                        </Tabs.Content>
 
-                                        <TabPanel px={0} py={5}>
+                                        <Tabs.Content value="bom" px={0} py={5}>
                                             <VStack align="stretch" gap={6}>
                                                 <Box>
                                                     <Text fontWeight="semibold" mb={3}>Receta jerárquica</Text>
@@ -517,8 +490,7 @@ export default function AreaOperativaOrderDetailDrawer({
                                                     )}
                                                 </Box>
                                             </VStack>
-                                        </TabPanel>
-                                    </TabPanels>
+                                        </Tabs.Content>
                                 </Tabs.Root>
                             ) : null}
 

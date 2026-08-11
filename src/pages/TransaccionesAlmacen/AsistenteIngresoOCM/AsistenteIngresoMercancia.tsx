@@ -26,6 +26,8 @@ export default function AsistenteIngresoMercancia() {
         defaultStep: 0,
         count: steps.length
     });
+    const activeStep = stepsApi.value;
+    const setActiveStep = stepsApi.setStep;
 
     const [selectedOrder, setSelectedOrder] = useState<OrdenCompra|null>(null);
 
@@ -62,8 +64,9 @@ export default function AsistenteIngresoMercancia() {
         <Container minW={['auto', 'container.lg', 'container.xl']} w={'full'} h={'full'}>
             <Flex direction={"column"} gap={4}>
                 <Steps.RootProvider p={'1em'} backgroundColor={"app.stepperTeal"} w={'full'} value={stepsApi} >
+                    <Steps.List>
                     {steps.map((step, index) => (
-                        <Steps.Item key={index}>
+                        <Steps.Item key={index} index={index}>
                             <Steps.Indicator>
                                 <Steps.Status
                                     complete={<LuCheck />}
@@ -80,6 +83,7 @@ export default function AsistenteIngresoMercancia() {
                             <Steps.Separator />
                         </Steps.Item>
                     ))}
+                    </Steps.List>
                 </Steps.RootProvider>
                 {renderActiveStep()}
             </Flex>

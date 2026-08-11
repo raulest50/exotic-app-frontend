@@ -1,19 +1,5 @@
 import {useEffect, useMemo, useState} from 'react';
-import {
-    Badge,
-    Box,
-    Button,
-    Flex,
-    Heading,
-    NativeSelect,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-} from '@chakra-ui/react';
+import { Badge, Box, Button, Flex, Heading, NativeSelect, Table, Text } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL';

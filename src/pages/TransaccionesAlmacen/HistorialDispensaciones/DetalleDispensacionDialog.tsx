@@ -1,21 +1,4 @@
-import {
-    Button,
-    Box,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-    HStack,
-    Spinner,
-    Flex,
-    Badge,
-    Dialog,
-    Portal,
-} from '@chakra-ui/react';
+import { Button, Box, Table, Text, VStack, HStack, Spinner, Flex, Badge, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
@@ -120,9 +103,11 @@ export default function DetalleDispensacionDialog({
                 <Dialog.Positioner>
                     <Dialog.Content>
                         <Dialog.Header fontFamily="Comfortaa Variable">
-                            {transaccion.tipoEntidadCausante === 'OAA'
-                                ? 'Detalle de ajuste de inventario'
-                                : 'Detalle de Dispensación'}
+                            <Dialog.Title>
+                                {transaccion.tipoEntidadCausante === 'OAA'
+                                    ? 'Detalle de ajuste de inventario'
+                                    : 'Detalle de Dispensación'}
+                            </Dialog.Title>
                         </Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
@@ -199,7 +184,7 @@ export default function DetalleDispensacionDialog({
                                         </Text>
                                     ) : (
                                         <Box bg="app.surface" borderRadius="md" boxShadow="sm" overflowX="auto">
-                                            <Table.Root size="sm" variant="striped">
+                                            <Table.Root size="sm" variant="line" striped>
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>Producto ID</Table.ColumnHeader>

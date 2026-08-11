@@ -32,7 +32,7 @@ import {
 } from '../types.tsx';
 import AlcanceStockHelpModal from './AlcanceStockHelpModal.tsx';
 import ListaProductos from './ListaProductos.tsx';
-import { LuHelpCircle } from 'react-icons/lu';
+import { LuCircleHelp } from 'react-icons/lu';
 
 const endPoints = new EndPointsURL();
 
@@ -335,7 +335,7 @@ function InventarioConsolidadoTab() {
                                     <IconButton
                                         aria-label="Explicar los alcances del stock"
                                         variant="outline"
-                                        onClick={helpModal.onOpen}><LuHelpCircle /></IconButton>
+                                        onClick={helpModal.onOpen}><LuCircleHelp /></IconButton>
                                 </HStack>
                                 <Field.HelperText>{descripcionAlcance}</Field.HelperText>
                             </Field.Root>
@@ -357,7 +357,7 @@ function InventarioConsolidadoTab() {
                                 <Text fontSize="sm" fontWeight="semibold" mb={2}>
                                     Almacenes incluidos
                                 </Text>
-                                <Wrap spacingX={6} spacingY={2}>
+                                <Wrap columnGap={6} rowGap={2}>
                                     {TODOS_LOS_ALMACENES.map((almacen) => (
                                         <WrapItem key={almacen}>
                                             <Checkbox.Root

@@ -1,18 +1,5 @@
 import { useState } from 'react';
-import {
-    Box,
-    Button,
-    Flex,
-    IconButton,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Text,
-    VStack,
-} from '@chakra-ui/react';
+import { Box, Button, Flex, IconButton, Table, Text, VStack } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { FiX } from 'react-icons/fi';
 import MaterialByLotePicker, {
@@ -90,7 +77,7 @@ export default function AveriaAlmacenStep0SelectMaterial({
 
                 <Box w="full" overflowX="auto">
                     {selectedItems.length > 0 ? (
-                        <Table.Root variant="simple" size="sm">
+                        <Table.Root variant="line" size="sm">
                             <Table.Header>
                                 <Table.Row>
                                     <Table.ColumnHeader>Código</Table.ColumnHeader>

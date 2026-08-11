@@ -1,18 +1,5 @@
 import React from 'react';
-import {
-    Box,
-    Button,
-    Collapsible,
-    IconButton,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    Tag,
-} from '@chakra-ui/react';
+import { Box, Button, Collapsible, IconButton, Table, Text, Tag } from '@chakra-ui/react';
 import {FaChevronDown, FaChevronUp} from 'react-icons/fa';
 import {InsumoDesglosado, LoteSeleccionado} from '../types';
 import { LuTrash2 } from 'react-icons/lu';
@@ -190,7 +177,7 @@ export default function TablaDispensacionInsumos({
                                     borderRadius="md"
                                     m={2}
                                 >
-                                    <Table.Root variant="simple" size="sm" colorPalette="purple">
+                                    <Table.Root variant="line" size="sm" colorPalette="purple">
                                         <Table.Header bg="app.rowSelectedPurple">
                                             <Table.Row>
                                                 <Table.ColumnHeader>ID Producto</Table.ColumnHeader>

@@ -1,20 +1,4 @@
-import {
-    Accordion,
-    Box,
-    Button,
-    Input,
-    NativeSelect,
-    Stack,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Textarea,
-    Th,
-    Thead,
-    Tr,
-    Field,
-} from "@chakra-ui/react";
+import { Accordion, Box, Button, Input, NativeSelect, Stack, Table, Text, Textarea, Field } from "@chakra-ui/react";
 import type { Producto } from "../../Productos/types.tsx";
 import type { AjusteLoteAsignado } from "./types";
 import {
@@ -134,7 +118,7 @@ export default function AjustesInventarioStep1SpecifyQuantities({
                     Ajustar inventario por lote
                 </Text>
                 {selectedProducts.length > 0 ? (
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>ID</Table.ColumnHeader>
@@ -177,7 +161,7 @@ export default function AjustesInventarioStep1SpecifyQuantities({
                                                 size="sm"
                                                 width="130px"
                                                 placeholder="0.0000"
-                                                invalid={isInvalidQuantity}
+                                                aria-invalid={isInvalidQuantity}
                                             />
                                         </Table.Cell>
                                         <Table.Cell minW="260px">

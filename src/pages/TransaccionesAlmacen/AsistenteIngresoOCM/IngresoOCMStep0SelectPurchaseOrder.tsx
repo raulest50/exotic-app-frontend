@@ -1,21 +1,4 @@
-import {
-    Box,
-    Button,
-    Flex,
-    Heading,
-    Input,
-    Table,
-    Tbody,
-    Td,
-    Th,
-    Thead,
-    Tr,
-    useDisclosure,
-    VStack,
-    IconButton,
-    HStack,
-    Field,
-} from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Input, Table, useDisclosure, VStack, IconButton, HStack, Field } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 import {useMemo, useRef, useState} from "react";
@@ -266,7 +249,7 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
             </VStack>
 
             <ProveedorPicker
-                isOpen={isOpen}
+                isOpen={open}
                 onClose={onClose}
                 onSelectProveedor={(prov) => setProveedor(prov)}
             />

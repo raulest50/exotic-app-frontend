@@ -1,17 +1,4 @@
-import {
-    Box,
-    Table,
-    TableContainer,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    Button,
-    Spinner,
-    Flex,
-} from '@chakra-ui/react';
+import { Box, Table, Text, Button, Spinner, Flex } from '@chakra-ui/react';
 import { TransaccionAlmacen } from '../../TransaccionesAlmacen/HistorialDispensaciones/types';
 import { causaAjusteLabel } from '../../TransaccionesAlmacen/AjustesInventario/causasAjuste';
 
@@ -97,7 +84,7 @@ export default function TablaTranAlmacen({
     return (
         <Box bg='app.surface' borderRadius='md' boxShadow='sm' overflowX='auto'>
             <Table.ScrollArea>
-                <Table.Root variant="simple" size='sm'>
+                <Table.Root variant="line" size='sm'>
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>ID Transacción</Table.ColumnHeader>

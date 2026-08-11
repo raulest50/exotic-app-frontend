@@ -1,23 +1,4 @@
-import {
-    Alert,
-    Box,
-    Button,
-    Flex,
-    Heading,
-    IconButton,
-    Input,
-    NativeSelect,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-    Tag,
-    Field,
-} from '@chakra-ui/react';
+import { Alert, Box, Button, Flex, Heading, IconButton, Input, NativeSelect, Table, Text, VStack, Tag, Field } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import {useEffect, useMemo, useState} from 'react';
 import {AreaOperativaDestinoOption, DispensacionDTO, InsumoDesglosado, ItemPendienteReposicion, LoteSeleccionado} from '../types';
@@ -693,7 +674,7 @@ export default function DispensacionStep3ReviewSubmit({
                             Agregar Usuario
                         </Button>
                         {usuariosRealizadores.length > 0 ? (
-                            <Table.Root size='sm' variant='simple'>
+                            <Table.Root size='sm' variant='line'>
                                 <Table.Header>
                                     <Table.Row>
                                         <Table.ColumnHeader>Usuario</Table.ColumnHeader>
@@ -785,7 +766,7 @@ export default function DispensacionStep3ReviewSubmit({
                         Resumen de Materiales a Dispensar
                     </Heading>
                     {summaryItems.length > 0 ? (
-                        <Table.Root size='sm' variant='striped'>
+                        <Table.Root size='sm' variant='line' striped>
                             <Table.Header>
                                 <Table.Row>
                                     <Table.ColumnHeader>Material (ID)</Table.ColumnHeader>
@@ -829,7 +810,7 @@ export default function DispensacionStep3ReviewSubmit({
                         <Heading size='md' mb={4} fontFamily='Comfortaa Variable' color='orange.700'>
                             Reposición de Material por Averías
                         </Heading>
-                        <Table.Root size='sm' variant='striped'>
+                        <Table.Root size='sm' variant='line' striped>
                             <Table.Header>
                                 <Table.Row>
                                     <Table.ColumnHeader>Material (ID)</Table.ColumnHeader>

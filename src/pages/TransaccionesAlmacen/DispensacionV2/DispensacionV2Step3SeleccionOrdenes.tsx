@@ -1,21 +1,4 @@
-import {
-    Alert,
-    Badge,
-    Box,
-    Button,
-    Checkbox,
-    Flex,
-    Heading,
-    Table,
-    TableContainer,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-} from "@chakra-ui/react";
+import { Alert, Badge, Box, Button, Checkbox, Flex, Heading, Table, Text, VStack } from "@chakra-ui/react";
 import { useMemo } from "react";
 import type {
     MpsSemanalLotePlanificadoDTO,
@@ -190,7 +173,7 @@ export default function DispensacionV2Step3SeleccionOrdenes({
             ) : (
                 <Box borderWidth="1px" borderRadius="md" bg="app.surface" p={4}>
                     <Table.ScrollArea>
-                        <Table.Root size="sm" variant="simple">
+                        <Table.Root size="sm" variant="line">
                             <Table.Header>
                                 <Table.Row>
                                     <Table.ColumnHeader>Lote planificado</Table.ColumnHeader>
@@ -201,8 +184,7 @@ export default function DispensacionV2Step3SeleccionOrdenes({
                                     <Table.ColumnHeader>Estado</Table.ColumnHeader>
                                     <Table.ColumnHeader textAlign="center">
                                         <Checkbox.Root
-                                            checked={allCardOrdenesSelected}
-                                            indeterminate={someCardOrdenesSelected}
+                                            checked={allCardOrdenesSelected ? true : someCardOrdenesSelected ? "indeterminate" : false}
                                             disabled={selectableOrdenes.length === 0}
                                             onCheckedChange={handleToggleAll}
                                         ><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Seleccionar

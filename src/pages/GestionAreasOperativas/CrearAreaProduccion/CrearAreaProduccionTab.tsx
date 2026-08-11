@@ -1,20 +1,5 @@
 import { useState } from 'react';
-import {
-    Box,
-    Button,
-    Heading,
-    IconButton,
-    Input,
-    InputGroup,
-    InputRightElement,
-    Tag,
-    TagLabel,
-    Text,
-    VStack,
-    Wrap,
-    WrapItem,
-    Field,
-} from '@chakra-ui/react';
+import { Box, Button, Heading, IconButton, Input, InputGroup, Tag, Text, VStack, Wrap, WrapItem, Field } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -167,7 +152,7 @@ function CrearAreaProduccionTab() {
                                 setErrors((prev) => ({ ...prev, nombre: undefined }));
                             }
                         }}
-                        sx={input_style}
+                        css={input_style}
                         placeholder="Nombre del área de producción"
                     />
                     {errors.nombre && <Field.ErrorText>{errors.nombre}</Field.ErrorText>}
@@ -178,27 +163,29 @@ function CrearAreaProduccionTab() {
                     <Input
                         value={descripcion}
                         onChange={(event) => setDescripcion(event.target.value)}
-                        sx={input_style}
+                        css={input_style}
                         placeholder="Descripción del área de producción"
                     />
                 </Field.Root>
 
                 <Field.Root required invalid={!!errors.responsable}>
                     <Field.Label>Responsable del Área</Field.Label>
-                    <InputGroup>
+                    <InputGroup
+                        endElement={(
+                            <IconButton
+                                aria-label="Buscar usuario"
+                                size="sm"
+                                onClick={() => setIsUserPickerOpen(true)}
+                                disabled={isSubmitting || isValidatingResponsable}
+                            ><LuSearch /></IconButton>
+                        )}
+                    >
                         <Input
                             value={responsable ? `${responsable.cedula} - ${responsable.nombreCompleto || responsable.username}` : ''}
                             placeholder="Seleccione un responsable"
                             readOnly
                             bg="app.inputReadonly"
                         />
-                        <InputRightElement>
-                            <IconButton
-                                aria-label="Buscar usuario"
-                                size="sm"
-                                onClick={() => setIsUserPickerOpen(true)}
-                                disabled={isSubmitting || isValidatingResponsable}><LuSearch /></IconButton>
-                        </InputRightElement>
                     </InputGroup>
                     {errors.responsable && <Field.ErrorText>{errors.responsable}</Field.ErrorText>}
                 </Field.Root>

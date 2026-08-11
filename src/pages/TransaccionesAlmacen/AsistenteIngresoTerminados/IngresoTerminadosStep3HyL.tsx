@@ -5,7 +5,7 @@ import type {
     ReporteProduccionPendiente,
 } from "./types";
 import { consolidarProductos, formatCantidad } from "./produccionCierreUtils";
-import { LuCheckCircle } from 'react-icons/lu';
+import { LuCircleCheck } from 'react-icons/lu';
 
 interface Props {
     fechaProduccion: string;
@@ -64,7 +64,7 @@ export default function IngresoTerminadosStep3HyL({
 
             {generado ? (
                 <HStack color="green.600" fontSize="sm">
-                    <LuCheckCircle />
+                    <LuCircleCheck />
                     <Text>HyL listo para este cierre.</Text>
                 </HStack>
             ) : null}

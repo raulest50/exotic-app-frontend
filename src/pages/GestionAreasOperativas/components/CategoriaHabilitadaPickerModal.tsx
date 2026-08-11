@@ -1,33 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useColorModeValue } from "../../../components/ui/color-mode";
-import {
-    Badge,
-    Box,
-    Button,
-    Checkbox,
-    Flex,
-    Grid,
-    Heading,
-    HStack,
-    Input,
-    InputGroup,
-    InputRightElement,
-    SimpleGrid,
-    Spinner,
-    NativeSelect,
-    Table,
-    TableContainer,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-    Field,
-    Dialog,
-    Portal,
-} from '@chakra-ui/react';
+import { Badge, Box, Button, Checkbox, Flex, Grid, Heading, HStack, Input, InputGroup, SimpleGrid, Spinner, NativeSelect, Table, Text, VStack, Field, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -225,9 +198,9 @@ export default function CategoriaHabilitadaPickerModal({
                         <Dialog.Header px={{ base: 4, md: 6 }} py={4} borderBottomWidth="1px" borderColor="app.border">
                             <Box pr={10}>
                                 <HStack gap={3} flexWrap="wrap">
-                                    <Heading as="h2" size="md" fontFamily="Comfortaa Variable">
+                                    <Dialog.Title fontFamily="Comfortaa Variable">
                                         Gestionar categorías
-                                    </Heading>
+                                    </Dialog.Title>
                                     <Badge colorPalette="teal">{selectedCategorias.length} seleccionadas</Badge>
                                 </HStack>
                                 <Text color="app.textSubtle" fontSize="sm" fontWeight="normal" mt={1}>
@@ -257,7 +230,19 @@ export default function CategoriaHabilitadaPickerModal({
                                         </Text>
                                     </Box>
 
-                                    <InputGroup>
+                                    <InputGroup
+                                        endElement={(
+                                            <Button
+                                                colorPalette="teal"
+                                                size="sm"
+                                                onClick={() => void fetchCategorias(0)}
+                                                loading={loading}
+                                            >
+                                                Buscar
+                                            </Button>
+                                        )}
+                                        endElementProps={{ width: "auto", px: 2 }}
+                                    >
                                         <Input
                                             value={searchNombre}
                                             onChange={(event) => setSearchNombre(event.target.value)}
@@ -269,16 +254,6 @@ export default function CategoriaHabilitadaPickerModal({
                                             placeholder="Buscar categoría por nombre"
                                             pr="92px"
                                         />
-                                        <InputRightElement width="auto" px={2}>
-                                            <Button
-                                                colorPalette="teal"
-                                                size="sm"
-                                                onClick={() => void fetchCategorias(0)}
-                                                loading={loading}
-                                            >
-                                                Buscar
-                                            </Button>
-                                        </InputRightElement>
                                     </InputGroup>
 
                                     {loading ? (
@@ -449,9 +424,8 @@ export default function CategoriaHabilitadaPickerModal({
                                                         <SimpleGrid columns={{ base: 1, sm: 2, lg: 1, xl: 2 }} gap={3}>
                                                             <Field.Root>
                                                                 <Field.Label fontSize="xs">Unidad</Field.Label>
-                                                                <NativeSelect.Root>
+                                                                <NativeSelect.Root size="sm">
                                                                     <NativeSelect.Field
-                                                                        size="sm"
                                                                         value={categoria.unidadMedidaId ?? ''}
                                                                         onChange={(event) => setUnidadForCategoria(
                                                                             categoria.categoriaId,

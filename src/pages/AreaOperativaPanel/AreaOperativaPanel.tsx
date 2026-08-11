@@ -9,35 +9,7 @@ import {
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
-import {
-    Alert,
-    Box,
-    Button,
-    ButtonGroup,
-    Flex,
-    Grid,
-    HStack,
-    Heading,
-    Input,
-    InputGroup,
-    InputLeftElement,
-    NumberInput,
-    NumberInputField,
-    SimpleGrid,
-    Spinner,
-    Tab,
-    TabList,
-    TabPanel,
-    TabPanels,
-    Tabs,
-    Text,
-    Textarea,
-    VStack,
-    useDisclosure,
-    Field,
-    Dialog,
-    Portal,
-} from "@chakra-ui/react";
+import { Alert, Box, Button, ButtonGroup, Flex, Grid, HStack, Heading, Input, InputGroup, NumberInput, SimpleGrid, Spinner, Tabs, Text, Textarea, VStack, useDisclosure, Field, Dialog, Portal } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     FiArchive,
@@ -721,13 +693,12 @@ export default function AreaOperativaPanel() {
                 </HStack>
             </Box>
 
-            <Tabs.Root variant='enclosed' colorPalette="teal" lazyMount>
+            <Tabs.Root defaultValue="tablero" variant='enclosed' colorPalette="teal" lazyMount>
                 <Tabs.List>
-                    <Tab minH={12}>Tablero operativo</Tab>
-                    <Tab minH={12}>MPS semanal</Tab>
+                    <Tabs.Trigger value="tablero" minH={12}>Tablero operativo</Tabs.Trigger>
+                    <Tabs.Trigger value="mps-semanal" minH={12}>MPS semanal</Tabs.Trigger>
                 </Tabs.List>
-                <TabPanels>
-                    <TabPanel px={0} pb={0}>
+                    <Tabs.Content value="tablero" px={0} pb={0}>
                         <VStack w="full" gap={6} align="stretch">
                             <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
                                 <VStack align="stretch" gap={3}>
@@ -785,11 +756,9 @@ export default function AreaOperativaPanel() {
                                         <Text fontSize="sm" fontWeight="semibold" mb={2}>
                                             Buscar
                                         </Text>
-                                        <InputGroup size="lg">
-                                            <InputLeftElement pointerEvents="none">
-                                                <FiSearch />
-                                            </InputLeftElement>
+                                        <InputGroup startElement={<FiSearch />}>
                                             <Input
+                                                size="lg"
                                                 value={searchTerm}
                                                 onChange={(event) => setSearchTerm(event.target.value)}
                                                 placeholder="Buscar por lote, OP, producto o nodo"
@@ -899,11 +868,10 @@ export default function AreaOperativaPanel() {
                                 </Box>
                             ) : null}
                         </VStack>
-                    </TabPanel>
-                    <TabPanel px={0} pb={0}>
+                    </Tabs.Content>
+                    <Tabs.Content value="mps-semanal" px={0} pb={0}>
                         <AreaOperativaMpsSemanalTab />
-                    </TabPanel>
-                </TabPanels>
+                    </Tabs.Content>
             </Tabs.Root>
 
             <Dialog.Root open={isActionOpen} size='lg' scrollBehavior="inside" placement='center' onOpenChange={e => {
@@ -916,7 +884,7 @@ export default function AreaOperativaPanel() {
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content mx={{ base: 2, md: 4 }} maxH="calc(100dvh - 2rem)">
-                            <Dialog.Header>{actionMeta.title}</Dialog.Header>
+                            <Dialog.Header><Dialog.Title>{actionMeta.title}</Dialog.Title></Dialog.Header>
                             <Dialog.CloseTrigger />
                             <Dialog.Body>
                                 {selectedOrden ? (
@@ -938,9 +906,9 @@ export default function AreaOperativaPanel() {
                                                 <Field.Label>Cantidad producida</Field.Label>
                                                 <NumberInput.Root
                                                     value={String(cantidadProducida)}
-                                                    onValueChange={(value) => setCantidadProducida(value)}
+                                                    onValueChange={({ value }) => setCantidadProducida(value)}
                                                     min={0.0001}
-                                                    precision={4}
+                                                    formatOptions={{ maximumFractionDigits: 4 }}
                                                     clampValueOnBlur={false}
                                                 >
                                                     <NumberInput.Input

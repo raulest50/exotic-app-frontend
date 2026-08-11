@@ -1,24 +1,4 @@
-import {
-    Badge,
-    Box,
-    Button,
-    Flex,
-    Heading,
-    IconButton,
-    NativeSelect,
-    Spinner,
-    Table,
-    TableContainer,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-    Dialog,
-    Portal,
-} from "@chakra-ui/react";
+import { Badge, Box, Button, Flex, Heading, IconButton, NativeSelect, Spinner, Table, Text, VStack, Dialog, Portal } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useMemo, useState } from "react";
 import CustomDecimalInput from "../../../components/CustomDecimalInput/CustomDecimalInput";
@@ -164,7 +144,7 @@ export default function DispensacionV2DetalleLotesModal({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Detalle de lotes origen</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Detalle de lotes origen</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body pb={6}>
                             {draft ? (
@@ -279,10 +259,8 @@ export default function DispensacionV2DetalleLotesModal({
                                                     </Button>
                                                     {disponibles.length > 0 ? (
                                                         <>
-                                                            <NativeSelect.Root>
+                                                            <NativeSelect.Root size="sm" maxW="360px">
                                                                 <NativeSelect.Field
-                                                                    size="sm"
-                                                                    maxW="360px"
                                                                     placeholder="Seleccione lote para agregar"
                                                                     value={selectedLoteId[material.productoId] ?? ""}
                                                                     onChange={(event) => setSelectedLoteId((current) => ({

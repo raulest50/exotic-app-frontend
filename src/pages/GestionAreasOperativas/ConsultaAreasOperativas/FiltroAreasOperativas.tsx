@@ -6,7 +6,6 @@ import {
     IconButton,
     Input,
     InputGroup,
-    InputRightElement,
     NativeSelect,
     Field,
 } from '@chakra-ui/react';
@@ -67,11 +66,10 @@ export default function FiltroAreasOperativas({ onBuscar, loading }: FiltroAreas
             <Flex gap={4} wrap="wrap" alignItems="flex-end">
                 <Field.Root maxW="250px">
                     <Field.Label>Buscar por</Field.Label>
-                    <NativeSelect.Root>
+                    <NativeSelect.Root disabled={loading}>
                         <NativeSelect.Field
                             value={searchType}
-                            onChange={(e) => handleSearchTypeChange(e.target.value as SearchType)}
-                            disabled={loading}>
+                            onChange={(e) => handleSearchTypeChange(e.target.value as SearchType)}>
                             <option value="NOMBRE">Nombre del Área</option>
                             <option value="RESPONSABLE">Usuario Responsable</option>
                             <option value="ID">ID del Área</option>
@@ -109,20 +107,22 @@ export default function FiltroAreasOperativas({ onBuscar, loading }: FiltroAreas
                     )}
 
                     {searchType === 'RESPONSABLE' && (
-                        <InputGroup>
+                        <InputGroup
+                            endElement={(
+                                <IconButton
+                                    aria-label="Buscar usuario"
+                                    size="sm"
+                                    onClick={() => setIsUserPickerOpen(true)}
+                                    disabled={loading}
+                                ><LuSearch /></IconButton>
+                            )}
+                        >
                             <Input
                                 value={responsable ? `${responsable.cedula} - ${responsable.nombreCompleto || responsable.username}` : ''}
                                 placeholder="Seleccione un responsable"
                                 readOnly
                                 bg="app.inputReadonly"
                             />
-                            <InputRightElement>
-                                <IconButton
-                                    aria-label="Buscar usuario"
-                                    size="sm"
-                                    onClick={() => setIsUserPickerOpen(true)}
-                                    disabled={loading}><LuSearch /></IconButton>
-                            </InputRightElement>
                         </InputGroup>
                     )}
                 </Field.Root>

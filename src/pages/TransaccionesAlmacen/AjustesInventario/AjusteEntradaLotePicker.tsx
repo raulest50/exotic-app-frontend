@@ -1,24 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-    Alert,
-    Box,
-    Button,
-    Flex,
-    HStack,
-    IconButton,
-    NativeSelect,
-    Spinner,
-    Table,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    Field,
-    Dialog,
-    Portal,
-} from "@chakra-ui/react";
+import { Alert, Box, Button, Flex, HStack, IconButton, NativeSelect, Spinner, Table, Text, Field, Dialog, Portal } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
@@ -108,7 +89,7 @@ export default function AjusteEntradaLotePicker({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Ajuste de entrada por lote - {productoNombre}</Dialog.Header>
+                        <Dialog.Header><Dialog.Title>Ajuste de entrada por lote - {productoNombre}</Dialog.Title></Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <Flex direction="column" gap={4}>
@@ -128,9 +109,8 @@ export default function AjusteEntradaLotePicker({
                                         <Text fontWeight="bold">Lotes existentes del producto</Text>
                                         <HStack gap={2}>
                                             <Field.Root width="auto" minW="120px">
-                                                <NativeSelect.Root>
+                                                <NativeSelect.Root size="sm">
                                                     <NativeSelect.Field
-                                                        size="sm"
                                                         value={size}
                                                         onChange={(e) => setSize(Number(e.target.value))}>
                                                         <option value={5}>5 por página</option>

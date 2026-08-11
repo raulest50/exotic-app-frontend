@@ -1,22 +1,4 @@
-import {
-    Alert,
-    Badge,
-    Box,
-    Button,
-    Checkbox,
-    Flex,
-    Heading,
-    Spinner,
-    Table,
-    TableContainer,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-} from "@chakra-ui/react";
+import { Alert, Badge, Box, Button, Checkbox, Flex, Heading, Spinner, Table, Text, VStack } from "@chakra-ui/react";
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiRefreshCw } from "react-icons/fi";
@@ -320,7 +302,7 @@ export default function DispensacionV2Step3Materiales({
                 <VStack align="stretch" gap={4}>
                     <Box borderWidth="1px" borderRadius="md" bg="app.surface" p={4}>
                         <Table.ScrollArea>
-                            <Table.Root size="sm" variant="simple">
+                            <Table.Root size="sm" variant="line">
                                 <Table.Header>
                                     <Table.Row>
                                         <Table.ColumnHeader>Dispensar</Table.ColumnHeader>
@@ -338,9 +320,9 @@ export default function DispensacionV2Step3Materiales({
                                                     colorPalette="teal"
                                                     checked={material.checked}
                                                     disabled={!material.inventareable && !material.consumoDirecto}
-                                                    onCheckedChange={(event) => updateMaterial(
+                                                    onCheckedChange={({ checked }) => updateMaterial(
                                                         material.productoId,
-                                                        (current) => ({ ...current, checked: event.target.checked }),
+                                                        (current) => ({ ...current, checked: checked === true }),
                                                     )}><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control></Checkbox.Root>
                                             </Table.Cell>
                                             <Table.Cell>

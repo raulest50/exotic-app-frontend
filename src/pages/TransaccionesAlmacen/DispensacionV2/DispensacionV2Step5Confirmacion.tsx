@@ -1,22 +1,4 @@
-import {
-    Alert,
-    Badge,
-    Box,
-    Button,
-    Flex,
-    Heading,
-    Input,
-    Table,
-    TableContainer,
-    Tbody,
-    Td,
-    Text,
-    Th,
-    Thead,
-    Tr,
-    VStack,
-    Field,
-} from "@chakra-ui/react";
+import { Alert, Badge, Box, Button, Flex, Heading, Input, Table, Text, VStack, Field } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
@@ -131,7 +113,7 @@ export default function DispensacionV2Step5Confirmacion({
             <Box borderWidth="1px" borderRadius="md" bg="app.surface" p={4}>
                 <Heading size="sm" mb={3}>Resumen final por material</Heading>
                 <Table.ScrollArea>
-                    <Table.Root size="sm" variant="striped">
+                    <Table.Root size="sm" variant="line" striped>
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>Material</Table.ColumnHeader>
@@ -147,7 +129,7 @@ export default function DispensacionV2Step5Confirmacion({
                                 const seDispensa = material.cantidadADispensarTotal > 0;
                                 const rowBg = material.warning ? "orange.50" : seDispensa ? "teal.50" : undefined;
                                 return (
-                                    <Table.Row key={material.productoId} sx={rowBg ? { "> td": { bg: rowBg } } : undefined}>
+                                    <Table.Row key={material.productoId} css={rowBg ? { "> td": { bg: rowBg } } : undefined}>
                                         <Table.Cell>
                                             <Flex align="center" gap={2} wrap="wrap">
                                                 <Text fontWeight="semibold" fontSize="sm">{material.productoNombre}</Text>
