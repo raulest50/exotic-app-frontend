@@ -6,7 +6,6 @@ import {
     Collapsible,
     Input,
     InputGroup,
-    InputLeftElement,
     SimpleGrid,
     Spinner,
     Stack,
@@ -86,12 +85,11 @@ export default function BuscadorStockMaterialCard() {
                                 <Text color="app.textMuted" fontSize="sm">
                                     Busque por código o nombre. Se muestran hasta 10 coincidencias del almacén General.
                                 </Text>
-                                <InputGroup>
-                                    <InputLeftElement pointerEvents="none">
-                                        {loading
-                                            ? <Spinner size="sm" />
-                                            : <Icon as={LuSearch} color="app.textMuted" />}
-                                    </InputLeftElement>
+                                <InputGroup
+                                    startElement={loading
+                                        ? <Spinner size="sm" />
+                                        : <Icon as={LuSearch} color="app.textMuted" />}
+                                >
                                     <Input
                                         minH="44px"
                                         aria-label="Buscar material por código o nombre"

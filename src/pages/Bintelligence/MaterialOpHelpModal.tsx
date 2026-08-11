@@ -1,4 +1,4 @@
-import { Alert, Code, Stack, Text, List, Dialog, Portal } from "@chakra-ui/react";
+import { Alert, CloseButton, Code, Stack, Text, List, Dialog, Portal } from "@chakra-ui/react";
 
 export default function MaterialOpHelpModal({
     isOpen,
@@ -25,9 +25,11 @@ export default function MaterialOpHelpModal({
                 <Dialog.Positioner>
                     <Dialog.Content>
                         <Dialog.Header>
-                            Material dispensado, WIP y material en tránsito
+                            <Dialog.Title>Material dispensado, WIP y material en tránsito</Dialog.Title>
                         </Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton size="sm" position="absolute" top="2" right="2" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body pb={6}>
                             <Stack gap={4}>
                                 <Stack gap={2}>

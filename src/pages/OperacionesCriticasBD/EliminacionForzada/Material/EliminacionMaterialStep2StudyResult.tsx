@@ -5,12 +5,7 @@ import {
     Flex,
     Heading,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
@@ -125,7 +120,7 @@ export default function EliminacionMaterialStep2StudyResult({
                 <Heading size="sm" mb={2}>
                     Material seleccionado
                 </Heading>
-                <Table.Root size="sm" variant="simple">
+                <Table.Root size="sm" variant="line">
                     <Table.Body>
                         <Table.Row>
                             <Table.Cell>ID</Table.Cell>
@@ -152,7 +147,7 @@ export default function EliminacionMaterialStep2StudyResult({
                     Ítems de orden de compra impactados ({itemsOrdenCompra.length})
                 </Heading>
                 {itemsOrdenCompra.length > 0 ? (
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>Item ID</Table.ColumnHeader>
@@ -188,7 +183,7 @@ export default function EliminacionMaterialStep2StudyResult({
                     Recetas impactadas ({insumosReceta.length})
                 </Heading>
                 {insumosReceta.length > 0 ? (
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>Insumo ID</Table.ColumnHeader>
@@ -220,7 +215,7 @@ export default function EliminacionMaterialStep2StudyResult({
                     Case packs impactados ({insumosEmpaque.length})
                 </Heading>
                 {insumosEmpaque.length > 0 ? (
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>Insumo empaque ID</Table.ColumnHeader>
@@ -254,7 +249,7 @@ export default function EliminacionMaterialStep2StudyResult({
                     Lotes potencialmente eliminados ({lotes.length})
                 </Heading>
                 {lotes.length > 0 ? (
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>ID</Table.ColumnHeader>
@@ -295,7 +290,7 @@ export default function EliminacionMaterialStep2StudyResult({
                                     <Text fontSize="sm" color="app.textMuted">{ta.observaciones}</Text>
                                 )}
                                 {ta.movimientos.length > 0 && (
-                                    <Table.Root size="sm" mt={2} variant="simple">
+                                    <Table.Root size="sm" mt={2} variant="line">
                                         <Table.Header>
                                             <Table.Row>
                                                 <Table.ColumnHeader>Mov. ID</Table.ColumnHeader>
@@ -333,7 +328,7 @@ export default function EliminacionMaterialStep2StudyResult({
                     Asientos contables relacionados ({asientosContables.length})
                 </Heading>
                 {asientosContables.length > 0 ? (
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>ID</Table.ColumnHeader>

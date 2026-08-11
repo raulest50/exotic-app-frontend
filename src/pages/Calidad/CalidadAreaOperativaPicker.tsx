@@ -6,14 +6,8 @@ import {
     IconButton,
     Input,
     InputGroup,
-    InputLeftElement,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
     useDisclosure,
     Field,
@@ -83,12 +77,12 @@ export default function CalidadAreaOperativaPicker({
     };
 
     useEffect(() => {
-        if (isOpen) {
+        if (open) {
             setSearchText("");
             buscarAreas("");
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen]);
+    }, [open]);
 
     const seleccionarArea = (area: AreaOperativaOption) => {
         onChange(area);
@@ -137,7 +131,7 @@ export default function CalidadAreaOperativaPicker({
             </Box>
             {helperText && <Field.HelperText>{helperText}</Field.HelperText>}
 
-            <Dialog.Root open={isOpen} size='xl' onOpenChange={e => {
+            <Dialog.Root open={open} size='xl' onOpenChange={e => {
                 if (!e.open) {
                     onClose();
                 }
@@ -147,15 +141,12 @@ export default function CalidadAreaOperativaPicker({
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header>Seleccionar area operativa</Dialog.Header>
+                            <Dialog.Header><Dialog.Title>Seleccionar area operativa</Dialog.Title></Dialog.Header>
                             <Dialog.CloseTrigger />
                             <Dialog.Body>
                                 <VStack align="stretch" gap={4}>
                                     <HStack>
-                                        <InputGroup>
-                                            <InputLeftElement pointerEvents="none">
-                                                <Icon as={LuSearch} color="gray.400" />
-                                            </InputLeftElement>
+                                        <InputGroup startElement={<Icon as={LuSearch} color="gray.400" />}>
                                             <Input
                                                 value={searchText}
                                                 onChange={(event) => setSearchText(event.target.value)}

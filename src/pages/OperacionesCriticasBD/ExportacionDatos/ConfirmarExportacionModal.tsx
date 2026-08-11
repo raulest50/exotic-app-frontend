@@ -1,6 +1,7 @@
 import {
     Alert,
     Button,
+    CloseButton,
     Input,
     Spinner,
     Text,
@@ -199,8 +200,18 @@ export default function ConfirmarExportacionModal({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>{config?.tituloModal}</Dialog.Header>
-                        <Dialog.CloseTrigger disabled={isExporting} />
+                        <Dialog.Header>
+                            <Dialog.Title>{config?.tituloModal}</Dialog.Title>
+                        </Dialog.Header>
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton
+                                size="sm"
+                                position="absolute"
+                                top="2"
+                                right="2"
+                                disabled={isExporting}
+                            />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <Alert.Root status="warning" mb={4}>
                                 <Alert.Indicator />

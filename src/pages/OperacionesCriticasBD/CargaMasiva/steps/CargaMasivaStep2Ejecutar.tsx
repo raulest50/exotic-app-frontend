@@ -92,7 +92,7 @@ export default function CargaMasivaStep2Ejecutar({
                 onSuccess();
             }
         } catch (error) {
-            const err = error as AxiosError;
+            const err = error as AxiosError<{ message?: string }>;
             let errorMessage = "Error al ejecutar la carga masiva";
             if (axios.isAxiosError(err)) {
                 errorMessage = err.response?.data?.message || err.message || errorMessage;

@@ -235,10 +235,10 @@ export default function OrganizationChart({
         }}>
         <Portal>
 
-          <Dialog.Backdrop>
-            <Dialog.Positioner>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
               <Dialog.Content>
-                <Dialog.Header>Cambios sin guardar</Dialog.Header>
+                <Dialog.Header><Dialog.Title>Cambios sin guardar</Dialog.Title></Dialog.Header>
                 <Dialog.Body>
                   Si sales de esta página se descartará el borrador del organigrama.
                 </Dialog.Body>
@@ -262,8 +262,7 @@ export default function OrganizationChart({
                   </Button>
                 </Dialog.Footer>
               </Dialog.Content>
-            </Dialog.Positioner>
-          </Dialog.Backdrop>
+          </Dialog.Positioner>
 
         </Portal>
 </Dialog.Root>

@@ -1,5 +1,6 @@
 import {
     Box,
+    CloseButton,
     Drawer,
     Flex,
     Heading,
@@ -17,7 +18,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 import type { LeadTimeProveedorMaterialDTO, LeadTimeStatsDTO } from "./types.ts";
 import { formatDateTime, formatNumber } from "./utils.ts";
 import LeadTimeDetailHelpModal from "./LeadTimeDetailHelpModal.tsx";
-import { LuHelpCircle } from 'react-icons/lu';
+import { LuCircleHelp } from 'react-icons/lu';
 
 type Props = {
     isOpen: boolean;
@@ -110,7 +111,9 @@ export default function LeadTimeDetailDrawer({
                     <Drawer.Backdrop />
                     <Drawer.Positioner>
                         <Drawer.Content>
-                            <Drawer.CloseTrigger />
+                            <Drawer.CloseTrigger asChild>
+                                <CloseButton size="sm" position="absolute" top="2" right="2" />
+                            </Drawer.CloseTrigger>
                             <Drawer.Header pr={16}>
                                 <Flex
                                     align={{ base: "stretch", sm: "center" }}
@@ -118,14 +121,14 @@ export default function LeadTimeDetailDrawer({
                                     direction={{ base: "column", sm: "row" }}
                                     gap={3}
                                 >
-                                    <Text>Detalle de lead time</Text>
+                                    <Drawer.Title>Detalle de lead time</Drawer.Title>
                                     <Tooltip content="Explicacion de metricas y por que se usan">
                                         <IconButton
                                             aria-label="Ayuda del detalle de lead time"
                                             size="sm"
                                             variant="outline"
                                             colorPalette="blue"
-                                            onClick={onHelpOpen}><LuHelpCircle /></IconButton>
+                                            onClick={onHelpOpen}><LuCircleHelp /></IconButton>
                                     </Tooltip>
                                 </Flex>
                             </Drawer.Header>

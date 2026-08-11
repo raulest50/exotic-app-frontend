@@ -1,13 +1,9 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import {
     Box,
     Center,
     Container,
     Spinner,
-    Tab,
-    TabList,
-    TabPanel,
-    TabPanels,
     Tabs,
 } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader.tsx";
@@ -48,6 +44,18 @@ export default function BintelligencePage() {
     ];
 
     const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));
+    const visibleTabKeys = visibleTabs.map((tab) => tab.key).join("|");
+    const [selectedTab, setSelectedTab] = useState(visibleTabs[0]?.key ?? "");
+
+    useEffect(() => {
+        setSelectedTab((current) =>
+            visibleTabs.some((tab) => tab.key === current)
+                ? current
+                : (visibleTabs[0]?.key ?? ""),
+        );
+        // The joined key list changes only when permissions alter visible tabs.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [visibleTabKeys]);
 
     return (
         <Container
@@ -58,32 +66,36 @@ export default function BintelligencePage() {
             h="full"
         >
             <MyHeader title={"BI"} />
-            <Tabs.Root lazyMount>
+            <Tabs.Root
+                lazyMount
+                value={selectedTab}
+                onValueChange={({ value }) => setSelectedTab(value)}
+            >
                 <Box overflowX="auto" pb={1}>
                     <Tabs.List minW="max-content">
                         {visibleTabs.map((tab) => (
-                            <Tab
+                            <Tabs.Trigger
                                 key={tab.key}
-                                sx={my_style_tab}
+                                value={tab.key}
+                                css={my_style_tab}
+                                _selected={{ bg: "app.tabSelected" }}
                                 flexShrink={0}
                                 whiteSpace="nowrap"
                                 fontSize={{ base: "sm", md: "md" }}
                                 px={{ base: 3, md: 4 }}
                             >
                                 {tab.label}
-                            </Tab>
+                            </Tabs.Trigger>
                         ))}
                     </Tabs.List>
                 </Box>
-                <TabPanels>
-                    {visibleTabs.map((tab) => (
-                        <TabPanel key={tab.key} px={{ base: 0, md: 4 }}>
-                            <Suspense fallback={<TabLoadingFallback />}>
-                                {tab.render()}
-                            </Suspense>
-                        </TabPanel>
-                    ))}
-                </TabPanels>
+                {visibleTabs.map((tab) => (
+                    <Tabs.Content key={tab.key} value={tab.key} px={{ base: 0, md: 4 }}>
+                        <Suspense fallback={<TabLoadingFallback />}>
+                            {tab.render()}
+                        </Suspense>
+                    </Tabs.Content>
+                ))}
             </Tabs.Root>
         </Container>
     );

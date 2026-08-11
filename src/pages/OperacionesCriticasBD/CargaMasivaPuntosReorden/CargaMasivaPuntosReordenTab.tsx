@@ -4,6 +4,7 @@ import {
     Badge,
     Box,
     Button,
+    CloseButton,
     Container,
     Flex,
     Heading,
@@ -13,15 +14,8 @@ import {
     Spinner,
     Stat,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     useDisclosure,
-    useSteps,
     VStack,
     Field,
     Dialog,
@@ -72,10 +66,7 @@ export default function CargaMasivaPuntosReordenTab({
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const toast = useAppToast();
     const confirmModal = useDisclosure();
-    const stepsApi = useSteps({
-        defaultStep: 0,
-        count: steps.length
-    });
+    const [activeStep, setActiveStep] = useState(0);
 
     const [file, setFile] = useState<File | null>(null);
     const [fileInputKey, setFileInputKey] = useState(0);
@@ -534,24 +525,26 @@ export default function CargaMasivaPuntosReordenTab({
                     onClick={onBackToSelector}
                     disabled={isExecuting}><FaArrowLeft />Volver a cargas masivas
                                     </Button>
-                <Steps.RootProvider p="1em" backgroundColor="app.stepperTeal" w="full" value={stepsApi}>
-                    {steps.map((step, index) => (
-                        <Steps.Item key={step.title}>
-                            <Steps.Indicator>
-                                <Steps.Status
-                                    complete={<LuCheck />}
-                                    incomplete={<Steps.Number />}
-                                    current={<Steps.Number />}
-                                />
-                            </Steps.Indicator>
-                            <Box flexShrink="0">
-                                <Steps.Title>{step.title}</Steps.Title>
-                                <Steps.Description>{step.description}</Steps.Description>
-                            </Box>
-                            <Steps.Separator />
-                        </Steps.Item>
-                    ))}
-                </Steps.RootProvider>
+                <Steps.Root step={activeStep} count={steps.length} p="1em" backgroundColor="app.stepperTeal" w="full">
+                    <Steps.List>
+                        {steps.map((step, index) => (
+                            <Steps.Item key={step.title} index={index}>
+                                <Steps.Indicator>
+                                    <Steps.Status
+                                        complete={<LuCheck />}
+                                        incomplete={<Steps.Number />}
+                                        current={<Steps.Number />}
+                                    />
+                                </Steps.Indicator>
+                                <Box flexShrink="0">
+                                    <Steps.Title>{step.title}</Steps.Title>
+                                    <Steps.Description>{step.description}</Steps.Description>
+                                </Box>
+                                <Steps.Separator />
+                            </Steps.Item>
+                        ))}
+                    </Steps.List>
+                </Steps.Root>
                 {isExecuting ? (
                     <Flex justify="center" align="center" minH="260px" direction="column" gap={3}>
                         <Spinner size="xl" color="purple.500" />
@@ -570,8 +563,12 @@ export default function CargaMasivaPuntosReordenTab({
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header>Confirmar actualización masiva</Dialog.Header>
-                            <Dialog.CloseTrigger />
+                            <Dialog.Header>
+                                <Dialog.Title>Confirmar actualización masiva</Dialog.Title>
+                            </Dialog.Header>
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton size="sm" position="absolute" top="2" right="2" />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body>
                                 Se actualizarán <strong>{validation?.updateRows ?? 0}</strong> materiales.
                                 El archivo será validado nuevamente antes de guardar.

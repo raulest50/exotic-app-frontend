@@ -151,9 +151,8 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
                                     >
                                         Detalle de referencias
                                     </Field.Label>
-                                    <NativeSelect.Root>
+                                    <NativeSelect.Root size="sm">
                                         <NativeSelect.Field
-                                            size="sm"
                                             minH="40px"
                                             value={referenceMode}
                                             onChange={(event) => setReferenceMode(

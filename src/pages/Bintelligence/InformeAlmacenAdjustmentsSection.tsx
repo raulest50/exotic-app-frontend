@@ -53,7 +53,7 @@ import type {
     PeriodoInforme,
     TipoFiltroAjuste,
 } from "./informesGlobales.types";
-import { LuChevronDown, LuChevronUp, LuHelpCircle, LuSearch } from 'react-icons/lu';
+import { LuChevronDown, LuChevronUp, LuCircleHelp, LuSearch } from 'react-icons/lu';
 
 type TrendGroup = "TODOS" | GrupoMaterialAjuste;
 type TrendPerspective = "valor" | "cantidad";
@@ -264,13 +264,13 @@ function AdjustmentGroupCard({
                             label="Positivos"
                             value={group.positivos.valorEstimado}
                             maximum={maximum}
-                            colorPalette="green"
+                            colorScheme="green"
                         />
                         <ProgressRow
                             label="Negativos"
                             value={group.negativos.valorEstimado}
                             maximum={maximum}
-                            colorPalette="red"
+                            colorScheme="red"
                         />
                     </Stack>
 
@@ -409,9 +409,8 @@ function AdjustmentTrend({
                         >
                             <Field.Root minW={{ md: "190px" }}>
                                 <Field.Label fontSize="xs" mb={1}>Grupo</Field.Label>
-                                <NativeSelect.Root>
+                                <NativeSelect.Root size="sm">
                                     <NativeSelect.Field
-                                        size="sm"
                                         minH="40px"
                                         value={group}
                                         onChange={(event) =>
@@ -446,9 +445,8 @@ function AdjustmentTrend({
                             {perspective === "cantidad" ? (
                                 <Field.Root minW={{ md: "120px" }}>
                                     <Field.Label fontSize="xs" mb={1}>Unidad</Field.Label>
-                                    <NativeSelect.Root>
+                                    <NativeSelect.Root size="sm">
                                         <NativeSelect.Field
-                                            size="sm"
                                             minH="40px"
                                             value={unit}
                                             onChange={(event) => setUnit(event.target.value)}>
@@ -574,7 +572,7 @@ function ImpactExplorer({
                                         size="sm"
                                         variant="ghost"
                                         colorPalette="blue"
-                                        flexShrink={0}><LuHelpCircle /></IconButton>
+                                        flexShrink={0}><LuCircleHelp /></IconButton>
                                 </Tooltip>
                             </HStack>
 

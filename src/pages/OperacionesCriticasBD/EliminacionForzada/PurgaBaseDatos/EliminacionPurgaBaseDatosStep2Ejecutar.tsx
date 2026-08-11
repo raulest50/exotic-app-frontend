@@ -5,12 +5,7 @@ import {
     Flex,
     Heading,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
@@ -118,7 +113,7 @@ export default function EliminacionPurgaBaseDatosStep2Ejecutar({
                     <Heading size="sm" mb={2}>
                         Resumen de ejecucion
                     </Heading>
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>Campo</Table.ColumnHeader>

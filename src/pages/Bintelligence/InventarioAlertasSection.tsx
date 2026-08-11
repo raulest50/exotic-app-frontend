@@ -14,13 +14,7 @@ import {
     Spinner,
     Stack,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     useBreakpointValue,
     useDisclosure,
     Field,
@@ -50,7 +44,7 @@ import {
     LuChevronDown,
     LuChevronRight,
     LuChevronUp,
-    LuHelpCircle,
+    LuCircleHelp,
     LuRepeat,
     LuSearch,
 } from 'react-icons/lu';
@@ -244,7 +238,7 @@ export default function InventarioAlertasSection({
                                     size="sm"
                                     variant="ghost"
                                     colorPalette="blue"
-                                    onClick={help.onOpen}><LuHelpCircle /></IconButton>
+                                    onClick={help.onOpen}><LuCircleHelp /></IconButton>
                             </Tooltip>
                             <Tooltip content="Refrescar esta sección" showArrow>
                                 <IconButton
@@ -269,27 +263,27 @@ export default function InventarioAlertasSection({
                         >
                             <AlertFilterButton
                                 label={`${formatInteger(summary.negativas)} negativas`}
-                                colorPalette="red"
+                                colorScheme="red"
                                 active={mode === "EXPLORAR"
                                     && type === "STOCK_NEGATIVO"}
                                 onClick={() => exploreType("STOCK_NEGATIVO")}
                             />
                             <AlertFilterButton
                                 label={`${formatInteger(summary.agotadas)} agotadas`}
-                                colorPalette="orange"
+                                colorScheme="orange"
                                 active={mode === "EXPLORAR" && type === "AGOTADO"}
                                 onClick={() => exploreType("AGOTADO")}
                             />
                             <AlertFilterButton
                                 label={`${formatInteger(summary.bajoUmbral)} bajo umbral`}
-                                colorPalette="yellow"
+                                colorScheme="yellow"
                                 active={mode === "EXPLORAR"
                                     && type === "BAJO_UMBRAL"}
                                 onClick={() => exploreType("BAJO_UMBRAL")}
                             />
                             <AlertFilterButton
                                 label={`${formatInteger(summary.sinCosto)} sin costo`}
-                                colorPalette="purple"
+                                colorScheme="purple"
                                 active={mode === "EXPLORAR" && type === "SIN_COSTO"}
                                 onClick={() => exploreType("SIN_COSTO")}
                             />

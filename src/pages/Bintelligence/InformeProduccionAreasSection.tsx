@@ -7,13 +7,7 @@ import {
     SimpleGrid,
     Stack,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     useBreakpointValue,
 } from "@chakra-ui/react";
 import { Tooltip } from '@/components/ui/tooltip';

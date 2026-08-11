@@ -7,12 +7,7 @@ import {
     Input,
     NativeSelect,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
@@ -308,9 +303,8 @@ export default function VersionadoControlProcesoTab() {
                                             <Input size="sm" value={row.nombre} onChange={(event) => updateRow(row.key, { nombre: event.target.value })} />
                                         </Table.Cell>
                                         <Table.Cell>
-                                            <NativeSelect.Root>
+                                            <NativeSelect.Root size="sm">
                                                 <NativeSelect.Field
-                                                    size="sm"
                                                     value={row.tipo}
                                                     onChange={(event) => updateRow(row.key, { tipo: event.target.value as TipoCaracteristicaControlProceso })}>
                                                     <option value="NUMERICA">Numerica</option>

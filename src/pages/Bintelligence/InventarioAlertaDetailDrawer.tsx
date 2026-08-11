@@ -1,6 +1,7 @@
 import {
     Badge,
     Box,
+    CloseButton,
     Drawer,
     HStack,
     SimpleGrid,
@@ -39,8 +40,12 @@ export default function InventarioAlertaDetailDrawer({
                 <Drawer.Backdrop />
                 <Drawer.Positioner>
                     <Drawer.Content>
-                        <Drawer.CloseTrigger />
-                        <Drawer.Header pr={12}>Detalle de alerta</Drawer.Header>
+                        <Drawer.CloseTrigger asChild>
+                            <CloseButton size="sm" position="absolute" top="2" right="2" />
+                        </Drawer.CloseTrigger>
+                        <Drawer.Header pr={12}>
+                            <Drawer.Title>Detalle de alerta</Drawer.Title>
+                        </Drawer.Header>
                         <Drawer.Body pb={8}>
                             <Stack gap={5}>
                                 <Box>

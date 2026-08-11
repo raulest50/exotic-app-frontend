@@ -1,4 +1,4 @@
-import { Steps, Box, Container, Flex, useSteps } from "@chakra-ui/react";
+import { Steps, Box, Container, Flex } from "@chakra-ui/react";
 import { LuCheck } from 'react-icons/lu';
 import { useState } from "react";
 import CargaMasivaStep0Informacion from "./steps/CargaMasivaStep0Informacion";
@@ -12,13 +12,10 @@ const steps = [
 ];
 
 export default function CargaMasivaAlmacenTab() {
-    const stepsApi = useSteps({
-        defaultStep: 0,
-        count: steps.length
-    });
+    const [activeStep, setActiveStep] = useState(0);
 
     const [excelFile, setExcelFile] = useState<File | null>(null);
-    const [excelData, setExcelData] = useState<any[] | null>(null);
+    const [, setExcelData] = useState<any[] | null>(null);
 
     const handleReset = () => {
         setExcelFile(null);
@@ -54,24 +51,26 @@ export default function CargaMasivaAlmacenTab() {
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <Flex direction="column" gap={4}>
-                <Steps.RootProvider p="1em" backgroundColor="app.stepperTeal" w="full" value={stepsApi}>
-                    {steps.map((step, index) => (
-                        <Steps.Item key={index}>
-                            <Steps.Indicator>
-                                <Steps.Status
-                                    complete={<LuCheck />}
-                                    incomplete={<Steps.Number />}
-                                    current={<Steps.Number />}
-                                />
-                            </Steps.Indicator>
-                            <Box flexShrink="0">
-                                <Steps.Title>{step.title}</Steps.Title>
-                                <Steps.Description>{step.description}</Steps.Description>
-                            </Box>
-                            <Steps.Separator />
-                        </Steps.Item>
-                    ))}
-                </Steps.RootProvider>
+                <Steps.Root step={activeStep} count={steps.length} p="1em" backgroundColor="app.stepperTeal" w="full">
+                    <Steps.List>
+                        {steps.map((step, index) => (
+                            <Steps.Item key={step.title} index={index}>
+                                <Steps.Indicator>
+                                    <Steps.Status
+                                        complete={<LuCheck />}
+                                        incomplete={<Steps.Number />}
+                                        current={<Steps.Number />}
+                                    />
+                                </Steps.Indicator>
+                                <Box flexShrink="0">
+                                    <Steps.Title>{step.title}</Steps.Title>
+                                    <Steps.Description>{step.description}</Steps.Description>
+                                </Box>
+                                <Steps.Separator />
+                            </Steps.Item>
+                        ))}
+                    </Steps.List>
+                </Steps.Root>
                 {ConditionalRenderStep()}
             </Flex>
         </Container>

@@ -6,13 +6,8 @@ import {
     Input,
     NativeSelect,
     Table,
-    Tbody,
-    Td,
     Text,
     Textarea,
-    Th,
-    Thead,
-    Tr,
     VStack,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
@@ -205,9 +200,8 @@ export default function DiligenciarControlProcesoTab() {
                                                 onChange={(event) => updateValue(key, event.target.value)}
                                             />
                                         ) : (
-                                            <NativeSelect.Root>
+                                            <NativeSelect.Root size="sm">
                                                 <NativeSelect.Field
-                                                    size="sm"
                                                     value={values[key] ?? ""}
                                                     onChange={(event) => updateValue(key, event.target.value)}>
                                                     <option value="">Seleccionar</option>

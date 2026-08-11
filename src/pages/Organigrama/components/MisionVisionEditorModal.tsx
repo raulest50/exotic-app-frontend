@@ -227,7 +227,7 @@ export default function MisionVisionEditorModal({
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>Editar identidad corporativa · versión base {versionBase}</Dialog.Header>
+            <Dialog.Header><Dialog.Title>Editar identidad corporativa · versión base {versionBase}</Dialog.Title></Dialog.Header>
             <Dialog.CloseTrigger disabled={saving} />
             <Dialog.Body>
               <VStack gap={7} align="stretch">

@@ -91,7 +91,7 @@ export default function EliminacionMaterialStep1SelectAndStudy({
             </VStack>
 
             <MateriaPrimaPicker
-                isOpen={isOpen}
+                isOpen={open}
                 onClose={onClose}
                 onSelectMateriaPrima={(material) => {
                     setMaterialSeleccionado(material);

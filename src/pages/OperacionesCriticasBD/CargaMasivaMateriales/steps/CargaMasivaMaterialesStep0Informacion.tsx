@@ -3,13 +3,7 @@ import {
     Button,
     Flex,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
@@ -120,7 +114,7 @@ export default function CargaMasivaMaterialesStep0Informacion({ setActiveStep }:
                     Ejemplos de filas válidas (solo referencia)
                 </Text>
                 <Table.ScrollArea borderWidth="1px" borderRadius="md" overflowX="auto">
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>producto_id</Table.ColumnHeader>

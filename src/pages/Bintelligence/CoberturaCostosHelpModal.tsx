@@ -1,4 +1,4 @@
-import { Text, Dialog, Portal } from "@chakra-ui/react";
+import { CloseButton, Text, Dialog, Portal } from "@chakra-ui/react";
 
 type Props = {
     isOpen: boolean;
@@ -22,8 +22,12 @@ export default function CoberturaCostosHelpModal({ isOpen, onClose }: Props) {
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Cobertura de costos</Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.Header>
+                            <Dialog.Title>Cobertura de costos</Dialog.Title>
+                        </Dialog.Header>
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton size="sm" position="absolute" top="2" right="2" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body pb={6}>
                             <Text>
                                 La cobertura de costos indica qué porcentaje de las referencias con stock

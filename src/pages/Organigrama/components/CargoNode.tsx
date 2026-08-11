@@ -15,21 +15,9 @@ export default function CargoNode(props: NodeProps<OrganigramaNode>) {
   const actionHoverBg = useColorModeValue("blue.50", "blue.900");
   const assignedUserColor = useColorModeValue("blue.600", "blue.200");
 
-  const handleEdit = useCallback(
-    (event: React.MouseEvent) => {
-      event.stopPropagation();
-      cargo.onEdit(props.id);
-    },
-    [cargo, props.id],
-  );
+  const handleEdit = useCallback(() => cargo.onEdit(props.id), [cargo, props.id]);
 
-  const handleViewDetails = useCallback(
-    (event: React.MouseEvent) => {
-      event.stopPropagation();
-      cargo.onViewDetails(props.id);
-    },
-    [cargo, props.id],
-  );
+  const handleViewDetails = useCallback(() => cargo.onViewDetails(props.id), [cargo, props.id]);
 
   return (
     <Box
@@ -71,23 +59,26 @@ export default function CargoNode(props: NodeProps<OrganigramaNode>) {
 
           <Box position="absolute" bottom="2px" right="2px" className="nodrag">
             <Menu.Root>
-              <Menu.Trigger
-                aria-label="Opciones del cargo"
-                icon={<LuMousePointerClick />}
-                variant="ghost"
-                size="lg"
-                color="blue.500"
-                _hover={{ bg: actionHoverBg }}
-                asChild><IconButton
-                    onClick={(event: React.MouseEvent<HTMLButtonElement>) => event.stopPropagation()} /></Menu.Trigger>
+              <Menu.Trigger asChild>
+                <IconButton
+                  aria-label="Opciones del cargo"
+                  variant="ghost"
+                  size="lg"
+                  color="blue.500"
+                  _hover={{ bg: actionHoverBg }}
+                  onClick={(event: React.MouseEvent<HTMLButtonElement>) => event.stopPropagation()}
+                >
+                  <LuMousePointerClick />
+                </IconButton>
+              </Menu.Trigger>
               <Portal><Menu.Positioner><Menu.Content>
                     {canEdit && (
-                      <Menu.Item icon={<MdEdit />} onSelect={handleEdit} value='item-0'>
-                        Editar cargo
+                      <Menu.Item onSelect={handleEdit} value='edit'>
+                        <MdEdit /> Editar cargo
                       </Menu.Item>
                     )}
-                    <Menu.Item icon={<MdInfoOutline />} onSelect={handleViewDetails} value='item-1'>
-                      Detalles y manual
+                    <Menu.Item onSelect={handleViewDetails} value='details'>
+                      <MdInfoOutline /> Detalles y manual
                     </Menu.Item>
                   </Menu.Content></Menu.Positioner></Portal>
             </Menu.Root>

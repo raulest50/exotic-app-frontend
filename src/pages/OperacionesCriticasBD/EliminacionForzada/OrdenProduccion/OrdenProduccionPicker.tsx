@@ -1,17 +1,13 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
     Box,
     Button,
+    CloseButton,
     Flex,
     Input,
     NativeSelect,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
     Field,
     Dialog,
@@ -113,8 +109,12 @@ export default function OrdenProduccionPicker({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Seleccionar orden de producción</Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.Header>
+                            <Dialog.Title>Seleccionar orden de producción</Dialog.Title>
+                        </Dialog.Header>
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton size="sm" position="absolute" top="2" right="2" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <VStack gap={4} align="stretch">
                                 <Flex gap={2} flexWrap="wrap">
@@ -163,7 +163,7 @@ export default function OrdenProduccionPicker({
                                 <Box w="full" overflowX="auto">
                                     {ordenes.length > 0 ? (
                                         <>
-                                            <Table.Root variant="simple" size="sm">
+                                            <Table.Root variant="line" size="sm">
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>ID</Table.ColumnHeader>

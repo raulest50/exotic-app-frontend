@@ -5,14 +5,8 @@ import {
   Flex,
   Heading,
   Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Input,
   InputGroup,
-  InputLeftElement,
   Badge,
   Button,
   Icon,
@@ -129,10 +123,7 @@ const CatalogoCuentas: React.FC = () => {
         <Heading size="md">Catálogo de Cuentas</Heading>
       </Flex>
 
-      <InputGroup mb={4}>
-        <InputLeftElement pointerEvents="none">
-          <Icon as={LuSearch} color={searchIconColor} />
-        </InputLeftElement>
+      <InputGroup mb={4} startElement={<Icon as={LuSearch} color={searchIconColor} />}>
         <Input 
           placeholder="Buscar por código o nombre" 
           value={searchTerm}
@@ -141,7 +132,7 @@ const CatalogoCuentas: React.FC = () => {
       </InputGroup>
 
       <Box overflowX="auto">
-        <Table.Root variant="simple">
+        <Table.Root variant="line">
           <Table.Header>
             <Table.Row>
               <Table.ColumnHeader>Código</Table.ColumnHeader>

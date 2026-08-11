@@ -33,7 +33,7 @@ import type {
     StockInventario,
     StockPorUnidad,
 } from "./informesGlobales.types";
-import { LuHelpCircle } from 'react-icons/lu';
+import { LuCircleHelp } from 'react-icons/lu';
 
 export function StockOverviewSection({ stock }: { stock: StockInventario }) {
     const coverageHelp = useDisclosure();
@@ -355,7 +355,7 @@ function CostCoverageCard({
                                 onClick={onOpenHelp}
                                 size="sm"
                                 variant="ghost"
-                                colorPalette="blue"><LuHelpCircle /></IconButton>
+                                colorPalette="blue"><LuCircleHelp /></IconButton>
                         </Tooltip>
                     </HStack>
                     <Stat.ValueText fontSize="xl" lineHeight="shorter" mt={1}>

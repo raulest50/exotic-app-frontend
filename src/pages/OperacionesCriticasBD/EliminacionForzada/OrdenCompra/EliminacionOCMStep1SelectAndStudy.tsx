@@ -90,7 +90,7 @@ export default function EliminacionOCMStep1SelectAndStudy({
             </VStack>
 
             <OrdenCompraPicker
-                isOpen={isOpen}
+                isOpen={open}
                 onClose={onClose}
                 onSelectOrden={(orden) => {
                     setOrdenSeleccionada(orden);

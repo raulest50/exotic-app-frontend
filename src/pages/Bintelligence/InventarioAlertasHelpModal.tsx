@@ -1,4 +1,4 @@
-import { Text, Button, Stack, List, Dialog, Portal } from "@chakra-ui/react";
+import { CloseButton, Text, Button, Stack, List, Dialog, Portal } from "@chakra-ui/react";
 
 export default function InventarioAlertasHelpModal({
     isOpen,
@@ -18,8 +18,12 @@ export default function InventarioAlertasHelpModal({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Cómo se clasifican las alertas</Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.Header>
+                            <Dialog.Title>Cómo se clasifican las alertas</Dialog.Title>
+                        </Dialog.Header>
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton size="sm" position="absolute" top="2" right="2" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <Stack gap={4}>
                                 <Text>

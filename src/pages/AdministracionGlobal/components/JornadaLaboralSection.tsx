@@ -9,13 +9,8 @@ import {
     Spinner,
     Switch,
     Table,
-    Tbody,
-    Td,
     Text,
     Textarea,
-    Th,
-    Thead,
-    Tr,
     VStack,
     Field,
 } from "@chakra-ui/react";
@@ -237,11 +232,16 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
                                         {draft[section.key].laborable ? "Laborable" : "No laborable"}
                                     </Text>
                                 </Box>
-                                <Switch
+                                <Switch.Root
                                     checked={draft[section.key].laborable}
                                     disabled={!canEdit}
-                                    onValueChange={(event) => updateSectionLaborable(section.key, event.target.checked)}
-                                />
+                                    onCheckedChange={({ checked }) => updateSectionLaborable(section.key, checked)}
+                                >
+                                    <Switch.HiddenInput />
+                                    <Switch.Control>
+                                        <Switch.Thumb />
+                                    </Switch.Control>
+                                </Switch.Root>
                             </HStack>
 
                             <VStack align="stretch" gap={3}>
@@ -344,7 +344,7 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
             </Box>
 
             <Box overflowX="auto" borderWidth="1px" borderRadius="md">
-                <Table.Root size="sm" variant="simple">
+                <Table.Root size="sm" variant="line">
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>Version</Table.ColumnHeader>

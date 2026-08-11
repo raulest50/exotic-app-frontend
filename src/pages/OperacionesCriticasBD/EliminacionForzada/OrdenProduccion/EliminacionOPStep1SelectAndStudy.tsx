@@ -95,7 +95,7 @@ export default function EliminacionOPStep1SelectAndStudy({
             </VStack>
 
             <OrdenProduccionPicker
-                isOpen={isOpen}
+                isOpen={open}
                 onClose={onClose}
                 onSelectOrden={(orden) => {
                     setOrdenProduccionSeleccionada(orden);

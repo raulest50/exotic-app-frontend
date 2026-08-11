@@ -2,11 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   Input,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
   NumberInput,
-  NumberInputField,
-  NumberInputStepper,
   NativeSelect,
   Text,
   Textarea,
@@ -68,7 +64,7 @@ export default function EditCargoDialog({
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>Editar cargo</Dialog.Header>
+            <Dialog.Header><Dialog.Title>Editar cargo</Dialog.Title></Dialog.Header>
             <Dialog.CloseTrigger />
             <Dialog.Body>
               <Field.Root mb={4}>
@@ -113,8 +109,8 @@ export default function EditCargoDialog({
                   min={1}
                   max={10}
                   value={String(draft.nivel)}
-                  onValueChange={(_, value) =>
-                    setDraft({ ...draft, nivel: Number.isNaN(value) ? 1 : value })
+                  onValueChange={({ valueAsNumber }) =>
+                    setDraft({ ...draft, nivel: Number.isNaN(valueAsNumber) ? 1 : valueAsNumber })
                   }
                 >
                   <NumberInput.Input />

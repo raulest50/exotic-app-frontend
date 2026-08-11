@@ -35,6 +35,7 @@ export default function CargaMasivaCostosTab({ onBackToSelector }: CargaMasivaCo
 
                 <Steps.Root
                     step={flow.activeStep}
+                    count={STEPS.length}
                     orientation={orientation}
                     p={4}
                     borderWidth="1px"
@@ -42,8 +43,8 @@ export default function CargaMasivaCostosTab({ onBackToSelector }: CargaMasivaCo
                     gap={{ base: 2, md: 0 }}
                 >
                       <Steps.List>
-                        {STEPS.map((step) => (
-                            <Steps.Item key={step.title}>
+                        {STEPS.map((step, index) => (
+                            <Steps.Item key={step.title} index={index}>
                                 <Steps.Indicator>
                                     <Steps.Status
                                         complete={<LuCheck />}

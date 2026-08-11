@@ -5,12 +5,7 @@ import {
     Flex,
     Heading,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
@@ -137,7 +132,7 @@ export default function EliminacionOPStep2StudyResult({
                     Lotes ({lotes.length})
                 </Heading>
                 {lotes.length > 0 ? (
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>ID</Table.ColumnHeader>
@@ -195,7 +190,7 @@ export default function EliminacionOPStep2StudyResult({
                                     </Text>
                                 )}
                                 {ta.movimientos && ta.movimientos.length > 0 && (
-                                    <Table.Root size="sm" mt={2} variant="simple">
+                                    <Table.Root size="sm" mt={2} variant="line">
                                         <Table.Header>
                                             <Table.Row>
                                                 <Table.ColumnHeader>Mov. ID</Table.ColumnHeader>
@@ -236,7 +231,7 @@ export default function EliminacionOPStep2StudyResult({
                     Asientos contables ({asientosContables.length})
                 </Heading>
                 {asientosContables.length > 0 ? (
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>ID</Table.ColumnHeader>

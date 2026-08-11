@@ -5,12 +5,7 @@ import {
     Flex,
     Heading,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
@@ -134,7 +129,7 @@ export default function EliminacionOCMStep2StudyResult({
                     Ítems de orden de compra ({itemsOrdenCompra.length})
                 </Heading>
                 {itemsOrdenCompra.length > 0 ? (
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>Item ID</Table.ColumnHeader>
@@ -167,7 +162,7 @@ export default function EliminacionOCMStep2StudyResult({
                     Lotes ({lotes.length})
                 </Heading>
                 {lotes.length > 0 ? (
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>ID</Table.ColumnHeader>
@@ -209,7 +204,7 @@ export default function EliminacionOCMStep2StudyResult({
                                     <Text fontSize="sm" color="app.textMuted">{ta.observaciones}</Text>
                                 )}
                                 {ta.movimientos && ta.movimientos.length > 0 && (
-                                    <Table.Root size="sm" mt={2} variant="simple">
+                                    <Table.Root size="sm" mt={2} variant="line">
                                         <Table.Header>
                                             <Table.Row>
                                                 <Table.ColumnHeader>Mov. ID</Table.ColumnHeader>
@@ -248,7 +243,7 @@ export default function EliminacionOCMStep2StudyResult({
                     Asientos contables ({asientosContables.length})
                 </Heading>
                 {asientosContables.length > 0 ? (
-                    <Table.Root size="sm" variant="simple">
+                    <Table.Root size="sm" variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>ID</Table.ColumnHeader>

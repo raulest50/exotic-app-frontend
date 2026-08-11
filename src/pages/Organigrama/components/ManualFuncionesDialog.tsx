@@ -85,7 +85,7 @@ export default function ManualFuncionesDialog({
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>Detalles del cargo</Dialog.Header>
+            <Dialog.Header><Dialog.Title>Detalles del cargo</Dialog.Title></Dialog.Header>
             <Dialog.CloseTrigger />
             <Dialog.Body>
               <Text fontSize="2xl" fontWeight="bold">

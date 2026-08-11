@@ -9,10 +9,6 @@ import {
   Flex,
   IconButton,
   Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
   Collapsible,
   useDisclosure,
 } from "@chakra-ui/react";
@@ -38,7 +34,7 @@ export default function OrganigramaPage() {
 
   const isLoading = !accesosReady;
   const organizationChartId = "org-1";
-  const { open, onToggle } = useDisclosure({ defaultIsOpen: true });
+  const { open, onToggle } = useDisclosure({ defaultOpen: true });
   const [tabIndex, setTabIndex] = useState(0);
   const [organigramaDirty, setOrganigramaDirty] = useState(false);
   const tabHoverBg = useColorModeValue("blue.50", "blue.900");
@@ -70,7 +66,10 @@ export default function OrganigramaPage() {
 
   const visibleTabs = tabs.filter((tab) => tab.canSee);
   const safeTabIndex = Math.min(tabIndex, Math.max(visibleTabs.length - 1, 0));
-  const handleTabChange = (nextIndex: number) => {
+  const activeTabKey = visibleTabs[safeTabIndex]?.key ?? "";
+  const handleTabChange = ({ value }: { value: string }) => {
+    const nextIndex = visibleTabs.findIndex((tab) => tab.key === value);
+    if (nextIndex < 0) return;
     const currentTab = visibleTabs[safeTabIndex];
     const nextTab = visibleTabs[nextIndex];
     if (
@@ -104,7 +103,7 @@ export default function OrganigramaPage() {
         <Flex>
           <Flex direction="column" bg="app.surface" borderRight="1px" borderColor="app.border" position="relative">
             <IconButton
-              aria-label={isOpen ? "Colapsar panel" : "Expandir panel"}
+              aria-label={open ? "Colapsar panel" : "Expandir panel"}
               position="absolute"
               right="-16px"
               top="50%"
@@ -113,16 +112,17 @@ export default function OrganigramaPage() {
               size="sm"
               onClick={onToggle}
               borderRadius="full"
-              boxShadow="md">{isOpen ? <LuChevronLeft /> : <LuChevronRight />}</IconButton>
+              boxShadow="md">{open ? <LuChevronLeft /> : <LuChevronRight />}</IconButton>
 
-            <Collapsible.Root open={isOpen}>
+            <Collapsible.Root open={open}>
               <Collapsible.Content>
                 <Box w="250px" p={4}>
-                  <Tabs.Root unstyled colorPalette="blue" orientation="vertical" value={safeTabIndex} onValueChange={handleTabChange}>
+                  <Tabs.Root unstyled colorPalette="blue" orientation="vertical" value={activeTabKey} onValueChange={handleTabChange}>
                     <Tabs.List mb="1em" gap={3}>
                       {visibleTabs.map((tab) => (
-                        <Tab
+                        <Tabs.Trigger
                           key={tab.key}
+                          value={tab.key}
                           py={3}
                           px={4}
                           borderRadius="md"
@@ -132,34 +132,27 @@ export default function OrganigramaPage() {
                           transition="all 0.2s"
                         >
                           {tab.label}
-                        </Tab>
+                        </Tabs.Trigger>
                       ))}
                     </Tabs.List>
-                    <TabPanels>
-                      {visibleTabs.map((tab) => (
-                        <TabPanel key={tab.key} p={0}></TabPanel>
-                      ))}
-                    </TabPanels>
                   </Tabs.Root>
                 </Box>
               </Collapsible.Content>
             </Collapsible.Root>
           </Flex>
 
-          <Box flex="1" ml={isOpen ? 4 : 0}>
-            <Tabs.Root variant='enclosed' colorPalette="blue" lazyMount value={safeTabIndex} onValueChange={handleTabChange}>
+          <Box flex="1" ml={open ? 4 : 0}>
+            <Tabs.Root variant='enclosed' colorPalette="blue" lazyMount value={activeTabKey} onValueChange={handleTabChange}>
               <Tabs.List display="none">
                 {visibleTabs.map((tab) => (
-                  <Tab key={tab.key}>{tab.label}</Tab>
+                  <Tabs.Trigger key={tab.key} value={tab.key}>{tab.label}</Tabs.Trigger>
                 ))}
               </Tabs.List>
-              <TabPanels>
-                {visibleTabs.map((tab) => (
-                  <TabPanel key={tab.key} p={0}>
+              {visibleTabs.map((tab) => (
+                  <Tabs.Content key={tab.key} value={tab.key} p={0}>
                     {tab.render()}
-                  </TabPanel>
-                ))}
-              </TabPanels>
+                  </Tabs.Content>
+              ))}
             </Tabs.Root>
           </Box>
         </Flex>

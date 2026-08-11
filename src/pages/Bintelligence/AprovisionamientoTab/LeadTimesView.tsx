@@ -23,7 +23,7 @@ import type { Proveedor } from "../../Compras/types.tsx";
 import type { ProveedorMaterialLeadTimeMetricDTO } from "./types.ts";
 import { formatNumber } from "./utils.ts";
 import LeadTimeMetricHelpModal from "./LeadTimeMetricHelpModal.tsx";
-import { LuHelpCircle } from 'react-icons/lu';
+import { LuCircleHelp } from 'react-icons/lu';
 
 type Props = {
     selectedMaterial: Material | null;
@@ -109,7 +109,7 @@ export default function LeadTimesView({ selectedMaterial, selectedProveedor, fec
                                         size="sm"
                                         variant="outline"
                                         colorPalette="blue"
-                                        onClick={onHelpOpen}><LuHelpCircle /></IconButton>
+                                        onClick={onHelpOpen}><LuCircleHelp /></IconButton>
                                 </Tooltip>
                             </HStack>
                             <Text fontSize="sm" color="app.textMuted">

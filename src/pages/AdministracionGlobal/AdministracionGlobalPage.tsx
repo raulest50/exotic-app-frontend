@@ -10,26 +10,16 @@ import {
     HStack,
     Input,
     Spinner,
-    Tab,
-    TabList,
-    TabPanel,
-    TabPanels,
     Table,
     Tabs,
-    Tbody,
-    Td,
     Text,
     Textarea,
-    Th,
-    Thead,
-    Tr,
     VStack,
     Field,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import MyHeader from "../../components/MyHeader";
-import { my_style_tab } from "../../styles/styles_general";
 import { Modulo } from "../Usuarios/GestionUsuarios/types";
 import { useTabPermission } from "../../auth/usePermissions";
 import {
@@ -84,11 +74,19 @@ export default function AdministracionGlobalPage() {
     const [form, setForm] = useState<EmpresaIdentidadLegalVersionPayload>(EMPTY_FORM);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [selectedTab, setSelectedTab] = useState("");
 
     const ready = identidadLegalReady && jornadaLaboralReady;
     const canSeeAnyTab = canSeeIdentidadLegal || canSeeJornadaLaboral;
     const canEditIdentidadLegal = nivelIdentidadLegal >= 2;
     const canEditJornadaLaboral = nivelJornadaLaboral >= 2;
+    const visibleTabValues = [
+        canSeeIdentidadLegal ? TAB_IDENTIDAD_LEGAL : null,
+        canSeeJornadaLaboral ? TAB_JORNADA_LABORAL : null,
+    ].filter((value): value is string => value !== null);
+    const activeTab = visibleTabValues.includes(selectedTab)
+        ? selectedTab
+        : (visibleTabValues[0] ?? "");
 
     const loadData = useCallback(async () => {
         if (!canSeeIdentidadLegal) {
@@ -209,14 +207,31 @@ export default function AdministracionGlobalPage() {
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <MyHeader title="Administracion Global" />
             <Flex direction="column" w="full" h="full">
-                <Tabs.Root>
+                <Tabs.Root value={activeTab} onValueChange={({ value }) => setSelectedTab(value)}>
                     <Tabs.List>
-                        {canSeeIdentidadLegal && <Tab sx={my_style_tab}>Identidad Legal</Tab>}
-                        {canSeeJornadaLaboral && <Tab sx={my_style_tab}>Jornada Laboral</Tab>}
-                    </Tabs.List>
-                    <TabPanels>
                         {canSeeIdentidadLegal && (
-                            <TabPanel px={0}>
+                            <Tabs.Trigger
+                                value={TAB_IDENTIDAD_LEGAL}
+                                borderRadius={0}
+                                _active={{ bg: "app.tabSelected" }}
+                                _selected={{ bg: "app.tabSelected" }}
+                            >
+                                Identidad Legal
+                            </Tabs.Trigger>
+                        )}
+                        {canSeeJornadaLaboral && (
+                            <Tabs.Trigger
+                                value={TAB_JORNADA_LABORAL}
+                                borderRadius={0}
+                                _active={{ bg: "app.tabSelected" }}
+                                _selected={{ bg: "app.tabSelected" }}
+                            >
+                                Jornada Laboral
+                            </Tabs.Trigger>
+                        )}
+                    </Tabs.List>
+                    {canSeeIdentidadLegal && (
+                        <Tabs.Content value={TAB_IDENTIDAD_LEGAL} px={0}>
                                 {loading ? (
                                     <Spinner />
                                 ) : (
@@ -331,7 +346,7 @@ export default function AdministracionGlobalPage() {
                                         />
 
                                         <Box overflowX="auto" borderWidth="1px" borderRadius="md">
-                                            <Table.Root size="sm" variant="simple">
+                                            <Table.Root size="sm" variant="line">
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>Version</Table.ColumnHeader>
@@ -372,14 +387,13 @@ export default function AdministracionGlobalPage() {
                                         </Box>
                                     </VStack>
                                 )}
-                            </TabPanel>
-                        )}
-                        {canSeeJornadaLaboral && (
-                            <TabPanel px={0}>
-                                <JornadaLaboralSection canEdit={canEditJornadaLaboral} />
-                            </TabPanel>
-                        )}
-                    </TabPanels>
+                        </Tabs.Content>
+                    )}
+                    {canSeeJornadaLaboral && (
+                        <Tabs.Content value={TAB_JORNADA_LABORAL} px={0}>
+                            <JornadaLaboralSection canEdit={canEditJornadaLaboral} />
+                        </Tabs.Content>
+                    )}
                 </Tabs.Root>
             </Flex>
         </Container>

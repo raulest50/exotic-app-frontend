@@ -1,15 +1,11 @@
 import {
     Box,
+    CloseButton,
     Code,
     Heading,
     Stack,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     Separator,
     Dialog,
     Portal,
@@ -75,7 +71,7 @@ const rankingHelpItems = [
 
 export default function LeadTimesRankingHelpModal({ isOpen, onClose }: Props) {
     return (
-        <Dialog.Root open={isOpen} size={{ base: "full", md: "6xl" }} scrollBehavior="inside" onOpenChange={e => {
+        <Dialog.Root open={isOpen} size={{ base: "full", md: "xl" }} scrollBehavior="inside" onOpenChange={e => {
             if (!e.open) {
                 onClose();
             }
@@ -84,9 +80,13 @@ export default function LeadTimesRankingHelpModal({ isOpen, onClose }: Props) {
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
-                        <Dialog.Header>Ayuda del ranking de lead times</Dialog.Header>
-                        <Dialog.CloseTrigger />
+                    <Dialog.Content maxW={{ md: "6xl" }}>
+                        <Dialog.Header>
+                            <Dialog.Title>Ayuda del ranking de lead times</Dialog.Title>
+                        </Dialog.Header>
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton size="sm" position="absolute" top="2" right="2" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body pb={6}>
                             <Stack gap={5}>
                                 <Text color="app.textMuted">
@@ -95,7 +95,7 @@ export default function LeadTimesRankingHelpModal({ isOpen, onClose }: Props) {
                                 </Text>
 
                                 <Box overflowX="auto">
-                                    <Table.Root size="sm" variant="simple">
+                                    <Table.Root size="sm" variant="line">
                                         <Table.Header>
                                             <Table.Row>
                                                 <Table.ColumnHeader>Campo</Table.ColumnHeader>

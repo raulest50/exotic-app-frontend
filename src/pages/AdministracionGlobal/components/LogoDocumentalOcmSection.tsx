@@ -7,13 +7,8 @@ import {
     Input,
     Spinner,
     Table,
-    Tbody,
-    Td,
     Text,
     Textarea,
-    Th,
-    Thead,
-    Tr,
     VStack,
     Field,
 } from "@chakra-ui/react";
@@ -325,7 +320,7 @@ export default function LogoDocumentalOcmSection({
             </Box>
 
             <Box overflowX="auto" borderWidth="1px" borderRadius="md">
-                <Table.Root size="sm" variant="simple">
+                <Table.Root size="sm" variant="line">
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader>Version</Table.ColumnHeader>

@@ -340,7 +340,7 @@ export default function InformesGlobalesTab() {
             </Card.Root>
 
             {activeIsLoading && activeHasCurrentData ? (
-                <Progress.Root size="xs" indeterminate colorPalette="green" borderRadius="full">
+                <Progress.Root size="xs" value={null} colorPalette="green" borderRadius="full">
                     <Progress.Track>
                         <Progress.Range />
                     </Progress.Track>

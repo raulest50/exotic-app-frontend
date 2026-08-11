@@ -3,11 +3,6 @@ import {
   Button,
   Box,
   Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Flex,
   Text,
   Spinner,
@@ -243,7 +238,7 @@ const DetalleAsientosCuenta: React.FC<DetalleAsientosCuentaProps> = ({
           ) : movimientos.length > 0 ? (
             <>
               <Box overflowX="auto">
-                <Table.Root variant="simple">
+                <Table.Root variant="line">
                   <Table.Header>
                     <Table.Row>
                       <Table.ColumnHeader>Fecha</Table.ColumnHeader>

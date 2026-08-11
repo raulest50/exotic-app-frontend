@@ -386,7 +386,7 @@ export function MisionVision({ canEdit }: MisionVisionProps) {
                     <Dialog.Positioner>
                         <Dialog.Content>
                             <Dialog.Header>
-                                {detailVersion ? `Detalle de la versión ${detailVersion.version}` : "Cargando versión"}
+                                <Dialog.Title>{detailVersion ? `Detalle de la versión ${detailVersion.version}` : "Cargando versión"}</Dialog.Title>
                             </Dialog.Header>
                             <Dialog.CloseTrigger />
                             <Dialog.Body>
@@ -419,7 +419,7 @@ export function MisionVision({ canEdit }: MisionVisionProps) {
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header>Restaurar versión {restoreTarget?.version}</Dialog.Header>
+                            <Dialog.Header><Dialog.Title>Restaurar versión {restoreTarget?.version}</Dialog.Title></Dialog.Header>
                             <Dialog.CloseTrigger disabled={restoring} />
                             <Dialog.Body>
                                 <Text mb={4}>

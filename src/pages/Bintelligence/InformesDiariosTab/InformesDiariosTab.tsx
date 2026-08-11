@@ -47,7 +47,7 @@ function InformePlaceholder({ title }: { title: string }) {
 }
 
 export default function InformesDiariosTab() {
-    const { open, onToggle } = useDisclosure({ defaultIsOpen: true });
+    const { open, onToggle } = useDisclosure({ defaultOpen: true });
     const [selectedReport, setSelectedReport] = useState<InformeDiarioKey>("almacen");
     const [apiReachable, setApiReachable] = useState<boolean | null>(null);
     const selectedReportBg = useColorModeValue("blue.50", "blue.900");
@@ -100,34 +100,34 @@ export default function InformesDiariosTab() {
                 borderRadius="md"
                 overflow="hidden"
                 display={{ base: "none", md: "flex" }}
-                w={isOpen ? "280px" : "52px"}
-                minW={isOpen ? "280px" : "52px"}
+                w={open ? "280px" : "52px"}
+                minW={open ? "280px" : "52px"}
                 transition="width 0.2s ease, min-width 0.2s ease"
                 flexShrink={0}
             >
                 <HStack
-                    px={isOpen ? 3 : 1}
+                    px={open ? 3 : 1}
                     py={2}
                     borderBottomWidth="1px"
                     borderColor="app.border"
-                    justify={isOpen ? "space-between" : "center"}
+                    justify={open ? "space-between" : "center"}
                     gap={2}
                 >
-                    {isOpen && (
+                    {open && (
                         <Text fontSize="sm" fontWeight="semibold" lineClamp={1}>
                             Informes diarios
                         </Text>
                     )}
                     <IconButton
-                        aria-label={isOpen ? "Colapsar menú" : "Expandir menú"}
+                        aria-label={open ? "Colapsar menú" : "Expandir menú"}
                         size="sm"
                         variant="ghost"
-                        onClick={onToggle}>{isOpen ? <LuChevronLeft /> : <LuChevronRight />}</IconButton>
+                        onClick={onToggle}>{open ? <LuChevronLeft /> : <LuChevronRight />}</IconButton>
                 </HStack>
 
                 <VStack align="stretch" gap={1} p={2} flex={1}>
                     {REPORT_OPTIONS.map((opt) =>
-                        isOpen ? (
+                        open ? (
                             <Button
                                 key={opt.key}
                                 variant="ghost"

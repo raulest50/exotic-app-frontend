@@ -2,6 +2,7 @@ import {
     Badge,
     Box,
     Button,
+    CloseButton,
     Drawer,
     Heading,
     HStack,
@@ -106,7 +107,7 @@ export default function EliminacionStep0SelectEntityType({
                                     </Button>
             </VStack>
 
-            <Drawer.Root placement='end' open={isOpen} size='sm' onOpenChange={e => {
+            <Drawer.Root placement='end' open={open} size='sm' onOpenChange={e => {
                 if (!e.open) {
                     onClose();
                 }
@@ -116,64 +117,70 @@ export default function EliminacionStep0SelectEntityType({
                     <Drawer.Backdrop />
                     <Drawer.Positioner>
                         <Drawer.Content>
-                            <Drawer.Header borderBottomWidth="1px">Tipo de entidad</Drawer.Header>
+                            <Drawer.Header borderBottomWidth="1px">
+                                <Drawer.Title>Tipo de entidad</Drawer.Title>
+                            </Drawer.Header>
+                            <Drawer.CloseTrigger asChild>
+                                <CloseButton size="sm" position="absolute" top="2" right="2" />
+                            </Drawer.CloseTrigger>
                             <Drawer.Body>
-                                <List.Root gap={2}>
+                                <List.Root gap={2} variant="plain">
                                     {visibleOptions.map((opt) => (
-                                        <List.Item
-                                            key={opt.id}
-                                            as={Button}
-                                            variant={opt.tone === "danger" ? "outline" : "ghost"}
-                                            justifyContent="flex-start"
-                                            h="auto"
-                                            py={3}
-                                            px={2}
-                                            onClick={() => handleSelect(opt)}
-                                            textAlign="left"
-                                            whiteSpace="normal"
-                                            borderColor={opt.tone === "danger" ? dangerBorder : undefined}
-                                            bg={opt.tone === "danger" ? dangerBg : undefined}
-                                            _hover={
-                                                opt.tone === "danger"
-                                                    ? { bg: dangerHoverBg, borderColor: dangerHoverBorder }
-                                                    : undefined
-                                            }
-                                            _active={
-                                                opt.tone === "danger"
-                                                    ? { bg: dangerActiveBg, borderColor: dangerActiveBorder }
-                                                    : undefined
-                                            }
-                                        >
-                                            <HStack align="flex-start" gap={3} w="full">
-                                                <Icon
-                                                    as={opt.tone === "danger" ? MdWarningAmber : AddIcon}
-                                                    color={opt.tone === "danger" ? "orange.400" : "teal.500"}
-                                                    boxSize={5}
-                                                    mt={0.5}
-                                                    flexShrink={0}
-                                                />
-                                                <Box>
-                                                    <HStack gap={2} mb={1} flexWrap="wrap">
+                                        <List.Item key={opt.id} w="full">
+                                            <Button
+                                                variant={opt.tone === "danger" ? "outline" : "ghost"}
+                                                justifyContent="flex-start"
+                                                w="full"
+                                                h="auto"
+                                                py={3}
+                                                px={2}
+                                                onClick={() => handleSelect(opt)}
+                                                textAlign="left"
+                                                whiteSpace="normal"
+                                                borderColor={opt.tone === "danger" ? dangerBorder : undefined}
+                                                bg={opt.tone === "danger" ? dangerBg : undefined}
+                                                _hover={
+                                                    opt.tone === "danger"
+                                                        ? { bg: dangerHoverBg, borderColor: dangerHoverBorder }
+                                                        : undefined
+                                                }
+                                                _active={
+                                                    opt.tone === "danger"
+                                                        ? { bg: dangerActiveBg, borderColor: dangerActiveBorder }
+                                                        : undefined
+                                                }
+                                            >
+                                                <HStack align="flex-start" gap={3} w="full">
+                                                    <Icon
+                                                        as={opt.tone === "danger" ? MdWarningAmber : LuPlus}
+                                                        color={opt.tone === "danger" ? "orange.400" : "teal.500"}
+                                                        boxSize={5}
+                                                        mt={0.5}
+                                                        flexShrink={0}
+                                                    />
+                                                    <Box>
+                                                        <HStack gap={2} mb={1} flexWrap="wrap">
+                                                            <Text
+                                                                fontWeight="semibold"
+                                                                color={opt.tone === "danger" ? dangerTitleColor : undefined}
+                                                            >
+                                                                {opt.label}
+                                                            </Text>
+                                                            {opt.tone === "danger" && (
+                                                                <Badge colorPalette={env === "staging" ? "orange" : "blue"}>
+                                                                    {envBadgeLabel}
+                                                                </Badge>
+                                                            )}
+                                                        </HStack>
                                                         <Text
-                                                            fontWeight="semibold"
-                                                            color={opt.tone === "danger" ? dangerTitleColor : undefined}
+                                                            fontSize="sm"
+                                                            color={opt.tone === "danger" ? dangerTextColor : "app.textMuted"}
                                                         >
-                                                            {opt.label}
+                                                            {opt.description}
                                                         </Text>
-                                                        {opt.tone === "danger" && (
-                                                            <Badge colorPalette={env === "staging" ? "orange" : "blue"}>
-                                                                {envBadgeLabel}
-                                                            </Badge>
-                                                        )}
-                                                    </HStack>
-                                                    <Text
-                                                        fontSize="sm"
-                                                        color={opt.tone === "danger" ? dangerTextColor : "app.textMuted"}
-                                                    >
-                                                        {opt.description}
-                                                    </Text>
-                                                </Box>
-                                            </HStack>
+                                                    </Box>
+                                                </HStack>
+                                            </Button>
                                         </List.Item>
                                     ))}
                                 </List.Root>

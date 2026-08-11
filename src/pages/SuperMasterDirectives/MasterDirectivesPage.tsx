@@ -10,18 +10,9 @@ import {
     Input,
     Spinner,
     Switch,
-    Tab,
-    TabList,
-    TabPanel,
-    TabPanels,
     Tabs,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     Field,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
@@ -43,7 +34,7 @@ import {
     AREA_OPERATIVA_NOISE_SAMPLE_SECONDS_MIN,
     MASTER_DIRECTIVE_KEYS,
 } from "../../context/masterDirectiveConstants";
-import { LuHelpCircle } from 'react-icons/lu';
+import { LuCircleHelp } from 'react-icons/lu';
 
 interface SuperMasterConfig {
     id: number;
@@ -608,15 +599,14 @@ export default function MasterDirectivesPage() {
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <MyHeader title="Directivas Maestras" />
 
-            <Tabs.Root variant='enclosed' colorPalette="teal">
+            <Tabs.Root defaultValue="general" variant="enclosed" colorPalette="teal">
                 <Tabs.List>
-                    <Tab>General</Tab>
-                    <Tab>Produccion</Tab>
-                    <Tab>Area Operativa</Tab>
+                    <Tabs.Trigger value="general">General</Tabs.Trigger>
+                    <Tabs.Trigger value="produccion">Produccion</Tabs.Trigger>
+                    <Tabs.Trigger value="area-operativa">Area Operativa</Tabs.Trigger>
                 </Tabs.List>
-                <TabPanels>
-                    <TabPanel px={0}>
-                        <Table.Root variant="simple">
+                <Tabs.Content value="general" px={0}>
+                        <Table.Root variant="line">
                             <Table.Header>
                                 <Table.Row>
                                     <Table.ColumnHeader>Nombre</Table.ColumnHeader>
@@ -638,11 +628,16 @@ export default function MasterDirectivesPage() {
                                             </Table.Cell>
                                             <Table.Cell>
                                                 <HStack>
-                                                    <Switch
+                                                    <Switch.Root
                                                         checked={value}
                                                         disabled={!canManageSuperMasterConfig}
-                                                        onValueChange={e => updateDraft(key, e.target.checked)}
-                                                    />
+                                                        onCheckedChange={({ checked }) => updateDraft(key, checked)}
+                                                    >
+                                                        <Switch.HiddenInput />
+                                                        <Switch.Control>
+                                                            <Switch.Thumb />
+                                                        </Switch.Control>
+                                                    </Switch.Root>
                                                     {hasRowChange && (
                                                         <Icon color="orange.400" asChild><FaCircleExclamation /></Icon>
                                                     )}
@@ -659,7 +654,7 @@ export default function MasterDirectivesPage() {
                                 <Text mb={2} fontWeight="bold">
                                     Directivas numericas
                                 </Text>
-                                <Table.Root variant="simple">
+                                <Table.Root variant="line">
                                     <Table.Header>
                                         <Table.Row>
                                             <Table.ColumnHeader>Nombre</Table.ColumnHeader>
@@ -715,7 +710,7 @@ export default function MasterDirectivesPage() {
                                 <Text mb={2} fontWeight="bold">
                                     Directivas booleanas
                                 </Text>
-                                <Table.Root variant="simple">
+                                <Table.Root variant="line">
                                     <Table.Header>
                                         <Table.Row>
                                             <Table.ColumnHeader>Nombre</Table.ColumnHeader>
@@ -736,10 +731,15 @@ export default function MasterDirectivesPage() {
                                                     </Table.Cell>
                                                     <Table.Cell>
                                                         <HStack>
-                                                            <Switch
+                                                            <Switch.Root
                                                                 checked={isBooleanEnabled(value)}
-                                                                onValueChange={e => updateDirectiveDraft(directive.id, String(e.target.checked))}
-                                                            />
+                                                                onCheckedChange={({ checked }) => updateDirectiveDraft(directive.id, String(checked))}
+                                                            >
+                                                                <Switch.HiddenInput />
+                                                                <Switch.Control>
+                                                                    <Switch.Thumb />
+                                                                </Switch.Control>
+                                                            </Switch.Root>
                                                             {hasRowChange && (
                                                                 <Icon color="orange.400" asChild><FaCircleExclamation /></Icon>
                                                             )}
@@ -752,9 +752,9 @@ export default function MasterDirectivesPage() {
                                 </Table.Root>
                             </Box>
                         )}
-                    </TabPanel>
+                </Tabs.Content>
 
-                    <TabPanel px={0}>
+                <Tabs.Content value="produccion" px={0}>
                         <Box>
                             <Text mb={2} fontWeight="bold">
                                 Inicio de produccion y MPS semanal
@@ -764,7 +764,7 @@ export default function MasterDirectivesPage() {
                                     Las directivas de produccion aun no estan disponibles. Verifica que el backend haya inicializado las directivas maestras.
                                 </Text>
                             )}
-                            <Table.Root variant="simple">
+                            <Table.Root variant="line">
                                 <Table.Header>
                                     <Table.Row>
                                         <Table.ColumnHeader>Configuracion</Table.ColumnHeader>
@@ -786,14 +786,17 @@ export default function MasterDirectivesPage() {
                                                     <HStack gap={2} align="center">
                                                         <Text fontWeight="bold">{label}</Text>
                                                         {extendedHelp && (
-                                                            <Tooltip content={extendedHelp} showArrow maxW="360px" whiteSpace="normal" positioning={{
-                                                                placement: "top"
-                                                            }}>
+                                                            <Tooltip
+                                                                content={extendedHelp}
+                                                                showArrow
+                                                                contentProps={{ maxW: "360px", whiteSpace: "normal" }}
+                                                                positioning={{ placement: "top" }}
+                                                            >
                                                                 <IconButton
                                                                     aria-label={`Ayuda detallada ${label}`}
                                                                     size="xs"
                                                                     variant="ghost"
-                                                                    colorPalette="teal"><LuHelpCircle /></IconButton>
+                                                                    colorPalette="teal"><LuCircleHelp /></IconButton>
                                                             </Tooltip>
                                                         )}
                                                     </HStack>
@@ -809,10 +812,15 @@ export default function MasterDirectivesPage() {
                                                 <Table.Cell>
                                                     {directive.tipoDato === "BOOLEANO" ? (
                                                         <HStack>
-                                                            <Switch
+                                                            <Switch.Root
                                                                 checked={isBooleanEnabled(value)}
-                                                                onValueChange={e => updateDirectiveDraft(directive.id, String(e.target.checked))}
-                                                            />
+                                                                onCheckedChange={({ checked }) => updateDirectiveDraft(directive.id, String(checked))}
+                                                            >
+                                                                <Switch.HiddenInput />
+                                                                <Switch.Control>
+                                                                    <Switch.Thumb />
+                                                                </Switch.Control>
+                                                            </Switch.Root>
                                                             {hasRowChange && (
                                                                 <Icon color="orange.400" asChild><FaCircleExclamation /></Icon>
                                                             )}
@@ -898,9 +906,9 @@ export default function MasterDirectivesPage() {
                                 </Box>
                             ) : null}
                         </Box>
-                    </TabPanel>
+                </Tabs.Content>
 
-                    <TabPanel px={0}>
+                <Tabs.Content value="area-operativa" px={0}>
                         <Box>
                             <Text mb={2} fontWeight="bold">
                                 Tablero operativo
@@ -910,7 +918,7 @@ export default function MasterDirectivesPage() {
                                     Las directivas del tablero operativo aun no estan disponibles. Verifica que el backend haya inicializado las directivas maestras.
                                 </Text>
                             )}
-                            <Table.Root variant="simple">
+                            <Table.Root variant="line">
                                 <Table.Header>
                                     <Table.Row>
                                         <Table.ColumnHeader>Configuracion</Table.ColumnHeader>
@@ -936,10 +944,15 @@ export default function MasterDirectivesPage() {
                                                 </Table.Cell>
                                                 <Table.Cell>
                                                     <HStack>
-                                                        <Switch
+                                                        <Switch.Root
                                                             checked={isBooleanEnabled(value)}
-                                                            onValueChange={e => updateDirectiveDraft(directive.id, String(e.target.checked))}
-                                                        />
+                                                            onCheckedChange={({ checked }) => updateDirectiveDraft(directive.id, String(checked))}
+                                                        >
+                                                            <Switch.HiddenInput />
+                                                            <Switch.Control>
+                                                                <Switch.Thumb />
+                                                            </Switch.Control>
+                                                        </Switch.Root>
                                                         {hasRowChange && (
                                                             <Icon color="orange.400" asChild><FaCircleExclamation /></Icon>
                                                         )}
@@ -960,7 +973,7 @@ export default function MasterDirectivesPage() {
                                         Las directivas de ruido aun no estan disponibles. Verifica que el backend haya inicializado las directivas maestras.
                                     </Text>
                                 )}
-                                <Table.Root variant="simple">
+                                <Table.Root variant="line">
                                     <Table.Header>
                                         <Table.Row>
                                             <Table.ColumnHeader>Configuracion</Table.ColumnHeader>
@@ -981,10 +994,15 @@ export default function MasterDirectivesPage() {
                                                     </Table.Cell>
                                                     <Table.Cell>
                                                         <HStack>
-                                                            <Switch
+                                                            <Switch.Root
                                                                 checked={isBooleanEnabled(value)}
-                                                                onValueChange={e => updateDirectiveDraft(noiseEnabledDirective.id, String(e.target.checked))}
-                                                            />
+                                                                onCheckedChange={({ checked }) => updateDirectiveDraft(noiseEnabledDirective.id, String(checked))}
+                                                            >
+                                                                <Switch.HiddenInput />
+                                                                <Switch.Control>
+                                                                    <Switch.Thumb />
+                                                                </Switch.Control>
+                                                            </Switch.Root>
                                                             {hasRowChange && (
                                                                 <Icon color="orange.400" asChild><FaCircleExclamation /></Icon>
                                                             )}
@@ -1047,7 +1065,7 @@ export default function MasterDirectivesPage() {
                                         Las directivas de inactividad aun no estan disponibles. Verifica que el backend haya inicializado las directivas maestras.
                                     </Text>
                                 )}
-                                <Table.Root variant="simple">
+                                <Table.Root variant="line">
                                     <Table.Header>
                                         <Table.Row>
                                             <Table.ColumnHeader>Configuracion</Table.ColumnHeader>
@@ -1068,10 +1086,15 @@ export default function MasterDirectivesPage() {
                                                     </Table.Cell>
                                                     <Table.Cell>
                                                         <HStack>
-                                                            <Switch
+                                                            <Switch.Root
                                                                 checked={isBooleanEnabled(value)}
-                                                                onValueChange={e => updateDirectiveDraft(inactivityEnabledDirective.id, String(e.target.checked))}
-                                                            />
+                                                                onCheckedChange={({ checked }) => updateDirectiveDraft(inactivityEnabledDirective.id, String(checked))}
+                                                            >
+                                                                <Switch.HiddenInput />
+                                                                <Switch.Control>
+                                                                    <Switch.Thumb />
+                                                                </Switch.Control>
+                                                            </Switch.Root>
                                                             {hasRowChange && (
                                                                 <Icon color="orange.400" asChild><FaCircleExclamation /></Icon>
                                                             )}
@@ -1125,8 +1148,7 @@ export default function MasterDirectivesPage() {
                                 </Table.Root>
                             </Box>
                         </Box>
-                    </TabPanel>
-                </TabPanels>
+                </Tabs.Content>
             </Tabs.Root>
 
             <HStack mt={4}>

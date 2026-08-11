@@ -1,4 +1,4 @@
-import { Alert, Code, Stack, Text, List, Dialog, Portal } from "@chakra-ui/react";
+import { Alert, CloseButton, Code, Stack, Text, List, Dialog, Portal } from "@chakra-ui/react";
 
 type Props = {
     isOpen: boolean;
@@ -23,8 +23,12 @@ export default function AjustesImpactoHelpModal({ isOpen, onClose }: Props) {
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>¿Cómo se calcula el mayor impacto?</Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.Header>
+                            <Dialog.Title>¿Cómo se calcula el mayor impacto?</Dialog.Title>
+                        </Dialog.Header>
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton size="sm" position="absolute" top="2" right="2" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body pb={6}>
                             <Stack gap={4}>
                                 <Text>

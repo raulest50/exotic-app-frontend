@@ -13,13 +13,7 @@ import {
     Spinner,
     Stack,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     useBreakpointValue,
     useDisclosure,
 } from "@chakra-ui/react";
@@ -55,7 +49,7 @@ import type {
     PaginaInformeInventario,
     WipMaterialEstimado,
 } from "./informesGlobales.types";
-import { LuDownload, LuHelpCircle } from 'react-icons/lu';
+import { LuCircleHelp, LuDownload } from 'react-icons/lu';
 
 const PAGE_SIZE = 10;
 const EXCEL_MIME =
@@ -315,7 +309,7 @@ export function PendingPurchaseOrdersSection({
                                 <>
                                     <Accordion.Root multiple>
                                         {detail.result.items.map((order) => (
-                                            <Accordion.Item key={order.ocmId} value='item-0'>
+                                            <Accordion.Item key={order.ocmId} value={String(order.ocmId)}>
                                                 <h4>
                                                     <Accordion.ItemTrigger minH="48px">
                                                         <Box flex="1" textAlign="left">
@@ -559,7 +553,7 @@ export function OpenProductionOrdersSection({
                                     variant="ghost"
                                     minW="44px"
                                     minH="44px"
-                                    onClick={help.onOpen}><LuHelpCircle /></IconButton>
+                                    onClick={help.onOpen}><LuCircleHelp /></IconButton>
                             </Tooltip>
                         </HStack>
 

@@ -1,4 +1,4 @@
-import { Code, Stack, Text, Separator, List, Dialog, Portal } from "@chakra-ui/react";
+import { CloseButton, Code, Stack, Text, Separator, List, Dialog, Portal } from "@chakra-ui/react";
 
 type Props = {
     isOpen: boolean;
@@ -7,7 +7,7 @@ type Props = {
 
 export default function LeadTimeMetricHelpModal({ isOpen, onClose }: Props) {
     return (
-        <Dialog.Root open={isOpen} size={{ base: "full", md: "3xl" }} scrollBehavior="inside" onOpenChange={e => {
+        <Dialog.Root open={isOpen} size={{ base: "full", md: "xl" }} scrollBehavior="inside" onOpenChange={e => {
             if (!e.open) {
                 onClose();
             }
@@ -16,9 +16,13 @@ export default function LeadTimeMetricHelpModal({ isOpen, onClose }: Props) {
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
-                        <Dialog.Header>Calculo de lead time proveedor-material</Dialog.Header>
-                        <Dialog.CloseTrigger />
+                    <Dialog.Content maxW={{ md: "3xl" }}>
+                        <Dialog.Header>
+                            <Dialog.Title>Calculo de lead time proveedor-material</Dialog.Title>
+                        </Dialog.Header>
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton size="sm" position="absolute" top="2" right="2" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body pb={6}>
                             <Stack gap={5}>
                                 <Text>

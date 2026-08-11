@@ -188,7 +188,7 @@ function buildProductionReferenceSeries(
     const selectedReferences = sortedReferences.slice(0, selectedCount);
     const groupedReferences = sortedReferences.slice(selectedCount);
 
-    const series = selectedReferences.map((reference) => {
+    const series: ProductionReferenceSeries[] = selectedReferences.map((reference) => {
         const paletteIndex = sortedReferences.indexOf(reference)
             % PRODUCTION_REFERENCE_PALETTE.length;
         return {

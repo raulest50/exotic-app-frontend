@@ -45,18 +45,18 @@ interface SafeRichTextProps extends BoxProps {
   html: string;
 }
 
-export default function SafeRichText({ html, ...boxProps }: SafeRichTextProps) {
+export default function SafeRichText({ html, css, ...boxProps }: SafeRichTextProps) {
   const safeHtml = useMemo(() => sanitizeRichHtml(html), [html]);
 
   return (
     <Box
       {...boxProps}
       css={{
-        '& & p': { mb: 3 },
-        '& & p:last-of-type': { mb: 0 },
-        '& & ul, & ol': { pl: 6, mb: 3 },
-        '& & a': { color: "blue.500", textDecoration: "underline" },
-        ...boxProps.sx
+        "& p": { mb: 3 },
+        "& p:last-of-type": { mb: 0 },
+        "& ul, & ol": { pl: 6, mb: 3 },
+        "& a": { color: "blue.500", textDecoration: "underline" },
+        ...css,
       }}
       dangerouslySetInnerHTML={{ __html: safeHtml }}
     />

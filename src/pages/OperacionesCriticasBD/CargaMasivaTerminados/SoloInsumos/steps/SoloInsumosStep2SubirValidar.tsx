@@ -6,13 +6,7 @@ import {
     Icon,
     Input,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
@@ -285,7 +279,7 @@ export default function SoloInsumosStep2SubirValidar({
                             <Alert.Title>Errores de validacion encontrados:</Alert.Title>
                             <Alert.Description as="div" mt={3}>
                                 <Table.ScrollArea maxH="300px" overflowY="auto">
-                                    <Table.Root size="sm" variant="simple">
+                                    <Table.Root size="sm" variant="line">
                                         <Table.Header>
                                             <Table.Row>
                                                 <Table.ColumnHeader>Fila</Table.ColumnHeader>

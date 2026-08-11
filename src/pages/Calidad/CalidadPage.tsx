@@ -1,4 +1,4 @@
-import { Alert, Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
+import { Alert, Container, Tabs } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader";
 import { my_style_tab } from "../../styles/styles_general";
 import { useAccessSnapshot } from "../../auth/usePermissions";
@@ -44,17 +44,15 @@ export default function CalidadPage() {
                     No tiene tabs habilitados para este modulo.
                 </Alert.Root>
             ) : (
-                <Tabs.Root>
+                <Tabs.Root defaultValue={visibleTabs[0]?.key}>
                     <Tabs.List>
                         {visibleTabs.map((tab) => (
-                            <Tab key={tab.key} sx={my_style_tab}>{tab.label}</Tab>
+                            <Tabs.Trigger key={tab.key} value={tab.key} css={my_style_tab}>{tab.label}</Tabs.Trigger>
                         ))}
                     </Tabs.List>
-                    <TabPanels>
-                        {visibleTabs.map((tab) => (
-                            <TabPanel key={tab.key}>{tab.render()}</TabPanel>
-                        ))}
-                    </TabPanels>
+                    {visibleTabs.map((tab) => (
+                        <Tabs.Content key={tab.key} value={tab.key}>{tab.render()}</Tabs.Content>
+                    ))}
                 </Tabs.Root>
             )}
         </Container>

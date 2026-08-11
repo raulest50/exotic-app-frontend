@@ -9,20 +9,13 @@ import {
     HStack,
     IconButton,
     Input,
-    Radio,
     RadioGroup,
     NativeSelect,
     SimpleGrid,
     Spinner,
     Stack,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     useBreakpointValue,
     useDisclosure,
     Field,
@@ -56,7 +49,7 @@ import type {
     OrdenCoberturaMaterial,
 } from "./informesGlobales.types";
 import {
-    LuAlertCircle,
+    LuCircleAlert,
     LuChevronDown,
     LuChevronRight,
     LuChevronUp,
@@ -245,7 +238,7 @@ export default function CoberturaMaterialesCard() {
                             onClick={toggleExpanded}
                             aria-expanded={expanded}><HStack gap={2} flexWrap="wrap">
                                 {report?.confianzaBaja ? (
-                                    <Icon as={LuAlertCircle} color="yellow.500" />
+                                    <Icon as={LuCircleAlert} color="yellow.500" />
                                 ) : null}
                                 <Text as="span">
                                     {coverageToggleLabel(
@@ -432,7 +425,7 @@ function CoverageContextControls({
                 <Field.Label fontSize="sm">Fuente de demanda</Field.Label>
                 <RadioGroup.Root
                     value={demandSource}
-                    onValueChange={(value) => onDemandSourceChange(
+                    onValueChange={({ value }) => onDemandSourceChange(
                         value as FuenteDemandaCobertura,
                     )}>
                     <Stack gap={3}>

@@ -1,16 +1,12 @@
 import {
     Box,
     Button,
+    CloseButton,
     Input,
     NativeSelect,
     Stack,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
     Field,
     Dialog,
@@ -93,7 +89,7 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
     }, [isOpen]);
 
     return (
-        <Dialog.Root open={isOpen} size={{ base: "full", md: "4xl" }} scrollBehavior="inside" onOpenChange={e => {
+        <Dialog.Root open={isOpen} size={{ base: "full", md: "xl" }} scrollBehavior="inside" onOpenChange={e => {
             if (!e.open) {
                 onClose();
             }
@@ -102,9 +98,13 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
-                        <Dialog.Header>Seleccionar material</Dialog.Header>
-                        <Dialog.CloseTrigger />
+                    <Dialog.Content maxW={{ md: "4xl" }}>
+                        <Dialog.Header>
+                            <Dialog.Title>Seleccionar material</Dialog.Title>
+                        </Dialog.Header>
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton size="sm" position="absolute" top="2" right="2" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <VStack align="stretch" gap={4}>
                                 <Field.Root>
@@ -122,12 +122,13 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
                                                 }
                                             }}
                                         />
-                                        <NativeSelect.Root>
+                                        <NativeSelect.Root
+                                            width={{ base: "full", md: "150px" }}
+                                            disabled={loading}
+                                        >
                                             <NativeSelect.Field
                                                 value={searchType}
-                                                onChange={(e) => setSearchType(e.target.value as BiSearchType)}
-                                                width={{ base: "full", md: "150px" }}
-                                                disabled={loading}>
+                                                onChange={(e) => setSearchType(e.target.value as BiSearchType)}>
                                                 <option value="NOMBRE">Nombre</option>
                                                 <option value="ID">ID</option>
                                             </NativeSelect.Field>
@@ -150,7 +151,7 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
                                 <Box w="full" overflowX="auto">
                                     {items.length > 0 ? (
                                         <>
-                                            <Table.Root variant="striped" size="sm">
+                                            <Table.Root variant="line" striped size="sm">
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>ID</Table.ColumnHeader>
