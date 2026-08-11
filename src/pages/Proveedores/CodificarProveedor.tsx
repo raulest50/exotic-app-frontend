@@ -531,13 +531,12 @@ function CodificarProveedor() {
                     <GridItem>
                         <Field.Root required>
                             <Field.Label>Ciudad</Field.Label>
-                            <NativeSelect.Root>
+                            <NativeSelect.Root disabled={!departamento}>
                                 <NativeSelect.Field
                                     placeholder="Seleccione una ciudad"
                                     value={ciudad}
                                     onChange={handleCiudadChange}
-                                    // Disable if no department is selected
-                                    disabled={!departamento}>
+                                >
                                     {ciudadesDisponibles.map((ciudad) => (
                                         <option key={ciudad.codigo} value={ciudad.nombre}>
                                             {ciudad.nombre}

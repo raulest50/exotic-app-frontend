@@ -9,9 +9,7 @@ import {
   Heading,
   Input,
   InputGroup,
-  InputLeftElement,
   Tag,
-  TagLabel,
   Text,
   Separator,
   Icon,
@@ -410,16 +408,17 @@ export default function InfoNiveles() {
         </Box>
       </Alert.Root>
 
-      <InputGroup mb={6}>
-        <InputLeftElement pointerEvents="none">
-          <Icon as={LuSearch} color="gray.300" />
-        </InputLeftElement>
+      <InputGroup
+        mb={6}
+        startElement={<Icon as={LuSearch} color="gray.300" />}
+        startElementProps={{ pointerEvents: "none" }}
+      >
         <Input
           placeholder="Buscar modulo por nombre o descripcion..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           size="md"
-          variant="filled"
+          variant="subtle"
           _hover={{ bg: "app.rowHoverStrong" }}
           _focus={{ bg: "app.surface", borderColor: "blue.500" }}
         />
@@ -434,7 +433,7 @@ export default function InfoNiveles() {
 
       <Accordion.Root multiple>
         {filteredModules.map((moduleKey) => (
-          <Accordion.Item key={moduleKey} mb={2} borderWidth="1px" borderRadius="md" value='item-0'>
+          <Accordion.Item key={moduleKey} mb={2} borderWidth="1px" borderRadius="md" value={moduleKey}>
             <h2>
               <Accordion.ItemTrigger _expanded={{ bg: "app.rowActiveBlue", color: accordionExpandedColor }}>
                 <Box flex="1" textAlign="left">

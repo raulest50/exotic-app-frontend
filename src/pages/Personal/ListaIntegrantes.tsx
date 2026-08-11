@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Thead, Tbody, Tr, Th, Td, Box, IconButton } from '@chakra-ui/react';
+import { Table, Box, IconButton } from '@chakra-ui/react';
 import { Tooltip } from '@/components/ui/tooltip';
 import { IntegrantePersonalResumen, getEstadoIntegranteText } from './types';
 import { LuEye } from 'react-icons/lu';
@@ -12,7 +12,7 @@ interface Props {
 const ListaIntegrantes: React.FC<Props> = ({ integrantes, onVerDetalle }) => {
     return (
         <Box overflowX="auto" mt={4}>
-            <Table.Root variant="simple">
+            <Table.Root variant="line">
                 <Table.Header>
                     <Table.Row>
                         <Table.ColumnHeader>ID</Table.ColumnHeader>

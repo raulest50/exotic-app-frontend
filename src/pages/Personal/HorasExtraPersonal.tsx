@@ -3,6 +3,7 @@ import {
     Badge,
     Box,
     Button,
+    CloseButton,
     Flex,
     Grid,
     GridItem,
@@ -12,12 +13,7 @@ import {
     NativeSelect,
     Spinner,
     Table,
-    Tbody,
-    Td,
     Textarea,
-    Th,
-    Thead,
-    Tr,
     useDisclosure,
     Field,
     Dialog,
@@ -376,7 +372,7 @@ export function HorasExtraPersonal() {
                     <Spinner />
                 ) : (
                     <Box overflowX="auto">
-                        <Table.Root variant="simple" size="sm">
+                        <Table.Root variant="line" size="sm">
                             <Table.Header>
                                 <Table.Row>
                                     <Table.ColumnHeader>Empleado</Table.ColumnHeader>
@@ -465,9 +461,13 @@ export function HorasExtraPersonal() {
                     <Dialog.Positioner>
                         <Dialog.Content>
                             <Dialog.Header>
-                                {decisionState?.accion === 'rechazar' ? 'Rechazar hora extra' : 'Anular hora extra'}
+                                <Dialog.Title>
+                                    {decisionState?.accion === 'rechazar' ? 'Rechazar hora extra' : 'Anular hora extra'}
+                                </Dialog.Title>
                             </Dialog.Header>
-                            <Dialog.CloseTrigger />
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton size="sm" position="absolute" top="2" right="2" />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body>
                                 <Field.Root required>
                                     <Field.Label>Motivo</Field.Label>

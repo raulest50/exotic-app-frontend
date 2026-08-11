@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
     Button,
+    CloseButton,
     Container,
     Flex,
     Grid,
@@ -293,8 +294,12 @@ export function ConsultaDePersonal() {
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header>Detalle de integrante</Dialog.Header>
-                            <Dialog.CloseTrigger />
+                            <Dialog.Header>
+                                <Dialog.Title>Detalle de integrante</Dialog.Title>
+                            </Dialog.Header>
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton size="sm" position="absolute" top="2" right="2" />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body>
                                 <Grid templateColumns={['1fr', 'repeat(2, 1fr)']} gap={4}>
                                     <GridItem>

@@ -3,18 +3,14 @@ import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
     Box,
     Button,
+    CloseButton,
     Flex,
     Grid,
     GridItem,
     Heading,
     IconButton,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     useDisclosure,
     Dialog,
     Portal,
@@ -119,7 +115,7 @@ export default function GestionNotificacionesTab() {
                         Tipos de Notificación
                     </Heading>
                     <Box border="1px solid" borderColor="app.border" borderRadius="md" overflow="hidden">
-                        <Table.Root variant="simple" size="sm">
+                        <Table.Root variant="line" size="sm">
                             <Table.Header bg="app.tableHeader">
                                 <Table.Row>
                                     <Table.ColumnHeader>Nombre</Table.ColumnHeader>
@@ -183,7 +179,7 @@ export default function GestionNotificacionesTab() {
                                 </Button>
                             </Flex>
                             <Box border="1px solid" borderColor="app.border" borderRadius="md" overflow="hidden">
-                                <Table.Root variant="simple" size="sm">
+                                <Table.Root variant="line" size="sm">
                                     <Table.Header bg="app.tableHeader">
                                         <Table.Row>
                                             <Table.ColumnHeader>Nombre</Table.ColumnHeader>
@@ -242,8 +238,12 @@ export default function GestionNotificacionesTab() {
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header>{infoTarget?.nombre}</Dialog.Header>
-                            <Dialog.CloseTrigger />
+                            <Dialog.Header>
+                                <Dialog.Title>{infoTarget?.nombre}</Dialog.Title>
+                            </Dialog.Header>
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton size="sm" position="absolute" top="2" right="2" />
+                            </Dialog.CloseTrigger>
                             <Dialog.Body>
                                 <Text>{infoTarget?.descripcion}</Text>
                             </Dialog.Body>

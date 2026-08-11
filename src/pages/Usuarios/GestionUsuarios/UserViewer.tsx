@@ -9,12 +9,7 @@ import {
     Menu,
     Spacer,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     Portal,
 } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
@@ -304,7 +299,7 @@ export default function UserViewer({
             </Flex>
             <Flex>
                 <Box flex="2">
-                    <Table.Root variant="simple">
+                    <Table.Root variant="line">
                         <Table.Header>
                             <Table.Row>
                                 <Table.ColumnHeader>ID</Table.ColumnHeader>
@@ -336,16 +331,19 @@ export default function UserViewer({
                                     <Table.Cell>{user.username.toLowerCase() === 'master' ? 'Activo' : user.estado === 1 ? 'Activo' : 'Inactivo'}</Table.Cell>
                                     <Table.Cell onClick={(e) => e.stopPropagation()}>
                                         <Menu.Root>
-                                            <Menu.Trigger
-                                                icon={<BsThreeDotsVertical />}
-                                                variant="ghost"
-                                                size="sm"
-                                                aria-label="Acciones"
-                                                disabled={
-                                                    isLoading ||
-                                                    ['master', 'super_master'].includes(user.username.toLowerCase())
-                                                }
-                                                asChild><IconButton /></Menu.Trigger>
+                                            <Menu.Trigger asChild>
+                                                <IconButton
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    aria-label="Acciones"
+                                                    disabled={
+                                                        isLoading ||
+                                                        ['master', 'super_master'].includes(user.username.toLowerCase())
+                                                    }
+                                                >
+                                                    <BsThreeDotsVertical />
+                                                </IconButton>
+                                            </Menu.Trigger>
                                             <Portal><Menu.Positioner><Menu.Content>
                                                         <Menu.Item onSelect={() => onEditUser(user)} value='item-0'>
                                                             Editar campos
@@ -374,7 +372,7 @@ export default function UserViewer({
                                         typeof ma.modulo === 'string' ? ma.modulo : String(ma.modulo ?? '');
                                     const title = modStr ? modStr.replace(/_/g, ' ') : 'Desconocido';
                                     return (
-                                        <Accordion.Item key={ma.id} value='item-0'>
+                                        <Accordion.Item key={ma.id} value={String(ma.id)}>
                                             <Accordion.ItemTrigger px={2}>
                                                 <Box flex="1" textAlign="left">
                                                     <Text fontWeight="medium" fontSize="sm">

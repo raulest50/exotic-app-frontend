@@ -1,7 +1,7 @@
 // src/components/RoleSelectionDialog.tsx
 import React from 'react';
-import { List, Dialog, Portal } from '@chakra-ui/react';
-import { LuCheckCircle } from 'react-icons/lu';
+import { CloseButton, List, Dialog, Portal } from '@chakra-ui/react';
+import { LuCircleCheck } from 'react-icons/lu';
 
 export type RoleItem = {
     id: number;
@@ -32,8 +32,12 @@ const RoleSelectionDialog: React.FC<RoleSelectionDialogProps> = ({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Seleccionar Rol</Dialog.Header>
-                        <Dialog.CloseTrigger />
+                        <Dialog.Header>
+                            <Dialog.Title>Seleccionar Rol</Dialog.Title>
+                        </Dialog.Header>
+                        <Dialog.CloseTrigger asChild>
+                            <CloseButton size="sm" position="absolute" top="2" right="2" />
+                        </Dialog.CloseTrigger>
                         <Dialog.Body>
                             <List.Root gap={3}>
                                 {availableRoles && availableRoles.length > 0 ? (
@@ -50,7 +54,7 @@ const RoleSelectionDialog: React.FC<RoleSelectionDialogProps> = ({
                                             }}
                                             padding="2"
                                         >
-                                            <List.Indicator color="green.500" asChild><LuCheckCircle /></List.Indicator>
+                                            <List.Indicator color="green.500" asChild><LuCircleCheck /></List.Indicator>
                                             {role.name}
                                         </List.Item>
                                     ))

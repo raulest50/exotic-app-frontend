@@ -1,11 +1,7 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
     Container,
     Tabs,
-    TabList,
-    TabPanels,
-    Tab,
-    TabPanel,
     Center,
     Spinner,
     Text,
@@ -32,12 +28,20 @@ const USUARIOS_TAB_LABELS: Record<string, string> = {
 };
 
 export default function UsuariosPage() {
-    const { moduloAccesos, accesosReady, isMasterLike } = useAuth();
+    const { moduloAccesos, accesosReady, isMasterLike, isAreaResponsable, areaResponsable } = useAuth();
+    const [selectedTab, setSelectedTab] = useState("");
     const tabDefs = TABS_BY_MODULO[Modulo.USUARIOS] ?? [];
 
     const visibleTabs = tabDefs.filter(
-        (d) => accesosReady && canAccessTabFromSnapshot({ isMasterLike, moduloAccesos }, Modulo.USUARIOS, d.tabId)
+        (d) => accesosReady && canAccessTabFromSnapshot(
+            { isMasterLike, isAreaResponsable, areaResponsable, moduloAccesos },
+            Modulo.USUARIOS,
+            d.tabId
+        )
     );
+    const activeTab = visibleTabs.some((tab) => tab.tabId === selectedTab)
+        ? selectedTab
+        : (visibleTabs[0]?.tabId ?? "");
 
     if (!accesosReady) {
         return (
@@ -63,17 +67,19 @@ export default function UsuariosPage() {
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} minH={"100vh"} w={"full"} h={"full"}>
             <MyHeader title={"Roles y Usuarios"} />
-            <Tabs.Root>
+            <Tabs.Root value={activeTab} onValueChange={({ value }) => setSelectedTab(value)}>
                 <Tabs.List>
                     {visibleTabs.map((d) => (
-                        <Tab key={d.tabId}>{USUARIOS_TAB_LABELS[d.tabId] ?? d.label}</Tab>
+                        <Tabs.Trigger key={d.tabId} value={d.tabId}>
+                            {USUARIOS_TAB_LABELS[d.tabId] ?? d.label}
+                        </Tabs.Trigger>
                     ))}
                 </Tabs.List>
-                <TabPanels>
-                    {visibleTabs.map((d) => (
-                        <TabPanel key={d.tabId}>{USUARIOS_TAB_CONTENT[d.tabId]}</TabPanel>
-                    ))}
-                </TabPanels>
+                {visibleTabs.map((d) => (
+                    <Tabs.Content key={d.tabId} value={d.tabId}>
+                        {USUARIOS_TAB_CONTENT[d.tabId]}
+                    </Tabs.Content>
+                ))}
             </Tabs.Root>
         </Container>
     );

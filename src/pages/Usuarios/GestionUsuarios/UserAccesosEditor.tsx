@@ -13,12 +13,7 @@ import {
     Spinner,
     Switch,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     useDisclosure,
     VStack,
     Dialog,
@@ -278,7 +273,7 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                             </Flex>
                         ) : (
                             <Box overflowX="auto">
-                                <Table.Root size="sm" variant="simple">
+                                <Table.Root size="sm" variant="line">
                                     <Table.Header bg="app.tableHeader">
                                         <Table.Row>
                                             <Table.ColumnHeader>Modulo / Tab</Table.ColumnHeader>
@@ -324,13 +319,18 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                             </HStack>
                                                         </Table.Cell>
                                                         <Table.Cell onClick={(event) => event.stopPropagation()}>
-                                                            <Switch
+                                                            <Switch.Root
                                                                 checked={moduleRow.enabled}
                                                                 disabled={permisosBloqueadosPorArea}
-                                                                onValueChange={(event) =>
-                                                                    setModuleEnabled(modulo, event.target.checked)
+                                                                onCheckedChange={({ checked }) =>
+                                                                    setModuleEnabled(modulo, checked)
                                                                 }
-                                                            />
+                                                            >
+                                                                <Switch.HiddenInput />
+                                                                <Switch.Control>
+                                                                    <Switch.Thumb />
+                                                                </Switch.Control>
+                                                            </Switch.Root>
                                                         </Table.Cell>
                                                         <Table.Cell>
                                                             <Text fontSize="xs" color="app.textSubtle">
@@ -352,24 +352,30 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                                         </Box>
                                                                     </Table.Cell>
                                                                     <Table.Cell>
-                                                                        <Switch
+                                                                        <Switch.Root
                                                                             checked={tabRow.enabled}
                                                                             disabled={!moduleRow.enabled || permisosBloqueadosPorArea}
-                                                                            onValueChange={(event) =>
+                                                                            onCheckedChange={({ checked }) =>
                                                                                 setTabEnabled(
                                                                                     modulo,
                                                                                     tab.tabId,
-                                                                                    event.target.checked
+                                                                                    checked
                                                                                 )
                                                                             }
-                                                                        />
+                                                                        >
+                                                                            <Switch.HiddenInput />
+                                                                            <Switch.Control>
+                                                                                <Switch.Thumb />
+                                                                            </Switch.Control>
+                                                                        </Switch.Root>
                                                                     </Table.Cell>
                                                                     <Table.Cell>
-                                                                        <NativeSelect.Root>
+                                                                        <NativeSelect.Root
+                                                                            size="sm"
+                                                                            disabled={!moduleRow.enabled || !tabRow.enabled || permisosBloqueadosPorArea}
+                                                                        >
                                                                             <NativeSelect.Field
-                                                                                size="sm"
                                                                                 value={tabRow.nivel}
-                                                                                disabled={!moduleRow.enabled || !tabRow.enabled || permisosBloqueadosPorArea}
                                                                                 onChange={(event) =>
                                                                                     setTabNivel(
                                                                                         modulo,
@@ -453,42 +459,43 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
             <Dialog.Root
                 open={discardDialog.open}
                 initialFocusEl={() => cancelRef.current}
-                role='alertdialog'
-                onOpenChange={e => {
-                    if (!e.open) {
+                role="alertdialog"
+                closeOnInteractOutside={false}
+                onOpenChange={(event) => {
+                    if (!event.open) {
                         discardDialog.onClose();
                     }
-                }}>
-              <Portal>
-
-                    <Dialog.Backdrop>
-                        <Dialog.Positioner>
-                            <Dialog.Content>
-                                <Dialog.Header>Descartar cambios</Dialog.Header>
-                                <Dialog.Body>
-                                    Hay cambios sin guardar. Si sales ahora, se perderan.
-                                </Dialog.Body>
-                                <Dialog.Footer>
-                                    <Button ref={cancelRef} onClick={discardDialog.onClose}>
-                                        Seguir editando
-                                    </Button>
-                                    <Button
-                                        colorPalette="red"
-                                        ml={3}
-                                        onClick={() => {
-                                            discardDialog.onClose();
-                                            onBack();
-                                        }}
-                                    >
-                                        Descartar y salir
-                                    </Button>
-                                </Dialog.Footer>
-                            </Dialog.Content>
-                        </Dialog.Positioner>
-                    </Dialog.Backdrop>
-
+                }}
+            >
+                <Portal>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>
+                                <Dialog.Title>Descartar cambios</Dialog.Title>
+                            </Dialog.Header>
+                            <Dialog.Body>
+                                Hay cambios sin guardar. Si sales ahora, se perderan.
+                            </Dialog.Body>
+                            <Dialog.Footer>
+                                <Button ref={cancelRef} onClick={discardDialog.onClose}>
+                                    Seguir editando
+                                </Button>
+                                <Button
+                                    colorPalette="red"
+                                    ml={3}
+                                    onClick={() => {
+                                        discardDialog.onClose();
+                                        onBack();
+                                    }}
+                                >
+                                    Descartar y salir
+                                </Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
                 </Portal>
-</Dialog.Root>
+            </Dialog.Root>
         </Box>
     );
 }

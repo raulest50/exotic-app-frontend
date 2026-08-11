@@ -1,4 +1,4 @@
-import { Box, Table, Thead, Tbody, Tr, Th, Td, Text, Button } from '@chakra-ui/react';
+import { Box, Table, Text, Button } from '@chakra-ui/react';
 import { Proveedor } from '../../types.tsx';
 
 type Props = {
@@ -9,7 +9,7 @@ type Props = {
 export function ListaSearchProveedores({ proveedores, onVerDetalle }: Props) {
     return (
         <Box overflowX="auto" width="100%">
-            <Table.Root variant="simple" size="sm">
+            <Table.Root variant="line" size="sm">
                 <Table.Header>
                     <Table.Row>
                         <Table.ColumnHeader>ID</Table.ColumnHeader>
