@@ -9,11 +9,6 @@ import {
     HStack,
     Text,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
     Flex,
     Field,
     Dialog,
@@ -131,7 +126,9 @@ const AreaPickerGeneric: React.FC<AreaPickerGenericProps> = ({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Seleccionar Área de Producción</Dialog.Header>
+                        <Dialog.Header>
+                            <Dialog.Title>Seleccionar Área de Producción</Dialog.Title>
+                        </Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <VStack gap={4}>
@@ -158,7 +155,7 @@ const AreaPickerGeneric: React.FC<AreaPickerGenericProps> = ({
                                 <Box w="full" overflowX="auto">
                                     {areas.length > 0 ? (
                                         <>
-                                            <Table.Root variant="simple" size="sm">
+                                            <Table.Root variant="line" size="sm">
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>ID</Table.ColumnHeader>

@@ -60,7 +60,7 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
                 onClick={handleNotificationClick}
                 zIndex={1}><MdNotificationsActive /></IconButton>
         ) : (
-            <Popover.Root open={isOpen} closeOnInteractOutside={true} onOpenChange={e => {
+            <Popover.Root open={open} closeOnInteractOutside={true} onOpenChange={e => {
                 if (e.open)
                     {} else {
                     onClose();
@@ -125,7 +125,7 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
 
             {isComprasNotification && notification && (
                 <AlertaInfoDialogCompras
-                    isOpen={isOpen}
+                    isOpen={open}
                     onClose={onClose}
                     notification={notification}
                     to={to}
@@ -136,7 +136,7 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
 
             {isStockNotification && notification && (
                 <AlertaInfoDialogStock
-                    isOpen={isOpen}
+                    isOpen={open}
                     onClose={onClose}
                     notification={notification}
                     to={to}

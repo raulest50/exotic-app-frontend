@@ -7,12 +7,7 @@ import {
     HStack,
     Input,
     Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
     Field,
     Dialog,
@@ -135,7 +130,9 @@ const IntegrantePersonalPicker = ({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Seleccionar integrante</Dialog.Header>
+                        <Dialog.Header>
+                            <Dialog.Title>Seleccionar integrante</Dialog.Title>
+                        </Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <VStack gap={4}>
@@ -160,7 +157,7 @@ const IntegrantePersonalPicker = ({
                                 <Box w="full" overflowX="auto">
                                     {integrantes.length > 0 ? (
                                         <>
-                                            <Table.Root variant="simple" size="sm">
+                                            <Table.Root variant="line" size="sm">
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>Cédula</Table.ColumnHeader>

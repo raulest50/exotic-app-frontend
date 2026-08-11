@@ -80,7 +80,9 @@ export default function SuperMasterOnboardingModal({ isOpen, onClose, onSuccess 
                 isClosable: true,
             });
         } catch (err: unknown) {
-            const msg = err && typeof err === "object" && "response" in err && (err.response as { data?: { message?: string } })?.data?.message;
+            const msg = err && typeof err === "object" && "response" in err
+                ? (err.response as { data?: { message?: string } })?.data?.message
+                : undefined;
             toast({
                 title: "Error al enviar código",
                 description: msg ?? "No se pudo enviar el código.",
@@ -113,7 +115,9 @@ export default function SuperMasterOnboardingModal({ isOpen, onClose, onSuccess 
             onSuccess();
             onClose();
         } catch (err: unknown) {
-            const msg = err && typeof err === "object" && "response" in err && (err.response as { data?: { message?: string } })?.data?.message;
+            const msg = err && typeof err === "object" && "response" in err
+                ? (err.response as { data?: { message?: string } })?.data?.message
+                : undefined;
             toast({
                 title: "Error",
                 description: msg ?? "No se pudo completar el perfil.",
@@ -137,7 +141,9 @@ export default function SuperMasterOnboardingModal({ isOpen, onClose, onSuccess 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Completar perfil de Super Master</Dialog.Header>
+                        <Dialog.Header>
+                            <Dialog.Title>Completar perfil de Super Master</Dialog.Title>
+                        </Dialog.Header>
                         <Dialog.Body>
                             <Field.Root required mb={4}>
                                 <Field.Label>Correo electrónico</Field.Label>

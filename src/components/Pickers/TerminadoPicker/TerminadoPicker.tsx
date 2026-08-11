@@ -144,7 +144,9 @@ export default function TerminadoPicker({isOpen, onClose, onSelectTerminado}: Te
                 <Dialog.Backdrop/>
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Seleccionar producto terminado</Dialog.Header>
+                        <Dialog.Header>
+                            <Dialog.Title>Seleccionar producto terminado</Dialog.Title>
+                        </Dialog.Header>
                         <Dialog.CloseTrigger/>
                         <Dialog.Body>
                             <Flex direction="column" gap={3}>

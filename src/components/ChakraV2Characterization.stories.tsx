@@ -8,27 +8,13 @@ import {
   Drawer,
   HStack,
   Input,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
   NumberInput,
-  NumberInputField,
-  NumberInputStepper,
   Progress,
   NativeSelect,
   SimpleGrid,
-  Tab,
   Table,
-  TableContainer,
-  TabList,
-  TabPanel,
-  TabPanels,
   Tabs,
-  Tbody,
-  Td,
   Text,
-  Th,
-  Thead,
-  Tr,
   VStack,
   useDisclosure,
   Portal,
@@ -40,7 +26,7 @@ import { useAppToast } from "@/components/ui/use-app-toast";
 import { Tooltip } from '@/components/ui/tooltip';
 
 const StoryFrame = ({ children, title }: { children: ReactNode; title: string }) => (
-  <Box minH="100vh" bg="app.surfaceSubtle" color="chakra-body-text" p={{ base: 4, md: 8 }}>
+  <Box minH="100vh" bg="app.surfaceSubtle" color="fg" p={{ base: 4, md: 8 }}>
     <VStack align="stretch" gap={6} maxW="960px" mx="auto">
       <Box>
         <Text as="h1" fontSize="2xl" fontWeight="bold">
@@ -56,7 +42,7 @@ const StoryFrame = ({ children, title }: { children: ReactNode; title: string })
 );
 
 export const ModalV2 = () => {
-  const { open, onClose, onOpen } = useDisclosure({ defaultIsOpen: true });
+  const { open, onClose, onOpen } = useDisclosure({ defaultOpen: true });
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   return (
@@ -64,7 +50,7 @@ export const ModalV2 = () => {
       <Button ref={triggerRef} alignSelf="flex-start" colorPalette="blue" onClick={onOpen}>
         Abrir modal
       </Button>
-      <Dialog.Root open={isOpen} finalFocusEl={() => triggerRef.current} placement='center' onOpenChange={e => {
+      <Dialog.Root open={open} finalFocusEl={() => triggerRef.current} placement='center' onOpenChange={e => {
         if (!e.open) {
           onClose();
         }
@@ -74,7 +60,9 @@ export const ModalV2 = () => {
           <Dialog.Backdrop />
           <Dialog.Positioner>
             <Dialog.Content>
-              <Dialog.Header>Confirmar operación</Dialog.Header>
+              <Dialog.Header>
+                <Dialog.Title>Confirmar operación</Dialog.Title>
+              </Dialog.Header>
               <Dialog.CloseTrigger />
               <Dialog.Body>
                 <Text>La información permanecerá sin cambios hasta confirmar.</Text>
@@ -97,7 +85,7 @@ export const ModalV2 = () => {
 };
 
 export const DrawerV2 = () => {
-  const { open, onClose, onOpen } = useDisclosure({ defaultIsOpen: true });
+  const { open, onClose, onOpen } = useDisclosure({ defaultOpen: true });
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   return (
@@ -105,7 +93,7 @@ export const DrawerV2 = () => {
       <Button ref={triggerRef} alignSelf="flex-start" colorPalette="teal" onClick={onOpen}>
         Abrir panel
       </Button>
-      <Drawer.Root open={isOpen} placement='end' finalFocusEl={() => triggerRef.current} size='sm' onOpenChange={e => {
+      <Drawer.Root open={open} placement='end' finalFocusEl={() => triggerRef.current} size='sm' onOpenChange={e => {
         if (!e.open) {
           onClose();
         }
@@ -116,7 +104,9 @@ export const DrawerV2 = () => {
           <Drawer.Positioner>
             <Drawer.Content>
               <Drawer.CloseTrigger />
-              <Drawer.Header borderBottomWidth="1px">Filtros del inventario</Drawer.Header>
+              <Drawer.Header borderBottomWidth="1px">
+                <Drawer.Title>Filtros del inventario</Drawer.Title>
+              </Drawer.Header>
               <Drawer.Body>
                 <VStack align="stretch" gap={4} pt={2}>
                   <Field.Root>
@@ -152,35 +142,33 @@ export const DrawerV2 = () => {
 };
 
 export const TabsV2 = () => {
-  const [tabIndex, setTabIndex] = useState(1);
+  const [tabValue, setTabValue] = useState('movements');
 
   return (
     <StoryFrame title="Tabs v2">
       <Tabs.Root
-        value={tabIndex}
-        onValueChange={setTabIndex}
+        value={tabValue}
+        onValueChange={({ value }) => setTabValue(value)}
         colorPalette="blue"
         variant='enclosed'
         lazyMount>
         <Tabs.List overflowX="auto">
-          <Tab>Resumen</Tab>
-          <Tab>Movimientos</Tab>
-          <Tab disabled>Auditoría</Tab>
+          <Tabs.Trigger value="summary">Resumen</Tabs.Trigger>
+          <Tabs.Trigger value="movements">Movimientos</Tabs.Trigger>
+          <Tabs.Trigger value="audit" disabled>Auditoría</Tabs.Trigger>
         </Tabs.List>
-        <TabPanels bg="app.surface" borderWidth="1px" borderTopWidth="0">
-          <TabPanel>
+        <Tabs.Content value="summary" bg="app.surface" borderWidth="1px" borderTopWidth="0">
             <Text>Resumen general del inventario.</Text>
-          </TabPanel>
-          <TabPanel>
+        </Tabs.Content>
+        <Tabs.Content value="movements" bg="app.surface" borderWidth="1px" borderTopWidth="0">
             <VStack align="stretch" gap={2}>
               <Text fontWeight="semibold">Último movimiento</Text>
               <Text color="app.textMuted">Ingreso OCM · 24 unidades · Lote L-001</Text>
             </VStack>
-          </TabPanel>
-          <TabPanel>
+        </Tabs.Content>
+        <Tabs.Content value="audit" bg="app.surface" borderWidth="1px" borderTopWidth="0">
             <Text>Contenido restringido.</Text>
-          </TabPanel>
-        </TabPanels>
+        </Tabs.Content>
       </Tabs.Root>
     </StoryFrame>
   );
@@ -210,7 +198,13 @@ export const FormsV2 = () => {
         </Field.Root>
         <Field.Root>
           <Field.Label>Cantidad</Field.Label>
-          <NumberInput.Root value={String(quantity)} min={0} precision={2} step={0.25} onValueChange={setQuantity}>
+          <NumberInput.Root
+            value={quantity}
+            min={0}
+            step={0.25}
+            formatOptions={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
+            onValueChange={({ value }) => setQuantity(value)}
+          >
             <NumberInput.Input />
             <NumberInput.Control>
               <NumberInput.IncrementTrigger />
@@ -234,7 +228,7 @@ export const FormsV2 = () => {
         <Checkbox.Root
           checked={requiresInspection}
           colorPalette="teal"
-          onCheckedChange={(event) => setRequiresInspection(event.target.checked)}
+          onCheckedChange={({ checked }) => setRequiresInspection(checked === true)}
         ><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Requiere inspección de calidad
                     </Checkbox.Label></Checkbox.Root>
       </SimpleGrid>
@@ -255,7 +249,7 @@ export const ToastV2 = () => {
       title: 'Movimiento guardado',
       description: 'El ingreso se registró correctamente.',
       status: 'success',
-      duration: null,
+      duration: Infinity,
       isClosable: true,
       position: 'top-right',
     });
@@ -306,7 +300,7 @@ const inventoryRows = [
 export const TableV2 = () => (
   <StoryFrame title="Table v2">
     <Table.ScrollArea bg="app.surface" borderWidth="1px" borderRadius="md">
-      <Table.Root variant="simple" size="sm">
+      <Table.Root variant="line" size="sm">
         <Table.Header bg="app.tableHeader">
           <Table.Row>
             <Table.ColumnHeader>Código</Table.ColumnHeader>
@@ -339,10 +333,10 @@ const processSteps = [
 export const StepperAndProgressV2 = () => (
   <StoryFrame title="Stepper y Progress v2">
     <VStack align="stretch" gap={8} bg="app.surface" borderWidth="1px" borderRadius="md" p={6}>
-      <Steps.Root step={1} colorPalette="teal" size="sm">
-            <Steps.List>
-          {processSteps.map((step) => (
-            <Steps.Item key={step.title}>
+      <Steps.Root step={1} count={processSteps.length} colorPalette="teal" size="sm">
+        <Steps.List>
+          {processSteps.map((step, index) => (
+            <Steps.Item key={step.title} index={index}>
               <Steps.Indicator>
                 <Steps.Status complete={<LuCheck />} incomplete={<Steps.Number />} current={<Steps.Number />} />
               </Steps.Indicator>
@@ -354,7 +348,7 @@ export const StepperAndProgressV2 = () => (
             </Steps.Item>
           ))}
         </Steps.List>
-          </Steps.Root>
+      </Steps.Root>
       <Box>
         <HStack justify="space-between" mb={2}>
           <Text fontWeight="semibold">Progreso del asistente</Text>

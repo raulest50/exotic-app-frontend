@@ -9,11 +9,6 @@ import {
     HStack,
     Text,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
     Flex,
     NativeSelect,
     Field,
@@ -165,7 +160,9 @@ const VendedorPicker: React.FC<VendedorPickerProps> = ({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Seleccionar Vendedor</Dialog.Header>
+                        <Dialog.Header>
+                            <Dialog.Title>Seleccionar Vendedor</Dialog.Title>
+                        </Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <VStack gap={4}>
@@ -179,12 +176,10 @@ const VendedorPicker: React.FC<VendedorPickerProps> = ({
                                             placeholder="Ingrese texto de búsqueda"
                                             disabled={isLoading}
                                         />
-                                        <NativeSelect.Root>
+                                        <NativeSelect.Root width="150px" disabled={isLoading}>
                                             <NativeSelect.Field
                                                 value={searchType}
-                                                onChange={(e) => setSearchType(e.target.value as SearchType)}
-                                                width="150px"
-                                                disabled={isLoading}>
+                                                onChange={(e) => setSearchType(e.target.value as SearchType)}>
                                                 <option value={SearchType.ID}>Por ID</option>
                                                 <option value={SearchType.NAME}>Por Nombre</option>
                                             </NativeSelect.Field>
@@ -203,7 +198,7 @@ const VendedorPicker: React.FC<VendedorPickerProps> = ({
                                 <Box w="full" overflowX="auto">
                                     {vendedores.length > 0 ? (
                                         <>
-                                            <Table.Root variant="simple" size="sm">
+                                            <Table.Root variant="line" size="sm">
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>ID</Table.ColumnHeader>

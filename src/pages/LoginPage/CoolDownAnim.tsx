@@ -1,6 +1,6 @@
 // src/pages/LoginPage/CoolDownAnim.tsx
 import React, { useEffect, useState } from 'react';
-import { Box, Flex, Text } from '@chakra-ui/react';
+import { Box, Flex, Icon, Text } from '@chakra-ui/react';
 import { Tooltip } from '@/components/ui/tooltip';
 import { BiTime } from 'react-icons/bi';
 
@@ -73,7 +73,9 @@ const CoolDownAnim: React.FC<CoolDownAnimProps> = ({
         height="50px"
       >
         {/* Icono de reloj moderno */}
-        <Box size="32px" color="gray.400" position="absolute" zIndex="1" asChild><BiTime /></Box>
+        <Icon boxSize="32px" color="gray.400" position="absolute" zIndex="1" asChild>
+          <BiTime />
+        </Icon>
 
         {/* Contenedor de la animación de llenado */}
         <Box 

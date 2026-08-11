@@ -1,6 +1,6 @@
 
 import {IoArrowBack} from "react-icons/io5";
-import { Box, Flex, Heading, IconButton, HStack, Tag, TagLabel } from '@chakra-ui/react';
+import { Box, Flex, Heading, IconButton, HStack, Tag } from '@chakra-ui/react';
 import {NavLink, useLocation} from "react-router-dom";
 import {useMemo} from "react";
 import {Modulo} from "../pages/Usuarios/GestionUsuarios/types";
@@ -84,7 +84,7 @@ function MyHeader({title,}:MyHeaderProps){
             {shouldShowInfo ? (
                 <HStack flexShrink={0} gap={2} align="center" ml={2}>
                     <Tag.Root size={'sm'} variant={'subtle'} colorPalette={'gray'} minW={0} maxW="200px">
-                        <Tag.Label isTruncated>
+                        <Tag.Label truncate>
                             {username}
                         </Tag.Label>
                     </Tag.Root>

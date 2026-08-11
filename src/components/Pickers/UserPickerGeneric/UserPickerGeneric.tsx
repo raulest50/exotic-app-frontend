@@ -9,11 +9,6 @@ import {
     HStack,
     Text,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
     Flex,
     NativeSelect,
     Field,
@@ -127,7 +122,9 @@ const UserGenericPicker: React.FC<UserGenericPickerProps> = ({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Seleccionar Usuario</Dialog.Header>
+                        <Dialog.Header>
+                            <Dialog.Title>Seleccionar Usuario</Dialog.Title>
+                        </Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <VStack gap={4}>
@@ -141,12 +138,10 @@ const UserGenericPicker: React.FC<UserGenericPickerProps> = ({
                                             placeholder="Ingrese texto de búsqueda"
                                             disabled={isLoading}
                                         />
-                                        <NativeSelect.Root>
+                                        <NativeSelect.Root width="150px" disabled={isLoading}>
                                             <NativeSelect.Field
                                                 value={searchType}
-                                                onChange={(e) => setSearchType(e.target.value as SearchType)}
-                                                disabled={isLoading}
-                                                width="150px">
+                                                onChange={(e) => setSearchType(e.target.value as SearchType)}>
                                                 <option value={SearchType.ID}>ID</option>
                                                 <option value={SearchType.NAME}>Nombre</option>
                                                 <option value={SearchType.EMAIL}>Correo</option>
@@ -166,7 +161,7 @@ const UserGenericPicker: React.FC<UserGenericPickerProps> = ({
                                 <Box w="full" overflowX="auto">
                                     {users.length > 0 ? (
                                         <>
-                                            <Table.Root variant="simple" size="sm">
+                                            <Table.Root variant="line" size="sm">
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>ID</Table.ColumnHeader>

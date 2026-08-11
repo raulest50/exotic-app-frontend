@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useColorModeValue } from "../ui/color-mode";
-import { Input, InputProps } from "@chakra-ui/react";
+import { Input, type InputProps } from "@chakra-ui/react";
 
 export interface CustomDecimalInputProps extends Omit<InputProps, 'value' | 'onChange' | 'type'> {
     /**
@@ -29,6 +29,12 @@ export interface CustomDecimalInputProps extends Omit<InputProps, 'value' | 'onC
      * (default: true)
      */
     allowEmpty?: boolean;
+    /**
+     * Alias heredado de Chakra UI v2. Se conserva para no romper consumidores
+     * del componente durante la migración; `disabled` tiene precedencia cuando
+     * ambas props están presentes.
+     */
+    isDisabled?: boolean;
 }
 
 /**
@@ -60,6 +66,8 @@ const CustomDecimalInput: React.FC<CustomDecimalInputProps> = ({
     maxDecimals,
     placeholder = "0.0000",
     allowEmpty = true,
+    isDisabled,
+    disabled,
     ...inputProps
 }) => {
     // Estado local para el valor del input (permite strings vacíos y decimales parciales)
@@ -160,6 +168,7 @@ const CustomDecimalInput: React.FC<CustomDecimalInputProps> = ({
             onChange={handleInputChange}
             onBlur={handleBlur}
             placeholder={placeholder}
+            disabled={disabled ?? isDisabled}
             textAlign={inputProps.textAlign || "right"}
             {...inputProps}
         />

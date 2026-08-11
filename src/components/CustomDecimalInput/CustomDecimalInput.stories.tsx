@@ -120,6 +120,20 @@ export const SmallSize = () => {
   );
 };
 
+export const LegacyIsDisabled = () => (
+  <Box p={8} maxW="400px">
+    <VStack gap={4} align="stretch">
+      <Text fontWeight="bold">Compatibilidad con isDisabled de Chakra v2</Text>
+      <CustomDecimalInput
+        value={12.34}
+        onChange={() => undefined}
+        isDisabled
+        w="150px"
+      />
+    </VStack>
+  </Box>
+);
+
 
 
 

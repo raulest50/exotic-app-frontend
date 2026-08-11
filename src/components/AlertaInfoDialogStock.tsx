@@ -5,13 +5,7 @@ import {
     Heading,
     Spinner,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
     Dialog,
     Portal,
@@ -59,7 +53,7 @@ function formatFecha(fecha?: string | null): string {
 function renderMaterialBaseTable(rows: MaterialEnPuntoReordenDTO[]) {
     return (
         <Table.ScrollArea maxH="18rem" overflowY="auto">
-            <Table.Root size="sm" variant="simple">
+            <Table.Root size="sm" variant="line">
                 <Table.Header>
                     <Table.Row>
                         <Table.ColumnHeader>Codigo</Table.ColumnHeader>
@@ -90,7 +84,7 @@ function renderMaterialBaseTable(rows: MaterialEnPuntoReordenDTO[]) {
 function renderMaterialConOcmTable(rows: MaterialEnPuntoReordenConOcmDTO[]) {
     return (
         <Table.ScrollArea maxH="18rem" overflowY="auto">
-            <Table.Root size="sm" variant="simple">
+            <Table.Root size="sm" variant="line">
                 <Table.Header>
                     <Table.Row>
                         <Table.ColumnHeader>Codigo</Table.ColumnHeader>
@@ -179,7 +173,9 @@ export default function AlertaInfoDialogStock({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content maxW="72rem">
-                        <Dialog.Header>Materiales en punto de reorden</Dialog.Header>
+                        <Dialog.Header>
+                            <Dialog.Title>Materiales en punto de reorden</Dialog.Title>
+                        </Dialog.Header>
                         <Dialog.Body>
                             <VStack align="stretch" gap={5}>
                                 <Text>{notification.message}</Text>

@@ -6,11 +6,6 @@ import {
     HStack,
     Input,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
     Text,
     VStack,
     Field,
@@ -114,7 +109,9 @@ const MaterialByLotePicker: React.FC<MaterialByLotePickerProps> = ({
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content>
-                        <Dialog.Header>Buscar Material por Lote</Dialog.Header>
+                        <Dialog.Header>
+                            <Dialog.Title>Buscar Material por Lote</Dialog.Title>
+                        </Dialog.Header>
                         <Dialog.CloseTrigger />
                         <Dialog.Body>
                             <VStack gap={4}>
@@ -141,7 +138,7 @@ const MaterialByLotePicker: React.FC<MaterialByLotePickerProps> = ({
                                 <Box w="full" overflowX="auto">
                                     {results.length > 0 ? (
                                         <>
-                                            <Table.Root variant="simple" size="sm">
+                                            <Table.Root variant="line" size="sm">
                                                 <Table.Header>
                                                     <Table.Row>
                                                         <Table.ColumnHeader>Código</Table.ColumnHeader>

@@ -45,7 +45,9 @@ import { Button, Input, Flex, HStack, Dialog, Portal } from "@chakra-ui/react";
               <Dialog.Backdrop />
               <Dialog.Positioner>
                 <Dialog.Content>
-                  <Dialog.Header> Ventana de Confirmacion</Dialog.Header>
+                  <Dialog.Header>
+                    <Dialog.Title>Ventana de Confirmacion</Dialog.Title>
+                  </Dialog.Header>
                   <Dialog.CloseTrigger />
                   <Dialog.Body p={'1em'}>
                     <Flex direction={'column'} gap={'1em'}>
@@ -77,6 +79,3 @@ import { Button, Input, Flex, HStack, Dialog, Portal } from "@chakra-ui/react";
         </>
       );
     }
-    
-    
-    

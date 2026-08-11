@@ -34,12 +34,10 @@ export default function BetterPagination({
         <Flex justify='space-between' align='center' gap={4}>
             <Flex align='center' gap={2}>
                 <Text>Tamaño de página:</Text>
-                <NativeSelect.Root>
+                <NativeSelect.Root width='80px' disabled={loading}>
                     <NativeSelect.Field
                         value={size}
-                        onChange={(e) => handleSizeChange(parseInt(e.target.value))}
-                        width='80px'
-                        disabled={loading}>
+                        onChange={(e) => handleSizeChange(parseInt(e.target.value))}>
                         {[5, 10, 20, 50].map(opt => (
                             <option key={opt} value={opt}>{opt}</option>
                         ))}

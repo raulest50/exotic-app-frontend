@@ -3,13 +3,7 @@ import {
     Button,
     Heading,
     Table,
-    TableContainer,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     VStack,
     Separator,
     Dialog,
@@ -78,7 +72,7 @@ function OrdenesTableWithPaginationBelow({
                 boxShadow="sm"
                 bg={tableBg}
             >
-                <Table.Root size="sm" variant="simple">
+                <Table.Root size="sm" variant="line">
                     <Table.Header position="sticky" top={0} bg={theadBg} zIndex={1} boxShadow="sm">
                         <Table.Row>
                             <Table.ColumnHeader py={3}>ID orden</Table.ColumnHeader>
@@ -215,7 +209,7 @@ export default function AlertaInfoDialogCompras({
                 <Dialog.Positioner>
                     <Dialog.Content maxW="lg" borderRadius="xl" boxShadow="2xl" mx={{ base: 3, md: 0 }}>
                         <Dialog.Header pt={8} pb={4} px={{ base: 6, md: 8 }} fontSize="xl" fontWeight="bold">
-                            Órdenes de compra pendientes
+                            <Dialog.Title>Órdenes de compra pendientes</Dialog.Title>
                         </Dialog.Header>
                         <Dialog.Body px={{ base: 6, md: 8 }} pt={2} pb={8}>
                             <VStack align="stretch" gap={6}>

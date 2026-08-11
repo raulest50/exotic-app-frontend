@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Input, InputProps } from "@chakra-ui/react";
+import { Input, type InputProps } from "@chakra-ui/react";
 
 export interface CustomIntegerInputProps extends Omit<InputProps, 'value' | 'onChange' | 'type'> {
     /**
@@ -24,6 +24,12 @@ export interface CustomIntegerInputProps extends Omit<InputProps, 'value' | 'onC
      * (default: false)
      */
     allowEmpty?: boolean;
+    /**
+     * Alias heredado de Chakra UI v2. Se conserva para no romper consumidores
+     * del componente durante la migración; `disabled` tiene precedencia cuando
+     * ambas props están presentes.
+     */
+    isDisabled?: boolean;
 }
 
 /**
@@ -41,6 +47,8 @@ const CustomIntegerInput: React.FC<CustomIntegerInputProps> = ({
     min = 0,
     placeholder = "0",
     allowEmpty = false,
+    isDisabled,
+    disabled,
     ...inputProps
 }) => {
     const [inputValue, setInputValue] = useState<string>(
@@ -115,6 +123,7 @@ const CustomIntegerInput: React.FC<CustomIntegerInputProps> = ({
             onChange={handleInputChange}
             onBlur={handleBlur}
             placeholder={placeholder}
+            disabled={disabled ?? isDisabled}
             textAlign={inputProps.textAlign || "right"}
             {...inputProps}
         />

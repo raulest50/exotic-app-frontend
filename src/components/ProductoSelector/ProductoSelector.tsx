@@ -7,12 +7,7 @@ import {
   Input,
   NativeSelect,
   Table,
-  Tbody,
-  Td,
   Text,
-  Th,
-  Thead,
-  Tr,
   VStack,
   Field,
   Dialog,
@@ -145,7 +140,9 @@ export default function ProductoSelector({
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>{title}</Dialog.Header>
+            <Dialog.Header>
+              <Dialog.Title>{title}</Dialog.Title>
+            </Dialog.Header>
             <Dialog.CloseTrigger />
             <Dialog.Body>
               <VStack gap={4} align="stretch">
@@ -159,12 +156,10 @@ export default function ProductoSelector({
                       placeholder="Ingrese nombre o ID"
                       disabled={isLoading}
                     />
-                    <NativeSelect.Root>
+                    <NativeSelect.Root width="150px" disabled={isLoading}>
                       <NativeSelect.Field
                         value={tipoBusqueda}
-                        onChange={(e) => setTipoBusqueda(e.target.value as TipoBusqueda)}
-                        width="150px"
-                        disabled={isLoading}>
+                        onChange={(e) => setTipoBusqueda(e.target.value as TipoBusqueda)}>
                         <option value="NOMBRE">Nombre</option>
                         <option value="ID">ID</option>
                       </NativeSelect.Field>
@@ -187,7 +182,7 @@ export default function ProductoSelector({
                 <Box w="full" overflowX="auto">
                   {items.length > 0 ? (
                     <>
-                      <Table.Root variant="simple" size="sm">
+                      <Table.Root variant="line" size="sm">
                         <Table.Header>
                           <Table.Row>
                             <Table.ColumnHeader>ID</Table.ColumnHeader>
