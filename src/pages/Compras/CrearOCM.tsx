@@ -1,7 +1,6 @@
 // ./CrearOrdenCompra.tsx
 import { useEffect, useState } from 'react';
 import {
-    Steps,
     Button,
     Container,
     Flex,
@@ -320,7 +319,7 @@ export default function CrearOCM() {
                             <NativeSelect.Root>
                                 <NativeSelect.Field
                                     value={condicionPago}
-                                    onValueChange={(e) => {
+                                    onChange={(e) => {
                                         setCondicionPago(e.target.value)
                                         if(e.target.value == "1") setPlazoPago(0);
                                         }
@@ -338,7 +337,7 @@ export default function CrearOCM() {
                             <Field.Label>Plazo de pago (dias)</Field.Label>
                             <Input
                                 value={plazoPago}
-                                onValueChange={ (e) => {setPlazoPago(Number(e.target.value))} }
+                                onChange={ (e) => {setPlazoPago(Number(e.target.value))} }
                             />
                         </Field.Root>
 
@@ -346,7 +345,7 @@ export default function CrearOCM() {
                             <Field.Label>Tiempo de entrega (dias)</Field.Label>
                             <Input
                                 value={tiempoEntrega}
-                                onValueChange={ (e) => {setTiempoEntrega(e.target.value)} }
+                                onChange={ (e) => {setTiempoEntrega(e.target.value)} }
                             />
                         </Field.Root>
 
@@ -363,7 +362,7 @@ export default function CrearOCM() {
                         <Field.Label>Observaciones</Field.Label>
                         <Textarea
                             value={observaciones}
-                            onValueChange={(e) => setObservaciones(e.target.value)}
+                            onChange={(e) => setObservaciones(e.target.value)}
                             placeholder="Ingrese observaciones"
                         />
                     </Field.Root>

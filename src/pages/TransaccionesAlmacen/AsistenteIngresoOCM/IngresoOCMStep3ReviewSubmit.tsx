@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -171,7 +170,7 @@ export default function IngresoOCMStep3ReviewSubmit({
                 <Textarea
                     placeholder="Escriba aqui sus observaciones si lo considera pertinente"
                     value={observaciones}
-                    onValueChange={(e) => setObservaciones(e.target.value)}
+                    onChange={(e) => setObservaciones(e.target.value)}
                 />
             </Field.Root>
 

@@ -1,5 +1,4 @@
 import {
-    Steps,
     Box,
     Button,
     Flex,
@@ -269,7 +268,7 @@ export default function CargaMasivaStep1SubirValidar({
                                 ref={inputRef}
                                 style={{ display: "none" }}
                                 accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                                onValueChange={handleFileChange}
+                                onChange={handleFileChange}
                             />
                             <Icon
                                 as={excelFile ? FaFileCircleCheck : FaFileCircleQuestion}

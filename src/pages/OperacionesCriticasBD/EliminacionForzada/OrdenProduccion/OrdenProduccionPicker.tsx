@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import {
-    Steps,
     Box,
     Button,
     Flex,
@@ -124,7 +123,7 @@ export default function OrdenProduccionPicker({
                                         <Input
                                             type="date"
                                             value={date1}
-                                            onValueChange={(e) => setDate1(e.target.value)}
+                                            onChange={(e) => setDate1(e.target.value)}
                                         />
                                     </Field.Root>
                                     <Field.Root flex="1" minW="120px">
@@ -132,7 +131,7 @@ export default function OrdenProduccionPicker({
                                         <Input
                                             type="date"
                                             value={date2}
-                                            onValueChange={(e) => setDate2(e.target.value)}
+                                            onChange={(e) => setDate2(e.target.value)}
                                         />
                                     </Field.Root>
                                     <Field.Root flex="1" minW="140px">
@@ -140,7 +139,7 @@ export default function OrdenProduccionPicker({
                                         <NativeSelect.Root>
                                             <NativeSelect.Field
                                                 value={String(estadoOrden)}
-                                                onValueChange={(e) =>
+                                                onChange={(e) =>
                                                     setEstadoOrden(Number(e.target.value))
                                                 }>
                                                 <option value="0">Solo abiertas/activas</option>

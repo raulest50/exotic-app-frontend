@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import AreaPickerGeneric from './AreaPickerGeneric.tsx';
-import { Steps, Button, Box, Text, VStack } from '@chakra-ui/react';
+import { Button, Box, Text, VStack } from '@chakra-ui/react';
 
 // Interface for AreaProduccion based on the backend model
 interface AreaProduccion {

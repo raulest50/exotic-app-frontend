@@ -1,6 +1,6 @@
 // src/components/CancelarOrdenDialog.tsx
 import React, { useEffect, useState } from 'react';
-import { Steps, Button, Text, Input, Dialog, Portal } from '@chakra-ui/react';
+import { Button, Text, Input, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -89,7 +89,7 @@ const CancelarOrdenDialog: React.FC<CancelarOrdenDialogProps> = ({ isOpen, onClo
                             <Input
                                 placeholder="Ingrese el código aquí"
                                 value={inputCode}
-                                onValueChange={(e) => setInputCode(e.target.value)}
+                                onChange={(e) => setInputCode(e.target.value)}
                             />
                         </Dialog.Body>
                         <Dialog.Footer>

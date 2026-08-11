@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useColorModeValue } from "../ui/color-mode";
-import { Steps, Input, InputProps } from "@chakra-ui/react";
+import { Input, InputProps } from "@chakra-ui/react";
 
 export interface CustomDecimalInputProps extends Omit<InputProps, 'value' | 'onChange' | 'type'> {
     /**
@@ -157,7 +157,7 @@ const CustomDecimalInput: React.FC<CustomDecimalInputProps> = ({
             type="text"
             inputMode="decimal"
             value={inputValue}
-            onValueChange={handleInputChange}
+            onChange={handleInputChange}
             onBlur={handleBlur}
             placeholder={placeholder}
             textAlign={inputProps.textAlign || "right"}

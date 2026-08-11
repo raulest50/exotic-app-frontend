@@ -1,7 +1,7 @@
 import { useCallback, type CSSProperties } from "react";
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import { Handle, type NodeProps, Position } from "@xyflow/react";
-import { Steps, Box, Flex, HStack, Icon, IconButton, Menu, Text, VStack, Portal } from "@chakra-ui/react";
+import { Box, Flex, HStack, Icon, IconButton, Menu, Text, VStack, Portal } from "@chakra-ui/react";
 import { FaUserTie } from "react-icons/fa";
 import { LuMousePointerClick } from "react-icons/lu";
 import { MdBusinessCenter, MdEdit, MdInfoOutline } from "react-icons/md";

@@ -1,6 +1,6 @@
 
 
-import { Steps, Button, Input, Flex, HStack, Dialog, Portal } from "@chakra-ui/react";
+import { Button, Input, Flex, HStack, Dialog, Portal } from "@chakra-ui/react";
   
   import {useState, useEffect} from "react";
   
@@ -52,7 +52,7 @@ import { Steps, Button, Input, Flex, HStack, Dialog, Portal } from "@chakra-ui/r
                       <p>Para confirmar que esta seguro de hacer esta accion digite porfavor este numero: {randomNum}  y seleccione aceptar</p>
                       <Input
                         value={confirmationNumber}
-                        onValueChange={ (e) => setConfirmationNumber(e.target.value)}
+                        onChange={ (e) => setConfirmationNumber(e.target.value)}
                       />
                     </Flex>
                     

@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-    Steps,
     Alert,
     Badge,
     Box,
@@ -232,7 +231,7 @@ export default function MpsObservacionesPanel({
                                     <NativeSelect.Root>
                                         <NativeSelect.Field
                                             value={newTipo}
-                                            onValueChange={(event) => setNewTipo(event.target.value as MpsSemanalObservacionTipo)}
+                                            onChange={(event) => setNewTipo(event.target.value as MpsSemanalObservacionTipo)}
                                             bg="white">
                                             {OBSERVACION_TIPO_OPTIONS.map((option) => (
                                                 <option key={option.value} value={option.value}>
@@ -247,7 +246,7 @@ export default function MpsObservacionesPanel({
                                     <Field.Label fontSize="sm">Nueva observacion</Field.Label>
                                     <Textarea
                                         value={newMensaje}
-                                        onValueChange={(event) => setNewMensaje(event.target.value)}
+                                        onChange={(event) => setNewMensaje(event.target.value)}
                                         placeholder="Describa el ajuste que debe revisar programacion."
                                         rows={3}
                                         bg="white"
@@ -359,7 +358,7 @@ export default function MpsObservacionesPanel({
                                                     <Field.Label fontSize="sm">Respuesta de correccion</Field.Label>
                                                     <Textarea
                                                         value={responseValue}
-                                                        onValueChange={(event) => setRespuestas((current) => ({
+                                                        onChange={(event) => setRespuestas((current) => ({
                                                             ...current,
                                                             [observacion.observacionId]: event.target.value,
                                                         }))}

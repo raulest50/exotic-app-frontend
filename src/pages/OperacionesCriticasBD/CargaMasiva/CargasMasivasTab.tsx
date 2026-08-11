@@ -1,4 +1,4 @@
-import { Steps, Button, Container, Flex, SimpleGrid } from "@chakra-ui/react";
+import { Button, Container, Flex, SimpleGrid } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import { IconType } from "react-icons";
 import { FaArrowLeft, FaBell, FaDatabase, FaKey } from "react-icons/fa";

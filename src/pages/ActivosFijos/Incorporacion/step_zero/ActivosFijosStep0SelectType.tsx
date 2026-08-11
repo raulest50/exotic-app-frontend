@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Steps, Flex } from '@chakra-ui/react';
+import { Flex } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL';

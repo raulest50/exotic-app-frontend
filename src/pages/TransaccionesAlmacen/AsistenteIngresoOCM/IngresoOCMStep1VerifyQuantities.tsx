@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Box,
     Button,
@@ -306,7 +305,7 @@ export default function IngresoOCMStep1VerifyQuantities({
                     <Input
                         placeholder="Ingrese el token"
                         value={inputToken}
-                        onValueChange={(e) => setInputToken(e.target.value)}
+                        onChange={(e) => setInputToken(e.target.value)}
                     />
                 </Field.Root>
 

@@ -2,7 +2,6 @@ import {useState, useEffect} from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import {
-    Steps,
     Flex,
     Grid,
     Input,
@@ -169,7 +168,7 @@ export function CategoriasTab() {
                         <Input
                             name="categoriaId"
                             value={formData.categoriaId}
-                            onValueChange={handleInputChange}
+                            onChange={handleInputChange}
                             placeholder="Id de la categoría"
                             disabled={submitting}
                         />
@@ -180,7 +179,7 @@ export function CategoriasTab() {
                         <Input
                             name="categoriaNombre"
                             value={formData.categoriaNombre}
-                            onValueChange={handleInputChange}
+                            onChange={handleInputChange}
                             placeholder="Nombre de la categoría"
                             disabled={submitting}
                         />
@@ -191,7 +190,7 @@ export function CategoriasTab() {
                         <Input
                             name="categoriaDescripcion"
                             value={formData.categoriaDescripcion}
-                            onValueChange={handleInputChange}
+                            onChange={handleInputChange}
                             placeholder="Descripción de la categoría"
                             disabled={submitting}
                         />

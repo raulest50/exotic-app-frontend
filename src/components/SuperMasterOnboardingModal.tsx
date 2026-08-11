@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Steps, Button, Input, Text, Progress, Field, Dialog, Portal } from "@chakra-ui/react";
+import { Button, Input, Text, Progress, Field, Dialog, Portal } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import EndPointsURL from "../api/EndPointsURL";
@@ -145,7 +145,7 @@ export default function SuperMasterOnboardingModal({ isOpen, onClose, onSuccess 
                                     type="email"
                                     placeholder="correo@ejemplo.com"
                                     value={email}
-                                    onValueChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     disabled={codeSent}
                                 />
                             </Field.Root>
@@ -168,7 +168,7 @@ export default function SuperMasterOnboardingModal({ isOpen, onClose, onSuccess 
                                             placeholder="000000"
                                             maxLength={6}
                                             value={code}
-                                            onValueChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                                            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
                                         />
                                     </Field.Root>
                                     <Field.Root required mb={2}>
@@ -177,7 +177,7 @@ export default function SuperMasterOnboardingModal({ isOpen, onClose, onSuccess 
                                             type="password"
                                             placeholder="Mínimo 8 caracteres"
                                             value={password}
-                                            onValueChange={(e) => setPassword(e.target.value)}
+                                            onChange={(e) => setPassword(e.target.value)}
                                         />
                                         <Progress.Root
                                             value={passwordStrength.strength}
@@ -198,7 +198,7 @@ export default function SuperMasterOnboardingModal({ isOpen, onClose, onSuccess 
                                             type="password"
                                             placeholder="Repetir contraseña"
                                             value={confirmPassword}
-                                            onValueChange={(e) => setConfirmPassword(e.target.value)}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
                                         />
                                         {confirmPassword && !passwordsMatch && (
                                             <Text fontSize="sm" color="red.500" mt={1}>

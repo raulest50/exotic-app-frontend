@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useColorModeValue } from "../../components/ui/color-mode";
 import {
-  Steps,
   Container,
   Box,
   Spinner,

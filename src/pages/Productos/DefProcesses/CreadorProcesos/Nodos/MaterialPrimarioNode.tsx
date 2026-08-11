@@ -1,5 +1,5 @@
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { Steps, Box, Flex, Text, Icon } from "@chakra-ui/react";
+import { Box, Flex, Text, Icon } from "@chakra-ui/react";
 
 import { PiCubeFocusThin } from "react-icons/pi";
 

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Steps,
     Button,
     Box,
     Text,
@@ -239,7 +238,7 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
                     {renderItems()}
                     <VStack mt={4} align='center'>
                         <Text fontWeight='bold'>Código: {randomCode}</Text>
-                        <Input maxW='200px' value={inputCode} onValueChange={(e)=>setInputCode(e.target.value)} placeholder='Digite código'/>
+                        <Input maxW='200px' value={inputCode} onChange={(e)=>setInputCode(e.target.value)} placeholder='Digite código'/>
                         <Button colorPalette='green' onClick={handleLiberar}>Liberar Orden</Button>
                     </VStack>
                 </>
@@ -256,13 +255,13 @@ const DialogLiberarEnviarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onEs
                             <NativeSelect.Root>
                                 <NativeSelect.Field
                                     value={tipoEnvio}
-                                    onValueChange={e=>setTipoEnvio(e.target.value as TipoEnvio)}>
+                                    onChange={e=>setTipoEnvio(e.target.value as TipoEnvio)}>
                                     <option value={TipoEnvio.MANUAL}>{TipoEnvio.MANUAL}</option>
                                     {hasEmail() && <option value={TipoEnvio.EMAIL}>CORREO ELECTRÓNICO</option>}
                                 </NativeSelect.Field>
                                 <NativeSelect.Indicator />
                             </NativeSelect.Root>
-                            <Input maxW='200px' value={inputCode} onValueChange={e=>setInputCode(e.target.value)} placeholder='Digite código'/>
+                            <Input maxW='200px' value={inputCode} onChange={e=>setInputCode(e.target.value)} placeholder='Digite código'/>
                             <Button colorPalette='green' onClick={handleEnviar} loading={isLoading} loadingText='Enviando'>Enviar a Proveedor</Button>
                         </HStack>
                     </VStack>

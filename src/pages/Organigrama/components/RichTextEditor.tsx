@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useColorModeValue } from "../../../components/ui/color-mode";
-import { Steps, Box, ButtonGroup, IconButton } from "@chakra-ui/react";
+import { Box, ButtonGroup, IconButton } from "@chakra-ui/react";
 import { Tooltip } from '@/components/ui/tooltip';
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";

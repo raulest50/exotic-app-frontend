@@ -1,4 +1,4 @@
-import { Steps, Box, Button, Flex, Heading, Input, Field } from '@chakra-ui/react';
+import { Box, Button, Flex, Heading, Input, Field } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import {useState} from 'react';
 import axios from 'axios';
@@ -46,11 +46,11 @@ export default function DetalleModRecProd({recurso, setEstado, refreshSearch}:Pr
       <Heading size='md' mb={4}>Detalle Recurso Producción</Heading>
       <Field.Root mb={4} required>
         <Field.Label>Nombre</Field.Label>
-        <Input value={recursoData.nombre} onValueChange={e=>setRecursoData({...recursoData, nombre:e.target.value})} disabled={!editMode} />
+        <Input value={recursoData.nombre} onChange={e=>setRecursoData({...recursoData, nombre:e.target.value})} disabled={!editMode} />
       </Field.Root>
       <Field.Root mb={4} required>
         <Field.Label>Descripción</Field.Label>
-        <Input value={recursoData.descripcion} onValueChange={e=>setRecursoData({...recursoData, descripcion:e.target.value})} disabled={!editMode} />
+        <Input value={recursoData.descripcion} onChange={e=>setRecursoData({...recursoData, descripcion:e.target.value})} disabled={!editMode} />
       </Field.Root>
       <RPAFmanager recursoId={recursoData.id} activos={recursoData.activosFijos || []} onChange={handleActivosChange} editMode={editMode} />
       <Flex mt={4} gap={2}>

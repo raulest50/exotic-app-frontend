@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import TerminadoPicker, { TerminadoPickerResult } from './TerminadoPicker.tsx';
-import { Steps, Button, Box, Text, VStack, Badge, HStack } from '@chakra-ui/react';
+import { Button, Box, Text, VStack, Badge, HStack } from '@chakra-ui/react';
 
 export const Default = () => {
     const [isOpen, setIsOpen] = useState(false);

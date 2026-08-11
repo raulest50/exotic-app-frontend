@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Steps,
     Button,
     Text,
     Input,
@@ -143,7 +142,7 @@ const DialogCancelarOCAF: React.FC<Props> = ({ isOpen, onClose, orden, onOrdenCa
                             <Input
                                 placeholder="Ingrese el código"
                                 value={inputCode}
-                                onValueChange={(e) => setInputCode(e.target.value)}
+                                onChange={(e) => setInputCode(e.target.value)}
                             />
                         </Dialog.Body>
                         <Dialog.Footer>

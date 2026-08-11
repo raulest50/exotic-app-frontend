@@ -1,6 +1,5 @@
 import {useState} from 'react';
 import {
-  Steps,
   Box,
   Heading,
   Input,
@@ -217,7 +216,7 @@ function DefinicionProcesosTab() {
             <Input
               type="number"
               value={constantSeconds}
-              onValueChange={(e) => setConstantSeconds(Number(e.target.value))}
+              onChange={(e) => setConstantSeconds(Number(e.target.value))}
               sx={input_style}
             />
             <Field.HelperText>
@@ -232,7 +231,7 @@ function DefinicionProcesosTab() {
             <Input
               type="number"
               value={throughputUnitsPerSec}
-              onValueChange={(e) => setThroughputUnitsPerSec(Number(e.target.value))}
+              onChange={(e) => setThroughputUnitsPerSec(Number(e.target.value))}
               step="any"
               sx={input_style}
             />
@@ -248,7 +247,7 @@ function DefinicionProcesosTab() {
             <Input
               type="number"
               value={secondsPerUnit}
-              onValueChange={(e) => setSecondsPerUnit(Number(e.target.value))}
+              onChange={(e) => setSecondsPerUnit(Number(e.target.value))}
               sx={input_style}
             />
             <Field.HelperText>
@@ -264,7 +263,7 @@ function DefinicionProcesosTab() {
               <Input
                 type="number"
                 value={secondsPerBatch}
-                onValueChange={(e) => setSecondsPerBatch(Number(e.target.value))}
+                onChange={(e) => setSecondsPerBatch(Number(e.target.value))}
                 sx={input_style}
               />
             </Field.Root>
@@ -273,7 +272,7 @@ function DefinicionProcesosTab() {
               <Input
                 type="number"
                 value={batchSize}
-                onValueChange={(e) => setBatchSize(Number(e.target.value))}
+                onChange={(e) => setBatchSize(Number(e.target.value))}
                 sx={input_style}
               />
               <Field.HelperText>
@@ -293,14 +292,14 @@ function DefinicionProcesosTab() {
       <VStack gap={4} align="stretch">
         <Field.Root required>
           <Field.Label>Nombre</Field.Label>
-          <Input value={nombre} onValueChange={(e) => setNombre(e.target.value)} sx={input_style} />
+          <Input value={nombre} onChange={(e) => setNombre(e.target.value)} sx={input_style} />
         </Field.Root>
         <Field.Root>
           <Field.Label>Set-up Time (segundos)</Field.Label>
           <Input
             type="number"
             value={setUpTime}
-            onValueChange={(e) => setSetUpTime(Number(e.target.value))}
+            onChange={(e) => setSetUpTime(Number(e.target.value))}
             sx={input_style}
           />
         </Field.Root>
@@ -311,7 +310,7 @@ function DefinicionProcesosTab() {
           <NativeSelect.Root>
             <NativeSelect.Field
               value={model}
-              onValueChange={(e) => setModel(e.target.value as TimeModelType)}
+              onChange={(e) => setModel(e.target.value as TimeModelType)}
               sx={input_style}>
               <option value={TimeModelType.CONSTANT}>Tiempo Constante</option>
               <option value={TimeModelType.THROUGHPUT_RATE}>Tasa de Rendimiento</option>
@@ -333,7 +332,7 @@ function DefinicionProcesosTab() {
           <Input
             type="number"
             value={nivelAcceso}
-            onValueChange={(e) => setNivelAcceso(Number(e.target.value))}
+            onChange={(e) => setNivelAcceso(Number(e.target.value))}
             sx={input_style}
           />
           <Field.HelperText>
@@ -354,7 +353,7 @@ function DefinicionProcesosTab() {
                 key={fileInputKey}
                 type="file"
                 accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                onValueChange={handleDocumentoChange}
+                onChange={handleDocumentoChange}
                 p={1}
               />
               <Field.HelperText>
@@ -386,7 +385,7 @@ function DefinicionProcesosTab() {
                 <Field.Label>Observación inicial (opcional)</Field.Label>
                 <Textarea
                   value={documentoMotivo}
-                  onValueChange={(event) => setDocumentoMotivo(event.target.value)}
+                  onChange={(event) => setDocumentoMotivo(event.target.value)}
                   placeholder="Ejemplo: Documento inicial del proceso"
                 />
               </Field.Root>

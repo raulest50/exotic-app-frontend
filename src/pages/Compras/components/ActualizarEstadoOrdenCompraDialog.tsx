@@ -1,7 +1,6 @@
 // src/components/ActualizarEstadoOrdenCompraDialog.tsx
 import React, { useEffect, useState } from 'react';
 import {
-    Steps,
     Button,
     Box,
     Text,
@@ -363,7 +362,7 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                                     <Input
                                         placeholder="Digite token dinámico"
                                         value={inputCode}
-                                        onValueChange={(e) => setInputCode(e.target.value)}
+                                        onChange={(e) => setInputCode(e.target.value)}
                                         maxW="200px"
                                     />
                                 </Field.Root>
@@ -389,7 +388,7 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                                 <Field.Root>
                                     <Field.Label>Tipo Envio Orden Compra</Field.Label>
                                     <NativeSelect.Root>
-                                        <NativeSelect.Field value={tipoEnvio} onValueChange={(e) => setTipoEnvio(e.target.value)}>
+                                        <NativeSelect.Field value={tipoEnvio} onChange={(e) => setTipoEnvio(e.target.value)}>
                                             <option value={TipoEnvio.MANUAL}>{TipoEnvio.MANUAL}</option>
                                             {hasEmail() && (
                                                 <option value={TipoEnvio.EMAIL}>CORREO ELECTRÓNICO</option>
@@ -406,7 +405,7 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                                 <Input
                                 placeholder="Digite el código"
                                 value={inputCode}
-                                onValueChange={(e) => setInputCode(e.target.value)}
+                                onChange={(e) => setInputCode(e.target.value)}
                                 maxW="200px"
                                 />
                                 <Button
@@ -437,7 +436,7 @@ const ActualizarEstadoOrdenCompraDialog: React.FC<ActualizarEstadoOrdenCompraDia
                             <Input
                                 placeholder="Digite token dinámico"
                                 value={inputCode}
-                                onValueChange={(e) => setInputCode(e.target.value)}
+                                onChange={(e) => setInputCode(e.target.value)}
                                 maxW="200px"
                             />
                             <Button

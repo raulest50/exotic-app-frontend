@@ -1,5 +1,4 @@
 import {
-  Steps,
   Box,
   Button,
   Flex,
@@ -166,7 +165,7 @@ export function ProcesoProduccionPicker({isOpen, onClose, onConfirm, alreadySele
                     <Input
                       placeholder='Buscar por nombre'
                       value={searchText}
-                      onValueChange={(e) => setSearchText(e.target.value)}
+                      onChange={(e) => setSearchText(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           fetchAvailable(0);

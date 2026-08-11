@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Steps,
     Box,
     Button,
     Checkbox,
@@ -321,7 +320,7 @@ function InventarioConsolidadoTab() {
                                     <NativeSelect.Root>
                                         <NativeSelect.Field
                                             value={alcance}
-                                            onValueChange={(event) =>
+                                            onChange={(event) =>
                                                 handleScopeChange(event.target.value as AlcanceStock)
                                             }>
                                             <option value="FISICO_TOTAL">Inventario físico total</option>
@@ -379,13 +378,13 @@ function InventarioConsolidadoTab() {
                             <Input
                                 placeholder="Buscar producto por nombre o ID"
                                 value={searchTerm}
-                                onValueChange={(event) => setSearchTerm(event.target.value)}
+                                onChange={(event) => setSearchTerm(event.target.value)}
                                 onKeyDown={onKeyPressInputBuscar}
                             />
                             <NativeSelect.Root>
                                 <NativeSelect.Field
                                     value={tipoBusqueda}
-                                    onValueChange={(event) => setTipoBusqueda(event.target.value)}
+                                    onChange={(event) => setTipoBusqueda(event.target.value)}
                                     w={{ base: 'full', lg: '150px' }}
                                     flexShrink={0}>
                                     <option value="NOMBRE">Nombre</option>

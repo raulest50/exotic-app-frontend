@@ -6,7 +6,6 @@ import BetterPagination from '../../../components/BetterPagination/BetterPaginat
 import { TransaccionAlmacen, PaginatedResponse, FiltroHistDispensacionDTO } from './types';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
-import { Alert } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import DetalleDispensacionDialog from './DetalleDispensacionDialog.tsx';
 import DispensacionPDF_Generator_Class from '../AsistenteDispensacion/AsistenteDispensacionComponents/DispensacionPDF_Generator';

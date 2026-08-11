@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Steps, Text } from '@chakra-ui/react';
+import { Text } from '@chakra-ui/react';
 
 interface WelcomeBiteProps {
   text: string;

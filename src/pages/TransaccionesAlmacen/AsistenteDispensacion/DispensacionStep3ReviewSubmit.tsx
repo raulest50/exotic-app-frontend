@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Box,
     Button,
@@ -753,7 +752,7 @@ export default function DispensacionStep3ReviewSubmit({
                                 <NativeSelect.Field
                                     placeholder='Seleccione un área operativa'
                                     value={dispensacion?.areaOperativaDestinoId?.toString() ?? ''}
-                                    onValueChange={(e) => {
+                                    onChange={(e) => {
                                         const value = e.target.value;
                                         setDispensacion({
                                             ...(dispensacion ?? {ordenProduccionId: ordenProduccionId ?? 0, items: []}),
@@ -868,7 +867,7 @@ export default function DispensacionStep3ReviewSubmit({
                         <Field.Label fontFamily='Comfortaa Variable'>Token de Verificación</Field.Label>
                         <Input
                             value={inputToken}
-                            onValueChange={e => setInputToken(e.target.value)}
+                            onChange={e => setInputToken(e.target.value)}
                             placeholder='Ingrese el token de 4 dígitos'
                             maxLength={4}
                             type='text'

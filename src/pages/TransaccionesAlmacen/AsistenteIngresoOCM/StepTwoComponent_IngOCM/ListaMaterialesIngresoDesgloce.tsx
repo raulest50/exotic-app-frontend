@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-    Steps,
     Box,
     Flex,
     Table,

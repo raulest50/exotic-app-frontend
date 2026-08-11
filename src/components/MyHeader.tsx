@@ -1,6 +1,6 @@
 
 import {IoArrowBack} from "react-icons/io5";
-import { Steps, Box, Flex, Heading, IconButton, HStack, Tag, TagLabel } from '@chakra-ui/react';
+import { Box, Flex, Heading, IconButton, HStack, Tag, TagLabel } from '@chakra-ui/react';
 import {NavLink, useLocation} from "react-router-dom";
 import {useMemo} from "react";
 import {Modulo} from "../pages/Usuarios/GestionUsuarios/types";

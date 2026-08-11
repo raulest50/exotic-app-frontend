@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    Steps,
     Alert,
     Badge,
     Box,
@@ -256,7 +255,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                             <Input
                                 size="sm"
                                 value={createUnidadDraft.nombre}
-                                onValueChange={(event) => setCreateUnidadDraft((prev) => ({ ...prev, nombre: event.target.value }))}
+                                onChange={(event) => setCreateUnidadDraft((prev) => ({ ...prev, nombre: event.target.value }))}
                                 placeholder="Marmita"
                             />
                         </Field.Root>
@@ -268,7 +267,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                                 min={0.000001}
                                 step="0.000001"
                                 value={createUnidadDraft.relacionEstandar}
-                                onValueChange={(event) => setCreateUnidadDraft((prev) => ({
+                                onChange={(event) => setCreateUnidadDraft((prev) => ({
                                     ...prev,
                                     relacionEstandar: parseNumber(event.target.value, 1),
                                 }))}
@@ -280,7 +279,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                                 <NativeSelect.Field
                                     size="sm"
                                     value={createUnidadDraft.unidadRelacion}
-                                    onValueChange={(event) => setCreateUnidadDraft((prev) => ({
+                                    onChange={(event) => setCreateUnidadDraft((prev) => ({
                                         ...prev,
                                         unidadRelacion: event.target.value as UnidadRelacionAreaOperativa,
                                     }))}>
@@ -368,7 +367,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                                                     size="sm"
                                                     value={draft.nombre}
                                                     readOnly={isReadOnly}
-                                                    onValueChange={(event) => setUnidadDraftField(unidad.id, 'nombre', event.target.value)}
+                                                    onChange={(event) => setUnidadDraftField(unidad.id, 'nombre', event.target.value)}
                                                     bg={isReadOnly ? 'app.inputReadonly' : undefined}
                                                 />
                                             </Table.Cell>
@@ -380,7 +379,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                                                     step="0.000001"
                                                     value={draft.relacionEstandar}
                                                     readOnly={isReadOnly}
-                                                    onValueChange={(event) => setUnidadDraftField(
+                                                    onChange={(event) => setUnidadDraftField(
                                                         unidad.id,
                                                         'relacionEstandar',
                                                         parseNumber(event.target.value, 1),
@@ -395,7 +394,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                                                         value={draft.unidadRelacion}
                                                         disabled={isReadOnly}
                                                         bg={isReadOnly ? 'app.inputReadonly' : undefined}
-                                                        onValueChange={(event) => setUnidadDraftField(
+                                                        onChange={(event) => setUnidadDraftField(
                                                             unidad.id,
                                                             'unidadRelacion',
                                                             event.target.value as UnidadRelacionAreaOperativa,
@@ -459,7 +458,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                                                     value={draft.nombre}
                                                     readOnly={isReadOnly}
                                                     bg={isReadOnly ? 'app.inputReadonly' : undefined}
-                                                    onValueChange={(event) => setUnidadDraftField(
+                                                    onChange={(event) => setUnidadDraftField(
                                                         unidad.id,
                                                         'nombre',
                                                         event.target.value,
@@ -478,7 +477,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                                                         value={draft.relacionEstandar}
                                                         readOnly={isReadOnly}
                                                         bg={isReadOnly ? 'app.inputReadonly' : undefined}
-                                                        onValueChange={(event) => setUnidadDraftField(
+                                                        onChange={(event) => setUnidadDraftField(
                                                             unidad.id,
                                                             'relacionEstandar',
                                                             parseNumber(event.target.value, 1),
@@ -493,7 +492,7 @@ export default function AreaOperativaUnidadMedidaConfig({
                                                             value={draft.unidadRelacion}
                                                             disabled={isReadOnly}
                                                             bg={isReadOnly ? 'app.inputReadonly' : undefined}
-                                                            onValueChange={(event) => setUnidadDraftField(
+                                                            onChange={(event) => setUnidadDraftField(
                                                                 unidad.id,
                                                                 'unidadRelacion',
                                                                 event.target.value as UnidadRelacionAreaOperativa,

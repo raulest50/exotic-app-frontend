@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Steps, Container, Flex, NativeSelect, Button, Spinner } from '@chakra-ui/react';
+import { Container, Flex, NativeSelect, Button, Spinner } from '@chakra-ui/react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import EndPointsURL from '../../../api/EndPointsURL';
@@ -93,7 +93,7 @@ export function ReportesTabAf() {
                         <NativeSelect.Root>
                             <NativeSelect.Field
                                 value={estadoSearch}
-                                onValueChange={(e) => setEstadoSearch(e.target.value)}
+                                onChange={(e) => setEstadoSearch(e.target.value)}
                                 ml={4}
                                 width="200px">
                                 <option value="0,1,2">Pendientes</option>

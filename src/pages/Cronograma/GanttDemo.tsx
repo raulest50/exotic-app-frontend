@@ -1,4 +1,4 @@
-import { Steps, Box } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import { useColorModeValue } from "../../components/ui/color-mode";
 import { Gantt } from "wx-react-gantt";
 import "wx-react-gantt/dist/gantt.css";

@@ -1,4 +1,4 @@
-import { Steps, Badge, Box, HStack, Table, Tbody, Td, Text, Th, Thead, Tr, VStack } from "@chakra-ui/react";
+import { Badge, Box, HStack, Table, Tbody, Td, Text, Th, Thead, Tr, VStack } from "@chakra-ui/react";
 import type { ReporteProduccionPendiente } from "./types";
 import { consolidarProductos, formatCantidad } from "./produccionCierreUtils";
 

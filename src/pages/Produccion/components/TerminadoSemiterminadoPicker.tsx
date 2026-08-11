@@ -1,6 +1,5 @@
 import {useCallback, useEffect, useMemo, useState, type KeyboardEvent} from 'react';
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -228,7 +227,7 @@ export default function TerminadoSemiterminadoPicker({isOpen, onClose, onConfirm
                                     <Input
                                         placeholder={tipoBusqueda === 'NOMBRE' ? 'Buscar por nombre' : 'Buscar por código'}
                                         value={searchText}
-                                        onValueChange={event => setSearchText(event.target.value)}
+                                        onChange={event => setSearchText(event.target.value)}
                                         onKeyDown={handleKeyDown}
                                     />
                                     <Button onClick={handleSearch} loading={isLoading} loadingText='Buscando'>

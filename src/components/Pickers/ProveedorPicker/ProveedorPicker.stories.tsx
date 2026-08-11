@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ProveedorPicker from './ProveedorPicker.tsx';
-import { Steps, Button, Box, Text, VStack } from '@chakra-ui/react';
+import { Button, Box, Text, VStack } from '@chakra-ui/react';
 
 interface Proveedor {
     id: string;

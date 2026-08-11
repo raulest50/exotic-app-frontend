@@ -1,4 +1,4 @@
-import { Steps, Box, Table, Thead, Tbody, Tr, Th, Td, Text, Button } from '@chakra-ui/react';
+import { Box, Table, Thead, Tbody, Tr, Th, Td, Text, Button } from '@chakra-ui/react';
 import { Proveedor } from '../../types.tsx';
 
 type Props = {

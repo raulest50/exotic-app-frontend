@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Box,
     Button,
@@ -97,7 +96,7 @@ export default function BuscadorStockMaterialCard() {
                                         minH="44px"
                                         aria-label="Buscar material por código o nombre"
                                         value={search}
-                                        onValueChange={(event) => setSearch(event.target.value)}
+                                        onChange={(event) => setSearch(event.target.value)}
                                         placeholder="Ej. MP-001 o azúcar"
                                     />
                                 </InputGroup>

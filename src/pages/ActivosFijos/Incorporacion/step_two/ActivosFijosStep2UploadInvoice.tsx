@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Steps, Button, Flex, Heading, Text, VStack, Separator } from '@chakra-ui/react';
+import { Button, Flex, Heading, Text, VStack, Separator } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 
 import { IncorporacionActivoDto } from '../../types.tsx';

@@ -1,5 +1,4 @@
 import {
-    Steps,
     Card,
     HStack,
     IconButton,

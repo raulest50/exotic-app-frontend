@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import {
-    Steps,
     Container,
     Tabs,
     TabList,

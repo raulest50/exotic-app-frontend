@@ -1,5 +1,4 @@
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -306,14 +305,14 @@ export default function VersionadoControlProcesoTab() {
                                 {rows.map((row) => (
                                     <Table.Row key={row.key}>
                                         <Table.Cell>
-                                            <Input size="sm" value={row.nombre} onValueChange={(event) => updateRow(row.key, { nombre: event.target.value })} />
+                                            <Input size="sm" value={row.nombre} onChange={(event) => updateRow(row.key, { nombre: event.target.value })} />
                                         </Table.Cell>
                                         <Table.Cell>
                                             <NativeSelect.Root>
                                                 <NativeSelect.Field
                                                     size="sm"
                                                     value={row.tipo}
-                                                    onValueChange={(event) => updateRow(row.key, { tipo: event.target.value as TipoCaracteristicaControlProceso })}>
+                                                    onChange={(event) => updateRow(row.key, { tipo: event.target.value as TipoCaracteristicaControlProceso })}>
                                                     <option value="NUMERICA">Numerica</option>
                                                     <option value="BOOLEANA">Cumple/No cumple</option>
                                                 </NativeSelect.Field>
@@ -325,7 +324,7 @@ export default function VersionadoControlProcesoTab() {
                                                 size="sm"
                                                 value={row.unidad}
                                                 disabled={row.tipo === "BOOLEANA"}
-                                                onValueChange={(event) => updateRow(row.key, { unidad: event.target.value })}
+                                                onChange={(event) => updateRow(row.key, { unidad: event.target.value })}
                                             />
                                         </Table.Cell>
                                         <Table.Cell>
@@ -334,7 +333,7 @@ export default function VersionadoControlProcesoTab() {
                                                 type="number"
                                                 min={1}
                                                 value={row.cantidadMuestras}
-                                                onValueChange={(event) => updateRow(row.key, { cantidadMuestras: event.target.value })}
+                                                onChange={(event) => updateRow(row.key, { cantidadMuestras: event.target.value })}
                                             />
                                         </Table.Cell>
                                         <Table.Cell>
@@ -343,7 +342,7 @@ export default function VersionadoControlProcesoTab() {
                                                 type="number"
                                                 min={1}
                                                 value={row.unidadesPorMuestra}
-                                                onValueChange={(event) => updateRow(row.key, { unidadesPorMuestra: event.target.value })}
+                                                onChange={(event) => updateRow(row.key, { unidadesPorMuestra: event.target.value })}
                                             />
                                         </Table.Cell>
                                         <Table.Cell>
@@ -352,7 +351,7 @@ export default function VersionadoControlProcesoTab() {
                                                 type="number"
                                                 value={row.limiteInferior}
                                                 disabled={row.tipo === "BOOLEANA"}
-                                                onValueChange={(event) => updateRow(row.key, { limiteInferior: event.target.value })}
+                                                onChange={(event) => updateRow(row.key, { limiteInferior: event.target.value })}
                                             />
                                         </Table.Cell>
                                         <Table.Cell>
@@ -361,7 +360,7 @@ export default function VersionadoControlProcesoTab() {
                                                 type="number"
                                                 value={row.limiteSuperior}
                                                 disabled={row.tipo === "BOOLEANA"}
-                                                onValueChange={(event) => updateRow(row.key, { limiteSuperior: event.target.value })}
+                                                onChange={(event) => updateRow(row.key, { limiteSuperior: event.target.value })}
                                             />
                                         </Table.Cell>
                                         <Table.Cell>

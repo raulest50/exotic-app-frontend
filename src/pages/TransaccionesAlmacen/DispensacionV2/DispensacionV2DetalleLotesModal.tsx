@@ -1,5 +1,4 @@
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -286,7 +285,7 @@ export default function DispensacionV2DetalleLotesModal({
                                                                     maxW="360px"
                                                                     placeholder="Seleccione lote para agregar"
                                                                     value={selectedLoteId[material.productoId] ?? ""}
-                                                                    onValueChange={(event) => setSelectedLoteId((current) => ({
+                                                                    onChange={(event) => setSelectedLoteId((current) => ({
                                                                         ...current,
                                                                         [material.productoId]: event.target.value,
                                                                     }))}>

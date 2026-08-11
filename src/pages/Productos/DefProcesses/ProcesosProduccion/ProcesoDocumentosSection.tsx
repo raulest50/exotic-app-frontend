@@ -1,5 +1,4 @@
 import {
-  Steps,
   Accordion,
   Badge,
   Box,
@@ -203,7 +202,7 @@ export default function ProcesoDocumentosSection({
                 key={fileInputKey}
                 type="file"
                 accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                onValueChange={handleFileChange}
+                onChange={handleFileChange}
                 p={1}
               />
               <Field.HelperText>
@@ -235,7 +234,7 @@ export default function ProcesoDocumentosSection({
                 <Field.Label>{vigente ? 'Motivo del cambio' : 'Observación inicial (opcional)'}</Field.Label>
                 <Textarea
                   value={motivoCambio}
-                  onValueChange={(event) => setMotivoCambio(event.target.value)}
+                  onChange={(event) => setMotivoCambio(event.target.value)}
                   placeholder={vigente ? 'Describa brevemente qué cambió' : 'Documento inicial del proceso'}
                 />
               </Field.Root>

@@ -1,5 +1,5 @@
 import {Handle, NodeProps, Position} from "@xyflow/react";
-import { Steps, Box, Flex, Icon, Text } from "@chakra-ui/react";
+import { Box, Flex, Icon, Text } from "@chakra-ui/react";
 import { GrCubes } from "react-icons/gr";
 
 

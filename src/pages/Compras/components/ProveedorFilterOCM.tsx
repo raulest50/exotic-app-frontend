@@ -1,5 +1,5 @@
 import React from "react";
-import { Steps, Card, HStack, IconButton, Text, Button, VStack } from "@chakra-ui/react";
+import { Card, HStack, IconButton, Text, Button, VStack } from "@chakra-ui/react";
 import { FaSearch } from "react-icons/fa";
 import { Proveedor } from "../types";
 

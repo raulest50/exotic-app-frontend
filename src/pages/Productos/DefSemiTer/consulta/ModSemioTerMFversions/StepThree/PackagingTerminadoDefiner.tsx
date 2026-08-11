@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  Steps,
   Button,
   Flex,
   Input,
@@ -228,7 +227,7 @@ const PackagingTerminadoDefiner: React.FC<Props> = ({ isOpen, onClose, onSave, i
                       <InputGroup>
                         <Input
                           value={searchTerm}
-                          onValueChange={(e) => setSearchTerm(e.target.value)}
+                          onChange={(e) => setSearchTerm(e.target.value)}
                           placeholder="Nombre del material"
                         />
                         <InputRightElement>
@@ -345,7 +344,7 @@ const PackagingTerminadoDefiner: React.FC<Props> = ({ isOpen, onClose, onSave, i
                       <Field.Label>EAN14 / ITF-14</Field.Label>
                       <Input
                         value={casePack.ean14 || ""}
-                        onValueChange={(e) => handleInputChange('ean14', e.target.value)}
+                        onChange={(e) => handleInputChange('ean14', e.target.value)}
                         placeholder="Código EAN14"
                       />
                     </Field.Root>

@@ -1,5 +1,5 @@
 import MyHeader from "../../components/MyHeader";
-import { Steps, Container, Tabs, TabList, TabPanels, Tab, TabPanel, Spinner, Text } from "@chakra-ui/react";
+import { Container, Tabs, TabList, TabPanels, Tab, TabPanel, Spinner, Text } from "@chakra-ui/react";
 import AsistenteIngresoMercancia from "./AsistenteIngresoOCM/AsistenteIngresoMercancia";
 import { AsistenteDispensacion } from "./AsistenteDispensacion/AsistenteDispensacion.tsx";
 import AjustesInventarioTab from "./AjustesInventario/AjustesInventarioTab";

@@ -1,5 +1,4 @@
 import {
-    Steps,
     Accordion,
     Box,
     Button,
@@ -168,7 +167,7 @@ export default function AjustesInventarioStep1SpecifyQuantities({
                                                 type="number"
                                                 step="0.0001"
                                                 value={quantityValue ?? ""}
-                                                onValueChange={(e) => {
+                                                onChange={(e) => {
                                                     const value = e.target.value;
                                                     onChangeQuantity(
                                                         producto.productoId,
@@ -206,7 +205,7 @@ export default function AjustesInventarioStep1SpecifyQuantities({
                             <NativeSelect.Field
                                 placeholder="Seleccione una causa"
                                 value={causaAjuste}
-                                onValueChange={(event) => onChangeCausaAjuste(
+                                onChange={(event) => onChangeCausaAjuste(
                                     event.target.value as CausaAjusteInventario | "",
                                 )}>
                                 {CAUSAS_AJUSTE.map((option) => (
@@ -274,7 +273,7 @@ export default function AjustesInventarioStep1SpecifyQuantities({
                                 ? "Indique la orden de producción o el motivo de la contingencia"
                                 : "Escribe cualquier detalle relevante para este ajuste"}
                             value={observaciones}
-                            onValueChange={(e) => onChangeObservaciones(e.target.value)}
+                            onChange={(e) => onChangeObservaciones(e.target.value)}
                         />
                         {observationsAreMissing ? (
                             <Field.ErrorText>

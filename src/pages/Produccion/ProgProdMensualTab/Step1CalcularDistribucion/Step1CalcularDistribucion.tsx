@@ -1,6 +1,5 @@
 import React, { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
 import {
-    Steps,
     Box,
     Button,
     ButtonGroup,

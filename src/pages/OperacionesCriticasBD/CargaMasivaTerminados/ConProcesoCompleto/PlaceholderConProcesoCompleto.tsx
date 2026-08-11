@@ -1,4 +1,4 @@
-import { Steps, Box, Button, Container, Text } from "@chakra-ui/react";
+import { Box, Button, Container, Text } from "@chakra-ui/react";
 
 interface PlaceholderConProcesoCompletoProps {
     onVolver: () => void;

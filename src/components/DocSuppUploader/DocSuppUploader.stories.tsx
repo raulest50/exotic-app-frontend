@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DocSuppUploader } from './DocSuppUploader';
-import { Steps, Box, Text } from '@chakra-ui/react';
+import { Box, Text } from '@chakra-ui/react';
 
 export const Default = () => {
   const [file, setFile] = useState<File | null>(null);

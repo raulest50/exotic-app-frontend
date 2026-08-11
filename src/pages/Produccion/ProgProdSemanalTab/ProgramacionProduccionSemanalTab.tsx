@@ -12,7 +12,6 @@ import {
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import {
-    Steps,
     Badge,
     Box,
     Button,

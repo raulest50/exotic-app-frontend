@@ -4,7 +4,6 @@ import { useColorModeValue } from "../../components/ui/color-mode";
 import { useAuth } from '../../context/AuthContext.tsx';
 import { useNavigate } from 'react-router-dom';
 import {
-    Steps,
     Button,
     Container,
     Flex,
@@ -67,7 +66,7 @@ const FormularioLogin: React.FC<FormularioLoginProps> = ({
                 <Input
                     placeholder="username"
                     value={username}
-                    onValueChange={e => setUsername(e.target.value)}
+                    onChange={e => setUsername(e.target.value)}
                     disabled={isLoading}
                 />
             </Field.Root>
@@ -77,7 +76,7 @@ const FormularioLogin: React.FC<FormularioLoginProps> = ({
                     placeholder="password"
                     type="password"
                     value={password}
-                    onValueChange={e => setPassword(e.target.value)}
+                    onChange={e => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
                 />
@@ -130,7 +129,7 @@ const FormularioForgot: React.FC<FormularioForgotProps> = ({
                     placeholder="correo@ejemplo.com"
                     type="email"
                     value={email}
-                    onValueChange={e => setEmail(e.target.value)}
+                    onChange={e => setEmail(e.target.value)}
                     disabled={isLoading}
                 />
             </Field.Root>

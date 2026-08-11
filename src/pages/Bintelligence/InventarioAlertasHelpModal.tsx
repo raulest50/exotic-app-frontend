@@ -1,4 +1,4 @@
-import { Steps, Text, Button, Stack, List, Dialog, Portal } from "@chakra-ui/react";
+import { Text, Button, Stack, List, Dialog, Portal } from "@chakra-ui/react";
 
 export default function InventarioAlertasHelpModal({
     isOpen,

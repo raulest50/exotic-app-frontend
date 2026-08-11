@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Steps, Box, Button, Input, Heading, Grid, GridItem, Flex, Field } from '@chakra-ui/react';
+import { Box, Button, Input, Heading, Grid, GridItem, Flex, Field } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import { User } from './types.tsx';
@@ -118,7 +118,7 @@ export default function EditarUsuario({ user, onBack }: Props) {
                             autoComplete="off"
                             type="number"
                             value={form.cedula}
-                            onValueChange={(e) => handleChange('cedula', e.target.value)}
+                            onChange={(e) => handleChange('cedula', e.target.value)}
                             disabled={isLoading}
                         />
                         {errors.cedula && <Field.ErrorText>{errors.cedula}</Field.ErrorText>}
@@ -130,7 +130,7 @@ export default function EditarUsuario({ user, onBack }: Props) {
                         <Input
                             autoComplete="off"
                             value={form.nombreCompleto}
-                            onValueChange={(e) => handleChange('nombreCompleto', e.target.value)}
+                            onChange={(e) => handleChange('nombreCompleto', e.target.value)}
                             disabled={isLoading}
                         />
                         {errors.nombreCompleto && <Field.ErrorText>{errors.nombreCompleto}</Field.ErrorText>}
@@ -142,7 +142,7 @@ export default function EditarUsuario({ user, onBack }: Props) {
                         <Input
                             autoComplete="off"
                             value={form.username}
-                            onValueChange={(e) => handleChange('username', e.target.value)}
+                            onChange={(e) => handleChange('username', e.target.value)}
                             disabled={isLoading}
                         />
                         {errors.username && <Field.ErrorText>{errors.username}</Field.ErrorText>}
@@ -155,7 +155,7 @@ export default function EditarUsuario({ user, onBack }: Props) {
                             autoComplete="off"
                             type="email"
                             value={form.email}
-                            onValueChange={(e) => handleChange('email', e.target.value)}
+                            onChange={(e) => handleChange('email', e.target.value)}
                             disabled={isLoading}
                         />
                         {errors.email && <Field.ErrorText>{errors.email}</Field.ErrorText>}
@@ -167,7 +167,7 @@ export default function EditarUsuario({ user, onBack }: Props) {
                         <Input
                             autoComplete="off"
                             value={form.cel}
-                            onValueChange={(e) => handleChange('cel', e.target.value)}
+                            onChange={(e) => handleChange('cel', e.target.value)}
                             disabled={isLoading}
                         />
                     </Field.Root>
@@ -178,7 +178,7 @@ export default function EditarUsuario({ user, onBack }: Props) {
                         <Input
                             autoComplete="off"
                             value={form.direccion}
-                            onValueChange={(e) => handleChange('direccion', e.target.value)}
+                            onChange={(e) => handleChange('direccion', e.target.value)}
                             disabled={isLoading}
                         />
                     </Field.Root>
@@ -190,7 +190,7 @@ export default function EditarUsuario({ user, onBack }: Props) {
                             autoComplete="off"
                             type="date"
                             value={form.fechaNacimiento}
-                            onValueChange={(e) => handleChange('fechaNacimiento', e.target.value)}
+                            onChange={(e) => handleChange('fechaNacimiento', e.target.value)}
                             disabled={isLoading}
                         />
                     </Field.Root>

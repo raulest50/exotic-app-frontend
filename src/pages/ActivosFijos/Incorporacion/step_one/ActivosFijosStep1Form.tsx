@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
-    Steps,
     Button,
     Flex,
     SimpleGrid,

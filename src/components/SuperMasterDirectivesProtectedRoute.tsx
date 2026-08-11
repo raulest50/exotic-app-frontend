@@ -1,5 +1,5 @@
 import React from "react";
-import { Steps, Center, Spinner, Text } from "@chakra-ui/react";
+import { Center, Spinner, Text } from "@chakra-ui/react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useMasterDirectives } from "../context/MasterDirectivesContext";

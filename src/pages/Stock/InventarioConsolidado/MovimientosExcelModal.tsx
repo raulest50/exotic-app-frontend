@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Steps, Input, Button, Field, Dialog, Portal } from '@chakra-ui/react';
+import { Input, Button, Field, Dialog, Portal } from '@chakra-ui/react';
 
 /**
  * Modal for selecting a date range before exporting product movements.
@@ -48,11 +48,11 @@ function MovimientosExcelModal({ isOpen, onClose, onConfirm }: MovimientosExcelM
                         <Dialog.Body>
                             <Field.Root>
                                 <Field.Label>Fecha inicio</Field.Label>
-                                <Input type="date" value={startDate} onValueChange={(e) => setStartDate(e.target.value)} />
+                                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                             </Field.Root>
                             <Field.Root mt={4}>
                                 <Field.Label>Fecha fin</Field.Label>
-                                <Input type="date" value={endDate} onValueChange={(e) => setEndDate(e.target.value)} />
+                                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                             </Field.Root>
                         </Dialog.Body>
                         <Dialog.Footer>

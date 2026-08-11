@@ -1,6 +1,5 @@
 import {useState} from 'react';
 import {
-  Steps,
   Box,
   Button,
   Flex,
@@ -81,7 +80,7 @@ function PanelBusqueda({setEstado,setRecursoSel,setRefreshFn}:PanelProps){
             <Field.Label>{searchType===TipoBusqueda.ID? 'ID' : 'Nombre'}</Field.Label>
             <Input
               value={searchText}
-              onValueChange={e=>setSearchText(e.target.value)}
+              onChange={e=>setSearchText(e.target.value)}
               onKeyDown={(e)=>{
                 if(e.key==='Enter'){
                   handleSearch();
@@ -94,7 +93,7 @@ function PanelBusqueda({setEstado,setRecursoSel,setRefreshFn}:PanelProps){
             <NativeSelect.Root>
               <NativeSelect.Field
                 value={searchType}
-                onValueChange={e=>setSearchType(e.target.value as TipoBusqueda)}>
+                onChange={e=>setSearchType(e.target.value as TipoBusqueda)}>
                 <option value={TipoBusqueda.ID}>ID</option>
                 <option value={TipoBusqueda.NOMBRE}>Nombre</option>
               </NativeSelect.Field>

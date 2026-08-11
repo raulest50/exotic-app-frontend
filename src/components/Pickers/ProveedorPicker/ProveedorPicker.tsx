@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-    Steps,
     Box,
     Button,
     Input,
@@ -118,7 +117,7 @@ const ProveedorPicker: React.FC<ProveedorPickerProps> = ({
                                     <HStack>
                                         <Input
                                             value={searchText}
-                                            onValueChange={(e) => setSearchText(e.target.value)}
+                                            onChange={(e) => setSearchText(e.target.value)}
                                             onKeyDown={onKeyPress_InputBuscar}
                                             placeholder="Ingrese nombre o NIT"
                                             disabled={isLoading}

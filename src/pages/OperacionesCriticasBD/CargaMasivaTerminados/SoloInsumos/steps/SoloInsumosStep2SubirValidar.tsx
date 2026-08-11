@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Box,
     Button,
@@ -242,7 +241,7 @@ export default function SoloInsumosStep2SubirValidar({
                     <VStack gap={4} align="stretch">
                         <HStack gap={4} alignItems="center">
                             <Button onClick={() => inputRef.current?.click()}>Subir JSON</Button>
-                            <Input type="file" ref={inputRef} style={{ display: "none" }} accept=".json,application/json" onValueChange={handleFileChange} />
+                            <Input type="file" ref={inputRef} style={{ display: "none" }} accept=".json,application/json" onChange={handleFileChange} />
                             <Icon as={jsonFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize="2em" color={jsonFile ? "green" : "orange.500"} />
                             {jsonFile && <Text fontSize="sm" lineClamp={1} flex={1}>{jsonFile.name}</Text>}
                         </HStack>

@@ -1,6 +1,5 @@
 // CrearOrdenCompraActivos.tsx
 import {
-    Steps,
     Container,
     Flex,
     Input,
@@ -279,7 +278,7 @@ export default function CrearOC_AF() {
                                 ref={cotizacionInputRef}
                                 style={{ display: 'none' }}
                                 accept="application/pdf"
-                                onValueChange={handleCotizacionChange}
+                                onChange={handleCotizacionChange}
                             />
                         </Field.Root>
                     </Flex>
@@ -292,7 +291,7 @@ export default function CrearOC_AF() {
                             <NativeSelect.Root>
                                 <NativeSelect.Field
                                     value={condicionPago}
-                                    onValueChange={(e) => {
+                                    onChange={(e) => {
                                         setCondicionPago(e.target.value)
                                         if (e.target.value == "1") setPlazoPago(0);
                                     }
@@ -311,7 +310,7 @@ export default function CrearOC_AF() {
                             <Field.Label>Plazo de pago (dias)</Field.Label>
                             <Input
                                 value={plazoPago}
-                                onValueChange={ (e) => {setPlazoPago(Number(e.target.value))} }
+                                onChange={ (e) => {setPlazoPago(Number(e.target.value))} }
                             />
                         </Field.Root>
 
@@ -319,7 +318,7 @@ export default function CrearOC_AF() {
                             <Field.Label>Tiempo de entrega (dias)</Field.Label>
                             <Input
                                 value={tiempoEntrega}
-                                onValueChange={ (e) => {setTiempoEntrega(e.target.value)} }
+                                onChange={ (e) => {setTiempoEntrega(e.target.value)} }
                             />
                         </Field.Root>
 

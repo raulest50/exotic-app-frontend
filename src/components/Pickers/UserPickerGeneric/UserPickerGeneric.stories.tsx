@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import UserGenericPicker from './UserPickerGeneric.tsx';
 import { User } from '../../../pages/Usuarios/GestionUsuarios/types.tsx';
-import { Steps, Button, Box, Text, VStack } from '@chakra-ui/react';
+import { Button, Box, Text, VStack } from '@chakra-ui/react';
 
 export const Default = () => {
   const [isOpen, setIsOpen] = useState(false);

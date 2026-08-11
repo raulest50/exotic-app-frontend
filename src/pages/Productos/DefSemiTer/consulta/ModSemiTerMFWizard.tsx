@@ -1,4 +1,4 @@
-import { Steps, Box, Button, Flex, Heading, Spinner, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Spinner, Text } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useState } from "react";
 import axios from "axios";

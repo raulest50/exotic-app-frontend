@@ -1,4 +1,4 @@
-import { Steps, Badge, Box, Flex, Text, Icon, VStack, Checkbox } from "@chakra-ui/react";
+import { Badge, Box, Flex, Text, Icon, VStack, Checkbox } from "@chakra-ui/react";
 import { Handle, Position, NodeProps, useReactFlow } from "@xyflow/react";
 import { MdLocationOn } from "react-icons/md";
 

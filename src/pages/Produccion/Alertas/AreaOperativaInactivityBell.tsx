@@ -1,4 +1,4 @@
-import { Steps, Icon } from "@chakra-ui/react";
+import { Icon } from "@chakra-ui/react";
 import { Tooltip } from '@/components/ui/tooltip';
 import { FiBell } from "react-icons/fi";
 

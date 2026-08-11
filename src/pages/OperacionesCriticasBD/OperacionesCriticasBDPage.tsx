@@ -1,5 +1,4 @@
 import {
-    Steps,
     Container,
     Flex,
     Tab,

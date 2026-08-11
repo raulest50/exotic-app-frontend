@@ -3,7 +3,6 @@ import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import MyPagination from "../../../components/MyPagination.tsx";
 import {
-    Steps,
     Alert,
     Box,
     Button,
@@ -249,7 +248,7 @@ export default function ConfParamsCategoria() {
                     <InputGroup>
                         <Input
                             value={searchNombre}
-                            onValueChange={(e) => setSearchNombre(e.target.value)}
+                            onChange={(e) => setSearchNombre(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder="Coincidencia parcial (vacio = todas)"
                         />

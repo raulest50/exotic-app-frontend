@@ -1,5 +1,4 @@
 import {
-    Steps,
     Box,
     Button,
     Flex,
@@ -173,7 +172,7 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
                             inputMode="numeric"
                             pattern="[0-9]*"
                             value={ordenCompraId}
-                            onValueChange={(e) => setOrdenCompraId(e.target.value.replace(/\D/g, ""))}
+                            onChange={(e) => setOrdenCompraId(e.target.value.replace(/\D/g, ""))}
                             placeholder="Ej: 123"
                         />
                     </Field.Root>
@@ -190,7 +189,7 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
                             <Input
                                 type="date"
                                 value={fechaInicio}
-                                onValueChange={(e) => setFechaInicio(e.target.value)}
+                                onChange={(e) => setFechaInicio(e.target.value)}
                             />
                         </Field.Root>
                         <Field.Root minW="220px">
@@ -198,7 +197,7 @@ export default function IngresoOCMStep0SelectPurchaseOrder({
                             <Input
                                 type="date"
                                 value={fechaFin}
-                                onValueChange={(e) => setFechaFin(e.target.value)}
+                                onChange={(e) => setFechaFin(e.target.value)}
                             />
                         </Field.Root>
                     </VStack>

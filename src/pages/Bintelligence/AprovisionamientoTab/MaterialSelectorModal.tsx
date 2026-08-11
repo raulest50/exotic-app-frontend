@@ -1,5 +1,4 @@
 import {
-    Steps,
     Box,
     Button,
     Input,
@@ -113,7 +112,7 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
                                     <Stack direction={{ base: "column", md: "row" }} align={{ base: "stretch", md: "end" }}>
                                         <Input
                                             value={searchText}
-                                            onValueChange={(e) => setSearchText(e.target.value)}
+                                            onChange={(e) => setSearchText(e.target.value)}
                                             placeholder="Ingrese nombre o ID"
                                             disabled={loading}
                                             onKeyDown={(e) => {
@@ -126,7 +125,7 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
                                         <NativeSelect.Root>
                                             <NativeSelect.Field
                                                 value={searchType}
-                                                onValueChange={(e) => setSearchType(e.target.value as BiSearchType)}
+                                                onChange={(e) => setSearchType(e.target.value as BiSearchType)}
                                                 width={{ base: "full", md: "150px" }}
                                                 disabled={loading}>
                                                 <option value="NOMBRE">Nombre</option>

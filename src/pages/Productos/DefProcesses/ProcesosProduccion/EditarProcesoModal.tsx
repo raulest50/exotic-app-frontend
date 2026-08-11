@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import {
-  Steps,
   Button,
   Input,
   NativeSelect,
@@ -208,7 +207,7 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
                       <Input 
                         name="nombre" 
                         value={procesoEditado.nombre} 
-                        onValueChange={handleChange} 
+                        onChange={handleChange}
                       />
                     </Field.Root>
 
@@ -248,7 +247,7 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
                         <NativeSelect.Field
                           name="model"
                           value={procesoEditado.model}
-                          onValueChange={handleModelChange}>
+                          onChange={handleModelChange}>
                           <option value={TimeModelType.CONSTANT}>Constante</option>
                           <option value={TimeModelType.THROUGHPUT_RATE}>Tasa</option>
                           <option value={TimeModelType.PER_UNIT}>Por Unidad</option>
@@ -375,7 +374,7 @@ export function EditarProcesoModal({ isOpen, onClose, proceso, onSave }: EditarP
                           <Field.Label>Ingrese el token de confirmación:</Field.Label>
                           <Input 
                             value={inputToken}
-                            onValueChange={(e) => setInputToken(e.target.value)}
+                            onChange={(e) => setInputToken(e.target.value)}
                             placeholder="Ingrese el token de 4 dígitos"
                           />
                         </Field.Root>

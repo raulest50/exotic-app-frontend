@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
-  Steps,
   NativeSelect,
   NumberInput,
   NumberInputField,
@@ -202,7 +201,7 @@ export function MetodoDepreciacionComponent(props: Props) {
             <NativeSelect.Root>
               <NativeSelect.Field
                 value={metodoDepreciacion}
-                onValueChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                   setMetodoDepreciacion(e.target.value as MetodoDepreciacion)
                 }>
                 <option value={MetodoDepreciacion.SL}>Línea Recta (SL)</option>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Steps, Alert, Button, Text, VStack, Dialog, Portal } from "@chakra-ui/react";
+import { Alert, Button, Text, VStack, Dialog, Portal } from "@chakra-ui/react";
 
 interface ProveedorLeadTimeKpiHelpModalProps {
     isOpen: boolean;

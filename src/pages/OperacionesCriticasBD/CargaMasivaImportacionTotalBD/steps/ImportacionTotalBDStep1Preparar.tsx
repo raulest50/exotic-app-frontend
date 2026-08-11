@@ -1,4 +1,4 @@
-import { Steps, Alert, Box, Button, Input, Text, VStack, Field } from "@chakra-ui/react";
+import { Alert, Box, Button, Input, Text, VStack, Field } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useState, type ChangeEvent } from "react";
 
@@ -63,7 +63,7 @@ export default function ImportacionTotalBDStep1Preparar({
                     <Input
                         type="file"
                         accept=".dump"
-                        onValueChange={handleFileChange}
+                        onChange={handleFileChange}
                     />
                 </Field.Root>
 
@@ -82,7 +82,7 @@ export default function ImportacionTotalBDStep1Preparar({
                     <Input
                         placeholder="Ingrese el token de 4 digitos"
                         value={inputToken}
-                        onValueChange={(e) => setInputToken(e.target.value)}
+                        onChange={(e) => setInputToken(e.target.value)}
                     />
                 </Field.Root>
             </Box>

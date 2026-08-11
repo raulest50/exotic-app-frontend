@@ -15,7 +15,6 @@
  */
 
 import {
-    Steps,
     Flex,
     Stack,
     Checkbox,
@@ -132,7 +131,7 @@ export default function InformeProductosTabAdvanced() {
                     <Field.Label>Buscar:</Field.Label>
                     <Input
                         value={searchText}
-                        onValueChange={(e) => setSearchText(e.target.value)}
+                        onChange={(e) => setSearchText(e.target.value)}
                         placeholder="Nombre del producto"
                         disabled={chkbox.length === 0}
                         onKeyDown={(e) => {
@@ -174,7 +173,7 @@ export default function InformeProductosTabAdvanced() {
                 <Field.Root maxW="200px">
                     <Field.Label>Ordenar por:</Field.Label>
                     <NativeSelect.Root>
-                        <NativeSelect.Field value={sortBy} onValueChange={(e) => setSortBy(e.target.value)}>
+                        <NativeSelect.Field value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
                             <option value="nombre">Nombre</option>
                             <option value="fechaCreacion">Fecha de creación</option>
                             <option value="costo">Costo</option>
@@ -188,7 +187,7 @@ export default function InformeProductosTabAdvanced() {
                     <Input
                         type="date"
                         value={filterByDate}
-                        onValueChange={(e) => setFilterByDate(e.target.value)}
+                        onChange={(e) => setFilterByDate(e.target.value)}
                     />
                 </Field.Root>
             </Flex>

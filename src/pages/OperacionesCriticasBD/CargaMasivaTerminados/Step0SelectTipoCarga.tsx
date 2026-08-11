@@ -1,4 +1,4 @@
-import { Steps, Card, Flex, Heading, Icon, SimpleGrid, Text } from "@chakra-ui/react";
+import { Card, Flex, Heading, Icon, SimpleGrid, Text } from "@chakra-ui/react";
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import { FaPlus, FaListUl } from "react-icons/fa";
 import { AiFillProduct } from "react-icons/ai";

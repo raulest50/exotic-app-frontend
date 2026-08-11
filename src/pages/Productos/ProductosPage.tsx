@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Steps, Container } from '@chakra-ui/react';
+import { Container } from '@chakra-ui/react';
 
 import MyHeader from '../../components/MyHeader.tsx';
 import ProductosMenuSelection from './ProductosMenuSelection';

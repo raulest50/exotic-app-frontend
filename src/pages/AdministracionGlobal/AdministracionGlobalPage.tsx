@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Badge,
     Box,
@@ -239,7 +238,7 @@ export default function AdministracionGlobalPage() {
                                                         <Field.Label>{FIELD_LABELS.razonSocial}</Field.Label>
                                                         <Input
                                                             value={form.razonSocial}
-                                                            onValueChange={(event) => handleChange("razonSocial", event.target.value)}
+                                                            onChange={(event) => handleChange("razonSocial", event.target.value)}
                                                             readOnly={!canEditIdentidadLegal}
                                                         />
                                                     </Field.Root>
@@ -248,7 +247,7 @@ export default function AdministracionGlobalPage() {
                                                     <Field.Label>{FIELD_LABELS.nombreComercial}</Field.Label>
                                                     <Input
                                                         value={form.nombreComercial}
-                                                        onValueChange={(event) => handleChange("nombreComercial", event.target.value)}
+                                                        onChange={(event) => handleChange("nombreComercial", event.target.value)}
                                                         readOnly={!canEditIdentidadLegal}
                                                     />
                                                 </Field.Root>
@@ -256,7 +255,7 @@ export default function AdministracionGlobalPage() {
                                                     <Field.Label>{FIELD_LABELS.tipoIdentificacion}</Field.Label>
                                                     <Input
                                                         value={form.tipoIdentificacion}
-                                                        onValueChange={(event) => handleChange("tipoIdentificacion", event.target.value)}
+                                                        onChange={(event) => handleChange("tipoIdentificacion", event.target.value)}
                                                         readOnly={!canEditIdentidadLegal}
                                                     />
                                                 </Field.Root>
@@ -264,7 +263,7 @@ export default function AdministracionGlobalPage() {
                                                     <Field.Label>{FIELD_LABELS.numeroIdentificacion}</Field.Label>
                                                     <Input
                                                         value={form.numeroIdentificacion}
-                                                        onValueChange={(event) => handleChange("numeroIdentificacion", event.target.value)}
+                                                        onChange={(event) => handleChange("numeroIdentificacion", event.target.value)}
                                                         readOnly={!canEditIdentidadLegal}
                                                     />
                                                 </Field.Root>
@@ -272,7 +271,7 @@ export default function AdministracionGlobalPage() {
                                                     <Field.Label>{FIELD_LABELS.digitoVerificacion}</Field.Label>
                                                     <Input
                                                         value={form.digitoVerificacion}
-                                                        onValueChange={(event) => handleChange("digitoVerificacion", event.target.value)}
+                                                        onChange={(event) => handleChange("digitoVerificacion", event.target.value)}
                                                         readOnly={!canEditIdentidadLegal}
                                                     />
                                                 </Field.Root>
@@ -280,7 +279,7 @@ export default function AdministracionGlobalPage() {
                                                     <Field.Label>{FIELD_LABELS.telefonoPrincipal}</Field.Label>
                                                     <Input
                                                         value={form.telefonoPrincipal}
-                                                        onValueChange={(event) => handleChange("telefonoPrincipal", event.target.value)}
+                                                        onChange={(event) => handleChange("telefonoPrincipal", event.target.value)}
                                                         readOnly={!canEditIdentidadLegal}
                                                     />
                                                 </Field.Root>
@@ -288,7 +287,7 @@ export default function AdministracionGlobalPage() {
                                                     <Field.Label>{FIELD_LABELS.emailPrincipal}</Field.Label>
                                                     <Input
                                                         value={form.emailPrincipal}
-                                                        onValueChange={(event) => handleChange("emailPrincipal", event.target.value)}
+                                                        onChange={(event) => handleChange("emailPrincipal", event.target.value)}
                                                         readOnly={!canEditIdentidadLegal}
                                                         type="email"
                                                     />
@@ -298,7 +297,7 @@ export default function AdministracionGlobalPage() {
                                                         <Field.Label>{FIELD_LABELS.motivoCambio}</Field.Label>
                                                         <Textarea
                                                             value={form.motivoCambio}
-                                                            onValueChange={(event) => handleChange("motivoCambio", event.target.value)}
+                                                            onChange={(event) => handleChange("motivoCambio", event.target.value)}
                                                             readOnly={!canEditIdentidadLegal}
                                                             minH="90px"
                                                         />

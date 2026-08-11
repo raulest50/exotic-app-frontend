@@ -1,5 +1,4 @@
 import {
-    Steps,
     Badge,
     Box,
     Heading,

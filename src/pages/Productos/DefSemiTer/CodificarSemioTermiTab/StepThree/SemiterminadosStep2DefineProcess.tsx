@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Steps, Box, Button, Flex, HStack, Field } from "@chakra-ui/react";
+import { Box, Button, Flex, HStack, Field } from "@chakra-ui/react";
 import ProcessDesigner from "../../../DefProcesses/CreadorProcesos/ProcessDesigner.tsx";
 import PackagingTerminadoDefiner from "./PackagingTerminadoDefiner.tsx";
 import CustomDecimalInput from "../../../../../components/CustomDecimalInput/CustomDecimalInput.tsx";

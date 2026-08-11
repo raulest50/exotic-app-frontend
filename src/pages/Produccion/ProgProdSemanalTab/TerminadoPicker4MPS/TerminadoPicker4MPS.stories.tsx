@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Steps, Badge, Box, Button, HStack, Text, VStack } from "@chakra-ui/react";
+import { Badge, Box, Button, HStack, Text, VStack } from "@chakra-ui/react";
 import TerminadoPicker4MPS, { type TerminadoPickerResult } from "./TerminadoPicker4MPS.tsx";
 
 export const Default = () => {

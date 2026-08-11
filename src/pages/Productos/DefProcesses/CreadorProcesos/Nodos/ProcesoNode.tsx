@@ -1,6 +1,6 @@
 
 
-import { Steps, Box, Flex, Text, Icon, VStack, HStack, Badge } from "@chakra-ui/react";
+import { Box, Flex, Text, Icon, VStack, HStack, Badge } from "@chakra-ui/react";
 import {Handle, Position, NodeProps} from "@xyflow/react";
 
 import { TbArrowsJoin } from "react-icons/tb";

@@ -1,4 +1,4 @@
-import { Steps, Card, Heading, Icon, IconButton, Popover, useDisclosure } from "@chakra-ui/react";
+import { Card, Heading, Icon, IconButton, Popover, useDisclosure } from "@chakra-ui/react";
 import { useColorModeValue } from "./ui/color-mode";
 import type { IconType } from "react-icons";
 import { NavLink } from "react-router-dom";

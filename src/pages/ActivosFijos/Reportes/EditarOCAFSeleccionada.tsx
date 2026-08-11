@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import {
-    Steps,
     Flex,
     Button,
     Heading,
@@ -225,7 +224,7 @@ export function EditarOCAFSeleccionada({ ocaf, onVolver, accessLevel }: Props) {
                         <NativeSelect.Root>
                             <NativeSelect.Field
                                 value={condicionPago}
-                                onValueChange={handleCondicionPagoChange}
+                                onChange={handleCondicionPagoChange}
                                 width="200px">
                                 <option value="0">Crédito</option>
                                 <option value="1">Contado</option>
@@ -238,7 +237,7 @@ export function EditarOCAFSeleccionada({ ocaf, onVolver, accessLevel }: Props) {
                         <Field.Label>Plazo de pago (días)</Field.Label>
                         <Input
                             value={plazoPago}
-                            onValueChange={handlePlazoPagoChange}
+                            onChange={handlePlazoPagoChange}
                             type="number"
                             min={0}
                         />
@@ -248,7 +247,7 @@ export function EditarOCAFSeleccionada({ ocaf, onVolver, accessLevel }: Props) {
                         <Field.Label>Tiempo de entrega (días)</Field.Label>
                         <Input
                             value={tiempoEntrega}
-                            onValueChange={handleTiempoEntregaChange}
+                            onChange={handleTiempoEntregaChange}
                         />
                     </Field.Root>
 

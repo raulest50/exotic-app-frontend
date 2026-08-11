@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-    Steps,
     Button,
     Card,
     Input,
@@ -99,7 +98,7 @@ export default function InformeDiarioComprasPanel() {
                         <NativeSelect.Root>
                             <NativeSelect.Field
                                 value={modoFecha}
-                                onValueChange={(e) => setModoFecha(e.target.value as ModoFechaInforme)}>
+                                onChange={(e) => setModoFecha(e.target.value as ModoFechaInforme)}>
                                 <option value="fecha_unica">Fecha única</option>
                                 <option value="rango">Rango de fechas</option>
                             </NativeSelect.Field>
@@ -112,7 +111,7 @@ export default function InformeDiarioComprasPanel() {
                             <Input
                                 type="date"
                                 value={fecha}
-                                onValueChange={(e) => setFecha(e.target.value)}
+                                onChange={(e) => setFecha(e.target.value)}
                             />
                         </Field.Root>
                     ) : (
@@ -122,7 +121,7 @@ export default function InformeDiarioComprasPanel() {
                                 <Input
                                     type="date"
                                     value={fechaDesde}
-                                    onValueChange={(e) => setFechaDesde(e.target.value)}
+                                    onChange={(e) => setFechaDesde(e.target.value)}
                                 />
                             </Field.Root>
                             <Field.Root invalid={rangeInvalid}>
@@ -130,7 +129,7 @@ export default function InformeDiarioComprasPanel() {
                                 <Input
                                     type="date"
                                     value={fechaHasta}
-                                    onValueChange={(e) => setFechaHasta(e.target.value)}
+                                    onChange={(e) => setFechaHasta(e.target.value)}
                                 />
                                 {rangeInvalid ? (
                                     <Field.HelperText color="red.500">

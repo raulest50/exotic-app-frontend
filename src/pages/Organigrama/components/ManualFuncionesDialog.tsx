@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Steps,
   Alert,
   Box,
   Button,
@@ -135,7 +134,7 @@ export default function ManualFuncionesDialog({
                         accept="application/pdf,.pdf"
                         p={1}
                         disabled={isLoading}
-                        onValueChange={(event) => void upload(event.target.files?.[0])}
+                        onChange={(event) => void upload(event.target.files?.[0])}
                       />
                     </Field.Root>
                     <Field.Root>
@@ -146,7 +145,7 @@ export default function ManualFuncionesDialog({
                           maxLength={255}
                           placeholder="https://..."
                           value={manualUrl}
-                          onValueChange={(event) => setManualUrl(event.target.value)}
+                          onChange={(event) => setManualUrl(event.target.value)}
                           disabled={isLoading}
                         />
                         <Button

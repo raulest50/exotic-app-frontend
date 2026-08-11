@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-    Steps,
     Box,
     Button,
     Flex,
@@ -114,7 +113,7 @@ export default function OrdenCompraPicker({
                                         <Input
                                             type="date"
                                             value={date1}
-                                            onValueChange={(e) => setDate1(e.target.value)}
+                                            onChange={(e) => setDate1(e.target.value)}
                                         />
                                     </Field.Root>
                                     <Field.Root flex="1" minW="120px">
@@ -122,13 +121,13 @@ export default function OrdenCompraPicker({
                                         <Input
                                             type="date"
                                             value={date2}
-                                            onValueChange={(e) => setDate2(e.target.value)}
+                                            onChange={(e) => setDate2(e.target.value)}
                                         />
                                     </Field.Root>
                                     <Field.Root flex="1" minW="140px">
                                         <Field.Label>Estado</Field.Label>
                                         <NativeSelect.Root>
-                                            <NativeSelect.Field value={estados} onValueChange={(e) => setEstados(e.target.value)}>
+                                            <NativeSelect.Field value={estados} onChange={(e) => setEstados(e.target.value)}>
                                                 <option value="-1,0,1,2,3">Todas</option>
                                                 <option value="0,1,2">Pendientes</option>
                                                 <option value="3">Cerradas</option>

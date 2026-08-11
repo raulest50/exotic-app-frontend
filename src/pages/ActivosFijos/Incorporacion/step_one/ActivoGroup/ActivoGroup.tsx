@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-    Steps,
     Card,
     Flex,
     IconButton,
@@ -259,7 +258,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                             <Input 
                                 type="number"
                                 value={precioUnitario}
-                                onValueChange={(e) => {
+                                onChange={(e) => {
                                     const newPrecioUnitario = parseFloat(e.target.value);
 
                                     // Validate that the price is a positive number
@@ -290,7 +289,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                             <Input 
                                 type="number"
                                 value={ivaPercentage}
-                                onValueChange={(e) => {
+                                onChange={(e) => {
                                     const newIvaPercentage = parseFloat(e.target.value);
 
                                     // Validate that the IVA percentage is a non-negative number
@@ -333,7 +332,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                                     <NativeSelect.Root>
                                         <NativeSelect.Field
                                             value={tipoActivo}
-                                            onValueChange={(e) => {
+                                            onChange={(e) => {
                                                 const newTipoActivo = e.target.value as TipoActivo;
                                                 setTipoActivo(newTipoActivo);
                                                 updateCommonAttributes(newTipoActivo, undefined, undefined);
@@ -351,7 +350,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                                     <Field.Label>Marca</Field.Label>
                                     <Input 
                                         value={brand} 
-                                        onValueChange={(e) => {
+                                        onChange={(e) => {
                                             const newBrand = e.target.value;
                                             setBrand(newBrand);
                                             updateCommonAttributes(undefined, newBrand, undefined);
@@ -369,7 +368,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                                                 type="number"
                                                 placeholder="Capacidad"
                                                 value={capacidad}
-                                                onValueChange={(e) => {
+                                                onChange={(e) => {
                                                     const newCapacidad = parseFloat(e.target.value);
 
                                                     // Validate that the capacity is a positive number
@@ -397,7 +396,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                                             <NativeSelect.Root>
                                                 <NativeSelect.Field
                                                     value={unidadCapacidad}
-                                                    onValueChange={(e) => {
+                                                    onChange={(e) => {
                                                         const newUnidadCapacidad = e.target.value as UnidadesCapacidad;
                                                         setUnidadCapacidad(newUnidadCapacidad);
                                                         // Actualizar la unidad de capacidad en todos los activos
@@ -443,7 +442,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                                         <Field.Label>ID</Field.Label>
                                         <Input 
                                             value={activo.id} 
-                                            onValueChange={(e) => updateActivo(index, 'id', e.target.value)}
+                                            onChange={(e) => updateActivo(index, 'id', e.target.value)}
                                         />
                                     </Field.Root>
                                 </GridItem>
@@ -452,7 +451,7 @@ export function ActivoGroup({ itemOrdenCompraActivo, setActivoFijoGroup, tipoInc
                                         <Field.Label>Nombre</Field.Label>
                                         <Input 
                                             value={activo.nombre} 
-                                            onValueChange={(e) => updateActivo(index, 'nombre', e.target.value)}
+                                            onChange={(e) => updateActivo(index, 'nombre', e.target.value)}
                                         />
                                     </Field.Root>
                                 </GridItem>

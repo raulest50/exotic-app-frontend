@@ -1,7 +1,6 @@
 import { type ChangeEvent, useEffect, useState } from 'react';
 import { useColorModeValue } from "../../../../components/ui/color-mode";
 import {
-    Steps,
     Table,
     Thead,
     Tbody,
@@ -213,7 +212,7 @@ export function CardIngresoMaterial({
                                                                 type="date"
                                                                 size="sm"
                                                                 value={lote.productionDate}
-                                                                onValueChange={(e) => handleLoteChange(lote.lineKey, 'productionDate', e.target.value)}
+                                                                onChange={(e) => handleLoteChange(lote.lineKey, 'productionDate', e.target.value)}
                                                             />
                                                         </Table.Cell>
                                                         <Table.Cell>
@@ -222,7 +221,7 @@ export function CardIngresoMaterial({
                                                                 type="date"
                                                                 size="sm"
                                                                 value={lote.expirationDate}
-                                                                onValueChange={(e) => handleLoteChange(lote.lineKey, 'expirationDate', e.target.value)}
+                                                                onChange={(e) => handleLoteChange(lote.lineKey, 'expirationDate', e.target.value)}
                                                                 required
                                                             />
                                                         </Table.Cell>
@@ -232,7 +231,7 @@ export function CardIngresoMaterial({
                                                                 type="number"
                                                                 size="sm"
                                                                 value={lote.cantidad}
-                                                                onValueChange={(e) => handleLoteChange(lote.lineKey, 'cantidad', parseFloat(e.target.value) || 0)}
+                                                                onChange={(e) => handleLoteChange(lote.lineKey, 'cantidad', parseFloat(e.target.value) || 0)}
                                                                 min={0}
                                                                 max={maxPermitido}
                                                                 w="100px"

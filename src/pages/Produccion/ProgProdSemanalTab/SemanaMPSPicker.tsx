@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { Steps, Badge, Flex, NativeSelect, Spinner, Text, VStack, Field } from "@chakra-ui/react";
+import { Badge, Flex, NativeSelect, Spinner, Text, VStack, Field } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     ListarSemanasMps,
@@ -138,7 +138,7 @@ export default function SemanaMPSPicker({
                     <NativeSelect.Root>
                         <NativeSelect.Field
                             value={anioSemana}
-                            onValueChange={(event) => setAnioSemana(Number(event.target.value))}
+                            onChange={(event) => setAnioSemana(Number(event.target.value))}
                             disabled={isDisabled || isLoading}>
                             {yearOptions.map((year) => (
                                 <option key={year} value={year}>
@@ -156,7 +156,7 @@ export default function SemanaMPSPicker({
                         <NativeSelect.Field
                             value={value}
                             placeholder={isLoading ? "Cargando semanas..." : "Seleccione una semana"}
-                            onValueChange={(event) => handleWeekChange(event.target.value)}
+                            onChange={(event) => handleWeekChange(event.target.value)}
                             disabled={isDisabled || isLoading}>
                             {semanas.map((semana) => (
                                 <option key={semana.codigo} value={semana.startDate}>

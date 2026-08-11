@@ -1,7 +1,6 @@
 // src/components/UserViewer.tsx
 import { useEffect, useState } from 'react';
 import {
-    Steps,
     Accordion,
     Box,
     Button,

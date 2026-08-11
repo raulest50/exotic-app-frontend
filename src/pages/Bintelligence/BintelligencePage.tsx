@@ -1,6 +1,5 @@
 import { lazy, Suspense } from "react";
 import {
-    Steps,
     Box,
     Center,
     Container,

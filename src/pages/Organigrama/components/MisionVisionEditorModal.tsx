@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
-  Steps,
   Alert,
   Box,
   Button,
@@ -290,7 +289,7 @@ export default function MisionVisionEditorModal({
                   <Field.Label>Motivo del cambio</Field.Label>
                   <Textarea
                     value={motivoCambio}
-                    onValueChange={(event) => setMotivoCambio(event.target.value)}
+                    onChange={(event) => setMotivoCambio(event.target.value)}
                     maxLength={1000}
                     rows={3}
                     placeholder="Describe brevemente por qué se publica esta versión"
@@ -350,7 +349,7 @@ function SortableValue({ value, index, total, onUpdate, onRemove, onMove }: Sort
           <Field.Label fontSize="sm" mb={1}>Título del valor {index + 1}</Field.Label>
           <Input
             value={value.titulo}
-            onValueChange={(event) => onUpdate({ titulo: event.target.value })}
+            onChange={(event) => onUpdate({ titulo: event.target.value })}
             maxLength={120}
           />
         </Field.Root>

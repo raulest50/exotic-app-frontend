@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Steps, Box } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import { ActivoGroup } from './ActivoGroup';
 import { ActivoFijo, TIPO_INCORPORACION } from '../../../types';
 

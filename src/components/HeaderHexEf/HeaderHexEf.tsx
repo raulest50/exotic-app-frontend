@@ -1,5 +1,5 @@
 import {IoArrowBack} from "react-icons/io5";
-import { Steps, Flex, Spacer, Heading, IconButton, Box, HStack } from '@chakra-ui/react';
+import { Flex, Spacer, Heading, IconButton, Box, HStack } from '@chakra-ui/react';
 import {NavLink} from "react-router-dom";
 
 interface HeaderHexEfProps {

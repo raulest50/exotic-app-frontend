@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Badge,
     Box,
@@ -415,7 +414,7 @@ function AdjustmentTrend({
                                         size="sm"
                                         minH="40px"
                                         value={group}
-                                        onValueChange={(event) =>
+                                        onChange={(event) =>
                                             setGroup(event.target.value as TrendGroup)}>
                                         <option value="TODOS">Todos los productos</option>
                                         <option value="MATERIA_PRIMA">Materias primas</option>
@@ -452,7 +451,7 @@ function AdjustmentTrend({
                                             size="sm"
                                             minH="40px"
                                             value={unit}
-                                            onValueChange={(event) => setUnit(event.target.value)}>
+                                            onChange={(event) => setUnit(event.target.value)}>
                                             {availableUnits.map((item) => (
                                                 <option key={item} value={item}>{item}</option>
                                             ))}
@@ -732,7 +731,7 @@ function ExplorerControls({
                             minH="40px"
                             value={draftSearch}
                             placeholder="Código o nombre"
-                            onValueChange={(event) => setDraftSearch(event.target.value)}
+                            onChange={(event) => setDraftSearch(event.target.value)}
                             onKeyDown={onSearchKeyDown}
                         />
                         <IconButton
@@ -748,7 +747,7 @@ function ExplorerControls({
                         <NativeSelect.Field
                             minH="40px"
                             value={type}
-                            onValueChange={(event) =>
+                            onChange={(event) =>
                                 onTypeChange(event.target.value as TipoFiltroAjuste)}>
                             <option value="TODOS">Todos</option>
                             <option value="POSITIVO">Solo positivos</option>
@@ -763,7 +762,7 @@ function ExplorerControls({
                         <NativeSelect.Field
                             minH="40px"
                             value={order}
-                            onValueChange={(event) =>
+                            onChange={(event) =>
                                 onOrderChange(event.target.value as OrdenAjusteMaterial)}>
                             <option value="IMPACTO">Mayor impacto económico</option>
                             <option value="MOVIMIENTOS">Más movimientos</option>
@@ -779,7 +778,7 @@ function ExplorerControls({
                         <NativeSelect.Field
                             minH="40px"
                             value={size}
-                            onValueChange={(event) =>
+                            onChange={(event) =>
                                 onSizeChange(Number(event.target.value) as PageSize)}>
                             <option value={5}>5 por grupo</option>
                             <option value={10}>10 por grupo</option>

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useColorModeValue } from "../../components/ui/color-mode";
 import {
-    Steps,
     Box,
     Button,
     Container,
@@ -694,7 +693,7 @@ export default function MasterDirectivesPage() {
                                                                     max={getNumericDirectiveBounds(directive).max}
                                                                     step={1}
                                                                     value={value}
-                                                                    onValueChange={e => updateDirectiveDraft(directive.id, e.target.value)}
+                                                                    onChange={e => updateDirectiveDraft(directive.id, e.target.value)}
                                                                 />
                                                                 {error && <Field.ErrorText>{error}</Field.ErrorText>}
                                                             </Field.Root>
@@ -827,7 +826,7 @@ export default function MasterDirectivesPage() {
                                                                     max={bounds.max}
                                                                     step={1}
                                                                     value={value}
-                                                                    onValueChange={e => updateDirectiveDraft(directive.id, e.target.value)}
+                                                                    onChange={e => updateDirectiveDraft(directive.id, e.target.value)}
                                                                 />
                                                                 {error && <Field.ErrorText>{error}</Field.ErrorText>}
                                                             </Field.Root>
@@ -1018,7 +1017,7 @@ export default function MasterDirectivesPage() {
                                                                     max={bounds.max}
                                                                     step={1}
                                                                     value={value}
-                                                                    onValueChange={e => updateDirectiveDraft(directive.id, e.target.value)}
+                                                                    onChange={e => updateDirectiveDraft(directive.id, e.target.value)}
                                                                 />
                                                                 {error && <Field.ErrorText>{error}</Field.ErrorText>}
                                                             </Field.Root>
@@ -1105,7 +1104,7 @@ export default function MasterDirectivesPage() {
                                                                     max={bounds.max}
                                                                     step={1}
                                                                     value={value}
-                                                                    onValueChange={e => updateDirectiveDraft(directive.id, e.target.value)}
+                                                                    onChange={e => updateDirectiveDraft(directive.id, e.target.value)}
                                                                 />
                                                                 {error && <Field.ErrorText>{error}</Field.ErrorText>}
                                                             </Field.Root>

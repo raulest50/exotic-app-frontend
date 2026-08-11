@@ -1,4 +1,4 @@
-import { Steps, Text, Dialog, Portal } from "@chakra-ui/react";
+import { Text, Dialog, Portal } from "@chakra-ui/react";
 
 type Props = {
     isOpen: boolean;

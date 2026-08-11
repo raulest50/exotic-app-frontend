@@ -1,4 +1,4 @@
-import { Steps, Container } from "@chakra-ui/react";
+import { Container } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader";
 import GanttDemo from "./GanttDemo";
 

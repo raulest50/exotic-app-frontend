@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Steps, Badge, Box, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr } from "@chakra-ui/react";
+import { Badge, Box, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr } from "@chakra-ui/react";
 import type { ResumenCapacidadCategoriaRow } from "./step1Distribucion.utils";
 import { formatCantidad } from "./step1Distribucion.utils";
 

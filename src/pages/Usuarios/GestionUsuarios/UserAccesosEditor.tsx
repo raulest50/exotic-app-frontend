@@ -1,6 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-    Steps,
     Alert,
     Badge,
     Box,
@@ -371,7 +370,7 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                                                 size="sm"
                                                                                 value={tabRow.nivel}
                                                                                 disabled={!moduleRow.enabled || !tabRow.enabled || permisosBloqueadosPorArea}
-                                                                                onValueChange={(event) =>
+                                                                                onChange={(event) =>
                                                                                     setTabNivel(
                                                                                         modulo,
                                                                                         tab.tabId,

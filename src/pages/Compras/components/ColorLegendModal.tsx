@@ -1,5 +1,5 @@
 import React from 'react';
-import { Steps, Button, Box, Text, Flex, Dialog, Portal } from '@chakra-ui/react';
+import { Button, Box, Text, Flex, Dialog, Portal } from '@chakra-ui/react';
 
 interface ColorLegendModalProps {
     isOpen: boolean;

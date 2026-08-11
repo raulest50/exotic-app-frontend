@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Steps, Box, Button, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, Text, VStack } from '@chakra-ui/react';
 import ProductoSelector, { ProductoMin } from './ProductoSelector';
 
 export const Default = () => {

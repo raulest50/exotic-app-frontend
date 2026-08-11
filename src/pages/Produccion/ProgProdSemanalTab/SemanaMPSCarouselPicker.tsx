@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-    Steps,
     Badge,
     Box,
     Flex,

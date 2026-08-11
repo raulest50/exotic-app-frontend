@@ -10,7 +10,6 @@
 
 import { useState, useRef } from "react";
 import {
-    Steps,
     Badge,
     Button,
     Flex,
@@ -298,7 +297,7 @@ export default function HistorialOrdenesTab() {
                 <NativeSelect.Root>
                     <NativeSelect.Field
                         value={searchParamState}
-                        onValueChange={(e) => setSearchParamState(e.target.value)}
+                        onChange={(e) => setSearchParamState(e.target.value)}
                         ml={4}
                         width="200px">
                         <option value="0">Solo Ordenes Activas</option>

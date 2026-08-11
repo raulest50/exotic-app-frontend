@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import {
-    Steps,
     Container,
     Input,
     Button,
@@ -113,37 +112,37 @@ export default function CodificarCliente(){
                     <GridItem>
                         <Field.Root required>
                             <Field.Label>Nombre</Field.Label>
-                            <Input value={formData.nombre} onValueChange={e=>handleChange('nombre',e.target.value)} />
+                            <Input value={formData.nombre} onChange={e=>handleChange('nombre',e.target.value)} />
                         </Field.Root>
                     </GridItem>
                     <GridItem>
                         <Field.Root required>
                             <Field.Label>Correo Electrónico</Field.Label>
-                            <Input type='email' value={formData.email} onValueChange={e=>handleChange('email',e.target.value)} />
+                            <Input type='email' value={formData.email} onChange={e=>handleChange('email',e.target.value)} />
                         </Field.Root>
                     </GridItem>
                     <GridItem>
                         <Field.Root required>
                             <Field.Label>Teléfono</Field.Label>
-                            <Input value={formData.telefono} onValueChange={e=>handleChange('telefono',e.target.value)} />
+                            <Input value={formData.telefono} onChange={e=>handleChange('telefono',e.target.value)} />
                         </Field.Root>
                     </GridItem>
                     <GridItem>
                         <Field.Root required>
                             <Field.Label>Dirección</Field.Label>
-                            <Input value={formData.direccion} onValueChange={e=>handleChange('direccion',e.target.value)} />
+                            <Input value={formData.direccion} onChange={e=>handleChange('direccion',e.target.value)} />
                         </Field.Root>
                     </GridItem>
                     <GridItem>
                         <Field.Root>
                             <Field.Label>Condiciones de Pago</Field.Label>
-                            <Input value={formData.condicionesPago||''} onValueChange={e=>handleChange('condicionesPago',e.target.value)} />
+                            <Input value={formData.condicionesPago||''} onChange={e=>handleChange('condicionesPago',e.target.value)} />
                         </Field.Root>
                     </GridItem>
                     <GridItem>
                         <Field.Root>
                             <Field.Label>Límite de Crédito</Field.Label>
-                            <Input type='number' value={formData.limiteCredito||''} onValueChange={e=>handleChange('limiteCredito',Number(e.target.value))} />
+                            <Input type='number' value={formData.limiteCredito||''} onChange={e=>handleChange('limiteCredito',Number(e.target.value))} />
                         </Field.Root>
                     </GridItem>
                     <GridItem colSpan={[1,2]}>
@@ -160,7 +159,7 @@ export default function CodificarCliente(){
                                 <Field.Label>RUT</Field.Label>
                                 <Icon as={rutFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize='4em' color={rutFile ? 'green' : 'orange.500'} />
                                 <Button onClick={()=>rutInputRef.current?.click()}>Examinar</Button>
-                                <Input type='file' ref={rutInputRef} style={{display:'none'}} accept='application/pdf' onValueChange={handleRutChange}/>
+                                <Input type='file' ref={rutInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleRutChange}/>
                             </VStack>
                         </Field.Root>
                     </GridItem>
@@ -170,7 +169,7 @@ export default function CodificarCliente(){
                                 <Field.Label>Cámara y Comercio</Field.Label>
                                 <Icon as={camaraFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize='4em' color={camaraFile ? 'green' : 'orange.500'} />
                                 <Button onClick={()=>camaraInputRef.current?.click()}>Examinar</Button>
-                                <Input type='file' ref={camaraInputRef} style={{display:'none'}} accept='application/pdf' onValueChange={handleCamaraChange}/>
+                                <Input type='file' ref={camaraInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleCamaraChange}/>
                             </VStack>
                         </Field.Root>
                     </GridItem>

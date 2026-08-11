@@ -1,4 +1,4 @@
-import { Steps, Badge, Stack, Separator } from "@chakra-ui/react";
+import { Badge, Stack, Separator } from "@chakra-ui/react";
 import BuscadorStockMaterialCard from "./BuscadorStockMaterialCard";
 import CoberturaMaterialesCard from "./CoberturaMaterialesCard";
 import InformeAlmacenAdjustmentsSection from "./InformeAlmacenAdjustmentsSection";

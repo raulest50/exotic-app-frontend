@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Badge,
     Box,
@@ -107,7 +106,7 @@ export default function IngresoTerminadosStep2Correccion({
                                         value={edicion.motivoCorreccion}
                                         maxLength={500}
                                         placeholder={changed ? "Describa la diferencia" : "Sin cambios"}
-                                        onValueChange={(event) => onChange(reporte.reporteId, {
+                                        onChange={(event) => onChange(reporte.reporteId, {
                                             ...edicion,
                                             motivoCorreccion: event.target.value,
                                         })}

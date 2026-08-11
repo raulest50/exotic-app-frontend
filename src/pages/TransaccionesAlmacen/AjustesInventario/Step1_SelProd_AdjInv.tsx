@@ -1,5 +1,4 @@
 import {
-    Steps,
     Box,
     Button,
     Checkbox,
@@ -76,7 +75,7 @@ export default function AjustesInventarioStep0SelectProducts({
                             <Field.Label>Buscar:</Field.Label>
                             <Input
                                 value={searchText}
-                                onValueChange={(e) => setSearchText(e.target.value)}
+                                onChange={(e) => setSearchText(e.target.value)}
                                 placeholder={"Ingresa el nombre del producto"}
                                 disabled={chkbox.length === 0}
                                 onKeyDown={(e) => {

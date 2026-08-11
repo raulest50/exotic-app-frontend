@@ -1,5 +1,4 @@
 import {
-  Steps,
   Box,
   Button,
   Flex,
@@ -95,7 +94,7 @@ export default function RecursoProduccionPicker({isOpen, onClose, onConfirm, alr
                     <Input
                       placeholder='Buscar'
                       value={searchText}
-                      onValueChange={(e)=>setSearchText(e.target.value)}
+                      onChange={(e)=>setSearchText(e.target.value)}
                       onKeyDown={(e)=>{
                         if(e.key==='Enter'){
                           fetchAvailable(0);

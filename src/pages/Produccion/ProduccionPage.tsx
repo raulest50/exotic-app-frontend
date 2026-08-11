@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Steps, Box, Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
+import { Box, Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 
 import MyHeader from "../../components/MyHeader.tsx";
 import { tabAccessRule } from "../../auth/accessHelpers.ts";

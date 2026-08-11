@@ -1,5 +1,5 @@
 
-import { Steps, Flex, FlexProps } from "@chakra-ui/react";
+import { Flex, FlexProps } from "@chakra-ui/react";
 import MyDatePicker from "./MyDatePicker.tsx";
 import {format} from "date-fns";
 

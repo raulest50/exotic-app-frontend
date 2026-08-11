@@ -1,6 +1,6 @@
 // ReporteOrdenesCompras.tsx
 import { useState } from "react";
-import { Steps, Button, Container, Flex, NativeSelect, Spinner, IconButton } from "@chakra-ui/react";
+import { Button, Container, Flex, NativeSelect, Spinner, IconButton } from "@chakra-ui/react";
 import { Tooltip } from '@/components/ui/tooltip';
 import { OrdenCompraMateriales, Proveedor } from "./types";
 import { format } from "date-fns";
@@ -96,7 +96,7 @@ export default function ReporteOrdenesCompras() {
                         <NativeSelect.Root>
                             <NativeSelect.Field
                                 value={estadoOrden_search}
-                                onValueChange={(e) => setEstadoOrdenSearch(e.target.value)}
+                                onChange={(e) => setEstadoOrdenSearch(e.target.value)}
                                 ml={4}
                                 width="200px">
                                 <option value="0,1,2">Pendientes</option>

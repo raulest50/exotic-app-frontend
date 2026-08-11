@@ -1,4 +1,4 @@
-import { Steps, SimpleGrid, Container } from '@chakra-ui/react';
+import { SimpleGrid, Container } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { FaDatabase } from 'react-icons/fa';
 import { FaCube, FaCodeBranch, FaTruck } from 'react-icons/fa';

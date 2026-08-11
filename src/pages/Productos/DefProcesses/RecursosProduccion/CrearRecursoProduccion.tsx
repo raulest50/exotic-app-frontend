@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import { Steps, Box, Button, Heading, Input, VStack, Field } from '@chakra-ui/react';
+import { Box, Button, Heading, Input, VStack, Field } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 
@@ -67,11 +67,11 @@ function CrearRecursoProduccion() {
             <VStack gap={4} align="stretch">
                 <Field.Root required>
                     <Field.Label>Nombre</Field.Label>
-                    <Input value={nombre} onValueChange={(e) => setNombre(e.target.value)} sx={input_style} />
+                    <Input value={nombre} onChange={(e) => setNombre(e.target.value)} sx={input_style} />
                 </Field.Root>
                 <Field.Root required>
                     <Field.Label>Descripción</Field.Label>
-                    <Input value={descripcion} onValueChange={(e)=>setDescripcion(e.target.value)} sx={input_style} />
+                    <Input value={descripcion} onChange={(e)=>setDescripcion(e.target.value)} sx={input_style} />
                 </Field.Root>
                 <RPAFmanager activos={activos} onChange={setActivos} />
                 <Button colorPalette="teal" onClick={handleSubmit}>Guardar</Button>

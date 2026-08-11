@@ -9,7 +9,6 @@
  */
 import { useState } from 'react';
 import {
-    Steps,
     Button,
     Checkbox,
     Container,
@@ -91,12 +90,12 @@ export default function ReportesActivosFijosTab() {
                     <Input
                         placeholder="Buscar"
                         value={valorBusqueda}
-                        onValueChange={(e) => setValorBusqueda(e.target.value)}
+                        onChange={(e) => setValorBusqueda(e.target.value)}
                     />
                     <NativeSelect.Root>
                         <NativeSelect.Field
                             value={tipoBusqueda}
-                            onValueChange={(e) => setTipoBusqueda(e.target.value)}
+                            onChange={(e) => setTipoBusqueda(e.target.value)}
                             width="200px">
                             {/* QUICKFIX TEMPORAL: Valores actualizados con prefijo "POR_" para coincidir con el backend */}
                             <option value="POR_ID">ID</option>
@@ -112,7 +111,7 @@ export default function ReportesActivosFijosTab() {
                         <NativeSelect.Field
                             placeholder="Todas las categorias"
                             value={tipoActivo}
-                            onValueChange={(e) => setTipoActivo(e.target.value)}
+                            onChange={(e) => setTipoActivo(e.target.value)}
                             width="200px">
                             <option value={TipoActivo.PRODUCCION}>Producción</option>
                             <option value={TipoActivo.MOBILIARIO}>Mobiliario</option>

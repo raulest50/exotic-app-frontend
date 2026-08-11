@@ -10,7 +10,6 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import {
-    Steps,
     Alert,
     Box,
     Button,
@@ -792,7 +791,7 @@ export default function AreaOperativaPanel() {
                                             </InputLeftElement>
                                             <Input
                                                 value={searchTerm}
-                                                onValueChange={(event) => setSearchTerm(event.target.value)}
+                                                onChange={(event) => setSearchTerm(event.target.value)}
                                                 placeholder="Buscar por lote, OP, producto o nodo"
                                             />
                                         </InputGroup>
@@ -961,7 +960,7 @@ export default function AreaOperativaPanel() {
                                             <Text fontWeight="bold" mb={1}>Observaciones (opcionales)</Text>
                                             <Textarea
                                                 value={observaciones}
-                                                onValueChange={(event) => setObservaciones(event.target.value)}
+                                                onChange={(event) => setObservaciones(event.target.value)}
                                                 placeholder="Agregar observaciones para esta transición"
                                                 maxLength={500}
                                                 rows={4}

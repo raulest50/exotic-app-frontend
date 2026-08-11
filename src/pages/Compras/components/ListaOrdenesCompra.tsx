@@ -8,7 +8,7 @@
 */
 // src/components/ListaOrdenesCompra.tsx
 import React, { useState } from 'react';
-import { Steps, Table, Thead, Tbody, Tr, Th, Td, Box } from '@chakra-ui/react';
+import { Table, Thead, Tbody, Tr, Th, Td, Box } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import {getEstadoText, OrdenCompraMateriales} from '../types';
 import OrdenCompraDetails from './OrdenCompraDetails';

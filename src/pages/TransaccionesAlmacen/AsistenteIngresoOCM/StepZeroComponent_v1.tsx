@@ -1,6 +1,6 @@
 // StepZeroComponent.tsx
 import { useState } from "react";
-import { Steps, Button, Flex, Heading, Input, Text, Field } from "@chakra-ui/react";
+import { Button, Flex, Heading, Input, Text, Field } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { OrdenCompra } from "../types";
@@ -73,7 +73,7 @@ export default function StepZeroComponent_v1({
                     <Field.Label>Id Orden de Compra</Field.Label>
                     <Input
                         value={ordenCompraId}
-                        onValueChange={(e) => setOrdenCompraId(e.target.value)}
+                        onChange={(e) => setOrdenCompraId(e.target.value)}
                     />
                 </Field.Root>
                 <Button

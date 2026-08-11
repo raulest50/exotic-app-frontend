@@ -1,5 +1,4 @@
 import {
-    Steps,
     Flex,
     Box,
     Heading,
@@ -537,7 +536,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                             <NativeSelect.Root>
                                                 <NativeSelect.Field
                                                     value={proveedorData.regimenTributario}
-                                                    onValueChange={(e) => handleInputChange('regimenTributario', Number(e.target.value))}>
+                                                    onChange={(e) => handleInputChange('regimenTributario', Number(e.target.value))}>
                                                     <option value={0}>Régimen Simplificado</option>
                                                     <option value={1}>Régimen Común</option>
                                                     <option value={2}>Gran Contribuyente</option>
@@ -557,7 +556,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                             <NativeSelect.Root>
                                                 <NativeSelect.Field
                                                     value={proveedorData.condicionPago}
-                                                    onValueChange={(e) => handleInputChange('condicionPago', e.target.value)}>
+                                                    onChange={(e) => handleInputChange('condicionPago', e.target.value)}>
                                                     <option value="credito">Crédito</option>
                                                     <option value="contado">Contado</option>
                                                 </NativeSelect.Field>
@@ -578,7 +577,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                                 max={limiteRecepcionesParcialesOcmMax}
                                                 step={1}
                                                 value={limiteRecepcionesParcialesOcmInput}
-                                                onValueChange={(e) => setLimiteRecepcionesParcialesOcmInput(e.target.value)}
+                                                onChange={(e) => setLimiteRecepcionesParcialesOcmInput(e.target.value)}
                                                 placeholder={`Maximo configurable: ${limiteRecepcionesParcialesOcmMax}`}
                                             />
                                             <Field.HelperText>
@@ -635,7 +634,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                         ref={rutInputRef}
                                         style={{ display: 'none' }}
                                         accept="application/pdf"
-                                        onValueChange={handleRutChange}
+                                        onChange={handleRutChange}
                                     />
                                     {rutFile && <Text>{rutFile.name}</Text>}
                                 </VStack>
@@ -654,7 +653,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                         ref={camaraInputRef}
                                         style={{ display: 'none' }}
                                         accept="application/pdf"
-                                        onValueChange={handleCamaraChange}
+                                        onChange={handleCamaraChange}
                                     />
                                     {camaraFile && <Text>{camaraFile.name}</Text>}
                                 </VStack>
@@ -681,14 +680,14 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                                     <Field.Label>Nombre Completo</Field.Label>
                                                     <Input
                                                         value={contacto.fullName}
-                                                        onValueChange={(e) => handleContactChange(index, 'fullName', e.target.value)}
+                                                        onChange={(e) => handleContactChange(index, 'fullName', e.target.value)}
                                                     />
                                                 </Field.Root>
                                                 <Field.Root mt={2}>
                                                     <Field.Label>Cargo</Field.Label>
                                                     <Input
                                                         value={contacto.cargo}
-                                                        onValueChange={(e) => handleContactChange(index, 'cargo', e.target.value)}
+                                                        onChange={(e) => handleContactChange(index, 'cargo', e.target.value)}
                                                     />
                                                 </Field.Root>
                                             </GridItem>
@@ -697,14 +696,14 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                                     <Field.Label>Celular</Field.Label>
                                                     <Input
                                                         value={contacto.cel}
-                                                        onValueChange={(e) => handleContactChange(index, 'cel', e.target.value)}
+                                                        onChange={(e) => handleContactChange(index, 'cel', e.target.value)}
                                                     />
                                                 </Field.Root>
                                                 <Field.Root mt={2}>
                                                     <Field.Label>Correo Electrónico</Field.Label>
                                                     <Input
                                                         value={contacto.email}
-                                                        onValueChange={(e) => handleContactChange(index, 'email', e.target.value)}
+                                                        onChange={(e) => handleContactChange(index, 'email', e.target.value)}
                                                     />
                                                 </Field.Root>
                                             </GridItem>

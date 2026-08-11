@@ -1,6 +1,6 @@
 // src/pages/LoginPage/CoolDownAnim.tsx
 import React, { useEffect, useState } from 'react';
-import { Steps, Box, Flex, Text } from '@chakra-ui/react';
+import { Box, Flex, Text } from '@chakra-ui/react';
 import { Tooltip } from '@/components/ui/tooltip';
 import { BiTime } from 'react-icons/bi';
 

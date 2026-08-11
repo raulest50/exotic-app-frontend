@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import EndPointsURL from '../../../../api/EndPointsURL.tsx';
 import {
-    Steps,
     Button,
     Input,
     InputGroup,
@@ -121,7 +120,7 @@ export default function AreaOperativaPicker({
                                 <InputGroup>
                                     <Input
                                         value={searchNombre}
-                                        onValueChange={(e) => setSearchNombre(e.target.value)}
+                                        onChange={(e) => setSearchNombre(e.target.value)}
                                         onKeyDown={handleKeyDown}
                                         placeholder="Buscar por nombre..."
                                     />

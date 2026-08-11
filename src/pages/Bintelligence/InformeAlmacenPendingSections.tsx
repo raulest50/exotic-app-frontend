@@ -1,5 +1,4 @@
 import {
-    Steps,
     Accordion,
     Alert,
     Badge,

@@ -1,4 +1,4 @@
-import { Steps, Container, Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
+import { Container, Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader.tsx";
 import { my_style_tab } from "../../styles/styles_general.tsx";
 import BuscarTranOcmAsentar from "./BuscarTranOcmAsentar.tsx";

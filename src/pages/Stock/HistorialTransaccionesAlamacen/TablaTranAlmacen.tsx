@@ -1,5 +1,4 @@
 import {
-    Steps,
     Box,
     Table,
     TableContainer,

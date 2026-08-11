@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
-  Steps,
   Box,
   Flex,
   Heading,
@@ -137,7 +136,7 @@ const CatalogoCuentas: React.FC = () => {
         <Input 
           placeholder="Buscar por código o nombre" 
           value={searchTerm}
-          onValueChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </InputGroup>
 

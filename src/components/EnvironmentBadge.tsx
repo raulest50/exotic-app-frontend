@@ -1,4 +1,4 @@
-import { Steps, Badge } from '@chakra-ui/react';
+import { Badge } from '@chakra-ui/react';
 import EndPointsURL from '../api/EndPointsURL';
 
 export const EnvironmentBadge = () => {

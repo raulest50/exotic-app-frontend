@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
-    Steps,
     Box,
     Button,
     Flex,

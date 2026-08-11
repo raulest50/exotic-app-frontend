@@ -1,4 +1,4 @@
-import { Steps, Alert, Badge, Box, HStack, SimpleGrid, Text, VStack } from "@chakra-ui/react";
+import { Alert, Badge, Box, HStack, SimpleGrid, Text, VStack } from "@chakra-ui/react";
 import ReporteHyLButton from "./ReporteHyLButton";
 import type {
     EdicionReporteProduccion,

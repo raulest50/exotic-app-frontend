@@ -1,6 +1,5 @@
 // components/ListaItemsActivos.tsx
 import {
-    Steps,
     Table,
     Thead,
     Tbody,
@@ -119,7 +118,7 @@ const ListaItemsOCA: FC<Props> = ({ items, setItems }) => {
                                 <Input
                                     size="sm"
                                     value={item.nombre}
-                                    onValueChange={e =>
+                                    onChange={e =>
                                         updateRow(idx, "nombre", e.target.value)
                                     }
                                 />

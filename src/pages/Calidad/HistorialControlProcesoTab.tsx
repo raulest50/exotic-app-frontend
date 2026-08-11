@@ -1,5 +1,4 @@
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -137,15 +136,15 @@ export default function HistorialControlProcesoTab() {
                 <HStack align="end" gap={3}>
                     <Box flex="1">
                         <Text fontWeight="semibold" mb={1}>Producto</Text>
-                        <Input value={producto} onValueChange={(event) => setProducto(event.target.value)} placeholder="Codigo o nombre" />
+                        <Input value={producto} onChange={(event) => setProducto(event.target.value)} placeholder="Codigo o nombre" />
                     </Box>
                     <Box>
                         <Text fontWeight="semibold" mb={1}>Desde</Text>
-                        <Input type="date" value={fechaDesde} onValueChange={(event) => setFechaDesde(event.target.value)} />
+                        <Input type="date" value={fechaDesde} onChange={(event) => setFechaDesde(event.target.value)} />
                     </Box>
                     <Box>
                         <Text fontWeight="semibold" mb={1}>Hasta</Text>
-                        <Input type="date" value={fechaHasta} onValueChange={(event) => setFechaHasta(event.target.value)} />
+                        <Input type="date" value={fechaHasta} onChange={(event) => setFechaHasta(event.target.value)} />
                     </Box>
                     <Button colorPalette="teal" onClick={() => buscar(0)} loading={loadingSearch}>Buscar</Button>
                 </HStack>

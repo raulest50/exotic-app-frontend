@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Button,
     Input,
@@ -217,7 +216,7 @@ export default function ConfirmarExportacionModal({
                                 <Input
                                     placeholder="Ingrese el token de 4 dígitos"
                                     value={inputToken}
-                                    onValueChange={(e) => setInputToken(e.target.value)}
+                                    onChange={(e) => setInputToken(e.target.value)}
                                     disabled={isExporting}
                                 />
                             </Field.Root>

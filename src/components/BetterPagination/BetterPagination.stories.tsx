@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Steps, Box, VStack, Text } from '@chakra-ui/react';
+import { Box, VStack, Text } from '@chakra-ui/react';
 import BetterPagination from './BetterPagination.tsx';
 
 export const Default = () => {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import {
-    Steps,
     Textarea,
     Button,
     VStack,
@@ -539,7 +538,7 @@ export default function CrearOrdenesProduccionTab() {
                         <Input
                             placeholder="Ingrese el número de pedido comercial"
                             value={numeroPedidoComercial}
-                            onValueChange={(e) => setNumeroPedidoComercial(e.target.value)}
+                            onChange={(e) => setNumeroPedidoComercial(e.target.value)}
                         />
                     </Field.Root>
                 </HStack>
@@ -551,7 +550,7 @@ export default function CrearOrdenesProduccionTab() {
                     <Input
                         type="date"
                         value={fechaLanzamiento}
-                        onValueChange={(e) => handleFechaLanzamientoChange(e.target.value)}
+                        onChange={(e) => handleFechaLanzamientoChange(e.target.value)}
                     />
                 </Field.Root>
 
@@ -560,7 +559,7 @@ export default function CrearOrdenesProduccionTab() {
                     <Input
                         type="date"
                         value={fechaFinalPlanificada}
-                        onValueChange={(e) => handleFechaFinalPlanificadaChange(e.target.value)}
+                        onChange={(e) => handleFechaFinalPlanificadaChange(e.target.value)}
                     />
                 </Field.Root>
             </HStack>
@@ -596,7 +595,7 @@ export default function CrearOrdenesProduccionTab() {
                     <Input
                         placeholder="Ingrese el área"
                         value={areaOperativa}
-                        onValueChange={(e) => setAreaOperativa(e.target.value)}
+                        onChange={(e) => setAreaOperativa(e.target.value)}
                     />
                 </Field.Root>
 
@@ -605,7 +604,7 @@ export default function CrearOrdenesProduccionTab() {
                     <Input
                         placeholder="Ingrese el departamento"
                         value={departamentoOperativo}
-                        onValueChange={(e) => setDepartamentoOperativo(e.target.value)}
+                        onChange={(e) => setDepartamentoOperativo(e.target.value)}
                     />
                 </Field.Root>
             </HStack>
@@ -633,7 +632,7 @@ export default function CrearOrdenesProduccionTab() {
             <Textarea
                 placeholder="Observaciones"
                 value={observaciones}
-                onValueChange={(e) => setObservaciones(e.target.value)}
+                onChange={(e) => setObservaciones(e.target.value)}
                 mt="4"
             />
 
@@ -672,7 +671,7 @@ export default function CrearOrdenesProduccionTab() {
                                             value={lote}
                                             readOnly={!isLotesEditable[i] || !canEditLote}
                                             bg={isLotesEditable[i] && canEditLote ? 'white' : 'gray.100'}
-                                            onValueChange={(e) => {
+                                            onChange={(e) => {
                                                 setLoteBatchNumbers(prev => {
                                                     const updated = [...prev];
                                                     updated[i] = e.target.value;

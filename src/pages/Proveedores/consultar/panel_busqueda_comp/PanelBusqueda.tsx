@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Proveedor, DTO_SearchProveedor, TIPO_BUSQUEDA } from "../../types.tsx";
 import {
-    Steps,
     Flex,
     Input,
     Stack,
@@ -132,7 +131,7 @@ export default function PanelBusqueda({setEstado, setProveedorSeleccionado}: Pro
                             <Input
                                 placeholder={searchType === 'ID' ? "Ingrese el ID del proveedor" : "Ingrese el nombre del proveedor"}
                                 value={searchText}
-                                onValueChange={(e) => setSearchText(e.target.value)}
+                                onChange={(e) => setSearchText(e.target.value)}
                             />
                         </Field.Root>
 
@@ -141,7 +140,7 @@ export default function PanelBusqueda({setEstado, setProveedorSeleccionado}: Pro
                             <Field.Root mb={4} flex={1} >
                                 <Field.Label>Tipo de Búsqueda</Field.Label>
                                 <NativeSelect.Root>
-                                    <NativeSelect.Field value={searchType} onValueChange={(e) => setSearchType(e.target.value)}>
+                                    <NativeSelect.Field value={searchType} onChange={(e) => setSearchType(e.target.value)}>
                                         <option value={TIPO_BUSQUEDA.ID}>ID</option>
                                         <option value={TIPO_BUSQUEDA.NOMBRE_Y_CATEGORIA}>Nombre y Categorías</option>
                                     </NativeSelect.Field>

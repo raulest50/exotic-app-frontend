@@ -1,5 +1,4 @@
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -260,7 +259,7 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
                                             <Input
                                                 type="time"
                                                 value={block.horaInicio}
-                                                onValueChange={(event) => updateBlock(section.key, index, "horaInicio", event.target.value)}
+                                                onChange={(event) => updateBlock(section.key, index, "horaInicio", event.target.value)}
                                             />
                                         </Field.Root>
                                         <Field.Root disabled={!canEdit}>
@@ -270,7 +269,7 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
                                             <Input
                                                 type="time"
                                                 value={block.horaFin}
-                                                onValueChange={(event) => updateBlock(section.key, index, "horaFin", event.target.value)}
+                                                onChange={(event) => updateBlock(section.key, index, "horaFin", event.target.value)}
                                             />
                                         </Field.Root>
                                         {canEdit && (
@@ -305,7 +304,7 @@ export default function JornadaLaboralSection({ canEdit }: JornadaLaboralSection
                     <Field.Label>Motivo del cambio</Field.Label>
                     <Textarea
                         value={draft.motivoCambio}
-                        onValueChange={(event) => setDraft((current) => ({ ...current, motivoCambio: event.target.value }))}
+                        onChange={(event) => setDraft((current) => ({ ...current, motivoCambio: event.target.value }))}
                         readOnly={!canEdit}
                         minH="90px"
                     />

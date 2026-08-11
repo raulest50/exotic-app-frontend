@@ -1,4 +1,4 @@
-import { Steps, Card, Container, Flex, Heading, SimpleGrid, Text } from '@chakra-ui/react';
+import { Card, Container, Flex, Heading, SimpleGrid, Text } from '@chakra-ui/react';
 import { useState } from 'react';
 import WizardAveriaProduccion from './WizardAveriaProduccion/WizardAveriaProduccion';
 import WizardAveriaAlmacen from './WizardAveriaAlmacen/WizardAveriaAlmacen';

@@ -1,7 +1,6 @@
 import {useState} from 'react';
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
-    Steps,
     Box,
     NativeSelect,
     Flex,
@@ -122,7 +121,7 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
                     <NativeSelect.Root>
                         <NativeSelect.Field
                             value={dateMode}
-                            onValueChange={(e) => setDateMode(e.target.value as DateMode)}>
+                            onChange={(e) => setDateMode(e.target.value as DateMode)}>
                             <option value="none">Ninguno</option>
                             <option value="range">Rango de Fechas</option>
                             <option value="single">Fecha Específica</option>
@@ -191,7 +190,7 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
                         <NativeSelect.Root>
                             <NativeSelect.Field
                                 value={odTipoFiltroId.toString()}
-                                onValueChange={(e) => {
+                                onChange={(e) => {
                                     const value = parseInt(e.target.value) as 0 | 1;
                                     setOdTipoFiltroId(value);
                                     setOdLoteAsignado('');
@@ -212,7 +211,7 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
                         <Input
                             type="text"
                             value={odLoteAsignado}
-                            onValueChange={(e) => setOdLoteAsignado(e.target.value)}
+                            onChange={(e) => setOdLoteAsignado(e.target.value)}
                             placeholder="Ej: L-2025-001"
                         />
                     </Field.Root>
@@ -295,7 +294,7 @@ function FiltroTranAlmacenSearch({ onBuscar, loading }: FiltroTranAlmacenSearchP
                     <NativeSelect.Root>
                         <NativeSelect.Field
                             value={viewMode}
-                            onValueChange={(e) => setViewMode(e.target.value as MODE)}>
+                            onChange={(e) => setViewMode(e.target.value as MODE)}>
                             <option value={MODE.OCM}>Ingreso de Materiales (OCM) </option>
                             {/*<option value={MODE.OP}>Ingreso Producto Terminado (OP) </option>*/}
                             <option value={MODE.OAA}>Ajustes de Almacén</option>

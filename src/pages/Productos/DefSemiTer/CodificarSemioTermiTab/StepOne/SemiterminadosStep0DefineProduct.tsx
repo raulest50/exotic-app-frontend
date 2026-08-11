@@ -1,6 +1,5 @@
 // IngresoOCMStep1VerifyQuantities.tsx
 import {
-    Steps,
     Button,
     Flex,
     GridItem,
@@ -351,7 +350,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                         <Field.Label>Codigo Id</Field.Label>
                         <Input
                             value={productoId}
-                            onValueChange={(e) => setProductoId(normalizeProductId(e.target.value))}
+                            onChange={(e) => setProductoId(normalizeProductId(e.target.value))}
                             variant="filled"
                         />
                     </Field.Root>
@@ -362,7 +361,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                         <Field.Label>Nombre</Field.Label>
                         <Input
                             value={nombre}
-                            onValueChange={(e) => setNombre(e.target.value)}
+                            onChange={(e) => setNombre(e.target.value)}
                             variant="filled"
                         />
                     </Field.Root>
@@ -374,7 +373,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                             <NativeSelect.Field
                                 flex="1"
                                 value={tipoUnidades}
-                                onValueChange={(e) => setTipoUnidades(e.target.value)}>
+                                onChange={(e) => setTipoUnidades(e.target.value)}>
                                 <option value={UNIDADES.KG}>{UNIDADES.KG}</option>
                                 <option value={UNIDADES.L}>{UNIDADES.L}</option>
                                 <option value={UNIDADES.U}>{UNIDADES.U}</option>
@@ -386,7 +385,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                             <Field.Label>Contenido por envase</Field.Label>
                             <Input
                                 value={cantidadUnidad}
-                                onValueChange={(e) => setCantidadUnidad(e.target.value)}
+                                onChange={(e) => setCantidadUnidad(e.target.value)}
                                 variant="filled"
                             />
                         </Field.Root>
@@ -401,7 +400,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                                 <NativeSelect.Field
                                     flex="1"
                                     value={tipo_producto}
-                                    onValueChange={(e) => setTipo_producto(e.target.value)}>
+                                    onChange={(e) => setTipo_producto(e.target.value)}>
                                     <option value={TIPOS_PRODUCTOS.semiTerminado}>Semiterminado</option>
                                     <option value={TIPOS_PRODUCTOS.terminado}>Terminado</option>
                                 </NativeSelect.Field>
@@ -417,7 +416,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                         <NativeSelect.Root>
                             <NativeSelect.Field
                                 value={selectedCategoriaId || ""}
-                                onValueChange={(e) => setSelectedCategoriaId(Number(e.target.value))}
+                                onChange={(e) => setSelectedCategoriaId(Number(e.target.value))}
                                 disabled={loadingCategorias || categoriasDisponibles.length === 0}
                                 placeholder="Seleccione una categoria">
                                 {categoriasDisponibles.map((categoria) => (
@@ -448,7 +447,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                         <HStack align="center" gap={2}>
                             <Input
                                 value={prefijoLote}
-                                onValueChange={(e) => {
+                                onChange={(e) => {
                                     setPrefijoLote(e.target.value);
                                     setPrefijoVerificado(false);
                                 }}
@@ -492,7 +491,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                         <Field.Label>Observaciones</Field.Label>
                         <Textarea
                             value={observaciones}
-                            onValueChange={(e) => setObservaciones(e.target.value)}
+                            onChange={(e) => setObservaciones(e.target.value)}
                             variant="filled"
                         />
                     </Field.Root>

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-    Steps,
     Alert,
     Badge,
     Box,
@@ -626,7 +625,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     <Field.Label>Motivo del cambio</Field.Label>
                     <Input
                         value={motivoCambio}
-                        onValueChange={(event) => setMotivoCambio(event.target.value)}
+                        onChange={(event) => setMotivoCambio(event.target.value)}
                         placeholder="Opcional: describe por qué se crea esta nueva versión"
                     />
                 </Field.Root>
@@ -729,7 +728,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                                 min={0}
                                 step={1}
                                 value={selectedNode.data.duracionEstimadaMinutos ?? 0}
-                                onValueChange={(event) => handleSelectedNodeDurationChange(event.target.value)}
+                                onChange={(event) => handleSelectedNodeDurationChange(event.target.value)}
                                 disabled={isReadOnly}
                             />
                         </Field.Root>

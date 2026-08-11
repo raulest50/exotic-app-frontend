@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useColorModeValue } from "../../../../../components/ui/color-mode";
 import {
-    Steps,
     Box,
     Button,
     Flex,
@@ -110,7 +109,7 @@ export default function AveriaProduccionStep0SelectArea({
                     <HStack>
                         <Input
                             value={searchText}
-                            onValueChange={(e) => setSearchText(e.target.value)}
+                            onChange={(e) => setSearchText(e.target.value)}
                             onKeyDown={onKeyDown_InputBuscar}
                             placeholder="Ingrese nombre del área"
                             disabled={isLoading}

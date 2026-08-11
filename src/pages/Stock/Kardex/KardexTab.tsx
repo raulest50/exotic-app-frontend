@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Steps,
   Box,
   Button,
   Flex,
@@ -184,7 +183,7 @@ export function KardexTab(_: Props) {
             <Field.Root maxW="200px">
               <Field.Label>Almacén</Field.Label>
               <NativeSelect.Root>
-                <NativeSelect.Field value={almacen} onValueChange={(e) => setAlmacen(e.target.value)}>
+                <NativeSelect.Field value={almacen} onChange={(e) => setAlmacen(e.target.value)}>
                   <option value="GENERAL">General</option>
                   <option value="AVERIAS">Averías</option>
                 </NativeSelect.Field>
@@ -197,7 +196,7 @@ export function KardexTab(_: Props) {
               <NativeSelect.Root>
                 <NativeSelect.Field
                   value={modoFecha}
-                  onValueChange={(e) => setModoFecha(e.target.value as ModoFecha)}>
+                  onChange={(e) => setModoFecha(e.target.value as ModoFecha)}>
                   <option value="UNICA">Fecha única</option>
                   <option value="RANGO">Rango de fechas</option>
                 </NativeSelect.Field>

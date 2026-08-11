@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useColorModeValue } from "../../../../../components/ui/color-mode";
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -135,7 +134,7 @@ export default function AveriaProduccionStep1SelectOrder({
                     <HStack>
                         <Input
                             value={searchText}
-                            onValueChange={(e) => setSearchText(e.target.value)}
+                            onChange={(e) => setSearchText(e.target.value)}
                             onKeyDown={onKeyDown_InputBuscar}
                             placeholder="Ingrese número de lote"
                             disabled={isLoading}

@@ -1,6 +1,6 @@
 import React from "react";
 import { useColorModeValue } from "../../../../../../components/ui/color-mode";
-import { Steps, Box, Text, Flex, HStack, VStack, Tag, Icon, IconButton, Badge } from "@chakra-ui/react";
+import { Box, Text, Flex, HStack, VStack, Tag, Icon, IconButton, Badge } from "@chakra-ui/react";
 import { Tooltip } from '@/components/ui/tooltip';
 import { Producto } from "../../../types.tsx";
 

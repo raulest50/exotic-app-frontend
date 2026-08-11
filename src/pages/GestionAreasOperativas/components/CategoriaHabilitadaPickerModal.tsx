@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -261,7 +260,7 @@ export default function CategoriaHabilitadaPickerModal({
                                     <InputGroup>
                                         <Input
                                             value={searchNombre}
-                                            onValueChange={(event) => setSearchNombre(event.target.value)}
+                                            onChange={(event) => setSearchNombre(event.target.value)}
                                             onKeyDown={(event) => {
                                                 if (event.key === 'Enter' && !loading) {
                                                     void fetchCategorias(0);
@@ -454,7 +453,7 @@ export default function CategoriaHabilitadaPickerModal({
                                                                     <NativeSelect.Field
                                                                         size="sm"
                                                                         value={categoria.unidadMedidaId ?? ''}
-                                                                        onValueChange={(event) => setUnidadForCategoria(
+                                                                        onChange={(event) => setUnidadForCategoria(
                                                                             categoria.categoriaId,
                                                                             event.target.value ? Number(event.target.value) : null,
                                                                         )}>
@@ -477,7 +476,7 @@ export default function CategoriaHabilitadaPickerModal({
                                                                     step="0.000001"
                                                                     value={categoria.factorLote ?? ''}
                                                                     disabled={!categoria.unidadMedidaId}
-                                                                    onValueChange={(event) => {
+                                                                    onChange={(event) => {
                                                                         const parsed = Number(event.target.value);
                                                                         setFactorLoteForCategoria(
                                                                             categoria.categoriaId,

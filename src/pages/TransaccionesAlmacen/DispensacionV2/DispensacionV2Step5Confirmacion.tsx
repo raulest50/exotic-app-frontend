@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Badge,
     Box,
@@ -188,7 +187,7 @@ export default function DispensacionV2Step5Confirmacion({
                     <Field.Label>Token de verificación</Field.Label>
                     <Input
                         value={inputToken}
-                        onValueChange={(event) => setInputToken(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                        onChange={(event) => setInputToken(event.target.value.replace(/\D/g, "").slice(0, 4))}
                         placeholder="Ingrese el token"
                         inputMode="numeric"
                         maxLength={4}

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-    Steps,
     Flex,
     VStack,
     HStack,
@@ -176,7 +175,7 @@ function HistorialCompras() {
                 <Heading size="md">Buscar Proveedor</Heading>
                 <HStack w="full">
                     <NativeSelect.Root>
-                        <NativeSelect.Field value={searchType} onValueChange={(e) => setSearchType(e.target.value)}>
+                        <NativeSelect.Field value={searchType} onChange={(e) => setSearchType(e.target.value)}>
                             <option value="nombre">Nombre</option>
                             <option value="nit">NIT</option>
                         </NativeSelect.Field>
@@ -185,7 +184,7 @@ function HistorialCompras() {
                     <Input
                         placeholder="Buscar..."
                         value={searchText}
-                        onValueChange={(e) => setSearchText(e.target.value)}
+                        onChange={(e) => setSearchText(e.target.value)}
                         onKeyDown={handleKeyPress}
                     />
                 </HStack>

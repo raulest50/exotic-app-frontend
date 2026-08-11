@@ -1,5 +1,4 @@
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -203,14 +202,14 @@ export default function DiligenciarControlProcesoTab() {
                                                 size="sm"
                                                 type="number"
                                                 value={values[key] ?? ""}
-                                                onValueChange={(event) => updateValue(key, event.target.value)}
+                                                onChange={(event) => updateValue(key, event.target.value)}
                                             />
                                         ) : (
                                             <NativeSelect.Root>
                                                 <NativeSelect.Field
                                                     size="sm"
                                                     value={values[key] ?? ""}
-                                                    onValueChange={(event) => updateValue(key, event.target.value)}>
+                                                    onChange={(event) => updateValue(key, event.target.value)}>
                                                     <option value="">Seleccionar</option>
                                                     <option value="true">Cumple</option>
                                                     <option value="false">No cumple</option>
@@ -242,7 +241,7 @@ export default function DiligenciarControlProcesoTab() {
                         <Text fontWeight="semibold" mb={1}>Lote de produccion</Text>
                         <Input
                             value={loteSearch}
-                            onValueChange={(event) => setLoteSearch(event.target.value)}
+                            onChange={(event) => setLoteSearch(event.target.value)}
                             onKeyDown={(event) => event.key === "Enter" && buscarLotes()}
                             placeholder="Buscar por lote o producto"
                         />
@@ -296,7 +295,7 @@ export default function DiligenciarControlProcesoTab() {
 
                     <Box borderWidth="1px" borderRadius="md" p={4}>
                         <Text fontWeight="semibold" mb={2}>Observaciones</Text>
-                        <Textarea value={observaciones} onValueChange={(event) => setObservaciones(event.target.value)} />
+                        <Textarea value={observaciones} onChange={(event) => setObservaciones(event.target.value)} />
                         <HStack justify="flex-end" mt={4}>
                             <Button colorPalette="teal" onClick={guardar} loading={saving}>
                                 Guardar control

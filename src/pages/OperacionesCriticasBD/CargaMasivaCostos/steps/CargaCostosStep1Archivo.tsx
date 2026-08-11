@@ -1,4 +1,4 @@
-import { Steps, Alert, Box, Button, Input, Text, Textarea, VStack, Field } from "@chakra-ui/react";
+import { Alert, Box, Button, Input, Text, Textarea, VStack, Field } from "@chakra-ui/react";
 import { ChangeEvent } from "react";
 import { CargaCostosErrorFila } from "../types";
 
@@ -44,7 +44,7 @@ export default function CargaCostosStep1Archivo({
                     type="file"
                     accept=".xlsx"
                     p={1}
-                    onValueChange={onFileChange}
+                    onChange={onFileChange}
                 />
                 <Field.HelperText>Maximo 10 MB y 5.000 materiales validos.</Field.HelperText>
             </Field.Root>
@@ -55,7 +55,7 @@ export default function CargaCostosStep1Archivo({
                     id="carga-costos-motivo"
                     maxLength={500}
                     value={motivo}
-                    onValueChange={(event) => onMotivoChange(event.target.value)}
+                    onChange={(event) => onMotivoChange(event.target.value)}
                     placeholder="Ej. Actualizacion de costos segun informe de compras de julio"
                 />
                 <Field.HelperText>{motivo.length}/500 caracteres. Quedara registrado en el historial.</Field.HelperText>

@@ -1,4 +1,4 @@
-import { Steps, SimpleGrid, Flex, Heading, Button, Container, Box, IconButton } from "@chakra-ui/react";
+import { SimpleGrid, Flex, Heading, Button, Container, Box, IconButton } from "@chakra-ui/react";
 import { Tooltip } from '@/components/ui/tooltip';
 import { useColorMode, useColorModeValue } from "../components/ui/color-mode";
 import { useEffect, useMemo, useState } from "react";

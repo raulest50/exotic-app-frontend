@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -685,7 +684,7 @@ export default function AprobacionMPSWeekTab() {
                                                 <Input
                                                     aria-label="Token de aprobacion MPS"
                                                     value={approvalTokenInput}
-                                                    onValueChange={(event) => setApprovalTokenInput(
+                                                    onChange={(event) => setApprovalTokenInput(
                                                         event.target.value.replace(/\D/g, "").slice(0, 4),
                                                     )}
                                                     inputMode="numeric"

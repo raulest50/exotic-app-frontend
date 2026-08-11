@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { Steps, Center, Spinner, Text } from "@chakra-ui/react";
+import { Center, Spinner, Text } from "@chakra-ui/react";
 import { useAuth } from "../context/AuthContext.tsx";
 import Home from "../pages/Home.tsx";
 

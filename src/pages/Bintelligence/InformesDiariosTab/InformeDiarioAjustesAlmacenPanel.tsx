@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-    Steps,
     Button,
     Card,
     Input,
@@ -95,7 +94,7 @@ export default function InformeDiarioAjustesAlmacenPanel() {
                         <Input
                             type="date"
                             value={fechaDesde}
-                            onValueChange={(e) => setFechaDesde(e.target.value)}
+                            onChange={(e) => setFechaDesde(e.target.value)}
                         />
                         <Field.HelperText>
                             Para un solo día, use la misma fecha en desde y hasta.
@@ -106,7 +105,7 @@ export default function InformeDiarioAjustesAlmacenPanel() {
                         <Input
                             type="date"
                             value={fechaHasta}
-                            onValueChange={(e) => setFechaHasta(e.target.value)}
+                            onChange={(e) => setFechaHasta(e.target.value)}
                         />
                         {rangeInvalid ? (
                             <Field.HelperText color="red.500">
@@ -119,7 +118,7 @@ export default function InformeDiarioAjustesAlmacenPanel() {
                         <NativeSelect.Root>
                             <NativeSelect.Field
                                 value={sentido}
-                                onValueChange={(e) => setSentido(e.target.value as SentidoAjuste)}>
+                                onChange={(e) => setSentido(e.target.value as SentidoAjuste)}>
                                 <option value="ENTRADAS">Entradas (ajuste positivo)</option>
                                 <option value="SALIDAS">Salidas (ajuste negativo)</option>
                                 <option value="MIXTA">Mixta (entradas y salidas)</option>

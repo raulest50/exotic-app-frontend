@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Steps,
   Button,
   Input,
   NumberDecrementStepper,
@@ -84,7 +83,7 @@ export default function EditCargoDialog({
                 <Input
                   maxLength={255}
                   value={draft.tituloCargo}
-                  onValueChange={(event) => setDraft({ ...draft, tituloCargo: event.target.value })}
+                  onChange={(event) => setDraft({ ...draft, tituloCargo: event.target.value })}
                 />
               </Field.Root>
 
@@ -93,7 +92,7 @@ export default function EditCargoDialog({
                 <Input
                   maxLength={255}
                   value={draft.departamento}
-                  onValueChange={(event) => setDraft({ ...draft, departamento: event.target.value })}
+                  onChange={(event) => setDraft({ ...draft, departamento: event.target.value })}
                 />
               </Field.Root>
 
@@ -102,7 +101,7 @@ export default function EditCargoDialog({
                 <Textarea
                   maxLength={255}
                   value={draft.descripcionCargo}
-                  onValueChange={(event) =>
+                  onChange={(event) =>
                     setDraft({ ...draft, descripcionCargo: event.target.value })
                   }
                 />
@@ -131,7 +130,7 @@ export default function EditCargoDialog({
                 <NativeSelect.Root>
                   <NativeSelect.Field
                     value={draft.usuario || ""}
-                    onValueChange={(event) =>
+                    onChange={(event) =>
                       setDraft({ ...draft, usuario: event.target.value || undefined })
                     }
                     placeholder="Sin usuario asignado">

@@ -1,5 +1,4 @@
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -267,7 +266,7 @@ export default function LogoDocumentalOcmSection({
                     <VStack align="stretch" flex={1} gap={4}>
                         <Field.Root disabled={!canEdit}>
                             <Field.Label>Nuevo logo PNG</Field.Label>
-                            <Input type="file" accept="image/png" onValueChange={handleFileChange} p={1} />
+                            <Input type="file" accept="image/png" onChange={handleFileChange} p={1} />
                         </Field.Root>
 
                         {selectedDataUrl ? (
@@ -298,7 +297,7 @@ export default function LogoDocumentalOcmSection({
                             <Field.Label>Motivo del cambio</Field.Label>
                             <Textarea
                                 value={motivoCambio}
-                                onValueChange={(event) => setMotivoCambio(event.target.value)}
+                                onChange={(event) => setMotivoCambio(event.target.value)}
                                 minH="80px"
                             />
                         </Field.Root>

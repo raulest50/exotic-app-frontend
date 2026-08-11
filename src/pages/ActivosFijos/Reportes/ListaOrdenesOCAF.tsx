@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
-    Steps,
     Table,
     Thead,
     Tbody,

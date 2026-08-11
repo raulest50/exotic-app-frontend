@@ -12,7 +12,6 @@
  */
 
 import {
-    Steps,
     Flex,
     Box,
     Heading,
@@ -727,7 +726,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                         <Field.Root mt={2}>
                                             <Input
                                                 value={productoData.nombre}
-                                                onValueChange={(e) => handleInputChange('nombre', e.target.value)}
+                                                onChange={(e) => handleInputChange('nombre', e.target.value)}
                                             />
                                         </Field.Root>
                                     ) : (
@@ -746,7 +745,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                                 <NativeSelect.Root>
                                                     <NativeSelect.Field
                                                         value={(productoData as Material).tipoMaterial}
-                                                        onValueChange={(e) => handleInputChange('tipoMaterial', Number(e.target.value))}>
+                                                        onChange={(e) => handleInputChange('tipoMaterial', Number(e.target.value))}>
                                                         <option value={1}>Materia Prima</option>
                                                         <option value={2}>Material de Empaque</option>
                                                     </NativeSelect.Field>
@@ -766,7 +765,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                                 <NativeSelect.Root>
                                                     <NativeSelect.Field
                                                         value={categoriaActualId}
-                                                        onValueChange={(e) => handleCategoriaChange(Number(e.target.value))}
+                                                        onChange={(e) => handleCategoriaChange(Number(e.target.value))}
                                                         disabled={!categoriaEditable}>
                                                         <option value="" disabled>
                                                             {loadingCategorias || loadingCategoriaEditability
@@ -800,7 +799,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                                 <HStack align="center" gap={2}>
                                                     <Input
                                                         value={(productoData as Producto).prefijoLote ?? ''}
-                                                        onValueChange={(e) => handleInputChange('prefijoLote', e.target.value)}
+                                                        onChange={(e) => handleInputChange('prefijoLote', e.target.value)}
                                                         placeholder="Ej: TRK, SLA"
                                                         flex="1"
                                                     />
@@ -846,7 +845,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                         <Field.Root mt={2}>
                                             <Input
                                                 value={productoData.cantidadUnidad}
-                                                onValueChange={(e) => handleInputChange('cantidadUnidad', e.target.value)}
+                                                onChange={(e) => handleInputChange('cantidadUnidad', e.target.value)}
                                             />
                                         </Field.Root>
                                     ) : (
@@ -860,7 +859,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                             <NativeSelect.Root>
                                                 <NativeSelect.Field
                                                     value={productoData.ivaPercentual}
-                                                    onValueChange={(e) =>
+                                                    onChange={(e) =>
                                                         handleInputChange('ivaPercentual', Number(e.target.value))
                                                     }>
                                                     <option value={IVA_VALUES.iva_0}> No Tiene </option>
@@ -925,7 +924,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                         <Field.Root>
                             <Textarea
                                 value={productoData.observaciones || ''}
-                                onValueChange={(e) => handleInputChange('observaciones', e.target.value)}
+                                onChange={(e) => handleInputChange('observaciones', e.target.value)}
                                 placeholder="Ingrese observaciones sobre el producto"
                                 rows={4}
                             />

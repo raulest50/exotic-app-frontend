@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import {
-    Steps,
     VStack,
     SimpleGrid,
     GridItem,
@@ -276,7 +275,7 @@ function CodificarMaterialesTab() {
                             <Field.Label>Codigo</Field.Label>
                             <Input
                                 value={codigo}
-                                onValueChange={(e) => setCodigo(normalizeProductId(e.target.value))}
+                                onChange={(e) => setCodigo(normalizeProductId(e.target.value))}
                                 sx={input_style}
                             />
                         </Field.Root>
@@ -287,7 +286,7 @@ function CodificarMaterialesTab() {
                             <Field.Label>Prefijo de lote</Field.Label>
                             <Input
                                 value={prefijoLote}
-                                onValueChange={(e) => setPrefijoLote(e.target.value.toUpperCase())}
+                                onChange={(e) => setPrefijoLote(e.target.value.toUpperCase())}
                                 disabled={!inventareable}
                                 sx={input_style}
                             />
@@ -304,7 +303,7 @@ function CodificarMaterialesTab() {
                             <Field.Label>Nombre</Field.Label>
                             <Input
                                 value={nombre}
-                                onValueChange={(e) => setNombre(e.target.value)}
+                                onChange={(e) => setNombre(e.target.value)}
                                 sx={input_style}
                             />
                         </Field.Root>
@@ -336,7 +335,7 @@ function CodificarMaterialesTab() {
                                 <NativeSelect.Field
                                     flex="1"
                                     value={tipo_unidad}
-                                    onValueChange={(e) => setTipo_unidad(e.target.value)}>
+                                    onChange={(e) => setTipo_unidad(e.target.value)}>
                                     <option value={UNIDADES.KG}>{UNIDADES.KG}</option>
                                     <option value={UNIDADES.L}>{UNIDADES.L}</option>
                                     <option value={UNIDADES.U}>{UNIDADES.U}</option>
@@ -348,7 +347,7 @@ function CodificarMaterialesTab() {
                                 <Field.Label>Cantidad por Unidad</Field.Label>
                                 <Input
                                     value={cantidad_unidad}
-                                    onValueChange={(e) => setCantidad_unidad(e.target.value)}
+                                    onChange={(e) => setCantidad_unidad(e.target.value)}
                                     variant="filled"
                                 />
                             </Field.Root>
@@ -363,7 +362,7 @@ function CodificarMaterialesTab() {
                                     <NativeSelect.Field
                                         flex="1"
                                         value={tipoMaterial}
-                                        onValueChange={(e) => setTipoMaterial(Number(e.target.value))}>
+                                        onChange={(e) => setTipoMaterial(Number(e.target.value))}>
                                         <option value={TIPOS_MATERIALES.materiaPrima}>Materia Prima</option>
                                         <option value={TIPOS_MATERIALES.materialDeEmpaque}>Material Empaque</option>
                                     </NativeSelect.Field>
@@ -381,7 +380,7 @@ function CodificarMaterialesTab() {
                                     <NativeSelect.Field
                                         flex="1"
                                         value={ivaPercentage}
-                                        onValueChange={(e) => setIvaPercentage(Number(e.target.value))}>
+                                        onChange={(e) => setIvaPercentage(Number(e.target.value))}>
                                         <option value={IVA_VALUES.iva_0}> No tiene </option>
                                         <option value={IVA_VALUES.iva_5}> 5 %</option>
                                         <option value={IVA_VALUES.iva_19}> 19 %</option>
@@ -441,7 +440,7 @@ function CodificarMaterialesTab() {
                                 type="number"
                                 step="any"
                                 value={puntoReordenStr}
-                                onValueChange={(e) => setPuntoReordenStr(e.target.value)}
+                                onChange={(e) => setPuntoReordenStr(e.target.value)}
                                 disabled={!inventareable}
                                 sx={input_style}
                             />
@@ -456,7 +455,7 @@ function CodificarMaterialesTab() {
                             <Field.Label>Observaciones</Field.Label>
                             <Textarea
                                 value={observaciones}
-                                onValueChange={(e) => setObservaciones(e.target.value)}
+                                onChange={(e) => setObservaciones(e.target.value)}
                                 variant="filled"
                             />
                         </Field.Root>

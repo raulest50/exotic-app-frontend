@@ -14,7 +14,6 @@
  */
 
 import {
-    Steps,
     Flex,
     Stack,
     Checkbox,
@@ -139,7 +138,7 @@ export default function InformeProductosTab() {
                     </Field.Label>
                     <Input
                         value={searchText}
-                        onValueChange={(e) => setSearchText(e.target.value)}
+                        onChange={(e) => setSearchText(e.target.value)}
                         placeholder={
                             searchType === "ID"
                                 ? "Ingrese codigo o identificador unico"
@@ -161,7 +160,7 @@ export default function InformeProductosTab() {
                     <NativeSelect.Root>
                         <NativeSelect.Field
                             value={searchType}
-                            onValueChange={(e) => setSearchType(e.target.value as SearchType)}>
+                            onChange={(e) => setSearchType(e.target.value as SearchType)}>
                             <option value="NOMBRE">Nombre</option>
                             <option value="ID">ID exacto</option>
                             <option value="ID_PARCIAL">ID parcial</option>

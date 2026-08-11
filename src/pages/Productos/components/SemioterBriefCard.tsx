@@ -1,4 +1,4 @@
-import { Steps, Card, Flex, Heading, Text, VStack, Separator } from "@chakra-ui/react";
+import { Card, Flex, Heading, Text, VStack, Separator } from "@chakra-ui/react";
 import {ProductoSemiter, TIPOS_PRODUCTOS} from "../types.tsx";
 
 interface props{

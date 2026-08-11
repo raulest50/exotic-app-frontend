@@ -6,7 +6,6 @@ import DetalleTransaccionDialog from './DetalleTransaccionDialog.tsx';
 import { TransaccionAlmacen, PaginatedResponse } from '../../TransaccionesAlmacen/HistorialDispensaciones/types';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
-import { Alert } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import TablaTranAlmacen from "./TablaTranAlmacen.tsx";
 

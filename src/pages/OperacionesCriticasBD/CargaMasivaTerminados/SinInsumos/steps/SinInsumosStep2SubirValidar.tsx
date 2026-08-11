@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Box,
     Button,
@@ -317,7 +316,7 @@ export default function SinInsumosStep2SubirValidar({
                                 ref={inputRef}
                                 style={{ display: "none" }}
                                 accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                onValueChange={handleFileChange}
+                                onChange={handleFileChange}
                             />
                             <Icon as={excelFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize="2em" color={excelFile ? "green" : "orange.500"} />
                             {excelFile && <Text fontSize="sm" lineClamp={1} flex={1}>{excelFile.name}</Text>}

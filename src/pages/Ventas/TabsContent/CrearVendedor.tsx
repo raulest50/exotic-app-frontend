@@ -1,6 +1,5 @@
 import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
-    Steps,
     Input,
     Textarea,
     Button,
@@ -323,7 +322,7 @@ const CrearVendedor: React.FC<CrearVendedorProps> = ({ onVendorCreated }) => {
                                                     <Input
                                                         name="cedula"
                                                         value={formData.cedula}
-                                                        onValueChange={(event) => handleChange('cedula', event.target.value)}
+                                                        onChange={(event) => handleChange('cedula', event.target.value)}
                                                         onBlur={() => handleBlur('cedula')}
                                                         placeholder="Número de cédula"
                                                     />
@@ -335,7 +334,7 @@ const CrearVendedor: React.FC<CrearVendedorProps> = ({ onVendorCreated }) => {
                                                     <Input
                                                         name="nombres"
                                                         value={formData.nombres}
-                                                        onValueChange={(event) => handleChange('nombres', event.target.value)}
+                                                        onChange={(event) => handleChange('nombres', event.target.value)}
                                                         onBlur={() => handleBlur('nombres')}
                                                         placeholder="Nombres completos"
                                                     />
@@ -347,7 +346,7 @@ const CrearVendedor: React.FC<CrearVendedorProps> = ({ onVendorCreated }) => {
                                                     <Input
                                                         name="apellidos"
                                                         value={formData.apellidos}
-                                                        onValueChange={(event) => handleChange('apellidos', event.target.value)}
+                                                        onChange={(event) => handleChange('apellidos', event.target.value)}
                                                         onBlur={() => handleBlur('apellidos')}
                                                         placeholder="Apellidos completos"
                                                     />
@@ -364,7 +363,7 @@ const CrearVendedor: React.FC<CrearVendedorProps> = ({ onVendorCreated }) => {
                                                         name="fechaNacimiento"
                                                         value={formData.fechaNacimiento}
                                                         max={new Date().toISOString().split('T')[0]}
-                                                        onValueChange={(event) => handleChange('fechaNacimiento', event.target.value)}
+                                                        onChange={(event) => handleChange('fechaNacimiento', event.target.value)}
                                                         onBlur={() => handleBlur('fechaNacimiento')}
                                                     />
                                                     <Field.ErrorText>{formErrors.fechaNacimiento}</Field.ErrorText>
@@ -376,7 +375,7 @@ const CrearVendedor: React.FC<CrearVendedorProps> = ({ onVendorCreated }) => {
                                                         type="email"
                                                         name="email"
                                                         value={formData.email}
-                                                        onValueChange={(event) => handleChange('email', event.target.value)}
+                                                        onChange={(event) => handleChange('email', event.target.value)}
                                                         onBlur={() => handleBlur('email')}
                                                         placeholder="correo@dominio.com"
                                                     />
@@ -388,7 +387,7 @@ const CrearVendedor: React.FC<CrearVendedorProps> = ({ onVendorCreated }) => {
                                                     <Input
                                                         name="telefono"
                                                         value={formData.telefono}
-                                                        onValueChange={(event) => handleChange('telefono', event.target.value)}
+                                                        onChange={(event) => handleChange('telefono', event.target.value)}
                                                         onBlur={() => handleBlur('telefono')}
                                                         placeholder="Ej. +58 555-1234567"
                                                     />
@@ -400,7 +399,7 @@ const CrearVendedor: React.FC<CrearVendedorProps> = ({ onVendorCreated }) => {
                                                     <Textarea
                                                         name="direccion"
                                                         value={formData.direccion}
-                                                        onValueChange={(event) => handleChange('direccion', event.target.value)}
+                                                        onChange={(event) => handleChange('direccion', event.target.value)}
                                                         onBlur={() => handleBlur('direccion')}
                                                         placeholder="Dirección de residencia"
                                                         rows={3}

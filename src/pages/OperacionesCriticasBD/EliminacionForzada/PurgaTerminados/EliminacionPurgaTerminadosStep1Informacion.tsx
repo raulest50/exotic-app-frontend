@@ -1,4 +1,4 @@
-import { Steps, Alert, Box, Button, Flex, Heading, Text, VStack } from "@chakra-ui/react";
+import { Alert, Box, Button, Flex, Heading, Text, VStack } from "@chakra-ui/react";
 
 interface EliminacionPurgaTerminadosStep1InformacionProps {
     setActiveStep: (step: number) => void;

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-    Steps,
     Alert,
     Box,
     Button,
@@ -169,7 +168,7 @@ export default function AveriaProduccionStep3ReviewSubmit({
                     <Text fontWeight="bold" mb={2}>Observaciones (opcional)</Text>
                     <Textarea
                         value={observaciones}
-                        onValueChange={e => setObservaciones(e.target.value)}
+                        onChange={e => setObservaciones(e.target.value)}
                         placeholder="Escriba observaciones adicionales sobre este reporte de avería..."
                         size="sm"
                         resize="vertical"
@@ -182,7 +181,7 @@ export default function AveriaProduccionStep3ReviewSubmit({
                         <Field.Label>Token de Verificación</Field.Label>
                         <Input
                             value={inputToken}
-                            onValueChange={e => setInputToken(e.target.value)}
+                            onChange={e => setInputToken(e.target.value)}
                             placeholder="Ingrese el token de 4 dígitos"
                             maxLength={4}
                             type="text"

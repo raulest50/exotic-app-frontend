@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Steps,
   Box,
   Button,
   Flex,
@@ -155,7 +154,7 @@ export default function ProductoSelector({
                   <HStack>
                     <Input
                       value={searchText}
-                      onValueChange={(e) => setSearchText(e.target.value)}
+                      onChange={(e) => setSearchText(e.target.value)}
                       onKeyDown={onKeyPressBuscar}
                       placeholder="Ingrese nombre o ID"
                       disabled={isLoading}
@@ -163,7 +162,7 @@ export default function ProductoSelector({
                     <NativeSelect.Root>
                       <NativeSelect.Field
                         value={tipoBusqueda}
-                        onValueChange={(e) => setTipoBusqueda(e.target.value as TipoBusqueda)}
+                        onChange={(e) => setTipoBusqueda(e.target.value as TipoBusqueda)}
                         width="150px"
                         disabled={isLoading}>
                         <option value="NOMBRE">Nombre</option>

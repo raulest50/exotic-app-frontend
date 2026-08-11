@@ -1,4 +1,4 @@
-import { Steps, Card, Flex, Heading, Icon, SimpleGrid, Text } from '@chakra-ui/react';
+import { Card, Flex, Heading, Icon, SimpleGrid, Text } from '@chakra-ui/react';
 import { FaTools, FaBoxOpen, FaCogs } from 'react-icons/fa';
 import { Modulo } from '../Usuarios/GestionUsuarios/types.tsx';
 import { moduleAccessRule } from '../../auth/accessHelpers.ts';

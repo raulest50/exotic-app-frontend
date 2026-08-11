@@ -1,4 +1,4 @@
-import { Steps, Card, NativeSelect, Stack, Text, Field } from "@chakra-ui/react";
+import { Card, NativeSelect, Stack, Text, Field } from "@chakra-ui/react";
 import { useState } from "react";
 import HorasExtraBiPanel from "./HorasExtraBiPanel.tsx";
 
@@ -18,7 +18,7 @@ export default function PersonalBiTab() {
                             <NativeSelect.Root>
                                 <NativeSelect.Field
                                     value={view}
-                                    onValueChange={(e) => setView(e.target.value as PersonalBiView)}>
+                                    onChange={(e) => setView(e.target.value as PersonalBiView)}>
                                     <option value="horas-extra">Horas extra</option>
                                 </NativeSelect.Field>
                                 <NativeSelect.Indicator />

@@ -1,6 +1,5 @@
 import {useState} from 'react';
 import {
-    Steps,
     Button,
     Flex,
     Grid,
@@ -271,7 +270,7 @@ export function IncorporarPersonal() {
                                 <Field.Label>Cédula</Field.Label>
                                 <Input
                                     value={id}
-                                    onValueChange={(e) => setId(e.target.value)}
+                                    onChange={(e) => setId(e.target.value)}
                                     placeholder="Número de cédula"
                                 />
                             </Field.Root>
@@ -282,7 +281,7 @@ export function IncorporarPersonal() {
                                 <Field.Label>Nombres</Field.Label>
                                 <Input
                                     value={nombres}
-                                    onValueChange={(e) => setNombres(e.target.value)}
+                                    onChange={(e) => setNombres(e.target.value)}
                                     placeholder="Nombres"
                                 />
                             </Field.Root>
@@ -293,7 +292,7 @@ export function IncorporarPersonal() {
                                 <Field.Label>Apellidos</Field.Label>
                                 <Input
                                     value={apellidos}
-                                    onValueChange={(e) => setApellidos(e.target.value)}
+                                    onChange={(e) => setApellidos(e.target.value)}
                                     placeholder="Apellidos"
                                 />
                             </Field.Root>
@@ -304,7 +303,7 @@ export function IncorporarPersonal() {
                                 <Field.Label>Celular</Field.Label>
                                 <Input
                                     value={celular}
-                                    onValueChange={(e) => setCelular(e.target.value)}
+                                    onChange={(e) => setCelular(e.target.value)}
                                     placeholder="Número de celular"
                                 />
                             </Field.Root>
@@ -315,7 +314,7 @@ export function IncorporarPersonal() {
                                 <Field.Label>Dirección</Field.Label>
                                 <Input
                                     value={direccion}
-                                    onValueChange={(e) => setDireccion(e.target.value)}
+                                    onChange={(e) => setDireccion(e.target.value)}
                                     placeholder="Dirección de residencia"
                                 />
                             </Field.Root>
@@ -327,7 +326,7 @@ export function IncorporarPersonal() {
                                 <Input
                                     type="email"
                                     value={email}
-                                    onValueChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     placeholder="Correo electrónico (opcional)"
                                 />
                             </Field.Root>
@@ -338,7 +337,7 @@ export function IncorporarPersonal() {
                                 <Field.Label>Contacto de emergencia</Field.Label>
                                 <Input
                                     value={nombreContactoEmergencia}
-                                    onValueChange={(e) => setNombreContactoEmergencia(e.target.value)}
+                                    onChange={(e) => setNombreContactoEmergencia(e.target.value)}
                                     placeholder="Nombre del contacto"
                                 />
                             </Field.Root>
@@ -349,7 +348,7 @@ export function IncorporarPersonal() {
                                 <Field.Label>Celular de emergencia</Field.Label>
                                 <Input
                                     value={celularContactoEmergencia}
-                                    onValueChange={(e) => setCelularContactoEmergencia(e.target.value)}
+                                    onChange={(e) => setCelularContactoEmergencia(e.target.value)}
                                     placeholder="Celular del contacto"
                                 />
                             </Field.Root>
@@ -362,7 +361,7 @@ export function IncorporarPersonal() {
                                     <NativeSelect.Field
                                         placeholder="Seleccione estado civil"
                                         value={estadoCivil}
-                                        onValueChange={(e) => setEstadoCivil(e.target.value as EstadoCivil | '')}>
+                                        onChange={(e) => setEstadoCivil(e.target.value as EstadoCivil | '')}>
                                         {Object.values(EstadoCivil).map((item) => (
                                             <option key={item} value={item}>{getEstadoCivilText(item)}</option>
                                         ))}
@@ -379,7 +378,7 @@ export function IncorporarPersonal() {
                                     type="number"
                                     min={0}
                                     value={numeroHijos}
-                                    onValueChange={(e) => setNumeroHijos(e.target.value)}
+                                    onChange={(e) => setNumeroHijos(e.target.value)}
                                     placeholder="Sin informar"
                                 />
                             </Field.Root>
@@ -397,7 +396,7 @@ export function IncorporarPersonal() {
                                 <Field.Label>Cargo</Field.Label>
                                 <Input
                                     value={cargo}
-                                    onValueChange={(e) => setCargo(e.target.value)}
+                                    onChange={(e) => setCargo(e.target.value)}
                                     placeholder="Cargo (opcional)"
                                 />
                             </Field.Root>
@@ -410,7 +409,7 @@ export function IncorporarPersonal() {
                                     <NativeSelect.Field
                                         placeholder="Seleccione departamento"
                                         value={departamento}
-                                        onValueChange={(e) => setDepartamento(e.target.value as DepartamentoIntegrante | '')}>
+                                        onChange={(e) => setDepartamento(e.target.value as DepartamentoIntegrante | '')}>
                                         <option value="PRODUCCION">Producción</option>
                                         <option value="ADMINISTRATIVO">Administrativo</option>
                                     </NativeSelect.Field>
@@ -425,7 +424,7 @@ export function IncorporarPersonal() {
                                 <Input
                                     type="date"
                                     value={fechaIngreso}
-                                    onValueChange={(e) => setFechaIngreso(e.target.value)}
+                                    onChange={(e) => setFechaIngreso(e.target.value)}
                                 />
                             </Field.Root>
                         </GridItem>
@@ -435,7 +434,7 @@ export function IncorporarPersonal() {
                                 <Field.Label>Centro de Costo</Field.Label>
                                 <Input
                                     value={centroDeCosto}
-                                    onValueChange={(e) => setCentroDeCosto(e.target.value)}
+                                    onChange={(e) => setCentroDeCosto(e.target.value)}
                                     placeholder="Centro de costo (opcional)"
                                 />
                             </Field.Root>
@@ -446,7 +445,7 @@ export function IncorporarPersonal() {
                                 <Field.Label>Centro de Producción</Field.Label>
                                 <Input
                                     value={centroDeProduccion}
-                                    onValueChange={(e) => setCentroDeProduccion(e.target.value)}
+                                    onChange={(e) => setCentroDeProduccion(e.target.value)}
                                     placeholder="Centro de producción (opcional)"
                                 />
                             </Field.Root>
@@ -458,7 +457,7 @@ export function IncorporarPersonal() {
                                 <Input
                                     type="number"
                                     value={salario}
-                                    onValueChange={(e) => setSalario(e.target.value)}
+                                    onChange={(e) => setSalario(e.target.value)}
                                     placeholder="Salario en pesos colombianos (opcional)"
                                 />
                             </Field.Root>
@@ -476,7 +475,7 @@ export function IncorporarPersonal() {
                                 <Field.Label>Número de cuenta</Field.Label>
                                 <Input
                                     value={numeroCuentaBancaria}
-                                    onValueChange={(e) => setNumeroCuentaBancaria(e.target.value)}
+                                    onChange={(e) => setNumeroCuentaBancaria(e.target.value)}
                                     placeholder="Número de cuenta bancaria"
                                 />
                             </Field.Root>
@@ -487,7 +486,7 @@ export function IncorporarPersonal() {
                                 <Field.Label>Banco</Field.Label>
                                 <Input
                                     value={banco}
-                                    onValueChange={(e) => setBanco(e.target.value)}
+                                    onChange={(e) => setBanco(e.target.value)}
                                     placeholder="Entidad bancaria"
                                 />
                             </Field.Root>

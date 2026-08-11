@@ -1,5 +1,4 @@
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -138,7 +137,7 @@ export default function AprovisionamientoTab() {
                                 <Input
                                     type="date"
                                     value={fechaCorte}
-                                    onValueChange={(e) => setFechaCorte(e.target.value)}
+                                    onChange={(e) => setFechaCorte(e.target.value)}
                                 />
                             </Field.Root>
 
@@ -149,7 +148,7 @@ export default function AprovisionamientoTab() {
                                     min={1}
                                     step={1}
                                     value={ventanaDiasInput}
-                                    onValueChange={(e) => setVentanaDiasInput(e.target.value)}
+                                    onChange={(e) => setVentanaDiasInput(e.target.value)}
                                 />
                             </Field.Root>
                         </Flex>

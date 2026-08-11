@@ -1,6 +1,5 @@
 import { type KeyboardEvent, useEffect, useState } from 'react';
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -145,7 +144,7 @@ const IntegrantePersonalPicker = ({
                                     <HStack>
                                         <Input
                                             value={searchText}
-                                            onValueChange={(e) => setSearchText(e.target.value)}
+                                            onChange={(e) => setSearchText(e.target.value)}
                                             onKeyDown={onKeyPressInputBuscar}
                                             placeholder="Ingrese cédula, nombre o apellido"
                                             disabled={isLoading}

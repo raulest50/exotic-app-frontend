@@ -1,4 +1,4 @@
-import { Steps, Alert, Box, Button, Flex, Heading, Input, Text, VStack, Field } from "@chakra-ui/react";
+import { Alert, Box, Button, Flex, Heading, Input, Text, VStack, Field } from "@chakra-ui/react";
 import {
     CargaCostosConfirmacion,
     CargaCostosPreparacion,
@@ -138,7 +138,7 @@ export default function CargaCostosStep3Confirmacion({
                         pattern="[0-9]*"
                         maxLength={4}
                         value={typedToken}
-                        onValueChange={(event) => onTokenChange(event.target.value.replace(/\D/g, ""))}
+                        onChange={(event) => onTokenChange(event.target.value.replace(/\D/g, ""))}
                     />
                     <Field.HelperText>Dispone de cinco intentos por cada token.</Field.HelperText>
                 </Field.Root>

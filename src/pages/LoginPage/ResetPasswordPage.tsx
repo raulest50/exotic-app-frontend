@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-    Steps,
     Button,
     Container,
     Flex,
@@ -167,7 +166,7 @@ export default function ResetPasswordPage() {
                         placeholder="Nueva contraseña"
                         type="password"
                         value={newPassword}
-                        onValueChange={e => setNewPassword(e.target.value)}
+                        onChange={e => setNewPassword(e.target.value)}
                     />
                     <Progress.Root
                         value={passwordStrength.strength}
@@ -189,7 +188,7 @@ export default function ResetPasswordPage() {
                         placeholder="Confirmar contraseña"
                         type="password"
                         value={confirmPassword}
-                        onValueChange={e => setConfirmPassword(e.target.value)}
+                        onChange={e => setConfirmPassword(e.target.value)}
                     />
                     {confirmPassword && !passwordsMatch && (
                         <Text fontSize="sm" color="red.500" mt={1}>

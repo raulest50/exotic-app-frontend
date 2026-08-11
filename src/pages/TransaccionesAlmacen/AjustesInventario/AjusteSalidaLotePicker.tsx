@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-    Steps,
     Alert,
     Box,
     Button,
@@ -175,7 +174,7 @@ export default function AjusteSalidaLotePicker({
                                                         <NativeSelect.Field
                                                             size="sm"
                                                             value={size}
-                                                            onValueChange={(e) => setSize(Number(e.target.value))}>
+                                                            onChange={(e) => setSize(Number(e.target.value))}>
                                                             <option value={5}>5 por página</option>
                                                             <option value={10}>10 por página</option>
                                                             <option value={20}>20 por página</option>

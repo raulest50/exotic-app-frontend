@@ -1,7 +1,6 @@
 // OrdenCompraDetails.tsx
 import React from 'react';
 import {
-    Steps,
     Button,
     Box,
     Text,

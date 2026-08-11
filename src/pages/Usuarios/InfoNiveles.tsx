@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useColorModeValue } from "../../components/ui/color-mode";
 import {
-  Steps,
   Accordion,
   Alert,
   Box,
@@ -418,7 +417,7 @@ export default function InfoNiveles() {
         <Input
           placeholder="Buscar modulo por nombre o descripcion..."
           value={searchTerm}
-          onValueChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           size="md"
           variant="filled"
           _hover={{ bg: "app.rowHoverStrong" }}

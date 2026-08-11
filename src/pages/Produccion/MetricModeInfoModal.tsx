@@ -1,4 +1,4 @@
-import { Steps, Box, SimpleGrid, Text, VStack, Button, Dialog, Portal } from "@chakra-ui/react";
+import { Box, SimpleGrid, Text, VStack, Button, Dialog, Portal } from "@chakra-ui/react";
 
 interface MetricModeInfoModalProps {
     isOpen: boolean;

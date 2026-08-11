@@ -1,5 +1,5 @@
 
-import { Steps, Button, List, Text, Dialog, Portal } from '@chakra-ui/react';
+import { Button, List, Text, Dialog, Portal } from '@chakra-ui/react';
 
 interface ItemCompra {
     itemCompraId: number;

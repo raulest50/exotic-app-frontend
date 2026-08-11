@@ -1,4 +1,4 @@
-import { Steps, Alert, Box, Button, Flex, Heading, Text } from '@chakra-ui/react';
+import { Alert, Box, Button, Flex, Heading, Text } from '@chakra-ui/react';
 import React, {useEffect, useMemo, useState} from 'react';
 import {CasePackResponseDTO, DispensacionDTO, InsumoDesglosado, ItemPendienteReposicion, LoteSeleccionado, TransaccionAlmacenDetalle} from '../types';
 import {LotePickerDispensacion} from './AsistenteDispensacionComponents/LotePickerDispensacion';

@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import {
-    Steps,
     Container,
     Input,
     Button,
@@ -474,7 +473,7 @@ function CodificarProveedor() {
                             <Field.Label>Identificacion</Field.Label>
                             <Input
                                 value={id}
-                                onValueChange={(e) => setId(e.target.value)}
+                                onChange={(e) => setId(e.target.value)}
                                 placeholder="Nit o identificación del proveedor"
                             />
                         </Field.Root>
@@ -484,7 +483,7 @@ function CodificarProveedor() {
                         <NativeSelect.Root>
                             <NativeSelect.Field
                                 value={tipoIdentificacion}
-                                onValueChange={(e) => setTipoIdentificacion(Number(e.target.value))}>
+                                onChange={(e) => setTipoIdentificacion(Number(e.target.value))}>
                                 <option value={TIPOS_ID.cc}>Cedula de ciudadania</option>
                                 <option value={TIPOS_ID.nit}>Nit</option>
                             </NativeSelect.Field>
@@ -496,7 +495,7 @@ function CodificarProveedor() {
                             <Field.Label>Nombre</Field.Label>
                             <Input
                                 value={nombre}
-                                onValueChange={(e) => setNombre(e.target.value)}
+                                onChange={(e) => setNombre(e.target.value)}
                                 placeholder="Nombre del proveedor"
                             />
                         </Field.Root>
@@ -506,7 +505,7 @@ function CodificarProveedor() {
                             <Field.Label>Dirección</Field.Label>
                             <Input
                                 value={direccion}
-                                onValueChange={(e) => setDireccion(e.target.value)}
+                                onChange={(e) => setDireccion(e.target.value)}
                                 placeholder="Dirección del proveedor"
                             />
                         </Field.Root>
@@ -518,7 +517,7 @@ function CodificarProveedor() {
                                 <NativeSelect.Field
                                     placeholder="Seleccione un departamento"
                                     value={departamento}
-                                    onValueChange={handleDepartamentoChange}>
+                                    onChange={handleDepartamentoChange}>
                                     {departamentosColombia.map((depto) => (
                                         <option key={depto.codigo} value={depto.nombre}>
                                             {depto.nombre}
@@ -536,7 +535,7 @@ function CodificarProveedor() {
                                 <NativeSelect.Field
                                     placeholder="Seleccione una ciudad"
                                     value={ciudad}
-                                    onValueChange={handleCiudadChange}
+                                    onChange={handleCiudadChange}
                                     // Disable if no department is selected
                                     disabled={!departamento}>
                                     {ciudadesDisponibles.map((ciudad) => (
@@ -554,7 +553,7 @@ function CodificarProveedor() {
                                 <Input
                                     mt={2}
                                     value={otraCiudad}
-                                    onValueChange={handleOtraCiudadChange}
+                                    onChange={handleOtraCiudadChange}
                                     placeholder="Ingrese el nombre de la ciudad"
                                 />
                             )}
@@ -566,7 +565,7 @@ function CodificarProveedor() {
                             <Input
                                 type="url"
                                 value={url}
-                                onValueChange={(e) => setUrl(e.target.value)}
+                                onChange={(e) => setUrl(e.target.value)}
                                 placeholder="Página web (opcional)"
                             />
                         </Field.Root>
@@ -610,7 +609,7 @@ function CodificarProveedor() {
                                     <Field.Label>Nombre Completo</Field.Label>
                                     <Input
                                         value={contacto.fullName}
-                                        onValueChange={(e) =>
+                                        onChange={(e) =>
                                             handleContactoChange(index, 'fullName', e.target.value)
                                         }
                                         placeholder="Nombre Completo"
@@ -620,7 +619,7 @@ function CodificarProveedor() {
                                     <Field.Label>Cargo</Field.Label>
                                     <Input
                                         value={contacto.cargo}
-                                        onValueChange={(e) =>
+                                        onChange={(e) =>
                                             handleContactoChange(index, 'cargo', e.target.value)
                                         }
                                         placeholder="Cargo"
@@ -630,7 +629,7 @@ function CodificarProveedor() {
                                     <Field.Label>Celular</Field.Label>
                                     <Input
                                         value={contacto.cel}
-                                        onValueChange={(e) =>
+                                        onChange={(e) =>
                                             handleContactoChange(index, 'cel', e.target.value)
                                         }
                                         placeholder="Celular"
@@ -640,7 +639,7 @@ function CodificarProveedor() {
                                     <Field.Label>Correo Electrónico</Field.Label>
                                     <Input
                                         value={contacto.email}
-                                        onValueChange={(e) =>
+                                        onChange={(e) =>
                                             handleContactoChange(index, 'email', e.target.value)
                                         }
                                         placeholder="Correo Electrónico"
@@ -678,7 +677,7 @@ function CodificarProveedor() {
                             <NativeSelect.Root>
                                 <NativeSelect.Field
                                     value={regimenTributario}
-                                    onValueChange={(e) => setRegimenTributario(Number(e.target.value))}>
+                                    onChange={(e) => setRegimenTributario(Number(e.target.value))}>
                                     <option value={0}>Regimen Comun</option>
                                     <option value={1}>Regimen Simplificado</option>
                                     <option value={2}>Regimen Especial</option>
@@ -694,7 +693,7 @@ function CodificarProveedor() {
                                 <NativeSelect.Field
                                     placeholder="Seleccione..."
                                     value={condicionPago}
-                                    onValueChange={(e) => setCondicionPago(e.target.value)}>
+                                    onChange={(e) => setCondicionPago(e.target.value)}>
                                     <option value="credito">Crédito</option>
                                     <option value="contado">Contado</option>
                                 </NativeSelect.Field>
@@ -707,7 +706,7 @@ function CodificarProveedor() {
                             <Field.Label>Observaciones</Field.Label>
                             <Textarea
                                 value={observacion}
-                                onValueChange={(e) => setObservacion(e.target.value)}
+                                onChange={(e) => setObservacion(e.target.value)}
                                 placeholder="Notas adicionales"
                             />
                         </Field.Root>
@@ -728,7 +727,7 @@ function CodificarProveedor() {
                                 max={limiteRecepcionesParcialesOcmMax}
                                 step={1}
                                 value={limiteRecepcionesParcialesOcm}
-                                onValueChange={handleLimiteRecepcionesParcialesOcmChange}
+                                onChange={handleLimiteRecepcionesParcialesOcmChange}
                                 onKeyDown={blockInvalidLimiteRecepcionesKeys}
                                 placeholder={`Maximo configurable: ${limiteRecepcionesParcialesOcmMax}`}
                             />
@@ -756,7 +755,7 @@ function CodificarProveedor() {
                                     ref={rutInputRef}
                                     style={{ display: 'none' }}
                                     accept="application/pdf"
-                                    onValueChange={handleRutChange}
+                                    onChange={handleRutChange}
                                 />
                             </VStack>
                         </Field.Root>
@@ -776,7 +775,7 @@ function CodificarProveedor() {
                                     ref={camaraInputRef}
                                     style={{ display: 'none' }}
                                     accept="application/pdf"
-                                    onValueChange={handleCamaraChange}
+                                    onChange={handleCamaraChange}
                                 />
                             </VStack>
                         </Field.Root>

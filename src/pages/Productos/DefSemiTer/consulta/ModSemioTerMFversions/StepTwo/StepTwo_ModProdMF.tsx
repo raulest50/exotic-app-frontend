@@ -1,7 +1,7 @@
 // SemiterminadosStep1DefineInputs.tsx
 import React, { useState, useEffect } from "react";
 import { Producto, Insumo, ProductoSemiter } from "../../../../types.tsx";
-import { Steps, Button, Flex, HStack, Stat, VStack } from "@chakra-ui/react";
+import { Button, Flex, HStack, Stat, VStack } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import SemioterBriefCard from "../../../../components/SemioterBriefCard.tsx";
 import BandejaBusqueda from "./BandejaBusqueda.tsx";

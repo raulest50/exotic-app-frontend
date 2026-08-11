@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-    Steps,
     Button,
     Container,
     Flex,
@@ -259,7 +258,7 @@ export function ConsultaDePersonal() {
                     <Input
                         placeholder="Buscar por cédula, nombre o apellido"
                         value={searchText}
-                        onValueChange={(e) => setSearchText(e.target.value)}
+                        onChange={(e) => setSearchText(e.target.value)}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') onBuscar();
                         }}
@@ -313,31 +312,31 @@ export function ConsultaDePersonal() {
                                     <GridItem>
                                         <Field.Root required>
                                             <Field.Label>Nombres</Field.Label>
-                                            <Input value={detalleForm.nombres} onValueChange={(e) => updateForm('nombres', e.target.value)} />
+                                            <Input value={detalleForm.nombres} onChange={(e) => updateForm('nombres', e.target.value)} />
                                         </Field.Root>
                                     </GridItem>
                                     <GridItem>
                                         <Field.Root required>
                                             <Field.Label>Apellidos</Field.Label>
-                                            <Input value={detalleForm.apellidos} onValueChange={(e) => updateForm('apellidos', e.target.value)} />
+                                            <Input value={detalleForm.apellidos} onChange={(e) => updateForm('apellidos', e.target.value)} />
                                         </Field.Root>
                                     </GridItem>
                                     <GridItem>
                                         <Field.Root required>
                                             <Field.Label>Celular</Field.Label>
-                                            <Input value={detalleForm.celular} onValueChange={(e) => updateForm('celular', e.target.value)} />
+                                            <Input value={detalleForm.celular} onChange={(e) => updateForm('celular', e.target.value)} />
                                         </Field.Root>
                                     </GridItem>
                                     <GridItem>
                                         <Field.Root>
                                             <Field.Label>Correo electrónico</Field.Label>
-                                            <Input value={detalleForm.email} onValueChange={(e) => updateForm('email', e.target.value)} />
+                                            <Input value={detalleForm.email} onChange={(e) => updateForm('email', e.target.value)} />
                                         </Field.Root>
                                     </GridItem>
                                     <GridItem colSpan={[1, 2]}>
                                         <Field.Root required>
                                             <Field.Label>Dirección</Field.Label>
-                                            <Input value={detalleForm.direccion} onValueChange={(e) => updateForm('direccion', e.target.value)} />
+                                            <Input value={detalleForm.direccion} onChange={(e) => updateForm('direccion', e.target.value)} />
                                         </Field.Root>
                                     </GridItem>
                                     <GridItem>
@@ -345,7 +344,7 @@ export function ConsultaDePersonal() {
                                             <Field.Label>Contacto de emergencia</Field.Label>
                                             <Input
                                                 value={detalleForm.nombreContactoEmergencia}
-                                                onValueChange={(e) => updateForm('nombreContactoEmergencia', e.target.value)}
+                                                onChange={(e) => updateForm('nombreContactoEmergencia', e.target.value)}
                                             />
                                         </Field.Root>
                                     </GridItem>
@@ -354,7 +353,7 @@ export function ConsultaDePersonal() {
                                             <Field.Label>Celular de emergencia</Field.Label>
                                             <Input
                                                 value={detalleForm.celularContactoEmergencia}
-                                                onValueChange={(e) => updateForm('celularContactoEmergencia', e.target.value)}
+                                                onChange={(e) => updateForm('celularContactoEmergencia', e.target.value)}
                                             />
                                         </Field.Root>
                                     </GridItem>
@@ -365,7 +364,7 @@ export function ConsultaDePersonal() {
                                                 <NativeSelect.Field
                                                     placeholder="Seleccione estado civil"
                                                     value={detalleForm.estadoCivil}
-                                                    onValueChange={(e) => updateForm('estadoCivil', e.target.value as EstadoCivil | '')}>
+                                                    onChange={(e) => updateForm('estadoCivil', e.target.value as EstadoCivil | '')}>
                                                     {Object.values(EstadoCivil).map((item) => (
                                                         <option key={item} value={item}>{getEstadoCivilText(item)}</option>
                                                     ))}
@@ -381,7 +380,7 @@ export function ConsultaDePersonal() {
                                                 type="number"
                                                 min={0}
                                                 value={detalleForm.numeroHijos}
-                                                onValueChange={(e) => updateForm('numeroHijos', e.target.value)}
+                                                onChange={(e) => updateForm('numeroHijos', e.target.value)}
                                             />
                                         </Field.Root>
                                     </GridItem>
@@ -391,7 +390,7 @@ export function ConsultaDePersonal() {
                                             <Input
                                                 type="date"
                                                 value={detalleForm.fechaIngreso}
-                                                onValueChange={(e) => updateForm('fechaIngreso', e.target.value)}
+                                                onChange={(e) => updateForm('fechaIngreso', e.target.value)}
                                             />
                                         </Field.Root>
                                     </GridItem>
@@ -401,7 +400,7 @@ export function ConsultaDePersonal() {
                                             <NativeSelect.Root>
                                                 <NativeSelect.Field
                                                     value={detalleForm.estado}
-                                                    onValueChange={(e) => updateForm('estado', e.target.value as EstadoIntegrante | '')}>
+                                                    onChange={(e) => updateForm('estado', e.target.value as EstadoIntegrante | '')}>
                                                     <option value={EstadoIntegrante.ACTIVO}>Activo</option>
                                                     <option value={EstadoIntegrante.INACTIVO}>Inactivo</option>
                                                 </NativeSelect.Field>
@@ -412,7 +411,7 @@ export function ConsultaDePersonal() {
                                     <GridItem>
                                         <Field.Root>
                                             <Field.Label>Cargo</Field.Label>
-                                            <Input value={detalleForm.cargo} onValueChange={(e) => updateForm('cargo', e.target.value)} />
+                                            <Input value={detalleForm.cargo} onChange={(e) => updateForm('cargo', e.target.value)} />
                                         </Field.Root>
                                     </GridItem>
                                     <GridItem>
@@ -422,7 +421,7 @@ export function ConsultaDePersonal() {
                                                 <NativeSelect.Field
                                                     placeholder="Seleccione departamento"
                                                     value={detalleForm.departamento}
-                                                    onValueChange={(e) => updateForm('departamento', e.target.value as DepartamentoIntegrante | '')}>
+                                                    onChange={(e) => updateForm('departamento', e.target.value as DepartamentoIntegrante | '')}>
                                                     <option value="PRODUCCION">Producción</option>
                                                     <option value="ADMINISTRATIVO">Administrativo</option>
                                                 </NativeSelect.Field>
@@ -437,7 +436,7 @@ export function ConsultaDePersonal() {
                                                 type="number"
                                                 min={0}
                                                 value={detalleForm.salario}
-                                                onValueChange={(e) => updateForm('salario', e.target.value)}
+                                                onChange={(e) => updateForm('salario', e.target.value)}
                                             />
                                         </Field.Root>
                                     </GridItem>
@@ -446,14 +445,14 @@ export function ConsultaDePersonal() {
                                             <Field.Label>Número de cuenta</Field.Label>
                                             <Input
                                                 value={detalleForm.numeroCuentaBancaria}
-                                                onValueChange={(e) => updateForm('numeroCuentaBancaria', e.target.value)}
+                                                onChange={(e) => updateForm('numeroCuentaBancaria', e.target.value)}
                                             />
                                         </Field.Root>
                                     </GridItem>
                                     <GridItem>
                                         <Field.Root>
                                             <Field.Label>Banco</Field.Label>
-                                            <Input value={detalleForm.banco} onValueChange={(e) => updateForm('banco', e.target.value)} />
+                                            <Input value={detalleForm.banco} onChange={(e) => updateForm('banco', e.target.value)} />
                                         </Field.Root>
                                     </GridItem>
                                 </Grid>

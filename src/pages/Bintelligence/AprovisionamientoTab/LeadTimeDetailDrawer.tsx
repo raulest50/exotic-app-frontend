@@ -1,5 +1,4 @@
 import {
-    Steps,
     Box,
     Drawer,
     Flex,

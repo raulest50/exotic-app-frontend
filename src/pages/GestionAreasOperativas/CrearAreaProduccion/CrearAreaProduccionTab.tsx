@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-    Steps,
     Box,
     Button,
     Heading,
@@ -162,7 +161,7 @@ function CrearAreaProduccionTab() {
                     <Field.Label>Nombre</Field.Label>
                     <Input
                         value={nombre}
-                        onValueChange={(event) => {
+                        onChange={(event) => {
                             setNombre(event.target.value);
                             if (errors.nombre) {
                                 setErrors((prev) => ({ ...prev, nombre: undefined }));
@@ -178,7 +177,7 @@ function CrearAreaProduccionTab() {
                     <Field.Label>Descripción</Field.Label>
                     <Input
                         value={descripcion}
-                        onValueChange={(event) => setDescripcion(event.target.value)}
+                        onChange={(event) => setDescripcion(event.target.value)}
                         sx={input_style}
                         placeholder="Descripción del área de producción"
                     />

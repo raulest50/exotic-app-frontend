@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-    Steps,
     Box,
     Button,
     Flex,
@@ -124,7 +123,7 @@ const MaterialByLotePicker: React.FC<MaterialByLotePickerProps> = ({
                                     <HStack>
                                         <Input
                                             value={searchText}
-                                            onValueChange={(e) => setSearchText(e.target.value)}
+                                            onChange={(e) => setSearchText(e.target.value)}
                                             onKeyDown={onKeyDown_InputBuscar}
                                             placeholder="Ingrese número de lote (parcial o completo)"
                                             disabled={isLoading}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Steps, Box, Button, Text, ChakraProvider } from '@chakra-ui/react';
+import { Box, Button, Text, ChakraProvider } from '@chakra-ui/react';
 import axios from 'axios';
 import { ProcesoProduccionPicker } from './ProcesoProduccionPicker';
 import { ProcesoProduccionEntity, TimeModelType } from '../../../../types.tsx';

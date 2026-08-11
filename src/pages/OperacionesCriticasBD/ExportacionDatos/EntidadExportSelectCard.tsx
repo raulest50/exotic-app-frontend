@@ -1,7 +1,7 @@
 
 import {IconType} from "react-icons";
 import { useColorModeValue } from "../../../components/ui/color-mode";
-import { Steps, Card, Text, Circle, Heading, Icon, VStack } from "@chakra-ui/react";
+import { Card, Text, Circle, Heading, Icon, VStack } from "@chakra-ui/react";
 import '@fontsource-variable/comfortaa';
 
 interface EntidadExportSelectCardProps {

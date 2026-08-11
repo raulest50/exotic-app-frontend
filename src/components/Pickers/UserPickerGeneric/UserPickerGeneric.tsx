@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import {
-    Steps,
     Box,
     Button,
     Input,
@@ -137,7 +136,7 @@ const UserGenericPicker: React.FC<UserGenericPickerProps> = ({
                                     <HStack>
                                         <Input
                                             value={searchText}
-                                            onValueChange={(e) => setSearchText(e.target.value)}
+                                            onChange={(e) => setSearchText(e.target.value)}
                                             onKeyDown={onKeyPress_InputBuscar}
                                             placeholder="Ingrese texto de búsqueda"
                                             disabled={isLoading}
@@ -145,7 +144,7 @@ const UserGenericPicker: React.FC<UserGenericPickerProps> = ({
                                         <NativeSelect.Root>
                                             <NativeSelect.Field
                                                 value={searchType}
-                                                onValueChange={(e) => setSearchType(e.target.value as SearchType)}
+                                                onChange={(e) => setSearchType(e.target.value as SearchType)}
                                                 disabled={isLoading}
                                                 width="150px">
                                                 <option value={SearchType.ID}>ID</option>

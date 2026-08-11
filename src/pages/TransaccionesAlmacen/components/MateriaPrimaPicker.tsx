@@ -1,7 +1,6 @@
 // ./MateriaPrimaPicker.tsx
 import React, { useState } from 'react';
 import {
-    Steps,
     Box,
     Button,
     Input,
@@ -142,7 +141,7 @@ const MateriaPrimaPicker: React.FC<MateriaPrimaPickerProps> = ({
                                     <HStack>
                                         <Input
                                             value={searchText}
-                                            onValueChange={(e) => setSearchText(e.target.value)}
+                                            onChange={(e) => setSearchText(e.target.value)}
                                             onKeyDown={onKeyPress_InputBuscar}
                                             placeholder="Ingrese nombre o ID"
                                             disabled={isLoading}
@@ -150,7 +149,7 @@ const MateriaPrimaPicker: React.FC<MateriaPrimaPickerProps> = ({
                                         <NativeSelect.Root>
                                             <NativeSelect.Field
                                                 value={tipoBusqueda}
-                                                onValueChange={(e) => setTipoBusqueda(e.target.value)}
+                                                onChange={(e) => setTipoBusqueda(e.target.value)}
                                                 width="150px"
                                                 disabled={isLoading}>
                                                 <option value="NOMBRE">Nombre</option>

@@ -1,4 +1,4 @@
-import { Steps, Alert, Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
+import { Alert, Container, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader";
 import { my_style_tab } from "../../styles/styles_general";
 import { useAccessSnapshot } from "../../auth/usePermissions";

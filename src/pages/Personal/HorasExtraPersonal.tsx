@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -302,31 +301,31 @@ export function HorasExtraPersonal() {
                     <GridItem>
                         <Field.Root required>
                             <Field.Label>Fecha</Field.Label>
-                            <Input type="date" value={fecha} onValueChange={(e) => setFecha(e.target.value)} />
+                            <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
                         </Field.Root>
                     </GridItem>
                     <GridItem>
                         <Field.Root required>
                             <Field.Label>Inicio</Field.Label>
-                            <Input type="time" value={horaInicio} onValueChange={(e) => setHoraInicio(e.target.value)} />
+                            <Input type="time" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} />
                         </Field.Root>
                     </GridItem>
                     <GridItem>
                         <Field.Root required>
                             <Field.Label>Fin</Field.Label>
-                            <Input type="time" value={horaFin} onValueChange={(e) => setHoraFin(e.target.value)} />
+                            <Input type="time" value={horaFin} onChange={(e) => setHoraFin(e.target.value)} />
                         </Field.Root>
                     </GridItem>
                     <GridItem colSpan={[1, 2]}>
                         <Field.Root required>
                             <Field.Label>Motivo</Field.Label>
-                            <Input value={motivo} onValueChange={(e) => setMotivo(e.target.value)} />
+                            <Input value={motivo} onChange={(e) => setMotivo(e.target.value)} />
                         </Field.Root>
                     </GridItem>
                     <GridItem colSpan={[1, 2]}>
                         <Field.Root>
                             <Field.Label>Observaciones</Field.Label>
-                            <Input value={observaciones} onValueChange={(e) => setObservaciones(e.target.value)} />
+                            <Input value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
                         </Field.Root>
                     </GridItem>
                     <GridItem colSpan={[1, 4]}>
@@ -343,24 +342,24 @@ export function HorasExtraPersonal() {
                 <Grid templateColumns={['1fr', '2fr repeat(3, 1fr) auto']} gap={3} alignItems="end">
                     <Field.Root>
                         <Field.Label>Buscar</Field.Label>
-                        <Input value={q} onValueChange={(e) => setQ(e.target.value)} onKeyDown={(e) => {
+                        <Input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => {
                             if (e.key === 'Enter') buscar(0);
                         }} />
                     </Field.Root>
                     <Field.Root>
                         <Field.Label>Desde</Field.Label>
-                        <Input type="date" value={desde} onValueChange={(e) => setDesde(e.target.value)} />
+                        <Input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
                     </Field.Root>
                     <Field.Root>
                         <Field.Label>Hasta</Field.Label>
-                        <Input type="date" value={hasta} onValueChange={(e) => setHasta(e.target.value)} />
+                        <Input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
                     </Field.Root>
                     <Field.Root>
                         <Field.Label>Estado</Field.Label>
                         <NativeSelect.Root>
                             <NativeSelect.Field
                                 value={estado}
-                                onValueChange={(e) => setEstado(e.target.value as EstadoRegistroHoraExtra | '')}>
+                                onChange={(e) => setEstado(e.target.value as EstadoRegistroHoraExtra | '')}>
                                 <option value="">Todos</option>
                                 {Object.values(EstadoRegistroHoraExtra).map((item) => (
                                     <option key={item} value={item}>{getEstadoRegistroHoraExtraText(item)}</option>
@@ -472,7 +471,7 @@ export function HorasExtraPersonal() {
                             <Dialog.Body>
                                 <Field.Root required>
                                     <Field.Label>Motivo</Field.Label>
-                                    <Textarea value={decisionMotivo} onValueChange={(e) => setDecisionMotivo(e.target.value)} />
+                                    <Textarea value={decisionMotivo} onChange={(e) => setDecisionMotivo(e.target.value)} />
                                 </Field.Root>
                             </Dialog.Body>
                             <Dialog.Footer>

@@ -9,7 +9,6 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import {
-    Steps,
     Alert,
     Box,
     Button,
@@ -721,7 +720,7 @@ export default function MonitorearAreasOperativasTab() {
                             type="date"
                             value={fechaConsulta}
                             max={getTodayIsoDate()}
-                            onValueChange={(event) => setFechaConsulta(event.target.value)}
+                            onChange={(event) => setFechaConsulta(event.target.value)}
                             w={{ base: "full", md: "220px" }}
                             bg="white"
                         />
@@ -745,7 +744,7 @@ export default function MonitorearAreasOperativasTab() {
                             <NativeSelect.Root>
                                 <NativeSelect.Field
                                     value={metricMode}
-                                    onValueChange={(event) => handleMetricModeChange(event.target.value as MetricMode)}
+                                    onChange={(event) => handleMetricModeChange(event.target.value as MetricMode)}
                                     w={{ base: "full", md: "260px" }}
                                     bg="white">
                                     <option value="actual">Actual</option>
@@ -766,7 +765,7 @@ export default function MonitorearAreasOperativasTab() {
                                         type="date"
                                         value={rangoDesde}
                                         max={getTodayIsoDate()}
-                                        onValueChange={(event) => setRangoDesde(event.target.value)}
+                                        onChange={(event) => setRangoDesde(event.target.value)}
                                         w={{ base: "full", md: "220px" }}
                                         bg="white"
                                     />
@@ -779,7 +778,7 @@ export default function MonitorearAreasOperativasTab() {
                                         type="date"
                                         value={rangoHasta}
                                         max={getTodayIsoDate()}
-                                        onValueChange={(event) => setRangoHasta(event.target.value)}
+                                        onChange={(event) => setRangoHasta(event.target.value)}
                                         w={{ base: "full", md: "220px" }}
                                         bg="white"
                                     />
@@ -913,7 +912,7 @@ export default function MonitorearAreasOperativasTab() {
                                         <NativeSelect.Root>
                                             <NativeSelect.Field
                                                 value={correctionTarget}
-                                                onValueChange={(event) => setCorrectionTarget(event.target.value)}
+                                                onChange={(event) => setCorrectionTarget(event.target.value)}
                                                 disabled={correctionSaving}>
                                                 {CORRECTION_STATE_OPTIONS
                                                     .filter((option) => option.value !== correctionCard?.estado)
@@ -931,7 +930,7 @@ export default function MonitorearAreasOperativasTab() {
                                         <Field.Label>Motivo</Field.Label>
                                         <Textarea
                                             value={correctionMotivo}
-                                            onValueChange={(event) => setCorrectionMotivo(event.target.value)}
+                                            onChange={(event) => setCorrectionMotivo(event.target.value)}
                                             maxLength={500}
                                             rows={4}
                                             disabled={correctionSaving}

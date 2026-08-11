@@ -1,5 +1,4 @@
 import {
-    Steps,
     Badge,
     Button,
     ButtonGroup,
@@ -261,7 +260,7 @@ export default function InformesGlobalesTab() {
                                     <NativeSelect.Field
                                         minH="44px"
                                         value={dateMode}
-                                        onValueChange={(event) => setDateMode(event.target.value as DateMode)}>
+                                        onChange={(event) => setDateMode(event.target.value as DateMode)}>
                                         <option value="fecha_unica">Fecha única</option>
                                         <option value="rango">Rango de fechas</option>
                                     </NativeSelect.Field>
@@ -276,7 +275,7 @@ export default function InformesGlobalesTab() {
                                         minH="44px"
                                         type="date"
                                         value={date}
-                                        onValueChange={(event) => setDate(event.target.value)}
+                                        onChange={(event) => setDate(event.target.value)}
                                     />
                                     <Field.ErrorText>Seleccione una fecha.</Field.ErrorText>
                                 </Field.Root>
@@ -288,7 +287,7 @@ export default function InformesGlobalesTab() {
                                             minH="44px"
                                             type="date"
                                             value={startDate}
-                                            onValueChange={(event) => setStartDate(event.target.value)}
+                                            onChange={(event) => setStartDate(event.target.value)}
                                         />
                                         <Field.ErrorText>Revise la fecha inicial.</Field.ErrorText>
                                     </Field.Root>
@@ -301,7 +300,7 @@ export default function InformesGlobalesTab() {
                                             minH="44px"
                                             type="date"
                                             value={endDate}
-                                            onValueChange={(event) => setEndDate(event.target.value)}
+                                            onChange={(event) => setEndDate(event.target.value)}
                                         />
                                         <Field.ErrorText>
                                             {rangeTooLong

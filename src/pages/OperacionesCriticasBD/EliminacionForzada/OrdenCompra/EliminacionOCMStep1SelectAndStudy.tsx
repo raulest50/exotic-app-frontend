@@ -1,4 +1,4 @@
-import { Steps, Box, Button, Flex, Heading, Text, useDisclosure, VStack } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Text, useDisclosure, VStack } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from "axios";
 import { useMemo, useState } from "react";

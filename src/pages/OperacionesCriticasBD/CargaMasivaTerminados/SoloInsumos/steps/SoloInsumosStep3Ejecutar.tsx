@@ -1,4 +1,4 @@
-import { Steps, Alert, Box, Button, Flex, Heading, Spinner, Text, VStack } from "@chakra-ui/react";
+import { Alert, Box, Button, Flex, Heading, Spinner, Text, VStack } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { useColorModeValue } from "../../../../../components/ui/color-mode";
 import { useMemo, useState } from "react";

@@ -12,7 +12,6 @@
  */
 
 import {
-    Steps,
     Flex,
     Box,
     Heading,
@@ -494,7 +493,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                         <Field.Root mt={2}>
                                             <Input
                                                 value={productoData.nombre}
-                                                onValueChange={(e) => handleInputChange('nombre', e.target.value)}
+                                                onChange={(e) => handleInputChange('nombre', e.target.value)}
                                             />
                                         </Field.Root>
                                     ) : (
@@ -538,7 +537,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                                 <NativeSelect.Root>
                                                     <NativeSelect.Field
                                                         value={(productoData as Material).tipoMaterial}
-                                                        onValueChange={(e) => handleInputChange('tipoMaterial', Number(e.target.value))}>
+                                                        onChange={(e) => handleInputChange('tipoMaterial', Number(e.target.value))}>
                                                         <option value={1}>Materia Prima</option>
                                                         <option value={2}>Material de Empaque</option>
                                                     </NativeSelect.Field>
@@ -557,7 +556,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                             <Field.Root mt={2}>
                                                 <Input
                                                     value={(productoData as Material).prefijoLote ?? ''}
-                                                    onValueChange={(e) => handleInputChange('prefijoLote', e.target.value.toUpperCase())}
+                                                    onChange={(e) => handleInputChange('prefijoLote', e.target.value.toUpperCase())}
                                                     disabled={!isInventareable}
                                                 />
                                                 <Field.HelperText fontSize="xs">
@@ -580,7 +579,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                                     type="text"
                                                     inputMode="decimal"
                                                     value={materialPuntoReordenInput}
-                                                    onValueChange={(e) =>
+                                                    onChange={(e) =>
                                                         setMaterialPuntoReordenInput(e.target.value)
                                                     }
                                                     disabled={!isInventareable}
@@ -617,7 +616,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                         <Field.Root mt={2}>
                                             <Input
                                                 value={productoData.cantidadUnidad}
-                                                onValueChange={(e) => handleInputChange('cantidadUnidad', e.target.value)}
+                                                onChange={(e) => handleInputChange('cantidadUnidad', e.target.value)}
                                             />
                                         </Field.Root>
                                     ) : (
@@ -631,7 +630,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                                             <NativeSelect.Root>
                                                 <NativeSelect.Field
                                                     value={productoData.ivaPercentual}
-                                                    onValueChange={(e) =>
+                                                    onChange={(e) =>
                                                         handleInputChange('ivaPercentual', Number(e.target.value))
                                                     }>
                                                     <option value={IVA_VALUES.iva_0}> No Tiene </option>
@@ -666,7 +665,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
                         <Field.Root>
                             <Textarea
                                 value={productoData.observaciones || ''}
-                                onValueChange={(e) => handleInputChange('observaciones', e.target.value)}
+                                onChange={(e) => handleInputChange('observaciones', e.target.value)}
                                 placeholder="Ingrese observaciones sobre el producto"
                                 rows={4}
                             />

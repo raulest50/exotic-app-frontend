@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import VendedorPicker from './VendedorPicker.tsx';
-import { Steps, Button, Box, Text, VStack } from '@chakra-ui/react';
+import { Button, Box, Text, VStack } from '@chakra-ui/react';
 
 // Interface for Vendedor based on the backend model
 interface Vendedor {

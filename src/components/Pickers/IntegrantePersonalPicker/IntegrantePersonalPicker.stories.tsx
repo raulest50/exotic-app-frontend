@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Steps, Badge, Box, Button, Text, VStack } from '@chakra-ui/react';
+import { Badge, Box, Button, Text, VStack } from '@chakra-ui/react';
 import axios from 'axios';
 import IntegrantePersonalPicker from './IntegrantePersonalPicker.tsx';
 import {

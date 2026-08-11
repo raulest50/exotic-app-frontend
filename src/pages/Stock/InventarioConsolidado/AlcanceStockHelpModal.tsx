@@ -1,4 +1,4 @@
-import { Steps, Box, Text, VStack, Separator, Dialog, Portal } from '@chakra-ui/react';
+import { Box, Text, VStack, Separator, Dialog, Portal } from '@chakra-ui/react';
 
 type AlcanceStockHelpModalProps = {
     isOpen: boolean;

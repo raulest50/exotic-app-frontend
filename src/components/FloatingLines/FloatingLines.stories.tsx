@@ -1,6 +1,5 @@
 import type { Story, StoryDefault } from '@ladle/react';
 import {
-  Steps,
   Box,
   Button,
   Container,

@@ -1,7 +1,6 @@
 // src/components/OrdenCompraItems.tsx
 import React from 'react';
 import {
-    Steps,
     Table,
     Thead,
     Tbody,
@@ -86,7 +85,7 @@ const ListaItemsOCM: React.FC<OrdenCompraItemsProps> = ({
                                         size="sm"
                                         type="number"
                                         value={item.cantidad}
-                                        onValueChange={(e) =>
+                                        onChange={(e) =>
                                             onUpdateItem(
                                                 index,
                                                 'cantidad',
@@ -100,7 +99,7 @@ const ListaItemsOCM: React.FC<OrdenCompraItemsProps> = ({
                                         size="sm"
                                         type="number"
                                         value={item.precioUnitario}
-                                        onValueChange={(e) =>
+                                        onChange={(e) =>
                                             onUpdateItem(
                                                 index,
                                                 'precioUnitario',

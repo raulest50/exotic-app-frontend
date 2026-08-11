@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-    Steps,
     Box,
     Button,
     Flex,
@@ -71,7 +70,7 @@ export default function FiltroAreasOperativas({ onBuscar, loading }: FiltroAreas
                     <NativeSelect.Root>
                         <NativeSelect.Field
                             value={searchType}
-                            onValueChange={(e) => handleSearchTypeChange(e.target.value as SearchType)}
+                            onChange={(e) => handleSearchTypeChange(e.target.value as SearchType)}
                             disabled={loading}>
                             <option value="NOMBRE">Nombre del Área</option>
                             <option value="RESPONSABLE">Usuario Responsable</option>
@@ -91,7 +90,7 @@ export default function FiltroAreasOperativas({ onBuscar, loading }: FiltroAreas
                     {searchType === 'NOMBRE' && (
                         <Input
                             value={nombre}
-                            onValueChange={(e) => setNombre(e.target.value)}
+                            onChange={(e) => setNombre(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder="Ingrese nombre del área"
                             disabled={loading}
@@ -102,7 +101,7 @@ export default function FiltroAreasOperativas({ onBuscar, loading }: FiltroAreas
                         <Input
                             type="number"
                             value={areaId}
-                            onValueChange={(e) => setAreaId(e.target.value)}
+                            onChange={(e) => setAreaId(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder="Ingrese ID del área"
                             disabled={loading}

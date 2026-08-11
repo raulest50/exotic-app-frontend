@@ -1,6 +1,5 @@
 import {useEffect, useMemo, useState} from 'react';
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -269,7 +268,7 @@ export default function DispensacionStep1SelectOrder({setActiveStep, setDispensa
                     <NativeSelect.Root>
                         <NativeSelect.Field
                             value={size}
-                            onValueChange={(e) => {setPage(0); setSize(parseInt(e.target.value));}}
+                            onChange={(e) => {setPage(0); setSize(parseInt(e.target.value));}}
                             width='80px'>
                             {[5,10,20,50].map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </NativeSelect.Field>

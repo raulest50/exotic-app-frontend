@@ -1,5 +1,5 @@
 import React from 'react';
-import { Steps, Table, Thead, Tbody, Tr, Th, Td, Box, IconButton } from '@chakra-ui/react';
+import { Table, Thead, Tbody, Tr, Th, Td, Box, IconButton } from '@chakra-ui/react';
 import { Tooltip } from '@/components/ui/tooltip';
 import { IntegrantePersonalResumen, getEstadoIntegranteText } from './types';
 import { LuEye } from 'react-icons/lu';

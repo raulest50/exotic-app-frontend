@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-    Steps,
     Box,
     Button,
     Flex,
@@ -163,7 +162,7 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
                             <NativeSelect.Root>
                                 <NativeSelect.Field
                                     value={tipoFiltroId.toString()}
-                                    onValueChange={(e) => {
+                                    onChange={(e) => {
                                         const value = parseInt(e.target.value) as 0 | 1 | 2 | 3;
                                         setTipoFiltroId(value);
                                         setTransaccionId('');
@@ -185,7 +184,7 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
                                 <Input
                                     type="number"
                                     value={transaccionId}
-                                    onValueChange={(e) => setTransaccionId(e.target.value)}
+                                    onChange={(e) => setTransaccionId(e.target.value)}
                                     placeholder="Ej: 123"
                                     min="1"
                                 />
@@ -198,7 +197,7 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
                                 <Input
                                     type="number"
                                     value={ordenProduccionId}
-                                    onValueChange={(e) => setOrdenProduccionId(e.target.value)}
+                                    onChange={(e) => setOrdenProduccionId(e.target.value)}
                                     placeholder="Ej: 456"
                                     min="1"
                                 />
@@ -210,7 +209,7 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
                                 <Field.Label>Lote de Producción</Field.Label>
                                 <Input
                                     value={loteAsignado}
-                                    onValueChange={(e) => setLoteAsignado(e.target.value)}
+                                    onChange={(e) => setLoteAsignado(e.target.value)}
                                     placeholder="Ej: LOT-PT"
                                 />
                             </Field.Root>
@@ -272,7 +271,7 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
                             <NativeSelect.Root>
                                 <NativeSelect.Field
                                     value={tipoFiltroFecha.toString()}
-                                    onValueChange={(e) => {
+                                    onChange={(e) => {
                                         const value = parseInt(e.target.value) as 0 | 1 | 2;
                                         setTipoFiltroFecha(value);
                                         setFechaInicio('');

@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactElement } from "react";
 import { useColorModeValue } from "../../../components/ui/color-mode";
 import {
-    Steps,
     Box,
     Button,
     Card,
@@ -80,7 +79,7 @@ export default function InformesDiariosTab() {
                     <NativeSelect.Root>
                         <NativeSelect.Field
                             value={selectedReport}
-                            onValueChange={(event) => setSelectedReport(event.target.value as InformeDiarioKey)}>
+                            onChange={(event) => setSelectedReport(event.target.value as InformeDiarioKey)}>
                             {REPORT_OPTIONS.map((opt) => (
                                 <option key={opt.key} value={opt.key}>
                                     {opt.label}

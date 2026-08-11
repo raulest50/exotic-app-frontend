@@ -1,6 +1,6 @@
 import { type Dispatch, type SetStateAction } from "react";
 import {IngresoOCM_DTA, OrdenCompra, TipoEntidadCausante} from "../../types.tsx";
-import { Steps, Button, Flex, Heading, Icon, IconButton, Text, Separator } from "@chakra-ui/react";
+import { Button, Flex, Heading, Icon, IconButton, Text, Separator } from "@chakra-ui/react";
 import { MdAddAPhoto } from "react-icons/md";
 import { FaFolderOpen } from "react-icons/fa";
 import { FaFileCircleQuestion } from "react-icons/fa6";

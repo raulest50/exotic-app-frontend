@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Box,
     Button,
@@ -606,7 +605,7 @@ export default function CrearDesdePlantillaTab() {
                         <Field.Label>Codigo Id</Field.Label>
                         <Input
                             value={productoId}
-                            onValueChange={(e) => setProductoId(normalizeProductId(e.target.value))}
+                            onChange={(e) => setProductoId(normalizeProductId(e.target.value))}
                             variant="filled"
                         />
                     </Field.Root>
@@ -614,7 +613,7 @@ export default function CrearDesdePlantillaTab() {
                 <GridItem colSpan={2}>
                     <Field.Root required>
                         <Field.Label>Nombre</Field.Label>
-                        <Input value={nombre} onValueChange={(e) => setNombre(e.target.value)} variant="filled" />
+                        <Input value={nombre} onChange={(e) => setNombre(e.target.value)} variant="filled" />
                     </Field.Root>
                 </GridItem>
                 <GridItem colSpan={1}>
@@ -622,7 +621,7 @@ export default function CrearDesdePlantillaTab() {
                         <NativeSelect.Root>
                             <NativeSelect.Field
                                 value={tipoUnidades}
-                                onValueChange={(e) => setTipoUnidades(e.target.value)}>
+                                onChange={(e) => setTipoUnidades(e.target.value)}>
                                 <option value={UNIDADES.KG}>{UNIDADES.KG}</option>
                                 <option value={UNIDADES.L}>{UNIDADES.L}</option>
                                 <option value={UNIDADES.U}>{UNIDADES.U}</option>
@@ -634,7 +633,7 @@ export default function CrearDesdePlantillaTab() {
                             <Field.Label>Contenido por envase</Field.Label>
                             <Input
                                 value={cantidadUnidad}
-                                onValueChange={(e) => setCantidadUnidad(e.target.value)}
+                                onChange={(e) => setCantidadUnidad(e.target.value)}
                                 variant="filled"
                             />
                         </Field.Root>
@@ -658,7 +657,7 @@ export default function CrearDesdePlantillaTab() {
                         <HStack>
                             <Input
                                 value={prefijoLote}
-                                onValueChange={(e) => {
+                                onChange={(e) => {
                                     setPrefijoLote(e.target.value);
                                     setPrefijoVerificado(false);
                                 }}
@@ -696,7 +695,7 @@ export default function CrearDesdePlantillaTab() {
                         <Field.Label>Observaciones</Field.Label>
                         <Textarea
                             value={observaciones}
-                            onValueChange={(e) => setObservaciones(e.target.value)}
+                            onChange={(e) => setObservaciones(e.target.value)}
                             variant="filled"
                         />
                     </Field.Root>

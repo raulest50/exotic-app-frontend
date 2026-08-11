@@ -1,4 +1,4 @@
-import { Steps, Box, Table, Thead, Tbody, Tr, Th, Td, Button, Text } from '@chakra-ui/react';
+import { Box, Table, Thead, Tbody, Tr, Th, Td, Button, Text } from '@chakra-ui/react';
 import { Cliente } from '../../types.tsx';
 
 interface Props{

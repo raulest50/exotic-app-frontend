@@ -1,7 +1,7 @@
 // BandejaBusqueda.tsx
 import React, { useState } from "react";
 import { Producto, TIPOS_PRODUCTOS } from "../../../../types.tsx";
-import { Steps, Box, Button, Flex, Input, NativeSelect, Spinner, Field } from "@chakra-ui/react";
+import { Box, Button, Flex, Input, NativeSelect, Spinner, Field } from "@chakra-ui/react";
 import axios from "axios";
 import EndPointsURL from "../../../../../../api/EndPointsURL.tsx";
 import ItemBandejaBusqueda from "./ItemBandejaBusqueda.tsx";
@@ -60,7 +60,7 @@ const BandejaBusqueda: React.FC<BandejaBusquedaProps> = ({ onAddInsumo }) => {
                         <Field.Label>Buscar</Field.Label>
                         <Input
                             value={searchString}
-                            onValueChange={(e) => setSearchString(e.target.value)}
+                            onChange={(e) => setSearchString(e.target.value)}
                             placeholder="Ingrese término de búsqueda..."
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") {
@@ -80,7 +80,7 @@ const BandejaBusqueda: React.FC<BandejaBusquedaProps> = ({ onAddInsumo }) => {
                         <NativeSelect.Root>
                             <NativeSelect.Field
                                 value={tipoBusqueda}
-                                onValueChange={(e) => setTipoBusqueda(e.target.value)}>
+                                onChange={(e) => setTipoBusqueda(e.target.value)}>
                                 <option value="Nombre">Nombre</option>
                                 <option value="ID">ID</option>
                             </NativeSelect.Field>
@@ -92,7 +92,7 @@ const BandejaBusqueda: React.FC<BandejaBusquedaProps> = ({ onAddInsumo }) => {
                         <NativeSelect.Root>
                             <NativeSelect.Field
                                 value={clasificacion}
-                                onValueChange={(e) => setClasificacion(e.target.value)}>
+                                onChange={(e) => setClasificacion(e.target.value)}>
                                 <option value={TIPOS_PRODUCTOS.materiaPrima}>Materia Prima</option>
                                 <option value={TIPOS_PRODUCTOS.semiTerminado}>Semiterminado</option>
                             </NativeSelect.Field>

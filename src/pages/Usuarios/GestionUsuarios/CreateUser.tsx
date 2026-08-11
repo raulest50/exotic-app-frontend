@@ -1,6 +1,6 @@
 // src/pages/Usuarios/CreateUser.tsx
 import { useState } from 'react';
-import { Steps, Box, Button, Input, Heading, Grid, GridItem, Flex, Field } from '@chakra-ui/react';
+import { Box, Button, Input, Heading, Grid, GridItem, Flex, Field } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -86,7 +86,7 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
                         <Input autoComplete={"off"}
                                type="number"
                                value={cedula}
-                               onValueChange={(e) => setCedula(e.target.value)}
+                               onChange={(e) => setCedula(e.target.value)}
                         />
                     </Field.Root>
                 </GridItem>
@@ -95,7 +95,7 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
                         <Field.Label>Nombre Completo</Field.Label>
                         <Input autoComplete={"off"}
                                value={nombreCompleto}
-                               onValueChange={(e) => setNombreCompleto(e.target.value)}
+                               onChange={(e) => setNombreCompleto(e.target.value)}
                         />
                     </Field.Root>
                 </GridItem>
@@ -105,7 +105,7 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
                         <Field.Label>Nombre de Usuario</Field.Label>
                         <Input autoComplete={"new-username"}
                                value={username}
-                               onValueChange={(e) => setUsername(e.target.value)}
+                               onChange={(e) => setUsername(e.target.value)}
                         />
                     </Field.Root>
                 </GridItem>
@@ -115,7 +115,7 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
                         <Input autoComplete={"new-password"}
                                type="password"
                                value={password}
-                               onValueChange={(e) => setPassword(e.target.value)}
+                               onChange={(e) => setPassword(e.target.value)}
                         />
                     </Field.Root>
                 </GridItem>
@@ -127,7 +127,7 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
                             autoComplete={"off"}
                             type="email" 
                             value={email} 
-                            onValueChange={(e) => {
+                            onChange={(e) => {
                                 setEmail(e.target.value);
                                 if (emailError) setEmailError('');
                             }} 
@@ -141,7 +141,7 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
                         <Field.Label>Celular</Field.Label>
                         <Input autoComplete={"off"}
                                value={cel}
-                               onValueChange={(e) => setCel(e.target.value)}
+                               onChange={(e) => setCel(e.target.value)}
                         />
                     </Field.Root>
                 </GridItem>
@@ -150,7 +150,7 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
                         <Field.Label>Dirección</Field.Label>
                         <Input autoComplete={"off"}
                                value={direccion}
-                               onValueChange={(e) => setDireccion(e.target.value)}
+                               onChange={(e) => setDireccion(e.target.value)}
                         />
                     </Field.Root>
                 </GridItem>
@@ -161,7 +161,7 @@ export default function CreateUser({ onUserCreated, onCancel }: Props) {
                         <Input autoComplete={"off"}
                                type="date"
                                value={fechaNacimiento}
-                               onValueChange={(e) => setFechaNacimiento(e.target.value)}
+                               onChange={(e) => setFechaNacimiento(e.target.value)}
                         />
                     </Field.Root>
                 </GridItem>

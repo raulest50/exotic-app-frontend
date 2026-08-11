@@ -1,6 +1,5 @@
 import {useState, useEffect} from 'react';
 import {
-    Steps,
     Button,
     Flex,
     Table,
@@ -224,7 +223,7 @@ export function LotePickerDispensacion({
                                                         <NativeSelect.Field
                                                             size="sm"
                                                             value={size}
-                                                            onValueChange={(e) => handleSizeChange(parseInt(e.target.value))}>
+                                                            onChange={(e) => handleSizeChange(parseInt(e.target.value))}>
                                                             <option value={5}>5 por página</option>
                                                             <option value={10}>10 por página</option>
                                                             <option value={20}>20 por página</option>

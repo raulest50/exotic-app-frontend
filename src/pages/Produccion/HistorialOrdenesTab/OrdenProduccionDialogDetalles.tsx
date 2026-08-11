@@ -1,5 +1,4 @@
 import {
-    Steps,
     Box,
     Alert,
     Badge,
@@ -267,7 +266,7 @@ export default function OrdenProduccionDialogDetalles({
                                                 <Field.Label>{"Ingrese el token de confirmaci\u00F3n:"}</Field.Label>
                                                 <Input
                                                     value={inputToken}
-                                                    onValueChange={(e) => setInputToken(e.target.value)}
+                                                    onChange={(e) => setInputToken(e.target.value)}
                                                     placeholder="Ingrese el token de 4 d\u00EDgitos"
                                                 />
                                             </Field.Root>

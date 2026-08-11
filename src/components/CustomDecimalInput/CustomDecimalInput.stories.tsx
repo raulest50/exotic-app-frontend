@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Steps, VStack, HStack, Text, Box } from '@chakra-ui/react';
+import { VStack, HStack, Text, Box } from '@chakra-ui/react';
 import CustomDecimalInput from './CustomDecimalInput';
 
 export const Default = () => {

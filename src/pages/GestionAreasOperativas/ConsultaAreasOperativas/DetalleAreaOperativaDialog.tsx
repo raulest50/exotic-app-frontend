@@ -1,6 +1,5 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    Steps,
     Alert,
     Avatar,
     Badge,
@@ -509,7 +508,7 @@ export default function DetalleAreaOperativaDialog({
                                                                     <Field.Label>Nombre</Field.Label>
                                                                     <Input
                                                                         value={editNombre}
-                                                                        onValueChange={(event) => setEditNombre(event.target.value)}
+                                                                        onChange={(event) => setEditNombre(event.target.value)}
                                                                         placeholder="Nombre del área"
                                                                     />
                                                                 </Field.Root>
@@ -518,7 +517,7 @@ export default function DetalleAreaOperativaDialog({
                                                                     <Field.Label>Descripción</Field.Label>
                                                                     <Textarea
                                                                         value={editDescripcion}
-                                                                        onValueChange={(event) => setEditDescripcion(event.target.value)}
+                                                                        onChange={(event) => setEditDescripcion(event.target.value)}
                                                                         placeholder="Descripción del área"
                                                                         resize="vertical"
                                                                         minH="120px"

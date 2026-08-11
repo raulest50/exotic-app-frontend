@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -230,11 +229,11 @@ export default function HorasExtraBiPanel() {
                         <SimpleGrid columns={{ base: 1, lg: 4 }} gap={4}>
                             <Field.Root>
                                 <Field.Label>Fecha desde</Field.Label>
-                                <Input type="date" value={fechaDesde} onValueChange={(e) => setFechaDesde(e.target.value)} />
+                                <Input type="date" value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} />
                             </Field.Root>
                             <Field.Root invalid={rangeInvalid}>
                                 <Field.Label>Fecha hasta</Field.Label>
-                                <Input type="date" value={fechaHasta} onValueChange={(e) => setFechaHasta(e.target.value)} />
+                                <Input type="date" value={fechaHasta} onChange={(e) => setFechaHasta(e.target.value)} />
                                 {rangeInvalid ? (
                                     <Field.HelperText color="red.500">La fecha final no puede ser anterior.</Field.HelperText>
                                 ) : null}
@@ -244,7 +243,7 @@ export default function HorasExtraBiPanel() {
                                 <NativeSelect.Root>
                                     <NativeSelect.Field
                                         value={granularidad}
-                                        onValueChange={(e) => setGranularidad(e.target.value as HorasExtraBiGranularidad)}>
+                                        onChange={(e) => setGranularidad(e.target.value as HorasExtraBiGranularidad)}>
                                         <option value="DIA">Día</option>
                                         <option value="SEMANA">Semana</option>
                                         <option value="MES">Mes</option>
@@ -257,7 +256,7 @@ export default function HorasExtraBiPanel() {
                                 <NativeSelect.Root>
                                     <NativeSelect.Field
                                         value={departamento}
-                                        onValueChange={(e) => setDepartamento(e.target.value as DepartamentoPersonal | "")}>
+                                        onChange={(e) => setDepartamento(e.target.value as DepartamentoPersonal | "")}>
                                         <option value="">Todos</option>
                                         <option value="PRODUCCION">Producción</option>
                                         <option value="ADMINISTRATIVO">Administrativo</option>
@@ -267,7 +266,7 @@ export default function HorasExtraBiPanel() {
                             </Field.Root>
                             <Field.Root>
                                 <Field.Label>Cargo</Field.Label>
-                                <Input value={cargo} onValueChange={(e) => setCargo(e.target.value)} />
+                                <Input value={cargo} onChange={(e) => setCargo(e.target.value)} />
                             </Field.Root>
                             <Field.Root>
                                 <Field.Label>Integrante</Field.Label>

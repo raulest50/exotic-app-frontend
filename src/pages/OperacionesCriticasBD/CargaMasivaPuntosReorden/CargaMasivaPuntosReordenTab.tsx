@@ -369,7 +369,7 @@ export default function CargaMasivaPuntosReordenTab({
                             id="puntos-reorden-file"
                             type="file"
                             accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                            onValueChange={handleFileChange}
+                            onChange={handleFileChange}
                             p={1}
                         />
                         <Field.HelperText>Solo .xlsx, máximo 10 MB.</Field.HelperText>

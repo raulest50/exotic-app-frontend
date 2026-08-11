@@ -1,5 +1,5 @@
 
-import { Steps, Button, Flex, Heading, HStack, Icon, Text } from "@chakra-ui/react";
+import { Button, Flex, Heading, HStack, Icon, Text } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 
 import { RiSave3Fill } from "react-icons/ri";

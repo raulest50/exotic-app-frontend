@@ -1,4 +1,4 @@
-import { Steps, Box, Button, Flex, Table, Thead, Tbody, Tr, Th, Td, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, Flex, Table, Thead, Tbody, Tr, Th, Td, Text, VStack } from '@chakra-ui/react';
 import CustomDecimalInput from '../../../../../components/CustomDecimalInput/CustomDecimalInput';
 import { AveriaAlmacenItem } from '../WizardAveriaAlmacen';
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Steps, Button, Input, Text, Field, Dialog, Portal } from '@chakra-ui/react';
+import { Button, Input, Text, Field, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { OrdenCompra } from '../../types';
 import { closeOrdenCompraOcm } from '../ocmIngresoApi';
@@ -126,7 +126,7 @@ export function CerrarOrdenDialog({ isOpen, onClose, orden, setActiveStep }: Cer
                                 <Input
                                     placeholder="Ingrese el token"
                                     value={inputToken}
-                                    onValueChange={(e) => setInputToken(e.target.value)}
+                                    onChange={(e) => setInputToken(e.target.value)}
                                     maxLength={4}
                                     type="text"
                                     inputMode="numeric"

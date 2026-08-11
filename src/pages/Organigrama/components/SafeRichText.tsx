@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Steps, Box, BoxProps } from "@chakra-ui/react";
+import { Box, BoxProps } from "@chakra-ui/react";
 import DOMPurify from "dompurify";
 
 const ALLOWED_TAGS = ["p", "br", "strong", "em", "u", "ul", "ol", "li", "a"];

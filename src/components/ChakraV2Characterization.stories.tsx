@@ -220,7 +220,7 @@ export const FormsV2 = () => {
         </Field.Root>
         <Field.Root invalid>
           <Field.Label>Lote</Field.Label>
-          <Input value="" onValueChange={() => undefined} placeholder="Ej. L-001" />
+          <Input value="" onChange={() => undefined} placeholder="Ej. L-001" />
           <Field.ErrorText>El lote es obligatorio.</Field.ErrorText>
         </Field.Root>
         <Field.Root readOnly>

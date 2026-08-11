@@ -1,4 +1,4 @@
-import { Steps, Button, Text, Input, Dialog, Portal } from '@chakra-ui/react';
+import { Button, Text, Input, Dialog, Portal } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 interface DeleteProductoDialogProps {
@@ -59,7 +59,7 @@ export default function DeleteProductoDialog({ isOpen, onClose, onConfirm }: Del
                             <Input
                                 placeholder="Ingrese el código aquí"
                                 value={inputCode}
-                                onValueChange={(e) => setInputCode(e.target.value)}
+                                onChange={(e) => setInputCode(e.target.value)}
                                 disabled={isLoading}
                             />
                         </Dialog.Body>

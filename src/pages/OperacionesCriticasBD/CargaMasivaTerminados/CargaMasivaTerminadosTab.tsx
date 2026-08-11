@@ -1,4 +1,4 @@
-import { Steps, Button, Container, Flex } from "@chakra-ui/react";
+import { Button, Container, Flex } from "@chakra-ui/react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useState } from "react";
 import Step0SelectTipoCarga, { TipoCargaTerminado } from "./Step0SelectTipoCarga";

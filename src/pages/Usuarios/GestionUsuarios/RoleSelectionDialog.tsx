@@ -1,6 +1,6 @@
 // src/components/RoleSelectionDialog.tsx
 import React from 'react';
-import { Steps, List, Dialog, Portal } from '@chakra-ui/react';
+import { List, Dialog, Portal } from '@chakra-ui/react';
 import { LuCheckCircle } from 'react-icons/lu';
 
 export type RoleItem = {

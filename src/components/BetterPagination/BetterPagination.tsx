@@ -1,4 +1,4 @@
-import { Steps, Flex, Button, NativeSelect, Text } from '@chakra-ui/react';
+import { Flex, Button, NativeSelect, Text } from '@chakra-ui/react';
 import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 
 interface BetterPaginationProps {
@@ -37,7 +37,7 @@ export default function BetterPagination({
                 <NativeSelect.Root>
                     <NativeSelect.Field
                         value={size}
-                        onValueChange={(e) => handleSizeChange(parseInt(e.target.value))}
+                        onChange={(e) => handleSizeChange(parseInt(e.target.value))}
                         width='80px'
                         disabled={loading}>
                         {[5, 10, 20, 50].map(opt => (

@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Badge,
     Box,
@@ -157,7 +156,7 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
                                             size="sm"
                                             minH="40px"
                                             value={referenceMode}
-                                            onValueChange={(event) => setReferenceMode(
+                                            onChange={(event) => setReferenceMode(
                                                 event.target.value as ProductionReferenceMode,
                                             )}>
                                             <option value="TOP_8">Top 8 + Otras</option>

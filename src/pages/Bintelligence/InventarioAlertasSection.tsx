@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Badge,
     Box,
@@ -575,7 +574,7 @@ function ExplorationView({
                             value={draftSearch}
                             maxLength={100}
                             placeholder="Código o nombre"
-                            onValueChange={(event) => setDraftSearch(event.target.value)}
+                            onChange={(event) => setDraftSearch(event.target.value)}
                             onKeyDown={onSearchKeyDown}
                         />
                         <IconButton
@@ -591,7 +590,7 @@ function ExplorationView({
                         <NativeSelect.Field
                             minH="40px"
                             value={group}
-                            onValueChange={(event) => onGroupChange(
+                            onChange={(event) => onGroupChange(
                                 event.target.value as FiltroGrupoAlertaInventario,
                             )}>
                             <option value="TODOS">Todos</option>
@@ -612,7 +611,7 @@ function ExplorationView({
                         <NativeSelect.Field
                             minH="40px"
                             value={unit}
-                            onValueChange={(event) => onUnitChange(event.target.value)}>
+                            onChange={(event) => onUnitChange(event.target.value)}>
                             <option value="">Todas</option>
                             {facetUnits.map((value) => (
                                 <option key={value} value={value}>{value}</option>
@@ -627,7 +626,7 @@ function ExplorationView({
                         <NativeSelect.Field
                             minH="40px"
                             value={order}
-                            onValueChange={(event) => onOrderChange(
+                            onChange={(event) => onOrderChange(
                                 event.target.value as OrdenAlertaInventario,
                             )}>
                             <option value="PRIORIDAD">Prioridad</option>
@@ -648,7 +647,7 @@ function ExplorationView({
                         <NativeSelect.Field
                             minH="40px"
                             value={size}
-                            onValueChange={(event) => onSizeChange(
+                            onChange={(event) => onSizeChange(
                                 Number(event.target.value) as PageSize,
                             )}>
                             <option value={10}>10</option>

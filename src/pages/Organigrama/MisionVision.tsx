@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useColorModeValue } from "../../components/ui/color-mode";
 import axios from "axios";
 import {
-    Steps,
     Accordion,
     Alert,
     Badge,
@@ -428,7 +427,7 @@ export function MisionVision({ canEdit }: MisionVisionProps) {
                                 </Text>
                                 <Textarea
                                     value={restoreReason}
-                                    onValueChange={(event) => setRestoreReason(event.target.value)}
+                                    onChange={(event) => setRestoreReason(event.target.value)}
                                     maxLength={1000}
                                     rows={4}
                                     placeholder="Motivo de la restauración"

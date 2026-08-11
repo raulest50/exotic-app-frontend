@@ -10,7 +10,7 @@
  * de producción.
  */
 
-import { Steps, Button, Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
+import { Button, Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
 import {FaArrowLeft} from 'react-icons/fa';
 import DefinicionProcesosTab from './ProcesosProduccion/DefinicionProcesosTab.tsx';
 import CrearRecursoProduccion from './RecursosProduccion/CrearRecursoProduccion.tsx';

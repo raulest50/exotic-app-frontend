@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import { Steps, NativeSelect, Input, Button, IconButton, HStack } from '@chakra-ui/react';
+import { NativeSelect, Input, Button, IconButton, HStack } from '@chakra-ui/react';
 import { LuRepeat, LuSearch } from 'react-icons/lu';
 
 interface Props {
@@ -41,7 +41,7 @@ export default function FiltroODP_AsistDisp({onRefresh, onSearchByLote, isLoadin
             <NativeSelect.Root>
                 <NativeSelect.Field
                     value={tipoFiltro}
-                    onValueChange={(e) => handleFiltroChange(e.target.value)}
+                    onChange={(e) => handleFiltroChange(e.target.value)}
                     width='170px'
                     size='md'>
                     <option value='sin_filtro'>Sin filtro</option>
@@ -64,7 +64,7 @@ export default function FiltroODP_AsistDisp({onRefresh, onSearchByLote, isLoadin
                     <Input
                         placeholder='Número de lote'
                         value={loteInput}
-                        onValueChange={(e) => setLoteInput(e.target.value)}
+                        onChange={(e) => setLoteInput(e.target.value)}
                         onKeyPress={handleKeyPress}
                         width='200px'
                         size='md'

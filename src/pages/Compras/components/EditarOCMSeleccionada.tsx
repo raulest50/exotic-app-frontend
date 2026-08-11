@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import {
-    Steps,
     Flex,
     Button,
     Heading,
@@ -380,7 +379,7 @@ export function EditarOcmSeleccionada({ ocm, onVolver }: Props) {
                     <NativeSelect.Root>
                         <NativeSelect.Field
                             value={condicionPago}
-                            onValueChange={handleCondicionPagoChange}
+                            onChange={handleCondicionPagoChange}
                             width="200px">
                             <option value="0">Crédito</option>
                             <option value="1">Contado</option>
@@ -393,7 +392,7 @@ export function EditarOcmSeleccionada({ ocm, onVolver }: Props) {
                     <Field.Label>Plazo de pago (días)</Field.Label>
                     <Input
                         value={plazoPago}
-                        onValueChange={handlePlazoPagoChange}
+                        onChange={handlePlazoPagoChange}
                         type="number"
                         min={0}
                     />
@@ -403,7 +402,7 @@ export function EditarOcmSeleccionada({ ocm, onVolver }: Props) {
                     <Field.Label>Tiempo de entrega (días)</Field.Label>
                     <Input
                         value={tiempoEntrega}
-                        onValueChange={handleTiempoEntregaChange}
+                        onChange={handleTiempoEntregaChange}
                     />
                 </Field.Root>
 
@@ -419,7 +418,7 @@ export function EditarOcmSeleccionada({ ocm, onVolver }: Props) {
                 <Field.Label>Observaciones</Field.Label>
                 <Textarea
                     value={observaciones}
-                    onValueChange={handleObservacionesChange}
+                    onChange={handleObservacionesChange}
                     placeholder="Ingrese observaciones"
                 />
             </Field.Root>

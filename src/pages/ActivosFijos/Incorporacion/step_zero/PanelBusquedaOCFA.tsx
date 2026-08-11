@@ -1,5 +1,4 @@
 import {
-    Steps,
     Flex,
     Card,
     Input,
@@ -92,7 +91,7 @@ export function PanelBusquedaOCFA({
                                 <Input
                                     placeholder="Ej: 12345"
                                     value={ocNumber}
-                                    onValueChange={(e) => setOcNumber(e.target.value)}
+                                    onChange={(e) => setOcNumber(e.target.value)}
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') {
                                             onSearch();

@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Badge,
     Box,
@@ -90,7 +89,7 @@ export default function IngresoTerminadosStep4Resumen({
                         <Field.Label>Digite el código {codigo} para confirmar</Field.Label>
                         <Input
                             value={codigoIngresado}
-                            onValueChange={(event) => onCodigoChange(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                            onChange={(event) => onCodigoChange(event.target.value.replace(/\D/g, "").slice(0, 4))}
                             inputMode="numeric"
                             autoComplete="off"
                             maxLength={4}

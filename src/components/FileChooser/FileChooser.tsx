@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Steps, Box, Button, HStack, Icon, Input, Text, Field } from "@chakra-ui/react";
+import { Box, Button, HStack, Icon, Input, Text, Field } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { FaFileCircleCheck, FaFileCircleQuestion } from "react-icons/fa6";
 import axios from "axios";
@@ -119,7 +119,7 @@ export function FileChooser({
             <Input
               placeholder="Ingrese el enlace de Google Sheets"
               value={link}
-              onValueChange={(e) => setLink(e.target.value)}
+              onChange={(e) => setLink(e.target.value)}
               flex={1}
             />
             <Button colorPalette="blue" onClick={handleUploadFromLink} disabled={!link}>
@@ -138,7 +138,7 @@ export function FileChooser({
             ref={inputRef}
             style={{ display: "none" }}
             accept={accept}
-            onValueChange={handleFileChange}
+            onChange={handleFileChange}
           />
           <Icon as={file ? FaFileCircleCheck : FaFileCircleQuestion} boxSize="2em" color={file ? "green" : "orange.500"} />
           {file && (

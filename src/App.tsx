@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { Steps, Center, Spinner } from '@chakra-ui/react';
+import { Center, Spinner } from '@chakra-ui/react';
 
 import './App.css'
 import EndPointsURL from './api/EndPointsURL'

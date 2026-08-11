@@ -1,5 +1,4 @@
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -159,7 +158,7 @@ export default function CalidadAreaOperativaPicker({
                                             </InputLeftElement>
                                             <Input
                                                 value={searchText}
-                                                onValueChange={(event) => setSearchText(event.target.value)}
+                                                onChange={(event) => setSearchText(event.target.value)}
                                                 onKeyDown={(event) => {
                                                     if (event.key === "Enter") buscarAreas();
                                                 }}

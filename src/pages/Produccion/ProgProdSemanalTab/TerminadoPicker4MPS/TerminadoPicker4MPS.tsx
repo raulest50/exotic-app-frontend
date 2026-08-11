@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import {
-    Steps,
     Badge,
     Box,
     Button,
@@ -241,7 +240,7 @@ export default function TerminadoPicker4MPS({
                                         <NativeSelect.Root>
                                             <NativeSelect.Field
                                                 value={selectedCategoriaId}
-                                                onValueChange={(event) => handleCategoriaChange(event.target.value)}
+                                                onChange={(event) => handleCategoriaChange(event.target.value)}
                                                 disabled={isLoadingCategorias}>
                                                 <option value="">Todas las categorias</option>
                                                 {categorias.map((categoria) => (
@@ -259,7 +258,7 @@ export default function TerminadoPicker4MPS({
                                             <Input
                                                 placeholder={tipoBusqueda === "NOMBRE" ? "Buscar por nombre" : "Buscar por codigo"}
                                                 value={searchText}
-                                                onValueChange={(event) => setSearchText(event.target.value)}
+                                                onChange={(event) => setSearchText(event.target.value)}
                                                 onKeyDown={handleKeyDown}
                                             />
                                             <Button onClick={handleSearch} loading={isLoading} loadingText="Buscando">

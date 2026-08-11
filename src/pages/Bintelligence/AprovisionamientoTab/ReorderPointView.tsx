@@ -1,5 +1,4 @@
 import {
-    Steps,
     Box,
     Button,
     Card,
@@ -260,7 +259,7 @@ export default function ReorderPointView({
                                     type="text"
                                     inputMode="decimal"
                                     value={inputValue}
-                                    onValueChange={(e) => setInputValue(e.target.value)}
+                                    onChange={(e) => setInputValue(e.target.value)}
                                 />
                                 <Field.HelperText>
                                     -1 sin alertas; 0 sin umbral definido; mayor o igual a 0 es valido.

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Steps, Flex, Input, Button, Box, NativeSelect, Field } from '@chakra-ui/react';
+import { Flex, Input, Button, Box, NativeSelect, Field } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import MyPagination from '../../../components/MyPagination.tsx';
 import { ListaSearchClientes } from './panel_busqueda_comp/ListaSearchClientes.tsx';
@@ -57,17 +57,17 @@ export default function PanelBusqueda({setEstado, setClienteSeleccionado}:Props)
                 {searchType===SearchType.ID ? (
                     <Field.Root mb={4}>
                         <Field.Label>ID Cliente</Field.Label>
-                        <Input value={id} onValueChange={e=>setId(e.target.value)} />
+                        <Input value={id} onChange={e=>setId(e.target.value)} />
                     </Field.Root>
                 ) : (
                     <>
                         <Field.Root mb={4}>
                             <Field.Label>Nombre</Field.Label>
-                            <Input value={nombre} onValueChange={e=>setNombre(e.target.value)} />
+                            <Input value={nombre} onChange={e=>setNombre(e.target.value)} />
                         </Field.Root>
                         <Field.Root mb={4}>
                             <Field.Label>Correo Electrónico</Field.Label>
-                            <Input value={email} onValueChange={e=>setEmail(e.target.value)} />
+                            <Input value={email} onChange={e=>setEmail(e.target.value)} />
                         </Field.Root>
                     </>
                 )}
@@ -77,7 +77,7 @@ export default function PanelBusqueda({setEstado, setClienteSeleccionado}:Props)
                         <NativeSelect.Root>
                             <NativeSelect.Field
                                 value={searchType}
-                                onValueChange={e=>setSearchType(e.target.value as SearchType)}>
+                                onChange={e=>setSearchType(e.target.value as SearchType)}>
                                 <option value={SearchType.ID}>ID</option>
                                 <option value={SearchType.NOMBRE_O_EMAIL}>Nombre o Correo</option>
                             </NativeSelect.Field>

@@ -1,6 +1,6 @@
 // DatePicker.tsx
 import React from 'react';
-import { Steps, Input, Field } from '@chakra-ui/react';
+import { Input, Field } from '@chakra-ui/react';
 
 interface DatePickerProps {
     date: string;
@@ -32,7 +32,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
             <Input
                 type="date"
                 value={date}
-                onValueChange={handleChange}
+                onChange={handleChange}
                 onBlur={handleBlur}
             />
         </Field.Root>

@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Steps, Box, Flex, IconButton, Icon, Text, VStack, Separator } from "@chakra-ui/react";
+import { Box, Flex, IconButton, Icon, Text, VStack, Separator } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { MdAddAPhoto } from "react-icons/md";
 import { FaFolderOpen } from "react-icons/fa";

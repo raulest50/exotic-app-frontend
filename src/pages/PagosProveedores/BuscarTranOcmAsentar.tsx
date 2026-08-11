@@ -1,6 +1,5 @@
 import {useState} from 'react';
 import {
-  Steps,
   Flex,
   Input,
   NativeSelect,
@@ -74,7 +73,7 @@ export default function BuscarTranOcmAsentar() {
           <NativeSelect.Root>
             <NativeSelect.Field
               value={estadoContable}
-              onValueChange={e => setEstadoContable(e.target.value as EstadoContable)}>
+              onChange={e => setEstadoContable(e.target.value as EstadoContable)}>
               <option value={EstadoContable.PENDIENTE}>Pendiente</option>
               <option value={EstadoContable.CONTABILIZADA}>Contabilizada</option>
               <option value={EstadoContable.NO_APLICA}>No aplica</option>
@@ -84,11 +83,11 @@ export default function BuscarTranOcmAsentar() {
         </Field.Root>
         <Field.Root w={["100%","200px"]}>
           <Field.Label>Fecha inicio</Field.Label>
-          <Input type="date" value={fechaInicio} onValueChange={e => setFechaInicio(e.target.value)} />
+          <Input type="date" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} />
         </Field.Root>
         <Field.Root w={["100%","200px"]}>
           <Field.Label>Fecha fin</Field.Label>
-          <Input type="date" value={fechaFin} onValueChange={e => setFechaFin(e.target.value)} />
+          <Input type="date" value={fechaFin} onChange={e => setFechaFin(e.target.value)} />
         </Field.Root>
         <Flex alignItems="flex-end">
           <Button colorPalette="blue" onClick={() => handleSearch(0)} loading={loading}>

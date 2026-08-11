@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-    Steps,
     Box,
     Button,
     Flex,
@@ -134,19 +133,19 @@ export function DetalleCliente({cliente,setEstado,setClienteSeleccionado,refresh
                     <VStack align='start' gap={3}>
                         <Box>
                             <Text fontWeight='bold'>Nombre:</Text>
-                            {editMode ? <Input value={clienteData.nombre} onValueChange={e=>handleInputChange('nombre',e.target.value)} /> : <Text>{cliente.nombre}</Text>}
+                            {editMode ? <Input value={clienteData.nombre} onChange={e=>handleInputChange('nombre',e.target.value)} /> : <Text>{cliente.nombre}</Text>}
                         </Box>
                         <Box>
                             <Text fontWeight='bold'>Correo Electrónico:</Text>
-                            {editMode ? <Input value={clienteData.email} onValueChange={e=>handleInputChange('email',e.target.value)} /> : <Text>{cliente.email}</Text>}
+                            {editMode ? <Input value={clienteData.email} onChange={e=>handleInputChange('email',e.target.value)} /> : <Text>{cliente.email}</Text>}
                         </Box>
                         <Box>
                             <Text fontWeight='bold'>Teléfono:</Text>
-                            {editMode ? <Input value={clienteData.telefono} onValueChange={e=>handleInputChange('telefono',e.target.value)} /> : <Text>{cliente.telefono}</Text>}
+                            {editMode ? <Input value={clienteData.telefono} onChange={e=>handleInputChange('telefono',e.target.value)} /> : <Text>{cliente.telefono}</Text>}
                         </Box>
                         <Box>
                             <Text fontWeight='bold'>Dirección:</Text>
-                            {editMode ? <Input value={clienteData.direccion} onValueChange={e=>handleInputChange('direccion',e.target.value)} /> : <Text>{cliente.direccion}</Text>}
+                            {editMode ? <Input value={clienteData.direccion} onChange={e=>handleInputChange('direccion',e.target.value)} /> : <Text>{cliente.direccion}</Text>}
                         </Box>
                     </VStack>
                 </GridItem>
@@ -154,11 +153,11 @@ export function DetalleCliente({cliente,setEstado,setClienteSeleccionado,refresh
                     <VStack align='start' gap={3}>
                         <Box>
                             <Text fontWeight='bold'>Condiciones de Pago:</Text>
-                            {editMode ? <Input value={clienteData.condicionesPago||''} onValueChange={e=>handleInputChange('condicionesPago',e.target.value)} /> : <Text>{cliente.condicionesPago||'-'}</Text>}
+                            {editMode ? <Input value={clienteData.condicionesPago||''} onChange={e=>handleInputChange('condicionesPago',e.target.value)} /> : <Text>{cliente.condicionesPago||'-'}</Text>}
                         </Box>
                         <Box>
                             <Text fontWeight='bold'>Límite de Crédito:</Text>
-                            {editMode ? <Input type='number' value={clienteData.limiteCredito||''} onValueChange={e=>handleInputChange('limiteCredito',Number(e.target.value))} /> : <Text>{cliente.limiteCredito||'-'}</Text>}
+                            {editMode ? <Input type='number' value={clienteData.limiteCredito||''} onChange={e=>handleInputChange('limiteCredito',Number(e.target.value))} /> : <Text>{cliente.limiteCredito||'-'}</Text>}
                         </Box>
                     </VStack>
                 </GridItem>
@@ -170,7 +169,7 @@ export function DetalleCliente({cliente,setEstado,setClienteSeleccionado,refresh
                             <Field.Label>RUT</Field.Label>
                             <Icon as={rutFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize='4em' color={rutFile ? 'green' : 'orange.500'} />
                             <Button onClick={()=>rutInputRef.current?.click()}>Seleccionar archivo</Button>
-                            <Input type='file' ref={rutInputRef} style={{display:'none'}} accept='application/pdf' onValueChange={handleRutChange}/>
+                            <Input type='file' ref={rutInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleRutChange}/>
                             {rutFile && <Text>{rutFile.name}</Text>}
                         </VStack>
                     </GridItem>
@@ -179,7 +178,7 @@ export function DetalleCliente({cliente,setEstado,setClienteSeleccionado,refresh
                             <Field.Label>Cámara y Comercio</Field.Label>
                             <Icon as={camaraFile ? FaFileCircleCheck : FaFileCircleQuestion} boxSize='4em' color={camaraFile ? 'green' : 'orange.500'} />
                             <Button onClick={()=>camaraInputRef.current?.click()}>Seleccionar archivo</Button>
-                            <Input type='file' ref={camaraInputRef} style={{display:'none'}} accept='application/pdf' onValueChange={handleCamaraChange}/>
+                            <Input type='file' ref={camaraInputRef} style={{display:'none'}} accept='application/pdf' onChange={handleCamaraChange}/>
                             {camaraFile && <Text>{camaraFile.name}</Text>}
                         </VStack>
                     </GridItem>

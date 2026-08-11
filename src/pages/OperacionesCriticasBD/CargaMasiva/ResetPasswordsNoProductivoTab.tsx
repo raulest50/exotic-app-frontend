@@ -1,5 +1,4 @@
 import {
-    Steps,
     Alert,
     Box,
     Button,
@@ -104,7 +103,7 @@ export default function ResetPasswordsNoProductivoTab() {
                     <Input
                         placeholder="Ingrese el token de 4 digitos"
                         value={inputToken}
-                        onValueChange={(event) => setInputToken(event.target.value)}
+                        onChange={(event) => setInputToken(event.target.value)}
                         maxLength={4}
                     />
                 </Field.Root>

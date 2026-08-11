@@ -2,7 +2,6 @@
 
 import React from "react";
 import {
-    Steps,
     Badge,
     Card,
     HStack,

@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import axios from 'axios';
-import { Steps, Flex, NativeSelect, Input, IconButton, Spinner } from '@chakra-ui/react';
+import { Flex, NativeSelect, Input, IconButton, Spinner } from '@chakra-ui/react';
 import { LuRepeat } from 'react-icons/lu';
 
 type Props = {
@@ -71,7 +71,7 @@ export function SelectCurrencyTrm({
             <NativeSelect.Root>
                 <NativeSelect.Field
                     value={currency}
-                    onValueChange={(e) => {
+                    onChange={(e) => {
                         const cur = e.target.value;
                         setCurrency(cur);
                         cur == 'USD' ? currencyIsUSD[1](true) : currencyIsUSD[1](false);
@@ -90,7 +90,7 @@ export function SelectCurrencyTrm({
                 <NativeSelect.Root>
                     <NativeSelect.Field
                         value={tipoTRM}
-                        onValueChange={(e) => setTipoTRM(e.target.value)}
+                        onChange={(e) => setTipoTRM(e.target.value)}
                         flex={1}>
                         <option value={TIPO_TRM.ACTUAL} >{TIPO_TRM.ACTUAL}</option>
                         <option value={TIPO_TRM.FECHA} >{TIPO_TRM.FECHA}</option>
@@ -102,7 +102,7 @@ export function SelectCurrencyTrm({
                     <Flex>
                         <Input
                             value={usd2copState}
-                            onValueChange={(e) => {
+                            onChange={(e) => {
                                 setUsd2copState(e.target.value);
                                 useCurrentUsd2Cop(Number(e.target.value));
                             }}
@@ -120,12 +120,12 @@ export function SelectCurrencyTrm({
                             flex={2}
                             type="date"
                             value={date}
-                            onValueChange={(e) => setDate(e.target.value)}
+                            onChange={(e) => setDate(e.target.value)}
                         />
                         <Input
                             flex={2}
                             value={usd2copState}
-                            onValueChange={(e) => {
+                            onChange={(e) => {
                                 setUsd2copState(e.target.value);
                                 useCurrentUsd2Cop(Number(e.target.value));
                             }}
@@ -143,7 +143,7 @@ export function SelectCurrencyTrm({
                         <Input
                             autoFocus
                             value={usd2copState}
-                            onValueChange={(e) => {
+                            onChange={(e) => {
                                 setUsd2copState(e.target.value);
                                 useCurrentUsd2Cop(Number(e.target.value));
                             }}
