@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Box, Button, Flex, HStack, Field } from "@chakra-ui/react";
+import { Box, Button, Flex, HStack, Field, Text } from "@chakra-ui/react";
 import ProcessDesigner from "../../../../DefProcesses/CreadorProcesos/ProcessDesigner.tsx";
 import PackagingTerminadoDefiner from "./PackagingTerminadoDefiner.tsx";
 import CustomDecimalInput from "../../../../../../components/CustomDecimalInput/CustomDecimalInput.tsx";
@@ -62,7 +62,7 @@ export default function StepThree_ModProdMF({ setActiveStep, semioter2, setSemio
 
                 {isTerminado && (
                     <Box>
-                        <Field.Label>Packaging</Field.Label>
+                        <Text fontWeight="medium" mb={2}>Packaging</Text>
                         <Button colorPalette={casePack ? "green" : "blue"} onClick={() => setIsPackagingDefinerOpen(true)}>
                             {casePack ? "Packaging definido" : "Definir packaging"}
                         </Button>

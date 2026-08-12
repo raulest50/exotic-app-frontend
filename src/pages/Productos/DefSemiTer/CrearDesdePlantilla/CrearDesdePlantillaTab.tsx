@@ -746,7 +746,7 @@ export default function CrearDesdePlantillaTab() {
                         />
                     </Field.Root>
                     <Box>
-                        <Field.Label>Packaging</Field.Label>
+                        <Text fontWeight="medium" mb={2}>Packaging</Text>
                         <Button colorPalette={casePack ? "green" : "blue"} onClick={() => setIsPackagingDefinerOpen(true)}>
                             {casePack ? "Packaging definido" : "Definir packaging"}
                         </Button>

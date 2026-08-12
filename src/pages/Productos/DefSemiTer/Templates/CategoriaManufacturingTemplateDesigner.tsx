@@ -354,7 +354,7 @@ export default function CategoriaManufacturingTemplateDesigner({ categoria, onBa
                     />
                 </Field.Root>
                 <Box>
-                    <Field.Label>Packaging base</Field.Label>
+                    <Text fontWeight="medium" mb={2}>Packaging base</Text>
                     <Button colorPalette={casePack ? "green" : "blue"} onClick={() => setIsPackagingDefinerOpen(true)}>
                         {casePack ? "Packaging definido" : "Definir packaging"}
                     </Button>
