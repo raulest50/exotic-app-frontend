@@ -1,18 +1,13 @@
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { autoTable, type Table } from "jspdf-autotable";
 import {
     formatEmpresaIdentificacion,
     getEmpresaBrandingDocumentalVigente,
 } from "../../../../api/EmpresaIdentidadDocumentalApi";
 import { addContainedPng } from "../../../../utils/pdfBranding";
 
-// Extend jsPDF with properties added by jsPDF-AutoTable
-interface AutoTableProperties {
-    finalY: number;
-}
-
 interface jsPDFWithAutoTable extends jsPDF {
-    lastAutoTable?: AutoTableProperties;
+    lastAutoTable?: Table;
 }
 
 /**

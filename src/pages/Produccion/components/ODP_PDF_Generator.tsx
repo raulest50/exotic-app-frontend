@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { autoTable, type Table } from "jspdf-autotable";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import {
@@ -9,12 +9,8 @@ import {
 import { addContainedPng } from "../../../utils/pdfBranding";
 import { InsumoWithStock, OrdenProduccionDTO } from "../types.tsx";
 
-interface AutoTableProperties {
-    finalY: number;
-}
-
 interface jsPDFWithAutoTable extends jsPDF {
-    lastAutoTable?: AutoTableProperties;
+    lastAutoTable?: Table;
 }
 
 type EstadoInfo = { label: string };

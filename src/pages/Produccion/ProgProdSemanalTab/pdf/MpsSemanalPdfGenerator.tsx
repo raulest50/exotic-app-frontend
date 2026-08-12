@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { autoTable, type Table } from "jspdf-autotable";
 import { getEmpresaBrandingDocumentalVigente } from "../../../../api/EmpresaIdentidadDocumentalApi";
 import { addContainedPng } from "../../../../utils/pdfBranding";
 import type { MpsSemanalDraftDTO } from "../MpsSemanalService";
@@ -13,12 +13,8 @@ import {
     getMpsSemanaPdfLabel,
 } from "./mpsSemanalPdf.utils";
 
-interface AutoTableProperties {
-    finalY: number;
-}
-
 interface JsPdfWithAutoTable extends jsPDF {
-    lastAutoTable?: AutoTableProperties;
+    lastAutoTable?: Table;
 }
 
 class MpsSemanalPdfGenerator {

@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { autoTable, type Table } from "jspdf-autotable";
 import {
     formatEmpresaIdentificacion,
     getEmpresaBrandingDocumentalVigente,
@@ -11,12 +11,8 @@ import { formatCOP } from "../../utils/formatters";
 import { getCondicionPagoText, getRegimenTributario } from "../Compras/types";
 import type { ItemOrdenCompraActivo, OrdenCompraActivo } from "./types";
 
-interface AutoTableProperties {
-    finalY: number;
-}
-
 interface JsPdfWithAutoTable extends jsPDF {
-    lastAutoTable?: AutoTableProperties;
+    lastAutoTable?: Table;
 }
 
 export interface OcafPdfOptions {

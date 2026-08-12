@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { autoTable, type Table } from "jspdf-autotable";
 import {
     getCondicionPagoText,
     getRegimenTributario,
@@ -16,13 +16,8 @@ import {
     type EmpresaIdentidadDocumento,
 } from "../../api/EmpresaIdentidadDocumentalApi";
 
-// Extend jsPDF with properties added by jsPDF-AutoTable
-interface AutoTableProperties {
-    finalY: number;
-}
-
 interface jsPDFWithAutoTable extends jsPDF {
-    lastAutoTable?: AutoTableProperties;
+    lastAutoTable?: Table;
 }
 
 export interface OcmPdfOptions {
