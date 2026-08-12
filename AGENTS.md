@@ -47,11 +47,19 @@ Estas instrucciones aplican a todo el repositorio `exotic-app-frontend`.
 Ejecutar desde la raíz del repositorio:
 
 ```powershell
+bun run lint
 bun run vite build
 ```
 
-Este es el control de paridad con el build actual de Render. Debe ser la
-validación automatizada mínima para cambios de código del frontend.
+`bun run lint` es un gate de regresión: usa la configuración plana de ESLint 10
+y la línea base explícita de `eslint-suppressions.json`. No añadir supresiones
+para hacer pasar violaciones nuevas sin justificarlo dentro del alcance de la
+tarea. Cuando se corrija código previamente suprimido, ejecutar
+`bun run lint:suppressions:prune` y conservar la reducción resultante.
+
+`bun run vite build` es el control de paridad con el build actual de Render.
+Ambos comandos constituyen la validación automatizada mínima para cambios de
+código del frontend.
 
 Para cambios visibles o interactivos:
 
@@ -69,8 +77,6 @@ configuración de ejecución ni dependencias, no es necesario ejecutar el build.
 - No ejecutar `bun test` como verificación predeterminada. El repositorio no
   contiene actualmente una suite de pruebas compatible y el comando termina con
   `No tests found`.
-- No usar `bun run lint` como condición de finalización hasta reparar la
-  configuración de ESLint y sus dependencias.
 - No exigir que `bun run build` pase. Ese script ejecuta `tsc && vite build`, y
   el type-check completo contiene errores heredados no relacionados con muchas
   tareas locales.
@@ -94,6 +100,7 @@ Tratar su resultado como diagnóstico hasta que se sanee la línea base:
 
 Antes de entregar un cambio de código:
 
+- el gate de regresión `bun run lint` debe pasar sin advertencias nuevas;
 - el build equivalente a Render, `bun run vite build`, debe pasar;
 - el flujo afectado debe probarse manualmente cuando sus dependencias estén
   disponibles;
