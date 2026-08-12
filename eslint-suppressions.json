@@ -1,0 +1,678 @@
+{
+  "sandbox.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/api/ModulesNotifications.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/components/CustomDecimalInput/CustomDecimalInput.stories.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/components/CustomDecimalInput/CustomDecimalInput.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/components/DocSuppUploader/DocSuppUploader.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/components/Pickers/AreaPickerGeneric/AreaPickerGeneric.stories.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/Pickers/AreaPickerGeneric/AreaPickerGeneric.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/Pickers/TerminadoPicker/TerminadoPicker.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/components/SectionCard.tsx": {
+    "no-empty": {
+      "count": 1
+    }
+  },
+  "src/components/SelectCurrencyTRM/SelectCurrencyTRM.tsx": {
+    "@typescript-eslint/no-unused-expressions": {
+      "count": 1
+    },
+    "react-hooks/rules-of-hooks": {
+      "count": 5
+    }
+  },
+  "src/components/ui/color-mode.tsx": {
+    "@typescript-eslint/no-empty-object-type": {
+      "count": 1
+    },
+    "react-refresh/only-export-components": {
+      "count": 2
+    }
+  },
+  "src/components/ui/toaster.tsx": {
+    "react-refresh/only-export-components": {
+      "count": 3
+    }
+  },
+  "src/components/ui/use-app-toast.ts": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/context/AuthContext.tsx": {
+    "react-refresh/only-export-components": {
+      "count": 1
+    }
+  },
+  "src/context/MasterDirectivesContext.tsx": {
+    "react-refresh/only-export-components": {
+      "count": 1
+    }
+  },
+  "src/context/NotificationsContext.tsx": {
+    "react-refresh/only-export-components": {
+      "count": 1
+    }
+  },
+  "src/pages/ActivosFijos/Incorporacion/step_one/ActivoGroup/ActivoGroup.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/ActivosFijos/Incorporacion/step_one/ActivosFijosStep1Form.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/ActivosFijos/Incorporacion/step_three/ActivosFijosStep3ReviewSubmit.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 4
+    }
+  },
+  "src/pages/ActivosFijos/Reportes/Dialogs/DialogLiberarEnviarOCAF.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/ActivosFijos/Reportes/EditarOCAFSeleccionada.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/ActivosFijos/types.tsx": {
+    "@typescript-eslint/no-empty-object-type": {
+      "count": 5
+    }
+  },
+  "src/pages/AreaOperativaPanel/Analitica/Noise/noiseSampler.worker.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/AreaOperativaPanel/Analitica/Noise/useAreaOperativaNoiseSampler.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/AreaOperativaPanel/AreaOperativaMpsSemanalTab.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/AreaOperativaPanel/AreaOperativaPanel.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "src/pages/Bintelligence/AprovisionamientoTab/ReorderPointView.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Bintelligence/AprovisionamientoTab/types.ts": {
+    "@typescript-eslint/no-empty-object-type": {
+      "count": 1
+    }
+  },
+  "src/pages/Bintelligence/InformeGlobalUi.tsx": {
+    "react-refresh/only-export-components": {
+      "count": 8
+    }
+  },
+  "src/pages/Bintelligence/InformeProduccionAreasSection.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "src/pages/Clientes/CodificarCliente.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/pages/Clientes/consultar/DetalleCliente.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-expressions": {
+      "count": 2
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    }
+  },
+  "src/pages/Clientes/consultar/PanelBusqueda.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/pages/Compras/CrearOCM.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Compras/OCM_PDF_Generator.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "src/pages/Compras/components/ActualizarEstadoOrdenCompraDialog.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Compras/components/EditarOCMSeleccionada.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Compras/components/ListaOrdenesCompra.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    }
+  },
+  "src/pages/Compras/components/ProveedorCard.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/Contabilidad/cuentas/CatalogoCuentas.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Contabilidad/cuentas/DetalleAsientosCuenta.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "src/pages/GestionAreasOperativas/ConsultaAreasOperativas/ConsultaAreasOperativasTab.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/GestionAreasOperativas/components/CategoriaHabilitadaPickerModal.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/LoginPage/LoginPanel.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/pages/OperacionesCriticasBD/CargaMasiva/CargaMasivaAlmacenTab.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/OperacionesCriticasBD/CargaMasivaTerminados/SinInsumos/steps/SinInsumosStep2SubirValidar.tsx": {
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "src/pages/OperacionesCriticasBD/ExportacionDatos/ExportacionDatosTab.tsx": {
+    "@typescript-eslint/no-empty-object-type": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/pages/Organigrama/components/SafeRichText.tsx": {
+    "react-refresh/only-export-components": {
+      "count": 2
+    }
+  },
+  "src/pages/PagosProveedores/BuscarTranOcmAsentar.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/pages/Produccion/Alertas/useAreaOperativaInactivityAlerts.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/Produccion/ConfParamsCategoria/ConfParamsCategoria.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Produccion/CrearOrdenesProduccionTab/CrearOrdenesProduccionTab.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "src/pages/Produccion/CrearOrdenesProduccionTab/TerSemiTerCard.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 7
+    }
+  },
+  "src/pages/Produccion/HistorialOrdenesTab/HistorialOrdenesTab.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    }
+  },
+  "src/pages/Produccion/HistorialOrdenesTab/OrdenProduccionDialogDetalles.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Produccion/MonitorearAreasOperativasTab.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "src/pages/Produccion/ProgProdMensualTab/PlaneacionProduccionService.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    },
+    "react-refresh/only-export-components": {
+      "count": 1
+    }
+  },
+  "src/pages/Produccion/ProgProdSemanalTab/AprobacionMPSWeekTab.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "src/pages/Produccion/ProgProdSemanalTab/ProgramacionProduccionSemanalTab.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Produccion/ProgProdSemanalTab/pdf/MpsSemanalPdfGenerator.tsx": {
+    "react-refresh/only-export-components": {
+      "count": 2
+    }
+  },
+  "src/pages/Produccion/components/ODP_PDF_Generator.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 43
+    }
+  },
+  "src/pages/Produccion/components/SeguimientoBoardUI.tsx": {
+    "react-refresh/only-export-components": {
+      "count": 9
+    }
+  },
+  "src/pages/Produccion/components/TerminadoSemiterminadoPicker.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/pages/Produccion/types.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/Basic/componentes/DetalleProducto.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "src/pages/Productos/DefProcesses/CreadorProcesos/ProcessDesigner.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/DefProcesses/CreadorProcesos/components/ProcesoProduccionPicker/ProcesoProduccionPicker.stories.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/DefProcesses/CreadorProcesos/components/ProcesoProduccionPicker/ProcesoProduccionPicker.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/DefProcesses/ProcesosProduccion/ConsultaProcesosProduccion.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/DefProcesses/ProcesosProduccion/EditarProcesoModal.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 3
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/DefProcesses/ProcesosProduccion/RecursoProduccionPicker.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/DefProcesses/RecursosProduccion/AFpickerRP.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/DefProcesses/RecursosProduccion/ConsultaRecursosProduccion.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/DefProcesses/RecursosProduccion/CrearRecursoProduccion.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/DefProcesses/RecursosProduccion/DetalleModRecProd.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/DefProcesses/RecursosProduccion/RPAFmanager.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    }
+  },
+  "src/pages/Productos/DefSemiTer/CategoriasTab.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/DefSemiTer/CodificarSemioTermiTab/StepOne/SemiterminadosStep0DefineProduct.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "src/pages/Productos/DefSemiTer/CodificarSemioTermiTab/StepThree/PackagingTerminadoDefiner.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/DefSemiTer/consulta/DetalleProductoSemiTer.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/DefSemiTer/consulta/ModSemioTerMFversions/StepThree/PackagingTerminadoDefiner.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/Productos/types.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/Proveedores/consultar/DetalleProveedor.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Proveedores/consultar/panel_busqueda_comp/PanelBusqueda.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Stock/HistorialTransaccionesAlamacen/DetalleTransaccionDialog.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Stock/HistorialTransaccionesAlamacen/HistorialTransaccionesAlmacenTab.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/Stock/Kardex/KardexTab.tsx": {
+    "@typescript-eslint/no-empty-object-type": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    }
+  },
+  "src/pages/TransaccionesAlmacen/AjustesInventario/AjusteEntradaLotePicker.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/AjustesInventario/AjusteSalidaLotePicker.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/AjustesInventario/AjustesInventarioTab.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 5
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/AsistenteDispensacion/AsistenteDispensacion.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/AsistenteDispensacion/AsistenteDispensacionComponents/LotePickerDispensacion.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/AsistenteDispensacion/DispensacionStep1SelectOrder.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "src/pages/TransaccionesAlmacen/AsistenteDispensacion/DispensacionStep2EditItems.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 3
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "src/pages/TransaccionesAlmacen/AsistenteDispensacion/DispensacionStep3ReviewSubmit.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/AsistenteIngresoOCM/IngresoOCMStep0SelectPurchaseOrder.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/AsistenteIngresoOCM/StepTwoComponent_IngOCM/CerrarOrdenDialog.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/AsistenteIngresoOCM/StepTwoComponent_IngOCM/ListaMaterialesIngresoDesgloce.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/AsistenteIngresoOCM/StepTwoComponent_IngOCM/ListaTransaccionesAlmacen.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/pages/TransaccionesAlmacen/AsistenteIngresoOCM/StepZeroComponent_v1.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/DispensacionV2/DispensacionV2Step3SeleccionOrdenes.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/GestionAverias/WizardAveriaProduccion/WizardAveriaProduccion.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/GestionAverias/WizardAveriaProduccion/steps/AveriaProduccionStep2ListAverias.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/HistorialDispensaciones/DetalleDispensacionDialog.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/TransaccionesAlmacen/HistorialDispensaciones/HistorialDispensaciones.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/pages/Usuarios/GestionNotificaciones/GestionNotificacionesTab.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "src/pages/Usuarios/GestionUsuarios/CreateUser.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/pages/Usuarios/GestionUsuarios/UserViewer.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    }
+  },
+  "src/pages/Usuarios/GestionUsuarios/userAccesosEditorModel.ts": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/pages/Ventas/TabsContent/CrearVendedor.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  }
+}
