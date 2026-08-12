@@ -35,6 +35,8 @@ import "@xyflow/react/dist/style.css";
 import FloatingLines from "@/components/FloatingLines/FloatingLines";
 import SplitText from "@/components/SplitText";
 import RichTextEditor from "@/pages/Organigrama/components/RichTextEditor";
+import SemanaMPSCarouselPicker from "@/pages/Produccion/ProgProdSemanalTab/SemanaMPSCarouselPicker";
+import type { SemanaMPSDTO } from "@/pages/Produccion/ProgProdSemanalTab/MpsSemanalService";
 
 const CHARACTERIZATION_COPY = "Caracterización determinista y aislada para validar React 18 y React 19.";
 
@@ -451,6 +453,53 @@ export const Three = () => {
       ) : (
         <UnmountedState label="Three" testId="three-unmounted" />
       )}
+    </StoryFrame>
+  );
+};
+
+const MOTION_CAROUSEL_INITIAL_WEEK = "2026-08-10";
+
+export const MotionCarousel = () => {
+  const [mounted, setMounted] = useState(true);
+  const [selectedWeek, setSelectedWeek] = useState(MOTION_CAROUSEL_INITIAL_WEEK);
+  const [selectionCount, setSelectionCount] = useState(0);
+
+  const handleChange = (week: SemanaMPSDTO) => {
+    setSelectedWeek(week.startDate);
+    setSelectionCount(currentCount => currentCount + 1);
+  };
+
+  return (
+    <StoryFrame title="Motion / carrusel semanal MPS" testId="react-compat-motion-carousel">
+      <MountToggle
+        controls="motion-carousel-surface"
+        label="Carrusel MPS"
+        mounted={mounted}
+        onToggle={() => setMounted(currentMounted => !currentMounted)}
+      />
+      {mounted ? (
+        <Box
+          id="motion-carousel-surface"
+          data-testid="motion-carousel-surface"
+          bg="app.surface"
+          borderWidth="1px"
+          borderRadius="md"
+          p={{ base: 3, md: 5 }}
+        >
+          <SemanaMPSCarouselPicker value={selectedWeek} onChange={handleChange} />
+        </Box>
+      ) : (
+        <UnmountedState label="Carrusel MPS" testId="motion-carousel-unmounted" />
+      )}
+      <Box bg="app.surface" borderWidth="1px" borderRadius="md" p={4}>
+        <Text fontWeight="semibold">Estado observable</Text>
+        <Text as="output" data-testid="motion-carousel-value" display="block" mt={1}>
+          Semana seleccionada: {selectedWeek}
+        </Text>
+        <Text as="output" data-testid="motion-carousel-selection-count" display="block" mt={1}>
+          Selecciones: {selectionCount}
+        </Text>
+      </Box>
     </StoryFrame>
   );
 };
