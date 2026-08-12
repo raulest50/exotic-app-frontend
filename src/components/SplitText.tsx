@@ -1,6 +1,6 @@
 // src/components/SplitText.tsx
 import { Text, TextProps } from "@chakra-ui/react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 interface SplitTextProps extends TextProps {
     /** Text to display */
