@@ -54,6 +54,7 @@ export default class EndPointsURL{
     public update_categoria_lote_size: string;
     public update_categoria_tiempo_dias_fabricacion: string;
     public update_categoria_capacidad_productiva_diaria: string;
+    public update_categoria_vida_util: string;
     public get_categoria_manufacturing_template: string;
     public save_categoria_manufacturing_template: string;
     public delete_categoria_manufacturing_template: string;
@@ -726,6 +727,7 @@ export default class EndPointsURL{
         this.update_categoria_lote_size = `${domain}/categorias/{categoriaId}/lote-size`;
         this.update_categoria_tiempo_dias_fabricacion = `${domain}/categorias/{categoriaId}/tiempo-dias-fabricacion`;
         this.update_categoria_capacidad_productiva_diaria = `${domain}/categorias/{categoriaId}/capacidad-productiva-diaria`;
+        this.update_categoria_vida_util = `${domain}/categorias/{categoriaId}/vida-util`;
         this.get_categoria_manufacturing_template = `${domain}/${productos_res}/categorias/{categoriaId}/manufacturing-template`;
         this.save_categoria_manufacturing_template = `${domain}/${productos_res}/categorias/{categoriaId}/manufacturing-template`;
         this.delete_categoria_manufacturing_template = `${domain}/${productos_res}/categorias/{categoriaId}/manufacturing-template`;

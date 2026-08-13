@@ -123,7 +123,11 @@ export function AsistenteIngresoTerminados() {
             setSeleccion(pendientes);
             setEdiciones(Object.fromEntries(pendientes.reportes.map((reporte) => [
                 reporte.reporteId,
-                { cantidadConfirmada: reporte.cantidadReportada, motivoCorreccion: "" },
+                {
+                    cantidadConfirmada: reporte.cantidadReportada,
+                    motivoCorreccion: "",
+                    fechaVencimiento: reporte.fechaVencimientoSugerida ?? "",
+                },
             ])));
             setPaso(1);
             setHylGenerado(false);
@@ -153,9 +157,17 @@ export function AsistenteIngresoTerminados() {
                 && !edicion.motivoCorreccion.trim()) {
                 return `Debe indicar el motivo de corrección del lote ${reporte.lote}.`;
             }
+            if (puedeCerrar) {
+                if (!edicion.fechaVencimiento) {
+                    return `Debe indicar la fecha de vencimiento del lote ${reporte.lote}.`;
+                }
+                if (edicion.fechaVencimiento <= seleccion.fechaProduccion) {
+                    return `La fecha de vencimiento del lote ${reporte.lote} debe ser posterior a la fecha de producción.`;
+                }
+            }
         }
         return null;
-    }, [ediciones, seleccion]);
+    }, [ediciones, puedeCerrar, seleccion]);
 
     const actualizarEdicion = (reporteId: number, value: EdicionReporteProduccion) => {
         setEdiciones((current) => ({ ...current, [reporteId]: value }));
@@ -166,7 +178,7 @@ export function AsistenteIngresoTerminados() {
 
     const avanzar = () => {
         if (paso === 2 && errorEdicion) {
-            toast({ title: "Revise las cantidades", description: errorEdicion, status: "warning", duration: 5000 });
+            toast({ title: "Revise los datos", description: errorEdicion, status: "warning", duration: 5000 });
             return;
         }
         if (paso === 3 && !hylGenerado) return;
@@ -185,6 +197,7 @@ export function AsistenteIngresoTerminados() {
                     version: reporte.version,
                     cantidadConfirmada: ediciones[reporte.reporteId].cantidadConfirmada,
                     motivoCorreccion: ediciones[reporte.reporteId].motivoCorreccion.trim() || null,
+                    fechaVencimiento: ediciones[reporte.reporteId].fechaVencimiento,
                 })),
             });
             setResultado(response);
@@ -336,6 +349,7 @@ export function AsistenteIngresoTerminados() {
             {paso === 1 ? <IngresoTerminadosStep1Lectura reportes={seleccion.reportes} /> : null}
             {paso === 2 ? (
                 <IngresoTerminadosStep2Correccion
+                    fechaProduccion={seleccion.fechaProduccion}
                     reportes={seleccion.reportes}
                     ediciones={ediciones}
                     editable={puedeCerrar}

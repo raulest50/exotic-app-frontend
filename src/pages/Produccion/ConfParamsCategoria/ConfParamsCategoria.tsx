@@ -15,17 +15,23 @@ import {
     Table,
     Text,
     Field,
+    NativeSelect,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { RiSave3Fill } from "react-icons/ri";
 import CustomIntegerInput from "../../../components/CustomIntegerInput/CustomIntegerInput.tsx";
-import type { Categoria } from "../types.tsx";
+import type { Categoria, UnidadTiempoVencimiento } from "../types.tsx";
 import { RutaProcesoCatDesigner } from "./RutaProcesoCatDesigner";
 import { LuLock, LuLockOpen } from 'react-icons/lu';
 
 const PAGE_SIZE = 10;
 
-type EditableCategoriaField = "loteSize" | "tiempoDiasFabricacion";
+type EditableCategoriaField = "loteSize" | "tiempoDiasFabricacion" | "vidaUtil";
+
+type VidaUtilDraft = {
+    cantidad: string;
+    unidad: UnidadTiempoVencimiento | null;
+};
 
 function getAxiosErrorMessage(error: unknown, fallback: string): string {
     if (axios.isAxiosError(error)) {
@@ -43,6 +49,7 @@ export default function ConfParamsCategoria() {
     const [error, setError] = useState<string | null>(null);
     const [editingLoteSize, setEditingLoteSize] = useState<Record<number, number>>({});
     const [editingTiempoDiasFabricacion, setEditingTiempoDiasFabricacion] = useState<Record<number, number>>({});
+    const [editingVidaUtil, setEditingVidaUtil] = useState<Record<number, VidaUtilDraft>>({});
     const [unlockedFields, setUnlockedFields] = useState<Record<string, boolean>>({});
     const [savingFieldKey, setSavingFieldKey] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<"list" | "designer">("list");
@@ -118,6 +125,17 @@ export default function ConfParamsCategoria() {
                 return { ...prev, ...next };
             });
 
+            setEditingVidaUtil((prev) => {
+                const next: Record<number, VidaUtilDraft> = {};
+                loadedCategorias.forEach((c) => {
+                    next[c.categoriaId] = {
+                        cantidad: c.vidaUtilCantidad != null ? String(c.vidaUtilCantidad) : "",
+                        unidad: c.vidaUtilUnidad ?? null,
+                    };
+                });
+                return { ...prev, ...next };
+            });
+
             if (loadedCategorias.length > 0) {
                 await fetchRutasExistentes(loadedCategorias.map((c) => c.categoriaId));
             }
@@ -159,6 +177,33 @@ export default function ConfParamsCategoria() {
 
     const handleTiempoDiasFabricacionChange = (categoriaId: number, value: number) => {
         setEditingTiempoDiasFabricacion((prev) => ({ ...prev, [categoriaId]: value }));
+    };
+
+    const handleVidaUtilCantidadChange = (categoriaId: number, value: string) => {
+        if (!/^\d*$/.test(value)) return;
+        setEditingVidaUtil((prev) => ({
+            ...prev,
+            [categoriaId]: {
+                ...(prev[categoriaId] ?? { cantidad: "", unidad: null }),
+                cantidad: value,
+            },
+        }));
+    };
+
+    const handleVidaUtilUnidadChange = (
+        categoriaId: number,
+        unidad: UnidadTiempoVencimiento | null,
+    ) => {
+        setEditingVidaUtil((prev) => {
+            const current = prev[categoriaId] ?? { cantidad: "", unidad: null };
+            return {
+                ...prev,
+                [categoriaId]: {
+                    cantidad: unidad == null ? "" : (current.cantidad || "1"),
+                    unidad,
+                },
+            };
+        });
     };
 
     const handleSaveLoteSize = async (categoria: Categoria) => {
@@ -229,6 +274,63 @@ export default function ConfParamsCategoria() {
         }
     };
 
+    const handleSaveVidaUtil = async (categoria: Categoria) => {
+        const categoriaId = categoria.categoriaId;
+        const draft = editingVidaUtil[categoriaId] ?? { cantidad: "", unidad: null };
+        const fieldKey = buildFieldKey(categoriaId, "vidaUtil");
+        const cantidad = draft.unidad == null ? null : Number(draft.cantidad);
+        if (draft.unidad != null && (cantidad == null || !Number.isInteger(cantidad) || cantidad <= 0)) {
+            toast({
+                title: "Vida util invalida",
+                description: "La cantidad debe ser un numero entero mayor que cero.",
+                status: "warning",
+                duration: 4000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        setSavingFieldKey(fieldKey);
+        try {
+            const url = endPoints.update_categoria_vida_util.replace(
+                "{categoriaId}", String(categoriaId));
+            const response = await axios.patch<Categoria>(url, {
+                vidaUtilCantidad: cantidad,
+                vidaUtilUnidad: draft.unidad,
+            });
+            setCategorias((prev) => prev.map((c) => (
+                c.categoriaId === categoriaId ? response.data : c
+            )));
+            setEditingVidaUtil((prev) => ({
+                ...prev,
+                [categoriaId]: {
+                    cantidad: response.data.vidaUtilCantidad != null
+                        ? String(response.data.vidaUtilCantidad)
+                        : "",
+                    unidad: response.data.vidaUtilUnidad ?? null,
+                },
+            }));
+            setUnlockedFields((prev) => ({ ...prev, [fieldKey]: false }));
+            toast({
+                title: "Vida util actualizada",
+                description: `Categoria "${categoria.categoriaNombre}" actualizada correctamente`,
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+        } catch (err) {
+            toast({
+                title: "Error",
+                description: getAxiosErrorMessage(err, "No se pudo actualizar la vida util."),
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setSavingFieldKey(null);
+        }
+    };
+
     if (viewMode === "designer" && selectedCategoria) {
         return <RutaProcesoCatDesigner categoria={selectedCategoria} onBack={backToList} />;
     }
@@ -282,12 +384,13 @@ export default function ConfParamsCategoria() {
                 <>
                     <Box borderWidth="1px" borderRadius="lg" overflow="hidden" mb={4}>
                         <Table.ScrollArea w="full" overflowX="auto">
-                            <Table.Root variant="line" size="sm" minW="900px">
+                            <Table.Root variant="line" size="sm" minW="1180px">
                                 <Table.Header>
                                     <Table.Row>
                                         <Table.ColumnHeader>ID</Table.ColumnHeader>
                                         <Table.ColumnHeader>Nombre</Table.ColumnHeader>
                                         <Table.ColumnHeader>Tamano de lote</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Vida util / vencimiento</Table.ColumnHeader>
                                         <Table.ColumnHeader>Tiempo fabricacion (dias)</Table.ColumnHeader>
                                         <Table.ColumnHeader>Ruta de Proceso</Table.ColumnHeader>
                                     </Table.Row>
@@ -297,9 +400,21 @@ export default function ConfParamsCategoria() {
                                         const catId = categoria.categoriaId;
                                         const loteFieldKey = buildFieldKey(catId, "loteSize");
                                         const tiempoFieldKey = buildFieldKey(catId, "tiempoDiasFabricacion");
+                                        const vidaUtilFieldKey = buildFieldKey(catId, "vidaUtil");
 
                                         const currentLote = editingLoteSize[catId] ?? categoria.loteSize ?? 0;
                                         const currentTiempo = editingTiempoDiasFabricacion[catId] ?? categoria.tiempoDiasFabricacion ?? 0;
+                                        const currentVidaUtil = editingVidaUtil[catId] ?? {
+                                            cantidad: categoria.vidaUtilCantidad != null
+                                                ? String(categoria.vidaUtilCantidad)
+                                                : "",
+                                            unidad: categoria.vidaUtilUnidad ?? null,
+                                        };
+                                        const vidaUtilChanged = currentVidaUtil.cantidad
+                                            !== (categoria.vidaUtilCantidad != null
+                                                ? String(categoria.vidaUtilCantidad)
+                                                : "")
+                                            || currentVidaUtil.unidad !== (categoria.vidaUtilUnidad ?? null);
 
                                         return (
                                             <Table.Row key={catId}>
@@ -329,6 +444,65 @@ export default function ConfParamsCategoria() {
                                                                 boxSize={10}
                                                                 onClick={() => handleSaveLoteSize(categoria)}
                                                                 loading={savingFieldKey === loteFieldKey}><Icon boxSize={5} asChild><RiSave3Fill /></Icon></IconButton>
+                                                        )}
+                                                    </Flex>
+                                                </Table.Cell>
+                                                <Table.Cell>
+                                                    <Flex align="center" gap={2} minW="330px">
+                                                        <IconButton
+                                                            aria-label={unlockedFields[vidaUtilFieldKey]
+                                                                ? "Bloquear edicion"
+                                                                : "Habilitar edicion"}
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            boxSize={10}
+                                                            onClick={() => toggleLock(catId, "vidaUtil")}
+                                                        >
+                                                            {unlockedFields[vidaUtilFieldKey]
+                                                                ? <Icon as={LuLockOpen} boxSize={5} />
+                                                                : <Icon as={LuLock} boxSize={5} />}
+                                                        </IconButton>
+                                                        <Input
+                                                            value={currentVidaUtil.cantidad}
+                                                            onChange={(event) => handleVidaUtilCantidadChange(
+                                                                catId, event.target.value)}
+                                                            disabled={!unlockedFields[vidaUtilFieldKey]
+                                                                || currentVidaUtil.unidad == null}
+                                                            inputMode="numeric"
+                                                            placeholder="N"
+                                                            width="70px"
+                                                            textAlign="right"
+                                                        />
+                                                        <NativeSelect.Root
+                                                            width="160px"
+                                                            disabled={!unlockedFields[vidaUtilFieldKey]}
+                                                        >
+                                                            <NativeSelect.Field
+                                                                value={currentVidaUtil.unidad ?? ""}
+                                                                onChange={(event) => handleVidaUtilUnidadChange(
+                                                                    catId,
+                                                                    (event.target.value || null)
+                                                                        as UnidadTiempoVencimiento | null,
+                                                                )}
+                                                            >
+                                                                <option value="">Sin automatico</option>
+                                                                <option value="DIAS">Dias</option>
+                                                                <option value="MESES">Meses</option>
+                                                                <option value="ANIOS">Anios</option>
+                                                            </NativeSelect.Field>
+                                                            <NativeSelect.Indicator />
+                                                        </NativeSelect.Root>
+                                                        {unlockedFields[vidaUtilFieldKey] && vidaUtilChanged && (
+                                                            <IconButton
+                                                                aria-label="Guardar vida util"
+                                                                colorPalette="green"
+                                                                size="sm"
+                                                                boxSize={10}
+                                                                onClick={() => handleSaveVidaUtil(categoria)}
+                                                                loading={savingFieldKey === vidaUtilFieldKey}
+                                                            >
+                                                                <Icon boxSize={5} asChild><RiSave3Fill /></Icon>
+                                                            </IconButton>
                                                         )}
                                                     </Flex>
                                                 </Table.Cell>

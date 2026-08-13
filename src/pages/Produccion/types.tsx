@@ -44,7 +44,11 @@ export interface Categoria {
     loteSize?: number;
     tiempoDiasFabricacion?: number;
     capacidadProductivaDiaria?: number;
+    vidaUtilCantidad?: number | null;
+    vidaUtilUnidad?: UnidadTiempoVencimiento | null;
 }
+
+export type UnidadTiempoVencimiento = "DIAS" | "MESES" | "ANIOS";
 
 export interface Terminado extends Producto {
     insumos: Insumo[];

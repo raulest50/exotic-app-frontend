@@ -24,6 +24,9 @@ export interface ReporteProduccionPendiente {
     cantidadReportada: number;
     reportadoEn: string;
     reportadoPor: string;
+    vidaUtilCantidadAplicada: number | null;
+    vidaUtilUnidadAplicada: "DIAS" | "MESES" | "ANIOS" | null;
+    fechaVencimientoSugerida: string | null;
 }
 
 export interface PendientesProduccionFecha {
@@ -34,6 +37,7 @@ export interface PendientesProduccionFecha {
 export interface EdicionReporteProduccion {
     cantidadConfirmada: number;
     motivoCorreccion: string;
+    fechaVencimiento: string;
 }
 
 export interface CierreProduccionRequest {
@@ -44,6 +48,7 @@ export interface CierreProduccionRequest {
         version: number;
         cantidadConfirmada: number;
         motivoCorreccion: string | null;
+        fechaVencimiento: string;
     }>;
 }
 
@@ -59,6 +64,7 @@ export interface CierreProduccionResponse {
         lote: string;
         cantidadConfirmada: number;
         transaccionAlmacenId: number;
+        fechaVencimiento: string;
     }>;
 }
 

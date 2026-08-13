@@ -9,7 +9,24 @@ import {
     sameCantidad,
 } from "./produccionCierreUtils";
 
+const UNIDAD_LABEL: Record<"DIAS" | "MESES" | "ANIOS", string> = {
+    DIAS: "dias",
+    MESES: "meses",
+    ANIOS: "anios",
+};
+
+function getVencimientoHelper(reporte: ReporteProduccionPendiente): string {
+    if (reporte.fechaVencimientoSugerida && reporte.vidaUtilUnidadAplicada) {
+        return `Sugerida por la categoria: ${reporte.fechaVencimientoSugerida} (${reporte.vidaUtilCantidadAplicada} ${UNIDAD_LABEL[reporte.vidaUtilUnidadAplicada]}). Puede modificarla.`;
+    }
+    if (reporte.fechaVencimientoSugerida) {
+        return "El lote ya tenia esta fecha registrada.";
+    }
+    return "El lote no tiene vida util automatica. Ingrese la fecha manualmente.";
+}
+
 interface Props {
+    fechaProduccion: string;
     reportes: ReporteProduccionPendiente[];
     ediciones: Record<number, EdicionReporteProduccion>;
     editable: boolean;
@@ -17,19 +34,25 @@ interface Props {
 }
 
 export default function IngresoTerminadosStep2Correccion({
+    fechaProduccion,
     reportes,
     ediciones,
     editable,
     onChange,
 }: Props) {
     const consolidados = consolidarProductos(reportes, ediciones);
+    const fechaMinimaVencimiento = (() => {
+        const fecha = new Date(`${fechaProduccion}T00:00:00Z`);
+        fecha.setUTCDate(fecha.getUTCDate() + 1);
+        return fecha.toISOString().slice(0, 10);
+    })();
 
     return (
         <VStack align="stretch" gap={5}>
             {!editable ? (
                 <Alert.Root status="info" borderRadius="md">
                     <Alert.Indicator />
-                    Su nivel de acceso permite consultar y generar HyL, pero no corregir cantidades.
+                    Su nivel de acceso permite consultar y generar HyL, pero no modificar los datos del cierre.
                 </Alert.Root>
             ) : null}
 
@@ -70,7 +93,7 @@ export default function IngresoTerminadosStep2Correccion({
                                 </Text>
                             </HStack>
 
-                            <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+                            <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap={4}>
                                 <Field.Root required>
                                     <Field.Label>Cantidad confirmada</Field.Label>
                                     <NumberInput.Root
@@ -99,6 +122,22 @@ export default function IngresoTerminadosStep2Correccion({
                                             motivoCorreccion: event.target.value,
                                         })}
                                     />
+                                </Field.Root>
+
+                                <Field.Root required disabled={!editable}>
+                                    <Field.Label>Fecha de vencimiento</Field.Label>
+                                    <Input
+                                        type="date"
+                                        value={edicion.fechaVencimiento}
+                                        min={fechaMinimaVencimiento}
+                                        onChange={(event) => onChange(reporte.reporteId, {
+                                            ...edicion,
+                                            fechaVencimiento: event.target.value,
+                                        })}
+                                    />
+                                    <Field.HelperText>
+                                        {getVencimientoHelper(reporte)}
+                                    </Field.HelperText>
                                 </Field.Root>
                             </SimpleGrid>
                         </Box>

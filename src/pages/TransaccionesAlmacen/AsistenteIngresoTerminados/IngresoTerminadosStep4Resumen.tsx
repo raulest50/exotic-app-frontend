@@ -71,9 +71,14 @@ export default function IngresoTerminadosStep4Resumen({
                                 {reporte.lote} · OP {reporte.ordenProduccionId}
                             </Text>
                         </Box>
-                        <Text whiteSpace="nowrap" fontWeight="semibold">
-                            {formatCantidad(ediciones[reporte.reporteId].cantidadConfirmada)}
-                        </Text>
+                        <Box textAlign="right" whiteSpace="nowrap">
+                            <Text fontWeight="semibold">
+                                {formatCantidad(ediciones[reporte.reporteId].cantidadConfirmada)}
+                            </Text>
+                            <Text fontSize="sm" color="app.textSubtle">
+                                Vence: {ediciones[reporte.reporteId].fechaVencimiento || "Pendiente de definir"}
+                            </Text>
+                        </Box>
                     </HStack>
                 ))}
             </VStack>
