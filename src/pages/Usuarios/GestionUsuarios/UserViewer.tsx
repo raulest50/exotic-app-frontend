@@ -25,6 +25,8 @@ type Props = {
     usersRefreshKey: number;
     onEditUser: (user: User) => void;
     onEditPermissions: (user: User) => void;
+    canManageSignatures: boolean;
+    onConfigureSignature: (user: User) => void;
 };
 
 function isModulo(value: string): value is Modulo {
@@ -42,6 +44,8 @@ export default function UserViewer({
     usersRefreshKey,
     onEditUser,
     onEditPermissions,
+    canManageSignatures,
+    onConfigureSignature,
 }: Props) {
 
     const [users, setUsers] = useState<User[]>([]);
@@ -351,6 +355,11 @@ export default function UserViewer({
                                                         <Menu.Item onSelect={() => onEditPermissions(user)} value='item-1'>
                                                             Editar permisos y accesos
                                                         </Menu.Item>
+                                                        {canManageSignatures ? (
+                                                            <Menu.Item onSelect={() => onConfigureSignature(user)} value='item-2'>
+                                                                Configurar firma visual
+                                                            </Menu.Item>
+                                                        ) : null}
                                                     </Menu.Content></Menu.Positioner></Portal>
                                         </Menu.Root>
                                     </Table.Cell>
