@@ -481,8 +481,7 @@ export default function ConfParamsCategoria() {
                                                                 value={currentVidaUtil.unidad ?? ""}
                                                                 onChange={(event) => handleVidaUtilUnidadChange(
                                                                     catId,
-                                                                    (event.target.value || null)
-                                                                        as UnidadTiempoVencimiento | null,
+                                                                    (event.target.value || null) as UnidadTiempoVencimiento | null,
                                                                 )}
                                                             >
                                                                 <option value="">Sin automatico</option>
