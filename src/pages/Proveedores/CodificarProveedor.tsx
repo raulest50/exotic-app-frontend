@@ -600,7 +600,7 @@ function CodificarProveedor() {
 
                 {/* Contactos Grid */}
                 <Box mt={6}>
-                    <Field.Label>Contactos</Field.Label>
+                    <Heading as="h3" size="sm" mb={3}>Contactos</Heading>
                     <Grid templateColumns={['1fr', 'repeat(3, 1fr)']} gap={4}>
                         {contactos.map((contacto, index) => (
                             <GridItem key={index} borderWidth="1px" borderRadius="md" p={4}>

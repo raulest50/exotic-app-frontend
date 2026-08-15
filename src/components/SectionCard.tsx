@@ -94,6 +94,7 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
         <>
             <NavLink to={to}>
                 <Card.Root
+                    variant="elevated"
                     h="full"
                     p={{ base: 4, md: 6, lg: "2em" }}
                     m={{ base: 0, md: 2, lg: "1em" }}
@@ -109,11 +110,20 @@ function SectionCard({ name, icon, to, bgColor = "blue.100", notification }: Sec
                         h={{ base: "auto", md: "40%" }}
                         minH={{ base: "3.25rem", md: "4rem" }}
                         borderBottom="0.1em solid"
-                        alignContent="center"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
                         px={0}
-                        pt={0}
+                        py={0}
                     >
-                        <Heading as="h2" size={{ base: "xs", md: "sm" }} fontFamily="Comfortaa Variable" lineClamp={2}>
+                        <Heading
+                            as="h2"
+                            size={{ base: "sm", md: "md" }}
+                            w="full"
+                            textAlign="center"
+                            fontFamily="Comfortaa Variable"
+                            lineClamp={2}
+                        >
                             {name}
                         </Heading>
                     </Card.Header>

@@ -621,42 +621,46 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                     <Card.Body>
                         <Grid templateColumns="repeat(2, 1fr)" gap={6}>
                             <GridItem>
-                                <VStack gap={4} align="stretch" alignItems="center">
-                                    <Field.Label>RUT</Field.Label>
-                                    <Icon
-                                        as={rutFile ? FaFileCircleCheck : FaFileCircleQuestion}
-                                        boxSize="4em"
-                                        color={rutFile ? "green" : "orange.500"}
-                                    />
-                                    <Button onClick={() => rutInputRef.current?.click()}>Seleccionar archivo</Button>
-                                    <Input
-                                        type="file"
-                                        ref={rutInputRef}
-                                        style={{ display: 'none' }}
-                                        accept="application/pdf"
-                                        onChange={handleRutChange}
-                                    />
-                                    {rutFile && <Text>{rutFile.name}</Text>}
-                                </VStack>
+                                <Field.Root>
+                                    <VStack gap={4} align="stretch" alignItems="center">
+                                        <Field.Label>RUT</Field.Label>
+                                        <Icon
+                                            as={rutFile ? FaFileCircleCheck : FaFileCircleQuestion}
+                                            boxSize="4em"
+                                            color={rutFile ? "green" : "orange.500"}
+                                        />
+                                        <Button onClick={() => rutInputRef.current?.click()}>Seleccionar archivo</Button>
+                                        <Input
+                                            type="file"
+                                            ref={rutInputRef}
+                                            style={{ display: 'none' }}
+                                            accept="application/pdf"
+                                            onChange={handleRutChange}
+                                        />
+                                        {rutFile && <Text>{rutFile.name}</Text>}
+                                    </VStack>
+                                </Field.Root>
                             </GridItem>
                             <GridItem>
-                                <VStack gap={4} align="stretch" alignItems="center">
-                                    <Field.Label>Cámara y Comercio</Field.Label>
-                                    <Icon
-                                        as={camaraFile ? FaFileCircleCheck : FaFileCircleQuestion}
-                                        boxSize="4em"
-                                        color={camaraFile ? "green" : "orange.500"}
-                                    />
-                                    <Button onClick={() => camaraInputRef.current?.click()}>Seleccionar archivo</Button>
-                                    <Input
-                                        type="file"
-                                        ref={camaraInputRef}
-                                        style={{ display: 'none' }}
-                                        accept="application/pdf"
-                                        onChange={handleCamaraChange}
-                                    />
-                                    {camaraFile && <Text>{camaraFile.name}</Text>}
-                                </VStack>
+                                <Field.Root>
+                                    <VStack gap={4} align="stretch" alignItems="center">
+                                        <Field.Label>Cámara y Comercio</Field.Label>
+                                        <Icon
+                                            as={camaraFile ? FaFileCircleCheck : FaFileCircleQuestion}
+                                            boxSize="4em"
+                                            color={camaraFile ? "green" : "orange.500"}
+                                        />
+                                        <Button onClick={() => camaraInputRef.current?.click()}>Seleccionar archivo</Button>
+                                        <Input
+                                            type="file"
+                                            ref={camaraInputRef}
+                                            style={{ display: 'none' }}
+                                            accept="application/pdf"
+                                            onChange={handleCamaraChange}
+                                        />
+                                        {camaraFile && <Text>{camaraFile.name}</Text>}
+                                    </VStack>
+                                </Field.Root>
                             </GridItem>
                         </Grid>
                     </Card.Body>
