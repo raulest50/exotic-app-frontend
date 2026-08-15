@@ -154,9 +154,9 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
             <VStack gap={6} align="stretch">
                 {/* Filtro por ID o lote */}
                 <Box>
-                    <Field.Label fontWeight="bold" mb={3}>
+                    <Heading as="h3" size="sm" mb={3}>
                         Filtrar por ID o Lote
-                    </Field.Label>
+                    </Heading>
                     <Grid templateColumns="repeat(12, 1fr)" gap={4} alignItems="end">
                         <Field.Root gridColumn="span 4">
                             <NativeSelect.Root>
@@ -221,9 +221,9 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
 
                 {/* Filtro por producto terminado */}
                 <Box>
-                    <Field.Label fontWeight="bold" mb={3}>
+                    <Heading as="h3" size="sm" mb={3}>
                         Filtrar por Producto Terminado
-                    </Field.Label>
+                    </Heading>
                     <Grid templateColumns="repeat(12, 1fr)" gap={4} alignItems="center">
                         <Box gridColumn="span 8">
                             <Text fontWeight="semibold">
@@ -263,9 +263,9 @@ export function FiltroHistorialDispensaciones({ onBuscar, onLimpiar }: Props) {
 
                 {/* Filtro por Fecha */}
                 <Box>
-                    <Field.Label fontWeight="bold" mb={3}>
+                    <Heading as="h3" size="sm" mb={3}>
                         Filtrar por Fecha
-                    </Field.Label>
+                    </Heading>
                     <Grid templateColumns="repeat(12, 1fr)" gap={4} alignItems="end">
                         <Field.Root gridColumn="span 4">
                             <NativeSelect.Root>
