@@ -78,6 +78,9 @@ export default function SemiterminadosStep3Confirmation({ setActiveStep, semiote
                         <Text><b>Cantidad por unidad:</b> {semioter3.cantidadUnidad}</Text>
                         <Text><b>Costo:</b> {semioter3.costo}</Text>
                         <Text><b>Inventariable:</b> {semioter3.inventareable ? "Si" : "No"}</Text>
+                        {semioter3.tipo_producto === TIPOS_PRODUCTOS.semiTerminado && (
+                            <Text><b>Orden de fabricación:</b> {semioter3.requiereOrdenFabricacion ? "Aplica" : "No aplica"}</Text>
+                        )}
                         {semioter3.observaciones && <Text><b>Observaciones:</b> {semioter3.observaciones}</Text>}
                     </VStack>
 

@@ -100,6 +100,8 @@ export default class EndPointsURL{
     public averias_historial: string;
     public averias_almacen_search_material_by_lote: string;
     public averias_almacen_registrar: string;
+    public produccion_batch_records: string;
+    public produccion_ordenes_fabricacion: string;
 
     // ingreso terminados almacen
     public ingreso_terminados_reporte_hyl: string;
@@ -340,6 +342,7 @@ export default class EndPointsURL{
     public calidad_ejecucion_preparar: string;
     public calidad_ejecuciones: string;
     public calidad_ejecucion_detalle: string;
+    public calidad_batch_records: string;
 
     // BI — informes diarios
     public informes_diarios_ping: string;
@@ -781,6 +784,8 @@ export default class EndPointsURL{
         this.averias_historial = `${domain}/${averias_res}/orden/{ordenProduccionId}/historial`;
         this.averias_almacen_search_material_by_lote = `${domain}/${averias_res}/almacen/search-material-by-lote`;
         this.averias_almacen_registrar = `${domain}/${averias_res}/almacen/registrar`;
+        this.produccion_batch_records = `${domain}/api/produccion/batch-records`;
+        this.produccion_ordenes_fabricacion = `${domain}/api/produccion/ordenes-fabricacion`;
 
         // ingreso terminados almacen endpoints
         this.ingreso_terminados_reporte_hyl = `${domain}/${ingresos_terminados_res}/reporte-hyl`;
@@ -1006,6 +1011,7 @@ export default class EndPointsURL{
         this.calidad_ejecucion_preparar = `${domain}/${calidad_res}/ejecuciones/preparar`;
         this.calidad_ejecuciones = `${domain}/${calidad_res}/ejecuciones`;
         this.calidad_ejecucion_detalle = `${domain}/${calidad_res}/ejecuciones/{id}`;
+        this.calidad_batch_records = `${domain}/${calidad_res}/batch-records`;
 
         // Planeacion de produccion endpoints
         this.planeacion_asociar_terminados = `${domain}/${planeacion_produccion_res}/asociar_terminados`;

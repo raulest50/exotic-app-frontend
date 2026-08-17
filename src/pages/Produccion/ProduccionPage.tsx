@@ -2,7 +2,7 @@ import { useMemo, useState, type JSX } from "react";
 import { Box, Container, Tabs } from "@chakra-ui/react";
 
 import MyHeader from "../../components/MyHeader.tsx";
-import { tabAccessRule } from "../../auth/accessHelpers.ts";
+import { getExactTabNivel, tabAccessRule } from "../../auth/accessHelpers.ts";
 import type { AccessRule } from "../../auth/accessModel.ts";
 import { useAccessSnapshot } from "../../auth/usePermissions";
 import { my_style_tab } from "../../styles/styles_general.tsx";
@@ -14,6 +14,8 @@ import MonitorearAreasOperativasTab from "./MonitorearAreasOperativasTab.tsx";
 import { PlaneacionProduccionTab } from "./ProgProdMensualTab/PlaneacionProduccionTab.tsx";
 import AprobacionMPSWeekTab from "./ProgProdSemanalTab/AprobacionMPSWeekTab.tsx";
 import ProgramacionProduccionSemanalTab from "./ProgProdSemanalTab/ProgramacionProduccionSemanalTab.tsx";
+import BatchRecordsTab from "./BatchRecords/BatchRecordsTab.tsx";
+import OrdenesFabricacionTab from "./OrdenesFabricacion/OrdenesFabricacionTab.tsx";
 
 export default function ProduccionPage() {
     const access = useAccessSnapshot();
@@ -61,6 +63,26 @@ export default function ProduccionPage() {
             label: "Monitorear Areas Operativas",
             render: () => <MonitorearAreasOperativasTab />,
             accesoValido: tabAccessRule(Modulo.PRODUCCION, "MONITOREAR_AREAS_OPERATIVAS", 1),
+        },
+        {
+            key: "batch-records",
+            label: "Expedientes de Fabricación",
+            render: () => <BatchRecordsTab />,
+            accesoValido: (snapshot) => snapshot.isMasterLike || (getExactTabNivel(
+                snapshot.moduloAccesos,
+                Modulo.PRODUCCION,
+                "CONSULTAR_BATCH_RECORD",
+            ) ?? 0) >= 1,
+        },
+        {
+            key: "ordenes-fabricacion",
+            label: "Órdenes de Fabricación",
+            render: () => <OrdenesFabricacionTab />,
+            accesoValido: (snapshot) => snapshot.isMasterLike || (getExactTabNivel(
+                snapshot.moduloAccesos,
+                Modulo.PRODUCCION,
+                "CREAR_ORDEN_FABRICACION",
+            ) ?? 0) >= 1,
         },
     ];
 

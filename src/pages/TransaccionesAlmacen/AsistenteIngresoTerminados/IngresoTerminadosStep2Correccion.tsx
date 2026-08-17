@@ -16,6 +16,11 @@ const UNIDAD_LABEL: Record<"DIAS" | "MESES" | "ANIOS", string> = {
 };
 
 function getVencimientoHelper(reporte: ReporteProduccionPendiente): string {
+    if (reporte.expedienteDigital) {
+        return reporte.puedeIngresar
+            ? "Fecha incluida en el expediente liberado por Calidad; no puede modificarse aquí."
+            : "Bloqueado hasta la decisión de Calidad.";
+    }
     if (reporte.fechaVencimientoSugerida && reporte.vidaUtilUnidadAplicada) {
         return `Sugerida por la categoria: ${reporte.fechaVencimientoSugerida} (${reporte.vidaUtilCantidadAplicada} ${UNIDAD_LABEL[reporte.vidaUtilUnidadAplicada]}). Puede modificarla.`;
     }
@@ -74,6 +79,7 @@ export default function IngresoTerminadosStep2Correccion({
                 {reportes.map((reporte) => {
                     const edicion = ediciones[reporte.reporteId];
                     const changed = !sameCantidad(edicion.cantidadConfirmada, reporte.cantidadReportada);
+                    const editableReporte = editable && reporte.puedeIngresar && !reporte.expedienteDigital;
                     return (
                         <Box key={reporte.reporteId} borderWidth="1px" borderRadius="md" p={{ base: 3, md: 4 }}>
                             <HStack
@@ -91,6 +97,9 @@ export default function IngresoTerminadosStep2Correccion({
                                 <Text fontSize="sm">
                                     Reportado: <strong>{formatCantidad(reporte.cantidadReportada)}</strong>
                                 </Text>
+                                <Badge colorPalette={reporte.puedeIngresar ? "green" : "orange"}>
+                                    {reporte.puedeIngresar ? (reporte.expedienteDigital ? "Datos liberados" : "Editable") : reporte.motivoBloqueo}
+                                </Badge>
                             </HStack>
 
                             <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap={4}>
@@ -101,7 +110,7 @@ export default function IngresoTerminadosStep2Correccion({
                                         min={0.0001}
                                         formatOptions={{ maximumFractionDigits: 4 }}
                                         clampValueOnBlur={false}
-                                        disabled={!editable}
+                                        disabled={!editableReporte}
                                         onValueChange={({ valueAsNumber }) => onChange(reporte.reporteId, {
                                             ...edicion,
                                             cantidadConfirmada: valueAsNumber,
@@ -111,7 +120,7 @@ export default function IngresoTerminadosStep2Correccion({
                                     </NumberInput.Root>
                                 </Field.Root>
 
-                                <Field.Root required={changed} disabled={!editable || !changed}>
+                                <Field.Root required={changed} disabled={!editableReporte || !changed}>
                                     <Field.Label>Motivo de corrección</Field.Label>
                                     <Input
                                         value={edicion.motivoCorreccion}
@@ -124,7 +133,7 @@ export default function IngresoTerminadosStep2Correccion({
                                     />
                                 </Field.Root>
 
-                                <Field.Root required disabled={!editable}>
+                                <Field.Root required disabled={!editableReporte}>
                                     <Field.Label>Fecha de vencimiento</Field.Label>
                                     <Input
                                         type="date"

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Box, Button, Flex, HStack, Field, Text } from "@chakra-ui/react";
+import { Box, Button, Checkbox, Flex, HStack, Field, Text } from "@chakra-ui/react";
 import ProcessDesigner from "../../../../DefProcesses/CreadorProcesos/ProcessDesigner.tsx";
 import PackagingTerminadoDefiner from "./PackagingTerminadoDefiner.tsx";
 import CustomDecimalInput from "../../../../../../components/CustomDecimalInput/CustomDecimalInput.tsx";
@@ -32,6 +32,9 @@ export default function StepThree_ModProdMF({ setActiveStep, semioter2, setSemio
     const [proceso, setProceso] = useState<ProcesoProduccionCompleto>(procesoInicial);
     const [isPackagingDefinerOpen, setIsPackagingDefinerOpen] = useState(false);
     const [casePack, setCasePack] = useState<CasePack | undefined>(semioter2.casePack);
+    const [requiereOrdenFabricacion, setRequiereOrdenFabricacion] = useState(
+        Boolean(semioter2.requiereOrdenFabricacion),
+    );
 
     const isTerminado = semioter2.tipo_producto === TIPOS_PRODUCTOS.terminado;
 
@@ -43,6 +46,10 @@ export default function StepThree_ModProdMF({ setActiveStep, semioter2, setSemio
                 rendimientoTeorico,
             },
             casePack: isTerminado ? casePack : undefined,
+            requiereOrdenFabricacion: isTerminado ? false : requiereOrdenFabricacion,
+            inventareable: isTerminado || requiereOrdenFabricacion
+                ? true
+                : semioter2.inventareable,
         });
         setActiveStep(3);
     };
@@ -66,6 +73,22 @@ export default function StepThree_ModProdMF({ setActiveStep, semioter2, setSemio
                         <Button colorPalette={casePack ? "green" : "blue"} onClick={() => setIsPackagingDefinerOpen(true)}>
                             {casePack ? "Packaging definido" : "Definir packaging"}
                         </Button>
+                    </Box>
+                )}
+
+                {!isTerminado && (
+                    <Box borderWidth="1px" borderRadius="md" px={4} py={3} maxW="lg">
+                        <Checkbox.Root
+                            checked={requiereOrdenFabricacion}
+                            onCheckedChange={({ checked }) => setRequiereOrdenFabricacion(checked === true)}
+                        >
+                            <Checkbox.HiddenInput />
+                            <Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>
+                            <Checkbox.Label>Aplica para orden de fabricación</Checkbox.Label>
+                        </Checkbox.Root>
+                        <Text mt={1} fontSize="sm" color="app.textSubtle">
+                            El semiterminado tendrá lote propio y podrá fabricarse mediante una OF independiente.
+                        </Text>
                     </Box>
                 )}
             </HStack>

@@ -141,6 +141,7 @@ export default function DiligenciarControlProcesoTab() {
             const request: EjecucionRequest = {
                 plantillaId: preparacion.plantilla.id,
                 loteId: preparacion.lote.id,
+                batchRecordEtapaId: preparacion.batchRecordEtapaId,
                 observaciones: observaciones.trim() || null,
                 muestras: buildMuestras(),
             };

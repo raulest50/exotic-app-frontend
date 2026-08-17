@@ -41,6 +41,7 @@ export default function IngresoTerminadosStep1Lectura({ reportes }: Props) {
                                         <Table.ColumnHeader textAlign='end'>Planeado</Table.ColumnHeader>
                                         <Table.ColumnHeader textAlign='end'>Reportado</Table.ColumnHeader>
                                         <Table.ColumnHeader>Responsable</Table.ColumnHeader>
+                                        <Table.ColumnHeader>Calidad</Table.ColumnHeader>
                                     </Table.Row>
                                 </Table.Header>
                                 <Table.Body>
@@ -51,6 +52,14 @@ export default function IngresoTerminadosStep1Lectura({ reportes }: Props) {
                                             <Table.Cell textAlign='end'>{formatCantidad(reporte.cantidadPlaneada)}</Table.Cell>
                                             <Table.Cell fontWeight="semibold" textAlign='end'>{formatCantidad(reporte.cantidadReportada)}</Table.Cell>
                                             <Table.Cell>{reporte.reportadoPor}</Table.Cell>
+                                            <Table.Cell>
+                                                <Badge colorPalette={reporte.puedeIngresar ? "green" : "orange"}>
+                                                    {reporte.puedeIngresar
+                                                        ? (reporte.expedienteDigital ? "Liberado" : "Disponible (legado)")
+                                                        : reporte.estadoCalidad}
+                                                </Badge>
+                                                {!reporte.puedeIngresar ? <Text fontSize="xs" color="app.textSubtle">{reporte.motivoBloqueo}</Text> : null}
+                                            </Table.Cell>
                                         </Table.Row>
                                     ))}
                                 </Table.Body>
@@ -70,6 +79,11 @@ export default function IngresoTerminadosStep1Lectura({ reportes }: Props) {
                                     <Text mt={2} fontSize="sm" color="app.textSubtle">
                                         Planeado {formatCantidad(reporte.cantidadPlaneada)} · {reporte.reportadoPor}
                                     </Text>
+                                    <Badge mt={2} colorPalette={reporte.puedeIngresar ? "green" : "orange"}>
+                                        {reporte.puedeIngresar
+                                            ? (reporte.expedienteDigital ? "Liberado por Calidad" : "Disponible (flujo legado)")
+                                            : reporte.motivoBloqueo}
+                                    </Badge>
                                 </Box>
                             ))}
                         </VStack>

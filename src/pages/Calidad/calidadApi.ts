@@ -11,6 +11,9 @@ import type {
     PlantillaRequest,
     PlantillaResponse,
     PrepararEjecucionResponse,
+    BatchRecordQualityInboxItem,
+    BatchRecordQualityReviewDetail,
+    DecisionCalidadBatchRecord,
 } from "./types";
 
 const endpoints = new EndPointsURL();
@@ -78,10 +81,14 @@ export async function searchLotesProduccion(search: string): Promise<LoteProducc
     return response.data ?? [];
 }
 
-export async function prepararEjecucion(areaId: number, loteId: number): Promise<PrepararEjecucionResponse> {
+export async function prepararEjecucion(
+    areaId: number,
+    loteId: number,
+    batchRecordEtapaId?: number,
+): Promise<PrepararEjecucionResponse> {
     const response = await axios.get<PrepararEjecucionResponse>(endpoints.calidad_ejecucion_preparar, {
         ...axiosOptions,
-        params: { areaId, loteId },
+        params: { areaId, loteId, batchRecordEtapaId },
     });
     return response.data;
 }
@@ -110,6 +117,39 @@ export async function buscarEjecuciones(params: {
 export async function detalleEjecucion(id: number): Promise<EjecucionDetalleResponse> {
     const response = await axios.get<EjecucionDetalleResponse>(
         endpoints.calidad_ejecucion_detalle.replace("{id}", String(id)),
+        axiosOptions,
+    );
+    return response.data;
+}
+
+export async function buscarBatchRecordsCalidad(params: {
+    search?: string;
+    page?: number;
+    size?: number;
+}): Promise<PageResponse<BatchRecordQualityInboxItem>> {
+    const response = await axios.get<PageResponse<BatchRecordQualityInboxItem>>(
+        endpoints.calidad_batch_records,
+        { ...axiosOptions, params },
+    );
+    return response.data;
+}
+
+export async function detalleBatchRecordCalidad(id: number): Promise<BatchRecordQualityReviewDetail> {
+    const response = await axios.get<BatchRecordQualityReviewDetail>(
+        `${endpoints.calidad_batch_records}/${id}`,
+        axiosOptions,
+    );
+    return response.data;
+}
+
+export async function decidirBatchRecordCalidad(
+    id: number,
+    decision: DecisionCalidadBatchRecord,
+    motivo: string,
+): Promise<BatchRecordQualityReviewDetail> {
+    const response = await axios.post<BatchRecordQualityReviewDetail>(
+        `${endpoints.calidad_batch_records}/${id}/decision`,
+        { decision, motivo },
         axiosOptions,
     );
     return response.data;

@@ -27,6 +27,12 @@ export interface ReporteProduccionPendiente {
     vidaUtilCantidadAplicada: number | null;
     vidaUtilUnidadAplicada: "DIAS" | "MESES" | "ANIOS" | null;
     fechaVencimientoSugerida: string | null;
+    estadoCalidad: string;
+    batchRecordId: number | null;
+    batchRecordEstado: string | null;
+    expedienteDigital: boolean;
+    puedeIngresar: boolean;
+    motivoBloqueo: string | null;
 }
 
 export interface PendientesProduccionFecha {

@@ -82,6 +82,10 @@ export function AsistenteIngresoTerminados() {
     const [enviando, setEnviando] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [resultado, setResultado] = useState<CierreProduccionResponse | null>(null);
+    const reportesIngresables = useMemo(
+        () => seleccion?.reportes.filter((reporte) => reporte.puedeIngresar) ?? [],
+        [seleccion],
+    );
 
     const cargarResumen = useCallback(async () => {
         setCargando(true);
@@ -144,7 +148,7 @@ export function AsistenteIngresoTerminados() {
 
     const errorEdicion = useMemo(() => {
         if (!seleccion) return null;
-        for (const reporte of seleccion.reportes) {
+        for (const reporte of reportesIngresables) {
             const edicion = ediciones[reporte.reporteId];
             if (!edicion || !Number.isFinite(edicion.cantidadConfirmada) || edicion.cantidadConfirmada <= 0) {
                 return `La cantidad del lote ${reporte.lote} debe ser mayor que cero.`;
@@ -167,7 +171,7 @@ export function AsistenteIngresoTerminados() {
             }
         }
         return null;
-    }, [ediciones, puedeCerrar, seleccion]);
+    }, [ediciones, puedeCerrar, reportesIngresables, seleccion]);
 
     const actualizarEdicion = (reporteId: number, value: EdicionReporteProduccion) => {
         setEdiciones((current) => ({ ...current, [reporteId]: value }));
@@ -192,7 +196,7 @@ export function AsistenteIngresoTerminados() {
             const response = await confirmarCierreProduccion({
                 fechaProduccion: seleccion.fechaProduccion,
                 idempotencyKey,
-                reportes: seleccion.reportes.map((reporte) => ({
+                reportes: reportesIngresables.map((reporte) => ({
                     reporteId: reporte.reporteId,
                     version: reporte.version,
                     cantidadConfirmada: ediciones[reporte.reporteId].cantidadConfirmada,
@@ -317,7 +321,7 @@ export function AsistenteIngresoTerminados() {
             <Flex justify="space-between" gap={3} align={{ base: "flex-start", md: "center" }} flexDir={{ base: "column", md: "row" }}>
                 <Box>
                     <Heading size="md">Producción del {formatFecha(seleccion.fechaProduccion)}</Heading>
-                    <Text mt={1} color="app.textSubtle">{seleccion.reportes.length} lote(s) pendientes</Text>
+                    <Text mt={1} color="app.textSubtle">{seleccion.reportes.length} lote(s) visibles · {reportesIngresables.length} disponible(s) para ingreso</Text>
                 </Box>
                 <Button size="sm" variant="ghost" onClick={volverAlResumen}><LuArrowLeft />Cambiar fecha
                                     </Button>
@@ -346,11 +350,15 @@ export function AsistenteIngresoTerminados() {
 
             <Separator />
 
+            {reportesIngresables.length === 0 ? (
+                <Alert.Root status="warning"><Alert.Indicator />Los lotes permanecen visibles, pero ninguno está liberado por Calidad.</Alert.Root>
+            ) : null}
+
             {paso === 1 ? <IngresoTerminadosStep1Lectura reportes={seleccion.reportes} /> : null}
             {paso === 2 ? (
                 <IngresoTerminadosStep2Correccion
                     fechaProduccion={seleccion.fechaProduccion}
-                    reportes={seleccion.reportes}
+                    reportes={reportesIngresables}
                     ediciones={ediciones}
                     editable={puedeCerrar}
                     onChange={actualizarEdicion}
@@ -359,7 +367,7 @@ export function AsistenteIngresoTerminados() {
             {paso === 3 ? (
                 <IngresoTerminadosStep3HyL
                     fechaProduccion={seleccion.fechaProduccion}
-                    reportes={seleccion.reportes}
+                    reportes={reportesIngresables}
                     ediciones={ediciones}
                     generado={hylGenerado}
                     onGenerated={() => setHylGenerado(true)}
@@ -368,7 +376,7 @@ export function AsistenteIngresoTerminados() {
             ) : null}
             {paso === 4 ? (
                 <IngresoTerminadosStep4Resumen
-                    reportes={seleccion.reportes}
+                    reportes={reportesIngresables}
                     ediciones={ediciones}
                     codigo={codigo}
                     codigoIngresado={codigoIngresado}
@@ -390,7 +398,7 @@ export function AsistenteIngresoTerminados() {
                     <Button
                         colorPalette="teal"
                         onClick={avanzar}
-                        disabled={(paso === 2 && Boolean(errorEdicion)) || (paso === 3 && !hylGenerado)}>Continuar
+                        disabled={reportesIngresables.length === 0 || (paso === 2 && Boolean(errorEdicion)) || (paso === 3 && !hylGenerado)}>Continuar
                                             <LuArrowRight /></Button>
                 ) : null}
             </HStack>

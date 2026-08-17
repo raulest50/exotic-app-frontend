@@ -231,6 +231,7 @@ export const toProductoManufacturingPayload = (producto: ProductoSemiter): Produ
     tipoUnidades: producto.tipoUnidades,
     cantidadUnidad: toNumber(producto.cantidadUnidad),
     inventareable: producto.inventareable,
+    requiereOrdenFabricacion: producto.requiereOrdenFabricacion,
     categoriaId: producto.categoria?.categoriaId,
     categoriaNombre: producto.categoria?.categoriaNombre,
     prefijoLote: producto.prefijoLote,
@@ -311,6 +312,7 @@ export const fromProductoManufacturingResponse = (dto: ProductoManufacturingDTO)
         tipo_producto: dto.tipoProducto,
         procesoProduccionCompleto: dto.procesoProduccionCompleto,
         inventareable: dto.inventareable,
+        requiereOrdenFabricacion: dto.requiereOrdenFabricacion,
         categoria: dto.categoriaId
             ? {
                   categoriaId: dto.categoriaId,

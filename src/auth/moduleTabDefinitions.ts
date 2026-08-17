@@ -22,6 +22,8 @@ export const TABS_BY_MODULO: Record<Modulo, TabDefinition[]> = {
         tab("PROGRAMACION_PRODUCCION", "Programacion Produccion (Semanal)"),
         tab("MONITOREAR_AREAS_OPERATIVAS", "Monitorear Areas Operativas"),
         tab("APROBACION_MPS_WEEK", "Aprobacion MPS Semanal"),
+        tab("CONSULTAR_BATCH_RECORD", "Consultar Expedientes de Fabricacion", 1),
+        tab("CREAR_ORDEN_FABRICACION", "Ordenes de Fabricacion", 2),
     ],
     [Modulo.STOCK]: [
         tab("CONSOLIDADO", "Consolidado"),
@@ -96,6 +98,7 @@ export const TABS_BY_MODULO: Record<Modulo, TabDefinition[]> = {
         tab("VERSIONADO_CONTROL_PROCESO", "Versionado Control de Proceso"),
         tab("DILIGENCIAR_CONTROL_PROCESO", "Diligenciar Control de Proceso"),
         tab("HISTORIAL_CONTROL_PROCESO", "Historial Control de Proceso"),
+        tab("REVISION_LIBERACION_LOTES", "Revision y Liberacion de Lotes", 3),
     ],
     [Modulo.PAGOS_PROVEEDORES]: [
         tab("ASENTAR_TRANSACCIONES_ALMACEN", "Asentar Transacciones Almacen"),

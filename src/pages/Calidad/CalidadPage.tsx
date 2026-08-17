@@ -2,12 +2,13 @@ import { Alert, Container, Tabs } from "@chakra-ui/react";
 import MyHeader from "../../components/MyHeader";
 import { my_style_tab } from "../../styles/styles_general";
 import { useAccessSnapshot } from "../../auth/usePermissions";
-import { tabAccessRule } from "../../auth/accessHelpers";
+import { getExactTabNivel, tabAccessRule } from "../../auth/accessHelpers";
 import type { AccessRule } from "../../auth/accessModel";
 import { Modulo } from "../Usuarios/GestionUsuarios/types";
 import VersionadoControlProcesoTab from "./VersionadoControlProcesoTab";
 import DiligenciarControlProcesoTab from "./DiligenciarControlProcesoTab";
 import HistorialControlProcesoTab from "./HistorialControlProcesoTab";
+import LiberacionLotesTab from "./LiberacionLotesTab";
 
 import type { JSX } from "react";
 
@@ -32,6 +33,16 @@ export default function CalidadPage() {
             label: "Historial Control de Proceso",
             render: () => <HistorialControlProcesoTab />,
             accesoValido: tabAccessRule(Modulo.CALIDAD, "HISTORIAL_CONTROL_PROCESO", 1),
+        },
+        {
+            key: "liberacion-lotes",
+            label: "Revisión y Liberación de Lotes",
+            render: () => <LiberacionLotesTab />,
+            accesoValido: (snapshot) => (getExactTabNivel(
+                snapshot.moduloAccesos,
+                Modulo.CALIDAD,
+                "REVISION_LIBERACION_LOTES",
+            ) ?? 0) >= 1,
         },
     ];
 

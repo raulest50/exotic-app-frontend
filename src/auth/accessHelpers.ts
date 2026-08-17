@@ -42,6 +42,18 @@ export function getTabNivel(
     return tab != null ? tab.nivel : null;
 }
 
+/** Obtiene únicamente el permiso explícito del tab, sin heredar el tab legado MAIN. */
+export function getExactTabNivel(
+    moduloAccesos: ModuloAccesoFE[] | null | undefined,
+    modulo: Modulo,
+    tabId: string
+): number | null {
+    const ma = moduloAccesos?.find((m) => m.modulo === modulo);
+    const acceptedTabIds = resolveLegacyTabIds(modulo, tabId);
+    const tab = ma?.tabs?.find((t) => acceptedTabIds.includes(t.tabId));
+    return tab != null ? tab.nivel : null;
+}
+
 /** Nivel máximo entre todos los tabs del módulo (útil para UI legacy por módulo). */
 export function maxNivelForModule(
     moduloAccesos: ModuloAccesoFE[] | null | undefined,

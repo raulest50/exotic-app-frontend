@@ -16,6 +16,7 @@ export interface Producto {
     observaciones?: string;
     costo: number;
     inventareable?: boolean;
+    requiereOrdenFabricacion?: boolean;
     tipoUnidades: string;
     cantidadUnidad: string;
     fechaCreacion?: string;
@@ -138,6 +139,7 @@ export interface ProductoSemiter {
     procesoProduccionCompleto?: ProcesoProduccionCompleto;
     categoria?: Categoria;
     inventareable?: boolean;
+    requiereOrdenFabricacion?: boolean;
     casePack?: CasePack;
     prefijoLote?: string;
     ivaPercentual?: number;
@@ -227,6 +229,7 @@ export interface ProductoManufacturingDTO {
     tipoUnidades: string;
     cantidadUnidad: number;
     inventareable?: boolean;
+    requiereOrdenFabricacion?: boolean;
     categoriaId?: number;
     categoriaNombre?: string;
     status?: number;
