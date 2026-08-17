@@ -282,10 +282,12 @@ export default function LoginPanel() {
 
     return (
         <Box
-            position="relative"
-            w="100vw"
-            mx="calc(50% - 50vw)"
-            minH="100vh"
+            position={{ base: "relative", "2xl": "fixed" }}
+            inset={{ base: "auto", "2xl": 0 }}
+            w={{ base: "100vw", "2xl": "auto" }}
+            h={{ base: "auto", "2xl": "dvh" }}
+            mx={{ base: "calc(50% - 50vw)", "2xl": 0 }}
+            minH={{ base: "100vh", "2xl": "auto" }}
             overflowX="hidden"
             overflowY="auto"
             isolation="isolate"
@@ -299,16 +301,23 @@ export default function LoginPanel() {
                 position="relative"
                 zIndex={1}
                 w="full"
-                maxW={{ base: "100%", md: "container.md" }}
+                maxW={{ base: "full", md: "3xl" }}
                 px={{ base: 4, md: 6 }}
                 minH="100vh"
                 bg="transparent"
             >
-                <Flex align="flex-start" justify="center" minH="100%" pt={{ base: 8, md: 12 }} pb={8} w="full">
+                <Flex
+                    align={{ base: "flex-start", "2xl": "center" }}
+                    justify="center"
+                    minH={{ base: "100%", "2xl": "dvh" }}
+                    pt={{ base: 8, md: 12, "2xl": 8 }}
+                    pb={8}
+                    w="full"
+                >
                     <Box
-                        w="100%"
-                        maxW="container.sm"
-                        minH={{ base: "auto", md: "75vh", lg: "78vh" }}
+                        w="full"
+                        maxW={{ base: "full", md: "2xl" }}
+                        minH={{ base: "auto", md: "75vh", lg: "78vh", "2xl": "auto" }}
                         display="flex"
                         flexDirection="column"
                     >
@@ -327,14 +336,14 @@ export default function LoginPanel() {
                         >
                             <Flex
                                 direction="column"
-                                gap={{ base: 5, md: 7 }}
-                                p={{ base: 6, sm: 8, md: "4em" }}
+                                gap={{ base: 5, md: 7, "2xl": 6 }}
+                                p={{ base: 6, sm: 8, md: 16, "2xl": 12 }}
                                 alignItems="center"
                                 justifyContent="flex-start"
                                 flex={1}
                                 minW={0}
                             >
-                                <Box boxSize={{ base: "9rem", sm: "12rem", md: "16.8rem" }}>
+                                <Box boxSize={{ base: "9rem", sm: "12rem", md: "16.8rem", "2xl": "14rem" }}>
                                     <Image src={'/logo_exotic.svg'} />
                                 </Box>
                                 {viewMode === 'login' ? (

@@ -13,7 +13,6 @@ import {
 import { Tooltip } from '@/components/ui/tooltip';
 import ReactECharts from "echarts-for-react";
 import { useEffect, useMemo, useState } from "react";
-import type { ReactElement } from "react";
 import {
     EmptyPanel,
     formatDate,
@@ -137,8 +136,6 @@ export default function InformeProduccionAreasSection({
                                         <Table.ColumnHeader>Producción</Table.ColumnHeader>
                                         <Table.ColumnHeader textAlign='end'>Salidas/día</Table.ColumnHeader>
                                         <Table.ColumnHeader textAlign='end'>Trabajo listo</Table.ColumnHeader>
-                                        <Table.ColumnHeader textAlign='end'>Días backlog</Table.ColumnHeader>
-                                        <Table.ColumnHeader>Señal</Table.ColumnHeader>
                                     </Table.Row>
                                 </Table.Header>
                                 <Table.Body>
@@ -288,18 +285,6 @@ function AreaTableRow({
             </Table.Cell>
             <Table.Cell textAlign='end'>{formatQuantity(area.actual.ritmoSalidaDiario)}</Table.Cell>
             <Table.Cell textAlign='end'>{area.actual.trabajoListo} lotes</Table.Cell>
-            <Table.Cell textAlign='end'>
-                {area.actual.diasBacklog === null || area.actual.diasBacklog === undefined
-                    ? "Sin ritmo"
-                    : formatQuantity(area.actual.diasBacklog)}
-            </Table.Cell>
-            <Table.Cell>
-                <SignalTooltip area={area}>
-                    <Box display="inline-block">
-                        <SignalBadge state={area.estado} />
-                    </Box>
-                </SignalTooltip>
-            </Table.Cell>
         </Table.Row>
     );
 }
@@ -331,23 +316,16 @@ function AreaMobileCard({
         >
             <Card.Body p={3}>
                 <Stack gap={3}>
-                    <HStack justify="space-between" align="flex-start">
-                        <Box minW={0}>
-                            <Text fontWeight="semibold" lineClamp={2}>
-                                {area.areaNombre}
-                            </Text>
-                            <Text color="app.textMuted" fontSize="xs">
-                                {area.actual.entradas} entradas · {area.actual.salidas} salidas
-                            </Text>
-                        </Box>
-                        <SignalTooltip area={area}>
-                            <Box flexShrink={0}>
-                                <SignalBadge state={area.estado} />
-                            </Box>
-                        </SignalTooltip>
-                    </HStack>
+                    <Box minW={0}>
+                        <Text fontWeight="semibold" lineClamp={2}>
+                            {area.areaNombre}
+                        </Text>
+                        <Text color="app.textMuted" fontSize="xs">
+                            {area.actual.entradas} entradas · {area.actual.salidas} salidas
+                        </Text>
+                    </Box>
                     <ProductionSummary area={area} />
-                    <SimpleGrid columns={3} gap={2}>
+                    <SimpleGrid columns={2} gap={2}>
                         <CompactMetric
                             label="Salidas/día"
                             value={formatQuantity(area.actual.ritmoSalidaDiario)}
@@ -355,13 +333,6 @@ function AreaMobileCard({
                         <CompactMetric
                             label="Trabajo listo"
                             value={`${area.actual.trabajoListo}`}
-                        />
-                        <CompactMetric
-                            label="Días backlog"
-                            value={area.actual.diasBacklog === null
-                            || area.actual.diasBacklog === undefined
-                                ? "—"
-                                : formatQuantity(area.actual.diasBacklog)}
                         />
                     </SimpleGrid>
                 </Stack>
@@ -466,34 +437,6 @@ function SignalExplanation({ area }: { area: AnaliticaAreaProduccion }) {
                 ))}
             </Box>
         </Alert.Root>
-    );
-}
-
-function SignalTooltip({
-    area,
-    children,
-}: {
-    area: AnaliticaAreaProduccion;
-    children: ReactElement;
-}) {
-    return (
-        <Tooltip
-            showArrow
-            content={(
-                <Stack gap={1} maxW="300px">
-                    {area.motivos.map((reason, index) => (
-                        <Text key={`${area.areaId}-tooltip-${index}`} fontSize="xs">
-                            {reason}
-                        </Text>
-                    ))}
-                </Stack>
-            )}
-            positioning={{
-                placement: "top"
-            }}
-        >
-            {children}
-        </Tooltip>
     );
 }
 
