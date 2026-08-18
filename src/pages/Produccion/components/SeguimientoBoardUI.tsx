@@ -34,7 +34,26 @@ export function getSeguimientoColumnDroppableId(estadoKey: EstadoTableroKey): st
 }
 
 export function getSeguimientoCardDraggableId(card: SeguimientoOrdenAreaCardDTO): string {
-    return `seguimiento-card-${card.id}`;
+    return `seguimiento-card-${card.tipoOrden ?? "OP"}-${card.id}`;
+}
+
+function isOrdenFabricacion(card: SeguimientoOrdenAreaCardDTO): boolean {
+    return card.tipoOrden === "OF";
+}
+
+function getOrdenReference(card: SeguimientoOrdenAreaCardDTO): string {
+    if (isOrdenFabricacion(card)) {
+        return `OF-${card.ordenFabricacionId ?? card.ordenId}`;
+    }
+    return `OP-${card.ordenId}`;
+}
+
+function isOrdenClosed(card: SeguimientoOrdenAreaCardDTO): boolean {
+    if (isOrdenFabricacion(card)) {
+        return card.estadoOrdenFabricacion === "CERRADA"
+            || card.estadoOrdenFabricacion === "CANCELADA";
+    }
+    return card.estadoOrden === -1 || card.estadoOrden === 2;
 }
 
 export const BOARD_COLUMN_META: Record<
@@ -186,7 +205,7 @@ function SeguimientoOrdenCard({
     touchOptimized = false,
 }: SeguimientoOrdenCardProps) {
     const isAlmacenGeneral = card.areaId === -1;
-    const isOrdenCerrada = card.estadoOrden === -1 || card.estadoOrden === 2;
+    const isOrdenCerrada = isOrdenClosed(card);
     const isCorrectionDragEnabled = mode === "monitor" && canCorrectState && !isAlmacenGeneral && !isOrdenCerrada;
     const isDragEnabled = dndEnabled && (mode === "leader" || isCorrectionDragEnabled);
 
@@ -282,14 +301,19 @@ function SeguimientoOrdenCardContent({
     isAlmacenGeneral,
     touchOptimized = false,
 }: SeguimientoOrdenCardProps & { isAlmacenGeneral: boolean }) {
-    const isOrdenCerrada = card.estadoOrden === -1 || card.estadoOrden === 2;
+    const isOrdenCerrada = isOrdenClosed(card);
 
     return (
         <VStack align="stretch" gap={2}>
             <VStack align="start" gap={1}>
-                <Badge colorPalette="teal" px={2} py={1}>
-                    {card.loteAsignado || `OP-${card.ordenId}`}
-                </Badge>
+                <HStack gap={2} flexWrap="wrap">
+                    <Badge colorPalette={isOrdenFabricacion(card) ? "purple" : "teal"} px={2} py={1}>
+                        {getOrdenReference(card)}
+                    </Badge>
+                    <Badge colorPalette="gray" variant="outline" px={2} py={1}>
+                        {card.loteAsignado || "Sin lote"}
+                    </Badge>
+                </HStack>
                 <Text fontSize="xs" color="app.textSubtle" lineClamp={1}>
                     {card.nodeLabel || "Sin nodo"}
                 </Text>

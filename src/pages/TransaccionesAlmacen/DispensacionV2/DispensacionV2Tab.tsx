@@ -1,4 +1,4 @@
-import { Steps, Box, Container, Flex } from "@chakra-ui/react";
+import { Steps, Box, Button, ButtonGroup, Container, Flex, Heading, Text } from "@chakra-ui/react";
 import { LuCheck } from 'react-icons/lu';
 import { useCallback, useState } from "react";
 import DispensacionV2Step1SelectArea, { type AreaOperativaDispensacionV2 } from "./DispensacionV2Step1SelectArea";
@@ -7,6 +7,12 @@ import DispensacionV2Step3SeleccionOrdenes from "./DispensacionV2Step3SeleccionO
 import DispensacionV2Step3Materiales from "./DispensacionV2Step3Materiales";
 import DispensacionV2Step4Resumen from "./DispensacionV2Step4Resumen";
 import DispensacionV2Step5Confirmacion from "./DispensacionV2Step5Confirmacion";
+import DispensacionV2OrdenFabricacionFlow from "./DispensacionV2OrdenFabricacionFlow";
+import { useMasterDirectives } from "../../../context/MasterDirectivesContext";
+import {
+    BATCH_RECORD_WORKFLOW_ENABLED_DEFAULT,
+    MASTER_DIRECTIVE_KEYS,
+} from "../../../context/masterDirectiveConstants";
 import type {
     DispensacionV2MaterialesRecetaResponseDTO,
     DispensacionV2MpsItemSeleccionado,
@@ -24,6 +30,12 @@ const steps = [
 ];
 
 export default function DispensacionV2Tab() {
+    const { loading: directivesLoading, getBooleanDirective } = useMasterDirectives();
+    const batchRecordWorkflowEnabled = !directivesLoading && getBooleanDirective(
+        MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED,
+        BATCH_RECORD_WORKFLOW_ENABLED_DEFAULT,
+    );
+    const [mode, setMode] = useState<"OP" | "OF">("OP");
     const [activeStep, setActiveStep] = useState(0);
     const [selectedArea, setSelectedArea] = useState<AreaOperativaDispensacionV2 | null>(null);
     const [selectedMpsItem, setSelectedMpsItem] = useState<DispensacionV2MpsItemSeleccionado | null>(null);
@@ -113,6 +125,19 @@ export default function DispensacionV2Tab() {
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
             <Flex direction="column" gap={4}>
+                {batchRecordWorkflowEnabled ? <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
+                    <Heading size="md">Tipo de orden a dispensar</Heading>
+                    <Text mt={1} mb={3} fontSize="sm" color="app.textMuted">
+                        Las OP conservan el flujo basado en MPS; las OF usan su receta congelada y su lote intermedio.
+                    </Text>
+                    <ButtonGroup attached variant="outline">
+                        <Button colorPalette={mode === "OP" ? "teal" : "gray"} variant={mode === "OP" ? "solid" : "outline"} onClick={() => setMode("OP")}>Orden de producción (OP)</Button>
+                        <Button colorPalette={mode === "OF" ? "purple" : "gray"} variant={mode === "OF" ? "solid" : "outline"} onClick={() => setMode("OF")}>Orden de fabricación (OF)</Button>
+                    </ButtonGroup>
+                </Box> : null}
+
+                {batchRecordWorkflowEnabled && mode === "OF" ? <DispensacionV2OrdenFabricacionFlow /> : (
+                    <>
                 <Steps.Root step={activeStep} count={steps.length} p="1em" backgroundColor="app.stepperTeal" w="full">
                       <Steps.List>
                         {steps.map((step, index) => (
@@ -188,6 +213,8 @@ export default function DispensacionV2Tab() {
                         onBack={goToStep4}
                         onSuccess={handleFinalizacionSuccess}
                     />
+                )}
+                    </>
                 )}
             </Flex>
         </Container>

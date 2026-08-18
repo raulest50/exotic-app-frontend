@@ -89,6 +89,11 @@ export default function StepThree_ModProdMF({ setActiveStep, semioter2, setSemio
                         <Text mt={1} fontSize="sm" color="app.textSubtle">
                             El semiterminado tendrá lote propio y podrá fabricarse mediante una OF independiente.
                         </Text>
+                        {requiereOrdenFabricacion && !semioter2.prefijoLote?.trim() ? (
+                            <Text mt={2} fontSize="sm" color="red.500">
+                                Defina primero un prefijo de lote en la información básica del semiterminado.
+                            </Text>
+                        ) : null}
                     </Box>
                 )}
             </HStack>
@@ -114,7 +119,12 @@ export default function StepThree_ModProdMF({ setActiveStep, semioter2, setSemio
                     variant="solid"
                     onClick={onClickSiguiente}
                     flex={2}
-                    disabled={!isProcessValid || rendimientoTeorico <= 0 || (isTerminado && !casePack)}
+                    disabled={
+                        !isProcessValid
+                        || rendimientoTeorico <= 0
+                        || (isTerminado && !casePack)
+                        || (!isTerminado && requiereOrdenFabricacion && !semioter2.prefijoLote?.trim())
+                    }
                 >
                     Continuar con confirmacion
                 </Button>

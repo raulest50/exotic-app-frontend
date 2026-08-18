@@ -64,6 +64,19 @@ export interface BatchRecordConsumo {
     registradoPor: string;
 }
 
+export interface BatchRecordVinculoGenealogia {
+    batchRecordId?: number | null;
+    batchRecordCodigo?: string | null;
+    ordenProduccionId?: number | null;
+    ordenFabricacionId?: number | null;
+    loteId: number;
+    lote: string;
+    productoId: string;
+    productoNombre: string;
+    cantidad?: number | null;
+    unidadMedida?: string | null;
+}
+
 export interface BatchRecordControl {
     id: number;
     etapaId?: number | null;
@@ -116,6 +129,8 @@ export interface BatchRecordDetail {
     firmas: BatchRecordFirma[];
     revisiones: BatchRecordRevision[];
     decisionesCalidad: Array<Record<string, unknown>>;
+    lotesOrigen: BatchRecordVinculoGenealogia[];
+    lotesDestino: BatchRecordVinculoGenealogia[];
 }
 
 export interface PageResponse<T> {

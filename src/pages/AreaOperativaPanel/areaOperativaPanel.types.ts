@@ -5,6 +5,55 @@ export interface AreaOperativaOrdenDetalleDTO {
     bom: BomJerarquicoDTO;
 }
 
+export interface OrdenFabricacionOperacionDTO {
+    id: number;
+    ordenFabricacionId: number;
+    frontendNodeId: string;
+    procesoProduccionId?: number | null;
+    procesoNombre: string;
+    areaOperativaId: number;
+    areaOperativaNombre: string;
+    posicionSecuencia: number;
+    estado: number;
+    estadoDescripcion: string;
+    fechaEstadoActual?: string | null;
+    fechaVisible?: string | null;
+    fechaCompletado?: string | null;
+    usuarioReporta?: string | null;
+    observaciones?: string | null;
+    batchRecordEtapaId?: number | null;
+    poeDocumentoVersionId?: number | null;
+    poeVersion?: number | null;
+    poeNombreArchivo?: string | null;
+}
+
+export interface OrdenFabricacionOperativaDTO {
+    ordenFabricacionId: number;
+    estado: string;
+    semiTerminadoId: string;
+    semiTerminadoNombre: string;
+    manufacturingVersionId: number;
+    manufacturingVersionNumber: number;
+    cantidadPlanificada: number;
+    unidadMedida: string;
+    loteId: number;
+    lote: string;
+    estadoCalidadLote: string;
+    batchRecordId: number;
+    batchRecordCodigo: string;
+    fechaCreacion: string;
+    fechaLanzamiento?: string | null;
+    fechaFinalPlanificada?: string | null;
+    creadaPor: string;
+    responsable?: string | null;
+    observaciones?: string | null;
+    ordenProduccionOrigenId?: number | null;
+    liberadaEn?: string | null;
+    politicaDispensacionInicio?: string | null;
+    estadoDispensacionMateriales?: string | null;
+    operaciones: OrdenFabricacionOperacionDTO[];
+}
+
 export interface OrdenOperativaResumenDTO {
     ordenId: number;
     loteAsignado: string | null;

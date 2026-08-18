@@ -52,7 +52,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
     const [observaciones, setObservaciones] = useState<string>("");
     const [tipo_producto, setTipo_producto] = useState<string>(TIPOS_PRODUCTOS.terminado);
 
-    // Prefijo de lote (solo para terminados)
+    // Prefijo de lote: obligatorio para terminados y para semiterminados que luego generen OF.
     const [prefijoLote, setPrefijoLote] = useState<string>("");
     const [modoPrefijoLote, setModoPrefijoLote] = useState<"automatico" | "editar">("automatico");
     const [prefijoVerificado, setPrefijoVerificado] = useState<boolean>(false);
@@ -126,9 +126,9 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
     useEffect(() => {
         if (tipo_producto !== TIPOS_PRODUCTOS.terminado) {
             setSelectedCategoriaId(null);
-            setPrefijoLote("");
-            setPrefijoVerificado(false);
             setModoPrefijoLote("automatico");
+            setPrefijoLote(calcularPrefijoDesdeNombre(nombre));
+            setPrefijoVerificado(false);
         } else {
             setModoPrefijoLote("automatico");
             setPrefijoLote(calcularPrefijoDesdeNombre(nombre));
@@ -136,9 +136,9 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
         }
     }, [tipo_producto]);
 
-    // Actualizar prefijo en tiempo real cuando el nombre cambia (modo automatico, solo terminados)
+    // Mantener una sugerencia disponible para terminados y semiterminados.
     useEffect(() => {
-        if (tipo_producto === TIPOS_PRODUCTOS.terminado && modoPrefijoLote === "automatico") {
+        if (modoPrefijoLote === "automatico") {
             setPrefijoLote(calcularPrefijoDesdeNombre(nombre));
             setPrefijoVerificado(false);
         }
@@ -293,7 +293,8 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
             return false;
         }
 
-        // Validar prefijo de lote para productos terminados
+        // El prefijo es obligatorio para terminados. En semiterminados se conserva
+        // opcionalmente para habilitar una OF en el paso de proceso.
         if (tipo_producto === TIPOS_PRODUCTOS.terminado) {
             if (!prefijoLote || !prefijoLote.trim()) {
                 toast({
@@ -315,6 +316,15 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                 });
                 return false;
             }
+        } else if (prefijoLote?.trim() && !prefijoVerificado) {
+            toast({
+                title: "Validacion",
+                description: "Verifique el prefijo de lote o déjelo vacío si el semiterminado no tendrá orden de fabricación.",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+            });
+            return false;
         }
 
         return true;
@@ -335,7 +345,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                 tipo_producto: tipo_producto,
                 categoria: tipo_producto === TIPOS_PRODUCTOS.terminado ? selectedCategoria : undefined,
                 inventareable: tipo_producto === TIPOS_PRODUCTOS.terminado,
-                prefijoLote: tipo_producto === TIPOS_PRODUCTOS.terminado ? (prefijoLote?.trim() || undefined) : undefined,
+                prefijoLote: prefijoLote?.trim() || undefined,
             };
             setSemioter(semioter);
             setActiveStep(1);
@@ -441,7 +451,7 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                     </Field.Root>
                 </GridItem>
 
-                <GridItem colSpan={3} display={tipo_producto === TIPOS_PRODUCTOS.terminado ? "flex" : "none"}>
+                <GridItem colSpan={3} display="flex">
                     <Field.Root required={tipo_producto === TIPOS_PRODUCTOS.terminado}>
                         <Field.Label>Prefijo de lote</Field.Label>
                         <HStack align="center" gap={2}>
@@ -483,6 +493,11 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                                 Prefijo verificado y disponible.
                             </Text>
                         )}
+                        {tipo_producto !== TIPOS_PRODUCTOS.terminado ? (
+                            <Field.HelperText>
+                                Opcional por ahora; será obligatorio si en el paso de proceso activa “Aplica para orden de fabricación”.
+                            </Field.HelperText>
+                        ) : null}
                     </Field.Root>
                 </GridItem>
 
@@ -513,8 +528,9 @@ export default function SemiterminadosStep0DefineProduct({setActiveStep, setSemi
                     colorPalette={"teal"}
                     onClick={onClickSiguiente}
                     disabled={
-                        tipo_producto === TIPOS_PRODUCTOS.terminado &&
-                        (categoriasDisponibles.length === 0 || !selectedCategoriaId || !prefijoVerificado)
+                        tipo_producto === TIPOS_PRODUCTOS.terminado
+                            ? (categoriasDisponibles.length === 0 || !selectedCategoriaId || !prefijoVerificado)
+                            : Boolean(prefijoLote?.trim()) && !prefijoVerificado
                     }
                 >
                     Siguiente

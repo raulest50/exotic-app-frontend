@@ -1,12 +1,16 @@
 export interface SeguimientoOrdenAreaCardDTO {
+    tipoOrden?: "OP" | "OF";
     id: number;
     ordenId: number;
+    ordenFabricacionId?: number | null;
+    operacionFabricacionId?: number | null;
     loteAsignado: string | null;
     productoId: string;
     productoNombre: string;
     tipoUnidades: string | null;
     cantidadProducir: number;
     estadoOrden: number;
+    estadoOrdenFabricacion?: string | null;
     politicaDispensacionInicio: string | null;
     fechaAplicacionPoliticaDispensacion: string | null;
     estadoDispensacionMateriales: string | null;

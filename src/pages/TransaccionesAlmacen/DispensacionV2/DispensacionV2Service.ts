@@ -9,6 +9,9 @@ import type {
     DispensacionV2MaterialesRecetaRequestDTO,
     DispensacionV2MaterialesRecetaResponseDTO,
     DispensacionV2OrdenSeleccionada,
+    DispensacionV2OrdenFabricacionFinalizacion,
+    DispensacionV2OrdenFabricacionOption,
+    DispensacionV2OrdenFabricacionPreparacion,
     DispensacionV2PreparacionRequestDTO,
     DispensacionV2PreparacionResponseDTO,
 } from "./DispensacionV2Types";
@@ -150,6 +153,70 @@ export async function getLotesDisponiblesDispensacionV2(
             params: { page, size },
             withCredentials: true,
         },
+    );
+    return response.data;
+}
+
+export async function buscarOrdenesFabricacionDispensacionV2(
+    areaId: number,
+    search = "",
+): Promise<DispensacionV2OrdenFabricacionOption[]> {
+    const response = await axios.get<DispensacionV2OrdenFabricacionOption[]>(
+        endpoints.dispensacion_v2_ordenes_fabricacion,
+        { params: { areaId, search: search || undefined }, withCredentials: true },
+    );
+    return response.data;
+}
+
+export async function prepararOrdenFabricacionDispensacionV2(
+    ordenFabricacionId: number,
+    areaId: number,
+): Promise<DispensacionV2OrdenFabricacionPreparacion> {
+    const response = await axios.get<DispensacionV2OrdenFabricacionPreparacion>(
+        `${endpoints.dispensacion_v2_ordenes_fabricacion}/${ordenFabricacionId}/preparacion`,
+        { params: { areaId }, withCredentials: true },
+    );
+    return response.data;
+}
+
+export async function asignarLotesOrdenFabricacionDispensacionV2(
+    preparacion: DispensacionV2OrdenFabricacionPreparacion,
+): Promise<DispensacionV2OrdenFabricacionPreparacion> {
+    const response = await axios.post<DispensacionV2OrdenFabricacionPreparacion>(
+        `${endpoints.dispensacion_v2_ordenes_fabricacion}/${preparacion.orden.ordenFabricacionId}/asignacion-lotes`,
+        {
+            areaId: preparacion.area.areaId,
+            materiales: preparacion.materiales.map((material) => ({
+                productoId: material.productoId,
+                checked: material.checked,
+                cantidadADispensar: material.cantidadADispensar,
+            })),
+        },
+        { withCredentials: true },
+    );
+    return response.data;
+}
+
+export async function finalizarOrdenFabricacionDispensacionV2(
+    preparacion: DispensacionV2OrdenFabricacionPreparacion,
+    observaciones?: string,
+): Promise<DispensacionV2OrdenFabricacionFinalizacion> {
+    const response = await axios.post<DispensacionV2OrdenFabricacionFinalizacion>(
+        `${endpoints.dispensacion_v2_ordenes_fabricacion}/${preparacion.orden.ordenFabricacionId}/finalizar`,
+        {
+            areaId: preparacion.area.areaId,
+            observaciones: observaciones?.trim() || null,
+            materiales: preparacion.materiales.map((material) => ({
+                productoId: material.productoId,
+                checked: material.checked,
+                cantidadADispensar: material.cantidadADispensar,
+                lotesOrigen: (material.lotesOrigen ?? []).map((lote) => ({
+                    loteId: lote.loteId,
+                    cantidadAsignada: lote.cantidadAsignada,
+                })),
+            })),
+        },
+        { withCredentials: true },
     );
     return response.data;
 }

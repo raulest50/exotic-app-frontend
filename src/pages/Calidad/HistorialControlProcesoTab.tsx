@@ -32,7 +32,10 @@ function formatDateTime(value: string) {
 
 function loteLabel(item: EjecucionListItemResponse | EjecucionDetalleResponse) {
     const producto = item.lote.producto ? `${item.lote.producto.productoId} - ${item.lote.producto.nombre}` : "";
-    return `${item.lote.batchNumber}${producto ? ` / ${producto}` : ""}`;
+    const orden = item.lote.tipoOrden === "OF" && item.lote.ordenFabricacionId
+        ? `OF-${item.lote.ordenFabricacionId}`
+        : item.lote.ordenProduccionId ? `OP-${item.lote.ordenProduccionId}` : null;
+    return `${item.lote.batchNumber}${orden ? ` (${orden})` : ""}${producto ? ` / ${producto}` : ""}`;
 }
 
 function resumenMuestra(muestra: MuestraResponse) {

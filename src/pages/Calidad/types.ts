@@ -27,6 +27,8 @@ export interface LoteProduccionResumen {
     expirationDate?: string;
     estadoCalidad?: string;
     ordenProduccionId?: number;
+    tipoOrden?: "OP" | "OF";
+    ordenFabricacionId?: number;
     batchRecordId?: number;
     batchRecordCodigo?: string;
     producto?: ProductoResumen;
