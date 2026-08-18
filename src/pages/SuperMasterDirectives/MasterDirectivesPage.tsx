@@ -567,7 +567,7 @@ export default function MasterDirectivesPage() {
                 };
                 return axios.put(endPoints.update_super_master_directive, {
                     oldMasterDirective: directive,
-                    newMasterDirective,
+                    newMasterDirective: newDirective,
                 });
             };
 

@@ -84,7 +84,7 @@ export default function Home() {
     const cards: HomeCardDef[] = [
         { to: "/usuarios", name: "Roles y Usuarios", icon: FaUsersGear, notificationModulo: Modulo.USUARIOS, accesoValido: moduleAccessRule(Modulo.USUARIOS) },
         { to: "/producto", name: "Productos", icon: PiDownloadDuotone, notificationModulo: Modulo.PRODUCTOS, accesoValido: moduleAccessRule(Modulo.PRODUCTOS) },
-        { to: "/produccion", name: "Gestion de Produccion", icon: AiOutlineAudit, notificationModulo: Modulo.PRODUCCION, accesoValido: moduleAccessRule(Modulo.PRODUCCION) },
+        { to: "/produccion", name: "Dirección Técnica y de Planta", icon: AiOutlineAudit, notificationModulo: Modulo.PRODUCCION, accesoValido: moduleAccessRule(Modulo.PRODUCCION) },
         { to: "/stock", name: "Stock", icon: BsDatabaseCheck, notificationModulo: Modulo.STOCK, accesoValido: moduleAccessRule(Modulo.STOCK) },
         { to: "/Proveedores", name: "Proveedores", icon: FaIndustry, notificationModulo: Modulo.PROVEEDORES, accesoValido: moduleAccessRule(Modulo.PROVEEDORES) },
         { to: "/compras", name: "Compras", icon: GiBuyCard, notificationModulo: Modulo.COMPRAS, accesoValido: moduleAccessRule(Modulo.COMPRAS) },

@@ -169,7 +169,7 @@ export default function ProduccionPage() {
             mx="auto"
             h="full"
         >
-            <MyHeader title="Producción" />
+            <MyHeader title="Dirección Técnica y de Planta" />
 
             {!activeGroup ? (
                 <Text py={8}>No tienes acceso a ninguna opción de este módulo.</Text>
