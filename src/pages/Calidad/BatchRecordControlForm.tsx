@@ -15,6 +15,10 @@ import {
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { useEffect, useState } from "react";
 import { extractApiError, guardarEjecucion, prepararEjecucion } from "./calidadApi";
+import {
+    buildDraftNumericControlGroup,
+    ControlProcesoNumericChart,
+} from "./charts/ControlProcesoNumericCharts";
 import type {
     BatchRecordEtapaControl,
     CaracteristicaResponse,
@@ -99,20 +103,34 @@ export default function BatchRecordControlForm({ loteId, etapa, onSaved, onCance
         }
     };
 
-    const matrix = (caracteristica: CaracteristicaResponse) => (
-        <Box key={caracteristica.id} borderWidth="1px" borderRadius="md" p={3}>
-            <HStack justify="space-between" mb={2} flexWrap="wrap">
-                <Text fontWeight="semibold">{caracteristica.nombre}</Text>
-                <HStack><Badge>{caracteristica.tipo}</Badge>{caracteristica.unidad ? <Badge variant="outline">{caracteristica.unidad}</Badge> : null}</HStack>
-            </HStack>
-            <Box overflowX="auto"><Table.Root size="sm"><Table.Header><Table.Row><Table.ColumnHeader>Unidad</Table.ColumnHeader>{range(caracteristica.cantidadMuestras).map((sample) => <Table.ColumnHeader key={sample}>Muestra {sample}</Table.ColumnHeader>)}</Table.Row></Table.Header>
-                <Table.Body>{range(caracteristica.unidadesPorMuestra).map((unit) => <Table.Row key={unit}><Table.Cell>{unit}</Table.Cell>{range(caracteristica.cantidadMuestras).map((sample) => {
-                    const key = keyOf(caracteristica.id, sample, unit);
-                    return <Table.Cell key={key}>{caracteristica.tipo === "NUMERICA" ? <Input size="sm" type="number" value={values[key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))} /> : <NativeSelect.Root size="sm"><NativeSelect.Field value={values[key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))}><option value="">Seleccionar</option><option value="true">Cumple</option><option value="false">No cumple</option></NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root>}</Table.Cell>;
-                })}</Table.Row>)}</Table.Body>
-            </Table.Root></Box>
-        </Box>
-    );
+    const matrix = (caracteristica: CaracteristicaResponse) => {
+        const chartGroup = caracteristica.tipo === "NUMERICA"
+            ? buildDraftNumericControlGroup(
+                caracteristica,
+                (muestra, unidad) => values[keyOf(caracteristica.id, muestra, unidad)],
+            )
+            : null;
+
+        return (
+            <Box key={caracteristica.id} borderWidth="1px" borderRadius="md" p={3}>
+                <HStack justify="space-between" mb={2} flexWrap="wrap">
+                    <Text fontWeight="semibold">{caracteristica.nombre}</Text>
+                    <HStack><Badge>{caracteristica.tipo}</Badge>{caracteristica.unidad ? <Badge variant="outline">{caracteristica.unidad}</Badge> : null}</HStack>
+                </HStack>
+                <Box overflowX="auto"><Table.Root size="sm"><Table.Header><Table.Row><Table.ColumnHeader>Unidad</Table.ColumnHeader>{range(caracteristica.cantidadMuestras).map((sample) => <Table.ColumnHeader key={sample}>Muestra {sample}</Table.ColumnHeader>)}</Table.Row></Table.Header>
+                    <Table.Body>{range(caracteristica.unidadesPorMuestra).map((unit) => <Table.Row key={unit}><Table.Cell>{unit}</Table.Cell>{range(caracteristica.cantidadMuestras).map((sample) => {
+                        const key = keyOf(caracteristica.id, sample, unit);
+                        return <Table.Cell key={key}>{caracteristica.tipo === "NUMERICA" ? <Input size="sm" type="number" value={values[key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))} /> : <NativeSelect.Root size="sm"><NativeSelect.Field value={values[key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))}><option value="">Seleccionar</option><option value="true">Cumple</option><option value="false">No cumple</option></NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root>}</Table.Cell>;
+                    })}</Table.Row>)}</Table.Body>
+                </Table.Root></Box>
+                {chartGroup ? (
+                    <Box mt={4}>
+                        <ControlProcesoNumericChart group={chartGroup} preview />
+                    </Box>
+                ) : null}
+            </Box>
+        );
+    };
 
     if (loading) return <HStack><Spinner size="sm" /><Text>Preparando plantilla congelada…</Text></HStack>;
     if (error || !preparacion) return (

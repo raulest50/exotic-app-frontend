@@ -2,22 +2,22 @@ import { Badge, Box, HStack, Stack, Text } from "@chakra-ui/react";
 import ReactECharts from "echarts-for-react";
 import { useMemo } from "react";
 import { useColorModeValue } from "../../../components/ui/color-mode";
-import type { MuestraResponse } from "../types";
+import type { CaracteristicaResponse, MuestraResponse } from "../types";
 
-interface NumericReading {
+export interface NumericReading {
     indiceUnidad: number;
     valor: number;
     fueraEspecificacion: boolean;
 }
 
-interface NumericSample {
+export interface NumericSample {
     numeroMuestra: number;
     lecturas: NumericReading[];
     promedio: number;
     promedioFueraEspecificacion: boolean;
 }
 
-interface NumericCharacteristicGroup {
+export interface NumericCharacteristicGroup {
     key: string;
     nombre: string;
     unidad?: string | null;
@@ -68,6 +68,62 @@ function isOutsideSpecification(
 ) {
     return (isFiniteNumber(lower) && value < lower)
         || (isFiniteNumber(upper) && value > upper);
+}
+
+export function buildDraftNumericControlGroup(
+    caracteristica: CaracteristicaResponse,
+    getValue: (numeroMuestra: number, indiceUnidad: number) => string | undefined,
+): NumericCharacteristicGroup {
+    const muestras: NumericSample[] = [];
+
+    if (caracteristica.tipo === "NUMERICA" && caracteristica.unidadesPorMuestra > 0) {
+        for (let numeroMuestra = 1; numeroMuestra <= caracteristica.cantidadMuestras; numeroMuestra += 1) {
+            const lecturas: NumericReading[] = [];
+
+            for (let indiceUnidad = 1; indiceUnidad <= caracteristica.unidadesPorMuestra; indiceUnidad += 1) {
+                const rawValue = getValue(numeroMuestra, indiceUnidad)?.trim() ?? "";
+                const valor = Number(rawValue);
+                if (rawValue === "" || !Number.isFinite(valor)) {
+                    lecturas.length = 0;
+                    break;
+                }
+                lecturas.push({
+                    indiceUnidad,
+                    valor,
+                    fueraEspecificacion: isOutsideSpecification(
+                        valor,
+                        caracteristica.limiteInferior,
+                        caracteristica.limiteSuperior,
+                    ),
+                });
+            }
+
+            if (lecturas.length !== caracteristica.unidadesPorMuestra) continue;
+            const promedio = lecturas.reduce(
+                (total, lectura) => total + lectura.valor,
+                0,
+            ) / lecturas.length;
+            muestras.push({
+                numeroMuestra,
+                lecturas,
+                promedio,
+                promedioFueraEspecificacion: isOutsideSpecification(
+                    promedio,
+                    caracteristica.limiteInferior,
+                    caracteristica.limiteSuperior,
+                ),
+            });
+        }
+    }
+
+    return {
+        key: String(caracteristica.id),
+        nombre: caracteristica.nombre,
+        unidad: caracteristica.unidad,
+        limiteInferior: caracteristica.limiteInferior,
+        limiteSuperior: caracteristica.limiteSuperior,
+        muestras,
+    };
 }
 
 function buildNumericGroups(muestras: MuestraResponse[]): NumericCharacteristicGroup[] {
@@ -303,91 +359,120 @@ function buildChartOption(
     };
 }
 
+export function ControlProcesoNumericChart({
+    group,
+    preview = false,
+}: {
+    group: NumericCharacteristicGroup;
+    preview?: boolean;
+}) {
+    const textColor = useColorModeValue("#2D3748", "#E2E8F0");
+    const gridColor = useColorModeValue("#E2E8F0", "#4A5568");
+    const axisColor = useColorModeValue("#A0AEC0", "#718096");
+
+    if (group.muestras.length === 0) {
+        return (
+            <Box borderWidth="1px" borderRadius="md" p={{ base: 3, md: 4 }}>
+                <HStack gap={2} mb={1} flexWrap="wrap">
+                    <Text fontWeight="semibold">Curva de {group.nombre}</Text>
+                    {preview ? <Badge colorPalette="blue">Vista previa</Badge> : null}
+                </HStack>
+                <Text fontSize="sm" color="app.textSubtle">
+                    Complete todas las unidades de una muestra para incorporarla a la curva.
+                </Text>
+            </Box>
+        );
+    }
+
+    const readings = group.muestras.flatMap((muestra) => muestra.lecturas);
+    const outOfSpec = readings.filter(
+        (lectura) => lectura.fueraEspecificacion,
+    ).length;
+    const hasLimits = isFiniteNumber(group.limiteInferior)
+        || isFiniteNumber(group.limiteSuperior);
+    const limits = [
+        isFiniteNumber(group.limiteInferior)
+            ? `mín. ${formatValue(group.limiteInferior, group.unidad)}`
+            : null,
+        isFiniteNumber(group.limiteSuperior)
+            ? `máx. ${formatValue(group.limiteSuperior, group.unidad)}`
+            : null,
+    ].filter(Boolean).join(" · ");
+    const option = buildChartOption(group, {
+        text: textColor,
+        grid: gridColor,
+        axis: axisColor,
+    });
+
+    return (
+        <Box borderWidth="1px" borderRadius="md" p={{ base: 3, md: 4 }}>
+            <HStack justify="space-between" align="start" mb={2} gap={3} flexWrap="wrap">
+                <Box>
+                    <HStack gap={2} flexWrap="wrap">
+                        <Text fontWeight="semibold">Curva de {group.nombre}</Text>
+                        {preview ? <Badge colorPalette="blue">Vista previa</Badge> : null}
+                    </HStack>
+                    <Text fontSize="sm" color="app.textSubtle">
+                        Promedio por muestra con sus lecturas individuales.
+                    </Text>
+                </Box>
+                <HStack gap={2} flexWrap="wrap">
+                    {group.unidad ? <Badge variant="outline">{group.unidad}</Badge> : null}
+                    <Badge>{group.muestras.length} muestras</Badge>
+                    <Badge>{readings.length} lecturas</Badge>
+                    {outOfSpec > 0 ? (
+                        <Badge colorPalette="red">{outOfSpec} fuera de especificación</Badge>
+                    ) : !hasLimits ? (
+                        <Badge colorPalette="gray">Sin límites configurados</Badge>
+                    ) : (
+                        <Badge colorPalette="green">Lecturas dentro de límites</Badge>
+                    )}
+                </HStack>
+            </HStack>
+            {limits ? (
+                <Text fontSize="xs" color="app.textSubtle" mb={1}>
+                    Especificación: {limits}
+                </Text>
+            ) : (
+                <Text fontSize="xs" color="app.textSubtle" mb={1}>
+                    La característica no tiene límites de especificación configurados.
+                </Text>
+            )}
+            <Box
+                role="img"
+                aria-label={`Curva de ${group.nombre} por número de muestra`}
+                h={{ base: "330px", md: "390px" }}
+                minW={0}
+            >
+                <ReactECharts
+                    option={option}
+                    notMerge
+                    lazyUpdate
+                    style={{ height: "100%", width: "100%" }}
+                />
+            </Box>
+            <Text fontSize="xs" color="app.textSubtle">
+                La línea representa el promedio. Los puntos representan unidades individuales y los puntos rojos indican valores fuera de especificación.
+                {preview ? " La vista previa solo incluye muestras completas." : ""}
+            </Text>
+        </Box>
+    );
+}
+
 export default function ControlProcesoNumericCharts({
     muestras,
 }: {
     muestras: MuestraResponse[];
 }) {
     const groups = useMemo(() => buildNumericGroups(muestras), [muestras]);
-    const textColor = useColorModeValue("#2D3748", "#E2E8F0");
-    const gridColor = useColorModeValue("#E2E8F0", "#4A5568");
-    const axisColor = useColorModeValue("#A0AEC0", "#718096");
 
     if (groups.length === 0) return null;
 
     return (
         <Stack gap={4}>
-            {groups.map((group) => {
-                const readings = group.muestras.flatMap((muestra) => muestra.lecturas);
-                const outOfSpec = readings.filter(
-                    (lectura) => lectura.fueraEspecificacion,
-                ).length;
-                const hasLimits = isFiniteNumber(group.limiteInferior)
-                    || isFiniteNumber(group.limiteSuperior);
-                const limits = [
-                    isFiniteNumber(group.limiteInferior)
-                        ? `mín. ${formatValue(group.limiteInferior, group.unidad)}`
-                        : null,
-                    isFiniteNumber(group.limiteSuperior)
-                        ? `máx. ${formatValue(group.limiteSuperior, group.unidad)}`
-                        : null,
-                ].filter(Boolean).join(" · ");
-                const option = buildChartOption(group, {
-                    text: textColor,
-                    grid: gridColor,
-                    axis: axisColor,
-                });
-
-                return (
-                    <Box key={group.key} borderWidth="1px" borderRadius="md" p={{ base: 3, md: 4 }}>
-                        <HStack justify="space-between" align="start" mb={2} gap={3} flexWrap="wrap">
-                            <Box>
-                                <Text fontWeight="semibold">Curva de {group.nombre}</Text>
-                                <Text fontSize="sm" color="app.textSubtle">
-                                    Promedio por muestra con sus lecturas individuales.
-                                </Text>
-                            </Box>
-                            <HStack gap={2} flexWrap="wrap">
-                                {group.unidad ? <Badge variant="outline">{group.unidad}</Badge> : null}
-                                <Badge>{group.muestras.length} muestras</Badge>
-                                <Badge>{readings.length} lecturas</Badge>
-                                {outOfSpec > 0 ? (
-                                    <Badge colorPalette="red">{outOfSpec} fuera de especificación</Badge>
-                                ) : !hasLimits ? (
-                                    <Badge colorPalette="gray">Sin límites configurados</Badge>
-                                ) : (
-                                    <Badge colorPalette="green">Lecturas dentro de límites</Badge>
-                                )}
-                            </HStack>
-                        </HStack>
-                        {limits ? (
-                            <Text fontSize="xs" color="app.textSubtle" mb={1}>
-                                Especificación: {limits}
-                            </Text>
-                        ) : (
-                            <Text fontSize="xs" color="app.textSubtle" mb={1}>
-                                La característica no tiene límites de especificación configurados.
-                            </Text>
-                        )}
-                        <Box
-                            role="img"
-                            aria-label={`Curva de ${group.nombre} por número de muestra`}
-                            h={{ base: "330px", md: "390px" }}
-                            minW={0}
-                        >
-                            <ReactECharts
-                                option={option}
-                                notMerge
-                                lazyUpdate
-                                style={{ height: "100%", width: "100%" }}
-                            />
-                        </Box>
-                        <Text fontSize="xs" color="app.textSubtle">
-                            La línea representa el promedio. Los puntos representan unidades individuales y los puntos rojos indican valores fuera de especificación.
-                        </Text>
-                    </Box>
-                );
-            })}
+            {groups.map((group) => (
+                <ControlProcesoNumericChart key={group.key} group={group} />
+            ))}
         </Stack>
     );
 }

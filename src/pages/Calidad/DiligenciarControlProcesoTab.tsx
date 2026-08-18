@@ -19,6 +19,10 @@ import {
     searchLotesProduccion,
 } from "./calidadApi";
 import CalidadAreaOperativaPicker from "./CalidadAreaOperativaPicker";
+import {
+    buildDraftNumericControlGroup,
+    ControlProcesoNumericChart,
+} from "./charts/ControlProcesoNumericCharts";
 import type {
     AreaOperativaOption,
     CaracteristicaResponse,
@@ -164,63 +168,77 @@ export default function DiligenciarControlProcesoTab() {
         }
     };
 
-    const renderMatriz = (caracteristica: CaracteristicaResponse) => (
-        <Box key={caracteristica.id} borderWidth="1px" borderRadius="md" p={4}>
-            <HStack justify="space-between" mb={3}>
-                <HStack>
-                    <Text fontWeight="semibold">{caracteristica.nombre}</Text>
-                    <Badge>{caracteristica.tipo === "NUMERICA" ? "Numerica" : "Cumple/No cumple"}</Badge>
-                    {caracteristica.unidad && <Badge variant="outline">{caracteristica.unidad}</Badge>}
+    const renderMatriz = (caracteristica: CaracteristicaResponse) => {
+        const chartGroup = caracteristica.tipo === "NUMERICA"
+            ? buildDraftNumericControlGroup(
+                caracteristica,
+                (muestra, unidad) => values[valueKey(caracteristica.id, muestra, unidad)],
+            )
+            : null;
+
+        return (
+            <Box key={caracteristica.id} borderWidth="1px" borderRadius="md" p={4}>
+                <HStack justify="space-between" mb={3}>
+                    <HStack>
+                        <Text fontWeight="semibold">{caracteristica.nombre}</Text>
+                        <Badge>{caracteristica.tipo === "NUMERICA" ? "Numerica" : "Cumple/No cumple"}</Badge>
+                        {caracteristica.unidad && <Badge variant="outline">{caracteristica.unidad}</Badge>}
+                    </HStack>
+                    <Text fontSize="sm" color="gray.600">
+                        {caracteristica.cantidadMuestras} muestras x {caracteristica.unidadesPorMuestra} unidades
+                    </Text>
                 </HStack>
-                <Text fontSize="sm" color="gray.600">
-                    {caracteristica.cantidadMuestras} muestras x {caracteristica.unidadesPorMuestra} unidades
-                </Text>
-            </HStack>
-            <Table.Root size="sm">
-                <Table.Header>
-                    <Table.Row>
-                        <Table.ColumnHeader>Unidad</Table.ColumnHeader>
-                        {numberRange(caracteristica.cantidadMuestras).map((muestra) => (
-                            <Table.ColumnHeader key={muestra}>Muestra {muestra}</Table.ColumnHeader>
-                        ))}
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {numberRange(caracteristica.unidadesPorMuestra).map((unidad) => (
-                        <Table.Row key={unidad}>
-                            <Table.Cell>{unidad}</Table.Cell>
-                            {numberRange(caracteristica.cantidadMuestras).map((muestra) => {
-                                const key = valueKey(caracteristica.id, muestra, unidad);
-                                return (
-                                    <Table.Cell key={key}>
-                                        {caracteristica.tipo === "NUMERICA" ? (
-                                            <Input
-                                                size="sm"
-                                                type="number"
-                                                value={values[key] ?? ""}
-                                                onChange={(event) => updateValue(key, event.target.value)}
-                                            />
-                                        ) : (
-                                            <NativeSelect.Root size="sm">
-                                                <NativeSelect.Field
-                                                    value={values[key] ?? ""}
-                                                    onChange={(event) => updateValue(key, event.target.value)}>
-                                                    <option value="">Seleccionar</option>
-                                                    <option value="true">Cumple</option>
-                                                    <option value="false">No cumple</option>
-                                                </NativeSelect.Field>
-                                                <NativeSelect.Indicator />
-                                            </NativeSelect.Root>
-                                        )}
-                                    </Table.Cell>
-                                );
-                            })}
+                <Table.Root size="sm">
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.ColumnHeader>Unidad</Table.ColumnHeader>
+                            {numberRange(caracteristica.cantidadMuestras).map((muestra) => (
+                                <Table.ColumnHeader key={muestra}>Muestra {muestra}</Table.ColumnHeader>
+                            ))}
                         </Table.Row>
-                    ))}
-                </Table.Body>
-            </Table.Root>
-        </Box>
-    );
+                    </Table.Header>
+                    <Table.Body>
+                        {numberRange(caracteristica.unidadesPorMuestra).map((unidad) => (
+                            <Table.Row key={unidad}>
+                                <Table.Cell>{unidad}</Table.Cell>
+                                {numberRange(caracteristica.cantidadMuestras).map((muestra) => {
+                                    const key = valueKey(caracteristica.id, muestra, unidad);
+                                    return (
+                                        <Table.Cell key={key}>
+                                            {caracteristica.tipo === "NUMERICA" ? (
+                                                <Input
+                                                    size="sm"
+                                                    type="number"
+                                                    value={values[key] ?? ""}
+                                                    onChange={(event) => updateValue(key, event.target.value)}
+                                                />
+                                            ) : (
+                                                <NativeSelect.Root size="sm">
+                                                    <NativeSelect.Field
+                                                        value={values[key] ?? ""}
+                                                        onChange={(event) => updateValue(key, event.target.value)}>
+                                                        <option value="">Seleccionar</option>
+                                                        <option value="true">Cumple</option>
+                                                        <option value="false">No cumple</option>
+                                                    </NativeSelect.Field>
+                                                    <NativeSelect.Indicator />
+                                                </NativeSelect.Root>
+                                            )}
+                                        </Table.Cell>
+                                    );
+                                })}
+                            </Table.Row>
+                        ))}
+                    </Table.Body>
+                </Table.Root>
+                {chartGroup ? (
+                    <Box mt={4}>
+                        <ControlProcesoNumericChart group={chartGroup} preview />
+                    </Box>
+                ) : null}
+            </Box>
+        );
+    };
 
     return (
         <VStack align="stretch" gap={5}>
