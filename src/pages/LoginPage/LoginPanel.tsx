@@ -344,7 +344,13 @@ export default function LoginPanel() {
                                 minW={0}
                             >
                                 <Box boxSize={{ base: "9rem", sm: "12rem", md: "16.8rem", "2xl": "14rem" }}>
-                                    <Image src={'/logo_exotic.svg'} />
+                                    <Image
+                                        src="/logo_novum.png"
+                                        alt="Laboratorios Novum S.A.S."
+                                        w="full"
+                                        h="full"
+                                        objectFit="contain"
+                                    />
                                 </Box>
                                 {viewMode === 'login' ? (
                                     <FormularioLogin
