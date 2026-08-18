@@ -9,11 +9,21 @@ import VersionadoControlProcesoTab from "./VersionadoControlProcesoTab";
 import DiligenciarControlProcesoTab from "./DiligenciarControlProcesoTab";
 import HistorialControlProcesoTab from "./HistorialControlProcesoTab";
 import LiberacionLotesTab from "./LiberacionLotesTab";
+import { useMasterDirectives } from "../../context/MasterDirectivesContext";
+import {
+    BATCH_RECORD_WORKFLOW_ENABLED_DEFAULT,
+    MASTER_DIRECTIVE_KEYS,
+} from "../../context/masterDirectiveConstants";
 
 import type { JSX } from "react";
 
 export default function CalidadPage() {
     const access = useAccessSnapshot();
+    const { loading: directivesLoading, getBooleanDirective } = useMasterDirectives();
+    const batchRecordWorkflowEnabled = !directivesLoading && getBooleanDirective(
+        MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED,
+        BATCH_RECORD_WORKFLOW_ENABLED_DEFAULT,
+    );
 
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
         {
@@ -46,7 +56,10 @@ export default function CalidadPage() {
         },
     ];
 
-    const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));
+    const visibleTabs = tabs.filter((tab) =>
+        tab.accesoValido(access)
+        && (tab.key !== "liberacion-lotes" || batchRecordWorkflowEnabled)
+    );
 
     return (
         <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">

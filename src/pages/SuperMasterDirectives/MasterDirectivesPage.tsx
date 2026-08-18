@@ -92,12 +92,15 @@ const AREA_OPERATIVA_DIRECTIVE_NAMES = new Set<string>([
 ]);
 
 const PRODUCTION_DIRECTIVE_NAMES = new Set<string>([
+    MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED,
     MASTER_DIRECTIVE_KEYS.DISPENSACION_NO_BLOQUEA_INICIO_PRODUCCION,
     MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION,
     MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO,
 ]);
 
 const PRODUCTION_DIRECTIVE_EXTENDED_HELP: Record<string, string> = {
+    [MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED]:
+        "Aplica unicamente a ordenes nuevas. Las OP creadas mientras este apagada conservaran el flujo anterior y no recibiran expediente retroactivamente. No puede apagarse mientras haya expedientes sin cerrar o anular.",
     [MASTER_DIRECTIVE_KEYS.DISPENSACION_NO_BLOQUEA_INICIO_PRODUCCION]:
         "Esta directiva se copia a cada ODP al momento de crearla. Cambiar el switch no modifica ODPs ya existentes; para esas ODPs use la accion retroactiva controlada de esta pantalla.",
     [MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO]:
@@ -223,6 +226,9 @@ function getAreaOperativaPanelDirectiveLabel(directive: MasterDirective) {
 }
 
 function getProductionDirectiveLabel(directive: MasterDirective) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED) {
+        return "Flujo regulado de Batch Record";
+    }
     if (directive.nombre === MASTER_DIRECTIVE_KEYS.DISPENSACION_NO_BLOQUEA_INICIO_PRODUCCION) {
         return "Dispensacion no bloquea inicio";
     }
@@ -258,6 +264,19 @@ function normalizeDirectiveDraftValue(directive: MasterDirective, value: string)
     return value.trim();
 }
 
+function getApiErrorMessage(error: unknown, fallback: string) {
+    if (axios.isAxiosError(error)) {
+        const data = error.response?.data;
+        if (typeof data === "string" && data.trim()) return data;
+        if (data && typeof data === "object" && "message" in data) {
+            const message = (data as { message?: unknown }).message;
+            if (typeof message === "string" && message.trim()) return message;
+        }
+        return error.message || fallback;
+    }
+    return error instanceof Error ? error.message : fallback;
+}
+
 export default function MasterDirectivesPage() {
     const [config, setConfig] = useState<SuperMasterConfig | null>(null);
     const [draft, setDraft] = useState<SuperMasterConfig | null>(null);
@@ -272,6 +291,7 @@ export default function MasterDirectivesPage() {
     const normalizedUser = user?.trim().toLowerCase();
     const canManageSuperMasterConfig = normalizedUser === "super_master";
     const canApplyDispensacionRetroactivity = normalizedUser === "master" || normalizedUser === "super_master";
+    const canManageBatchRecordWorkflow = normalizedUser === "master" || normalizedUser === "super_master";
     const [retroactivityPreview, setRetroactivityPreview] = useState<DispensacionRetroactividadDTO | null>(null);
     const [retroactivityLoading, setRetroactivityLoading] = useState<boolean>(false);
     const [retroactivityApplying, setRetroactivityApplying] = useState<boolean>(false);
@@ -428,6 +448,11 @@ export default function MasterDirectivesPage() {
         [masterDirectives]
     );
 
+    const batchRecordWorkflowDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED),
+        [masterDirectives]
+    );
+
     const noiseNumericDirectives = useMemo(
         () => [noiseIntervalDirective, noiseSampleDirective].filter(isPresentDirective),
         [noiseIntervalDirective, noiseSampleDirective]
@@ -439,8 +464,8 @@ export default function MasterDirectivesPage() {
     );
 
     const productionDirectives = useMemo(
-        () => [dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective].filter(isPresentDirective),
-        [dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective]
+        () => [batchRecordWorkflowDirective, dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective].filter(isPresentDirective),
+        [batchRecordWorkflowDirective, dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective]
     );
 
     const panelDirectives = useMemo(
@@ -451,7 +476,7 @@ export default function MasterDirectivesPage() {
     const hasAllNoiseDirectives = Boolean(noiseEnabledDirective && noiseIntervalDirective && noiseSampleDirective);
     const hasAllInactivityDirectives = Boolean(inactivityEnabledDirective && inactivityThresholdDirective && inactivityCheckIntervalDirective);
     const hasAllPanelDirectives = Boolean(panelHistoricoToggleDirective && panelAdminCorrectionDirective);
-    const hasAllProductionDirectives = Boolean(dispensacionNoBloqueaDirective && mpsDiasBloqueoDirective && mpsAgregarTerminadosAprobadoDirective);
+    const hasAllProductionDirectives = Boolean(batchRecordWorkflowDirective && dispensacionNoBloqueaDirective && mpsDiasBloqueoDirective && mpsAgregarTerminadosAprobadoDirective);
 
     const superMasterHasChanges =
         canManageSuperMasterConfig &&
@@ -500,28 +525,64 @@ export default function MasterDirectivesPage() {
 
     const handleSave = async () => {
         if (!draft || !hasChanges || hasDirectiveErrors || updating) return;
+
+        const changedDirectives = editableMasterDirectives.filter(directive => {
+            const value = directiveDrafts[directive.id] ?? directive.valor;
+            return normalizeDirectiveDraftValue(directive, value) !== normalizeDirectiveDraftValue(directive, directive.valor);
+        });
+        const batchRecordChange = changedDirectives.find(
+            directive => directive.nombre === MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED
+        );
+        if (batchRecordChange && !canManageBatchRecordWorkflow) {
+            toast({
+                title: "No autorizado",
+                description: "Solo master o super_master pueden cambiar el flujo de Batch Record.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+            return;
+        }
+        if (batchRecordChange) {
+            const targetValue = directiveDrafts[batchRecordChange.id] ?? batchRecordChange.valor;
+            const isActivation = !isBooleanEnabled(batchRecordChange.valor)
+                && isBooleanEnabled(targetValue);
+            if (isActivation) {
+                const confirmed = window.confirm(
+                    "Al activar Batch Record, toda OP nueva registrará firmas por etapa y requerirá liberación de Calidad antes del ingreso a almacén. También se habilitará la creación de OF. Verifique usuarios, cédulas, permisos, vidas útiles y plantillas de Calidad. La activación no será retroactiva. ¿Desea continuar?"
+                );
+                if (!confirmed) return;
+            }
+        }
+
         setUpdating(true);
         try {
+            const updateDirective = (directive: MasterDirective) => {
+                const newDirective = {
+                    ...directive,
+                    valor: normalizeDirectiveDraftValue(
+                        directive,
+                        directiveDrafts[directive.id] ?? directive.valor
+                    ),
+                };
+                return axios.put(endPoints.update_super_master_directive, {
+                    oldMasterDirective: directive,
+                    newMasterDirective,
+                });
+            };
+
+            if (batchRecordChange) {
+                await updateDirective(batchRecordChange);
+            }
+
             if (superMasterHasChanges) {
                 await axios.put(endPoints.update_super_master_directives_config, draft);
                 setConfig({ ...draft });
             }
 
-            const changedDirectives = editableMasterDirectives.filter(directive => {
-                const value = directiveDrafts[directive.id] ?? directive.valor;
-                return normalizeDirectiveDraftValue(directive, value) !== normalizeDirectiveDraftValue(directive, directive.valor);
-            });
-
-            await Promise.all(changedDirectives.map(directive => {
-                const newDirective = {
-                    ...directive,
-                    valor: normalizeDirectiveDraftValue(directive, directiveDrafts[directive.id] ?? directive.valor),
-                };
-                return axios.put(endPoints.update_super_master_directive, {
-                    oldMasterDirective: directive,
-                    newMasterDirective: newDirective,
-                });
-            }));
+            await Promise.all(changedDirectives
+                .filter(directive => directive !== batchRecordChange)
+                .map(updateDirective));
 
             if (changedDirectives.length > 0) {
                 await refreshDirectives();
@@ -539,6 +600,7 @@ export default function MasterDirectivesPage() {
             console.error("Error updating directives", err);
             toast({
                 title: "Error al actualizar directivas",
+                description: getApiErrorMessage(err, "No fue posible guardar las directivas."),
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -808,12 +870,18 @@ export default function MasterDirectivesPage() {
                                                             {directive.ayuda}
                                                         </Text>
                                                     )}
+                                                    {directive.nombre === MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED && (
+                                                        <Text fontSize="xs" color={explanatoryWarningColor} mt={1}>
+                                                            Active únicamente después de preparar responsables, permisos y controles de Calidad.
+                                                        </Text>
+                                                    )}
                                                 </Table.Cell>
                                                 <Table.Cell>
                                                     {directive.tipoDato === "BOOLEANO" ? (
                                                         <HStack>
                                                             <Switch.Root
                                                                 checked={isBooleanEnabled(value)}
+                                                                disabled={directive.nombre === MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED && !canManageBatchRecordWorkflow}
                                                                 onCheckedChange={({ checked }) => updateDirectiveDraft(directive.id, String(checked))}
                                                             >
                                                                 <Switch.HiddenInput />

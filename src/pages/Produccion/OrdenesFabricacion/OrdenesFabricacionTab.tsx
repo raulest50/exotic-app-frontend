@@ -19,6 +19,11 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { getExactTabNivel, MASTER_EFFECTIVE_NIVEL } from "../../../auth/accessHelpers";
 import { useAccessSnapshot } from "../../../auth/usePermissions";
+import { useMasterDirectives } from "../../../context/MasterDirectivesContext";
+import {
+    BATCH_RECORD_WORKFLOW_ENABLED_DEFAULT,
+    MASTER_DIRECTIVE_KEYS,
+} from "../../../context/masterDirectiveConstants";
 import { Modulo } from "../../Usuarios/GestionUsuarios/types";
 import {
     buscarOrdenesFabricacion,
@@ -36,6 +41,11 @@ function apiError(error: unknown): string {
 export default function OrdenesFabricacionTab() {
     const toast = useAppToast();
     const access = useAccessSnapshot();
+    const { loading: directivesLoading, getBooleanDirective } = useMasterDirectives();
+    const batchRecordWorkflowEnabled = !directivesLoading && getBooleanDirective(
+        MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED,
+        BATCH_RECORD_WORKFLOW_ENABLED_DEFAULT,
+    );
     const nivel = access.isMasterLike
         ? MASTER_EFFECTIVE_NIVEL
         : (getExactTabNivel(
@@ -79,6 +89,14 @@ export default function OrdenesFabricacionTab() {
     };
 
     const crear = async () => {
+        if (!batchRecordWorkflowEnabled) {
+            toast({
+                title: "Flujo de Batch Record deshabilitado",
+                description: "Active la directiva maestra antes de crear órdenes de fabricación.",
+                status: "warning",
+            });
+            return;
+        }
         const numeric = Number(cantidad);
         if (!selected || !Number.isFinite(numeric) || numeric <= 0 || !lote.trim()) {
             toast({ title: "Complete semiterminado, cantidad y lote", status: "warning" });
@@ -140,7 +158,14 @@ export default function OrdenesFabricacionTab() {
                 </Text>
             </Box>
 
-            {nivel >= 2 ? (
+            {!batchRecordWorkflowEnabled ? (
+                <Alert.Root status={directivesLoading ? "info" : "warning"}>
+                    <Alert.Indicator />
+                    {directivesLoading
+                        ? "Consultando la directiva de Batch Record."
+                        : "El flujo de Batch Record está apagado. La creación de OF permanece bloqueada; el histórico continúa disponible."}
+                </Alert.Root>
+            ) : nivel >= 2 ? (
                 <Box borderWidth="1px" borderRadius="md" p={4}>
                     <Heading size="sm" mb={4}>Nueva orden de fabricación</Heading>
                     <Flex gap={3} align="end" flexWrap="wrap">
@@ -187,7 +212,7 @@ export default function OrdenesFabricacionTab() {
                             <Table.Cell>{orden.cantidadPlanificada} {orden.unidadMedida}</Table.Cell>
                             <Table.Cell>{orden.batchRecordCodigo}</Table.Cell>
                             <Table.Cell><Badge colorPalette={orden.estado === "CANCELADA" ? "red" : "blue"}>{orden.estado}</Badge></Table.Cell>
-                            <Table.Cell>{nivel >= 2 && ["BORRADOR", "PLANIFICADA"].includes(orden.estado) ? <Button size="xs" colorPalette="red" variant="outline" onClick={() => void cancelar(orden.ordenFabricacionId)}>Cancelar</Button> : null}</Table.Cell>
+                            <Table.Cell>{batchRecordWorkflowEnabled && nivel >= 2 && ["BORRADOR", "PLANIFICADA"].includes(orden.estado) ? <Button size="xs" colorPalette="red" variant="outline" onClick={() => void cancelar(orden.ordenFabricacionId)}>Cancelar</Button> : null}</Table.Cell>
                         </Table.Row>
                     ))}</Table.Body></Table.Root>
                 </Box>
