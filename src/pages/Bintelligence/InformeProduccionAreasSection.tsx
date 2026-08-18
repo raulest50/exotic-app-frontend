@@ -13,6 +13,7 @@ import {
 import { Tooltip } from '@/components/ui/tooltip';
 import ReactECharts from "echarts-for-react";
 import { useEffect, useMemo, useState } from "react";
+import BetterPagination from "../../components/BetterPagination/BetterPagination";
 import {
     EmptyPanel,
     formatDate,
@@ -31,6 +32,8 @@ import type {
 } from "./informesGlobales.types";
 
 const MAX_VISIBLE_QUANTITIES = 2;
+const DEFAULT_PAGE_SIZE = 5;
+const PAGE_SIZE_OPTIONS = [5, 10, 20] as const;
 
 export default function InformeProduccionAreasSection({
     analytics,
@@ -39,15 +42,38 @@ export default function InformeProduccionAreasSection({
 }) {
     const compact = useBreakpointValue({ base: true, md: false }) ?? false;
     const chartHeight = useBreakpointValue({ base: 330, md: 390 }) ?? 390;
-    const areas = analytics?.areas ?? [];
+    const areas = useMemo(() => analytics?.areas ?? [], [analytics?.areas]);
     const defaultAreaId = useMemo(() => resolveDefaultAreaId(areas), [areas]);
     const [selectedAreaId, setSelectedAreaId] = useState<number | null>(defaultAreaId);
+    const [page, setPage] = useState(0);
+    const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+    const totalPages = Math.ceil(areas.length / pageSize);
+    const visibleAreas = useMemo(
+        () => areas.slice(page * pageSize, (page + 1) * pageSize),
+        [areas, page, pageSize],
+    );
+
+    useEffect(() => {
+        setPage(0);
+        setSelectedAreaId(defaultAreaId);
+    }, [
+        analytics?.fechaDesdePeriodoAnterior,
+        analytics?.fechaHastaPeriodoAnterior,
+        defaultAreaId,
+    ]);
 
     useEffect(() => {
         if (!areas.some((area) => area.areaId === selectedAreaId)) {
             setSelectedAreaId(defaultAreaId);
         }
     }, [areas, defaultAreaId, selectedAreaId]);
+
+    useEffect(() => {
+        if (totalPages === 0 || page < totalPages) return;
+        const lastPage = totalPages - 1;
+        setPage(lastPage);
+        setSelectedAreaId(areas[lastPage * pageSize]?.areaId ?? defaultAreaId);
+    }, [areas, defaultAreaId, page, pageSize, totalPages]);
 
     if (!analytics) {
         return null;
@@ -116,7 +142,7 @@ export default function InformeProduccionAreasSection({
 
             {compact ? (
                 <Stack gap={3}>
-                    {areas.map((area) => (
+                    {visibleAreas.map((area) => (
                         <AreaMobileCard
                             key={area.areaId}
                             area={area}
@@ -139,7 +165,7 @@ export default function InformeProduccionAreasSection({
                                     </Table.Row>
                                 </Table.Header>
                                 <Table.Body>
-                                    {areas.map((area) => (
+                                    {visibleAreas.map((area) => (
                                         <AreaTableRow
                                             key={area.areaId}
                                             area={area}
@@ -153,6 +179,24 @@ export default function InformeProduccionAreasSection({
                     </Card.Body>
                 </Card.Root>
             )}
+
+            <BetterPagination
+                page={page}
+                size={pageSize}
+                totalPages={totalPages}
+                totalItems={areas.length}
+                sizeOptions={PAGE_SIZE_OPTIONS}
+                previousLabel="Anterior"
+                nextLabel="Siguiente"
+                onPageChange={(nextPage) => {
+                    const boundedPage = Math.max(0, Math.min(nextPage, totalPages - 1));
+                    setPage(boundedPage);
+                    setSelectedAreaId(
+                        areas[boundedPage * pageSize]?.areaId ?? defaultAreaId,
+                    );
+                }}
+                onSizeChange={setPageSize}
+            />
 
             <Card.Root variant="outline">
                 <Card.Body p={{ base: 3, md: 5 }}>
