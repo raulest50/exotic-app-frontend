@@ -25,6 +25,7 @@ import {
     Badge,
     NativeSelect,
     Field,
+    Fieldset,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import axios from "axios";
@@ -136,13 +137,14 @@ export default function InformeProductosTabAdvanced() {
                     />
                 </Field.Root>
 
-                <Field.Root>
-                    <Field.Label>Categorías:</Field.Label>
+                <Fieldset.Root>
                     <CheckboxGroup
+                        name="categories"
                         colorPalette="green"
                         value={chkbox}
                         onValueChange={(values) => setChkbox(values as string[])}
                     >
+                        <Fieldset.Legend>Categorías:</Fieldset.Legend>
                         <Stack
                             gap={[2, 5]}
                             direction="column"
@@ -155,7 +157,7 @@ export default function InformeProductosTabAdvanced() {
                             <Checkbox.Root value="terminado"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Producto Terminado</Checkbox.Label></Checkbox.Root>
                         </Stack>
                     </CheckboxGroup>
-                </Field.Root>
+                </Fieldset.Root>
 
                 <Button onClick={handleSearch} colorPalette="blue" loading={loading}>
                     Buscar
