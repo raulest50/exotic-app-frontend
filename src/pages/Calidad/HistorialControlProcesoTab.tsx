@@ -16,6 +16,7 @@ import {
     extractApiError,
 } from "./calidadApi";
 import CalidadAreaOperativaPicker from "./CalidadAreaOperativaPicker";
+import ControlProcesoNumericCharts from "./charts/ControlProcesoNumericCharts";
 import type {
     AreaOperativaOption,
     EjecucionDetalleResponse,
@@ -197,6 +198,7 @@ export default function HistorialControlProcesoTab() {
                         <Badge colorPalette="teal">Version {detalle.plantillaVersion}</Badge>
                     </HStack>
                     <VStack align="stretch" gap={4}>
+                        <ControlProcesoNumericCharts muestras={detalle.muestras} />
                         {muestrasPorCaracteristica.map(([key, muestras]) => (
                             <Box key={key} borderWidth="1px" borderRadius="md" p={3}>
                                 <HStack mb={2}>

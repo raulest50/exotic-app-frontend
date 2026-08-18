@@ -142,6 +142,17 @@ export async function detalleBatchRecordCalidad(id: number): Promise<BatchRecord
     return response.data;
 }
 
+export async function detalleControlBatchRecordCalidad(
+    batchRecordId: number,
+    ejecucionId: number,
+): Promise<EjecucionDetalleResponse> {
+    const response = await axios.get<EjecucionDetalleResponse>(
+        `${endpoints.calidad_batch_records}/${batchRecordId}/controles/${ejecucionId}`,
+        axiosOptions,
+    );
+    return response.data;
+}
+
 export async function decidirBatchRecordCalidad(
     id: number,
     decision: DecisionCalidadBatchRecord,

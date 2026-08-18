@@ -25,13 +25,18 @@ import {
     buscarBatchRecordsCalidad,
     decidirBatchRecordCalidad,
     detalleBatchRecordCalidad,
+    detalleControlBatchRecordCalidad,
     extractApiError,
 } from "./calidadApi";
+import ControlProcesoNumericCharts, {
+    hasNumericControlSamples,
+} from "./charts/ControlProcesoNumericCharts";
 import type {
     BatchRecordEtapaControl,
     BatchRecordQualityInboxItem,
     BatchRecordQualityReviewDetail,
     DecisionCalidadBatchRecord,
+    EjecucionDetalleResponse,
     PageResponse,
 } from "./types";
 
@@ -57,6 +62,8 @@ export default function LiberacionLotesTab() {
     const [etapaControl, setEtapaControl] = useState<BatchRecordEtapaControl | null>(null);
     const [motivo, setMotivo] = useState("");
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+    const [controlDetail, setControlDetail] = useState<EjecucionDetalleResponse | null>(null);
+    const [loadingControlId, setLoadingControlId] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
     const [deciding, setDeciding] = useState(false);
 
@@ -80,6 +87,7 @@ export default function LiberacionLotesTab() {
         try {
             setDetail(await detalleBatchRecordCalidad(id));
             setEtapaControl(null);
+            setControlDetail(null);
             setMotivo("");
             setPdfUrl((current) => { if (current) URL.revokeObjectURL(current); return null; });
         } catch (error) {
@@ -94,6 +102,7 @@ export default function LiberacionLotesTab() {
         try {
             setDetail(await detalleBatchRecordCalidad(detail.evaluacion.batchRecordId));
             setEtapaControl(null);
+            setControlDetail(null);
             setPdfUrl((current) => { if (current) URL.revokeObjectURL(current); return null; });
             await cargar(page?.number ?? 0);
         } catch (error) {
@@ -118,6 +127,7 @@ export default function LiberacionLotesTab() {
                 motivo.trim(),
             );
             setDetail(updated);
+            setControlDetail(null);
             setPdfUrl((current) => { if (current) URL.revokeObjectURL(current); return null; });
             toast({ title: `Decisión registrada: ${decision}`, status: decision === "LIBERAR" ? "success" : "info" });
             await cargar();
@@ -142,6 +152,29 @@ export default function LiberacionLotesTab() {
         }
     };
 
+    const verCurvaControl = async (control: BatchRecordEtapaControl) => {
+        if (!detail || !control.ultimaEjecucionId) return;
+        if (controlDetail?.id === control.ultimaEjecucionId) {
+            setControlDetail(null);
+            return;
+        }
+        setLoadingControlId(control.ultimaEjecucionId);
+        try {
+            setControlDetail(await detalleControlBatchRecordCalidad(
+                detail.evaluacion.batchRecordId,
+                control.ultimaEjecucionId,
+            ));
+        } catch (error) {
+            toast({
+                title: "No fue posible cargar las mediciones",
+                description: extractApiError(error, "Error de consulta."),
+                status: "error",
+            });
+        } finally {
+            setLoadingControlId(null);
+        }
+    };
+
     return (
         <VStack align="stretch" gap={5}>
             <Box><Heading size="md">Revisión y liberación de lotes</Heading><Text mt={1} color="app.textSubtle">Cada decisión se registra individualmente, genera una revisión y queda firmada con la sesión autenticada.</Text></Box>
@@ -162,7 +195,85 @@ export default function LiberacionLotesTab() {
                         ? <Alert.Root status="warning"><Alert.Indicator /><Box><Text fontWeight="semibold">Bloqueos para liberar</Text>{detail.evaluacion.bloqueos.map((item) => <Text key={item} fontSize="sm">• {item}</Text>)}</Box></Alert.Root>
                         : <Alert.Root status="success"><Alert.Indicator />El expediente cumple las validaciones automáticas para liberación.</Alert.Root>}
 
-                <Box borderWidth="1px" borderRadius="md" p={4}><Heading size="sm" mb={3}>Controles vinculados a las plantillas congeladas</Heading><VStack align="stretch" gap={2}>{detail.controles.length ? detail.controles.map((control) => <Flex key={control.etapaId} borderWidth="1px" borderRadius="md" p={3} justify="space-between" align={{ base: "stretch", md: "center" }} gap={3} flexDir={{ base: "column", md: "row" }}><Box><Text fontWeight="semibold">{control.etapaNombre}</Text><Text fontSize="sm" color="app.textSubtle">{control.areaOperativaNombre} · plantilla v{control.plantillaVersion}</Text></Box><HStack><Badge colorPalette={badgePalette(control.ultimoResultado)}>{control.ultimoResultado ?? "PENDIENTE"}</Badge>{nivelDiligenciar >= 1 && detail.evaluacion.estado === "PENDIENTE_REVISION" ? <Button size="xs" variant="outline" onClick={() => setEtapaControl(control)}>{control.ultimaEjecucionId ? "Repetir control" : "Diligenciar"}</Button> : null}</HStack></Flex>) : <Text color="app.textSubtle">El expediente no exige controles por plantilla.</Text>}</VStack></Box>
+                <Box borderWidth="1px" borderRadius="md" p={4}>
+                    <Heading size="sm" mb={3}>Controles vinculados a las plantillas congeladas</Heading>
+                    <VStack align="stretch" gap={2}>
+                        {detail.controles.length ? detail.controles.map((control) => (
+                            <Flex
+                                key={control.etapaId}
+                                borderWidth="1px"
+                                borderRadius="md"
+                                p={3}
+                                justify="space-between"
+                                align={{ base: "stretch", md: "center" }}
+                                gap={3}
+                                flexDir={{ base: "column", md: "row" }}
+                            >
+                                <Box>
+                                    <Text fontWeight="semibold">{control.etapaNombre}</Text>
+                                    <Text fontSize="sm" color="app.textSubtle">
+                                        {control.areaOperativaNombre} · plantilla v{control.plantillaVersion}
+                                    </Text>
+                                </Box>
+                                <HStack flexWrap="wrap">
+                                    <Badge colorPalette={badgePalette(control.ultimoResultado)}>
+                                        {control.ultimoResultado ?? "PENDIENTE"}
+                                    </Badge>
+                                    {control.ultimaEjecucionId ? (
+                                        <Button
+                                            size="xs"
+                                            variant="outline"
+                                            loading={loadingControlId === control.ultimaEjecucionId}
+                                            onClick={() => void verCurvaControl(control)}
+                                        >
+                                            {controlDetail?.id === control.ultimaEjecucionId
+                                                ? "Ocultar curva"
+                                                : "Ver curva"}
+                                        </Button>
+                                    ) : null}
+                                    {nivelDiligenciar >= 1
+                                    && detail.evaluacion.estado === "PENDIENTE_REVISION" ? (
+                                        <Button
+                                            size="xs"
+                                            variant="outline"
+                                            onClick={() => setEtapaControl(control)}
+                                        >
+                                            {control.ultimaEjecucionId ? "Repetir control" : "Diligenciar"}
+                                        </Button>
+                                    ) : null}
+                                </HStack>
+                            </Flex>
+                        )) : (
+                            <Text color="app.textSubtle">
+                                El expediente no exige controles por plantilla.
+                            </Text>
+                        )}
+                    </VStack>
+                </Box>
+
+                {controlDetail ? (
+                    <Box borderWidth="1px" borderRadius="md" p={4}>
+                        <HStack justify="space-between" mb={3} gap={3} flexWrap="wrap">
+                            <Box>
+                                <Heading size="sm">Mediciones del último control</Heading>
+                                <Text fontSize="sm" color="app.textSubtle">
+                                    {controlDetail.areaOperativa.nombre} · plantilla v{controlDetail.plantillaVersion}
+                                </Text>
+                            </Box>
+                            <Button size="xs" variant="ghost" onClick={() => setControlDetail(null)}>
+                                Ocultar
+                            </Button>
+                        </HStack>
+                        {hasNumericControlSamples(controlDetail.muestras) ? (
+                            <ControlProcesoNumericCharts muestras={controlDetail.muestras} />
+                        ) : (
+                            <Alert.Root status="info">
+                                <Alert.Indicator />
+                                Este control no contiene características numéricas para graficar.
+                            </Alert.Root>
+                        )}
+                    </Box>
+                ) : null}
 
                 {etapaControl ? <BatchRecordControlForm loteId={detail.evaluacion.loteId} etapa={etapaControl} onCancel={() => setEtapaControl(null)} onSaved={() => void refrescarDetalle()} /> : null}
 

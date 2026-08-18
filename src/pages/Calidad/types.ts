@@ -96,6 +96,8 @@ export interface MuestraResponse {
     caracteristicaNombre: string;
     tipo: TipoCaracteristicaControlProceso;
     unidad?: string | null;
+    limiteInferior?: number | null;
+    limiteSuperior?: number | null;
     numeroMuestra: number;
     lecturas: LecturaResponse[];
 }
