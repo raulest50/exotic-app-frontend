@@ -1,11 +1,16 @@
-import { CloseButton, Accordion, Badge, Box, Drawer, Flex, HStack, SimpleGrid, Spinner, Stack, Table, Text, VStack, Tabs, Separator, Portal } from "@chakra-ui/react";
+import { useState } from "react";
+import axios from "axios";
+import { CloseButton, Accordion, Badge, Box, Button, Drawer, Flex, HStack, SimpleGrid, Spinner, Stack, Table, Text, VStack, Tabs, Separator, Portal } from "@chakra-ui/react";
 import { useColorModeValue } from "../../components/ui/color-mode";
+import { useAppToast } from "@/components/ui/use-app-toast";
+import EndPointsURL from "../../api/EndPointsURL.tsx";
 import { Background, BackgroundVariant, Edge, Handle, MiniMap, Node, NodeProps, NodeTypes, Position, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
     AreaOperativaOrdenDetalleDTO,
     BomRecetaNodeDTO,
     RutaProcesoVisualNodeDTO,
+    SeguimientoOperativoItemDTO,
 } from "./areaOperativaPanel.types.ts";
 import {
     formatDateTime,
@@ -258,6 +263,60 @@ export default function AreaOperativaOrderDetailDrawer({
 }: Props) {
     const routeNodes = buildRouteNodes(detail, currentAreaId);
     const routeEdges = buildRouteEdges(detail);
+    const toast = useAppToast();
+    const [loadingPoeSeguimientoId, setLoadingPoeSeguimientoId] = useState<number | null>(null);
+
+    const openPoe = async (item: SeguimientoOperativoItemDTO) => {
+        const poe = item.poe;
+        if (!detail || !poe) return;
+
+        const isPdf = poe.contentType.toLowerCase() === "application/pdf";
+        const previewWindow = isPdf ? window.open("about:blank", "_blank") : null;
+        if (previewWindow) {
+            previewWindow.opener = null;
+        }
+        setLoadingPoeSeguimientoId(item.seguimientoId);
+
+        try {
+            const url = new EndPointsURL().area_operativa_panel_poe_archivo
+                .replace("{ordenId}", String(detail.orden.ordenId))
+                .replace("{seguimientoId}", String(item.seguimientoId));
+            const response = await axios.get<Blob>(url, {
+                responseType: "blob",
+                withCredentials: true,
+            });
+            const objectUrl = URL.createObjectURL(response.data);
+
+            if (isPdf && previewWindow) {
+                previewWindow.location.replace(objectUrl);
+            } else {
+                const anchor = document.createElement("a");
+                anchor.href = objectUrl;
+                anchor.download = poe.nombreArchivo;
+                if (isPdf) anchor.target = "_blank";
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+            }
+            window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+        } catch (error) {
+            previewWindow?.close();
+            const message = axios.isAxiosError(error)
+                ? error.response?.status === 403
+                    ? "No tienes permiso para consultar el POE de esta etapa."
+                    : "No fue posible descargar el POE asociado a la etapa."
+                : "No fue posible abrir el POE asociado a la etapa.";
+            toast({
+                title: "POE no disponible",
+                description: message,
+                status: "error",
+                duration: 4000,
+                isClosable: true,
+            });
+        } finally {
+            setLoadingPoeSeguimientoId(null);
+        }
+    };
 
     return (
         <Drawer.Root open={isOpen} placement='end' size='xl' onOpenChange={e => {
@@ -388,6 +447,45 @@ export default function AreaOperativaOrderDetailDrawer({
                                                                     <Text>Completado: {formatDateTime(item.fechaCompletado)}</Text>
                                                                     <Text>Último reporte por: {item.usuarioReportaNombre || "Sistema / sin registro"}</Text>
                                                                 </Stack>
+
+                                                                {item.procesoProduccionId != null ? (
+                                                                    <Box mt={3} borderWidth="1px" borderRadius="md" p={3} bg="app.surfaceSubtle">
+                                                                        <HStack justify="space-between" align="start" gap={3} flexWrap="wrap">
+                                                                            <Box>
+                                                                                <Text fontSize="xs" color="app.textSubtle">Proceso de producción</Text>
+                                                                                <Text fontSize="sm" fontWeight="semibold">
+                                                                                    {item.procesoProduccionNombre || `Proceso ${item.procesoProduccionId}`}
+                                                                                </Text>
+                                                                            </Box>
+                                                                            {item.puedeConsultarPoe ? (
+                                                                                item.poe ? (
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="outline"
+                                                                                        colorPalette="teal"
+                                                                                        loading={loadingPoeSeguimientoId === item.seguimientoId}
+                                                                                        onClick={() => void openPoe(item)}
+                                                                                    >
+                                                                                        {item.poe.contentType === "application/pdf"
+                                                                                            ? `Ver POE v${item.poe.version}`
+                                                                                            : `Descargar POE v${item.poe.version}`}
+                                                                                    </Button>
+                                                                                ) : (
+                                                                                    <Badge colorPalette="orange">POE no disponible</Badge>
+                                                                                )
+                                                                            ) : null}
+                                                                        </HStack>
+                                                                        {item.puedeConsultarPoe && item.poe ? (
+                                                                            <Text mt={1} fontSize="xs" color="app.textSubtle" overflowWrap="anywhere">
+                                                                                {item.poe.nombreArchivo}
+                                                                            </Text>
+                                                                        ) : null}
+                                                                    </Box>
+                                                                ) : item.puedeConsultarPoe ? (
+                                                                    <Badge mt={3} colorPalette="gray">
+                                                                        Proceso y POE no configurados para esta ruta
+                                                                    </Badge>
+                                                                ) : null}
 
                                                                 {item.observaciones?.trim() ? (
                                                                     <>

@@ -42,6 +42,17 @@ export interface SeguimientoOperativoItemDTO {
     requiereJornadaLaboral: boolean;
     usuarioReportaNombre: string | null;
     observaciones: string | null;
+    procesoProduccionId: number | null;
+    procesoProduccionNombre: string | null;
+    puedeConsultarPoe: boolean;
+    poe: PoeOperativoDTO | null;
+}
+
+export interface PoeOperativoDTO {
+    documentoVersionId: number;
+    version: number;
+    nombreArchivo: string;
+    contentType: string;
 }
 
 export interface RutaProcesoVisualDTO {

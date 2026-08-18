@@ -66,6 +66,7 @@ export default class EndPointsURL{
     public get_ruta_proceso_cat_version: string;
     public save_ruta_proceso_cat: string;
     public delete_ruta_proceso_cat: string;
+    public get_ruta_proceso_cat_procesos_disponibles: string;
     public check_rutas_exist_batch: string;
 
 
@@ -327,6 +328,7 @@ export default class EndPointsURL{
     public seguimiento_pausar_proceso: string;
     public seguimiento_reportar_completado: string;
     public area_operativa_panel_detalle_operativo_orden: string;
+    public area_operativa_panel_poe_archivo: string;
     public area_operativa_panel_mps_semanal: string;
     public area_operativa_panel_mps_semanal_odps: string;
     public area_operativa_panel_mps_semanal_actual: string;
@@ -743,6 +745,7 @@ export default class EndPointsURL{
         this.get_ruta_proceso_cat_version = `${domain}/${ruta_proceso_cat_res}/{categoriaId}/versiones/{versionId}`;
         this.save_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/save_ruprocat`;
         this.delete_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/{categoriaId}`;
+        this.get_ruta_proceso_cat_procesos_disponibles = `${domain}/${ruta_proceso_cat_res}/procesos-disponibles`;
         this.check_rutas_exist_batch = `${domain}/${ruta_proceso_cat_res}/exists-batch`;
 
         // Proveedores endpoints
@@ -1042,6 +1045,7 @@ export default class EndPointsURL{
 
         const area_operativa_panel_res = 'api/area-operativa-panel';
         this.area_operativa_panel_detalle_operativo_orden = `${domain}/${area_operativa_panel_res}/ordenes/{ordenId}/detalle-operativo`;
+        this.area_operativa_panel_poe_archivo = `${domain}/${area_operativa_panel_res}/ordenes/{ordenId}/seguimientos/{seguimientoId}/poe/archivo`;
         this.area_operativa_panel_mps_semanal = `${domain}/${area_operativa_panel_res}/mps-semanal`;
         this.area_operativa_panel_mps_semanal_odps = `${domain}/${area_operativa_panel_res}/mps-semanal/odps`;
         this.area_operativa_panel_mps_semanal_actual = `${domain}/${area_operativa_panel_res}/mps-semanal/actual`;

@@ -209,9 +209,9 @@ export default function BatchRecordsTab() {
                     <Box borderWidth="1px" borderRadius="md" overflowX="auto">
                         <Heading size="sm" p={3}>Etapas y firmas operativas</Heading>
                         <Table.Root size="sm"><Table.Header><Table.Row>
-                            <Table.ColumnHeader>#</Table.ColumnHeader><Table.ColumnHeader>Etapa</Table.ColumnHeader><Table.ColumnHeader>Estado</Table.ColumnHeader><Table.ColumnHeader>Responsable</Table.ColumnHeader><Table.ColumnHeader>Terminada</Table.ColumnHeader>
+                            <Table.ColumnHeader>#</Table.ColumnHeader><Table.ColumnHeader>Etapa</Table.ColumnHeader><Table.ColumnHeader>POE aplicado</Table.ColumnHeader><Table.ColumnHeader>Estado</Table.ColumnHeader><Table.ColumnHeader>Responsable</Table.ColumnHeader><Table.ColumnHeader>Terminada</Table.ColumnHeader>
                         </Table.Row></Table.Header><Table.Body>{detail.etapas.map((etapa) => (
-                            <Table.Row key={etapa.id}><Table.Cell>{etapa.secuencia + 1}</Table.Cell><Table.Cell>{etapa.nombre}<Text fontSize="xs" color="app.textSubtle">{etapa.areaOperativaNombre}</Text></Table.Cell><Table.Cell><Badge colorPalette={palette(etapa.estado)}>{etapa.estado}</Badge></Table.Cell><Table.Cell>{etapa.reportadaPor ?? "—"}</Table.Cell><Table.Cell>{fecha(etapa.completadaEn)}</Table.Cell></Table.Row>
+                            <Table.Row key={etapa.id}><Table.Cell>{etapa.secuencia + 1}</Table.Cell><Table.Cell>{etapa.nombre}<Text fontSize="xs" color="app.textSubtle">{etapa.areaOperativaNombre}</Text></Table.Cell><Table.Cell>{etapa.poe ? <Box minW="220px"><Text fontSize="sm" fontWeight="semibold">{etapa.poe.procesoProduccionNombre} · v{etapa.poe.version}</Text><Text fontSize="xs" color="app.textSubtle" overflowWrap="anywhere">{etapa.poe.nombreArchivo}</Text><Text fontSize="xs" color="app.textSubtle" fontFamily="mono" overflowWrap="anywhere">SHA-256 {etapa.poe.sha256}</Text></Box> : "—"}</Table.Cell><Table.Cell><Badge colorPalette={palette(etapa.estado)}>{etapa.estado}</Badge></Table.Cell><Table.Cell>{etapa.reportadaPor ?? "—"}</Table.Cell><Table.Cell>{fecha(etapa.completadaEn)}</Table.Cell></Table.Row>
                         ))}</Table.Body></Table.Root>
                     </Box>
 

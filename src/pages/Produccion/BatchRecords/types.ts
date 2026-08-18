@@ -40,6 +40,16 @@ export interface BatchRecordEtapa {
     observaciones?: string | null;
     plantillaControlId?: number | null;
     plantillaControlVersion?: number | null;
+    poe?: BatchRecordPoeReferencia | null;
+}
+
+export interface BatchRecordPoeReferencia {
+    procesoProduccionId: number;
+    procesoProduccionNombre: string;
+    documentoVersionId: number;
+    version: number;
+    nombreArchivo: string;
+    sha256: string;
 }
 
 export interface BatchRecordConsumo {

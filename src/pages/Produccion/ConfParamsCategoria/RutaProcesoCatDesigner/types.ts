@@ -4,11 +4,22 @@ export interface AreaOperativa {
     descripcion: string;
 }
 
+export interface ProcesoRutaOption {
+    procesoId: number;
+    nombre: string;
+    poeVigenteDisponible: boolean;
+    poeVigenteVersion: number | null;
+}
+
 export interface RutaProcesoNodeData {
     [key: string]: unknown;
     label: string;
     areaOperativaId: number | null;
     areaOperativaNombre: string | null;
+    procesoProduccionId: number | null;
+    procesoProduccionNombre: string | null;
+    poeVigenteDisponible: boolean;
+    poeVigenteVersion: number | null;
     hasLeftHandle?: boolean;
     hasRightHandle?: boolean;
     duracionEstimadaMinutos?: number;
@@ -21,6 +32,10 @@ export interface RutaProcesoNodeDTO {
     posicionY: number;
     areaOperativaId: number | null;
     areaOperativaNombre: string | null;
+    procesoProduccionId: number | null;
+    procesoProduccionNombre: string | null;
+    poeVigenteDisponible: boolean;
+    poeVigenteVersion: number | null;
     label: string;
     hasLeftHandle: boolean;
     hasRightHandle: boolean;

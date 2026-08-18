@@ -98,11 +98,23 @@ export default function AreaOperativaNode(props: NodeProps) {
                         <Text fontWeight={"bold"} fontSize={"md"} textAlign={"center"}>
                             {String(data.label || "Sin asignar")}
                         </Text>
+                        {data.procesoProduccionNombre ? (
+                            <Text fontSize="xs" color="gray.600" textAlign="center" lineClamp={2}>
+                                Proceso: {String(data.procesoProduccionNombre)}
+                            </Text>
+                        ) : null}
                         <Flex gap={2} justify="center" wrap="wrap">
                             <Badge colorPalette="purple">{duracionEstimadaMinutos} min</Badge>
                             <Badge colorPalette={requiereJornadaLaboral ? "green" : "orange"}>
                                 {requiereJornadaLaboral ? "Jornada" : "Continuo"}
                             </Badge>
+                            {data.procesoProduccionId ? (
+                                <Badge colorPalette={data.poeVigenteDisponible ? "green" : "orange"}>
+                                    {data.poeVigenteDisponible
+                                        ? `POE v${String(data.poeVigenteVersion)}`
+                                        : "Sin POE"}
+                                </Badge>
+                            ) : null}
                         </Flex>
                     </VStack>
 

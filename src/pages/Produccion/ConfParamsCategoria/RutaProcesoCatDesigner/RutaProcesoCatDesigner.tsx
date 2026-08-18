@@ -38,15 +38,17 @@ import axios from "axios";
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
 import AreaOperativaNode from "./AreaOperativaNode.tsx";
 import AreaOperativaPicker from "./AreaOperativaPicker.tsx";
+import ProcesoProduccionRutaPicker from "./ProcesoProduccionRutaPicker.tsx";
 import {
     AreaOperativa,
+    ProcesoRutaOption,
     RutaProcesoCatDTO,
     RutaProcesoEdgeDTO,
     RutaProcesoNodeDTO,
     RutaProcesoNodeData,
 } from "./types.ts";
 import { Categoria } from "../../types.tsx";
-import { getConnectionError, validateRuta } from "./rutaValidation.ts";
+import { ALMACEN_GENERAL_ID, getConnectionError, validateRuta } from "./rutaValidation.ts";
 import { LuArrowLeft, LuPlus, LuTrash2, LuX } from 'react-icons/lu';
 
 const nodeTypes = {
@@ -80,6 +82,10 @@ function toFlowNodes(ruta: RutaProcesoCatDTO): Node<RutaProcesoNodeData>[] {
             label: node.label || node.areaOperativaNombre || 'Sin asignar',
             areaOperativaId: node.areaOperativaId,
             areaOperativaNombre: node.areaOperativaNombre,
+            procesoProduccionId: node.procesoProduccionId ?? null,
+            procesoProduccionNombre: node.procesoProduccionNombre ?? null,
+            poeVigenteDisponible: node.poeVigenteDisponible ?? false,
+            poeVigenteVersion: node.poeVigenteVersion ?? null,
             hasLeftHandle: node.hasLeftHandle ?? true,
             hasRightHandle: node.hasRightHandle ?? true,
             duracionEstimadaMinutos: node.duracionEstimadaMinutos ?? 0,
@@ -110,6 +116,7 @@ function buildGraphSignature(nodes: Node<RutaProcesoNodeData>[], edges: Edge[]):
                 y: node.position.y,
                 areaOperativaId: node.data.areaOperativaId ?? null,
                 areaOperativaNombre: node.data.areaOperativaNombre ?? null,
+                procesoProduccionId: node.data.procesoProduccionId ?? null,
                 label: node.data.label ?? '',
                 hasLeftHandle: node.data.hasLeftHandle ?? true,
                 hasRightHandle: node.data.hasRightHandle ?? true,
@@ -153,6 +160,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     const [saving, setSaving] = useState(false);
     const [selectedElement, setSelectedElement] = useState<Node<RutaProcesoNodeData> | Edge | null>(null);
     const [isPickerOpen, setIsPickerOpen] = useState(false);
+    const [isProcesoPickerOpen, setIsProcesoPickerOpen] = useState(false);
     const [nodeIdCounter, setNodeIdCounter] = useState(1);
     const [currentRuta, setCurrentRuta] = useState<RutaProcesoCatDTO | null>(null);
     const [versions, setVersions] = useState<RutaProcesoCatDTO[]>([]);
@@ -182,6 +190,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
         }
         return nodes.find((node) => node.id === selectedElement.id) ?? null;
     }, [nodes, selectedElement]);
+    const selectedNodeIsAlmacen = selectedNode?.data.areaOperativaId === ALMACEN_GENERAL_ID;
 
     const onConnect = useCallback(
         (params: Connection) => {
@@ -322,6 +331,10 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                 label: area.nombre,
                 areaOperativaId: area.areaId,
                 areaOperativaNombre: area.nombre,
+                procesoProduccionId: null,
+                procesoProduccionNombre: null,
+                poeVigenteDisponible: false,
+                poeVigenteVersion: null,
                 hasLeftHandle: true,
                 hasRightHandle: true,
                 duracionEstimadaMinutos: 0,
@@ -355,6 +368,24 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
 
     const handleSelectedNodeJornadaChange = (checked: boolean) => {
         updateSelectedNodeData({ requiereJornadaLaboral: checked });
+    };
+
+    const handleProcesoSelected = (proceso: ProcesoRutaOption) => {
+        updateSelectedNodeData({
+            procesoProduccionId: proceso.procesoId,
+            procesoProduccionNombre: proceso.nombre,
+            poeVigenteDisponible: proceso.poeVigenteDisponible,
+            poeVigenteVersion: proceso.poeVigenteVersion,
+        });
+    };
+
+    const handleClearProceso = () => {
+        updateSelectedNodeData({
+            procesoProduccionId: null,
+            procesoProduccionNombre: null,
+            poeVigenteDisponible: false,
+            poeVigenteVersion: null,
+        });
     };
 
     const handleSave = async () => {
@@ -403,6 +434,10 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     posicionY: node.position.y,
                     areaOperativaId: node.data.areaOperativaId || null,
                     areaOperativaNombre: node.data.areaOperativaNombre || null,
+                    procesoProduccionId: node.data.procesoProduccionId ?? null,
+                    procesoProduccionNombre: node.data.procesoProduccionNombre ?? null,
+                    poeVigenteDisponible: node.data.poeVigenteDisponible ?? false,
+                    poeVigenteVersion: node.data.poeVigenteVersion ?? null,
                     label: node.data.label || '',
                     hasLeftHandle: node.data.hasLeftHandle ?? true,
                     hasRightHandle: node.data.hasRightHandle ?? true,
@@ -581,7 +616,9 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     <Alert.Title>Convención operativa</Alert.Title>
                     <Alert.Description>
                         La ruta debe iniciar en Almacen General y terminar en el último nodo productivo.
-                        El ingreso del producto terminado a almacén se sigue manejando por su flujo propio.
+                        Cada nodo productivo debe indicar qué proceso ejecuta; un POE faltante se advertirá,
+                        pero no bloqueará el guardado. El ingreso del producto terminado a almacén se sigue
+                        manejando por su flujo propio.
                     </Alert.Description>
                 </Box>
             </Alert.Root>
@@ -742,6 +779,73 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                             </Switch.Root>
                         </Field.Root>
                     </Flex>
+
+                    <Separator my={4} />
+                    {selectedNodeIsAlmacen ? (
+                        <Text fontSize="sm" color="app.textSubtle">
+                            Almacén General no ejecuta un proceso productivo y no requiere POE.
+                        </Text>
+                    ) : (
+                        <Box>
+                            <Flex
+                                direction={{ base: "column", md: "row" }}
+                                gap={3}
+                                align={{ base: "stretch", md: "center" }}
+                                justify="space-between"
+                            >
+                                <Box>
+                                    <Text fontSize="sm" color="app.textSubtle">Proceso de producción</Text>
+                                    <Text fontWeight="semibold">
+                                        {selectedNode.data.procesoProduccionNombre || "Sin proceso asignado"}
+                                    </Text>
+                                    {selectedNode.data.procesoProduccionId != null ? (
+                                        <Flex gap={2} mt={1} wrap="wrap">
+                                            <Badge colorPalette="purple">
+                                                ID {selectedNode.data.procesoProduccionId}
+                                            </Badge>
+                                            <Badge colorPalette={selectedNode.data.poeVigenteDisponible ? "green" : "orange"}>
+                                                {selectedNode.data.poeVigenteDisponible
+                                                    ? `POE vigente v${selectedNode.data.poeVigenteVersion}`
+                                                    : "Sin POE vigente"}
+                                            </Badge>
+                                        </Flex>
+                                    ) : null}
+                                </Box>
+                                <Flex gap={2} wrap="wrap">
+                                    <Button
+                                        variant="outline"
+                                        colorPalette="purple"
+                                        onClick={() => setIsProcesoPickerOpen(true)}
+                                        disabled={isReadOnly}
+                                    >
+                                        {selectedNode.data.procesoProduccionId == null
+                                            ? "Asignar proceso"
+                                            : "Cambiar proceso"}
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        colorPalette="red"
+                                        onClick={handleClearProceso}
+                                        disabled={isReadOnly || selectedNode.data.procesoProduccionId == null}
+                                    >
+                                        Quitar
+                                    </Button>
+                                </Flex>
+                            </Flex>
+
+                            {selectedNode.data.procesoProduccionId != null
+                            && !selectedNode.data.poeVigenteDisponible ? (
+                                <Alert.Root status="warning" mt={3} borderRadius="md">
+                                    <Alert.Indicator />
+                                    <Alert.Description>
+                                        Este proceso no tiene un POE vigente. La ruta puede guardarse,
+                                        pero las OP creadas antes de publicar el documento conservarán
+                                        esta etapa sin POE. Las OP posteriores capturarán la versión vigente.
+                                    </Alert.Description>
+                                </Alert.Root>
+                            ) : null}
+                        </Box>
+                    )}
                 </Box>
             )}
 
@@ -873,6 +977,12 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                 onClose={() => setIsPickerOpen(false)}
                 onSelect={handleAreaSelected}
                 disabledAreaIds={disabledAreaIds}
+            />
+            <ProcesoProduccionRutaPicker
+                isOpen={isProcesoPickerOpen}
+                onClose={() => setIsProcesoPickerOpen(false)}
+                onSelect={handleProcesoSelected}
+                currentProcesoId={selectedNode?.data.procesoProduccionId}
             />
         </Flex>
     );

@@ -46,6 +46,11 @@ export function validateRuta(nodes: RutaNode[], edges: RutaEdge[]): RutaValidati
 
         if (areaId === ALMACEN_GENERAL_ID) {
             almacenCount += 1;
+            if (node.data.procesoProduccionId != null) {
+                errors.push("Almacen General no puede tener un proceso de producción asignado.");
+            }
+        } else if (node.data.procesoProduccionId == null) {
+            errors.push("Cada área productiva debe tener un proceso de producción asignado.");
         }
 
         nodeMap.set(node.id, node);
