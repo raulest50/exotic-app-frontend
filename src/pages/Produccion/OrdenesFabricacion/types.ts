@@ -33,8 +33,35 @@ export interface OrdenFabricacion {
     fechaLanzamiento?: string | null;
     fechaFinalPlanificada?: string | null;
     creadaPor: string;
-    responsable: string;
+    responsable?: string | null;
     observaciones?: string | null;
+    ordenProduccionOrigenId?: number | null;
+    liberadaEn?: string | null;
+    politicaDispensacionInicio: "BLOQUEANTE" | "NO_BLOQUEANTE";
+    estadoDispensacionMateriales: "PENDIENTE" | "PARCIAL" | "COMPLETA" | "LIBERADA_SIN_DISPENSACION";
+    operaciones: OrdenFabricacionOperacion[];
+}
+
+export interface OrdenFabricacionOperacion {
+    id: number;
+    ordenFabricacionId: number;
+    frontendNodeId: string;
+    procesoProduccionId?: number | null;
+    procesoNombre: string;
+    areaOperativaId: number;
+    areaOperativaNombre: string;
+    posicionSecuencia: number;
+    estado: number;
+    estadoDescripcion: string;
+    fechaEstadoActual?: string | null;
+    fechaVisible?: string | null;
+    fechaCompletado?: string | null;
+    usuarioReporta?: string | null;
+    observaciones?: string | null;
+    batchRecordEtapaId?: number | null;
+    poeDocumentoVersionId?: number | null;
+    poeVersion?: number | null;
+    poeNombreArchivo?: string | null;
 }
 
 export type OrdenFabricacionPage = PageResponse<OrdenFabricacion>;

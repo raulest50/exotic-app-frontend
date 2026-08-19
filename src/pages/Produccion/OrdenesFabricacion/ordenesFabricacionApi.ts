@@ -2,6 +2,7 @@ import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
 import type {
     OrdenFabricacion,
+    OrdenFabricacionOperacion,
     OrdenFabricacionPage,
     OrdenFabricacionRequest,
     SemiterminadoOptionPage,
@@ -15,6 +16,28 @@ export async function buscarOrdenesFabricacion(search = "", page = 0): Promise<O
         ...options,
         params: { search: search || undefined, page, size: 20 },
     });
+    return response.data;
+}
+
+export async function detalleOrdenFabricacion(id: number): Promise<OrdenFabricacion> {
+    const response = await axios.get<OrdenFabricacion>(
+        `${endpoints.produccion_ordenes_fabricacion}/${id}`,
+        options,
+    );
+    return response.data;
+}
+
+export async function corregirOperacionFabricacion(
+    operacionId: number,
+    estadoEsperado: number,
+    estadoDestino: number,
+    motivo: string,
+): Promise<OrdenFabricacionOperacion> {
+    const response = await axios.post<OrdenFabricacionOperacion>(
+        `${endpoints.produccion_ordenes_fabricacion}/operaciones/${operacionId}/corregir`,
+        { estadoEsperado, estadoDestino, motivo },
+        options,
+    );
     return response.data;
 }
 
@@ -38,6 +61,15 @@ export async function crearOrdenFabricacion(request: OrdenFabricacionRequest): P
 export async function cancelarOrdenFabricacion(id: number): Promise<OrdenFabricacion> {
     const response = await axios.put<OrdenFabricacion>(
         `${endpoints.produccion_ordenes_fabricacion}/${id}/cancelar`,
+        null,
+        options,
+    );
+    return response.data;
+}
+
+export async function liberarOrdenFabricacion(id: number): Promise<OrdenFabricacion> {
+    const response = await axios.post<OrdenFabricacion>(
+        `${endpoints.produccion_ordenes_fabricacion}/${id}/liberar`,
         null,
         options,
     );

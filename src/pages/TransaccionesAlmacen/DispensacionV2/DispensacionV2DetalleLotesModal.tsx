@@ -15,6 +15,7 @@ interface DispensacionV2DetalleLotesModalProps {
     orden: DispensacionV2OrdenDTO | null;
     onClose: () => void;
     onSave: (orden: DispensacionV2OrdenDTO) => void;
+    tipoOrden?: "OP" | "OF";
 }
 
 function formatDate(value?: string | null): string {
@@ -39,6 +40,7 @@ export default function DispensacionV2DetalleLotesModal({
     orden,
     onClose,
     onSave,
+    tipoOrden = "OP",
 }: DispensacionV2DetalleLotesModalProps) {
     const [draft, setDraft] = useState<DispensacionV2OrdenDTO | null>(orden);
     const [loadingProductoId, setLoadingProductoId] = useState<string | null>(null);
@@ -153,7 +155,7 @@ export default function DispensacionV2DetalleLotesModal({
                                 <VStack align="stretch" gap={5}>
                                     <Box>
                                         <Heading size="sm">
-                                            OP {draft.ordenProduccionId} - {draft.loteAsignado ?? "Sin lote"}
+                                            {tipoOrden} {draft.ordenProduccionId} - {draft.loteAsignado ?? "Sin lote"}
                                         </Heading>
                                         <Text fontSize="sm" color="app.textMuted">
                                             {draft.productoTerminadoNombre} ({draft.productoTerminadoId})
@@ -163,7 +165,7 @@ export default function DispensacionV2DetalleLotesModal({
                                     {materialesEditables.length === 0 ? (
                                         <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50">
                                             <Text fontSize="sm" color="app.textMuted">
-                                                Esta OP no tiene materiales inventariables marcados para dispensar.
+                                                Esta {tipoOrden} no tiene materiales inventariables marcados para dispensar.
                                             </Text>
                                         </Box>
                                     ) : null}

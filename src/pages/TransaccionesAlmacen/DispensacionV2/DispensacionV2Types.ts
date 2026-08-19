@@ -178,6 +178,30 @@ export interface DispensacionV2LotesDisponiblesResponseDTO {
     size: number;
 }
 
+export interface DispensacionV2OrdenFabricacionOption {
+    ordenFabricacionId: number;
+    lote: string;
+    semiTerminadoId: string;
+    semiTerminadoNombre: string;
+    cantidadPlanificada: number;
+    unidadMedida: string;
+    estado: string;
+    estadoDispensacionMateriales: string;
+}
+
+export interface DispensacionV2OrdenFabricacionPreparacion {
+    orden: DispensacionV2OrdenFabricacionOption;
+    area: DispensacionV2AreaDTO;
+    materiales: DispensacionV2MaterialDTO[];
+    warnings: string[];
+}
+
+export interface DispensacionV2OrdenFabricacionFinalizacion {
+    ordenFabricacionId: number;
+    lote: string;
+    transaccionId: number;
+}
+
 export function formatDispensacionV2Number(value: number | null | undefined, maxDecimals = 4): string {
     const safeValue = typeof value === "number" && Number.isFinite(value) ? value : 0;
     return safeValue.toLocaleString("es-CO", {

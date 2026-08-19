@@ -9,7 +9,7 @@ import {
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
-import { CloseButton, Alert, Box, Button, ButtonGroup, Flex, Grid, HStack, Heading, Input, InputGroup, NumberInput, SimpleGrid, Spinner, Tabs, Text, Textarea, VStack, useDisclosure, Field, Dialog, Portal } from "@chakra-ui/react";
+import { CloseButton, Alert, Badge, Box, Button, ButtonGroup, Flex, Grid, HStack, Heading, Input, InputGroup, NumberInput, SimpleGrid, Spinner, Tabs, Text, Textarea, VStack, useDisclosure, Field, Dialog, Portal } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     FiArchive,
@@ -44,8 +44,12 @@ import type {
 } from "../Produccion/components/seguimientoBoard.types.ts";
 import type { SeguimientoActionType } from "../Produccion/components/SeguimientoBoardUI.tsx";
 import AreaOperativaOrderDetailDrawer from "./AreaOperativaOrderDetailDrawer.tsx";
+import AreaOperativaFabricacionDetailDrawer from "./AreaOperativaFabricacionDetailDrawer.tsx";
 import AreaOperativaMpsSemanalTab from "./AreaOperativaMpsSemanalTab.tsx";
-import type { AreaOperativaOrdenDetalleDTO } from "./areaOperativaPanel.types.ts";
+import type {
+    AreaOperativaOrdenDetalleDTO,
+    OrdenFabricacionOperativaDTO,
+} from "./areaOperativaPanel.types.ts";
 import { useAreaOperativaNoiseSampler } from "./Analitica/Noise/useAreaOperativaNoiseSampler.ts";
 import { formatSemanaMpsDisplayDate } from "../Produccion/ProgProdSemanalTab/semanaMps.utils.ts";
 
@@ -192,6 +196,7 @@ function matchesFilter(card: SeguimientoOrdenAreaCardDTO, searchTerm: string): b
     return [
         card.loteAsignado || "",
         `op-${card.ordenId}`,
+        card.tipoOrden === "OF" ? `of-${card.ordenFabricacionId ?? card.ordenId}` : "",
         card.productoNombre,
         card.productoId,
         card.areaNombre,
@@ -286,10 +291,13 @@ export default function AreaOperativaPanel() {
     const [selectedAction, setSelectedAction] = useState<SeguimientoActionType | null>(null);
     const [observaciones, setObservaciones] = useState("");
     const [cantidadProducida, setCantidadProducida] = useState("");
+    const [fechaVencimiento, setFechaVencimiento] = useState("");
+    const [motivoDiferenciaCantidad, setMotivoDiferenciaCantidad] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
     const [detailLoading, setDetailLoading] = useState(false);
     const [detail, setDetail] = useState<AreaOperativaOrdenDetalleDTO | null>(null);
+    const [fabricacionDetail, setFabricacionDetail] = useState<OrdenFabricacionOperativaDTO | null>(null);
 
     const scrollToElement = useCallback((element: HTMLDivElement | null) => {
         element?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -492,10 +500,22 @@ export default function AreaOperativaPanel() {
     const openDetail = useCallback(async (orden: SeguimientoOrdenAreaCardDTO) => {
         setSelectedOrden(orden);
         setDetail(null);
+        setFabricacionDetail(null);
         setDetailLoading(true);
         onDetailOpen();
 
         try {
+            if (orden.tipoOrden === "OF" && orden.ordenFabricacionId) {
+                const response = await axios.get<OrdenFabricacionOperativaDTO>(
+                    endpoints.area_operativa_panel_detalle_operativo_fabricacion.replace(
+                        "{ordenFabricacionId}",
+                        String(orden.ordenFabricacionId),
+                    ),
+                    { withCredentials: true },
+                );
+                setFabricacionDetail(response.data);
+                return;
+            }
             const response = await axios.get<AreaOperativaOrdenDetalleDTO>(
                 endpoints.area_operativa_panel_detalle_operativo_orden.replace("{ordenId}", String(orden.ordenId)),
                 { withCredentials: true },
@@ -519,6 +539,8 @@ export default function AreaOperativaPanel() {
         setSelectedOrden(orden);
         setObservaciones("");
         setCantidadProducida("");
+        setFechaVencimiento("");
+        setMotivoDiferenciaCantidad("");
         onActionOpen();
     };
 
@@ -555,6 +577,7 @@ export default function AreaOperativaPanel() {
 
         const actionMeta = getActionMeta(selectedAction);
         const isFinalCompletion = selectedAction === "completar" && selectedOrden.esNodoFinal;
+        const isFabricacion = selectedOrden.tipoOrden === "OF";
         const parsedCantidad = Number(cantidadProducida);
         if (isFinalCompletion && (!Number.isFinite(parsedCantidad) || parsedCantidad <= 0)) {
             toast({
@@ -569,20 +592,46 @@ export default function AreaOperativaPanel() {
         setSubmitting(true);
 
         try {
-            await axios.post(
-                actionMeta.endpoint,
-                {
-                    ordenId: selectedOrden.ordenId,
-                    areaId: selectedOrden.areaId,
-                    observaciones: observaciones.trim() || null,
-                    cantidadProducida: isFinalCompletion ? parsedCantidad : null,
-                },
-                { withCredentials: true },
-            );
+            if (isFabricacion) {
+                const operacionId = selectedOrden.operacionFabricacionId;
+                if (!operacionId) throw new Error("La tarjeta no identifica la operación de fabricación.");
+                const endpoint = (() => {
+                    if (selectedAction === "iniciar") return endpoints.area_operativa_panel_iniciar_operacion_fabricacion;
+                    if (selectedAction === "pausar") return endpoints.area_operativa_panel_pausar_operacion_fabricacion;
+                    return endpoints.area_operativa_panel_completar_operacion_fabricacion;
+                })().replace("{operacionId}", String(operacionId));
+                await axios.post(
+                    endpoint,
+                    selectedAction === "completar"
+                        ? {
+                            observaciones: observaciones.trim() || null,
+                            cantidadObtenida: isFinalCompletion ? parsedCantidad : null,
+                            fechaVencimiento: isFinalCompletion && fechaVencimiento
+                                ? fechaVencimiento : null,
+                            motivoDiferenciaCantidad: isFinalCompletion
+                                ? motivoDiferenciaCantidad.trim() || null : null,
+                        }
+                        : { observaciones: observaciones.trim() || null },
+                    { withCredentials: true },
+                );
+            } else {
+                await axios.post(
+                    actionMeta.endpoint,
+                    {
+                        ordenId: selectedOrden.ordenId,
+                        areaId: selectedOrden.areaId,
+                        observaciones: observaciones.trim() || null,
+                        cantidadProducida: isFinalCompletion ? parsedCantidad : null,
+                    },
+                    { withCredentials: true },
+                );
+            }
 
             toast({
                 title: "Actualización registrada",
-                description: `${selectedOrden.loteAsignado || `OP-${selectedOrden.ordenId}`} actualizada correctamente.`,
+                description: `${selectedOrden.tipoOrden === "OF"
+                    ? `OF-${selectedOrden.ordenFabricacionId}`
+                    : selectedOrden.loteAsignado || `OP-${selectedOrden.ordenId}`} actualizada correctamente.`,
                 status: "success",
                 duration: 3000,
                 isClosable: true,
@@ -761,7 +810,7 @@ export default function AreaOperativaPanel() {
                                                 size="lg"
                                                 value={searchTerm}
                                                 onChange={(event) => setSearchTerm(event.target.value)}
-                                                placeholder="Buscar por lote, OP, producto o nodo"
+                                                placeholder="Buscar por lote, OP, OF, producto o etapa"
                                             />
                                         </InputGroup>
                                         </Box>
@@ -893,7 +942,14 @@ export default function AreaOperativaPanel() {
                                     <VStack align="stretch" gap={4}>
                                         <Box>
                                             <Text fontWeight="bold" mb={1}>Orden</Text>
-                                            <Text>{selectedOrden.loteAsignado || `OP-${selectedOrden.ordenId}`}</Text>
+                                            <HStack gap={2} flexWrap="wrap">
+                                                <Badge colorPalette={selectedOrden.tipoOrden === "OF" ? "purple" : "teal"}>
+                                                    {selectedOrden.tipoOrden === "OF"
+                                                        ? `OF-${selectedOrden.ordenFabricacionId}`
+                                                        : `OP-${selectedOrden.ordenId}`}
+                                                </Badge>
+                                                <Text>{selectedOrden.loteAsignado || "Sin lote"}</Text>
+                                            </HStack>
                                         </Box>
                                         <Box>
                                             <Text fontWeight="bold" mb={1}>Producto</Text>
@@ -922,10 +978,39 @@ export default function AreaOperativaPanel() {
                                                 </NumberInput.Root>
                                                 <Field.HelperText>
                                                     Planeado: {selectedOrden.cantidadProducir.toLocaleString("es-CO")}{" "}
-                                                    {selectedOrden.tipoUnidades || "unidades"}. Este reporte deja la OP pendiente de cierre.
+                                                    {selectedOrden.tipoUnidades || "unidades"}.
+                                                    {selectedOrden.tipoOrden === "OF"
+                                                        ? " Este reporte cierra la OF y registra el lote intermedio en almacén."
+                                                        : " Este reporte deja la OP pendiente de cierre."}
                                                 </Field.HelperText>
                                             </Field.Root>
                                         ) : null}
+                                        {selectedAction === "completar"
+                                            && selectedOrden.esNodoFinal
+                                            && selectedOrden.tipoOrden === "OF" ? (
+                                                <>
+                                                    <Field.Root>
+                                                        <Field.Label>Fecha de vencimiento (opcional)</Field.Label>
+                                                        <Input
+                                                            type="date"
+                                                            value={fechaVencimiento}
+                                                            onChange={(event) => setFechaVencimiento(event.target.value)}
+                                                        />
+                                                    </Field.Root>
+                                                    <Field.Root required={
+                                                        Number.isFinite(Number(cantidadProducida))
+                                                        && Math.abs(Number(cantidadProducida) - selectedOrden.cantidadProducir) > 0.0001
+                                                    }>
+                                                        <Field.Label>Motivo de diferencia de rendimiento</Field.Label>
+                                                        <Textarea
+                                                            value={motivoDiferenciaCantidad}
+                                                            onChange={(event) => setMotivoDiferenciaCantidad(event.target.value)}
+                                                            placeholder="Obligatorio si la cantidad obtenida difiere de la planificada"
+                                                            maxLength={500}
+                                                        />
+                                                    </Field.Root>
+                                                </>
+                                            ) : null}
                                         <Box>
                                             <Text fontWeight="bold" mb={1}>Observaciones (opcionales)</Text>
                                             <Textarea
@@ -961,7 +1046,15 @@ export default function AreaOperativaPanel() {
                                     disabled={
                                         selectedAction === "completar"
                                         && Boolean(selectedOrden?.esNodoFinal)
-                                        && (!Number.isFinite(Number(cantidadProducida)) || Number(cantidadProducida) <= 0)
+                                        && (
+                                            !Number.isFinite(Number(cantidadProducida))
+                                            || Number(cantidadProducida) <= 0
+                                            || (
+                                                selectedOrden?.tipoOrden === "OF"
+                                                && Math.abs(Number(cantidadProducida) - selectedOrden.cantidadProducir) > 0.0001
+                                                && !motivoDiferenciaCantidad.trim()
+                                            )
+                                        )
                                     }
                                 >
                                     {actionMeta.submitLabel}
@@ -973,13 +1066,23 @@ export default function AreaOperativaPanel() {
                 </Portal>
             </Dialog.Root>
 
-            <AreaOperativaOrderDetailDrawer
-                isOpen={isDetailOpen}
-                onClose={onDetailClose}
-                detail={detail}
-                loading={detailLoading}
-                currentAreaId={areaResponsable?.areaId ?? null}
-            />
+            {selectedOrden?.tipoOrden === "OF" ? (
+                <AreaOperativaFabricacionDetailDrawer
+                    isOpen={isDetailOpen}
+                    onClose={onDetailClose}
+                    detail={fabricacionDetail}
+                    loading={detailLoading}
+                    currentAreaId={areaResponsable?.areaId ?? null}
+                />
+            ) : (
+                <AreaOperativaOrderDetailDrawer
+                    isOpen={isDetailOpen}
+                    onClose={onDetailClose}
+                    detail={detail}
+                    loading={detailLoading}
+                    currentAreaId={areaResponsable?.areaId ?? null}
+                />
+            )}
         </VStack>
     );
 }

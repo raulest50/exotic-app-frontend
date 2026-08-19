@@ -171,6 +171,7 @@ export default class EndPointsURL{
     public dispensacion_v2_asignacion_lotes: string;
     public dispensacion_v2_finalizar: string;
     public dispensacion_v2_lotes_disponibles: string;
+    public dispensacion_v2_ordenes_fabricacion: string;
     public recomendar_lotes_multiple: string;
 
     public listar_lotes_de_producto:string;
@@ -329,6 +330,11 @@ export default class EndPointsURL{
     public seguimiento_reportar_completado: string;
     public area_operativa_panel_detalle_operativo_orden: string;
     public area_operativa_panel_poe_archivo: string;
+    public area_operativa_panel_detalle_operativo_fabricacion: string;
+    public area_operativa_panel_poe_fabricacion: string;
+    public area_operativa_panel_iniciar_operacion_fabricacion: string;
+    public area_operativa_panel_pausar_operacion_fabricacion: string;
+    public area_operativa_panel_completar_operacion_fabricacion: string;
     public area_operativa_panel_mps_semanal: string;
     public area_operativa_panel_mps_semanal_odps: string;
     public area_operativa_panel_mps_semanal_actual: string;
@@ -848,6 +854,7 @@ export default class EndPointsURL{
         this.dispensacion_v2_asignacion_lotes = `${domain}/${salidas_almacen_res}/dispensacion-v2/asignacion-lotes`;
         this.dispensacion_v2_finalizar = `${domain}/${salidas_almacen_res}/dispensacion-v2/finalizar`;
         this.dispensacion_v2_lotes_disponibles = `${domain}/${salidas_almacen_res}/dispensacion-v2/materiales/{productoId}/lotes-disponibles`;
+        this.dispensacion_v2_ordenes_fabricacion = `${domain}/${salidas_almacen_res}/dispensacion-v2/ordenes-fabricacion`;
         this.recomendar_lotes_multiple = `${domain}/${salidas_almacen_res}/recomendar-lotes-multiple`;
 
         this.listar_lotes_de_producto = `${domain}/${salidas_almacen_res}/lotes-disponibles`;
@@ -1046,6 +1053,11 @@ export default class EndPointsURL{
         const area_operativa_panel_res = 'api/area-operativa-panel';
         this.area_operativa_panel_detalle_operativo_orden = `${domain}/${area_operativa_panel_res}/ordenes/{ordenId}/detalle-operativo`;
         this.area_operativa_panel_poe_archivo = `${domain}/${area_operativa_panel_res}/ordenes/{ordenId}/seguimientos/{seguimientoId}/poe/archivo`;
+        this.area_operativa_panel_detalle_operativo_fabricacion = `${domain}/${area_operativa_panel_res}/ordenes-fabricacion/{ordenFabricacionId}/detalle-operativo`;
+        this.area_operativa_panel_poe_fabricacion = `${domain}/${area_operativa_panel_res}/ordenes-fabricacion/{ordenFabricacionId}/operaciones/{operacionId}/poe/archivo`;
+        this.area_operativa_panel_iniciar_operacion_fabricacion = `${domain}/${area_operativa_panel_res}/ordenes-fabricacion/operaciones/{operacionId}/iniciar`;
+        this.area_operativa_panel_pausar_operacion_fabricacion = `${domain}/${area_operativa_panel_res}/ordenes-fabricacion/operaciones/{operacionId}/pausar`;
+        this.area_operativa_panel_completar_operacion_fabricacion = `${domain}/${area_operativa_panel_res}/ordenes-fabricacion/operaciones/{operacionId}/completar`;
         this.area_operativa_panel_mps_semanal = `${domain}/${area_operativa_panel_res}/mps-semanal`;
         this.area_operativa_panel_mps_semanal_odps = `${domain}/${area_operativa_panel_res}/mps-semanal/odps`;
         this.area_operativa_panel_mps_semanal_actual = `${domain}/${area_operativa_panel_res}/mps-semanal/actual`;

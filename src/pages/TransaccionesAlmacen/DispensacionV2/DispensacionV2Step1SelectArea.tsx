@@ -22,6 +22,7 @@ interface DispensacionV2Step1SelectAreaProps {
     selectedArea: AreaOperativaDispensacionV2 | null;
     onSelectArea: (area: AreaOperativaDispensacionV2 | null) => void;
     onNext: () => void;
+    nextLabel?: string;
 }
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -56,6 +57,7 @@ export default function DispensacionV2Step1SelectArea({
     selectedArea,
     onSelectArea,
     onNext,
+    nextLabel = "Continuar al MPS",
 }: DispensacionV2Step1SelectAreaProps) {
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const toast = useAppToast();
@@ -209,7 +211,7 @@ export default function DispensacionV2Step1SelectArea({
 
                 <Flex justify="flex-end">
                     <Button colorPalette="teal" onClick={onNext} disabled={!selectedArea}>
-                        Continuar al MPS
+                        {nextLabel}
                     </Button>
                 </Flex>
             </VStack>

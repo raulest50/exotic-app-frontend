@@ -397,14 +397,15 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
             return false;
         }
 
-        // Validar prefijo de lote para productos terminados
-        if (producto.tipo_producto === 'T') {
+        // El prefijo es obligatorio para terminados y semiterminados con OF.
+        if (producto.tipo_producto === 'T'
+            || (producto.tipo_producto === 'S' && Boolean(productoData.requiereOrdenFabricacion))) {
             const prefijoValue = (productoData as Producto).prefijoLote;
             if (prefijoValue == null || (typeof prefijoValue === 'string' && prefijoValue.trim() === '')) {
                 if (showToast) {
                     toast({
                         title: "Validación fallida",
-                        description: "El prefijo de lote es requerido para productos terminados.",
+                        description: "El prefijo de lote es requerido para productos terminados o semiterminados con orden de fabricación.",
                         status: "warning",
                         duration: 3000,
                         isClosable: true,
@@ -435,8 +436,8 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
             return true;
         }
 
-        // Si es terminado, verificar cambios en prefijoLote
-        if (productoOriginalData.tipo_producto === 'T' &&
+        // Terminados y semiterminados pueden administrar un prefijo de lote.
+        if ((productoOriginalData.tipo_producto === 'T' || productoOriginalData.tipo_producto === 'S') &&
             (productoData as Producto).prefijoLote !== (productoOriginalData as Producto).prefijoLote) {
             return true;
         }
@@ -536,8 +537,10 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                 payload.tipoMaterial = (productoData as Material).tipoMaterial;
             }
 
-            if (isTerminado) {
+            if (isSemiOTerminado) {
                 payload.prefijoLote = ((productoData as Producto).prefijoLote ?? '').trim();
+            }
+            if (isTerminado) {
                 if (productoData.categoria?.categoriaId != null) {
                     payload.categoriaId = productoData.categoria.categoriaId;
                 }
@@ -594,7 +597,12 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     const canUseWizard = canEdit && isSemiOTerminado && !editMode;
 
     const prefijoUnchanged = ((productoData as Producto).prefijoLote ?? '').trim() === ((productoOriginalData as Producto).prefijoLote ?? '').trim();
-    const canSavePrefijo = prefijoUnchanged || prefijoVerificado;
+    const prefijoActual = ((productoData as Producto).prefijoLote ?? '').trim();
+    const prefijoObligatorio = isTerminado
+        || (producto.tipo_producto === 'S' && Boolean(productoData.requiereOrdenFabricacion));
+    const canSavePrefijo = prefijoUnchanged
+        || (!prefijoObligatorio && !prefijoActual)
+        || prefijoVerificado;
     const categoriaActualId = productoData.categoria?.categoriaId ?? '';
     const categoriaEditable = isTerminado &&
         !categoriaStatusError &&
@@ -614,11 +622,11 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                     ? 'No hay categorías disponibles para seleccionar.'
                     : null));
 
-    const isGuardarDisabled = !isFormValid || !hasChanges || (isTerminado && !canSavePrefijo);
+    const isGuardarDisabled = !isFormValid || !hasChanges || (isSemiOTerminado && !canSavePrefijo);
     const guardarDisabledReason: string | null = isGuardarDisabled
         ? !hasChanges
             ? 'No hay cambios en los datos.'
-            : isTerminado && !canSavePrefijo
+            : isSemiOTerminado && !canSavePrefijo
                 ? 'Verifique el prefijo de lote con el botón (✓) para habilitar Guardar.'
                 : !isFormValid
                     ? `Revise los campos requeridos o los valores (nombre, cantidad por unidad, IVA${isTerminado ? ', prefijo de lote' : ''}).`
@@ -791,7 +799,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                         )}
                                     </Box>
                                 )}
-                                {isTerminado && (
+                                {isSemiOTerminado && (
                                     <Box>
                                         <Text fontWeight="bold">Prefijo de lote:</Text>
                                         {editMode ? (
@@ -967,8 +975,8 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                             </Dialog.CloseTrigger>
                             <Dialog.Body pb={4}>
                                 <Text mb={2}>
-                                    El prefijo de lote identifica de forma única a cada producto terminado y se usa para generar
-                                    los números de lote al crear órdenes de producción (por ejemplo: TRK-0000001-26).
+                                    El prefijo identifica de forma única al producto y se usa para generar lotes en órdenes de
+                                    producción o de fabricación (por ejemplo: TRK-0000001-26).
                                 </Text>
                                 <Text mb={2}>
                                     <strong>Modo automático:</strong> El prefijo se calcula a partir del nombre del producto,
@@ -977,7 +985,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                                 </Text>
                                 <Text mb={2}>
                                     <strong>Modo editar:</strong> Puede definir un prefijo propio si lo desea. El prefijo debe ser
-                                    único entre todos los productos terminados.
+                                    único entre todos los productos que generan lote de manufactura.
                                 </Text>
                                 <Text mb={2}>
                                     Use el botón con el símbolo de verificación (✓) para comprobar que el prefijo no esté ya

@@ -226,6 +226,35 @@ export default function BatchRecordsTab() {
                         </Box>
                     </SimpleGrid>
 
+                    <SimpleGrid columns={{ base: 1, lg: 2 }} gap={4}>
+                        <Box borderWidth="1px" borderRadius="md" p={3}>
+                            <Heading size="sm" mb={2}>Lotes origen</Heading>
+                            {detail.lotesOrigen?.length ? detail.lotesOrigen.map((vinculo, index) => (
+                                <Box key={`origen-${vinculo.loteId}-${vinculo.batchRecordId ?? "externo"}-${index}`} py={2} borderBottomWidth="1px">
+                                    <HStack justify="space-between" align="start">
+                                        <Box><Text fontWeight="semibold">{vinculo.lote}</Text><Text fontSize="sm" color="app.textMuted">{vinculo.productoId} · {vinculo.productoNombre}</Text></Box>
+                                        <Badge colorPalette="purple">{vinculo.ordenFabricacionId ? `OF-${vinculo.ordenFabricacionId}` : vinculo.ordenProduccionId ? `OP-${vinculo.ordenProduccionId}` : "Externo"}</Badge>
+                                    </HStack>
+                                    {vinculo.cantidad != null ? <Text fontSize="sm">Consumido: {vinculo.cantidad} {vinculo.unidadMedida ?? ""}</Text> : null}
+                                    {vinculo.batchRecordCodigo ? <Text fontSize="xs" color="app.textSubtle">Expediente {vinculo.batchRecordCodigo}</Text> : null}
+                                </Box>
+                            )) : <Text color="app.textSubtle">No se registran lotes de origen.</Text>}
+                        </Box>
+                        <Box borderWidth="1px" borderRadius="md" p={3}>
+                            <Heading size="sm" mb={2}>Lotes destino alimentados</Heading>
+                            {detail.lotesDestino?.length ? detail.lotesDestino.map((vinculo, index) => (
+                                <Box key={`destino-${vinculo.loteId}-${vinculo.batchRecordId ?? "externo"}-${index}`} py={2} borderBottomWidth="1px">
+                                    <HStack justify="space-between" align="start">
+                                        <Box><Text fontWeight="semibold">{vinculo.lote}</Text><Text fontSize="sm" color="app.textMuted">{vinculo.productoId} · {vinculo.productoNombre}</Text></Box>
+                                        <Badge colorPalette="teal">{vinculo.ordenFabricacionId ? `OF-${vinculo.ordenFabricacionId}` : vinculo.ordenProduccionId ? `OP-${vinculo.ordenProduccionId}` : "Destino"}</Badge>
+                                    </HStack>
+                                    {vinculo.cantidad != null ? <Text fontSize="sm">Cantidad vinculada: {vinculo.cantidad} {vinculo.unidadMedida ?? ""}</Text> : null}
+                                    {vinculo.batchRecordCodigo ? <Text fontSize="xs" color="app.textSubtle">Expediente {vinculo.batchRecordCodigo}</Text> : null}
+                                </Box>
+                            )) : <Text color="app.textSubtle">Este lote aún no alimenta otro expediente.</Text>}
+                        </Box>
+                    </SimpleGrid>
+
                     <Box borderWidth="1px" borderRadius="md" p={3}>
                         <Heading size="sm" mb={2}>Firmas electrónicas ({detail.firmas.length})</Heading>
                         {detail.firmas.map((firma) => <Box key={firma.id} py={2} borderBottomWidth="1px"><HStack justify="space-between"><Text fontWeight="semibold">{firma.nombreFirmante}</Text><Badge>{firma.alcance}</Badge></HStack><Text fontSize="sm">{firma.rolFirmante} · {fecha(firma.firmadoEn)}</Text><Text fontSize="xs" color="app.textSubtle" overflowWrap="anywhere">SHA-256 {firma.hashContenidoFirmado}</Text></Box>)}

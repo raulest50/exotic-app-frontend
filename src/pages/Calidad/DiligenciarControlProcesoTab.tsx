@@ -42,7 +42,10 @@ function numberRange(size: number) {
 
 function loteLabel(lote: LoteProduccionResumen) {
     const producto = lote.producto ? ` - ${lote.producto.productoId} ${lote.producto.nombre}` : "";
-    return `${lote.batchNumber}${producto}`;
+    const orden = lote.tipoOrden === "OF" && lote.ordenFabricacionId
+        ? `OF-${lote.ordenFabricacionId}`
+        : lote.ordenProduccionId ? `OP-${lote.ordenProduccionId}` : null;
+    return `${lote.batchNumber}${orden ? ` (${orden})` : ""}${producto}`;
 }
 
 export default function DiligenciarControlProcesoTab() {
