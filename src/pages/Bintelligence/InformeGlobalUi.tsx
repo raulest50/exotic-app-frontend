@@ -16,9 +16,15 @@ interface KpiCardProps {
     label: string;
     value: string;
     help: string;
+    helpLineClamp?: number;
 }
 
-export function KpiCard({ label, value, help }: KpiCardProps) {
+export function KpiCard({
+    label,
+    value,
+    help,
+    helpLineClamp = 2,
+}: KpiCardProps) {
     return (
         <Card.Root variant="outline" minW={0}>
             <Card.Body p={{ base: 3, md: 4 }}>
@@ -34,7 +40,7 @@ export function KpiCard({ label, value, help }: KpiCardProps) {
                     >
                         {value}
                     </Stat.ValueText>
-                    <Stat.HelpText mb={0} mt={2} lineClamp={2}>
+                    <Stat.HelpText mb={0} mt={2} lineClamp={helpLineClamp}>
                         {help}
                     </Stat.HelpText>
                 </Stat.Root>

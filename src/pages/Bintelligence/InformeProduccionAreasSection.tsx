@@ -161,7 +161,7 @@ export default function InformeProduccionAreasSection({
                                         <Table.ColumnHeader>Área</Table.ColumnHeader>
                                         <Table.ColumnHeader>Producción</Table.ColumnHeader>
                                         <Table.ColumnHeader textAlign='end'>Salidas/día</Table.ColumnHeader>
-                                        <Table.ColumnHeader textAlign='end'>Trabajo listo</Table.ColumnHeader>
+                                        <Table.ColumnHeader textAlign='end'>Trabajo pendiente</Table.ColumnHeader>
                                     </Table.Row>
                                 </Table.Header>
                                 <Table.Body>
@@ -209,7 +209,7 @@ export default function InformeProduccionAreasSection({
                         >
                             <SectionHeading
                                 title={selectedArea.areaNombre}
-                                description="Entradas, salidas y trabajo listo al cierre de cada día."
+                                description="Entradas, salidas y trabajo pendiente al cierre de cada día."
                             />
                             <HStack gap={2} flexWrap="wrap">
                                 <SignalBadge state={selectedArea.estado} />
@@ -266,17 +266,14 @@ export default function InformeProduccionAreasSection({
                                 )}
                             />
                             <KpiCard
-                                label="Días de backlog"
-                                value={selectedArea.actual.diasBacklog === null
-                                || selectedArea.actual.diasBacklog === undefined
-                                    ? "Sin ritmo"
-                                    : formatQuantity(selectedArea.actual.diasBacklog)}
-                                help={metricComparisonHelp(
+                                label="Trabajo pendiente al cierre"
+                                value={`${formatQuantity(selectedArea.actual.trabajoListo)} lotes`}
+                                help={pendingWorkHelp(
+                                    selectedArea.actual.entradas,
+                                    selectedArea.actual.salidas,
                                     selectedArea.actual.diasBacklog,
-                                    selectedArea.anterior.diasBacklog,
-                                    selectedArea.comparacionDisponible,
-                                    `${selectedArea.actual.trabajoListo} lotes listos`,
                                 )}
+                                helpLineClamp={3}
                             />
                         </SimpleGrid>
 
@@ -375,7 +372,7 @@ function AreaMobileCard({
                             value={formatQuantity(area.actual.ritmoSalidaDiario)}
                         />
                         <CompactMetric
-                            label="Trabajo listo"
+                            label="Trabajo pendiente"
                             value={`${area.actual.trabajoListo}`}
                         />
                     </SimpleGrid>
@@ -535,7 +532,7 @@ function buildAreaFlowChart(area: AnaliticaAreaProduccion, compact: boolean) {
         aria: {
             enabled: true,
             description:
-                `Flujo diario del área ${area.areaNombre}: entradas, salidas y backlog en lotes.`,
+                `Flujo diario del área ${area.areaNombre}: entradas, salidas y trabajo pendiente en lotes.`,
         },
         tooltip: {
             trigger: "axis",
@@ -549,8 +546,8 @@ function buildAreaFlowChart(area: AnaliticaAreaProduccion, compact: boolean) {
             data: [
                 "Entradas",
                 "Salidas",
-                "Backlog actual",
-                ...(area.comparacionDisponible ? ["Backlog anterior"] : []),
+                "Pendientes al cierre",
+                ...(area.comparacionDisponible ? ["Pendientes del periodo anterior"] : []),
             ],
         },
         grid: {
@@ -589,7 +586,7 @@ function buildAreaFlowChart(area: AnaliticaAreaProduccion, compact: boolean) {
                 barMaxWidth: 28,
             },
             {
-                name: "Backlog actual",
+                name: "Pendientes al cierre",
                 type: "line",
                 data: area.serieActual.map((point) => point.backlogCierre),
                 itemStyle: { color: "#DD6B20" },
@@ -598,7 +595,7 @@ function buildAreaFlowChart(area: AnaliticaAreaProduccion, compact: boolean) {
                 smooth: 0.2,
             },
             ...(area.comparacionDisponible ? [{
-                name: "Backlog anterior",
+                name: "Pendientes del periodo anterior",
                 type: "line",
                 data: area.serieActual.map((point) =>
                     previousByIndex.get(point.indiceDia)?.backlogCierre ?? null),
@@ -667,6 +664,19 @@ function metricComparisonHelp(
     return prefix ? `${prefix} · ${comparison}` : comparison;
 }
 
+function pendingWorkHelp(
+    arrivals: number,
+    completions: number,
+    estimatedDays?: number | null,
+) {
+    const balance = arrivals - completions;
+    const formattedBalance = `${balance > 0 ? "+" : ""}${formatQuantity(balance)}`;
+    const estimate = estimatedDays === null || estimatedDays === undefined
+        ? "Sin salidas para estimar el tiempo"
+        : `Tiempo estimado: ${formatQuantity(estimatedDays)} días al ritmo actual`;
+    return `Balance del periodo: ${formattedBalance} lotes · ${estimate}`;
+}
+
 function formatMinutes(value?: number | null) {
     if (value === null || value === undefined) return "No estimable";
     if (value < 60) return `${formatQuantity(value)} min`;
@@ -697,7 +707,7 @@ function signalPresentation(state: EstadoAreaProduccion): {
     switch (state) {
         case "POSIBLE_CUELLO":
             return {
-                label: "Posible cuello",
+                label: "Riesgo de acumulación",
                 colorScheme: "red",
                 alertStatus: "error",
             };

@@ -19,10 +19,21 @@ export type EstadoCalidadLote =
     | "BLOQUEADO"
     | "NO_APLICA_CALIDAD";
 
+export type EstadoSincronizacionBatchRecord =
+    | "PENDIENTE"
+    | "SINCRONIZANDO"
+    | "ACTUALIZADO"
+    | "INCOMPLETO"
+    | "ERROR";
+
 export interface BatchRecordListItem {
     id: number;
     codigo: string;
     estado: EstadoBatchRecord;
+    estadoSincronizacion: EstadoSincronizacionBatchRecord;
+    sincronizadoEn?: string | null;
+    advertenciasDocumentales: string[];
+    ultimoErrorDocumental?: string | null;
     revisionDocumental: number;
     ordenProduccionId?: number | null;
     ordenFabricacionId?: number | null;

@@ -55,9 +55,12 @@ export default function IngresoTerminadosStep1Lectura({ reportes }: Props) {
                                             <Table.Cell>
                                                 <Badge colorPalette={reporte.puedeIngresar ? "green" : "orange"}>
                                                     {reporte.puedeIngresar
-                                                        ? (reporte.expedienteDigital ? "Liberado" : "Disponible (legado)")
+                                                        ? "Disponible para ingreso"
                                                         : reporte.estadoCalidad}
                                                 </Badge>
+                                                <Text fontSize="xs" color="app.textSubtle">
+                                                    Calidad: {reporte.estadoCalidad} · Expediente: {reporte.batchRecordEstado ?? "SIN EXPEDIENTE"}
+                                                </Text>
                                                 {!reporte.puedeIngresar ? <Text fontSize="xs" color="app.textSubtle">{reporte.motivoBloqueo}</Text> : null}
                                             </Table.Cell>
                                         </Table.Row>
@@ -81,9 +84,12 @@ export default function IngresoTerminadosStep1Lectura({ reportes }: Props) {
                                     </Text>
                                     <Badge mt={2} colorPalette={reporte.puedeIngresar ? "green" : "orange"}>
                                         {reporte.puedeIngresar
-                                            ? (reporte.expedienteDigital ? "Liberado por Calidad" : "Disponible (flujo legado)")
+                                            ? "Disponible para ingreso"
                                             : reporte.motivoBloqueo}
                                     </Badge>
+                                    <Text mt={1} fontSize="xs" color="app.textSubtle">
+                                        Calidad: {reporte.estadoCalidad} · Expediente: {reporte.batchRecordEstado ?? "SIN EXPEDIENTE"}
+                                    </Text>
                                 </Box>
                             ))}
                         </VStack>

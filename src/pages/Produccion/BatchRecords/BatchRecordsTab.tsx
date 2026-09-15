@@ -53,9 +53,9 @@ function fecha(value?: string | null): string {
 }
 
 function palette(estado: string): "green" | "red" | "orange" | "gray" {
-    if (["APROBADO", "CERRADO", "CONFORME", "LIBERADO"].includes(estado)) return "green";
+    if (["APROBADO", "CERRADO", "CONFORME", "LIBERADO", "ACTUALIZADO"].includes(estado)) return "green";
     if (["RECHAZADO", "ANULADO", "NO_CONFORME"].includes(estado)) return "red";
-    if (["LISTO_PARA_REVISION", "PENDIENTE_REVISION", "DEVUELTO_PRODUCCION", "EN_CORRECCION"].includes(estado)) return "orange";
+    if (["LISTO_PARA_REVISION", "PENDIENTE_REVISION", "DEVUELTO_PRODUCCION", "EN_CORRECCION", "PENDIENTE", "SINCRONIZANDO", "INCOMPLETO", "ERROR"].includes(estado)) return "orange";
     return "gray";
 }
 
@@ -267,7 +267,7 @@ export default function BatchRecordsTab() {
             <Box>
                 <Heading size="md">Expedientes digitales de fabricación</Heading>
                 <Text color="app.textSubtle" mt={1}>
-                    Consulte por OP o lote. El PDF se reconstruye desde los datos y revisiones del expediente.
+                    Consulte por OP o lote. El expediente documenta la historia disponible y no autoriza ni bloquea la operación del lote.
                 </Text>
             </Box>
 
@@ -300,7 +300,8 @@ export default function BatchRecordsTab() {
                             <Table.ColumnHeader>OP / OF</Table.ColumnHeader>
                             <Table.ColumnHeader>Lote</Table.ColumnHeader>
                             <Table.ColumnHeader>Producto</Table.ColumnHeader>
-                            <Table.ColumnHeader>Estado</Table.ColumnHeader>
+                            <Table.ColumnHeader>Expediente</Table.ColumnHeader>
+                            <Table.ColumnHeader>Sincronización</Table.ColumnHeader>
                             <Table.ColumnHeader />
                         </Table.Row></Table.Header>
                         <Table.Body>{page.content.map((item) => (
@@ -310,6 +311,7 @@ export default function BatchRecordsTab() {
                                 <Table.Cell>{item.lote}</Table.Cell>
                                 <Table.Cell>{item.productoId} · {item.productoNombre}</Table.Cell>
                                 <Table.Cell><Badge colorPalette={palette(item.estado)}>{item.estado}</Badge></Table.Cell>
+                                <Table.Cell><Badge colorPalette={palette(item.estadoSincronizacion)}>{item.estadoSincronizacion}</Badge></Table.Cell>
                                 <Table.Cell><Button size="xs" variant="outline" onClick={() => void abrir(item)}>Abrir</Button></Table.Cell>
                             </Table.Row>
                         ))}</Table.Body>
@@ -334,10 +336,23 @@ export default function BatchRecordsTab() {
                             <Text color="app.textSubtle">{detail.resumen.productoId} · {detail.resumen.productoNombre} · lote {detail.resumen.lote}</Text>
                         </Box>
                         <HStack>
-                            <Badge colorPalette={palette(detail.resumen.estado)}>{detail.resumen.estado}</Badge>
-                            <Badge colorPalette={palette(detail.resumen.estadoCalidadLote)}>{detail.resumen.estadoCalidadLote}</Badge>
+                            <Badge colorPalette={palette(detail.resumen.estado)}>Expediente: {detail.resumen.estado}</Badge>
+                            <Badge colorPalette={palette(detail.resumen.estadoSincronizacion)}>Sincronización: {detail.resumen.estadoSincronizacion}</Badge>
+                            <Badge colorPalette={palette(detail.resumen.estadoCalidadLote)}>Calidad: {detail.resumen.estadoCalidadLote}</Badge>
                         </HStack>
                     </Flex>
+
+                    {detail.resumen.advertenciasDocumentales.length ? (
+                        <Alert.Root status="warning">
+                            <Alert.Indicator />
+                            <Box>
+                                <Text fontWeight="semibold">Expediente documental incompleto</Text>
+                                {detail.resumen.advertenciasDocumentales.map((warning, index) => (
+                                    <Text key={`${index}-${warning}`} fontSize="sm">• {warning}</Text>
+                                ))}
+                            </Box>
+                        </Alert.Root>
+                    ) : null}
 
                     <SimpleGrid columns={{ base: 1, md: 4 }} gap={3}>
                         <Box borderWidth="1px" borderRadius="md" p={3}><Text fontSize="sm" color="app.textSubtle">Orden</Text><Text fontWeight="bold">{detail.resumen.ordenProduccionId ? `OP ${detail.resumen.ordenProduccionId}` : `OF ${detail.resumen.ordenFabricacionId}`}</Text></Box>

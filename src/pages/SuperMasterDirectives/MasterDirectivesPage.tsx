@@ -100,7 +100,7 @@ const PRODUCTION_DIRECTIVE_NAMES = new Set<string>([
 
 const PRODUCTION_DIRECTIVE_EXTENDED_HELP: Record<string, string> = {
     [MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED]:
-        "Aplica unicamente a ordenes nuevas. Las OP creadas mientras este apagada conservaran el flujo anterior y no recibiran expediente retroactivamente. No puede apagarse mientras haya expedientes sin cerrar o anular.",
+        "Aplica unicamente a ordenes nuevas. Al activarse crea expedientes documentales y habilita nuevas OF. Puede apagarse con expedientes abiertos: estos siguen disponibles y las proyecciones pendientes continúan procesándose. No crea expedientes retroactivos.",
     [MASTER_DIRECTIVE_KEYS.DISPENSACION_NO_BLOQUEA_INICIO_PRODUCCION]:
         "Esta directiva se copia a cada ODP al momento de crearla. Cambiar el switch no modifica ODPs ya existentes; para esas ODPs use la accion retroactiva controlada de esta pantalla.",
     [MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO]:
@@ -227,7 +227,7 @@ function getAreaOperativaPanelDirectiveLabel(directive: MasterDirective) {
 
 function getProductionDirectiveLabel(directive: MasterDirective) {
     if (directive.nombre === MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED) {
-        return "Flujo regulado de Batch Record";
+        return "Expediente Batch Record y OF";
     }
     if (directive.nombre === MASTER_DIRECTIVE_KEYS.DISPENSACION_NO_BLOQUEA_INICIO_PRODUCCION) {
         return "Dispensacion no bloquea inicio";
@@ -549,7 +549,7 @@ export default function MasterDirectivesPage() {
                 && isBooleanEnabled(targetValue);
             if (isActivation) {
                 const confirmed = window.confirm(
-                    "Al activar Batch Record, toda OP nueva registrará firmas por etapa y requerirá liberación de Calidad antes del ingreso a almacén. También se habilitará la creación de OF. Verifique usuarios, cédulas, permisos, vidas útiles y plantillas de Calidad. La activación no será retroactiva. ¿Desea continuar?"
+                    "Al activar Batch Record, las OP nuevas solicitarán un expediente documental y se habilitará la creación de OF. El expediente puede sincronizarse de forma incompleta y no cambia el estado de Calidad ni bloquea el ingreso a almacén. La activación no será retroactiva. ¿Desea continuar?"
                 );
                 if (!confirmed) return;
             }
@@ -872,7 +872,7 @@ export default function MasterDirectivesPage() {
                                                     )}
                                                     {directive.nombre === MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED && (
                                                         <Text fontSize="xs" color={explanatoryWarningColor} mt={1}>
-                                                            Active únicamente después de preparar responsables, permisos y controles de Calidad.
+                                                            Batch Record documenta el lote; Calidad conserva su estado de manera independiente.
                                                         </Text>
                                                     )}
                                                 </Table.Cell>
