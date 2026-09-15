@@ -7,6 +7,7 @@ import type {
     CaracteristicaPlanControl,
     CatalogoMagnitud,
     CatalogoUnidad,
+    CategoriaControlOption,
     ControlRequerido,
     DesviacionControl,
     DesviacionResolveWrite,
@@ -255,6 +256,7 @@ function serializePlanWrite(item: PlanControlWrite): PlanWriteWire {
             puntoAplicacion: rule.puntoAplicacion,
             areaOperativaId: rule.areaOperativaId,
             procesoId: rule.procesoProduccionId,
+            frontendNodeId: rule.frontendNodeId,
             momento: rule.momentoEjecucion,
             puntoExigencia: rule.puntoExigencia,
         })),
@@ -550,6 +552,11 @@ export async function setMagnitudActive(id: number, activo: boolean): Promise<Ca
 
 export async function listUnidades(incluirInactivas = false): Promise<CatalogoUnidad[]> {
     const response = await axios.get<CatalogoUnidad[]>(`${catalogBase}/unidades`, { ...requestOptions, params: { incluirInactivas } });
+    return response.data ?? [];
+}
+
+export async function listControlCategories(): Promise<CategoriaControlOption[]> {
+    const response = await axios.get<CategoriaControlOption[]>(endpoints.get_categorias, requestOptions);
     return response.data ?? [];
 }
 

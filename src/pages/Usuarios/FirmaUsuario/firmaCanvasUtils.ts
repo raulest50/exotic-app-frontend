@@ -6,20 +6,14 @@ export const FIRMA_MIN_HEIGHT_PX = 20;
 export const FIRMA_MAX_WIDTH_PX = 2000;
 export const FIRMA_MAX_HEIGHT_PX = 1000;
 
-const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+const FIRMA_ALLOWED_MIME_TYPES = new Set(["image/png", "image/jpeg"]);
 
-export async function validarFirmaPng(file: File): Promise<FirmaVisualSeleccionada> {
-    if (file.type.toLowerCase() !== "image/png") {
-        throw new Error("La firma visual debe ser un archivo PNG.");
+export async function validarFirmaImagen(file: File): Promise<FirmaVisualSeleccionada> {
+    if (!FIRMA_ALLOWED_MIME_TYPES.has(file.type.toLowerCase())) {
+        throw new Error("La firma visual debe ser un archivo PNG o JPG/JPEG.");
     }
     if (file.size <= 0 || file.size > FIRMA_MAX_FILE_SIZE_BYTES) {
         throw new Error("La firma visual debe pesar como máximo 1 MB.");
-    }
-
-    const signature = new Uint8Array(await file.slice(0, PNG_SIGNATURE.length).arrayBuffer());
-    if (signature.length !== PNG_SIGNATURE.length
-        || PNG_SIGNATURE.some((value, index) => signature[index] !== value)) {
-        throw new Error("El archivo seleccionado no es un PNG válido.");
     }
 
     const dataUrl = await fileToDataUrl(file);

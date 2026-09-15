@@ -61,10 +61,19 @@ export interface AplicabilidadPlanControl {
     areaOperativaNombre?: string | null;
     procesoProduccionId?: number | null;
     procesoProduccionNombre?: string | null;
+    /** Nodo gráfico exacto; ausente en planes legados que aplican por área/proceso. */
+    frontendNodeId?: string | null;
     momentoEjecucion: MomentoEjecucionControl;
     puntoExigencia: PuntoExigenciaControl;
+    /** Estado exclusivo del editor: confirma que Calidad eligió el punto en la ruta. */
+    ubicacionGraficaConfirmada?: boolean;
     /** Solo viene en respuestas históricas; el backend no lo acepta al guardar un plan. */
     legadoGlobal?: boolean;
+}
+
+export interface CategoriaControlOption {
+    categoriaId: number;
+    categoriaNombre: string;
 }
 
 export interface CaracteristicaPlanControl {

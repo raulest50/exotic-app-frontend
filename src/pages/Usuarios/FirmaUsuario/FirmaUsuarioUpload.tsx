@@ -2,7 +2,7 @@ import { Box, Field, Input, Text } from "@chakra-ui/react";
 import { useRef } from "react";
 import type { ChangeEvent } from "react";
 import type { FirmaVisualSeleccionada } from "./firmaUsuario.types";
-import { validarFirmaPng } from "./firmaCanvasUtils";
+import { validarFirmaImagen } from "./firmaCanvasUtils";
 
 interface FirmaUsuarioUploadProps {
     disabled?: boolean;
@@ -23,7 +23,7 @@ export default function FirmaUsuarioUpload({
         if (!file) return;
 
         try {
-            onChange(await validarFirmaPng(file));
+            onChange(await validarFirmaImagen(file));
         } catch (error) {
             if (inputRef.current) inputRef.current.value = "";
             onError(error instanceof Error ? error.message : "No se pudo validar la firma visual.");
@@ -33,16 +33,16 @@ export default function FirmaUsuarioUpload({
     return (
         <Box>
             <Field.Root disabled={disabled}>
-                <Field.Label>Archivo PNG</Field.Label>
+                <Field.Label>Archivo PNG o JPG/JPEG</Field.Label>
                 <Input
                     ref={inputRef}
                     type="file"
-                    accept="image/png,.png"
+                    accept="image/png,image/jpeg,.png,.jpg,.jpeg"
                     onChange={handleFileChange}
                     p={1}
                 />
                 <Field.HelperText>
-                    Máximo 1 MB y 2000 x 1000 px. Se conservará como una nueva versión.
+                    Máximo 1 MB y 2000 x 1000 px. La imagen se almacenará normalizada como PNG.
                 </Field.HelperText>
             </Field.Root>
             <Text fontSize="xs" color="app.textMuted" mt={2}>

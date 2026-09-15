@@ -26,14 +26,16 @@ import { LuCheck, LuPlus, LuTrash2 } from "react-icons/lu";
 import { useAppToast } from "../../components/ui/use-app-toast";
 import CatalogosControlDialog from "./CatalogosControlDialog";
 import ExceptionalRequirementDialog from "./ExceptionalRequirementDialog";
-import { apiFailureDetail, listMagnitudes, listUnidades, type ControlDomainApi } from "./api";
+import { apiFailureDetail, listControlCategories, listMagnitudes, listUnidades, type ControlDomainApi } from "./api";
 import { CONTROL_NOUN, CONTROL_OWNER_LABEL, CONTROL_SCOPE_LABEL, formatEnumLabel } from "./controlUi";
+import QualityControlPointRoutePicker from "./QualityControlPointRoutePicker";
 import StatusBadge from "./StatusBadge";
 import type {
     AplicabilidadPlanControl,
     CaracteristicaPlanControl,
     CatalogoMagnitud,
     CatalogoUnidad,
+    CategoriaControlOption,
     PlanControl,
     PlanControlWrite,
     VersionPlanControl,
@@ -63,6 +65,8 @@ const newApplicability = (): AplicabilidadPlanControl => ({
     puntoAplicacion: "LOTE_FINAL",
     momentoEjecucion: "DURANTE_FABRICACION",
     puntoExigencia: "INFORMATIVO",
+    frontendNodeId: null,
+    ubicacionGraficaConfirmada: false,
 });
 
 const newCharacteristic = (order: number): CaracteristicaPlanControl => ({
@@ -93,7 +97,11 @@ function versionToDraft(plan: PlanControl, version: VersionPlanControl): PlanCon
         nombre: plan.nombre,
         proposito: version.proposito,
         motivoCambio: version.estado === "BORRADOR" ? version.motivoCambio ?? "" : "",
-        aplicabilidades: version.aplicabilidades.map((rule) => ({ ...rule, productosExcluidosIds: [...rule.productosExcluidosIds] })),
+        aplicabilidades: version.aplicabilidades.map((rule) => ({
+            ...rule,
+            productosExcluidosIds: [...rule.productosExcluidosIds],
+            ubicacionGraficaConfirmada: true,
+        })),
         caracteristicas: version.caracteristicas.map((characteristic) => ({ ...characteristic })),
     };
 }
@@ -127,6 +135,14 @@ function compareDecimal(left: string, right: string) {
     return difference < 0n ? -1 : difference > 0n ? 1 : 0;
 }
 
+function qualityLocationLabel(rule: AplicabilidadPlanControl): string {
+    if (!rule.ubicacionGraficaConfirmada) return "Seleccione una salida en la ruta.";
+    if (rule.puntoAplicacion === "LOTE_FINAL") return "Salida final: aceptación del producto o lote.";
+    const operation = rule.procesoProduccionNombre || (rule.procesoProduccionId ? `Proceso ${rule.procesoProduccionId}` : "Operación");
+    const area = rule.areaOperativaNombre || (rule.areaOperativaId ? `Área ${rule.areaOperativaId}` : "Área sin identificar");
+    return `Salida de ${operation} · ${area}`;
+}
+
 function validateDraft(draft: PlanControlWrite, ambito: ControlDomainApi["ambito"], changeReasonRequired: boolean): string[] {
     const errors: string[] = [];
     if (!draft.codigo.trim()) errors.push("El código del plan es obligatorio.");
@@ -141,6 +157,9 @@ function validateDraft(draft: PlanControlWrite, ambito: ControlDomainApi["ambito
         if (rule.productoId && rule.categoriaId) errors.push(`${prefix}: producto y categoría son mutuamente excluyentes.`);
         if (rule.puntoAplicacion === "SALIDA_OPERACION" && (!rule.areaOperativaId || !rule.procesoProduccionId)) {
             errors.push(`${prefix}: una salida de operación exige área y proceso maestro.`);
+        }
+        if (ambito === "CALIDAD" && !rule.ubicacionGraficaConfirmada) {
+            errors.push(`${prefix}: seleccione gráficamente la salida donde se realizará el control.`);
         }
         if (rule.puntoExigencia === "CIERRE_ETAPA"
             && (rule.puntoAplicacion !== "SALIDA_OPERACION" || rule.momentoEjecucion !== "DURANTE_FABRICACION")) {
@@ -184,6 +203,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     const [plans, setPlans] = useState<PlanControl[]>([]);
     const [magnitudes, setMagnitudes] = useState<CatalogoMagnitud[]>([]);
     const [unidades, setUnidades] = useState<CatalogoUnidad[]>([]);
+    const [categorias, setCategorias] = useState<CategoriaControlOption[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [search, setSearch] = useState("");
@@ -215,12 +235,13 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     useEffect(() => {
         let mounted = true;
         setLoading(true);
-        Promise.all([api.listPlanes(), listMagnitudes(true), listUnidades(true)])
-            .then(([nextPlans, nextMagnitudes, nextUnits]) => {
+        Promise.all([api.listPlanes(), listMagnitudes(true), listUnidades(true), listControlCategories()])
+            .then(([nextPlans, nextMagnitudes, nextUnits, nextCategories]) => {
                 if (!mounted) return;
                 setPlans(nextPlans);
                 setMagnitudes(nextMagnitudes);
                 setUnidades(nextUnits);
+                setCategorias(nextCategories);
             })
             .catch((error) => {
                 if (!mounted) return;
@@ -370,14 +391,212 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                         <Field.Root readOnly><Field.Label>Responsable funcional</Field.Label><Input value={CONTROL_OWNER_LABEL[api.ambito]} readOnly bg="bg.subtle" /></Field.Root>
                     </Grid>}
 
-                    {step === 1 && <VStack align="stretch" gap={4}>{draft.aplicabilidades.map((rule, index) => <Box key={index} borderWidth="1px" borderRadius="md" p={4}><HStack justify="space-between" mb={3}><Text fontWeight="semibold">Regla {index + 1}</Text><IconButton aria-label={`Eliminar regla ${index + 1}`} size="sm" variant="ghost" disabled={draft.aplicabilidades.length === 1} onClick={() => setDraft((current) => ({ ...current, aplicabilidades: current.aplicabilidades.filter((_, position) => position !== index) }))}><LuTrash2 /></IconButton></HStack><Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={3}>
-                        <Field.Root required><Field.Label>Aplica por</Field.Label><NativeSelect.Root><NativeSelect.Field value={rule.productoId != null ? "PRODUCTO" : "CATEGORIA"} onChange={(event) => updateApplicability(index, event.target.value === "PRODUCTO" ? { productoId: "", categoriaId: null, categoriaNombre: null, productosExcluidosIds: [] } : { productoId: null, productoNombre: null })}><option value="PRODUCTO">Producto específico</option><option value="CATEGORIA">Categoría</option></NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root>
-                        {rule.productoId != null ? <Field.Root required><Field.Label>Código del producto</Field.Label><Input value={rule.productoId} onChange={(event) => updateApplicability(index, { productoId: event.target.value })} /></Field.Root> : <Field.Root required><Field.Label>ID de categoría</Field.Label><Input type="number" min={1} value={rule.categoriaId ?? ""} onChange={(event) => updateApplicability(index, { categoriaId: idOrNull(event.target.value) })} /></Field.Root>}
-                        <Field.Root><Field.Label>Exclusiones de producto</Field.Label><Input disabled={rule.productoId != null} value={rule.productosExcluidosIds.join(", ")} onChange={(event) => updateApplicability(index, { productosExcluidosIds: event.target.value.split(",").map((value) => value.trim()).filter(Boolean) })} placeholder="COD-1, COD-2" /></Field.Root>
-                        <Field.Root required><Field.Label>Tipo de orden</Field.Label><NativeSelect.Root><NativeSelect.Field value={rule.tipoOrden} onChange={(event) => updateApplicability(index, { tipoOrden: event.target.value as AplicabilidadPlanControl["tipoOrden"] })}><option value="AMBAS">OP y OF</option><option value="OP">OP</option><option value="OF">OF</option></NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root>
-                        <Field.Root required><Field.Label>Punto de aplicación</Field.Label><NativeSelect.Root><NativeSelect.Field value={rule.puntoAplicacion} onChange={(event) => { const point = event.target.value as AplicabilidadPlanControl["puntoAplicacion"]; updateApplicability(index, { puntoAplicacion: point, ...(point === "LOTE_FINAL" ? { areaOperativaId: null, procesoProduccionId: null, puntoExigencia: rule.puntoExigencia === "CIERRE_ETAPA" ? "INFORMATIVO" : rule.puntoExigencia } : {}) }); }}><option value="LOTE_FINAL">Lote final</option><option value="SALIDA_OPERACION">Salida de operación</option></NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root>
-                        {rule.puntoAplicacion === "SALIDA_OPERACION" && <><Field.Root required><Field.Label>ID de área operativa</Field.Label><Input type="number" min={1} value={rule.areaOperativaId ?? ""} onChange={(event) => updateApplicability(index, { areaOperativaId: idOrNull(event.target.value) })} /></Field.Root><Field.Root required><Field.Label>ID del proceso maestro</Field.Label><Input type="number" min={1} value={rule.procesoProduccionId ?? ""} onChange={(event) => updateApplicability(index, { procesoProduccionId: idOrNull(event.target.value) })} /></Field.Root></>}
-                    </Grid></Box>)}<Button alignSelf="start" size="sm" variant="outline" onClick={() => setDraft((current) => ({ ...current, aplicabilidades: [...current.aplicabilidades, newApplicability()] }))}><LuPlus />Agregar regla OR</Button></VStack>}
+                    {step === 1 && (
+                        <VStack align="stretch" gap={4}>
+                            {draft.aplicabilidades.map((rule, index) => (
+                                <Box key={index} borderWidth="1px" borderRadius="md" p={4}>
+                                    <HStack justify="space-between" mb={3}>
+                                        <Text fontWeight="semibold">Regla {index + 1}</Text>
+                                        <IconButton
+                                            aria-label={`Eliminar regla ${index + 1}`}
+                                            size="sm"
+                                            variant="ghost"
+                                            disabled={draft.aplicabilidades.length === 1}
+                                            onClick={() => setDraft((current) => ({
+                                                ...current,
+                                                aplicabilidades: current.aplicabilidades.filter((_, position) => position !== index),
+                                            }))}
+                                        ><LuTrash2 /></IconButton>
+                                    </HStack>
+                                    <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={3}>
+                                        <Field.Root required>
+                                            <Field.Label>Aplica por</Field.Label>
+                                            <NativeSelect.Root>
+                                                <NativeSelect.Field
+                                                    value={rule.productoId != null ? "PRODUCTO" : "CATEGORIA"}
+                                                    onChange={(event) => updateApplicability(index, event.target.value === "PRODUCTO"
+                                                        ? {
+                                                            productoId: "",
+                                                            categoriaId: null,
+                                                            categoriaNombre: null,
+                                                            productosExcluidosIds: [],
+                                                            areaOperativaId: null,
+                                                            areaOperativaNombre: null,
+                                                            procesoProduccionId: null,
+                                                            procesoProduccionNombre: null,
+                                                            frontendNodeId: null,
+                                                            ubicacionGraficaConfirmada: false,
+                                                        }
+                                                        : {
+                                                            productoId: null,
+                                                            productoNombre: null,
+                                                            areaOperativaId: null,
+                                                            areaOperativaNombre: null,
+                                                            procesoProduccionId: null,
+                                                            procesoProduccionNombre: null,
+                                                            frontendNodeId: null,
+                                                            ubicacionGraficaConfirmada: false,
+                                                        })}
+                                                >
+                                                    <option value="PRODUCTO">Producto específico</option>
+                                                    <option value="CATEGORIA">Categoría</option>
+                                                </NativeSelect.Field>
+                                                <NativeSelect.Indicator />
+                                            </NativeSelect.Root>
+                                        </Field.Root>
+
+                                        {rule.productoId != null ? (
+                                            <Field.Root required>
+                                                <Field.Label>Código del producto</Field.Label>
+                                                <Input
+                                                    value={rule.productoId}
+                                                    onChange={(event) => updateApplicability(index, {
+                                                        productoId: event.target.value,
+                                                        areaOperativaId: null,
+                                                        areaOperativaNombre: null,
+                                                        procesoProduccionId: null,
+                                                        procesoProduccionNombre: null,
+                                                        frontendNodeId: null,
+                                                        ubicacionGraficaConfirmada: false,
+                                                    })}
+                                                />
+                                            </Field.Root>
+                                        ) : (
+                                            <Field.Root required>
+                                                <Field.Label>Categoría</Field.Label>
+                                                <NativeSelect.Root>
+                                                    <NativeSelect.Field
+                                                        value={rule.categoriaId ?? ""}
+                                                        onChange={(event) => {
+                                                            const categoryId = idOrNull(event.target.value);
+                                                            const category = categorias.find((item) => item.categoriaId === categoryId);
+                                                            updateApplicability(index, {
+                                                                categoriaId: categoryId,
+                                                                categoriaNombre: category?.categoriaNombre ?? null,
+                                                                tipoOrden: categoryId == null ? "AMBAS" : "OP",
+                                                                areaOperativaId: null,
+                                                                areaOperativaNombre: null,
+                                                                procesoProduccionId: null,
+                                                                procesoProduccionNombre: null,
+                                                                frontendNodeId: null,
+                                                                ubicacionGraficaConfirmada: false,
+                                                            });
+                                                        }}
+                                                    >
+                                                        <option value="">Seleccionar</option>
+                                                        {categorias.map((category) => (
+                                                            <option key={category.categoriaId} value={category.categoriaId}>
+                                                                {category.categoriaNombre}
+                                                            </option>
+                                                        ))}
+                                                    </NativeSelect.Field>
+                                                    <NativeSelect.Indicator />
+                                                </NativeSelect.Root>
+                                            </Field.Root>
+                                        )}
+
+                                        <Field.Root>
+                                            <Field.Label>Exclusiones de producto</Field.Label>
+                                            <Input
+                                                disabled={rule.productoId != null}
+                                                value={rule.productosExcluidosIds.join(", ")}
+                                                onChange={(event) => updateApplicability(index, {
+                                                    productosExcluidosIds: event.target.value.split(",").map((value) => value.trim()).filter(Boolean),
+                                                })}
+                                                placeholder="COD-1, COD-2"
+                                            />
+                                        </Field.Root>
+
+                                        {api.ambito === "CALIDAD" ? (
+                                            <Box gridColumn={{ md: "1 / -1" }}>
+                                                <VStack align="stretch" gap={3}>
+                                                    <HStack justify="space-between" align={{ base: "stretch", md: "center" }} flexDirection={{ base: "column", md: "row" }}>
+                                                        <Box>
+                                                            <Text fontWeight="semibold">Punto de control de calidad</Text>
+                                                            <Text fontSize="sm" color="fg.muted">
+                                                                Seleccione la salida que será aceptada, rechazada o autorizada por Calidad.
+                                                            </Text>
+                                                        </Box>
+                                                        <QualityControlPointRoutePicker
+                                                            productoId={rule.productoId}
+                                                            categoriaId={rule.categoriaId}
+                                                            categoriaNombre={rule.categoriaNombre}
+                                                            selectedPoint={rule.ubicacionGraficaConfirmada ? {
+                                                                puntoAplicacion: rule.puntoAplicacion,
+                                                                areaOperativaId: rule.areaOperativaId ?? null,
+                                                                procesoProduccionId: rule.procesoProduccionId ?? null,
+                                                                frontendNodeId: rule.frontendNodeId ?? null,
+                                                            } : null}
+                                                            onConfirm={(selection) => updateApplicability(index, {
+                                                                puntoAplicacion: selection.puntoAplicacion,
+                                                                tipoOrden: selection.tipoOrden,
+                                                                areaOperativaId: selection.areaOperativaId,
+                                                                areaOperativaNombre: selection.areaOperativaNombre,
+                                                                procesoProduccionId: selection.procesoProduccionId,
+                                                                procesoProduccionNombre: selection.procesoProduccionNombre,
+                                                                frontendNodeId: selection.frontendNodeId,
+                                                                ubicacionGraficaConfirmada: true,
+                                                                ...(selection.puntoAplicacion === "LOTE_FINAL"
+                                                                    && rule.puntoExigencia === "CIERRE_ETAPA"
+                                                                    ? { puntoExigencia: "INFORMATIVO" as const }
+                                                                    : {}),
+                                                            })}
+                                                        />
+                                                    </HStack>
+                                                    <Alert.Root status={rule.ubicacionGraficaConfirmada ? "success" : "warning"}>
+                                                        <Alert.Indicator />
+                                                        <Alert.Content>
+                                                            <Alert.Title>{rule.ubicacionGraficaConfirmada ? "Punto seleccionado" : "Ubicación pendiente"}</Alert.Title>
+                                                            <Alert.Description>{qualityLocationLabel(rule)}</Alert.Description>
+                                                        </Alert.Content>
+                                                    </Alert.Root>
+                                                </VStack>
+                                            </Box>
+                                        ) : (
+                                            <>
+                                                <Field.Root required>
+                                                    <Field.Label>Tipo de orden</Field.Label>
+                                                    <NativeSelect.Root>
+                                                        <NativeSelect.Field value={rule.tipoOrden} onChange={(event) => updateApplicability(index, { tipoOrden: event.target.value as AplicabilidadPlanControl["tipoOrden"] })}>
+                                                            <option value="AMBAS">OP y OF</option><option value="OP">OP</option><option value="OF">OF</option>
+                                                        </NativeSelect.Field>
+                                                        <NativeSelect.Indicator />
+                                                    </NativeSelect.Root>
+                                                </Field.Root>
+                                                <Field.Root required>
+                                                    <Field.Label>Punto de aplicación</Field.Label>
+                                                    <NativeSelect.Root>
+                                                        <NativeSelect.Field value={rule.puntoAplicacion} onChange={(event) => {
+                                                            const point = event.target.value as AplicabilidadPlanControl["puntoAplicacion"];
+                                                            updateApplicability(index, {
+                                                                puntoAplicacion: point,
+                                                                ...(point === "LOTE_FINAL" ? {
+                                                                    areaOperativaId: null,
+                                                                    procesoProduccionId: null,
+                                                                    frontendNodeId: null,
+                                                                    puntoExigencia: rule.puntoExigencia === "CIERRE_ETAPA" ? "INFORMATIVO" : rule.puntoExigencia,
+                                                                } : {}),
+                                                            });
+                                                        }}>
+                                                            <option value="LOTE_FINAL">Lote final</option><option value="SALIDA_OPERACION">Salida de operación</option>
+                                                        </NativeSelect.Field>
+                                                        <NativeSelect.Indicator />
+                                                    </NativeSelect.Root>
+                                                </Field.Root>
+                                                {rule.puntoAplicacion === "SALIDA_OPERACION" && (
+                                                    <>
+                                                        <Field.Root required><Field.Label>ID de área operativa</Field.Label><Input type="number" min={1} value={rule.areaOperativaId ?? ""} onChange={(event) => updateApplicability(index, { areaOperativaId: idOrNull(event.target.value) })} /></Field.Root>
+                                                        <Field.Root required><Field.Label>ID del proceso maestro</Field.Label><Input type="number" min={1} value={rule.procesoProduccionId ?? ""} onChange={(event) => updateApplicability(index, { procesoProduccionId: idOrNull(event.target.value) })} /></Field.Root>
+                                                    </>
+                                                )}
+                                            </>
+                                        )}
+                                    </Grid>
+                                </Box>
+                            ))}
+                            <Button alignSelf="start" size="sm" variant="outline" onClick={() => setDraft((current) => ({ ...current, aplicabilidades: [...current.aplicabilidades, newApplicability()] }))}><LuPlus />Agregar regla OR</Button>
+                        </VStack>
+                    )}
 
                     {step === 2 && <VStack align="stretch" gap={4}>{draft.aplicabilidades.map((rule, index) => <Box key={index} borderWidth="1px" borderRadius="md" p={4}><Text fontWeight="semibold" mb={3}>Política de la regla {index + 1}</Text><Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}><Field.Root required readOnly={api.ambito === "PROCESO"}><Field.Label>Momento de ejecución</Field.Label><NativeSelect.Root disabled={api.ambito === "PROCESO"}><NativeSelect.Field value={rule.momentoEjecucion} onChange={(event) => { const moment = event.target.value as AplicabilidadPlanControl["momentoEjecucion"]; updateApplicability(index, { momentoEjecucion: moment, ...(moment === "REVISION_FINAL" && ["CIERRE_ETAPA", "ENVIO_CALIDAD"].includes(rule.puntoExigencia) ? { puntoExigencia: "LIBERACION" } : {}) }); }}><option value="DURANTE_FABRICACION">Durante fabricación</option>{api.ambito === "CALIDAD" && <option value="REVISION_FINAL">Revisión final</option>}</NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root>{api.ambito === "PROCESO" && <Field.HelperText>Valor fijo para control de proceso.</Field.HelperText>}</Field.Root><Field.Root required><Field.Label>Punto de exigencia</Field.Label><NativeSelect.Root><NativeSelect.Field value={rule.puntoExigencia} onChange={(event) => updateApplicability(index, { puntoExigencia: event.target.value as AplicabilidadPlanControl["puntoExigencia"] })}>{compatibleRequirements(rule).map((value) => <option key={value} value={value}>{formatEnumLabel(value)}</option>)}</NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root></Grid></Box>)}</VStack>}
 
