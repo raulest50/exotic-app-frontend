@@ -92,17 +92,20 @@ export default function CatalogosControlDialog({
     return (
         <Dialog.Root open={open} onOpenChange={({ open: next }) => setOpen(next)} size="xl" scrollBehavior="inside">
             <Dialog.Trigger asChild>
-                <Button variant="outline" size="sm"><LuBookOpen />Catálogos de medición</Button>
+                <Button variant="outline" size="sm"><LuBookOpen />Magnitudes y unidades</Button>
             </Dialog.Trigger>
             <Portal>
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content maxW="5xl">
                         <Dialog.Header>
-                            <Dialog.Title>Catálogos controlados de medición</Dialog.Title>
+                            <Dialog.Title>Magnitudes y unidades</Dialog.Title>
                         </Dialog.Header>
                         <Dialog.CloseTrigger asChild><CloseButton aria-label="Cerrar catálogos" size="sm" /></Dialog.CloseTrigger>
                         <Dialog.Body>
+                            <Text color="fg.muted" mb={4}>
+                                Este catálogo estandariza qué se mide y en qué unidad. Los objetivos, límites y muestras se definen en cada plan.
+                            </Text>
                             {!canManage && (
                                 <Alert.Root status="info" mb={4}>
                                     <Alert.Indicator />Los catálogos están disponibles en modo de consulta.

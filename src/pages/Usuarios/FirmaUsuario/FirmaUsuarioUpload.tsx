@@ -42,7 +42,8 @@ export default function FirmaUsuarioUpload({
                     p={1}
                 />
                 <Field.HelperText>
-                    Máximo 1 MB y 2000 x 1000 px. La imagen se almacenará normalizada como PNG.
+                    Máximo 4 MB. Las imágenes grandes se ajustarán automáticamente y se
+                    almacenarán optimizadas como PNG.
                 </Field.HelperText>
             </Field.Root>
             <Text fontSize="xs" color="app.textMuted" mt={2}>

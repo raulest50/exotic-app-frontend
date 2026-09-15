@@ -3,12 +3,9 @@ import {
     Badge,
     Box,
     Button,
-    CloseButton,
-    Dialog,
     Flex,
     Heading,
     HStack,
-    Portal,
     Spinner,
     Text,
     VStack,
@@ -35,7 +32,7 @@ import { LuCheck, LuGitBranch } from "react-icons/lu";
 import EndPointsURL from "../../api/EndPointsURL";
 import type { ProductoManufacturingDTO } from "../../pages/Productos/types";
 import type { RutaProcesoCatDTO } from "../../pages/Produccion/ConfParamsCategoria/RutaProcesoCatDesigner/types";
-import type { PuntoAplicacionControl, TipoOrdenControl } from "./types";
+import type { AmbitoControl, PuntoAplicacionControl, TipoOrdenControl } from "./types";
 
 const endpoints = new EndPointsURL();
 const FINAL_NODE_ID = "__quality_control_final__";
@@ -49,12 +46,15 @@ interface RouteNodeData extends Record<string, unknown> {
     areaOperativaNombre?: string | null;
     procesoProduccionId?: number | null;
     procesoProduccionNombre?: string | null;
+    optionId?: string;
+    selected?: boolean;
+    ambito?: AmbitoControl;
 }
 
 type RouteNode = Node<RouteNodeData>;
 type RouteEdge = Edge<{ optionId?: string }>;
 
-export interface QualityControlPointSelection {
+export interface ControlPointSelection {
     puntoAplicacion: PuntoAplicacionControl;
     tipoOrden: TipoOrdenControl;
     areaOperativaId: number | null;
@@ -65,9 +65,10 @@ export interface QualityControlPointSelection {
     label: string;
 }
 
-interface RoutePointOption extends QualityControlPointSelection {
+interface RoutePointOption extends ControlPointSelection {
     id: string;
-    edgeId: string;
+    edgeId?: string;
+    nodeId?: string;
 }
 
 interface RouteGraph {
@@ -78,27 +79,31 @@ interface RouteGraph {
 }
 
 interface Props {
+    ambito: AmbitoControl;
     productoId?: string | null;
     categoriaId?: number | null;
     categoriaNombre?: string | null;
-    selectedPoint?: Pick<QualityControlPointSelection,
+    selectedPoint?: Pick<ControlPointSelection,
         "puntoAplicacion" | "areaOperativaId" | "procesoProduccionId" | "frontendNodeId"> | null;
-    onConfirm: (selection: QualityControlPointSelection) => void;
+    onConfirm: (selection: ControlPointSelection) => void;
 }
 
 type RouteTarget = Pick<Props, "productoId" | "categoriaId" | "categoriaNombre">;
 
 function RouteNodeView({ data }: NodeProps<RouteNode>) {
-    const palette = data.kind === "FINAL" ? "purple" : data.kind === "OPERATION" ? "teal" : "gray";
+    const controlPalette = data.ambito === "PROCESO" ? "blue" : "purple";
+    const palette = data.selected
+        ? controlPalette
+        : data.kind === "FINAL" ? "purple" : data.kind === "OPERATION" ? "teal" : "gray";
     return (
         <Box
             minW="180px"
             maxW="240px"
-            borderWidth="2px"
+            borderWidth={data.selected ? "4px" : "2px"}
             borderColor={`${palette}.500`}
             borderRadius="lg"
             bg="bg.panel"
-            boxShadow="sm"
+            boxShadow={data.selected ? "md" : "sm"}
             px={4}
             py={3}
             textAlign="center"
@@ -116,10 +121,11 @@ function RouteNodeView({ data }: NodeProps<RouteNode>) {
 
 const nodeTypes = { routeNode: RouteNodeView };
 
-function edgeStyle(selectable: boolean, selected = false) {
+function edgeStyle(selectable: boolean, selected = false, ambito: AmbitoControl = "CALIDAD") {
+    const palette = ambito === "PROCESO" ? "blue" : "purple";
     return {
         stroke: selectable
-            ? "var(--chakra-colors-purple-500)"
+            ? `var(--chakra-colors-${palette}-500)`
             : "var(--chakra-colors-gray-300)",
         strokeWidth: selected ? 6 : selectable ? 4 : 2,
         opacity: selectable ? 1 : 0.55,
@@ -168,7 +174,7 @@ function routeEdge(
     };
 }
 
-function buildCategoryGraph(ruta: RutaProcesoCatDTO, label: string): RouteGraph {
+function buildCategoryGraph(ruta: RutaProcesoCatDTO, label: string, ambito: AmbitoControl): RouteGraph {
     const nodes = ruta.nodes.map((node) => routeNode(node.id, node.posicionX, node.posicionY, {
         label: node.label || node.areaOperativaNombre || "Etapa",
         detail: [node.areaOperativaNombre, node.procesoProduccionNombre].filter(Boolean).join(" · "),
@@ -182,6 +188,32 @@ function buildCategoryGraph(ruta: RutaProcesoCatDTO, label: string): RouteGraph 
     const outgoing = new Set(ruta.edges.map((edge) => edge.sourceNodeId));
     const terminal = nodes.find((node) => !outgoing.has(node.id) && node.data.kind === "OPERATION");
     const options: RoutePointOption[] = [];
+    if (ambito === "PROCESO") {
+        nodes.forEach((node) => {
+            if (node.data.kind !== "OPERATION") return;
+            const option: RoutePointOption = {
+                id: `operation:${node.id}`,
+                nodeId: node.id,
+                puntoAplicacion: "SALIDA_OPERACION",
+                tipoOrden: "OP",
+                areaOperativaId: node.data.areaOperativaId ?? null,
+                areaOperativaNombre: node.data.areaOperativaNombre ?? null,
+                procesoProduccionId: node.data.procesoProduccionId ?? null,
+                procesoProduccionNombre: node.data.procesoProduccionNombre ?? null,
+                frontendNodeId: node.id,
+                label: `Dentro de ${node.data.label}`,
+            };
+            node.data.optionId = option.id;
+            node.data.ambito = ambito;
+            options.push(option);
+        });
+        return {
+            label,
+            nodes,
+            edges: ruta.edges.map((edge) => routeEdge(edge.id, edge.sourceNodeId, edge.targetNodeId)),
+            options,
+        };
+    }
     const operationOptions = new Map<string, RoutePointOption>();
     const edges = ruta.edges.map((edge) => {
         const source = nodeById.get(edge.sourceNodeId);
@@ -237,7 +269,7 @@ function buildCategoryGraph(ruta: RutaProcesoCatDTO, label: string): RouteGraph 
     return { label, nodes, edges, options };
 }
 
-function buildManufacturingGraph(producto: ProductoManufacturingDTO): RouteGraph {
+function buildManufacturingGraph(producto: ProductoManufacturingDTO, ambito: AmbitoControl): RouteGraph {
     const process = producto.procesoProduccionCompleto;
     if (!process?.nodes?.length) {
         throw new Error("El producto no tiene un flujo de manufactura configurado.");
@@ -260,6 +292,36 @@ function buildManufacturingGraph(producto: ProductoManufacturingDTO): RouteGraph
     ));
     const nodeById = new Map(nodes.map((node) => [node.id, node]));
     const options: RoutePointOption[] = [];
+    if (ambito === "PROCESO") {
+        nodes.forEach((node) => {
+            if (node.data.kind !== "OPERATION") return;
+            const option: RoutePointOption = {
+                id: `operation:${node.id}`,
+                nodeId: node.id,
+                puntoAplicacion: "SALIDA_OPERACION",
+                tipoOrden: "OF",
+                areaOperativaId: node.data.areaOperativaId ?? null,
+                areaOperativaNombre: node.data.areaOperativaNombre ?? null,
+                procesoProduccionId: node.data.procesoProduccionId ?? null,
+                procesoProduccionNombre: node.data.procesoProduccionNombre ?? null,
+                frontendNodeId: node.id,
+                label: `Dentro de ${node.data.label}`,
+            };
+            node.data.optionId = option.id;
+            node.data.ambito = ambito;
+            options.push(option);
+        });
+        return {
+            label: `Flujo de fabricación · ${producto.nombre}`,
+            nodes,
+            edges: (process.edges ?? []).map((edge) => routeEdge(
+                edge.frontendId,
+                edge.sourceFrontendId,
+                edge.targetFrontendId,
+            )),
+            options,
+        };
+    }
     const edges = (process.edges ?? []).map((edge) => {
         const source = nodeById.get(edge.sourceFrontendId);
         const target = nodeById.get(edge.targetFrontendId);
@@ -293,7 +355,7 @@ function buildManufacturingGraph(producto: ProductoManufacturingDTO): RouteGraph
     return { label: `Flujo de fabricación · ${producto.nombre}`, nodes, edges, options };
 }
 
-async function loadCategoryGraph(categoriaId: number, label: string, signal: AbortSignal): Promise<RouteGraph> {
+async function loadCategoryGraph(categoriaId: number, label: string, ambito: AmbitoControl, signal: AbortSignal): Promise<RouteGraph> {
     const response = await axios.get<RutaProcesoCatDTO>(
         endpoints.get_ruta_proceso_cat.replace("{categoriaId}", String(categoriaId)),
         { withCredentials: true, signal },
@@ -301,14 +363,15 @@ async function loadCategoryGraph(categoriaId: number, label: string, signal: Abo
     if (!response.data?.nodes?.length) {
         throw new Error("La categoría seleccionada no tiene una ruta de proceso vigente.");
     }
-    return buildCategoryGraph(response.data, label);
+    return buildCategoryGraph(response.data, label, ambito);
 }
 
-async function loadRouteGraph(target: RouteTarget, signal: AbortSignal): Promise<RouteGraph> {
+async function loadRouteGraph(target: RouteTarget, ambito: AmbitoControl, signal: AbortSignal): Promise<RouteGraph> {
     if (target.categoriaId != null) {
         return loadCategoryGraph(
             target.categoriaId,
             `Ruta vigente · ${target.categoriaNombre || `Categoría ${target.categoriaId}`}`,
+            ambito,
             signal,
         );
     }
@@ -328,6 +391,7 @@ async function loadRouteGraph(target: RouteTarget, signal: AbortSignal): Promise
         return loadCategoryGraph(
             producto.categoriaId,
             `Ruta vigente · ${producto.nombre}`,
+            ambito,
             signal,
         );
     }
@@ -339,7 +403,7 @@ async function loadRouteGraph(target: RouteTarget, signal: AbortSignal): Promise
             "Este semiterminado es una etapa integrada y no tiene una OF o lote propios. Configure el control sobre la categoría del producto terminado que lo utiliza.",
         );
     }
-    return buildManufacturingGraph(producto);
+    return buildManufacturingGraph(producto, ambito);
 }
 
 function matchesSelection(option: RoutePointOption, selectedPoint: Props["selectedPoint"]): boolean {
@@ -350,33 +414,42 @@ function matchesSelection(option: RoutePointOption, selectedPoint: Props["select
         && option.procesoProduccionId === selectedPoint.procesoProduccionId;
 }
 
-function RouteGraphView({ graph, selectedId, onSelect }: {
+function RouteGraphView({ graph, selectedId, ambito, onSelect }: {
     graph: RouteGraph;
     selectedId: string | null;
+    ambito: AmbitoControl;
     onSelect: (option: RoutePointOption) => void;
 }) {
     const optionById = useMemo(() => new Map(graph.options.map((option) => [option.id, option])), [graph.options]);
+    const nodes = useMemo(() => graph.nodes.map((node) => ({
+        ...node,
+        data: {
+            ...node.data,
+            ambito,
+            selected: node.data.optionId === selectedId,
+        },
+    })), [ambito, graph.nodes, selectedId]);
     const edges = useMemo(() => graph.edges.map((edge) => {
         const optionId = edge.data?.optionId;
         return {
             ...edge,
             animated: optionId === selectedId,
-            style: edgeStyle(Boolean(optionId), optionId === selectedId),
+            style: edgeStyle(Boolean(optionId), optionId === selectedId, ambito),
         };
-    }), [graph.edges, selectedId]);
+    }), [ambito, graph.edges, selectedId]);
 
     return (
-        <Flex direction={{ base: "column", lg: "row" }} gap={4} minH={{ base: "600px", lg: "470px" }}>
+        <Flex direction={{ base: "column", lg: "row" }} gap={4} minH={{ base: "auto", lg: "420px" }}>
             <Box
                 flex="1"
-                minH={{ base: "380px", lg: "470px" }}
+                minH={{ base: "360px", lg: "420px" }}
                 borderWidth="1px"
                 borderRadius="lg"
                 overflow="hidden"
                 bg="bg.subtle"
             >
                 <ReactFlow
-                    nodes={graph.nodes}
+                    nodes={nodes}
                     edges={edges}
                     nodeTypes={nodeTypes}
                     nodesDraggable={false}
@@ -391,6 +464,11 @@ function RouteGraphView({ graph, selectedId, onSelect }: {
                         const option = optionId ? optionById.get(optionId) : undefined;
                         if (option) onSelect(option);
                     }}
+                    onNodeClick={(_, node) => {
+                        const optionId = node.data.optionId as string | undefined;
+                        const option = optionId ? optionById.get(optionId) : undefined;
+                        if (option) onSelect(option);
+                    }}
                 >
                     <Controls showInteractive={false} />
                     <MiniMap pannable zoomable />
@@ -398,15 +476,17 @@ function RouteGraphView({ graph, selectedId, onSelect }: {
                 </ReactFlow>
             </Box>
             <VStack align="stretch" gap={2} w={{ base: "full", lg: "330px" }}>
-                <Heading size="sm">Salidas disponibles</Heading>
+                <Heading size="sm">{ambito === "PROCESO" ? "Operaciones disponibles" : "Salidas disponibles"}</Heading>
                 <Text fontSize="sm" color="fg.muted">
-                    Seleccione una arista. Esta lista ofrece la misma acción mediante teclado.
+                    {ambito === "PROCESO"
+                        ? "Seleccione un nodo de operación. Esta lista ofrece la misma acción mediante teclado."
+                        : "Seleccione una arista. Esta lista ofrece la misma acción mediante teclado."}
                 </Text>
                 {graph.options.map((option) => (
                     <Button
                         key={option.id}
                         variant={selectedId === option.id ? "solid" : "outline"}
-                        colorPalette="purple"
+                        colorPalette={ambito === "PROCESO" ? "blue" : "purple"}
                         justifyContent="flex-start"
                         h="auto"
                         minH="44px"
@@ -423,119 +503,114 @@ function RouteGraphView({ graph, selectedId, onSelect }: {
     );
 }
 
-export default function QualityControlPointRoutePicker(props: Props) {
-    const [open, setOpen] = useState(false);
+export default function ControlPointRoutePicker(props: Props) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [graph, setGraph] = useState<RouteGraph | null>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
-    const { productoId, categoriaId, categoriaNombre, onConfirm } = props;
+    const { ambito, productoId, categoriaId, categoriaNombre, onConfirm } = props;
     const selectedPointType = props.selectedPoint?.puntoAplicacion;
     const selectedAreaId = props.selectedPoint?.areaOperativaId;
     const selectedProcessId = props.selectedPoint?.procesoProduccionId;
     const selectedFrontendNodeId = props.selectedPoint?.frontendNodeId;
+    const hasTarget = categoriaId != null || Boolean(productoId?.trim());
 
     useEffect(() => {
-        if (!open) return;
+        if (!hasTarget) {
+            setLoading(false);
+            setError(null);
+            setGraph(null);
+            setSelectedId(null);
+            return;
+        }
         const controller = new AbortController();
         setLoading(true);
         setError(null);
         setGraph(null);
         setSelectedId(null);
-        void loadRouteGraph({ productoId, categoriaId, categoriaNombre }, controller.signal)
-            .then((nextGraph) => {
-                setGraph(nextGraph);
-                const previousPoint = selectedPointType ? {
-                    puntoAplicacion: selectedPointType,
-                    areaOperativaId: selectedAreaId ?? null,
-                    procesoProduccionId: selectedProcessId ?? null,
-                    frontendNodeId: selectedFrontendNodeId ?? null,
-                } : null;
-                setSelectedId(nextGraph.options.find((option) => matchesSelection(option, previousPoint))?.id ?? null);
-            })
-            .catch((loadError: unknown) => {
-                if (axios.isCancel(loadError)) return;
-                const responseMessage = axios.isAxiosError(loadError)
-                    ? (loadError.response?.data as { error?: string; message?: string } | undefined)?.error
-                        || (loadError.response?.data as { error?: string; message?: string } | undefined)?.message
-                    : null;
-                setError(responseMessage || (loadError instanceof Error ? loadError.message : "No fue posible cargar la ruta."));
-            })
-            .finally(() => {
-                if (!controller.signal.aborted) setLoading(false);
-            });
-        return () => controller.abort();
+        const delay = categoriaId != null ? 0 : 400;
+        const timer = window.setTimeout(() => {
+            void loadRouteGraph({ productoId, categoriaId, categoriaNombre }, ambito, controller.signal)
+                .then(setGraph)
+                .catch((loadError: unknown) => {
+                    if (axios.isCancel(loadError)) return;
+                    const responseMessage = axios.isAxiosError(loadError)
+                        ? (loadError.response?.data as { error?: string; message?: string } | undefined)?.error
+                            || (loadError.response?.data as { error?: string; message?: string } | undefined)?.message
+                        : null;
+                    setError(responseMessage || (loadError instanceof Error ? loadError.message : "No fue posible cargar la ruta."));
+                })
+                .finally(() => {
+                    if (!controller.signal.aborted) setLoading(false);
+                });
+        }, delay);
+        return () => {
+            window.clearTimeout(timer);
+            controller.abort();
+        };
     }, [
+        ambito,
         categoriaId,
         categoriaNombre,
-        open,
+        hasTarget,
         productoId,
+    ]);
+
+    useEffect(() => {
+        if (!graph) return;
+        const previousPoint = selectedPointType ? {
+            puntoAplicacion: selectedPointType,
+            areaOperativaId: selectedAreaId ?? null,
+            procesoProduccionId: selectedProcessId ?? null,
+            frontendNodeId: selectedFrontendNodeId ?? null,
+        } : null;
+        setSelectedId(graph.options.find((option) => matchesSelection(option, previousPoint))?.id ?? null);
+    }, [
+        graph,
         selectedAreaId,
         selectedFrontendNodeId,
         selectedPointType,
         selectedProcessId,
     ]);
 
-    const selected = graph?.options.find((option) => option.id === selectedId) ?? null;
-    const hasTarget = categoriaId != null || Boolean(productoId?.trim());
+    const selectPoint = (option: RoutePointOption) => {
+        setSelectedId(option.id);
+        onConfirm(option);
+    };
 
     return (
-        <Dialog.Root open={open} onOpenChange={({ open: nextOpen }) => setOpen(nextOpen)} size="cover">
-            <Dialog.Trigger asChild>
-                <Button variant="outline" colorPalette="purple" disabled={!hasTarget}>
-                    <LuGitBranch /> Seleccionar salida en la ruta
-                </Button>
-            </Dialog.Trigger>
-            <Portal>
-                <Dialog.Backdrop />
-                <Dialog.Positioner>
-                    <Dialog.Content m={{ base: 2, md: 6 }} maxW="7xl">
-                        <Dialog.Header>
-                            <Dialog.Title>Punto gráfico del control de calidad</Dialog.Title>
-                        </Dialog.Header>
-                        <Dialog.CloseTrigger asChild>
-                            <CloseButton aria-label="Cerrar selector de ruta" size="sm" />
-                        </Dialog.CloseTrigger>
-                        <Dialog.Body>
-                            <Alert.Root status="info" mb={4}>
-                                <Alert.Indicator />
-                                <Alert.Content>
-                                    <Alert.Title>La ruta está en modo de solo lectura</Alert.Title>
-                                    <Alert.Description>
-                                        La arista representa la salida que Calidad evaluará. Ningún nodo ni conexión puede modificarse desde aquí.
-                                    </Alert.Description>
-                                </Alert.Content>
-                            </Alert.Root>
-                            {loading ? (
-                                <HStack justify="center" py={16}><Spinner /><Text>Cargando ruta vigente…</Text></HStack>
-                            ) : error ? (
-                                <Alert.Root status="warning"><Alert.Indicator /><Alert.Content><Alert.Title>No se puede seleccionar el punto</Alert.Title><Alert.Description>{error}</Alert.Description></Alert.Content></Alert.Root>
-                            ) : graph ? (
-                                <VStack align="stretch" gap={3}>
-                                    <Text fontWeight="semibold">{graph.label}</Text>
-                                    <ReactFlowProvider>
-                                        <RouteGraphView graph={graph} selectedId={selectedId} onSelect={(option) => setSelectedId(option.id)} />
-                                    </ReactFlowProvider>
-                                </VStack>
-                            ) : null}
-                        </Dialog.Body>
-                        <Dialog.Footer>
-                            <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
-                            <Button
-                                colorPalette="purple"
-                                disabled={!selected}
-                                onClick={() => {
-                                    if (!selected) return;
-                                    onConfirm(selected);
-                                    setOpen(false);
-                                }}
-                            >
-                                Confirmar punto
-                            </Button>
-                        </Dialog.Footer>
-                    </Dialog.Content>
-                </Dialog.Positioner>
-            </Portal>
-        </Dialog.Root>
+        <Box as="section" aria-label={ambito === "PROCESO" ? "Ubicación gráfica del control de proceso" : "Ubicación gráfica del control de calidad"} borderWidth="1px" borderRadius="lg" bg="bg.panel" p={{ base: 3, md: 4 }}>
+            <HStack justify="space-between" align="start" gap={3} mb={3} flexWrap="wrap">
+                <Box>
+                    <Heading size="sm">Ruta vigente</Heading>
+                    <Text fontSize="sm" color="fg.muted" mt={1}>
+                        {ambito === "PROCESO"
+                            ? "Seleccione el nodo donde se recopilará información para ajustar la operación."
+                            : "Seleccione la arista o salida que Calidad evaluará."}
+                    </Text>
+                </Box>
+                <Badge colorPalette="blue">Solo lectura</Badge>
+            </HStack>
+            {!hasTarget ? (
+                <Alert.Root status="info">
+                    <Alert.Indicator />
+                    <Alert.Content>
+                        <Alert.Title>Seleccione primero el producto o la categoría</Alert.Title>
+                        <Alert.Description>La ruta correspondiente aparecerá aquí automáticamente.</Alert.Description>
+                    </Alert.Content>
+                </Alert.Root>
+            ) : loading ? (
+                <HStack justify="center" py={16}><Spinner /><Text>Cargando ruta vigente…</Text></HStack>
+            ) : error ? (
+                <Alert.Root status="warning"><Alert.Indicator /><Alert.Content><Alert.Title>No se puede cargar la ruta</Alert.Title><Alert.Description>{error}</Alert.Description></Alert.Content></Alert.Root>
+            ) : graph ? (
+                <VStack align="stretch" gap={3}>
+                    <Text fontWeight="semibold">{graph.label}</Text>
+                    <ReactFlowProvider>
+                        <RouteGraphView graph={graph} selectedId={selectedId} ambito={ambito} onSelect={selectPoint} />
+                    </ReactFlowProvider>
+                </VStack>
+            ) : null}
+        </Box>
     );
 }

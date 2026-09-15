@@ -33,4 +33,5 @@ export interface FirmaVisualSeleccionada {
     dataUrl: string;
     anchoPx: number;
     altoPx: number;
+    requiereOptimizacion: boolean;
 }

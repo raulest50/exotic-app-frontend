@@ -65,7 +65,7 @@ export interface AplicabilidadPlanControl {
     frontendNodeId?: string | null;
     momentoEjecucion: MomentoEjecucionControl;
     puntoExigencia: PuntoExigenciaControl;
-    /** Estado exclusivo del editor: confirma que Calidad eligió el punto en la ruta. */
+    /** Estado exclusivo del editor: confirma que el punto fue elegido en la ruta. */
     ubicacionGraficaConfirmada?: boolean;
     /** Solo viene en respuestas históricas; el backend no lo acepta al guardar un plan. */
     legadoGlobal?: boolean;
@@ -127,7 +127,6 @@ export interface PlanControl {
 export interface PlanControlWrite {
     codigo: string;
     nombre: string;
-    proposito: string;
     motivoCambio?: string | null;
     aplicabilidades: AplicabilidadPlanControl[];
     caracteristicas: CaracteristicaPlanControl[];

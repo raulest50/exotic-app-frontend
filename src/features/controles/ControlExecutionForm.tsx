@@ -143,7 +143,7 @@ export default function ControlExecutionForm({ api, requirement, onSaved, onCanc
         <VStack align="stretch" gap={4}>
             <Box bg="bg.subtle" borderWidth="1px" borderRadius="md" p={4}>
                 <HStack justify="space-between" align="start" gap={3} flexWrap="wrap">
-                    <Box><Text fontWeight="bold">{requirement.planCodigo} · {requirement.planNombre}</Text><Text fontSize="sm" color="fg.muted">Versión {requirement.versionNumero} · {formatEnumLabel(requirement.proposito)}</Text></Box>
+                    <Box><Text fontWeight="bold">{requirement.planCodigo} · {requirement.planNombre}</Text><Text fontSize="sm" color="fg.muted">Versión {requirement.versionNumero}</Text></Box>
                     <HStack><Badge colorPalette={api.ambito === "PROCESO" ? "blue" : "purple"}>{api.ambito}</Badge><Badge>{formatEnumLabel(requirement.puntoExigencia)}</Badge></HStack>
                 </HStack>
             </Box>

@@ -3,7 +3,9 @@ import {
     Badge,
     Box,
     Button,
+    Checkbox,
     CloseButton,
+    Collapsible,
     Dialog,
     Field,
     Grid,
@@ -21,14 +23,14 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
-import { LuCheck, LuPlus, LuTrash2 } from "react-icons/lu";
+import { LuCheck, LuPlus, LuSettings2, LuTrash2 } from "react-icons/lu";
 
 import { useAppToast } from "../../components/ui/use-app-toast";
 import CatalogosControlDialog from "./CatalogosControlDialog";
 import ExceptionalRequirementDialog from "./ExceptionalRequirementDialog";
 import { apiFailureDetail, listControlCategories, listMagnitudes, listUnidades, type ControlDomainApi } from "./api";
-import { CONTROL_NOUN, CONTROL_OWNER_LABEL, CONTROL_SCOPE_LABEL, formatEnumLabel } from "./controlUi";
-import QualityControlPointRoutePicker from "./QualityControlPointRoutePicker";
+import { CONTROL_NOUN, CONTROL_SCOPE_LABEL } from "./controlUi";
+import ControlPointRoutePicker from "./QualityControlPointRoutePicker";
 import StatusBadge from "./StatusBadge";
 import type {
     AplicabilidadPlanControl,
@@ -53,17 +55,16 @@ interface ConfirmAction {
 }
 
 const steps = [
-    { title: "Identificación", description: "Alcance y propósito" },
-    { title: "Aplicabilidad", description: "Producto y operación" },
-    { title: "Política", description: "Momento y exigencia" },
-    { title: "Características", description: "Aceptación y muestreo" },
+    { title: "Identificación", description: "Código y nombre" },
+    { title: "Ubicación", description: "Producto y punto en la ruta" },
+    { title: "Mediciones", description: "Aceptación y muestreo" },
 ];
 
-const newApplicability = (): AplicabilidadPlanControl => ({
+const newApplicability = (ambito: ControlDomainApi["ambito"]): AplicabilidadPlanControl => ({
     productosExcluidosIds: [],
     tipoOrden: "AMBAS",
-    puntoAplicacion: "LOTE_FINAL",
-    momentoEjecucion: "DURANTE_FABRICACION",
+    puntoAplicacion: ambito === "PROCESO" ? "SALIDA_OPERACION" : "LOTE_FINAL",
+    momentoEjecucion: ambito === "PROCESO" ? "DURANTE_FABRICACION" : "REVISION_FINAL",
     puntoExigencia: "INFORMATIVO",
     frontendNodeId: null,
     ubicacionGraficaConfirmada: false,
@@ -85,23 +86,43 @@ const newCharacteristic = (order: number): CaracteristicaPlanControl => ({
 const defaultsFor = (ambito: ControlDomainApi["ambito"]): PlanControlWrite => ({
     codigo: "",
     nombre: "",
-    proposito: ambito === "PROCESO" ? "AJUSTE_DE_PROCESO" : "ENSAYO_DE_LIBERACION",
     motivoCambio: "",
-    aplicabilidades: [newApplicability()],
+    aplicabilidades: [newApplicability(ambito)],
     caracteristicas: [newCharacteristic(1)],
 });
+
+function inferredPolicy(
+    ambito: ControlDomainApi["ambito"],
+    puntoAplicacion: AplicabilidadPlanControl["puntoAplicacion"],
+    bloqueante: boolean,
+): Pick<AplicabilidadPlanControl, "momentoEjecucion" | "puntoExigencia"> {
+    if (ambito === "PROCESO") {
+        return { momentoEjecucion: "DURANTE_FABRICACION", puntoExigencia: "INFORMATIVO" };
+    }
+    return {
+        momentoEjecucion: puntoAplicacion === "LOTE_FINAL" ? "REVISION_FINAL" : "DURANTE_FABRICACION",
+        puntoExigencia: !bloqueante
+            ? "INFORMATIVO"
+            : puntoAplicacion === "LOTE_FINAL" ? "LIBERACION" : "CIERRE_ETAPA",
+    };
+}
 
 function versionToDraft(plan: PlanControl, version: VersionPlanControl): PlanControlWrite {
     return {
         codigo: plan.codigo,
         nombre: plan.nombre,
-        proposito: version.proposito,
         motivoCambio: version.estado === "BORRADOR" ? version.motivoCambio ?? "" : "",
-        aplicabilidades: version.aplicabilidades.map((rule) => ({
-            ...rule,
-            productosExcluidosIds: [...rule.productosExcluidosIds],
-            ubicacionGraficaConfirmada: true,
-        })),
+        aplicabilidades: version.aplicabilidades.map((rule) => {
+            const policy = inferredPolicy(plan.ambito, rule.puntoAplicacion, rule.puntoExigencia !== "INFORMATIVO");
+            return {
+                ...rule,
+                ...policy,
+                productosExcluidosIds: [...rule.productosExcluidosIds],
+                ubicacionGraficaConfirmada: rule.puntoAplicacion === "LOTE_FINAL"
+                    ? plan.ambito === "CALIDAD"
+                    : Boolean(rule.frontendNodeId),
+            };
+        }),
         caracteristicas: version.caracteristicas.map((characteristic) => ({ ...characteristic })),
     };
 }
@@ -135,22 +156,23 @@ function compareDecimal(left: string, right: string) {
     return difference < 0n ? -1 : difference > 0n ? 1 : 0;
 }
 
-function qualityLocationLabel(rule: AplicabilidadPlanControl): string {
-    if (!rule.ubicacionGraficaConfirmada) return "Seleccione una salida en la ruta.";
+function locationLabel(rule: AplicabilidadPlanControl, ambito: ControlDomainApi["ambito"]): string {
+    if (!rule.ubicacionGraficaConfirmada) {
+        return ambito === "PROCESO" ? "Seleccione una operación en la ruta." : "Seleccione una salida en la ruta.";
+    }
     if (rule.puntoAplicacion === "LOTE_FINAL") return "Salida final: aceptación del producto o lote.";
     const operation = rule.procesoProduccionNombre || (rule.procesoProduccionId ? `Proceso ${rule.procesoProduccionId}` : "Operación");
     const area = rule.areaOperativaNombre || (rule.areaOperativaId ? `Área ${rule.areaOperativaId}` : "Área sin identificar");
-    return `Salida de ${operation} · ${area}`;
+    return ambito === "PROCESO" ? `Dentro de ${operation} · ${area}` : `Salida de ${operation} · ${area}`;
 }
 
 function validateDraft(draft: PlanControlWrite, ambito: ControlDomainApi["ambito"], changeReasonRequired: boolean): string[] {
     const errors: string[] = [];
     if (!draft.codigo.trim()) errors.push("El código del plan es obligatorio.");
     if (!draft.nombre.trim()) errors.push("El nombre del plan es obligatorio.");
-    if (!draft.proposito.trim()) errors.push("El propósito es obligatorio.");
     if (changeReasonRequired && !draft.motivoCambio?.trim()) errors.push("El motivo del cambio es obligatorio para una nueva versión.");
     if (!draft.aplicabilidades.length) errors.push("Debe existir al menos una regla de aplicabilidad.");
-    if (!draft.caracteristicas.length) errors.push("Debe existir al menos una característica.");
+    if (!draft.caracteristicas.length) errors.push("Debe existir al menos una medición.");
     draft.aplicabilidades.forEach((rule, index) => {
         const prefix = `Regla ${index + 1}`;
         if (!rule.productoId && !rule.categoriaId) errors.push(`${prefix}: seleccione un producto o una categoría.`);
@@ -158,22 +180,17 @@ function validateDraft(draft: PlanControlWrite, ambito: ControlDomainApi["ambito
         if (rule.puntoAplicacion === "SALIDA_OPERACION" && (!rule.areaOperativaId || !rule.procesoProduccionId)) {
             errors.push(`${prefix}: una salida de operación exige área y proceso maestro.`);
         }
-        if (ambito === "CALIDAD" && !rule.ubicacionGraficaConfirmada) {
-            errors.push(`${prefix}: seleccione gráficamente la salida donde se realizará el control.`);
+        if (!rule.ubicacionGraficaConfirmada) {
+            errors.push(`${prefix}: seleccione gráficamente ${ambito === "PROCESO" ? "la operación" : "la salida"} donde se realizará el control.`);
         }
-        if (rule.puntoExigencia === "CIERRE_ETAPA"
-            && (rule.puntoAplicacion !== "SALIDA_OPERACION" || rule.momentoEjecucion !== "DURANTE_FABRICACION")) {
-            errors.push(`${prefix}: CIERRE_ETAPA solo es válido durante fabricación y en una salida de operación.`);
-        }
-        if (ambito === "PROCESO" && rule.momentoEjecucion !== "DURANTE_FABRICACION") {
-            errors.push(`${prefix}: los controles de proceso se ejecutan durante fabricación.`);
-        }
-        if (rule.momentoEjecucion === "REVISION_FINAL" && ["CIERRE_ETAPA", "ENVIO_CALIDAD"].includes(rule.puntoExigencia)) {
-            errors.push(`${prefix}: un ensayo de revisión final no puede bloquear la etapa ni su propio envío.`);
+        if (ambito === "PROCESO" && (rule.puntoAplicacion !== "SALIDA_OPERACION"
+            || rule.momentoEjecucion !== "DURANTE_FABRICACION"
+            || rule.puntoExigencia !== "INFORMATIVO")) {
+            errors.push(`${prefix}: un control de proceso debe ubicarse en una operación y siempre es informativo.`);
         }
     });
     draft.caracteristicas.forEach((characteristic, index) => {
-        const prefix = `Característica ${index + 1}`;
+        const prefix = `Medición ${index + 1}`;
         if (!characteristic.nombre.trim()) errors.push(`${prefix}: el nombre es obligatorio.`);
         if (!characteristic.magnitudId) errors.push(`${prefix}: la magnitud es obligatoria.`);
         if (characteristic.cantidadMuestras < 1 || characteristic.unidadesPorMuestra < 1) errors.push(`${prefix}: el muestreo debe ser mayor que cero.`);
@@ -208,6 +225,8 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     const [saving, setSaving] = useState(false);
     const [search, setSearch] = useState("");
     const [step, setStep] = useState(0);
+    const [editorOpen, setEditorOpen] = useState(false);
+    const [adminOpen, setAdminOpen] = useState(false);
     const [editingPlanId, setEditingPlanId] = useState<number | undefined>();
     const [changeReasonRequired, setChangeReasonRequired] = useState(false);
     const [draft, setDraft] = useState<PlanControlWrite>(() => defaultsFor(api.ambito));
@@ -257,6 +276,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
         setDraft(defaultsFor(api.ambito));
         setValidationErrors([]);
         setStep(0);
+        setEditorOpen(true);
     };
 
     const editPlan = (plan: PlanControl) => {
@@ -269,6 +289,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
         setDraft(versionToDraft(plan, source));
         setValidationErrors([]);
         setStep(0);
+        setEditorOpen(true);
     };
 
     const updateApplicability = (index: number, patch: Partial<AplicabilidadPlanControl>) => {
@@ -295,12 +316,15 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                 ...draft,
                 codigo: draft.codigo.trim().toUpperCase(),
                 nombre: draft.nombre.trim(),
-                proposito: draft.proposito.trim(),
                 motivoCambio: draft.motivoCambio?.trim() || null,
+                aplicabilidades: draft.aplicabilidades.map((rule) => ({
+                    ...rule,
+                    ...inferredPolicy(api.ambito, rule.puntoAplicacion, rule.puntoExigencia !== "INFORMATIVO"),
+                })),
             }, editingPlanId);
             toast({ title: "Borrador guardado", description: "La versión continúa editable hasta su publicación.", status: "success" });
             await load();
-            startNew();
+            setEditorOpen(false);
         } catch (error) {
             const detail = apiFailureDetail(error, "No fue posible guardar el borrador.");
             setValidationErrors([detail.message, ...detail.bloqueos]);
@@ -329,19 +353,17 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
         }
     };
 
-    const compatibleRequirements = (rule: AplicabilidadPlanControl) => {
-        if (rule.momentoEjecucion === "REVISION_FINAL") return ["INFORMATIVO", "LIBERACION"] as const;
-        if (rule.puntoAplicacion === "LOTE_FINAL") return ["INFORMATIVO", "ENVIO_CALIDAD", "LIBERACION"] as const;
-        return ["INFORMATIVO", "CIERRE_ETAPA", "ENVIO_CALIDAD", "LIBERACION"] as const;
-    };
-
     const activeCatalogsByDimension = useMemo(() => new Map(magnitudes.map((item) => [item.id, item.dimension])), [magnitudes]);
 
     return (
         <VStack align="stretch" gap={5}>
             <Box>
                 <Heading size="md">Planes de {CONTROL_NOUN[api.ambito].plural}</Heading>
-                <Text color="fg.muted" mt={1}>El ámbito y el responsable son fijados por el módulo; una magnitud no determina la clasificación.</Text>
+                <Text color="fg.muted" mt={1}>
+                    {api.ambito === "PROCESO"
+                        ? "Ubique cada medición dentro de la operación que necesita observar o ajustar."
+                        : "Ubique cada ensayo en la salida que Calidad debe evaluar."}
+                </Text>
             </Box>
 
             <HStack align="end" gap={3} flexWrap="wrap">
@@ -350,25 +372,41 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                     <Input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => event.key === "Enter" && void load()} placeholder="Código o nombre" />
                 </Field.Root>
                 <Button onClick={() => void load()} loading={loading}>Buscar</Button>
-                <CatalogosControlDialog magnitudes={magnitudes} unidades={unidades} canManage={nivel >= 3} onRefresh={loadCatalogs} />
-                {nivel >= 3 && <ExceptionalRequirementDialog api={api} onCreated={() => void load()} />}
+                {nivel >= 3 && <Button variant="ghost" onClick={() => setAdminOpen((current) => !current)}><LuSettings2 />Opciones administrativas</Button>}
                 {nivel >= 2 && <Button colorPalette="teal" onClick={startNew}><LuPlus />Nuevo plan</Button>}
             </HStack>
 
+            {nivel >= 3 && (
+                <Collapsible.Root open={adminOpen}>
+                    <Collapsible.Content>
+                        <Box borderWidth="1px" borderRadius="lg" bg="bg.subtle" p={4}>
+                            <Text fontWeight="semibold">Configuración avanzada</Text>
+                            <Text fontSize="sm" color="fg.muted" mt={1} mb={3}>
+                                Mantenga las magnitudes y unidades o agregue excepcionalmente un requisito a un expediente existente.
+                            </Text>
+                            <HStack gap={3} flexWrap="wrap">
+                                <CatalogosControlDialog magnitudes={magnitudes} unidades={unidades} canManage onRefresh={loadCatalogs} />
+                                <ExceptionalRequirementDialog api={api} onCreated={() => void load()} />
+                            </HStack>
+                        </Box>
+                    </Collapsible.Content>
+                </Collapsible.Root>
+            )}
+
             <Box borderWidth="1px" borderRadius="lg" overflowX="auto">
-                <Table.Root size="sm" minW="780px">
-                    <Table.Header><Table.Row><Table.ColumnHeader>Plan</Table.ColumnHeader><Table.ColumnHeader>Ámbito / responsable</Table.ColumnHeader><Table.ColumnHeader>Versiones</Table.ColumnHeader><Table.ColumnHeader>Aplicabilidad vigente</Table.ColumnHeader><Table.ColumnHeader /></Table.Row></Table.Header>
+                <Table.Root size="sm" minW="680px">
+                    <Table.Header><Table.Row><Table.ColumnHeader>Plan</Table.ColumnHeader><Table.ColumnHeader>Versiones</Table.ColumnHeader><Table.ColumnHeader>Configuración vigente</Table.ColumnHeader><Table.ColumnHeader /></Table.Row></Table.Header>
                     <Table.Body>{plans.map((plan) => {
                         const current = plan.versiones.find((version) => version.estado === "VIGENTE");
                         const draftVersion = plan.versiones.find((version) => version.estado === "BORRADOR");
-                        return <Table.Row key={plan.id}><Table.Cell><Text fontWeight="semibold">{plan.codigo}</Text><Text color="fg.muted">{plan.nombre}</Text></Table.Cell><Table.Cell><Badge colorPalette={plan.ambito === "PROCESO" ? "blue" : "purple"}>{CONTROL_SCOPE_LABEL[plan.ambito]}</Badge><Text fontSize="sm" mt={1}>{CONTROL_OWNER_LABEL[plan.ambito]}</Text></Table.Cell><Table.Cell><HStack>{current && <StatusBadge status={`VIGENTE · v${current.numero}`} />}{draftVersion && <Badge colorPalette="orange">BORRADOR · v{draftVersion.numero}</Badge>}</HStack></Table.Cell><Table.Cell>{current?.aplicabilidades.length ?? 0} reglas · {current?.caracteristicas.length ?? 0} características</Table.Cell><Table.Cell><HStack justify="flex-end">{nivel >= 2 && <Button size="xs" variant="outline" onClick={() => editPlan(plan)}>{draftVersion ? "Editar borrador" : "Nueva versión"}</Button>}{nivel >= 3 && draftVersion && <Button size="xs" colorPalette="teal" onClick={() => setConfirmAction({ kind: "PUBLICAR", plan, version: draftVersion })}>Publicar</Button>}{nivel >= 3 && current && <Button size="xs" colorPalette="orange" variant="outline" onClick={() => setConfirmAction({ kind: "RETIRAR", plan, version: current })}>Retirar</Button>}</HStack></Table.Cell></Table.Row>;
+                        return <Table.Row key={plan.id}><Table.Cell><Text fontWeight="semibold">{plan.codigo}</Text><Text color="fg.muted">{plan.nombre}</Text></Table.Cell><Table.Cell><HStack>{current && <StatusBadge status={`VIGENTE · v${current.numero}`} />}{draftVersion && <Badge colorPalette="orange">BORRADOR · v{draftVersion.numero}</Badge>}</HStack></Table.Cell><Table.Cell>{current?.aplicabilidades.length ?? 0} ubicaciones · {current?.caracteristicas.length ?? 0} mediciones</Table.Cell><Table.Cell><HStack justify="flex-end">{nivel >= 2 && <Button size="xs" variant="outline" onClick={() => editPlan(plan)}>{draftVersion ? "Editar borrador" : "Nueva versión"}</Button>}{nivel >= 3 && draftVersion && <Button size="xs" colorPalette="teal" onClick={() => setConfirmAction({ kind: "PUBLICAR", plan, version: draftVersion })}>Publicar</Button>}{nivel >= 3 && current && <Button size="xs" colorPalette="orange" variant="outline" onClick={() => setConfirmAction({ kind: "RETIRAR", plan, version: current })}>Retirar</Button>}</HStack></Table.Cell></Table.Row>;
                     })}</Table.Body>
                 </Table.Root>
                 {!loading && !plans.length && <Text py={8} textAlign="center" color="fg.muted">No hay planes registrados para este ámbito.</Text>}
                 {loading && <HStack justify="center" py={8}><Spinner size="sm" /><Text>Cargando planes…</Text></HStack>}
             </Box>
 
-            {nivel >= 2 && (
+            {nivel >= 2 && editorOpen && (
                 <Box borderWidth="1px" borderRadius="lg" p={{ base: 3, md: 5 }}>
                     <HStack justify="space-between" align="start" mb={5} flexWrap="wrap">
                         <Box><Heading size="sm">{editingPlanId ? "Borrador de nueva versión" : "Nuevo plan"}</Heading><Text fontSize="sm" color="fg.muted">La versión publicada será inmutable.</Text></Box>
@@ -385,10 +423,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                     {step === 0 && <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={4}>
                         <Field.Root required readOnly={editingPlanId != null} invalid={!draft.codigo.trim() && validationErrors.length > 0}><Field.Label>Código</Field.Label><Input value={draft.codigo} readOnly={editingPlanId != null} bg={editingPlanId != null ? "bg.subtle" : undefined} onChange={(event) => setDraft((current) => ({ ...current, codigo: event.target.value }))} placeholder="CP-PESO-ENVASE" maxLength={60} />{editingPlanId != null && <Field.HelperText>La identidad del plan es inmutable.</Field.HelperText>}</Field.Root>
                         <Field.Root required readOnly={editingPlanId != null} invalid={!draft.nombre.trim() && validationErrors.length > 0}><Field.Label>Nombre</Field.Label><Input value={draft.nombre} readOnly={editingPlanId != null} bg={editingPlanId != null ? "bg.subtle" : undefined} onChange={(event) => setDraft((current) => ({ ...current, nombre: event.target.value }))} maxLength={160} /></Field.Root>
-                        <Field.Root required><Field.Label>Propósito</Field.Label><NativeSelect.Root><NativeSelect.Field value={draft.proposito} onChange={(event) => setDraft((current) => ({ ...current, proposito: event.target.value }))}>{api.ambito === "PROCESO" ? <><option value="AJUSTE_DE_PROCESO">Ajuste de proceso</option><option value="ACEPTACION_DE_ENVASE">Aceptación de envase</option><option value="VERIFICACION_EN_PROCESO">Verificación en proceso</option></> : <><option value="ENSAYO_DE_LIBERACION">Ensayo de liberación</option><option value="VERIFICACION_DURANTE_FABRICACION">Verificación durante fabricación</option><option value="ACEPTACION_PRODUCTO">Aceptación de producto</option></>}</NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root>
-                        <Field.Root required={changeReasonRequired}><Field.Label>Motivo del cambio</Field.Label><Textarea value={draft.motivoCambio ?? ""} onChange={(event) => setDraft((current) => ({ ...current, motivoCambio: event.target.value }))} placeholder={changeReasonRequired ? "Explique por qué se crea esta versión" : "Opcional para la versión inicial"} maxLength={500} />{changeReasonRequired && <Field.HelperText>Obligatorio para publicar una versión v2 o posterior.</Field.HelperText>}</Field.Root>
-                        <Field.Root readOnly><Field.Label>Ámbito</Field.Label><Input value={CONTROL_SCOPE_LABEL[api.ambito]} readOnly bg="bg.subtle" /><Field.HelperText>No se envía como valor seleccionable.</Field.HelperText></Field.Root>
-                        <Field.Root readOnly><Field.Label>Responsable funcional</Field.Label><Input value={CONTROL_OWNER_LABEL[api.ambito]} readOnly bg="bg.subtle" /></Field.Root>
+                        <Field.Root required={changeReasonRequired} gridColumn={{ md: "1 / -1" }}><Field.Label>Motivo del cambio</Field.Label><Textarea value={draft.motivoCambio ?? ""} onChange={(event) => setDraft((current) => ({ ...current, motivoCambio: event.target.value }))} placeholder={changeReasonRequired ? "Explique por qué se crea esta versión" : "Opcional para la versión inicial"} maxLength={500} />{changeReasonRequired && <Field.HelperText>Obligatorio para publicar una versión v2 o posterior.</Field.HelperText>}</Field.Root>
                     </Grid>}
 
                     {step === 1 && (
@@ -507,112 +542,85 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                                             />
                                         </Field.Root>
 
-                                        {api.ambito === "CALIDAD" ? (
-                                            <Box gridColumn={{ md: "1 / -1" }}>
-                                                <VStack align="stretch" gap={3}>
-                                                    <HStack justify="space-between" align={{ base: "stretch", md: "center" }} flexDirection={{ base: "column", md: "row" }}>
-                                                        <Box>
-                                                            <Text fontWeight="semibold">Punto de control de calidad</Text>
-                                                            <Text fontSize="sm" color="fg.muted">
-                                                                Seleccione la salida que será aceptada, rechazada o autorizada por Calidad.
-                                                            </Text>
-                                                        </Box>
-                                                        <QualityControlPointRoutePicker
-                                                            productoId={rule.productoId}
-                                                            categoriaId={rule.categoriaId}
-                                                            categoriaNombre={rule.categoriaNombre}
-                                                            selectedPoint={rule.ubicacionGraficaConfirmada ? {
-                                                                puntoAplicacion: rule.puntoAplicacion,
-                                                                areaOperativaId: rule.areaOperativaId ?? null,
-                                                                procesoProduccionId: rule.procesoProduccionId ?? null,
-                                                                frontendNodeId: rule.frontendNodeId ?? null,
-                                                            } : null}
-                                                            onConfirm={(selection) => updateApplicability(index, {
-                                                                puntoAplicacion: selection.puntoAplicacion,
-                                                                tipoOrden: selection.tipoOrden,
-                                                                areaOperativaId: selection.areaOperativaId,
-                                                                areaOperativaNombre: selection.areaOperativaNombre,
-                                                                procesoProduccionId: selection.procesoProduccionId,
-                                                                procesoProduccionNombre: selection.procesoProduccionNombre,
-                                                                frontendNodeId: selection.frontendNodeId,
-                                                                ubicacionGraficaConfirmada: true,
-                                                                ...(selection.puntoAplicacion === "LOTE_FINAL"
-                                                                    && rule.puntoExigencia === "CIERRE_ETAPA"
-                                                                    ? { puntoExigencia: "INFORMATIVO" as const }
-                                                                    : {}),
-                                                            })}
-                                                        />
-                                                    </HStack>
-                                                    <Alert.Root status={rule.ubicacionGraficaConfirmada ? "success" : "warning"}>
-                                                        <Alert.Indicator />
-                                                        <Alert.Content>
-                                                            <Alert.Title>{rule.ubicacionGraficaConfirmada ? "Punto seleccionado" : "Ubicación pendiente"}</Alert.Title>
-                                                            <Alert.Description>{qualityLocationLabel(rule)}</Alert.Description>
-                                                        </Alert.Content>
-                                                    </Alert.Root>
-                                                </VStack>
-                                            </Box>
-                                        ) : (
-                                            <>
-                                                <Field.Root required>
-                                                    <Field.Label>Tipo de orden</Field.Label>
-                                                    <NativeSelect.Root>
-                                                        <NativeSelect.Field value={rule.tipoOrden} onChange={(event) => updateApplicability(index, { tipoOrden: event.target.value as AplicabilidadPlanControl["tipoOrden"] })}>
-                                                            <option value="AMBAS">OP y OF</option><option value="OP">OP</option><option value="OF">OF</option>
-                                                        </NativeSelect.Field>
-                                                        <NativeSelect.Indicator />
-                                                    </NativeSelect.Root>
-                                                </Field.Root>
-                                                <Field.Root required>
-                                                    <Field.Label>Punto de aplicación</Field.Label>
-                                                    <NativeSelect.Root>
-                                                        <NativeSelect.Field value={rule.puntoAplicacion} onChange={(event) => {
-                                                            const point = event.target.value as AplicabilidadPlanControl["puntoAplicacion"];
-                                                            updateApplicability(index, {
-                                                                puntoAplicacion: point,
-                                                                ...(point === "LOTE_FINAL" ? {
-                                                                    areaOperativaId: null,
-                                                                    procesoProduccionId: null,
-                                                                    frontendNodeId: null,
-                                                                    puntoExigencia: rule.puntoExigencia === "CIERRE_ETAPA" ? "INFORMATIVO" : rule.puntoExigencia,
-                                                                } : {}),
-                                                            });
-                                                        }}>
-                                                            <option value="LOTE_FINAL">Lote final</option><option value="SALIDA_OPERACION">Salida de operación</option>
-                                                        </NativeSelect.Field>
-                                                        <NativeSelect.Indicator />
-                                                    </NativeSelect.Root>
-                                                </Field.Root>
-                                                {rule.puntoAplicacion === "SALIDA_OPERACION" && (
-                                                    <>
-                                                        <Field.Root required><Field.Label>ID de área operativa</Field.Label><Input type="number" min={1} value={rule.areaOperativaId ?? ""} onChange={(event) => updateApplicability(index, { areaOperativaId: idOrNull(event.target.value) })} /></Field.Root>
-                                                        <Field.Root required><Field.Label>ID del proceso maestro</Field.Label><Input type="number" min={1} value={rule.procesoProduccionId ?? ""} onChange={(event) => updateApplicability(index, { procesoProduccionId: idOrNull(event.target.value) })} /></Field.Root>
-                                                    </>
+                                        <Box gridColumn={{ md: "1 / -1" }}>
+                                            <VStack align="stretch" gap={3}>
+                                                <ControlPointRoutePicker
+                                                    ambito={api.ambito}
+                                                    productoId={rule.productoId}
+                                                    categoriaId={rule.categoriaId}
+                                                    categoriaNombre={rule.categoriaNombre}
+                                                    selectedPoint={rule.ubicacionGraficaConfirmada ? {
+                                                        puntoAplicacion: rule.puntoAplicacion,
+                                                        areaOperativaId: rule.areaOperativaId ?? null,
+                                                        procesoProduccionId: rule.procesoProduccionId ?? null,
+                                                        frontendNodeId: rule.frontendNodeId ?? null,
+                                                    } : null}
+                                                    onConfirm={(selection) => updateApplicability(index, {
+                                                        puntoAplicacion: selection.puntoAplicacion,
+                                                        tipoOrden: selection.tipoOrden,
+                                                        areaOperativaId: selection.areaOperativaId,
+                                                        areaOperativaNombre: selection.areaOperativaNombre,
+                                                        procesoProduccionId: selection.procesoProduccionId,
+                                                        procesoProduccionNombre: selection.procesoProduccionNombre,
+                                                        frontendNodeId: selection.frontendNodeId,
+                                                        ubicacionGraficaConfirmada: true,
+                                                        ...inferredPolicy(
+                                                            api.ambito,
+                                                            selection.puntoAplicacion,
+                                                            rule.puntoExigencia !== "INFORMATIVO",
+                                                        ),
+                                                    })}
+                                                />
+                                                <Alert.Root status={rule.ubicacionGraficaConfirmada ? "success" : "warning"}>
+                                                    <Alert.Indicator />
+                                                    <Alert.Content>
+                                                        <Alert.Title>{rule.ubicacionGraficaConfirmada ? "Ubicación seleccionada" : "Ubicación pendiente"}</Alert.Title>
+                                                        <Alert.Description>{locationLabel(rule, api.ambito)}</Alert.Description>
+                                                    </Alert.Content>
+                                                </Alert.Root>
+                                                {api.ambito === "CALIDAD" ? (
+                                                    <Checkbox.Root
+                                                        checked={rule.puntoExigencia !== "INFORMATIVO"}
+                                                        disabled={!rule.ubicacionGraficaConfirmada}
+                                                        onCheckedChange={({ checked }) => updateApplicability(index, {
+                                                            ...inferredPolicy(api.ambito, rule.puntoAplicacion, checked === true),
+                                                        })}
+                                                    >
+                                                        <Checkbox.HiddenInput />
+                                                        <Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>
+                                                        <Checkbox.Label>
+                                                            {rule.puntoAplicacion === "LOTE_FINAL"
+                                                                ? "Impedir la liberación mientras el ensayo esté pendiente o no cumpla"
+                                                                : "Impedir continuar a la siguiente operación mientras el ensayo esté pendiente o no cumpla"}
+                                                        </Checkbox.Label>
+                                                    </Checkbox.Root>
+                                                ) : (
+                                                    <Text fontSize="sm" color="fg.muted">
+                                                        Este control es informativo: registra resultados para ajustar el proceso y no detiene la ruta.
+                                                    </Text>
                                                 )}
-                                            </>
-                                        )}
+                                            </VStack>
+                                        </Box>
                                     </Grid>
                                 </Box>
                             ))}
-                            <Button alignSelf="start" size="sm" variant="outline" onClick={() => setDraft((current) => ({ ...current, aplicabilidades: [...current.aplicabilidades, newApplicability()] }))}><LuPlus />Agregar regla OR</Button>
+                            <Button alignSelf="start" size="sm" variant="outline" onClick={() => setDraft((current) => ({ ...current, aplicabilidades: [...current.aplicabilidades, newApplicability(api.ambito)] }))}><LuPlus />Agregar ubicación alternativa</Button>
                         </VStack>
                     )}
 
-                    {step === 2 && <VStack align="stretch" gap={4}>{draft.aplicabilidades.map((rule, index) => <Box key={index} borderWidth="1px" borderRadius="md" p={4}><Text fontWeight="semibold" mb={3}>Política de la regla {index + 1}</Text><Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}><Field.Root required readOnly={api.ambito === "PROCESO"}><Field.Label>Momento de ejecución</Field.Label><NativeSelect.Root disabled={api.ambito === "PROCESO"}><NativeSelect.Field value={rule.momentoEjecucion} onChange={(event) => { const moment = event.target.value as AplicabilidadPlanControl["momentoEjecucion"]; updateApplicability(index, { momentoEjecucion: moment, ...(moment === "REVISION_FINAL" && ["CIERRE_ETAPA", "ENVIO_CALIDAD"].includes(rule.puntoExigencia) ? { puntoExigencia: "LIBERACION" } : {}) }); }}><option value="DURANTE_FABRICACION">Durante fabricación</option>{api.ambito === "CALIDAD" && <option value="REVISION_FINAL">Revisión final</option>}</NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root>{api.ambito === "PROCESO" && <Field.HelperText>Valor fijo para control de proceso.</Field.HelperText>}</Field.Root><Field.Root required><Field.Label>Punto de exigencia</Field.Label><NativeSelect.Root><NativeSelect.Field value={rule.puntoExigencia} onChange={(event) => updateApplicability(index, { puntoExigencia: event.target.value as AplicabilidadPlanControl["puntoExigencia"] })}>{compatibleRequirements(rule).map((value) => <option key={value} value={value}>{formatEnumLabel(value)}</option>)}</NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root></Grid></Box>)}</VStack>}
-
-                    {step === 3 && <VStack align="stretch" gap={4}>{draft.caracteristicas.map((characteristic, index) => {
+                    {step === 2 && <VStack align="stretch" gap={4}>{draft.caracteristicas.map((characteristic, index) => {
                         const dimension = characteristic.magnitudId ? activeCatalogsByDimension.get(characteristic.magnitudId) : undefined;
                         const compatibleUnits = unidades.filter((unit) => unit.activo && (!dimension || unit.dimension === dimension));
-                        return <Box key={index} borderWidth="1px" borderRadius="md" p={4}><HStack justify="space-between" mb={3}><Text fontWeight="semibold">Característica {index + 1}</Text><IconButton aria-label={`Eliminar característica ${index + 1}`} size="sm" variant="ghost" disabled={draft.caracteristicas.length === 1} onClick={() => setDraft((current) => ({ ...current, caracteristicas: current.caracteristicas.filter((_, position) => position !== index).map((item, position) => ({ ...item, orden: position + 1 })) }))}><LuTrash2 /></IconButton></HStack><Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={3}>
-                            <Field.Root required><Field.Label>Nombre</Field.Label><Input value={characteristic.nombre} onChange={(event) => updateCharacteristic(index, { nombre: event.target.value })} maxLength={120} /></Field.Root>
+                        return <Box key={index} borderWidth="1px" borderRadius="md" p={4}><HStack justify="space-between" mb={3}><Text fontWeight="semibold">Medición {index + 1}</Text><IconButton aria-label={`Eliminar medición ${index + 1}`} size="sm" variant="ghost" disabled={draft.caracteristicas.length === 1} onClick={() => setDraft((current) => ({ ...current, caracteristicas: current.caracteristicas.filter((_, position) => position !== index).map((item, position) => ({ ...item, orden: position + 1 })) }))}><LuTrash2 /></IconButton></HStack><Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={3}>
+                            <Field.Root required><Field.Label>Nombre de la medición</Field.Label><Input value={characteristic.nombre} onChange={(event) => updateCharacteristic(index, { nombre: event.target.value })} maxLength={120} /></Field.Root>
                             <Field.Root required><Field.Label>Tipo</Field.Label><NativeSelect.Root><NativeSelect.Field value={characteristic.tipo} onChange={(event) => { const type = event.target.value as CaracteristicaPlanControl["tipo"]; updateCharacteristic(index, type === "NUMERICA" ? { tipo: type, valorBooleanoEsperado: null } : { tipo: type, unidadId: null, objetivo: null, limiteInferior: null, limiteSuperior: null }); }}><option value="NUMERICA">Numérica</option><option value="BOOLEANA">Booleana</option></NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root>
                             <Field.Root required><Field.Label>Magnitud</Field.Label><NativeSelect.Root><NativeSelect.Field value={characteristic.magnitudId ?? ""} onChange={(event) => updateCharacteristic(index, { magnitudId: idOrNull(event.target.value), unidadId: null })}><option value="">Seleccionar</option>{magnitudes.filter((item) => item.activo).map((item) => <option key={item.id} value={item.id}>{item.nombre} · {item.dimension}</option>)}</NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root>
                             {characteristic.tipo === "NUMERICA" ? <><Field.Root required><Field.Label>Unidad</Field.Label><NativeSelect.Root><NativeSelect.Field value={characteristic.unidadId ?? ""} onChange={(event) => updateCharacteristic(index, { unidadId: idOrNull(event.target.value) })}><option value="">Seleccionar</option>{compatibleUnits.map((item) => <option key={item.id} value={item.id}>{item.nombre} ({item.simbolo})</option>)}</NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root><Field.Root><Field.Label>Objetivo</Field.Label><Input inputMode="decimal" value={characteristic.objetivo ?? ""} onChange={(event) => updateCharacteristic(index, { objetivo: decimalOrNull(event.target.value) })} /></Field.Root><Field.Root><Field.Label>Límite inferior</Field.Label><Input inputMode="decimal" value={characteristic.limiteInferior ?? ""} onChange={(event) => updateCharacteristic(index, { limiteInferior: decimalOrNull(event.target.value) })} /></Field.Root><Field.Root><Field.Label>Límite superior</Field.Label><Input inputMode="decimal" value={characteristic.limiteSuperior ?? ""} onChange={(event) => updateCharacteristic(index, { limiteSuperior: decimalOrNull(event.target.value) })} /></Field.Root><Field.Root required><Field.Label>Decimales visibles</Field.Label><Input type="number" min={0} max={8} value={characteristic.escala} onChange={(event) => updateCharacteristic(index, { escala: Number(event.target.value) })} /></Field.Root></> : <Field.Root required><Field.Label>Valor esperado</Field.Label><NativeSelect.Root><NativeSelect.Field value={characteristic.valorBooleanoEsperado == null ? "" : String(characteristic.valorBooleanoEsperado)} onChange={(event) => updateCharacteristic(index, { valorBooleanoEsperado: event.target.value === "" ? null : event.target.value === "true" })}><option value="">Seleccionar</option><option value="true">Sí / verdadero</option><option value="false">No / falso</option></NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root>}
                             <Field.Root required><Field.Label>Muestras</Field.Label><Input type="number" min={1} value={characteristic.cantidadMuestras} onChange={(event) => updateCharacteristic(index, { cantidadMuestras: Number(event.target.value) })} /></Field.Root><Field.Root required><Field.Label>Unidades por muestra</Field.Label><Input type="number" min={1} value={characteristic.unidadesPorMuestra} onChange={(event) => updateCharacteristic(index, { unidadesPorMuestra: Number(event.target.value) })} /></Field.Root>
                         </Grid></Box>;
-                    })}<Button alignSelf="start" size="sm" variant="outline" onClick={() => setDraft((current) => ({ ...current, caracteristicas: [...current.caracteristicas, newCharacteristic(current.caracteristicas.length + 1)] }))}><LuPlus />Agregar característica</Button></VStack>}
+                    })}<Button alignSelf="start" size="sm" variant="outline" onClick={() => setDraft((current) => ({ ...current, caracteristicas: [...current.caracteristicas, newCharacteristic(current.caracteristicas.length + 1)] }))}><LuPlus />Agregar medición</Button></VStack>}
 
-                    <HStack justify="space-between" mt={6} flexWrap="wrap"><Button variant="outline" disabled={step === 0} onClick={() => setStep((current) => current - 1)}>Anterior</Button><HStack>{step < steps.length - 1 ? <Button colorPalette="teal" onClick={() => setStep((current) => current + 1)}>Siguiente</Button> : <Button colorPalette="teal" loading={saving} onClick={() => void save()}>Guardar borrador</Button>}</HStack></HStack>
+                    <HStack justify="space-between" mt={6} flexWrap="wrap"><Button variant="outline" disabled={step === 0} onClick={() => setStep((current) => current - 1)}>Anterior</Button><HStack><Button variant="ghost" onClick={() => setEditorOpen(false)}>Cancelar</Button>{step < steps.length - 1 ? <Button colorPalette="teal" onClick={() => setStep((current) => current + 1)}>Siguiente</Button> : <Button colorPalette="teal" loading={saving} onClick={() => void save()}>Guardar borrador</Button>}</HStack></HStack>
                 </Box>
             )}
 

@@ -59,8 +59,18 @@ type VersionWire = Omit<VersionPlanControl, "aplicabilidades" | "caracteristicas
 };
 type PlanWire = Omit<PlanControl, "versiones"> & { versiones: VersionWire[] };
 
-type PlanWriteWire = Omit<PlanControlWrite, "aplicabilidades" | "caracteristicas"> & {
-    aplicabilidades: Array<Omit<ApplicabilityWire, "id" | "productoNombre" | "categoriaNombre" | "areaOperativaNombre" | "procesoNombre">>;
+type PlanWriteWire = Pick<PlanControlWrite, "codigo" | "nombre" | "motivoCambio"> & {
+    aplicabilidades: Array<{
+        productoId?: string | null;
+        categoriaId?: number | null;
+        productosExcluidosIds: string[];
+        tipoOrden: AplicabilidadPlanControl["tipoOrden"];
+        puntoAplicacion: AplicabilidadPlanControl["puntoAplicacion"];
+        areaOperativaId?: number | null;
+        procesoId?: number | null;
+        frontendNodeId?: string | null;
+        bloqueante: boolean;
+    }>;
     caracteristicas: Array<{
         nombre: string;
         tipo: CaracteristicaPlanControl["tipo"];
@@ -246,7 +256,6 @@ function serializePlanWrite(item: PlanControlWrite): PlanWriteWire {
     return {
         codigo: item.codigo,
         nombre: item.nombre,
-        proposito: item.proposito,
         motivoCambio: item.motivoCambio,
         aplicabilidades: item.aplicabilidades.map((rule) => ({
             productoId: rule.productoId,
@@ -257,8 +266,7 @@ function serializePlanWrite(item: PlanControlWrite): PlanWriteWire {
             areaOperativaId: rule.areaOperativaId,
             procesoId: rule.procesoProduccionId,
             frontendNodeId: rule.frontendNodeId,
-            momento: rule.momentoEjecucion,
-            puntoExigencia: rule.puntoExigencia,
+            bloqueante: rule.puntoExigencia !== "INFORMATIVO",
         })),
         caracteristicas: item.caracteristicas.map((characteristic) => ({
             nombre: characteristic.nombre,

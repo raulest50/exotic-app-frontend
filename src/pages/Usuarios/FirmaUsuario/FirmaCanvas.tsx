@@ -73,6 +73,7 @@ export default function FirmaCanvas({ disabled = false, onChange, onError }: Fir
                 dataUrl: canvas.toDataURL("image/png"),
                 anchoPx: canvas.width,
                 altoPx: canvas.height,
+                requiereOptimizacion: false,
             });
         } catch (error) {
             onError(error instanceof Error ? error.message : "No se pudo preparar la firma dibujada.");

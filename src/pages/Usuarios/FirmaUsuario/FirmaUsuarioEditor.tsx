@@ -257,7 +257,7 @@ export default function FirmaUsuarioEditor({ user, onBack, onSaved }: FirmaUsuar
                         >
                             <Tabs.List mb={4}>
                                 <Tabs.Trigger value="draw">Dibujar</Tabs.Trigger>
-                                <Tabs.Trigger value="upload">Subir PNG</Tabs.Trigger>
+                                <Tabs.Trigger value="upload">Subir imagen</Tabs.Trigger>
                             </Tabs.List>
                             <Tabs.Content value="draw">
                                 <FirmaCanvas
