@@ -49,7 +49,7 @@ import {
 } from "./types.ts";
 import { Categoria } from "../../types.tsx";
 import { ALMACEN_GENERAL_ID, getConnectionError, validateRuta } from "./rutaValidation.ts";
-import { LuArrowLeft, LuPlus, LuTrash2, LuX } from 'react-icons/lu';
+import { LuArrowLeft, LuMaximize2, LuMinimize2, LuPlus, LuTrash2, LuX } from 'react-icons/lu';
 
 const nodeTypes = {
     areaOperativaNode: AreaOperativaNode,
@@ -62,6 +62,8 @@ const defaultEdgeOptions = {
     },
     animated: true,
 };
+
+const EXPANDED_GRAPH_HEIGHT = "clamp(520px, 68dvh, 820px)";
 
 interface Props {
     categoria: Categoria;
@@ -170,6 +172,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
 
     const boxRef = useRef<HTMLDivElement>(null);
     const [isFullScreen, setIsFullScreen] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
     const { fitView } = useReactFlow();
 
     const validation = useMemo(() => validateRuta(nodes, edges), [nodes, edges]);
@@ -573,17 +576,30 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     const toggleFullScreen = () => {
         const element = boxRef.current;
         if (!element) return;
-        if (isFullScreen) {
-            document.exitFullscreen?.();
+        if (document.fullscreenElement === element) {
+            void document.exitFullscreen?.();
         } else {
-            element.requestFullscreen?.();
+            void element.requestFullscreen?.();
         }
-        setIsFullScreen((prev) => !prev);
     };
 
     useEffect(() => {
-        fitView();
-    }, [fitView, isFullScreen, nodes.length, edges.length]);
+        const timer = window.setTimeout(() => {
+            void fitView({
+                padding: isFullScreen || isExpanded ? 0.12 : 0.2,
+                duration: 200,
+            });
+        }, 80);
+        return () => window.clearTimeout(timer);
+    }, [fitView, isExpanded, isFullScreen, nodes.length, edges.length]);
+
+    useEffect(() => {
+        const syncFullScreenState = () => {
+            setIsFullScreen(document.fullscreenElement === boxRef.current);
+        };
+        document.addEventListener('fullscreenchange', syncFullScreenState);
+        return () => document.removeEventListener('fullscreenchange', syncFullScreenState);
+    }, []);
 
     if (loading) {
         return (
@@ -663,23 +679,34 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
             )}
 
             <Box
-                w="full"
                 ref={boxRef}
-                position="relative"
-                style={
-                    isFullScreen
-                        ? {
-                            width: "100vw",
-                            height: "100vh",
-                            position: "fixed",
-                            top: 0,
-                            left: 0,
-                            zIndex: 9999,
-                            border: "2px solid purple",
-                            background: "white",
-                        }
-                        : { height: "50vh", border: "2px solid purple", borderRadius: "8px" }
-                }
+                position={isFullScreen ? "fixed" : "relative"}
+                top={isFullScreen ? 0 : "auto"}
+                left={{
+                    base: isFullScreen ? 0 : "auto",
+                    xl: isFullScreen ? 0 : isExpanded ? "50%" : "auto",
+                }}
+                transform={{
+                    base: "none",
+                    xl: isFullScreen ? "none" : isExpanded ? "translateX(-50%)" : "none",
+                }}
+                w={{
+                    base: isFullScreen ? "100vw" : "full",
+                    xl: isFullScreen ? "100vw" : isExpanded ? "94vw" : "full",
+                }}
+                maxW={{
+                    base: isFullScreen ? "none" : "full",
+                    xl: isFullScreen ? "none" : isExpanded ? "container.3xl" : "full",
+                }}
+                h={{
+                    base: isFullScreen ? "100vh" : "50vh",
+                    xl: isFullScreen ? "100vh" : isExpanded ? EXPANDED_GRAPH_HEIGHT : "50vh",
+                }}
+                zIndex={isFullScreen ? 9999 : undefined}
+                borderWidth="2px"
+                borderColor="purple.500"
+                borderRadius={isFullScreen ? "0" : "lg"}
+                bg={isFullScreen ? "bg.panel" : undefined}
             >
                 <ReactFlow
                     nodes={nodes}
@@ -879,6 +906,16 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                         Volver a vigente
                     </Button>
                 )}
+
+                <Button
+                    display={{ base: "none", xl: "inline-flex" }}
+                    variant="outline"
+                    aria-pressed={isExpanded}
+                    onClick={() => setIsExpanded((current) => !current)}
+                >
+                    {isExpanded ? <LuMinimize2 /> : <LuMaximize2 />}
+                    {isExpanded ? "Vista normal" : "Ampliar diagrama"}
+                </Button>
 
                 <Button
                     variant="solid"

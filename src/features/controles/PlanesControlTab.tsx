@@ -27,6 +27,7 @@ import { LuCheck, LuPlus, LuSettings2, LuTrash2 } from "react-icons/lu";
 
 import { useAppToast } from "../../components/ui/use-app-toast";
 import CatalogosControlDialog from "./CatalogosControlDialog";
+import ControlProductPickerDialog from "./ControlProductPickerDialog";
 import ExceptionalRequirementDialog from "./ExceptionalRequirementDialog";
 import { apiFailureDetail, listControlCategories, listMagnitudes, listUnidades, type ControlDomainApi } from "./api";
 import { CONTROL_NOUN, CONTROL_SCOPE_LABEL } from "./controlUi";
@@ -38,6 +39,7 @@ import type {
     CatalogoMagnitud,
     CatalogoUnidad,
     CategoriaControlOption,
+    ControlProductOption,
     PlanControl,
     PlanControlWrite,
     VersionPlanControl,
@@ -62,6 +64,7 @@ const steps = [
 
 const newApplicability = (ambito: ControlDomainApi["ambito"]): AplicabilidadPlanControl => ({
     productosExcluidosIds: [],
+    productosExcluidos: [],
     tipoOrden: "AMBAS",
     puntoAplicacion: ambito === "PROCESO" ? "SALIDA_OPERACION" : "LOTE_FINAL",
     momentoEjecucion: ambito === "PROCESO" ? "DURANTE_FABRICACION" : "REVISION_FINAL",
@@ -112,12 +115,13 @@ function versionToDraft(plan: PlanControl, version: VersionPlanControl): PlanCon
         codigo: plan.codigo,
         nombre: plan.nombre,
         motivoCambio: version.estado === "BORRADOR" ? version.motivoCambio ?? "" : "",
-        aplicabilidades: version.aplicabilidades.map((rule) => {
+        aplicabilidades: version.aplicabilidades.slice(0, 1).map((rule) => {
             const policy = inferredPolicy(plan.ambito, rule.puntoAplicacion, rule.puntoExigencia !== "INFORMATIVO");
             return {
                 ...rule,
                 ...policy,
                 productosExcluidosIds: [...rule.productosExcluidosIds],
+                productosExcluidos: [...(rule.productosExcluidos ?? [])],
                 ubicacionGraficaConfirmada: rule.puntoAplicacion === "LOTE_FINAL"
                     ? plan.ambito === "CALIDAD"
                     : Boolean(rule.frontendNodeId),
@@ -171,10 +175,10 @@ function validateDraft(draft: PlanControlWrite, ambito: ControlDomainApi["ambito
     if (!draft.codigo.trim()) errors.push("El código del plan es obligatorio.");
     if (!draft.nombre.trim()) errors.push("El nombre del plan es obligatorio.");
     if (changeReasonRequired && !draft.motivoCambio?.trim()) errors.push("El motivo del cambio es obligatorio para una nueva versión.");
-    if (!draft.aplicabilidades.length) errors.push("Debe existir al menos una regla de aplicabilidad.");
+    if (draft.aplicabilidades.length !== 1) errors.push("El plan debe tener exactamente una aplicación y una ubicación.");
     if (!draft.caracteristicas.length) errors.push("Debe existir al menos una medición.");
     draft.aplicabilidades.forEach((rule, index) => {
-        const prefix = `Regla ${index + 1}`;
+        const prefix = draft.aplicabilidades.length === 1 ? "Aplicación" : `Aplicación ${index + 1}`;
         if (!rule.productoId && !rule.categoriaId) errors.push(`${prefix}: seleccione un producto o una categoría.`);
         if (rule.productoId && rule.categoriaId) errors.push(`${prefix}: producto y categoría son mutuamente excluyentes.`);
         if (rule.puntoAplicacion === "SALIDA_OPERACION" && (!rule.areaOperativaId || !rule.procesoProduccionId)) {
@@ -232,6 +236,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     const [draft, setDraft] = useState<PlanControlWrite>(() => defaultsFor(api.ambito));
     const [validationErrors, setValidationErrors] = useState<string[]>([]);
     const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+    const [productPickerMode, setProductPickerMode] = useState<"SINGLE" | "MULTIPLE" | null>(null);
 
     const loadCatalogs = async () => {
         const [nextMagnitudes, nextUnits] = await Promise.all([listMagnitudes(true), listUnidades(true)]);
@@ -354,6 +359,30 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     };
 
     const activeCatalogsByDimension = useMemo(() => new Map(magnitudes.map((item) => [item.id, item.dimension])), [magnitudes]);
+    const applicability = draft.aplicabilidades[0];
+
+    const clearLocation = (): Partial<AplicabilidadPlanControl> => ({
+        areaOperativaId: null,
+        areaOperativaNombre: null,
+        procesoProduccionId: null,
+        procesoProduccionNombre: null,
+        frontendNodeId: null,
+        ubicacionGraficaConfirmada: false,
+    });
+
+    const selectedTargetProducts = useMemo<ControlProductOption[]>(() => applicability?.productoId ? [{
+        productoId: applicability.productoId,
+        nombre: applicability.productoNombre || applicability.productoId,
+        tipoProducto: applicability.tipoOrden === "OF" ? "S" : "T",
+        categoriaId: applicability.categoriaId,
+        categoriaNombre: applicability.categoriaNombre,
+    }] : [], [
+        applicability?.categoriaId,
+        applicability?.categoriaNombre,
+        applicability?.productoId,
+        applicability?.productoNombre,
+        applicability?.tipoOrden,
+    ]);
 
     return (
         <VStack align="stretch" gap={5}>
@@ -399,7 +428,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                     <Table.Body>{plans.map((plan) => {
                         const current = plan.versiones.find((version) => version.estado === "VIGENTE");
                         const draftVersion = plan.versiones.find((version) => version.estado === "BORRADOR");
-                        return <Table.Row key={plan.id}><Table.Cell><VStack align="start" gap={1}><Text fontWeight="semibold">{plan.codigo}</Text><Text fontSize="sm" color="fg.muted"><Text as="span" fontWeight="semibold" color="fg">Nombre del plan: </Text>{plan.nombre}</Text><Badge size="sm" colorPalette={plan.ambito === "CALIDAD" ? "purple" : "blue"}>Ámbito: {CONTROL_SCOPE_LABEL[plan.ambito]}</Badge></VStack></Table.Cell><Table.Cell><HStack>{current && <StatusBadge status={`VIGENTE · v${current.numero}`} />}{draftVersion && <Badge colorPalette="orange">BORRADOR · v{draftVersion.numero}</Badge>}</HStack></Table.Cell><Table.Cell>{current?.aplicabilidades.length ?? 0} ubicaciones · {current?.caracteristicas.length ?? 0} mediciones</Table.Cell><Table.Cell><HStack justify="flex-end">{nivel >= 2 && <Button size="xs" variant="outline" onClick={() => editPlan(plan)}>{draftVersion ? "Editar borrador" : "Nueva versión"}</Button>}{nivel >= 3 && draftVersion && <Button size="xs" colorPalette="teal" onClick={() => setConfirmAction({ kind: "PUBLICAR", plan, version: draftVersion })}>Publicar</Button>}{nivel >= 3 && current && <Button size="xs" colorPalette="orange" variant="outline" onClick={() => setConfirmAction({ kind: "RETIRAR", plan, version: current })}>Retirar</Button>}</HStack></Table.Cell></Table.Row>;
+                        return <Table.Row key={plan.id}><Table.Cell><VStack align="start" gap={1}><Text fontWeight="semibold">{plan.codigo}</Text><Text fontSize="sm" color="fg.muted"><Text as="span" fontWeight="semibold" color="fg">Nombre del plan: </Text>{plan.nombre}</Text><Badge size="sm" colorPalette={plan.ambito === "CALIDAD" ? "purple" : "blue"}>Ámbito: {CONTROL_SCOPE_LABEL[plan.ambito]}</Badge></VStack></Table.Cell><Table.Cell><HStack>{current && <StatusBadge status={`VIGENTE · v${current.numero}`} />}{draftVersion && <Badge colorPalette="orange">BORRADOR · v{draftVersion.numero}</Badge>}</HStack></Table.Cell><Table.Cell>{current ? `1 ubicación · ${current.caracteristicas.length} mediciones` : "Sin versión vigente"}</Table.Cell><Table.Cell><HStack justify="flex-end">{nivel >= 2 && <Button size="xs" variant="outline" onClick={() => editPlan(plan)}>{draftVersion ? "Editar borrador" : "Nueva versión"}</Button>}{nivel >= 3 && draftVersion && <Button size="xs" colorPalette="teal" onClick={() => setConfirmAction({ kind: "PUBLICAR", plan, version: draftVersion })}>Publicar</Button>}{nivel >= 3 && current && <Button size="xs" colorPalette="orange" variant="outline" onClick={() => setConfirmAction({ kind: "RETIRAR", plan, version: current })}>Retirar</Button>}</HStack></Table.Cell></Table.Row>;
                     })}</Table.Body>
                 </Table.Root>
                 {!loading && !plans.length && <Text py={8} textAlign="center" color="fg.muted">No hay planes registrados para este ámbito.</Text>}
@@ -428,49 +457,38 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
 
                     {step === 1 && (
                         <VStack align="stretch" gap={4}>
-                            {draft.aplicabilidades.map((rule, index) => (
-                                <Box key={index} borderWidth="1px" borderRadius="md" p={4}>
-                                    <HStack justify="space-between" mb={3}>
-                                        <Text fontWeight="semibold">Regla {index + 1}</Text>
-                                        <IconButton
-                                            aria-label={`Eliminar regla ${index + 1}`}
-                                            size="sm"
-                                            variant="ghost"
-                                            disabled={draft.aplicabilidades.length === 1}
-                                            onClick={() => setDraft((current) => ({
-                                                ...current,
-                                                aplicabilidades: current.aplicabilidades.filter((_, position) => position !== index),
-                                            }))}
-                                        ><LuTrash2 /></IconButton>
-                                    </HStack>
+                            {applicability && (
+                                <Box borderWidth="1px" borderRadius="md" p={4}>
+                                    <Box mb={4}>
+                                        <Text fontWeight="semibold">Aplicación y ubicación</Text>
+                                        <Text fontSize="sm" color="fg.muted">
+                                            Cada plan corresponde a una sola ubicación de la ruta.
+                                        </Text>
+                                    </Box>
                                     <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={3}>
                                         <Field.Root required>
                                             <Field.Label>Aplica por</Field.Label>
                                             <NativeSelect.Root>
                                                 <NativeSelect.Field
-                                                    value={rule.productoId != null ? "PRODUCTO" : "CATEGORIA"}
-                                                    onChange={(event) => updateApplicability(index, event.target.value === "PRODUCTO"
+                                                    value={applicability.productoId != null ? "PRODUCTO" : "CATEGORIA"}
+                                                    onChange={(event) => updateApplicability(0, event.target.value === "PRODUCTO"
                                                         ? {
                                                             productoId: "",
+                                                            productoNombre: null,
                                                             categoriaId: null,
                                                             categoriaNombre: null,
                                                             productosExcluidosIds: [],
-                                                            areaOperativaId: null,
-                                                            areaOperativaNombre: null,
-                                                            procesoProduccionId: null,
-                                                            procesoProduccionNombre: null,
-                                                            frontendNodeId: null,
-                                                            ubicacionGraficaConfirmada: false,
+                                                            productosExcluidos: [],
+                                                            ...clearLocation(),
                                                         }
                                                         : {
                                                             productoId: null,
                                                             productoNombre: null,
-                                                            areaOperativaId: null,
-                                                            areaOperativaNombre: null,
-                                                            procesoProduccionId: null,
-                                                            procesoProduccionNombre: null,
-                                                            frontendNodeId: null,
-                                                            ubicacionGraficaConfirmada: false,
+                                                            categoriaId: null,
+                                                            categoriaNombre: null,
+                                                            productosExcluidosIds: [],
+                                                            productosExcluidos: [],
+                                                            ...clearLocation(),
                                                         })}
                                                 >
                                                     <option value="PRODUCTO">Producto específico</option>
@@ -480,41 +498,39 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                                             </NativeSelect.Root>
                                         </Field.Root>
 
-                                        {rule.productoId != null ? (
+                                        {applicability.productoId != null ? (
                                             <Field.Root required>
-                                                <Field.Label>Código del producto</Field.Label>
-                                                <Input
-                                                    value={rule.productoId}
-                                                    onChange={(event) => updateApplicability(index, {
-                                                        productoId: event.target.value,
-                                                        areaOperativaId: null,
-                                                        areaOperativaNombre: null,
-                                                        procesoProduccionId: null,
-                                                        procesoProduccionNombre: null,
-                                                        frontendNodeId: null,
-                                                        ubicacionGraficaConfirmada: false,
-                                                    })}
-                                                />
+                                                <Field.Label>Producto</Field.Label>
+                                                <VStack align="stretch" gap={2}>
+                                                    <Box borderWidth="1px" borderRadius="md" px={3} py={2} minH="40px">
+                                                        {applicability.productoId ? (
+                                                            <Box>
+                                                                <Text fontWeight="semibold">{applicability.productoNombre || applicability.productoId}</Text>
+                                                                <Text fontSize="sm" color="fg.muted">{applicability.productoId}</Text>
+                                                            </Box>
+                                                        ) : <Text color="fg.muted">Ningún producto seleccionado</Text>}
+                                                    </Box>
+                                                    <Button size="sm" variant="outline" onClick={() => setProductPickerMode("SINGLE")}>
+                                                        {applicability.productoId ? "Cambiar producto" : "Seleccionar producto"}
+                                                    </Button>
+                                                </VStack>
                                             </Field.Root>
                                         ) : (
                                             <Field.Root required>
                                                 <Field.Label>Categoría</Field.Label>
                                                 <NativeSelect.Root>
                                                     <NativeSelect.Field
-                                                        value={rule.categoriaId ?? ""}
+                                                        value={applicability.categoriaId ?? ""}
                                                         onChange={(event) => {
                                                             const categoryId = idOrNull(event.target.value);
                                                             const category = categorias.find((item) => item.categoriaId === categoryId);
-                                                            updateApplicability(index, {
+                                                            updateApplicability(0, {
                                                                 categoriaId: categoryId,
                                                                 categoriaNombre: category?.categoriaNombre ?? null,
                                                                 tipoOrden: categoryId == null ? "AMBAS" : "OP",
-                                                                areaOperativaId: null,
-                                                                areaOperativaNombre: null,
-                                                                procesoProduccionId: null,
-                                                                procesoProduccionNombre: null,
-                                                                frontendNodeId: null,
-                                                                ubicacionGraficaConfirmada: false,
+                                                                productosExcluidosIds: [],
+                                                                productosExcluidos: [],
+                                                                ...clearLocation(),
                                                             });
                                                         }}
                                                     >
@@ -530,32 +546,64 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                                             </Field.Root>
                                         )}
 
-                                        <Field.Root>
-                                            <Field.Label>Exclusiones de producto</Field.Label>
-                                            <Input
-                                                disabled={rule.productoId != null}
-                                                value={rule.productosExcluidosIds.join(", ")}
-                                                onChange={(event) => updateApplicability(index, {
-                                                    productosExcluidosIds: event.target.value.split(",").map((value) => value.trim()).filter(Boolean),
-                                                })}
-                                                placeholder="COD-1, COD-2"
-                                            />
-                                        </Field.Root>
+                                        {applicability.productoId == null && (
+                                            <Field.Root disabled={applicability.categoriaId == null}>
+                                                <Field.Label>Productos excluidos (opcional)</Field.Label>
+                                                <VStack align="stretch" gap={2}>
+                                                    <Box borderWidth="1px" borderRadius="md" px={3} py={2} minH="40px">
+                                                        {(applicability.productosExcluidos ?? []).length ? (
+                                                            <VStack align="stretch" gap={2}>
+                                                                {(applicability.productosExcluidos ?? []).map((product) => (
+                                                                    <HStack key={product.productoId} justify="space-between" gap={2}>
+                                                                        <Text fontSize="sm">
+                                                                            <Text as="span" fontWeight="semibold">{product.nombre}</Text>
+                                                                            <Text as="span" color="fg.muted"> · {product.productoId}</Text>
+                                                                        </Text>
+                                                                        <IconButton
+                                                                            aria-label={`Quitar ${product.nombre} de las exclusiones`}
+                                                                            size="xs"
+                                                                            variant="ghost"
+                                                                            onClick={() => {
+                                                                                const products = (applicability.productosExcluidos ?? [])
+                                                                                    .filter((item) => item.productoId !== product.productoId);
+                                                                                updateApplicability(0, {
+                                                                                    productosExcluidos: products,
+                                                                                    productosExcluidosIds: products.map((item) => item.productoId),
+                                                                                });
+                                                                            }}
+                                                                        ><LuTrash2 /></IconButton>
+                                                                    </HStack>
+                                                                ))}
+                                                            </VStack>
+                                                        ) : <Text color="fg.muted">Sin exclusiones</Text>}
+                                                    </Box>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        disabled={applicability.categoriaId == null}
+                                                        onClick={() => setProductPickerMode("MULTIPLE")}
+                                                    >Seleccionar exclusiones</Button>
+                                                    <Field.HelperText>
+                                                        Este plan no se asignará a esos productos de la categoría.
+                                                    </Field.HelperText>
+                                                </VStack>
+                                            </Field.Root>
+                                        )}
 
                                         <Box gridColumn={{ md: "1 / -1" }}>
                                             <VStack align="stretch" gap={3}>
                                                 <ControlPointRoutePicker
                                                     ambito={api.ambito}
-                                                    productoId={rule.productoId}
-                                                    categoriaId={rule.categoriaId}
-                                                    categoriaNombre={rule.categoriaNombre}
-                                                    selectedPoint={rule.ubicacionGraficaConfirmada ? {
-                                                        puntoAplicacion: rule.puntoAplicacion,
-                                                        areaOperativaId: rule.areaOperativaId ?? null,
-                                                        procesoProduccionId: rule.procesoProduccionId ?? null,
-                                                        frontendNodeId: rule.frontendNodeId ?? null,
+                                                    productoId={applicability.productoId}
+                                                    categoriaId={applicability.categoriaId}
+                                                    categoriaNombre={applicability.categoriaNombre}
+                                                    selectedPoint={applicability.ubicacionGraficaConfirmada ? {
+                                                        puntoAplicacion: applicability.puntoAplicacion,
+                                                        areaOperativaId: applicability.areaOperativaId ?? null,
+                                                        procesoProduccionId: applicability.procesoProduccionId ?? null,
+                                                        frontendNodeId: applicability.frontendNodeId ?? null,
                                                     } : null}
-                                                    onConfirm={(selection) => updateApplicability(index, {
+                                                    onConfirm={(selection) => updateApplicability(0, {
                                                         puntoAplicacion: selection.puntoAplicacion,
                                                         tipoOrden: selection.tipoOrden,
                                                         areaOperativaId: selection.areaOperativaId,
@@ -567,29 +615,29 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                                                         ...inferredPolicy(
                                                             api.ambito,
                                                             selection.puntoAplicacion,
-                                                            rule.puntoExigencia !== "INFORMATIVO",
+                                                            applicability.puntoExigencia !== "INFORMATIVO",
                                                         ),
                                                     })}
                                                 />
-                                                <Alert.Root status={rule.ubicacionGraficaConfirmada ? "success" : "warning"}>
+                                                <Alert.Root status={applicability.ubicacionGraficaConfirmada ? "success" : "warning"}>
                                                     <Alert.Indicator />
                                                     <Alert.Content>
-                                                        <Alert.Title>{rule.ubicacionGraficaConfirmada ? "Ubicación seleccionada" : "Ubicación pendiente"}</Alert.Title>
-                                                        <Alert.Description>{locationLabel(rule, api.ambito)}</Alert.Description>
+                                                        <Alert.Title>{applicability.ubicacionGraficaConfirmada ? "Ubicación seleccionada" : "Ubicación pendiente"}</Alert.Title>
+                                                        <Alert.Description>{locationLabel(applicability, api.ambito)}</Alert.Description>
                                                     </Alert.Content>
                                                 </Alert.Root>
                                                 {api.ambito === "CALIDAD" ? (
                                                     <Checkbox.Root
-                                                        checked={rule.puntoExigencia !== "INFORMATIVO"}
-                                                        disabled={!rule.ubicacionGraficaConfirmada}
-                                                        onCheckedChange={({ checked }) => updateApplicability(index, {
-                                                            ...inferredPolicy(api.ambito, rule.puntoAplicacion, checked === true),
+                                                        checked={applicability.puntoExigencia !== "INFORMATIVO"}
+                                                        disabled={!applicability.ubicacionGraficaConfirmada}
+                                                        onCheckedChange={({ checked }) => updateApplicability(0, {
+                                                            ...inferredPolicy(api.ambito, applicability.puntoAplicacion, checked === true),
                                                         })}
                                                     >
                                                         <Checkbox.HiddenInput />
                                                         <Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>
                                                         <Checkbox.Label>
-                                                            {rule.puntoAplicacion === "LOTE_FINAL"
+                                                            {applicability.puntoAplicacion === "LOTE_FINAL"
                                                                 ? "Impedir la liberación mientras el ensayo esté pendiente o no cumpla"
                                                                 : "Impedir continuar a la siguiente operación mientras el ensayo esté pendiente o no cumpla"}
                                                         </Checkbox.Label>
@@ -603,8 +651,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                                         </Box>
                                     </Grid>
                                 </Box>
-                            ))}
-                            <Button alignSelf="start" size="sm" variant="outline" onClick={() => setDraft((current) => ({ ...current, aplicabilidades: [...current.aplicabilidades, newApplicability(api.ambito)] }))}><LuPlus />Agregar ubicación alternativa</Button>
+                            )}
                         </VStack>
                     )}
 
@@ -627,6 +674,35 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
             <Dialog.Root open={confirmAction != null} onOpenChange={({ open }) => !open && setConfirmAction(null)}>
                 <Portal><Dialog.Backdrop /><Dialog.Positioner><Dialog.Content><Dialog.Header><Dialog.Title>{confirmAction?.kind === "PUBLICAR" ? "Publicar versión" : "Retirar versión"}</Dialog.Title></Dialog.Header><Dialog.CloseTrigger asChild><CloseButton aria-label="Cerrar confirmación" size="sm" /></Dialog.CloseTrigger><Dialog.Body><Text>{confirmAction?.kind === "PUBLICAR" ? "La versión quedará inmutable y se aplicará únicamente a lotes futuros." : "Los expedientes existentes conservarán esta versión congelada, pero no se asignará a lotes futuros."}</Text><Text mt={2} fontWeight="semibold">{confirmAction?.plan.codigo} · versión {confirmAction?.version.numero}</Text></Dialog.Body><Dialog.Footer><Button variant="ghost" onClick={() => setConfirmAction(null)}>Cancelar</Button><Button colorPalette={confirmAction?.kind === "PUBLICAR" ? "teal" : "orange"} loading={saving} onClick={() => void confirmVersionAction()}>Confirmar</Button></Dialog.Footer></Dialog.Content></Dialog.Positioner></Portal>
             </Dialog.Root>
+
+            {applicability && productPickerMode && (
+                <ControlProductPickerDialog
+                    open
+                    mode={productPickerMode}
+                    categoriaId={productPickerMode === "MULTIPLE" ? applicability.categoriaId : undefined}
+                    selectedProducts={productPickerMode === "SINGLE"
+                        ? selectedTargetProducts
+                        : applicability.productosExcluidos ?? []}
+                    onClose={() => setProductPickerMode(null)}
+                    onConfirm={(products) => {
+                        if (productPickerMode === "SINGLE") {
+                            const product = products[0];
+                            if (!product) return;
+                            updateApplicability(0, {
+                                productoId: product.productoId,
+                                productoNombre: product.nombre,
+                                tipoOrden: product.tipoProducto === "S" ? "OF" : "OP",
+                                ...clearLocation(),
+                            });
+                            return;
+                        }
+                        updateApplicability(0, {
+                            productosExcluidos: products,
+                            productosExcluidosIds: products.map((product) => product.productoId),
+                        });
+                    }}
+                />
+            )}
         </VStack>
     );
 }

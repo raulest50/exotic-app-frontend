@@ -38,6 +38,7 @@ import type { AmbitoControl, PuntoAplicacionControl, TipoOrdenControl } from "./
 const endpoints = new EndPointsURL();
 const FINAL_NODE_ID = "__quality_control_final__";
 const FINAL_EDGE_ID = "__quality_control_final_edge__";
+const EXPANDED_GRAPH_HEIGHT = "clamp(520px, 68dvh, 820px)";
 
 interface RouteNodeData extends Record<string, unknown> {
     label: string;
@@ -378,7 +379,7 @@ async function loadRouteGraph(target: RouteTarget, ambito: AmbitoControl, signal
     }
     const productoId = target.productoId?.trim();
     if (!productoId) {
-        throw new Error("Seleccione una categoría o indique el código de un producto.");
+        throw new Error("Seleccione una categoría o un producto.");
     }
     const response = await axios.get<ProductoManufacturingDTO>(
         endpoints.get_producto_manufacturing.replace("{productoId}", encodeURIComponent(productoId)),
@@ -453,6 +454,7 @@ function RouteGraphView({ graph, selectedId, ambito, expanded, onSelect }: {
             <Box
                 flex="1"
                 minH={{ base: "360px", lg: "420px" }}
+                h={{ base: "360px", lg: expanded ? EXPANDED_GRAPH_HEIGHT : "420px" }}
                 borderWidth="1px"
                 borderRadius="lg"
                 overflow="hidden"

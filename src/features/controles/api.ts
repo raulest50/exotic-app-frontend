@@ -8,6 +8,7 @@ import type {
     CatalogoMagnitud,
     CatalogoUnidad,
     CategoriaControlOption,
+    ControlProductOption,
     ControlRequerido,
     DesviacionControl,
     DesviacionResolveWrite,
@@ -243,12 +244,20 @@ function normalizeCharacteristic(item: CharacteristicWire): CaracteristicaPlanCo
 }
 
 function normalizeApplicability(item: ApplicabilityWire): AplicabilidadPlanControl {
+    const productosExcluidos = item.productosExcluidos
+        ?? (item.productosExcluidosIds ?? []).map((productoId) => ({
+            productoId,
+            nombre: productoId,
+            tipoProducto: "T" as const,
+        }));
     return {
         ...item,
         procesoProduccionId: item.procesoId,
         procesoProduccionNombre: item.procesoNombre,
         momentoEjecucion: item.momento,
-        productosExcluidosIds: item.productosExcluidosIds ?? [],
+        productosExcluidosIds: item.productosExcluidosIds
+            ?? productosExcluidos.map((producto) => producto.productoId),
+        productosExcluidos,
     };
 }
 
@@ -566,6 +575,22 @@ export async function listUnidades(incluirInactivas = false): Promise<CatalogoUn
 export async function listControlCategories(): Promise<CategoriaControlOption[]> {
     const response = await axios.get<CategoriaControlOption[]>(endpoints.get_categorias, requestOptions);
     return response.data ?? [];
+}
+
+export async function searchControlProducts(params: {
+    search?: string;
+    tipoBusqueda?: "NOMBRE" | "ID";
+    categoriaId?: number;
+    page?: number;
+    size?: number;
+}): Promise<PageResponse<ControlProductOption>> {
+    const page = params.page ?? 0;
+    const size = params.size ?? 10;
+    const response = await axios.get<PageResponse<ControlProductOption> | ControlProductOption[]>(
+        `${catalogBase}/productos`,
+        { ...requestOptions, params: { ...params, page, size } },
+    );
+    return asPage(response.data, page, size);
 }
 
 export async function createUnidad(request: { codigo: string; nombre: string; simbolo: string; dimension: string }): Promise<CatalogoUnidad> {

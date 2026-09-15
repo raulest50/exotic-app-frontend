@@ -48,6 +48,14 @@ export interface ResponsablePlanControl {
     disposicion?: string | null;
 }
 
+export interface ControlProductOption {
+    productoId: string;
+    nombre: string;
+    tipoProducto: "T" | "S";
+    categoriaId?: number | null;
+    categoriaNombre?: string | null;
+}
+
 export interface AplicabilidadPlanControl {
     id?: number;
     productoId?: string | null;
@@ -55,6 +63,7 @@ export interface AplicabilidadPlanControl {
     categoriaId?: number | null;
     categoriaNombre?: string | null;
     productosExcluidosIds: string[];
+    productosExcluidos?: ControlProductOption[];
     tipoOrden: TipoOrdenControl;
     puntoAplicacion: PuntoAplicacionControl;
     areaOperativaId?: number | null;

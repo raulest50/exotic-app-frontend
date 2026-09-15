@@ -28,6 +28,7 @@ import {
     VStack,
     Separator,
 } from "@chakra-ui/react";
+import { LuMaximize2, LuMinimize2 } from "react-icons/lu";
 import MaterialPrimarioNode from "./Nodos/MaterialPrimarioNode.tsx";
 import ProcesoNode from "./Nodos/ProcesoNode.tsx";
 import TargetNode from "./Nodos/TargetNode.tsx";
@@ -62,6 +63,8 @@ const defaultEdgeOptions = {
     animated: true,
 };
 
+const EXPANDED_GRAPH_HEIGHT = "clamp(520px, 68dvh, 820px)";
+
 function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }: Props) {
     const initialFlow = useMemo(() => buildFlowFromProceso(semioter2), [semioter2]);
     const [nodes, setNodes, onNodesChange] = useNodesState(initialFlow.nodes);
@@ -70,6 +73,7 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
     const [isProcesoPickerOpen, setIsProcesoPickerOpen] = useState(false);
     const [isAreaPickerOpen, setIsAreaPickerOpen] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const boxRef = useRef<HTMLDivElement>(null);
     const { fitView } = useReactFlow();
@@ -178,8 +182,22 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
     }, [computeValidity, edges, nodes, onValidityChange]);
 
     useEffect(() => {
-        fitView({ padding: 0.2 });
-    }, [fitView, isFullScreen, nodes.length, edges.length]);
+        const timer = window.setTimeout(() => {
+            void fitView({
+                padding: isFullScreen || isExpanded ? 0.12 : 0.2,
+                duration: 200,
+            });
+        }, 80);
+        return () => window.clearTimeout(timer);
+    }, [fitView, isExpanded, isFullScreen, nodes.length, edges.length]);
+
+    useEffect(() => {
+        const syncFullScreenState = () => {
+            setIsFullScreen(document.fullscreenElement === boxRef.current);
+        };
+        document.addEventListener("fullscreenchange", syncFullScreenState);
+        return () => document.removeEventListener("fullscreenchange", syncFullScreenState);
+    }, []);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -266,12 +284,11 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
         if (!element) {
             return;
         }
-        if (isFullScreen) {
-            document.exitFullscreen?.();
+        if (document.fullscreenElement === element) {
+            void document.exitFullscreen?.();
         } else {
-            element.requestFullscreen?.();
+            void element.requestFullscreen?.();
         }
-        setIsFullScreen((prev) => !prev);
     };
 
     const selectedAreaLabel = selectedProcessData
@@ -289,21 +306,34 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
             <Separator />
 
             <Box
-                w="fill"
                 ref={boxRef}
-                style={
-                    isFullScreen
-                        ? {
-                              width: "100vw",
-                              height: "100vh",
-                              position: "fixed",
-                              top: 0,
-                              left: 0,
-                              zIndex: 9999,
-                              border: "1px solid black",
-                          }
-                        : { height: "50vh", border: "1px solid black" }
-                }
+                position={isFullScreen ? "fixed" : "relative"}
+                top={isFullScreen ? 0 : "auto"}
+                left={{
+                    base: isFullScreen ? 0 : "auto",
+                    xl: isFullScreen ? 0 : isExpanded ? "50%" : "auto",
+                }}
+                transform={{
+                    base: "none",
+                    xl: isFullScreen ? "none" : isExpanded ? "translateX(-50%)" : "none",
+                }}
+                w={{
+                    base: isFullScreen ? "100vw" : "full",
+                    xl: isFullScreen ? "100vw" : isExpanded ? "94vw" : "full",
+                }}
+                maxW={{
+                    base: isFullScreen ? "none" : "full",
+                    xl: isFullScreen ? "none" : isExpanded ? "container.3xl" : "full",
+                }}
+                h={{
+                    base: isFullScreen ? "100vh" : "50vh",
+                    xl: isFullScreen ? "100vh" : isExpanded ? EXPANDED_GRAPH_HEIGHT : "50vh",
+                }}
+                zIndex={isFullScreen ? 9999 : undefined}
+                borderWidth="1px"
+                borderColor="border"
+                borderRadius={isFullScreen ? "0" : "md"}
+                bg={isFullScreen ? "bg.panel" : undefined}
             >
                 <ReactFlow
                     nodes={nodes}
@@ -338,6 +368,16 @@ function ProcessDesignerContent({ semioter2, onProcessChange, onValidityChange }
                 <Flex direction="row" gap={5} alignItems="center" wrap="wrap" flex={2}>
                     <Button variant="solid" colorPalette="teal" onClick={() => setIsProcesoPickerOpen(true)}>
                         Agregar Proceso
+                    </Button>
+
+                    <Button
+                        display={{ base: "none", xl: "inline-flex" }}
+                        variant="outline"
+                        aria-pressed={isExpanded}
+                        onClick={() => setIsExpanded((current) => !current)}
+                    >
+                        {isExpanded ? <LuMinimize2 /> : <LuMaximize2 />}
+                        {isExpanded ? "Vista normal" : "Ampliar diagrama"}
                     </Button>
 
                     <Button variant="solid" onClick={toggleFullScreen}>
