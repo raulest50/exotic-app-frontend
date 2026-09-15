@@ -23,11 +23,12 @@ import {
     Position,
     ReactFlow,
     ReactFlowProvider,
+    useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
-import { LuCheck, LuGitBranch } from "react-icons/lu";
+import { LuCheck, LuGitBranch, LuMaximize2, LuMinimize2 } from "react-icons/lu";
 
 import EndPointsURL from "../../api/EndPointsURL";
 import type { ProductoManufacturingDTO } from "../../pages/Productos/types";
@@ -414,12 +415,14 @@ function matchesSelection(option: RoutePointOption, selectedPoint: Props["select
         && option.procesoProduccionId === selectedPoint.procesoProduccionId;
 }
 
-function RouteGraphView({ graph, selectedId, ambito, onSelect }: {
+function RouteGraphView({ graph, selectedId, ambito, expanded, onSelect }: {
     graph: RouteGraph;
     selectedId: string | null;
     ambito: AmbitoControl;
+    expanded: boolean;
     onSelect: (option: RoutePointOption) => void;
 }) {
+    const { fitView } = useReactFlow();
     const optionById = useMemo(() => new Map(graph.options.map((option) => [option.id, option])), [graph.options]);
     const nodes = useMemo(() => graph.nodes.map((node) => ({
         ...node,
@@ -437,6 +440,13 @@ function RouteGraphView({ graph, selectedId, ambito, onSelect }: {
             style: edgeStyle(Boolean(optionId), optionId === selectedId, ambito),
         };
     }), [ambito, graph.edges, selectedId]);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            void fitView({ padding: expanded ? 0.12 : 0.25, duration: 200 });
+        }, 80);
+        return () => window.clearTimeout(timer);
+    }, [expanded, fitView]);
 
     return (
         <Flex direction={{ base: "column", lg: "row" }} gap={4} minH={{ base: "auto", lg: "420px" }}>
@@ -457,7 +467,7 @@ function RouteGraphView({ graph, selectedId, ambito, onSelect }: {
                     elementsSelectable={false}
                     deleteKeyCode={null}
                     fitView
-                    fitViewOptions={{ padding: 0.25 }}
+                    fitViewOptions={{ padding: expanded ? 0.12 : 0.25 }}
                     minZoom={0.25}
                     onEdgeClick={(_, edge) => {
                         const optionId = edge.data?.optionId;
@@ -508,6 +518,7 @@ export default function ControlPointRoutePicker(props: Props) {
     const [error, setError] = useState<string | null>(null);
     const [graph, setGraph] = useState<RouteGraph | null>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [expanded, setExpanded] = useState(false);
     const { ambito, productoId, categoriaId, categoriaNombre, onConfirm } = props;
     const selectedPointType = props.selectedPoint?.puntoAplicacion;
     const selectedAreaId = props.selectedPoint?.areaOperativaId;
@@ -579,7 +590,19 @@ export default function ControlPointRoutePicker(props: Props) {
     };
 
     return (
-        <Box as="section" aria-label={ambito === "PROCESO" ? "Ubicación gráfica del control de proceso" : "Ubicación gráfica del control de calidad"} borderWidth="1px" borderRadius="lg" bg="bg.panel" p={{ base: 3, md: 4 }}>
+        <Box
+            as="section"
+            aria-label={ambito === "PROCESO" ? "Ubicación gráfica del control de proceso" : "Ubicación gráfica del control de calidad"}
+            position="relative"
+            left={{ base: "auto", xl: expanded ? "50%" : "auto" }}
+            transform={{ base: "none", xl: expanded ? "translateX(-50%)" : "none" }}
+            w={{ base: "full", xl: expanded ? "94vw" : "full" }}
+            maxW={{ base: "full", xl: expanded ? "container.3xl" : "full" }}
+            borderWidth="1px"
+            borderRadius="lg"
+            bg="bg.panel"
+            p={{ base: 3, md: 4 }}
+        >
             <HStack justify="space-between" align="start" gap={3} mb={3} flexWrap="wrap">
                 <Box>
                     <Heading size="sm">Ruta vigente</Heading>
@@ -589,7 +612,20 @@ export default function ControlPointRoutePicker(props: Props) {
                             : "Seleccione la arista o salida que Calidad evaluará."}
                     </Text>
                 </Box>
-                <Badge colorPalette="blue">Solo lectura</Badge>
+                <HStack gap={2}>
+                    <Button
+                        display={{ base: "none", xl: "inline-flex" }}
+                        size="sm"
+                        variant="outline"
+                        disabled={!graph}
+                        aria-pressed={expanded}
+                        onClick={() => setExpanded((current) => !current)}
+                    >
+                        {expanded ? <LuMinimize2 /> : <LuMaximize2 />}
+                        {expanded ? "Vista normal" : "Ampliar diagrama"}
+                    </Button>
+                    <Badge colorPalette="blue">Solo lectura</Badge>
+                </HStack>
             </HStack>
             {!hasTarget ? (
                 <Alert.Root status="info">
@@ -607,7 +643,13 @@ export default function ControlPointRoutePicker(props: Props) {
                 <VStack align="stretch" gap={3}>
                     <Text fontWeight="semibold">{graph.label}</Text>
                     <ReactFlowProvider>
-                        <RouteGraphView graph={graph} selectedId={selectedId} ambito={ambito} onSelect={selectPoint} />
+                        <RouteGraphView
+                            graph={graph}
+                            selectedId={selectedId}
+                            ambito={ambito}
+                            expanded={expanded}
+                            onSelect={selectPoint}
+                        />
                     </ReactFlowProvider>
                 </VStack>
             ) : null}

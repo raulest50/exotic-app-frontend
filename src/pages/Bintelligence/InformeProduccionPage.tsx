@@ -2,10 +2,13 @@ import {
     Alert,
     Badge,
     Box,
+    Button,
     Card,
     HStack,
     NativeSelect,
+    Progress,
     SimpleGrid,
+    Spinner,
     Stack,
     Text,
     useBreakpointValue,
@@ -13,7 +16,8 @@ import {
     StackSeparator,
 } from "@chakra-ui/react";
 import ReactECharts from "echarts-for-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import BetterPagination from "../../components/BetterPagination/BetterPagination";
 import {
     EmptyPanel,
     formatDate,
@@ -24,36 +28,45 @@ import {
     SectionHeading,
 } from "./InformeGlobalUi";
 import {
+    fetchProductionDeviationsPage,
+    requestErrorMessage,
+} from "./informesGlobales.api";
+import {
     buildProductionChart,
     type ProductionReferenceMode,
 } from "./informesGlobales.charts";
 import InformeProduccionAreasSection from "./InformeProduccionAreasSection";
 import type {
+    DesviacionProduccion,
     InformeProduccion,
-    ReferenciaProduccion,
+    InformeQuery,
+    PaginaDesviacionesProduccion,
+    TipoDesviacionProduccion,
 } from "./informesGlobales.types";
 
-const MAX_VISIBLE_EXCEPTIONS = 5;
-
-type ProductionExceptionKind =
-    | "SIN_PRODUCCION"
-    | "DEFICIT"
-    | "NO_PLANEADA"
-    | "SOBREPRODUCCION";
-
-interface ProductionException {
-    reference: ReferenciaProduccion;
-    kind: ProductionExceptionKind;
-    difference: number;
-    variationPct: number | null;
-}
+const DEFAULT_DEVIATION_PAGE_SIZE = 5;
+const DEVIATION_PAGE_SIZE_OPTIONS = [5, 10, 20] as const;
 
 export default function InformeProduccionPage({ report }: { report: InformeProduccion }) {
     const compactChart = useBreakpointValue({ base: true, md: false }) ?? false;
     const chartHeight = useBreakpointValue({ base: 330, md: 420 }) ?? 420;
     const [referenceMode, setReferenceMode] =
         useState<ProductionReferenceMode>("TOP_8");
+    const [deviationPage, setDeviationPage] = useState(0);
+    const [deviationPageSize, setDeviationPageSize] =
+        useState(DEFAULT_DEVIATION_PAGE_SIZE);
+    const [deviations, setDeviations] =
+        useState<PaginaDesviacionesProduccion | null>(null);
+    const [deviationsLoading, setDeviationsLoading] = useState(true);
+    const [deviationsError, setDeviationsError] = useState<string | null>(null);
+    const [deviationsRetryKey, setDeviationsRetryKey] = useState(0);
     const summary = report.resumen;
+    const deviationQuery = useMemo<InformeQuery>(
+        () => report.modoFecha === "FECHA_UNICA"
+            ? { fecha: report.fechaDesde }
+            : { fechaDesde: report.fechaDesde, fechaHasta: report.fechaHasta },
+        [report.fechaDesde, report.fechaHasta, report.modoFecha],
+    );
     const chartOptions = useMemo(
         () => buildProductionChart(
             report.consolidadoCategorias,
@@ -71,10 +84,35 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
     const hasCategoryData = report.consolidadoCategorias.some(
         (category) => category.unidadesPlaneadas > 0 || category.unidadesProducidas > 0,
     );
-    const exceptionAnalysis = useMemo(
-        () => analyzeProductionExceptions(report.detalleReferencias),
-        [report.detalleReferencias],
-    );
+
+    useEffect(() => {
+        const controller = new AbortController();
+        setDeviationsLoading(true);
+        setDeviationsError(null);
+
+        fetchProductionDeviationsPage({
+            query: deviationQuery,
+            page: deviationPage,
+            size: deviationPageSize,
+            signal: controller.signal,
+        })
+            .then(setDeviations)
+            .catch((requestError: unknown) => {
+                if (!controller.signal.aborted) {
+                    setDeviationsError(requestErrorMessage(requestError));
+                }
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setDeviationsLoading(false);
+            });
+
+        return () => controller.abort();
+    }, [
+        deviationPage,
+        deviationPageSize,
+        deviationQuery,
+        deviationsRetryKey,
+    ]);
 
     return (
         <Stack gap={{ base: 4, md: 5 }}>
@@ -200,51 +238,96 @@ export default function InformeProduccionPage({ report }: { report: InformeProdu
                         title="Desviaciones relevantes"
                         description="Diferencias entre las cantidades planeadas y producidas en el periodo."
                     />
-                    {exceptionAnalysis.items.length > 0 ? (
+                    {deviations ? (
                         <Badge colorPalette="gray">
-                            {Math.min(
-                                exceptionAnalysis.items.length,
-                                MAX_VISIBLE_EXCEPTIONS,
-                            )} de {formatInteger(exceptionAnalysis.items.length)} mostradas
+                            {formatInteger(deviations.totalElements)} encontradas
                         </Badge>
                     ) : null}
                 </Stack>
 
-                <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} gap={3}>
-                    <KpiCard
-                        label="Sin producción"
-                        value={formatInteger(exceptionAnalysis.counts.SIN_PRODUCCION)}
-                        help="Planeadas sin unidades producidas"
-                    />
-                    <KpiCard
-                        label="Con déficit"
-                        value={formatInteger(exceptionAnalysis.counts.DEFICIT)}
-                        help="Producción por debajo del plan"
-                    />
-                    <KpiCard
-                        label="No planeadas"
-                        value={formatInteger(exceptionAnalysis.counts.NO_PLANEADA)}
-                        help="Producción sin cantidad planeada"
-                    />
-                    <KpiCard
-                        label="Sobreproducción"
-                        value={formatInteger(exceptionAnalysis.counts.SOBREPRODUCCION)}
-                        help="Producción por encima del plan"
-                    />
-                </SimpleGrid>
+                {deviations ? (
+                    <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} gap={3}>
+                        <KpiCard
+                            label="Sin producción"
+                            value={formatInteger(deviations.counts.sinProduccion)}
+                            help="Planeadas sin unidades producidas"
+                        />
+                        <KpiCard
+                            label="Con déficit"
+                            value={formatInteger(deviations.counts.deficit)}
+                            help="Producción por debajo del plan"
+                        />
+                        <KpiCard
+                            label="No planeadas"
+                            value={formatInteger(deviations.counts.noPlaneada)}
+                            help="Producción sin cantidad planeada"
+                        />
+                        <KpiCard
+                            label="Sobreproducción"
+                            value={formatInteger(deviations.counts.sobreproduccion)}
+                            help="Producción por encima del plan"
+                        />
+                    </SimpleGrid>
+                ) : null}
 
-                {exceptionAnalysis.items.length > 0 ? (
-                    <Stack separator={<StackSeparator borderColor="app.border" />} gap={0}>
-                        {exceptionAnalysis.items
-                            .slice(0, MAX_VISIBLE_EXCEPTIONS)
-                            .map((item, index) => (
+                {deviationsLoading && deviations ? (
+                    <Progress.Root
+                        size="xs"
+                        value={null}
+                        colorPalette="green"
+                        borderRadius="full"
+                        aria-label="Cargando página de desviaciones"
+                    >
+                        <Progress.Track>
+                            <Progress.Range />
+                        </Progress.Track>
+                    </Progress.Root>
+                ) : null}
+
+                {deviationsLoading && !deviations ? (
+                    <HStack minH="120px" justify="center">
+                        <Spinner color="green.500" />
+                        <Text color="app.textMuted">Consultando desviaciones…</Text>
+                    </HStack>
+                ) : deviationsError ? (
+                    <Alert.Root status="error" borderRadius="md">
+                        <Alert.Indicator />
+                        <Stack gap={2}>
+                            <Text fontSize="sm">{deviationsError}</Text>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setDeviationsRetryKey((current) => current + 1)}
+                            >
+                                Reintentar
+                            </Button>
+                        </Stack>
+                    </Alert.Root>
+                ) : deviations && deviations.items.length > 0 ? (
+                    <>
+                        <Stack separator={<StackSeparator borderColor="app.border" />} gap={0}>
+                            {deviations.items.map((item, index) => (
                                 <ProductionExceptionRow
                                     key={item.reference.productoId
                                         ?? `${item.reference.productoNombre}-${index}`}
                                     item={item}
                                 />
                             ))}
-                    </Stack>
+                        </Stack>
+                        <BetterPagination
+                            page={deviations.page}
+                            size={deviations.size}
+                            totalPages={deviations.totalPages}
+                            totalItems={deviations.totalElements}
+                            sizeOptions={DEVIATION_PAGE_SIZE_OPTIONS}
+                            loading={deviationsLoading}
+                            previousLabel="Anterior"
+                            nextLabel="Siguiente"
+                            ariaLabel="Paginación de desviaciones de producción"
+                            onPageChange={setDeviationPage}
+                            onSizeChange={setDeviationPageSize}
+                        />
+                    </>
                 ) : (
                     <Alert.Root status="success" borderRadius="md">
                         <Alert.Indicator />
@@ -268,83 +351,7 @@ function productionHelp(planned: number, trend?: number | null) {
     return `${plannedLabel} · ${sign}${formatPercent(trend)} vs. periodo anterior`;
 }
 
-function analyzeProductionExceptions(references: ReferenciaProduccion[]) {
-    const counts: Record<ProductionExceptionKind, number> = {
-        SIN_PRODUCCION: 0,
-        DEFICIT: 0,
-        NO_PLANEADA: 0,
-        SOBREPRODUCCION: 0,
-    };
-
-    const items = references
-        .map(toProductionException)
-        .filter((item): item is ProductionException => item !== null);
-
-    items.forEach((item) => {
-        counts[item.kind] += 1;
-    });
-
-    items.sort(compareProductionExceptions);
-    return { counts, items };
-}
-
-function toProductionException(
-    reference: ReferenciaProduccion,
-): ProductionException | null {
-    const planned = reference.cantidadPlaneada;
-    const produced = reference.cantidadProducida;
-    const difference = produced - planned;
-    let kind: ProductionExceptionKind | null = null;
-
-    if (planned > 0 && produced === 0) {
-        kind = "SIN_PRODUCCION";
-    } else if (planned <= 0 && produced > 0) {
-        kind = "NO_PLANEADA";
-    } else if (planned > 0 && produced < planned) {
-        kind = "DEFICIT";
-    } else if (planned > 0 && produced > planned) {
-        kind = "SOBREPRODUCCION";
-    }
-
-    if (!kind) return null;
-    return {
-        reference,
-        kind,
-        difference,
-        variationPct: planned > 0 ? (difference / planned) * 100 : null,
-    };
-}
-
-function compareProductionExceptions(
-    left: ProductionException,
-    right: ProductionException,
-) {
-    const impactDifference = Math.abs(right.difference) - Math.abs(left.difference);
-    if (impactDifference !== 0) return impactDifference;
-
-    const categoryDifference = compareText(
-        left.reference.categoriaNombre,
-        right.reference.categoriaNombre,
-    );
-    if (categoryDifference !== 0) return categoryDifference;
-
-    const nameDifference = compareText(
-        left.reference.productoNombre,
-        right.reference.productoNombre,
-    );
-    if (nameDifference !== 0) return nameDifference;
-
-    return compareText(
-        left.reference.productoId ?? "",
-        right.reference.productoId ?? "",
-    );
-}
-
-function compareText(left: string, right: string) {
-    return left.localeCompare(right, "es", { sensitivity: "base" });
-}
-
-function ProductionExceptionRow({ item }: { item: ProductionException }) {
+function ProductionExceptionRow({ item }: { item: DesviacionProduccion }) {
     const presentation = exceptionPresentation(item.kind);
     return (
         <Stack
@@ -403,7 +410,7 @@ function ExceptionMetric({ label, value }: { label: string; value: string }) {
     );
 }
 
-function exceptionPresentation(kind: ProductionExceptionKind) {
+function exceptionPresentation(kind: TipoDesviacionProduccion) {
     switch (kind) {
         case "SIN_PRODUCCION":
             return { label: "Sin producción", colorScheme: "orange" };

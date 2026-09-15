@@ -358,7 +358,10 @@ export default function InformesGlobalesTab() {
                     <LoadingPanel label="Cargando inventario y movimientos…" />
                 ) : null
             ) : activeHasCurrentData && production.data ? (
-                <InformeProduccionPage report={production.data} />
+                <InformeProduccionPage
+                    key={production.dataQueryKey ?? appliedQueryKey}
+                    report={production.data}
+                />
             ) : activeIsLoading ? (
                 <LoadingPanel label="Cargando informe de producción…" />
             ) : null}

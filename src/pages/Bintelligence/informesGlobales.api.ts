@@ -21,6 +21,7 @@ import type {
     HorizonteCoberturaMaterial,
     OrdenCoberturaMaterial,
     OrdenAjusteMaterial,
+    PaginaDesviacionesProduccion,
     PaginaInformeInventario,
     TipoFiltroAjuste,
 } from "./informesGlobales.types";
@@ -160,6 +161,37 @@ export async function fetchProductionReport(
             }
             : undefined,
         notas: response.data.notas ?? [],
+    };
+}
+
+export async function fetchProductionDeviationsPage({
+    query,
+    page,
+    size,
+    signal,
+}: {
+    query: InformeQuery;
+    page: number;
+    size: number;
+    signal?: AbortSignal;
+}): Promise<PaginaDesviacionesProduccion> {
+    const response = await axios.get<PaginaDesviacionesProduccion>(
+        `${endpoints.domain}/bi/informes-globales/produccion/desviaciones`,
+        {
+            params: { ...query, page, size },
+            signal,
+        },
+    );
+    const normalizedPage = normalizePage(response.data);
+    return {
+        ...response.data,
+        ...normalizedPage,
+        counts: {
+            sinProduccion: response.data.counts?.sinProduccion ?? 0,
+            deficit: response.data.counts?.deficit ?? 0,
+            noPlaneada: response.data.counts?.noPlaneada ?? 0,
+            sobreproduccion: response.data.counts?.sobreproduccion ?? 0,
+        },
     };
 }
 

@@ -10,6 +10,7 @@ interface BetterPaginationProps {
     loading?: boolean;
     previousLabel?: string;
     nextLabel?: string;
+    ariaLabel?: string;
     onPageChange: (page: number) => void;
     onSizeChange: (size: number) => void;
 }
@@ -23,6 +24,7 @@ export default function BetterPagination({
     loading = false,
     previousLabel = 'Página anterior',
     nextLabel = 'Página siguiente',
+    ariaLabel = 'Paginación',
     onPageChange,
     onSizeChange,
 }: BetterPaginationProps) {
@@ -40,6 +42,8 @@ export default function BetterPagination({
 
     return (
         <Flex
+            as='nav'
+            aria-label={ariaLabel}
             justify='space-between'
             align={{ base: 'stretch', md: 'center' }}
             direction={{ base: 'column', md: 'row' }}
@@ -49,6 +53,7 @@ export default function BetterPagination({
                 <Text>Tamaño de página:</Text>
                 <NativeSelect.Root width='80px' disabled={loading}>
                     <NativeSelect.Field
+                        aria-label='Tamaño de página'
                         value={size}
                         onChange={(e) => handleSizeChange(parseInt(e.target.value))}>
                         {sizeOptions.map(opt => (
@@ -65,7 +70,7 @@ export default function BetterPagination({
                     onClick={() => onPageChange(page - 1)}
                     disabled={isPrevDisabled}
                     aria-label={previousLabel}><LuChevronLeft />{previousLabel}</Button>
-                <Text fontSize='sm' textAlign='center'>
+                <Text fontSize='sm' textAlign='center' aria-live='polite'>
                     {totalItems === undefined
                         ? `Página ${totalPages === 0 ? 0 : page + 1} de ${totalPages}`
                         : `${firstVisibleItem}–${lastVisibleItem} de ${totalItems} · Página ${totalPages === 0 ? 0 : page + 1} de ${totalPages}`}

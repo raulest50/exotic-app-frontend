@@ -506,6 +506,31 @@ export interface ReferenciaProduccion {
     noPlaneado: boolean;
 }
 
+export type TipoDesviacionProduccion =
+    | "SIN_PRODUCCION"
+    | "DEFICIT"
+    | "NO_PLANEADA"
+    | "SOBREPRODUCCION";
+
+export interface DesviacionProduccion {
+    reference: ReferenciaProduccion;
+    kind: TipoDesviacionProduccion;
+    difference: number;
+    variationPct: number | null;
+}
+
+export interface ConteosDesviacionesProduccion {
+    sinProduccion: number;
+    deficit: number;
+    noPlaneada: number;
+    sobreproduccion: number;
+}
+
+export interface PaginaDesviacionesProduccion
+    extends PaginaInformeInventario<DesviacionProduccion> {
+    counts: ConteosDesviacionesProduccion;
+}
+
 export type EstadoAreaProduccion =
     | "ESTABLE"
     | "OBSERVACION"
