@@ -2,7 +2,7 @@ import { Container } from "@chakra-ui/react";
 
 import MyHeader from "../../components/MyHeader.tsx";
 import ModuleGroupedTabs, { type ModuleTabGroup } from "../../components/ModuleGroupedTabs.tsx";
-import { getExactTabNivel, tabAccessRule } from "../../auth/accessHelpers.ts";
+import { effectiveExactTabNivelFromSnapshot, tabAccessRule } from "../../auth/accessHelpers.ts";
 import type { AccessRule } from "../../auth/accessModel.ts";
 import { useAccessSnapshot } from "../../auth/usePermissions";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
@@ -22,18 +22,12 @@ import {
     PlanesControlProcesoTab,
 } from "./ControlProcesos/ControlProcesosTabs.tsx";
 
-const exactProductionTabAccessRule = (tabId: string, minLevel = 1, superMasterOnlyBypass = false): AccessRule => (
-    (snapshot) => (superMasterOnlyBypass
-        ? snapshot.username?.toLowerCase() === "super_master"
-        : snapshot.isMasterLike) || (getExactTabNivel(
-        snapshot.moduloAccesos,
+const exactProductionTabAccessRule = (tabId: string, minLevel = 1): AccessRule => (
+    (snapshot) => effectiveExactTabNivelFromSnapshot(
+        snapshot,
         Modulo.PRODUCCION,
         tabId,
-    ) ?? 0) >= minLevel
-);
-
-const strictProductionTabAccessRule = (tabId: string, minLevel = 1): AccessRule => (
-    (snapshot) => (getExactTabNivel(snapshot.moduloAccesos, Modulo.PRODUCCION, tabId) ?? 0) >= minLevel
+    ) >= minLevel
 );
 
 const PRODUCTION_GROUPS: ModuleTabGroup[] = [
@@ -90,25 +84,25 @@ const PRODUCTION_GROUPS: ModuleTabGroup[] = [
                 key: "planes-control-proceso",
                 label: "Planes de control",
                 render: () => <PlanesControlProcesoTab />,
-                accessRule: exactProductionTabAccessRule("PLANES_CONTROL_PROCESO", 1, true),
+                accessRule: exactProductionTabAccessRule("PLANES_CONTROL_PROCESO"),
             },
             {
                 key: "pendientes-control-proceso",
                 label: "Controles pendientes",
                 render: () => <PendientesControlProcesoTab />,
-                accessRule: strictProductionTabAccessRule("REGISTRAR_CONTROL_PROCESO"),
+                accessRule: exactProductionTabAccessRule("REGISTRAR_CONTROL_PROCESO"),
             },
             {
                 key: "desviaciones-control-proceso",
                 label: "Desviaciones",
                 render: () => <DesviacionesControlProcesoTab />,
-                accessRule: strictProductionTabAccessRule("DESVIACIONES_CONTROL_PROCESO"),
+                accessRule: exactProductionTabAccessRule("DESVIACIONES_CONTROL_PROCESO"),
             },
             {
                 key: "historial-control-proceso",
                 label: "Historial",
                 render: () => <HistorialControlesProcesoTab />,
-                accessRule: strictProductionTabAccessRule("HISTORIAL_CONTROL_PROCESO"),
+                accessRule: exactProductionTabAccessRule("HISTORIAL_CONTROL_PROCESO"),
             },
         ],
     },

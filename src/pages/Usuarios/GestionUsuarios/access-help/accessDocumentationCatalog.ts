@@ -237,7 +237,7 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
                         "Publicar o retirar versiones, administrar magnitudes y unidades, y crear exigencias excepcionales.",
                     ]),
                 ],
-                ["La cuenta Super Master recibe acceso automático; la cuenta Master requiere una asignación explícita en esta pestaña."],
+                ["Las cuentas Master y Super Master reciben acceso automático con nivel máximo; los demás usuarios requieren una asignación explícita."],
             ),
             tab(
                 "REGISTRAR_CONTROL_PROCESO",
@@ -252,7 +252,7 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
                         "Registrar controles, repetir o revalidar ejecuciones y crear controles independientes.",
                     ]),
                 ],
-                ["Este permiso es exacto: las cuentas Master y Super Master también requieren asignación explícita."],
+                ["Para usuarios ordinarios, el permiso y su nivel deben estar asignados explícitamente. Master y Super Master reciben acceso automático."],
             ),
             tab(
                 "DESVIACIONES_CONTROL_PROCESO",
@@ -267,7 +267,7 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
                         "Registrar investigación, resolución, disposición y resolver desviaciones abiertas.",
                     ]),
                 ],
-                ["Este permiso es exacto: las cuentas Master y Super Master también requieren asignación explícita."],
+                ["Para usuarios ordinarios, el permiso y su nivel deben estar asignados explícitamente. Master y Super Master reciben acceso automático."],
             ),
             sameScopeTab(
                 "HISTORIAL_CONTROL_PROCESO",
@@ -275,7 +275,7 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
                 "Presenta las ejecuciones y lecturas conservadas de controles de proceso.",
                 "Consultar el historial, detalle, resultados y observaciones de las ejecuciones de proceso.",
                 1,
-                ["Este permiso es exacto: las cuentas Master y Super Master también requieren asignación explícita."],
+                ["Para usuarios ordinarios, el permiso y su nivel deben estar asignados explícitamente. Master y Super Master reciben acceso automático."],
             ),
             tab(
                 "MONITOREAR_AREAS_OPERATIVAS",
