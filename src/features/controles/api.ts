@@ -15,6 +15,8 @@ import type {
     DisposicionDesviacion,
     EjecucionControl,
     EjecucionControlWrite,
+    EnsayoPendienteOption,
+    EnsayoPendienteOptionFilters,
     HistorialControlItem,
     HistorialFilters,
     PageResponse,
@@ -397,6 +399,7 @@ export interface ControlDomainApi {
     publishVersion: (planId: number, versionId: number) => Promise<PlanControl>;
     retireVersion: (planId: number, versionId: number) => Promise<PlanControl>;
     listPendientes: (filters?: PendientesFilters) => Promise<PageResponse<ControlRequerido>>;
+    listEnsayosPendientes?: (filters?: EnsayoPendienteOptionFilters) => Promise<PageResponse<EnsayoPendienteOption>>;
     execute: (request: EjecucionControlWrite) => Promise<EjecucionControl>;
     revalidate?: (requirementId: number, justification: string) => Promise<RevalidacionControl>;
     listHistorial: (filters?: HistorialFilters) => Promise<PageResponse<HistorialControlItem>>;
@@ -447,6 +450,15 @@ function createControlDomainApi(ambito: AmbitoControl): ControlDomainApi {
             const page = asPage(response.data, filters.page, filters.size);
             return { ...page, content: page.content.map(normalizePending) };
         },
+        ...(ambito === "CALIDAD" ? {
+            async listEnsayosPendientes(filters: EnsayoPendienteOptionFilters = {}) {
+                const response = await axios.get<PageResponse<EnsayoPendienteOption>>(
+                    `${base}/pendientes/opciones-ensayo`,
+                    { ...requestOptions, params: filters },
+                );
+                return response.data;
+            },
+        } : {}),
         async execute(request) {
             const response = await axios.post<ExecutionDetailWire>(`${base}/ejecuciones`, request, requestOptions);
             return normalizeExecutionDetail(response.data);

@@ -283,6 +283,7 @@ export interface DesviacionResolveWrite {
 }
 
 export interface PendientesFilters {
+    planId?: number;
     batchRecordId?: number;
     loteId?: number;
     search?: string;
@@ -293,6 +294,21 @@ export interface PendientesFilters {
     vencimientoHasta?: string;
     momento?: MomentoEjecucionControl;
     estado?: EstadoControlRequerido;
+    page?: number;
+    size?: number;
+}
+
+export interface EnsayoPendienteOption {
+    planId: number;
+    codigo: string;
+    nombre: string;
+    momentos: MomentoEjecucionControl[];
+}
+
+export interface EnsayoPendienteOptionFilters {
+    search?: string;
+    tipoOrden?: Exclude<TipoOrdenControl, "AMBAS">;
+    areaId?: number;
     page?: number;
     size?: number;
 }
