@@ -208,7 +208,7 @@ export interface BatchRecordControlRevision {
     versionNumero: number;
     ambito: "PROCESO" | "CALIDAD";
     estado: "PENDIENTE" | "CONFORME" | "NO_CONFORME" | "ACEPTADO_POR_DESVIACION" | "POR_REVALIDAR";
-    origen: "BATCH_RECORD" | "INDEPENDIENTE" | "LEGACY";
+    origen: "BATCH_RECORD" | "LEGACY";
     puntoAplicacion: "LOTE_FINAL" | "SALIDA_OPERACION";
     momento: "DURANTE_FABRICACION" | "REVISION_FINAL";
     puntoExigencia: "INFORMATIVO" | "CIERRE_ETAPA" | "ENVIO_CALIDAD" | "LIBERACION";

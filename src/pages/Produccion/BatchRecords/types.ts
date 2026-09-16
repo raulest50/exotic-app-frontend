@@ -133,8 +133,7 @@ export interface BatchRecordFirma {
         | "REVISION_CALIDAD"
         | "LIBERACION_LOTE"
         | "SOLICITUD_REAPERTURA_RECHAZO"
-        | "APROBACION_REAPERTURA_RECHAZO"
-        | "ADICION_CONTROL_REQUERIDO";
+        | "APROBACION_REAPERTURA_RECHAZO";
     decision: "CONFIRMA" | "APRUEBA" | "RECHAZA" | "DEVUELVE" | "SOLICITA" | "REABRE";
     firmadoEn: string;
     usernameFirmante: string;
@@ -155,7 +154,6 @@ export interface BatchRecordRevision {
         | "DECISION_CALIDAD"
         | "SOLICITUD_REAPERTURA_RECHAZO"
         | "REAPERTURA_RECHAZO"
-        | "ADICION_CONTROL_REQUERIDO"
         | "CORRECCION"
         | "CIERRE";
     contenidoSha256: string;

@@ -5,7 +5,6 @@ import {
     Button,
     Checkbox,
     CloseButton,
-    Collapsible,
     Dialog,
     Field,
     Grid,
@@ -23,12 +22,11 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
-import { LuCheck, LuPlus, LuSettings2, LuTrash2 } from "react-icons/lu";
+import { LuCheck, LuPlus, LuTrash2 } from "react-icons/lu";
 
 import { useAppToast } from "../../components/ui/use-app-toast";
 import CatalogosControlDialog from "./CatalogosControlDialog";
 import ControlProductPickerDialog from "./ControlProductPickerDialog";
-import ExceptionalRequirementDialog from "./ExceptionalRequirementDialog";
 import { apiFailureDetail, listControlCategories, listMagnitudes, listUnidades, type ControlDomainApi } from "./api";
 import { CONTROL_NOUN, CONTROL_SCOPE_LABEL } from "./controlUi";
 import ControlPointRoutePicker from "./QualityControlPointRoutePicker";
@@ -230,7 +228,6 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     const [search, setSearch] = useState("");
     const [step, setStep] = useState(0);
     const [editorOpen, setEditorOpen] = useState(false);
-    const [adminOpen, setAdminOpen] = useState(false);
     const [editingPlanId, setEditingPlanId] = useState<number | undefined>();
     const [changeReasonRequired, setChangeReasonRequired] = useState(false);
     const [draft, setDraft] = useState<PlanControlWrite>(() => defaultsFor(api.ambito));
@@ -401,26 +398,9 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                     <Input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => event.key === "Enter" && void load()} placeholder="Código o nombre" />
                 </Field.Root>
                 <Button onClick={() => void load()} loading={loading}>Buscar</Button>
-                {nivel >= 3 && <Button variant="ghost" onClick={() => setAdminOpen((current) => !current)}><LuSettings2 />Opciones administrativas</Button>}
+                {nivel >= 3 && <CatalogosControlDialog magnitudes={magnitudes} unidades={unidades} canManage onRefresh={loadCatalogs} />}
                 {nivel >= 2 && <Button colorPalette="teal" onClick={startNew}><LuPlus />Nuevo plan</Button>}
             </HStack>
-
-            {nivel >= 3 && (
-                <Collapsible.Root open={adminOpen}>
-                    <Collapsible.Content>
-                        <Box borderWidth="1px" borderRadius="lg" bg="bg.subtle" p={4}>
-                            <Text fontWeight="semibold">Configuración avanzada</Text>
-                            <Text fontSize="sm" color="fg.muted" mt={1} mb={3}>
-                                Mantenga las magnitudes y unidades o agregue excepcionalmente un requisito a un expediente existente.
-                            </Text>
-                            <HStack gap={3} flexWrap="wrap">
-                                <CatalogosControlDialog magnitudes={magnitudes} unidades={unidades} canManage onRefresh={loadCatalogs} />
-                                <ExceptionalRequirementDialog api={api} onCreated={() => void load()} />
-                            </HStack>
-                        </Box>
-                    </Collapsible.Content>
-                </Collapsible.Root>
-            )}
 
             <Box borderWidth="1px" borderRadius="lg" overflowX="auto">
                 <Table.Root size="sm" minW="680px">

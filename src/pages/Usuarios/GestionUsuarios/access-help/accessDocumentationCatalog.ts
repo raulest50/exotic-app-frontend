@@ -231,10 +231,10 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
                     level(2, "Preparación de borradores", [
                         "Incluye la consulta del nivel 1.",
                         "Crear planes, generar nuevas versiones y editar borradores.",
-                    ], ["Publicar, retirar, administrar catálogos o crear exigencias excepcionales."]),
+                    ], ["Publicar, retirar o administrar catálogos."]),
                     level(3, "Administración", [
                         "Incluye los niveles anteriores.",
-                        "Publicar o retirar versiones, administrar magnitudes y unidades, y crear exigencias excepcionales.",
+                        "Publicar o retirar versiones y administrar magnitudes físicas y unidades.",
                     ]),
                 ],
                 ["Las cuentas Master y Super Master reciben acceso automático con nivel máximo; los demás usuarios requieren una asignación explícita."],
@@ -249,7 +249,7 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
                     ]),
                     level(2, "Ejecución", [
                         "Incluye la consulta del nivel 1.",
-                        "Registrar controles, repetir o revalidar ejecuciones y crear controles independientes.",
+                        "Registrar controles, repetir o revalidar ejecuciones asociadas a un expediente.",
                     ]),
                 ],
                 ["Para usuarios ordinarios, el permiso y su nivel deben estar asignados explícitamente. Master y Super Master reciben acceso automático."],
@@ -644,12 +644,12 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
         tabs: [
             tab("PLANES_CONTROL_CALIDAD", "Planes de control de calidad", "Define los planes y versiones que gobiernan los ensayos de Calidad.", [
                 level(1, "Consulta", ["Consultar planes, versiones, aplicabilidades y características."], ["Crear o editar borradores, publicar versiones o administrar catálogos."]),
-                level(2, "Preparación de borradores", ["Incluye la consulta, permite crear planes, generar nuevas versiones y editar borradores."], ["Publicar, retirar, administrar catálogos o crear exigencias excepcionales."]),
-                level(3, "Administración", ["Incluye los niveles anteriores y permite publicar o retirar versiones, administrar catálogos y crear exigencias excepcionales." ]),
+                level(2, "Preparación de borradores", ["Incluye la consulta, permite crear planes, generar nuevas versiones y editar borradores."], ["Publicar, retirar o administrar catálogos."]),
+                level(3, "Administración", ["Incluye los niveles anteriores y permite publicar o retirar versiones y administrar magnitudes físicas y unidades." ]),
             ]),
             tab("REGISTRAR_CONTROL_CALIDAD", "Registro de ensayos", "Gestiona ensayos pendientes y ejecuciones de Calidad.", [
                 level(1, "Consulta", ["Buscar y consultar ensayos pendientes."], ["Registrar, repetir o revalidar un ensayo."]),
-                level(2, "Ejecución", ["Incluye la consulta y permite registrar, repetir o revalidar ensayos y crear controles independientes." ]),
+                level(2, "Ejecución", ["Incluye la consulta y permite registrar, repetir o revalidar ensayos asociados a un expediente." ]),
             ]),
             tab("DESVIACIONES_CONTROL_CALIDAD", "Desviaciones de calidad", "Investiga, resuelve y cierra resultados no conformes de Calidad.", [
                 level(1, "Consulta", ["Consultar desviaciones y abrir su detalle."], ["Modificar la investigación, resolver o cerrar la desviación."]),

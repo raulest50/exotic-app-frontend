@@ -176,44 +176,9 @@ export interface ControlRequerido {
     caracteristicas: CaracteristicaPlanControl[];
     requiereRepeticion: boolean;
     requiereRevalidacion: boolean;
-    agregadoExcepcionalmente: boolean;
-    motivoAdicion?: string | null;
-    agregadoPor?: string | null;
-    revisionAdicionId?: number | null;
-    firmaAdicionId?: number | null;
     ultimaEjecucionId?: number | null;
     ultimaEjecucionFecha?: string | null;
     fechaVencimientoLote?: string | null;
-}
-
-export interface LoteControlOption {
-    id: number;
-    lote: string;
-    productoId: string;
-    productoNombre: string;
-    tipoOrden: "OP" | "OF";
-    batchRecordId?: number | null;
-    batchRecordCodigo?: string | null;
-}
-
-export interface ExceptionalRequirementOption {
-    planId: number;
-    planCodigo: string;
-    planNombre: string;
-    versionId: number;
-    versionNumero: number;
-    proposito: string;
-    puntoAplicacion: PuntoAplicacionControl;
-    momento: MomentoEjecucionControl;
-    puntoExigencia: PuntoExigenciaControl;
-}
-
-export interface ExceptionalStageOption {
-    id: number;
-    secuencia: number;
-    nombre: string;
-    areaId: number;
-    areaNombre: string;
 }
 
 export interface LecturaControlWrite {
@@ -281,11 +246,6 @@ export interface EjecucionControl {
     observaciones?: string | null;
     repeticionDeId?: number | null;
     motivoRepeticion?: string | null;
-    agregadoExcepcionalmente: boolean;
-    motivoAdicion?: string | null;
-    agregadoPor?: string | null;
-    revisionAdicionId?: number | null;
-    firmaAdicionId?: number | null;
     muestras: MuestraControl[];
 }
 

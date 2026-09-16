@@ -92,14 +92,14 @@ export default function CatalogosControlDialog({
     return (
         <Dialog.Root open={open} onOpenChange={({ open: next }) => setOpen(next)} size="xl" scrollBehavior="inside">
             <Dialog.Trigger asChild>
-                <Button variant="outline" size="sm"><LuBookOpen />Magnitudes y unidades</Button>
+                <Button variant="outline"><LuBookOpen />Magnitudes físicas y unidades</Button>
             </Dialog.Trigger>
             <Portal>
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                     <Dialog.Content maxW="5xl">
                         <Dialog.Header>
-                            <Dialog.Title>Magnitudes y unidades</Dialog.Title>
+                            <Dialog.Title>Magnitudes físicas y unidades</Dialog.Title>
                         </Dialog.Header>
                         <Dialog.CloseTrigger asChild><CloseButton aria-label="Cerrar catálogos" size="sm" /></Dialog.CloseTrigger>
                         <Dialog.Body>

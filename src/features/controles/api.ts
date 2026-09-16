@@ -15,11 +15,8 @@ import type {
     DisposicionDesviacion,
     EjecucionControl,
     EjecucionControlWrite,
-    ExceptionalRequirementOption,
-    ExceptionalStageOption,
     HistorialControlItem,
     HistorialFilters,
-    LoteControlOption,
     PageResponse,
     PendientesFilters,
     PlanControl,
@@ -136,11 +133,6 @@ export interface ExecutionSummaryWire {
     areaOperativaNombre?: string | null;
     procesoId?: number | null;
     procesoNombre?: string | null;
-    agregadoExcepcionalmente: boolean;
-    motivoAdicion?: string | null;
-    agregadoPor?: string | null;
-    revisionAdicionId?: number | null;
-    firmaAdicionId?: number | null;
     usuarioUsername: string;
     usuarioNombreCompleto?: string | null;
     fechaRegistro: string;
@@ -368,11 +360,6 @@ export function normalizeExecutionDetail(item: ExecutionDetailWire): EjecucionCo
         observaciones: summary.observaciones,
         repeticionDeId: summary.repeticionDeId,
         motivoRepeticion: summary.motivoRepeticion,
-        agregadoExcepcionalmente: summary.agregadoExcepcionalmente,
-        motivoAdicion: summary.motivoAdicion,
-        agregadoPor: summary.agregadoPor,
-        revisionAdicionId: summary.revisionAdicionId,
-        firmaAdicionId: summary.firmaAdicionId,
         muestras: item.muestras.map((sample) => ({
             ...sample,
             tipo: sample.tipo ?? (sample.lecturas.some((reading) => reading.valorNumerico != null) ? "NUMERICA" : "BOOLEANA"),
@@ -410,11 +397,6 @@ export interface ControlDomainApi {
     publishVersion: (planId: number, versionId: number) => Promise<PlanControl>;
     retireVersion: (planId: number, versionId: number) => Promise<PlanControl>;
     listPendientes: (filters?: PendientesFilters) => Promise<PageResponse<ControlRequerido>>;
-    searchLotes: (search?: string, size?: number) => Promise<LoteControlOption[]>;
-    createIndependentRequirements: (loteId: number) => Promise<ControlRequerido[]>;
-    addExceptionalRequirement: (request: { batchRecordId: number; planId: number; batchRecordEtapaId?: number | null; motivo: string }) => Promise<ControlRequerido>;
-    listExceptionalOptions: (batchRecordId: number, batchRecordEtapaId?: number | null) => Promise<ExceptionalRequirementOption[]>;
-    listExceptionalStages: (batchRecordId: number) => Promise<ExceptionalStageOption[]>;
     execute: (request: EjecucionControlWrite) => Promise<EjecucionControl>;
     revalidate?: (requirementId: number, justification: string) => Promise<RevalidacionControl>;
     listHistorial: (filters?: HistorialFilters) => Promise<PageResponse<HistorialControlItem>>;
@@ -464,39 +446,6 @@ function createControlDomainApi(ambito: AmbitoControl): ControlDomainApi {
             const response = await axios.get<PageResponse<PendingWire> | PendingWire[]>(`${base}/pendientes`, { ...requestOptions, params: filters });
             const page = asPage(response.data, filters.page, filters.size);
             return { ...page, content: page.content.map(normalizePending) };
-        },
-        async searchLotes(search = "", size = 20) {
-            const response = await axios.get<LoteControlOption[]>(`${base}/lotes`, {
-                ...requestOptions,
-                params: { search: search.trim() || undefined, size },
-            });
-            return response.data ?? [];
-        },
-        async createIndependentRequirements(loteId) {
-            const response = await axios.post<PendingWire[]>(
-                `${base}/pendientes/independientes`,
-                { loteId },
-                requestOptions,
-            );
-            return (response.data ?? []).map(normalizePending);
-        },
-        async addExceptionalRequirement(request) {
-            const response = await axios.post<PendingWire>(`${base}/requisitos/excepcionales`, request, requestOptions);
-            return normalizePending(response.data);
-        },
-        async listExceptionalOptions(batchRecordId, batchRecordEtapaId) {
-            const response = await axios.get<ExceptionalRequirementOption[]>(
-                `${base}/requisitos/excepcionales/opciones`,
-                { ...requestOptions, params: { batchRecordId, batchRecordEtapaId } },
-            );
-            return response.data ?? [];
-        },
-        async listExceptionalStages(batchRecordId) {
-            const response = await axios.get<ExceptionalStageOption[]>(
-                `${base}/requisitos/excepcionales/etapas`,
-                { ...requestOptions, params: { batchRecordId } },
-            );
-            return response.data ?? [];
         },
         async execute(request) {
             const response = await axios.post<ExecutionDetailWire>(`${base}/ejecuciones`, request, requestOptions);
