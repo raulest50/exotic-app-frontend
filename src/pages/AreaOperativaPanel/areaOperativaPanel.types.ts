@@ -104,6 +104,13 @@ export interface PoeOperativoDTO {
     contentType: string;
 }
 
+export interface PoeViewerTarget {
+    url: string;
+    procesoNombre: string;
+    areaNombre: string;
+    version: number;
+}
+
 export interface RutaProcesoVisualDTO {
     nodes: RutaProcesoVisualNodeDTO[];
     edges: RutaProcesoVisualEdgeDTO[];

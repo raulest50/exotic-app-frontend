@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useColorModeValue } from "../../components/ui/color-mode";
 import {
     closestCenter,
@@ -49,11 +49,13 @@ import AreaOperativaMpsSemanalTab from "./AreaOperativaMpsSemanalTab.tsx";
 import type {
     AreaOperativaOrdenDetalleDTO,
     OrdenFabricacionOperativaDTO,
+    PoeViewerTarget,
 } from "./areaOperativaPanel.types.ts";
 import { useAreaOperativaNoiseSampler } from "./Analitica/Noise/useAreaOperativaNoiseSampler.ts";
 import { formatSemanaMpsDisplayDate } from "../Produccion/ProgProdSemanalTab/semanaMps.utils.ts";
 
 const endpoints = new EndPointsURL();
+const PoeViewerDialog = lazy(() => import("./PoeViewerDialog.tsx"));
 const TABLERO_VISTA_STORAGE_KEY = "areaOperativaPanel.tableroVista.v2";
 const COMPLETED_PAGE_SIZE = 20;
 const HISTORICAL_SEARCH_DEBOUNCE_MS = 300;
@@ -298,6 +300,7 @@ export default function AreaOperativaPanel() {
     const [detailLoading, setDetailLoading] = useState(false);
     const [detail, setDetail] = useState<AreaOperativaOrdenDetalleDTO | null>(null);
     const [fabricacionDetail, setFabricacionDetail] = useState<OrdenFabricacionOperativaDTO | null>(null);
+    const [poeViewerTarget, setPoeViewerTarget] = useState<PoeViewerTarget | null>(null);
 
     const scrollToElement = useCallback((element: HTMLDivElement | null) => {
         element?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1073,6 +1076,7 @@ export default function AreaOperativaPanel() {
                     detail={fabricacionDetail}
                     loading={detailLoading}
                     currentAreaId={areaResponsable?.areaId ?? null}
+                    onOpenPoe={setPoeViewerTarget}
                 />
             ) : (
                 <AreaOperativaOrderDetailDrawer
@@ -1081,8 +1085,17 @@ export default function AreaOperativaPanel() {
                     detail={detail}
                     loading={detailLoading}
                     currentAreaId={areaResponsable?.areaId ?? null}
+                    onOpenPoe={setPoeViewerTarget}
                 />
             )}
+            {poeViewerTarget ? (
+                <Suspense fallback={null}>
+                    <PoeViewerDialog
+                        target={poeViewerTarget}
+                        onClose={() => setPoeViewerTarget(null)}
+                    />
+                </Suspense>
+            ) : null}
         </VStack>
     );
 }

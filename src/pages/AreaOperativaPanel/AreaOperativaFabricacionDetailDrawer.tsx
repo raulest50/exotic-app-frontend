@@ -1,5 +1,3 @@
-import { useState } from "react";
-import axios from "axios";
 import {
     Badge,
     Box,
@@ -14,7 +12,6 @@ import {
     Text,
     VStack,
 } from "@chakra-ui/react";
-import { useAppToast } from "@/components/ui/use-app-toast";
 import EndPointsURL from "../../api/EndPointsURL";
 import {
     formatDateTime,
@@ -26,6 +23,7 @@ import {
 import type {
     OrdenFabricacionOperacionDTO,
     OrdenFabricacionOperativaDTO,
+    PoeViewerTarget,
 } from "./areaOperativaPanel.types";
 
 interface Props {
@@ -34,7 +32,10 @@ interface Props {
     detail: OrdenFabricacionOperativaDTO | null;
     loading: boolean;
     currentAreaId?: number | null;
+    onOpenPoe: (target: PoeViewerTarget) => void;
 }
+
+const endpoints = new EndPointsURL();
 
 function estadoColor(estado: number): string {
     if (estado === 2) return "green";
@@ -50,48 +51,18 @@ export default function AreaOperativaFabricacionDetailDrawer({
     detail,
     loading,
     currentAreaId,
+    onOpenPoe,
 }: Props) {
-    const endpoints = new EndPointsURL();
-    const toast = useAppToast();
-    const [loadingPoeId, setLoadingPoeId] = useState<number | null>(null);
-
-    const openPoe = async (operacion: OrdenFabricacionOperacionDTO) => {
-        if (!detail || !operacion.poeDocumentoVersionId) return;
-        const previewWindow = window.open("about:blank", "_blank");
-        if (previewWindow) previewWindow.opener = null;
-        setLoadingPoeId(operacion.id);
-        try {
-            const url = endpoints.area_operativa_panel_poe_fabricacion
+    const openPoe = (operacion: OrdenFabricacionOperacionDTO) => {
+        if (!detail || !operacion.poeDocumentoVersionId || operacion.poeVersion == null) return;
+        onOpenPoe({
+            url: endpoints.area_operativa_panel_poe_fabricacion
                 .replace("{ordenFabricacionId}", String(detail.ordenFabricacionId))
-                .replace("{operacionId}", String(operacion.id));
-            const response = await axios.get<Blob>(url, {
-                responseType: "blob",
-                withCredentials: true,
-            });
-            const objectUrl = URL.createObjectURL(response.data);
-            if (previewWindow) {
-                previewWindow.location.replace(objectUrl);
-            } else {
-                const anchor = document.createElement("a");
-                anchor.href = objectUrl;
-                anchor.download = operacion.poeNombreArchivo || "POE";
-                document.body.appendChild(anchor);
-                anchor.click();
-                anchor.remove();
-            }
-            window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
-        } catch (error) {
-            previewWindow?.close();
-            toast({
-                title: "POE no disponible",
-                description: axios.isAxiosError(error) && error.response?.status === 404
-                    ? "El POE congelado ya no está disponible."
-                    : "No fue posible abrir el POE congelado.",
-                status: "error",
-            });
-        } finally {
-            setLoadingPoeId(null);
-        }
+                .replace("{operacionId}", String(operacion.id)),
+            procesoNombre: operacion.procesoNombre,
+            areaNombre: operacion.areaOperativaNombre,
+            version: operacion.poeVersion,
+        });
     };
 
     return (
@@ -187,8 +158,7 @@ export default function AreaOperativaFabricacionDetailDrawer({
                                                             mt={3}
                                                             size="sm"
                                                             variant="outline"
-                                                            loading={loadingPoeId === operacion.id}
-                                                            onClick={() => void openPoe(operacion)}
+                                                            onClick={() => openPoe(operacion)}
                                                         >
                                                             Ver POE v{operacion.poeVersion}
                                                         </Button>
