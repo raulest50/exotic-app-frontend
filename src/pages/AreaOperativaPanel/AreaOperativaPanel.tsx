@@ -267,6 +267,8 @@ export default function AreaOperativaPanel() {
     const boardAbortControllerRef = useRef<AbortController | null>(null);
     const boardRequestIdRef = useRef(0);
     const hasLoadedBoardRef = useRef(false);
+    const lastSuccessfulBoardVistaRef = useRef<TableroVista | null>(null);
+    const lastSuccessfulCompletedPageRef = useRef(0);
     useAreaOperativaNoiseSampler();
 
     const {
@@ -284,6 +286,7 @@ export default function AreaOperativaPanel() {
     const [loading, setLoading] = useState(false);
     const [completedLoading, setCompletedLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [boardSnapshotStale, setBoardSnapshotStale] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
     const [tableroVista, setTableroVista] = useState<TableroVista>(getStoredTableroVista);
@@ -373,11 +376,13 @@ export default function AreaOperativaPanel() {
         page,
         search,
         completedOnly,
+        preserveCurrentBoardOnError = false,
     }: {
         vista: TableroVista;
         page: number;
         search: string;
         completedOnly: boolean;
+        preserveCurrentBoardOnError?: boolean;
     }) => {
         const requestId = boardRequestIdRef.current + 1;
         boardRequestIdRef.current = requestId;
@@ -410,10 +415,13 @@ export default function AreaOperativaPanel() {
             );
 
             if (requestId !== boardRequestIdRef.current) {
-                return;
+                return false;
             }
 
             const nextBoard = response.data ?? EMPTY_BOARD;
+            if (!completedOnly) {
+                lastSuccessfulBoardVistaRef.current = vista;
+            }
             const pagination = nextBoard.paginacionCompletadas;
             const lastValidPage = pagination && pagination.totalPages > 0
                 ? pagination.totalPages - 1
@@ -422,28 +430,56 @@ export default function AreaOperativaPanel() {
                 if (!completedOnly) {
                     setTablero(nextBoard);
                 }
+                lastSuccessfulCompletedPageRef.current = Math.min(
+                    lastSuccessfulCompletedPageRef.current,
+                    lastValidPage,
+                );
+                setBoardSnapshotStale(true);
                 hasLoadedBoardRef.current = true;
                 setCompletedPage(lastValidPage);
-                return;
+                return true;
             }
 
             setTablero(nextBoard);
+            setBoardSnapshotStale(false);
+            if (vista === "HISTORICO") {
+                lastSuccessfulCompletedPageRef.current = pagination?.page ?? page;
+            }
             if (!completedOnly) {
                 hasLoadedBoardRef.current = true;
             }
+            return true;
         } catch (err: any) {
             if (axios.isCancel(err) || err.code === "ERR_CANCELED") {
-                return;
+                return false;
             }
-            setError(
+            const errorMessage =
                 err.response?.data?.message ||
                 err.message ||
-                "No fue posible cargar el tablero operativo.",
-            );
-            if (!completedOnly) {
-                setTablero(EMPTY_BOARD);
-                hasLoadedBoardRef.current = false;
+                "No fue posible cargar el tablero operativo.";
+            const preservesCurrentBoard = !completedOnly
+                && preserveCurrentBoardOnError
+                && lastSuccessfulBoardVistaRef.current === vista;
+            const preservesDisplayedBoard = completedOnly || preservesCurrentBoard;
+            setError(preservesDisplayedBoard
+                ? `${errorMessage} Se muestran los últimos datos disponibles.`
+                : errorMessage);
+            if (completedOnly) {
+                setCompletedPage(lastSuccessfulCompletedPageRef.current);
+                setBoardSnapshotStale(true);
+            } else {
+                if (preservesCurrentBoard) {
+                    hasLoadedBoardRef.current = true;
+                    setBoardSnapshotStale(true);
+                } else {
+                    setTablero(EMPTY_BOARD);
+                    hasLoadedBoardRef.current = false;
+                    lastSuccessfulBoardVistaRef.current = null;
+                    lastSuccessfulCompletedPageRef.current = 0;
+                    setBoardSnapshotStale(false);
+                }
             }
+            return false;
         } finally {
             if (requestId === boardRequestIdRef.current) {
                 if (completedOnly) {
@@ -466,6 +502,7 @@ export default function AreaOperativaPanel() {
             page: completedPageRef.current,
             search: historicalSearchRef.current,
             completedOnly: false,
+            preserveCurrentBoardOnError: true,
         });
     }, [directivesLoading, effectiveTableroVista, fetchTablero]);
 
@@ -497,6 +534,7 @@ export default function AreaOperativaPanel() {
             page: completedPageRef.current,
             search: historicalSearchRef.current,
             completedOnly: false,
+            preserveCurrentBoardOnError: true,
         });
     }, [effectiveTableroVista, fetchTablero, refreshDirectives]);
 
@@ -538,6 +576,16 @@ export default function AreaOperativaPanel() {
     }, [onDetailOpen, toast]);
 
     const openActionModal = (action: SeguimientoActionType, orden: SeguimientoOrdenAreaCardDTO) => {
+        if (boardSnapshotStale) {
+            toast({
+                title: "Tablero pendiente de actualización",
+                description: "Actualiza el tablero antes de registrar una nueva transición.",
+                status: "warning",
+                duration: 4000,
+                isClosable: true,
+            });
+            return;
+        }
         setSelectedAction(action);
         setSelectedOrden(orden);
         setObservaciones("");
@@ -574,6 +622,16 @@ export default function AreaOperativaPanel() {
     };
 
     const handleSubmitAction = async () => {
+        if (boardSnapshotStale) {
+            toast({
+                title: "Tablero pendiente de actualización",
+                description: "Actualiza el tablero antes de registrar una nueva transición.",
+                status: "warning",
+                duration: 4000,
+                isClosable: true,
+            });
+            return;
+        }
         if (!selectedOrden || !selectedAction) {
             return;
         }
@@ -641,13 +699,16 @@ export default function AreaOperativaPanel() {
             });
 
             onActionClose();
-            setCompletedPage(0);
-            await fetchTablero({
+            const boardRefreshed = await fetchTablero({
                 vista: effectiveTableroVista,
                 page: 0,
                 search: historicalSearchRef.current,
                 completedOnly: false,
+                preserveCurrentBoardOnError: true,
             });
+            if (boardRefreshed) {
+                setCompletedPage(0);
+            }
         } catch (err: any) {
             toast({
                 title: "Error",
@@ -901,7 +962,7 @@ export default function AreaOperativaPanel() {
                                                         mode="leader"
                                                         onOpenDetail={openDetail}
                                                         onAction={openActionModal}
-                                                        dndEnabled
+                                                        dndEnabled={!boardSnapshotStale}
                                                         containerRef={getColumnContainerRef(estadoKey)}
                                                         totalItems={
                                                             estadoKey === "completado"
@@ -1047,15 +1108,18 @@ export default function AreaOperativaPanel() {
                                     onClick={() => void handleSubmitAction()}
                                     loading={submitting}
                                     disabled={
-                                        selectedAction === "completar"
-                                        && Boolean(selectedOrden?.esNodoFinal)
-                                        && (
-                                            !Number.isFinite(Number(cantidadProducida))
-                                            || Number(cantidadProducida) <= 0
-                                            || (
-                                                selectedOrden?.tipoOrden === "OF"
-                                                && Math.abs(Number(cantidadProducida) - selectedOrden.cantidadProducir) > 0.0001
-                                                && !motivoDiferenciaCantidad.trim()
+                                        boardSnapshotStale
+                                        || (
+                                            selectedAction === "completar"
+                                            && Boolean(selectedOrden?.esNodoFinal)
+                                            && (
+                                                !Number.isFinite(Number(cantidadProducida))
+                                                || Number(cantidadProducida) <= 0
+                                                || (
+                                                    selectedOrden?.tipoOrden === "OF"
+                                                    && Math.abs(Number(cantidadProducida) - selectedOrden.cantidadProducir) > 0.0001
+                                                    && !motivoDiferenciaCantidad.trim()
+                                                )
                                             )
                                         )
                                     }
