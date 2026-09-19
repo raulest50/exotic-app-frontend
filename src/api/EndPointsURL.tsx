@@ -69,6 +69,7 @@ export default class EndPointsURL{
     public get_ruta_proceso_cat_versiones: string;
     public get_ruta_proceso_cat_version: string;
     public save_ruta_proceso_cat: string;
+    public update_ruta_proceso_cat_layout: string;
     public delete_ruta_proceso_cat: string;
     public get_ruta_proceso_cat_procesos_disponibles: string;
     public check_rutas_exist_batch: string;
@@ -758,6 +759,7 @@ export default class EndPointsURL{
         this.get_ruta_proceso_cat_versiones = `${domain}/${ruta_proceso_cat_res}/{categoriaId}/versiones`;
         this.get_ruta_proceso_cat_version = `${domain}/${ruta_proceso_cat_res}/{categoriaId}/versiones/{versionId}`;
         this.save_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/save_ruprocat`;
+        this.update_ruta_proceso_cat_layout = `${domain}/${ruta_proceso_cat_res}/{categoriaId}/versiones/{versionId}/layout`;
         this.delete_ruta_proceso_cat = `${domain}/${ruta_proceso_cat_res}/{categoriaId}`;
         this.get_ruta_proceso_cat_procesos_disponibles = `${domain}/${ruta_proceso_cat_res}/procesos-disponibles`;
         this.check_rutas_exist_batch = `${domain}/${ruta_proceso_cat_res}/exists-batch`;

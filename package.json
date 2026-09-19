@@ -9,6 +9,7 @@
     "build:dev": "tsc && vite build --mode development",
     "lint": "eslint . --config eslint.gate.config.js --max-warnings 0",
     "lint:suppressions:prune": "eslint . --config eslint.gate.config.js --max-warnings 0 --prune-suppressions",
+    "test:ruta-proceso": "bun test tests/rutaProcesoChangeTracking.test.ts",
     "preview": "vite preview",
     "serve": "serve -s dist",
     "ladle": "ladle serve",

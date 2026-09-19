@@ -49,6 +49,17 @@ export interface RutaProcesoEdgeDTO {
     targetNodeId: string;
 }
 
+export interface RutaProcesoNodePositionDTO {
+    id: string;
+    posicionX: number;
+    posicionY: number;
+}
+
+export interface RutaProcesoLayoutUpdateDTO {
+    layoutRevision: number;
+    nodes: RutaProcesoNodePositionDTO[];
+}
+
 export interface RutaProcesoCatDTO {
     id?: number;
     categoriaId: number;
@@ -60,6 +71,9 @@ export interface RutaProcesoCatDTO {
     creadoEn?: string | null;
     creadoPor?: string | null;
     motivoCambio?: string | null;
+    layoutRevision?: number | null;
+    layoutActualizadoEn?: string | null;
+    layoutActualizadoPor?: string | null;
     nodes: RutaProcesoNodeDTO[];
     edges: RutaProcesoEdgeDTO[];
 }

@@ -44,11 +44,18 @@ import {
     ProcesoRutaOption,
     RutaProcesoCatDTO,
     RutaProcesoEdgeDTO,
+    RutaProcesoLayoutUpdateDTO,
     RutaProcesoNodeDTO,
     RutaProcesoNodeData,
 } from "./types.ts";
 import { Categoria } from "../../types.tsx";
 import { ALMACEN_GENERAL_ID, getConnectionError, validateRuta } from "./rutaValidation.ts";
+import {
+    buildLayoutSignature,
+    buildSemanticSignature,
+    getRouteSaveAvailability,
+    normalizeLayoutCoordinate,
+} from "./changeTracking.ts";
 import { LuArrowLeft, LuMaximize2, LuMinimize2, LuPlus, LuTrash2, LuX } from 'react-icons/lu';
 
 const nodeTypes = {
@@ -109,33 +116,6 @@ function getNextNodeId(ruta: RutaProcesoCatDTO): number {
     return maxId + 1;
 }
 
-function buildGraphSignature(nodes: Node<RutaProcesoNodeData>[], edges: Edge[]): string {
-    return JSON.stringify({
-        nodes: nodes
-            .map((node) => ({
-                id: node.id,
-                x: node.position.x,
-                y: node.position.y,
-                areaOperativaId: node.data.areaOperativaId ?? null,
-                areaOperativaNombre: node.data.areaOperativaNombre ?? null,
-                procesoProduccionId: node.data.procesoProduccionId ?? null,
-                label: node.data.label ?? '',
-                hasLeftHandle: node.data.hasLeftHandle ?? true,
-                hasRightHandle: node.data.hasRightHandle ?? true,
-                duracionEstimadaMinutos: node.data.duracionEstimadaMinutos ?? 0,
-                requiereJornadaLaboral: node.data.requiereJornadaLaboral ?? true,
-            }))
-            .sort((left, right) => left.id.localeCompare(right.id)),
-        edges: edges
-            .map((edge) => ({
-                id: edge.id,
-                source: edge.source,
-                target: edge.target,
-            }))
-            .sort((left, right) => left.id.localeCompare(right.id)),
-    });
-}
-
 function formatVersionDate(value?: string | null): string {
     if (!value) {
         return '-';
@@ -159,7 +139,8 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     const [nodes, setNodes, onNodesChange] = useNodesState<Node<RutaProcesoNodeData>>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    const [savingVersion, setSavingVersion] = useState(false);
+    const [savingLayout, setSavingLayout] = useState(false);
     const [selectedElement, setSelectedElement] = useState<Node<RutaProcesoNodeData> | Edge | null>(null);
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [isProcesoPickerOpen, setIsProcesoPickerOpen] = useState(false);
@@ -167,7 +148,8 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     const [currentRuta, setCurrentRuta] = useState<RutaProcesoCatDTO | null>(null);
     const [versions, setVersions] = useState<RutaProcesoCatDTO[]>([]);
     const [viewingHistorical, setViewingHistorical] = useState(false);
-    const [lastSavedSignature, setLastSavedSignature] = useState<string | null>(null);
+    const [lastSavedSemanticSignature, setLastSavedSemanticSignature] = useState<string | null>(null);
+    const [lastSavedLayoutSignature, setLastSavedLayoutSignature] = useState<string | null>(null);
     const [motivoCambio, setMotivoCambio] = useState('');
 
     const boxRef = useRef<HTMLDivElement>(null);
@@ -187,6 +169,40 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     const endPoints = useMemo(() => new EndPointsURL(), []);
     const toast = useAppToast();
     const isReadOnly = viewingHistorical;
+    const isMutating = savingVersion || savingLayout;
+    const semanticSignature = useMemo(
+        () => buildSemanticSignature(nodes, edges),
+        [edges, nodes],
+    );
+    const layoutSignature = useMemo(() => buildLayoutSignature(nodes), [nodes]);
+    const semanticDirty = currentRuta != null
+        && lastSavedSemanticSignature != null
+        && semanticSignature !== lastSavedSemanticSignature;
+    const layoutDirty = currentRuta != null
+        && lastSavedLayoutSignature != null
+        && layoutSignature !== lastSavedLayoutSignature;
+    const hasCurrentVersion = currentRuta?.versionId != null && currentRuta.estado === 'VIGENTE';
+    const { canSaveNewVersion, canSaveLayout } = useMemo(
+        () => getRouteSaveAvailability({
+            hasCurrentVersion,
+            isReadOnly,
+            isSaving: isMutating,
+            isValid: validation.isValid,
+            semanticDirty,
+            layoutDirty,
+        }),
+        [hasCurrentVersion, isMutating, isReadOnly, layoutDirty, semanticDirty, validation.isValid],
+    );
+    const renderedNodes = useMemo(
+        () => nodes.map((node) => ({
+            ...node,
+            data: {
+                ...node.data,
+                editingDisabled: isReadOnly || isMutating,
+            },
+        })),
+        [isMutating, isReadOnly, nodes],
+    );
     const selectedNode = useMemo(() => {
         if (!selectedElement || !('position' in selectedElement)) {
             return null;
@@ -197,6 +213,9 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
 
     const onConnect = useCallback(
         (params: Connection) => {
+            if (isReadOnly || isMutating) {
+                return;
+            }
             const error = getConnectionError(
                 { source: params.source, target: params.target },
                 nodes,
@@ -216,7 +235,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
 
             setEdges((currentEdges) => addEdge(params, currentEdges));
         },
-        [edges, nodes, setEdges, toast]
+        [edges, isMutating, isReadOnly, nodes, setEdges, toast]
     );
 
     const isValidConnection = useCallback(
@@ -240,7 +259,8 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                 setNodeIdCounter(1);
                 setSelectedElement(null);
                 setViewingHistorical(false);
-                setLastSavedSignature(null);
+                setLastSavedSemanticSignature(null);
+                setLastSavedLayoutSignature(null);
                 return;
             }
 
@@ -252,7 +272,8 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
             setNodeIdCounter(getNextNodeId(ruta));
             setSelectedElement(null);
             setViewingHistorical(historical);
-            setLastSavedSignature(historical ? null : buildGraphSignature(loadedNodes, loadedEdges));
+            setLastSavedSemanticSignature(buildSemanticSignature(loadedNodes, loadedEdges));
+            setLastSavedLayoutSignature(buildLayoutSignature(loadedNodes));
         },
         [setEdges, setNodes],
     );
@@ -304,14 +325,14 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     }, [loadRutaVigente, loadVersiones, toast]);
 
     const handleAddArea = () => {
-        if (isReadOnly) {
+        if (isReadOnly || isMutating) {
             return;
         }
         setIsPickerOpen(true);
     };
 
     const handleAreaSelected = (area: AreaOperativa) => {
-        if (isReadOnly) {
+        if (isReadOnly || isMutating) {
             return;
         }
 
@@ -349,7 +370,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     };
 
     const updateSelectedNodeData = (patch: Partial<RutaProcesoNodeData>) => {
-        if (!selectedNode || isReadOnly) {
+        if (!selectedNode || isReadOnly || isMutating) {
             return;
         }
 
@@ -414,11 +435,12 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
             return;
         }
 
-        const currentSignature = buildGraphSignature(nodes, edges);
-        if (lastSavedSignature === currentSignature) {
+        if (currentRuta && !semanticDirty) {
             toast({
-                title: 'Sin cambios',
-                description: 'No hay cambios en la ruta vigente para versionar.',
+                title: layoutDirty ? 'Solo hay cambios visuales' : 'Sin cambios funcionales',
+                description: layoutDirty
+                    ? 'Usa Guardar disposición para conservar las nuevas posiciones sin crear una versión.'
+                    : 'No hay cambios funcionales en la ruta vigente para versionar.',
                 status: 'info',
                 duration: 3000,
                 isClosable: true,
@@ -426,15 +448,17 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
             return;
         }
 
-        setSaving(true);
+        setSavingVersion(true);
         try {
             const rutaDTO: RutaProcesoCatDTO = {
                 categoriaId: categoria.categoriaId,
+                versionId: currentRuta?.versionId ?? null,
+                layoutRevision: currentRuta?.layoutRevision ?? null,
                 motivoCambio: motivoCambio.trim() || null,
                 nodes: nodes.map((node) => ({
                     id: node.id,
-                    posicionX: node.position.x,
-                    posicionY: node.position.y,
+                    posicionX: normalizeLayoutCoordinate(node.position.x),
+                    posicionY: normalizeLayoutCoordinate(node.position.y),
                     areaOperativaId: node.data.areaOperativaId || null,
                     areaOperativaNombre: node.data.areaOperativaNombre || null,
                     procesoProduccionId: node.data.procesoProduccionId ?? null,
@@ -485,6 +509,14 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     duration: 4000,
                     isClosable: true,
                 });
+                if (status === 409) {
+                    try {
+                        await loadRutaVigente();
+                        await loadVersiones();
+                    } catch (reloadError) {
+                        console.error('Error reloading ruta after version conflict:', reloadError);
+                    }
+                }
             } else {
                 toast({
                     title: 'Error',
@@ -495,12 +527,95 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                 });
             }
         } finally {
-            setSaving(false);
+            setSavingVersion(false);
+        }
+    };
+
+    const handleSaveLayout = async () => {
+        if (!currentRuta?.versionId || isReadOnly) {
+            return;
+        }
+        if (semanticDirty) {
+            toast({
+                title: 'Hay cambios funcionales pendientes',
+                description: 'La disposición no puede guardarse por separado hasta guardar o deshacer esos cambios.',
+                status: 'warning',
+                duration: 3500,
+                isClosable: true,
+            });
+            return;
+        }
+        if (!layoutDirty) {
+            toast({
+                title: 'Sin cambios visuales',
+                description: 'Las posiciones coinciden con la disposición guardada.',
+                status: 'info',
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        setSavingLayout(true);
+        try {
+            const layoutDTO: RutaProcesoLayoutUpdateDTO = {
+                layoutRevision: currentRuta.layoutRevision ?? 0,
+                nodes: nodes.map((node) => ({
+                    id: node.id,
+                    posicionX: normalizeLayoutCoordinate(node.position.x),
+                    posicionY: normalizeLayoutCoordinate(node.position.y),
+                })),
+            };
+            const endpoint = endPoints.update_ruta_proceso_cat_layout
+                .replace('{categoriaId}', String(categoria.categoriaId))
+                .replace('{versionId}', String(currentRuta.versionId));
+            const response = await axios.patch<RutaProcesoCatDTO>(endpoint, layoutDTO);
+            applyRuta(response.data, false);
+
+            toast({
+                title: 'Disposición guardada',
+                description: `La versión ${response.data.versionNumber ?? '-'} conserva su definición funcional · revisión visual ${response.data.layoutRevision ?? 0}.`,
+                status: 'success',
+                duration: 3500,
+                isClosable: true,
+            });
+        } catch (err) {
+            console.error('Error saving ruta layout:', err);
+            if (axios.isAxiosError(err)) {
+                const status = err.response?.status;
+                const payload = err.response?.data as BackendErrorResponse | undefined;
+                const message = payload?.message || payload?.title;
+                toast({
+                    title: status === 409 ? 'La ruta cambió' : 'Error',
+                    description: message || 'No se pudo guardar la disposición visual.',
+                    status: status === 409 ? 'warning' : 'error',
+                    duration: 4500,
+                    isClosable: true,
+                });
+                if (status === 409) {
+                    try {
+                        await loadRutaVigente();
+                        await loadVersiones();
+                    } catch (reloadError) {
+                        console.error('Error reloading ruta after layout conflict:', reloadError);
+                    }
+                }
+            } else {
+                toast({
+                    title: 'Error',
+                    description: 'No se pudo guardar la disposición visual.',
+                    status: 'error',
+                    duration: 3500,
+                    isClosable: true,
+                });
+            }
+        } finally {
+            setSavingLayout(false);
         }
     };
 
     const handleReset = () => {
-        if (isReadOnly) {
+        if (isReadOnly || isMutating) {
             return;
         }
         setNodes([]);
@@ -510,7 +625,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     };
 
     const handleDeleteSelected = () => {
-        if (!selectedElement || isReadOnly) {
+        if (!selectedElement || isReadOnly || isMutating) {
             return;
         }
 
@@ -612,7 +727,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     return (
         <Flex direction="column" gap={4} p="1em">
             <Flex direction="row" align="center" gap={4}>
-                <Button variant="outline" onClick={onBack}><LuArrowLeft />Volver
+                <Button variant="outline" onClick={onBack} disabled={isMutating}><LuArrowLeft />Volver
                                     </Button>
                 <Heading flex={2} as="h2" size="lg" fontFamily="Comfortaa Variable">
                     Ruta de Proceso - {categoria.categoriaNombre}
@@ -674,7 +789,11 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                         value={motivoCambio}
                         onChange={(event) => setMotivoCambio(event.target.value)}
                         placeholder="Opcional: describe por qué se crea esta nueva versión"
+                        disabled={isMutating || (currentRuta != null && !semanticDirty)}
                     />
+                    <Field.HelperText>
+                        Se utiliza únicamente al crear una versión por cambios funcionales.
+                    </Field.HelperText>
                 </Field.Root>
             )}
 
@@ -709,24 +828,24 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                 bg={isFullScreen ? "bg.panel" : undefined}
             >
                 <ReactFlow
-                    nodes={nodes}
+                    nodes={renderedNodes}
                     edges={edges}
-                    onNodesChange={isReadOnly ? undefined : onNodesChange}
-                    onEdgesChange={isReadOnly ? undefined : onEdgesChange}
-                    onConnect={isReadOnly ? undefined : onConnect}
+                    onNodesChange={isReadOnly || isMutating ? undefined : onNodesChange}
+                    onEdgesChange={isReadOnly || isMutating ? undefined : onEdgesChange}
+                    onConnect={isReadOnly || isMutating ? undefined : onConnect}
                     nodeTypes={nodeTypes}
                     defaultEdgeOptions={defaultEdgeOptions}
                     connectionMode={ConnectionMode.Loose}
-                    connectOnClick={!isReadOnly}
-                    nodesDraggable={!isReadOnly}
-                    nodesConnectable={!isReadOnly}
-                    elementsSelectable={!isReadOnly}
+                    connectOnClick={!isReadOnly && !isMutating}
+                    nodesDraggable={!isReadOnly && !isMutating}
+                    nodesConnectable={!isReadOnly && !isMutating}
+                    elementsSelectable={!isReadOnly && !isMutating}
                     onSelectionChange={({ nodes: selectedNodes, edges: selectedEdges }) => {
                         if (selectedNodes.length > 0) setSelectedElement(selectedNodes[0] as Node<RutaProcesoNodeData>);
                         else if (selectedEdges.length > 0) setSelectedElement(selectedEdges[0]);
                         else setSelectedElement(null);
                     }}
-                    isValidConnection={isReadOnly ? undefined : isValidConnection}
+                    isValidConnection={isReadOnly || isMutating ? undefined : isValidConnection}
                 >
                     <Controls />
                     <MiniMap nodeColor={() => '#805AD5'} />
@@ -755,13 +874,13 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                             <Button
                                 colorPalette="purple"
                                 onClick={handleAddArea}
-                                disabled={isReadOnly}
+                                disabled={isReadOnly || isMutating}
                                 boxShadow="lg"><LuPlus />Agregar Area
                                                             </Button>
                             <Button
                                 colorPalette="red"
                                 onClick={handleDeleteSelected}
-                                disabled={!selectedElement || isReadOnly}
+                                disabled={!selectedElement || isReadOnly || isMutating}
                                 boxShadow="lg"><LuTrash2 />Eliminar Seleccion
                                                             </Button>
                         </Flex>
@@ -787,7 +906,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                                 step={1}
                                 value={selectedNode.data.duracionEstimadaMinutos ?? 0}
                                 onChange={(event) => handleSelectedNodeDurationChange(event.target.value)}
-                                disabled={isReadOnly}
+                                disabled={isReadOnly || isMutating}
                             />
                         </Field.Root>
 
@@ -797,7 +916,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                                 colorPalette="purple"
                                 checked={selectedNode.data.requiereJornadaLaboral !== false}
                                 onCheckedChange={({ checked }) => handleSelectedNodeJornadaChange(checked)}
-                                disabled={isReadOnly}
+                                disabled={isReadOnly || isMutating}
                             >
                                 <Switch.HiddenInput />
                                 <Switch.Control>
@@ -843,7 +962,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                                         variant="outline"
                                         colorPalette="purple"
                                         onClick={() => setIsProcesoPickerOpen(true)}
-                                        disabled={isReadOnly}
+                                        disabled={isReadOnly || isMutating}
                                     >
                                         {selectedNode.data.procesoProduccionId == null
                                             ? "Asignar proceso"
@@ -853,7 +972,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                                         variant="ghost"
                                         colorPalette="red"
                                         onClick={handleClearProceso}
-                                        disabled={isReadOnly || selectedNode.data.procesoProduccionId == null}
+                                        disabled={isReadOnly || isMutating || selectedNode.data.procesoProduccionId == null}
                                     >
                                         Quitar
                                     </Button>
@@ -881,7 +1000,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     variant="solid"
                     colorPalette="purple"
                     onClick={handleAddArea}
-                    disabled={isReadOnly}
+                    disabled={isReadOnly || isMutating}
                 >
                     Agregar Area
                 </Button>
@@ -890,11 +1009,30 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     variant="solid"
                     colorPalette="green"
                     onClick={handleSave}
-                    loading={saving}
-                    disabled={!validation.isValid || isReadOnly}
-                    title={!validation.isValid ? "La ruta tiene reglas pendientes por corregir" : ""}
+                    loading={savingVersion}
+                    disabled={!canSaveNewVersion}
+                    title={!validation.isValid
+                        ? "La ruta tiene reglas pendientes por corregir"
+                        : !semanticDirty && currentRuta
+                            ? "No hay cambios funcionales para versionar"
+                            : ""}
                 >
                     Guardar nueva versión
+                </Button>
+
+                <Button
+                    variant="solid"
+                    colorPalette="teal"
+                    onClick={handleSaveLayout}
+                    loading={savingLayout}
+                    disabled={!canSaveLayout}
+                    title={semanticDirty
+                        ? "Los cambios funcionales deben guardarse como una nueva versión"
+                        : !layoutDirty
+                            ? "No hay cambios de posición pendientes"
+                            : ""}
+                >
+                    Guardar disposición
                 </Button>
 
                 {viewingHistorical && (
@@ -902,6 +1040,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                         variant="outline"
                         colorPalette="purple"
                         onClick={() => void handleReturnToVigente()}
+                        disabled={isMutating}
                     >
                         Volver a vigente
                     </Button>
@@ -928,7 +1067,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     variant="solid"
                     colorPalette="red"
                     onClick={handleReset}
-                    disabled={isReadOnly}
+                    disabled={isReadOnly || isMutating}
                 >
                     Reset
                 </Button>
@@ -937,13 +1076,17 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     variant="solid"
                     colorPalette="red"
                     onClick={handleDeleteSelected}
-                    disabled={!selectedElement || isReadOnly}
+                    disabled={!selectedElement || isReadOnly || isMutating}
                 >
                     Eliminar Seleccion
                 </Button>
 
                 <Text color="gray.500" fontSize="sm">
                     Nodos: {nodes.length} | Conexiones: {edges.length}
+                </Text>
+
+                <Text color="fg.muted" fontSize="xs" maxW="320px">
+                    Guardar disposición actualiza solo las posiciones visuales y conserva la versión funcional.
                 </Text>
             </Flex>
 
@@ -955,7 +1098,12 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                             Las versiones anteriores se conservan para órdenes existentes.
                         </Text>
                     </Box>
-                    <Button size="sm" variant="outline" onClick={() => void loadVersiones()}>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void loadVersiones()}
+                        disabled={isMutating}
+                    >
                         Refrescar
                     </Button>
                 </Flex>
@@ -996,7 +1144,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                                                 variant={currentRuta?.versionId === version.versionId ? 'solid' : 'outline'}
                                                 colorPalette="purple"
                                                 onClick={() => void handleViewVersion(version.versionId)}
-                                                disabled={currentRuta?.versionId === version.versionId}
+                                                disabled={isMutating || currentRuta?.versionId === version.versionId}
                                             >
                                                 {currentRuta?.versionId === version.versionId ? 'Abierta' : 'Abrir'}
                                             </Button>

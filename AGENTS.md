@@ -6,7 +6,14 @@ Estas instrucciones aplican a todo el repositorio `exotic-app-frontend`.
 
 - Este repositorio contiene únicamente el frontend. El backend Spring Boot está
   en un repositorio separado.
+- Hay dos repositorios hermanos, normalmente clonados junto a este:
+  `../exotic-app-backend` y `../exotic-app-e2e`. La suite contractual de
+  `exotic-app-e2e` lee directamente los tipos y adaptadores TypeScript de este
+  repositorio, así que cambiar rutas de API, payloads o enums puede romperla sin
+  que este repositorio falle. Avisarlo al reportar el cambio.
 - La aplicación usa React 19.2.8, TypeScript, Vite, Chakra UI v3 y Bun.
+- Las versiones de runtime están fijadas en `.bun-version` (1.3.14) y
+  `.node-version` (24.19.0).
 - El frontend de producción se despliega actualmente como un Static Site de
   Render. Render ejecuta `vite build` y publica el directorio `dist`.
 - El `Dockerfile` no participa en el despliegue actual del Static Site. No usar
@@ -72,11 +79,23 @@ Para cambios visibles o interactivos:
 Si la tarea solo cambia documentación o instrucciones y no altera código,
 configuración de ejecución ni dependencias, no es necesario ejecutar el build.
 
+## Otros scripts disponibles
+
+Ninguno de estos es un gate. Usarlos solo cuando la tarea lo justifique:
+
+- `bun run check:chakra-v3` verifica en modo estricto que no queden patrones de
+  Chakra v2. Útil en tareas de la migración a Chakra v3.
+- `bun run chakra:typegen` regenera los tipos del tema tras editar
+  `src/theme.ts`.
+- `bun run build:dev` construye en modo development.
+- `bun run preview` y `bun run serve` sirven el `dist` ya construido.
+
 ## Controles que actualmente no son gates
 
-- No ejecutar `bun test` como verificación predeterminada. El repositorio no
-  contiene actualmente una suite de pruebas compatible y el comando termina con
-  `No tests found`.
+- Ejecutar pruebas únicamente cuando el usuario lo pida de forma explícita.
+  Nunca correr `bun test` ni una suite del repositorio como verificación
+  predeterminada. Existe una suite acotada en `tests/`, ejecutable con
+  `bun run test:ruta-proceso`.
 - No exigir que `bun run build` pase. Ese script ejecuta `tsc && vite build`, y
   el type-check completo contiene errores heredados no relacionados con muchas
   tareas locales.
@@ -89,7 +108,8 @@ Cuando sea útil ejecutar el type-check global, usar exactamente:
 bunx tsc --noEmit --project tsconfig.json
 ```
 
-Tratar su resultado como diagnóstico hasta que se sanee la línea base:
+La línea base medida el 2026-09-17 es de 92 errores. Tratar su resultado como
+diagnóstico hasta que se sanee esa línea base:
 
 - distinguir los errores de archivos modificados de los errores heredados;
 - corregir regresiones introducidas por la tarea;

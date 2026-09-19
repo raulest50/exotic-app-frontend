@@ -13,12 +13,14 @@ export default function AreaOperativaNode(props: NodeProps) {
 
     const hasLeftHandle = data.hasLeftHandle !== false;
     const hasRightHandle = data.hasRightHandle !== false;
+    const editingDisabled = data.editingDisabled === true;
     const duracionEstimadaMinutos = typeof data.duracionEstimadaMinutos === "number"
         ? Math.max(0, data.duracionEstimadaMinutos)
         : 0;
     const requiereJornadaLaboral = data.requiereJornadaLaboral !== false;
 
     const handleLeftHandleChange = (checked: boolean) => {
+        if (editingDisabled) return;
         setNodes((nodes) =>
             nodes.map((node) =>
                 node.id === props.id
@@ -29,6 +31,7 @@ export default function AreaOperativaNode(props: NodeProps) {
     };
 
     const handleRightHandleChange = (checked: boolean) => {
+        if (editingDisabled) return;
         setNodes((nodes) =>
             nodes.map((node) =>
                 node.id === props.id
@@ -54,6 +57,8 @@ export default function AreaOperativaNode(props: NodeProps) {
                         onCheckedChange={({ checked }) => handleLeftHandleChange(checked === true)}
                         colorPalette="purple"
                         size="lg"
+                        disabled={editingDisabled}
+                        aria-label="Mostrar conector izquierdo"
                         title="Handle izquierdo"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control></Checkbox.Root>
                 </Box>
             )}
@@ -72,6 +77,8 @@ export default function AreaOperativaNode(props: NodeProps) {
                         onCheckedChange={({ checked }) => handleRightHandleChange(checked === true)}
                         colorPalette="purple"
                         size="lg"
+                        disabled={editingDisabled}
+                        aria-label="Mostrar conector derecho"
                         title="Handle derecho"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control></Checkbox.Root>
                 </Box>
             )}
@@ -124,7 +131,7 @@ export default function AreaOperativaNode(props: NodeProps) {
                             position={Position.Left}
                             id={"input"}
                             style={handleStyle}
-                            isConnectable={true}
+                            isConnectable={!editingDisabled}
                         />
                     )}
 
@@ -134,7 +141,7 @@ export default function AreaOperativaNode(props: NodeProps) {
                             position={Position.Right}
                             id={"output"}
                             style={handleStyle}
-                            isConnectable={true}
+                            isConnectable={!editingDisabled}
                         />
                     )}
 
