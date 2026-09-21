@@ -16,12 +16,11 @@ import {
     Portal,
     Spinner,
     Steps,
-    Table,
     Text,
     Textarea,
     VStack,
 } from "@chakra-ui/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LuCheck, LuPlus, LuTrash2 } from "react-icons/lu";
 
 import { useAppToast } from "../../components/ui/use-app-toast";
@@ -29,8 +28,10 @@ import CatalogosControlDialog from "./CatalogosControlDialog";
 import ControlProductPickerDialog from "./ControlProductPickerDialog";
 import { apiFailureDetail, listControlCategories, listMagnitudes, listUnidades, type ControlDomainApi } from "./api";
 import { CONTROL_NOUN, CONTROL_SCOPE_LABEL } from "./controlUi";
+import PlanVersionDetailDialog from "./PlanVersionDetailDialog";
+import PlanVersionList from "./PlanVersionList";
+import { getPlanVersionActions, PLAN_VERSION_FILTERS, planVersionFilterNotice, selectPlanVersionGroups, type PlanVersionFilter } from "./planVersionView";
 import ControlPointRoutePicker from "./QualityControlPointRoutePicker";
-import StatusBadge from "./StatusBadge";
 import type {
     AplicabilidadPlanControl,
     CaracteristicaPlanControl,
@@ -226,6 +227,12 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [search, setSearch] = useState("");
+    const [appliedSearch, setAppliedSearch] = useState("");
+    const [versionFilter, setVersionFilter] = useState<PlanVersionFilter>("TODAS");
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [detailSelection, setDetailSelection] = useState<{ planId: number; versionId: number } | null>(null);
+    const detailTriggerRef = useRef<HTMLButtonElement>(null);
+    const searchRef = useRef<HTMLInputElement>(null);
     const [step, setStep] = useState(0);
     const [editorOpen, setEditorOpen] = useState(false);
     const [editingPlanId, setEditingPlanId] = useState<number | undefined>();
@@ -241,13 +248,20 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
         setUnidades(nextUnits);
     };
 
-    const load = async () => {
+    const load = async (query = appliedSearch) => {
         setLoading(true);
+        setLoadError(null);
         try {
-            const [nextPlans] = await Promise.all([api.listPlanes({ search: search.trim() || undefined }), loadCatalogs()]);
+            const [nextPlans, , nextCategories] = await Promise.all([
+                api.listPlanes({ search: query || undefined }), loadCatalogs(), listControlCategories(),
+            ]);
             setPlans(nextPlans);
+            setCategorias(nextCategories);
+            setAppliedSearch(query);
         } catch (error) {
-            toast({ title: "No fue posible cargar los planes", description: apiFailureDetail(error, "Error de consulta.").message, status: "error" });
+            const message = apiFailureDetail(error, "Error de consulta.").message;
+            setLoadError(message);
+            toast({ title: "No fue posible cargar los planes", description: message, status: "error" });
         } finally {
             setLoading(false);
         }
@@ -256,6 +270,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     useEffect(() => {
         let mounted = true;
         setLoading(true);
+        setLoadError(null);
         Promise.all([api.listPlanes(), listMagnitudes(true), listUnidades(true), listControlCategories()])
             .then(([nextPlans, nextMagnitudes, nextUnits, nextCategories]) => {
                 if (!mounted) return;
@@ -266,7 +281,9 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
             })
             .catch((error) => {
                 if (!mounted) return;
-                toast({ title: "No fue posible cargar los planes", description: apiFailureDetail(error, "Error de consulta.").message, status: "error" });
+                const message = apiFailureDetail(error, "Error de consulta.").message;
+                setLoadError(message);
+                toast({ title: "No fue posible cargar los planes", description: message, status: "error" });
             })
             .finally(() => mounted && setLoading(false));
         return () => { mounted = false; };
@@ -281,11 +298,9 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
         setEditorOpen(true);
     };
 
-    const editPlan = (plan: PlanControl) => {
-        const source = plan.versiones.find((version) => version.estado === "BORRADOR")
-            ?? plan.versiones.find((version) => version.estado === "VIGENTE")
-            ?? plan.versiones[0];
-        if (!source) return;
+    const editPlan = (plan: PlanControl, source: VersionPlanControl) => {
+        const actions = getPlanVersionActions(plan, source.id, nivel);
+        if (loading || saving || loadError || (!actions.edit && !actions.create)) return;
         setEditingPlanId(plan.id);
         setChangeReasonRequired(source.numero > 1 || source.estado !== "BORRADOR");
         setDraft(versionToDraft(plan, source));
@@ -309,6 +324,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     };
 
     const save = async () => {
+        if (saving || loading || loadError || nivel < 2) return;
         const errors = validateDraft(draft, api.ambito, changeReasonRequired);
         setValidationErrors(errors);
         if (errors.length) return;
@@ -324,7 +340,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                     ...inferredPolicy(api.ambito, rule.puntoAplicacion, rule.puntoExigencia !== "INFORMATIVO"),
                 })),
             }, editingPlanId);
-            toast({ title: "Borrador guardado", description: "La versión continúa editable hasta su publicación.", status: "success" });
+            toast({ title: "Borrador guardado", description: "La versión continúa editable hasta su publicación." + planVersionFilterNotice(versionFilter, "BORRADOR"), status: "success" });
             await load();
             setEditorOpen(false);
         } catch (error) {
@@ -336,15 +352,19 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     };
 
     const confirmVersionAction = async () => {
-        if (!confirmAction) return;
+        if (!confirmAction || saving || loading || loadError) return;
+        const plan = plans.find((item) => item.id === confirmAction.plan.id);
+        if (!plan) return;
+        const actions = getPlanVersionActions(plan, confirmAction.version.id, nivel);
+        if (confirmAction.kind === "PUBLICAR" ? !actions.publish : !actions.retire) return;
         setSaving(true);
         try {
             if (confirmAction.kind === "PUBLICAR") {
                 await api.publishVersion(confirmAction.plan.id, confirmAction.version.id);
-                toast({ title: "Versión publicada", description: "Solo los lotes futuros resolverán esta versión.", status: "success" });
+                toast({ title: "Versión publicada", description: "Solo los lotes futuros resolverán esta versión." + planVersionFilterNotice(versionFilter, "VIGENTE"), status: "success" });
             } else {
                 await api.retireVersion(confirmAction.plan.id, confirmAction.version.id);
-                toast({ title: "Versión retirada", description: "Los expedientes existentes conservan su versión congelada.", status: "success" });
+                toast({ title: "Versión retirada", description: "Los expedientes existentes conservan su versión congelada." + planVersionFilterNotice(versionFilter, "RETIRADA"), status: "success" });
             }
             setConfirmAction(null);
             await load();
@@ -356,6 +376,10 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     };
 
     const activeCatalogsByDimension = useMemo(() => new Map(magnitudes.map((item) => [item.id, item.dimension])), [magnitudes]);
+    const versionGroups = useMemo(() => selectPlanVersionGroups(plans, versionFilter), [plans, versionFilter]);
+    const detailPlan = plans.find((plan) => plan.id === detailSelection?.planId);
+    const detailVersion = detailPlan?.versiones.find((version) => version.id === detailSelection?.versionId);
+    const listBusy = loading || saving || Boolean(loadError);
     const applicability = draft.aplicabilidades[0];
 
     const clearLocation = (): Partial<AplicabilidadPlanControl> => ({
@@ -395,25 +419,63 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
             <HStack align="end" gap={3} flexWrap="wrap">
                 <Field.Root flex="1" minW={{ base: "full", md: "280px" }}>
                     <Field.Label>Buscar plan</Field.Label>
-                    <Input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => event.key === "Enter" && void load()} placeholder="Código o nombre" />
+                    <Input ref={searchRef} value={search} disabled={loading || saving} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => event.key === "Enter" && void load(search.trim())} placeholder="Código o nombre" />
                 </Field.Root>
-                <Button onClick={() => void load()} loading={loading}>Buscar</Button>
+                <Button onClick={() => void load(search.trim())} loading={loading} disabled={saving}>Buscar</Button>
+                <Field.Root w={{ base: "full", md: "190px" }}>
+                    <Field.Label>Estado de la versión</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field value={versionFilter} disabled={saving} onChange={(event) => setVersionFilter(event.target.value as PlanVersionFilter)}>
+                            {PLAN_VERSION_FILTERS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
                 {nivel >= 3 && <CatalogosControlDialog magnitudes={magnitudes} unidades={unidades} canManage onRefresh={loadCatalogs} />}
-                {nivel >= 2 && <Button colorPalette="teal" onClick={startNew}><LuPlus />Nuevo plan</Button>}
+                {nivel >= 2 && <Button colorPalette="teal" disabled={listBusy} onClick={startNew}><LuPlus />Nuevo plan</Button>}
             </HStack>
 
+            {loadError && (
+                <Alert.Root status="error">
+                    <Alert.Indicator />
+                    <Box>
+                        <Text fontWeight="semibold">No fue posible actualizar el listado</Text>
+                        <Text fontSize="sm">{loadError}</Text>
+                        <Text fontSize="sm">Pulse Buscar para reintentar. Los datos mostrados pueden estar desactualizados.</Text>
+                    </Box>
+                </Alert.Root>
+            )}
+
             <Box borderWidth="1px" borderRadius="lg" overflowX="auto">
-                <Table.Root size="sm" minW="680px">
-                    <Table.Header><Table.Row><Table.ColumnHeader>Plan</Table.ColumnHeader><Table.ColumnHeader>Versiones</Table.ColumnHeader><Table.ColumnHeader>Configuración vigente</Table.ColumnHeader><Table.ColumnHeader /></Table.Row></Table.Header>
-                    <Table.Body>{plans.map((plan) => {
-                        const current = plan.versiones.find((version) => version.estado === "VIGENTE");
-                        const draftVersion = plan.versiones.find((version) => version.estado === "BORRADOR");
-                        return <Table.Row key={plan.id}><Table.Cell><VStack align="start" gap={1}><Text fontWeight="semibold">{plan.codigo}</Text><Text fontSize="sm" color="fg.muted"><Text as="span" fontWeight="semibold" color="fg">Nombre del plan: </Text>{plan.nombre}</Text><Badge size="sm" colorPalette={plan.ambito === "CALIDAD" ? "purple" : "blue"}>Ámbito: {CONTROL_SCOPE_LABEL[plan.ambito]}</Badge></VStack></Table.Cell><Table.Cell><HStack>{current && <StatusBadge status={`VIGENTE · v${current.numero}`} />}{draftVersion && <Badge colorPalette="orange">BORRADOR · v{draftVersion.numero}</Badge>}</HStack></Table.Cell><Table.Cell>{current ? `1 ubicación · ${current.caracteristicas.length} mediciones` : "Sin versión vigente"}</Table.Cell><Table.Cell><HStack justify="flex-end">{nivel >= 2 && <Button size="xs" variant="outline" onClick={() => editPlan(plan)}>{draftVersion ? "Editar borrador" : "Nueva versión"}</Button>}{nivel >= 3 && draftVersion && <Button size="xs" colorPalette="teal" onClick={() => setConfirmAction({ kind: "PUBLICAR", plan, version: draftVersion })}>Publicar</Button>}{nivel >= 3 && current && <Button size="xs" colorPalette="orange" variant="outline" onClick={() => setConfirmAction({ kind: "RETIRAR", plan, version: current })}>Retirar</Button>}</HStack></Table.Cell></Table.Row>;
-                    })}</Table.Body>
-                </Table.Root>
-                {!loading && !plans.length && <Text py={8} textAlign="center" color="fg.muted">No hay planes registrados para este ámbito.</Text>}
+                <PlanVersionList
+                    groups={versionGroups}
+                    nivel={nivel}
+                    busy={listBusy}
+                    onDetail={(plan, version, trigger) => {
+                        detailTriggerRef.current = trigger;
+                        setDetailSelection({ planId: plan.id, versionId: version.id });
+                    }}
+                    onEdit={editPlan}
+                    onPublish={(plan, version) => setConfirmAction({ kind: "PUBLICAR", plan, version })}
+                    onRetire={(plan, version) => setConfirmAction({ kind: "RETIRAR", plan, version })}
+                    onShowDraft={() => setVersionFilter("BORRADOR")}
+                />
+                {!loading && !loadError && !versionGroups.length && (
+                    <Text py={8} textAlign="center" color="fg.muted">
+                        {appliedSearch || versionFilter !== "TODAS"
+                            ? "No hay versiones que coincidan con la búsqueda y el estado seleccionados."
+                            : "No hay planes registrados para este ámbito."}
+                    </Text>
+                )}
                 {loading && <HStack justify="center" py={8}><Spinner size="sm" /><Text>Cargando planes…</Text></HStack>}
             </Box>
+
+            <PlanVersionDetailDialog
+                plan={detailPlan}
+                version={detailVersion}
+                onClose={() => setDetailSelection(null)}
+                finalFocusEl={() => detailTriggerRef.current?.isConnected ? detailTriggerRef.current : searchRef.current}
+            />
 
             {nivel >= 2 && editorOpen && (
                 <Box borderWidth="1px" borderRadius="lg" p={{ base: 3, md: 5 }}>
@@ -647,12 +709,36 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                         </Grid></Box>;
                     })}<Button alignSelf="start" size="sm" variant="outline" onClick={() => setDraft((current) => ({ ...current, caracteristicas: [...current.caracteristicas, newCharacteristic(current.caracteristicas.length + 1)] }))}><LuPlus />Agregar medición</Button></VStack>}
 
-                    <HStack justify="space-between" mt={6} flexWrap="wrap"><Button variant="outline" disabled={step === 0} onClick={() => setStep((current) => current - 1)}>Anterior</Button><HStack><Button variant="ghost" onClick={() => setEditorOpen(false)}>Cancelar</Button>{step < steps.length - 1 ? <Button colorPalette="teal" onClick={() => setStep((current) => current + 1)}>Siguiente</Button> : <Button colorPalette="teal" loading={saving} onClick={() => void save()}>Guardar borrador</Button>}</HStack></HStack>
+                    <HStack justify="space-between" mt={6} flexWrap="wrap">
+                        <Button variant="outline" disabled={step === 0 || saving} onClick={() => setStep((current) => current - 1)}>Anterior</Button>
+                        <HStack>
+                            <Button variant="ghost" disabled={saving} onClick={() => setEditorOpen(false)}>Cancelar</Button>
+                            {step < steps.length - 1
+                                ? <Button colorPalette="teal" onClick={() => setStep((current) => current + 1)}>Siguiente</Button>
+                                : <Button colorPalette="teal" disabled={listBusy} loading={saving} onClick={() => void save()}>Guardar borrador</Button>}
+                        </HStack>
+                    </HStack>
                 </Box>
             )}
 
-            <Dialog.Root open={confirmAction != null} onOpenChange={({ open }) => !open && setConfirmAction(null)}>
-                <Portal><Dialog.Backdrop /><Dialog.Positioner><Dialog.Content><Dialog.Header><Dialog.Title>{confirmAction?.kind === "PUBLICAR" ? "Publicar versión" : "Retirar versión"}</Dialog.Title></Dialog.Header><Dialog.CloseTrigger asChild><CloseButton aria-label="Cerrar confirmación" size="sm" /></Dialog.CloseTrigger><Dialog.Body><Text>{confirmAction?.kind === "PUBLICAR" ? "La versión quedará inmutable y se aplicará únicamente a lotes futuros." : "Los expedientes existentes conservarán esta versión congelada, pero no se asignará a lotes futuros."}</Text><Text mt={2} fontWeight="semibold">{confirmAction?.plan.codigo} · versión {confirmAction?.version.numero}</Text></Dialog.Body><Dialog.Footer><Button variant="ghost" onClick={() => setConfirmAction(null)}>Cancelar</Button><Button colorPalette={confirmAction?.kind === "PUBLICAR" ? "teal" : "orange"} loading={saving} onClick={() => void confirmVersionAction()}>Confirmar</Button></Dialog.Footer></Dialog.Content></Dialog.Positioner></Portal>
+            <Dialog.Root open={confirmAction != null} onOpenChange={({ open }) => !open && !saving && setConfirmAction(null)}>
+                <Portal>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header><Dialog.Title>{confirmAction?.kind === "PUBLICAR" ? "Publicar versión" : "Retirar versión"}</Dialog.Title></Dialog.Header>
+                            <Dialog.CloseTrigger asChild><CloseButton aria-label="Cerrar confirmación" size="sm" disabled={saving} /></Dialog.CloseTrigger>
+                            <Dialog.Body>
+                                <Text>{confirmAction?.kind === "PUBLICAR" ? "La versión quedará inmutable y se aplicará únicamente a lotes futuros." : "Los expedientes existentes conservarán esta versión congelada, pero no se asignará a lotes futuros."}</Text>
+                                <Text mt={2} fontWeight="semibold">{confirmAction?.plan.codigo} · versión {confirmAction?.version.numero}</Text>
+                            </Dialog.Body>
+                            <Dialog.Footer>
+                                <Button variant="ghost" disabled={saving} onClick={() => setConfirmAction(null)}>Cancelar</Button>
+                                <Button colorPalette={confirmAction?.kind === "PUBLICAR" ? "teal" : "orange"} disabled={listBusy} loading={saving} onClick={() => void confirmVersionAction()}>Confirmar</Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+                </Portal>
             </Dialog.Root>
 
             {applicability && productPickerMode && (
