@@ -57,10 +57,14 @@ import {
     normalizeLayoutCoordinate,
 } from "./changeTracking.ts";
 import { LuArrowLeft, LuMaximize2, LuMinimize2, LuPlus, LuTrash2, LuX } from 'react-icons/lu';
+import { indexRouteControls } from "@/features/controles/routeControlSummary";
+import { useRouteControlSummary } from "@/features/controles/useRouteControlSummary";
+import { RouteControlEdge, RouteControlLegend } from "@/features/controles/RouteControlIndicators";
 
 const nodeTypes = {
     areaOperativaNode: AreaOperativaNode,
 };
+const edgeTypes = { controlRoute: RouteControlEdge };
 
 const defaultEdgeOptions = {
     style: {
@@ -193,15 +197,28 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
         }),
         [hasCurrentVersion, isMutating, isReadOnly, layoutDirty, semanticDirty, validation.isValid],
     );
+    const showControls = hasCurrentVersion && !viewingHistorical && !semanticDirty;
+    const controlSummary = useRouteControlSummary({ categoriaId: categoria.categoriaId, enabled: showControls });
+    const indicators = useMemo(
+        () => indexRouteControls(nodes, edges, controlSummary.controls),
+        [controlSummary.controls, edges, nodes],
+    );
+    const renderedEdges = useMemo(() => edges.map((edge) => ({
+        ...edge,
+        type: "controlRoute",
+        data: { ...edge.data, controls: indicators.qualityByEdge.get(edge.id) },
+    })), [edges, indicators]);
     const renderedNodes = useMemo(
         () => nodes.map((node) => ({
             ...node,
             data: {
                 ...node.data,
                 editingDisabled: isReadOnly || isMutating,
+                processControls: indicators.processByNode.get(node.id),
+                finalQualityControls: indicators.finalByNode.get(node.id),
             },
         })),
-        [isMutating, isReadOnly, nodes],
+        [indicators, isMutating, isReadOnly, nodes],
     );
     const selectedNode = useMemo(() => {
         if (!selectedElement || !('position' in selectedElement)) {
@@ -797,6 +814,16 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                 </Field.Root>
             )}
 
+            {showControls ? (
+                <RouteControlLegend loading={controlSummary.loading} error={controlSummary.error} unmapped={indicators.unmapped} onRefresh={controlSummary.refresh} />
+            ) : (
+                <Text fontSize="xs" color="fg.muted">
+                    {viewingHistorical
+                        ? "Los indicadores de controles se consultan únicamente sobre la ruta vigente."
+                        : "Guarde la versión de la ruta para consultar los controles vigentes compatibles."}
+                </Text>
+            )}
+
             <Box
                 ref={boxRef}
                 position={isFullScreen ? "fixed" : "relative"}
@@ -829,11 +856,12 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
             >
                 <ReactFlow
                     nodes={renderedNodes}
-                    edges={edges}
+                    edges={renderedEdges}
                     onNodesChange={isReadOnly || isMutating ? undefined : onNodesChange}
                     onEdgesChange={isReadOnly || isMutating ? undefined : onEdgesChange}
                     onConnect={isReadOnly || isMutating ? undefined : onConnect}
                     nodeTypes={nodeTypes}
+                    edgeTypes={edgeTypes}
                     defaultEdgeOptions={defaultEdgeOptions}
                     connectionMode={ConnectionMode.Loose}
                     connectOnClick={!isReadOnly && !isMutating}

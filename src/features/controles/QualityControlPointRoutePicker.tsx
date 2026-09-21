@@ -34,13 +34,16 @@ import EndPointsURL from "../../api/EndPointsURL";
 import type { ProductoManufacturingDTO } from "../../pages/Productos/types";
 import type { RutaProcesoCatDTO } from "../../pages/Produccion/ConfParamsCategoria/RutaProcesoCatDesigner/types";
 import type { AmbitoControl, PuntoAplicacionControl, TipoOrdenControl } from "./types";
+import { indexRouteControls, type RouteControlNodeIndicators, type RouteControlSummary } from "./routeControlSummary";
+import { useRouteControlSummary } from "./useRouteControlSummary";
+import { RouteControlBadge, RouteControlEdge, RouteControlLegend, RouteFinalControls } from "./RouteControlIndicators";
 
 const endpoints = new EndPointsURL();
 const FINAL_NODE_ID = "__quality_control_final__";
 const FINAL_EDGE_ID = "__quality_control_final_edge__";
 const EXPANDED_GRAPH_HEIGHT = "clamp(520px, 68dvh, 820px)";
 
-interface RouteNodeData extends Record<string, unknown> {
+interface RouteNodeData extends Record<string, unknown>, RouteControlNodeIndicators {
     label: string;
     detail?: string;
     kind: "CONTEXT" | "OPERATION" | "FINAL";
@@ -54,7 +57,7 @@ interface RouteNodeData extends Record<string, unknown> {
 }
 
 type RouteNode = Node<RouteNodeData>;
-type RouteEdge = Edge<{ optionId?: string }>;
+type RouteEdge = Edge<{ optionId?: string; controls?: RouteControlSummary[] }>;
 
 export interface ControlPointSelection {
     puntoAplicacion: PuntoAplicacionControl;
@@ -98,30 +101,38 @@ function RouteNodeView({ data }: NodeProps<RouteNode>) {
         ? controlPalette
         : data.kind === "FINAL" ? "purple" : data.kind === "OPERATION" ? "teal" : "gray";
     return (
-        <Box
-            minW="180px"
-            maxW="240px"
-            borderWidth={data.selected ? "4px" : "2px"}
-            borderColor={`${palette}.500`}
-            borderRadius="lg"
-            bg="bg.panel"
-            boxShadow={data.selected ? "md" : "sm"}
-            px={4}
-            py={3}
-            textAlign="center"
-        >
-            <Handle type="target" position={Position.Left} isConnectable={false} style={{ opacity: 0 }} />
-            <Text fontWeight="semibold" lineClamp={2}>{data.label}</Text>
-            {data.detail ? <Text mt={1} fontSize="xs" color="fg.muted" lineClamp={2}>{data.detail}</Text> : null}
-            <Badge mt={2} size="sm" colorPalette={palette}>
-                {data.kind === "FINAL" ? "Salida final" : data.kind === "OPERATION" ? "Operación" : "Contexto"}
-            </Badge>
-            <Handle type="source" position={Position.Right} isConnectable={false} style={{ opacity: 0 }} />
+        <Box>
+            <Box
+                position="relative"
+                minW="180px"
+                maxW="240px"
+                borderWidth={data.selected ? "4px" : "2px"}
+                borderColor={`${palette}.500`}
+                borderRadius="lg"
+                bg="bg.panel"
+                boxShadow={data.selected ? "md" : "sm"}
+                px={4}
+                py={3}
+                textAlign="center"
+            >
+                <Handle type="target" position={Position.Left} isConnectable={false} style={{ opacity: 0 }} />
+                <Text fontWeight="semibold" lineClamp={2}>{data.label}</Text>
+                {data.detail ? <Text mt={1} fontSize="xs" color="fg.muted" lineClamp={2}>{data.detail}</Text> : null}
+                <Badge mt={2} size="sm" colorPalette={palette}>
+                    {data.kind === "FINAL" ? "Salida final" : data.kind === "OPERATION" ? "Operación" : "Contexto"}
+                </Badge>
+                {data.processControls?.length ? (
+                    <Box mt={2}><RouteControlBadge controls={data.processControls} ambito="PROCESO" /></Box>
+                ) : null}
+                <Handle type="source" position={Position.Right} isConnectable={false} style={{ opacity: 0 }} />
+            </Box>
+            <RouteFinalControls controls={data.finalQualityControls} />
         </Box>
     );
 }
 
 const nodeTypes = { routeNode: RouteNodeView };
+const edgeTypes = { controlRoute: RouteControlEdge };
 
 function edgeStyle(selectable: boolean, selected = false, ambito: AmbitoControl = "CALIDAD") {
     const palette = ambito === "PROCESO" ? "blue" : "purple";
@@ -416,31 +427,37 @@ function matchesSelection(option: RoutePointOption, selectedPoint: Props["select
         && option.procesoProduccionId === selectedPoint.procesoProduccionId;
 }
 
-function RouteGraphView({ graph, selectedId, ambito, expanded, onSelect }: {
+function RouteGraphView({ graph, selectedId, ambito, expanded, onSelect, summary }: {
     graph: RouteGraph;
     selectedId: string | null;
     ambito: AmbitoControl;
     expanded: boolean;
     onSelect: (option: RoutePointOption) => void;
+    summary: ReturnType<typeof useRouteControlSummary>;
 }) {
     const { fitView } = useReactFlow();
     const optionById = useMemo(() => new Map(graph.options.map((option) => [option.id, option])), [graph.options]);
+    const indicators = useMemo(() => indexRouteControls(graph.nodes, graph.edges, summary.controls), [graph, summary.controls]);
     const nodes = useMemo(() => graph.nodes.map((node) => ({
         ...node,
         data: {
             ...node.data,
             ambito,
             selected: node.data.optionId === selectedId,
+            processControls: indicators.processByNode.get(node.id),
+            finalQualityControls: indicators.finalByNode.get(node.id),
         },
-    })), [ambito, graph.nodes, selectedId]);
+    })), [ambito, graph.nodes, indicators, selectedId]);
     const edges = useMemo(() => graph.edges.map((edge) => {
         const optionId = edge.data?.optionId;
         return {
             ...edge,
+            type: "controlRoute",
+            data: { ...edge.data, controls: indicators.qualityByEdge.get(edge.id) },
             animated: optionId === selectedId,
             style: edgeStyle(Boolean(optionId), optionId === selectedId, ambito),
         };
-    }), [ambito, graph.edges, selectedId]);
+    }), [ambito, graph.edges, indicators, selectedId]);
 
     useEffect(() => {
         const timer = window.setTimeout(() => {
@@ -450,68 +467,72 @@ function RouteGraphView({ graph, selectedId, ambito, expanded, onSelect }: {
     }, [expanded, fitView]);
 
     return (
-        <Flex direction={{ base: "column", lg: "row" }} gap={4} minH={{ base: "auto", lg: "420px" }}>
-            <Box
-                flex="1"
-                minH={{ base: "360px", lg: "420px" }}
-                h={{ base: "360px", lg: expanded ? EXPANDED_GRAPH_HEIGHT : "420px" }}
-                borderWidth="1px"
-                borderRadius="lg"
-                overflow="hidden"
-                bg="bg.subtle"
-            >
-                <ReactFlow
-                    nodes={nodes}
-                    edges={edges}
-                    nodeTypes={nodeTypes}
-                    nodesDraggable={false}
-                    nodesConnectable={false}
-                    elementsSelectable={false}
-                    deleteKeyCode={null}
-                    fitView
-                    fitViewOptions={{ padding: expanded ? 0.12 : 0.25 }}
-                    minZoom={0.25}
-                    onEdgeClick={(_, edge) => {
-                        const optionId = edge.data?.optionId;
-                        const option = optionId ? optionById.get(optionId) : undefined;
-                        if (option) onSelect(option);
-                    }}
-                    onNodeClick={(_, node) => {
-                        const optionId = node.data.optionId as string | undefined;
-                        const option = optionId ? optionById.get(optionId) : undefined;
-                        if (option) onSelect(option);
-                    }}
+        <VStack align="stretch" gap={3}>
+            <RouteControlLegend loading={summary.loading} error={summary.error} unmapped={indicators.unmapped} onRefresh={summary.refresh} />
+            <Flex direction={{ base: "column", lg: "row" }} gap={4} minH={{ base: "auto", lg: "420px" }}>
+                <Box
+                    flex="1"
+                    minH={{ base: "360px", lg: "420px" }}
+                    h={{ base: "360px", lg: expanded ? EXPANDED_GRAPH_HEIGHT : "420px" }}
+                    borderWidth="1px"
+                    borderRadius="lg"
+                    overflow="hidden"
+                    bg="bg.subtle"
                 >
-                    <Controls showInteractive={false} />
-                    <MiniMap pannable zoomable />
-                    <Background variant={BackgroundVariant.Dots} gap={14} size={1} />
-                </ReactFlow>
-            </Box>
-            <VStack align="stretch" gap={2} w={{ base: "full", lg: "330px" }}>
-                <Heading size="sm">{ambito === "PROCESO" ? "Operaciones disponibles" : "Salidas disponibles"}</Heading>
-                <Text fontSize="sm" color="fg.muted">
-                    {ambito === "PROCESO"
-                        ? "Seleccione un nodo de operación. Esta lista ofrece la misma acción mediante teclado."
-                        : "Seleccione una arista. Esta lista ofrece la misma acción mediante teclado."}
-                </Text>
-                {graph.options.map((option) => (
-                    <Button
-                        key={option.id}
-                        variant={selectedId === option.id ? "solid" : "outline"}
-                        colorPalette={ambito === "PROCESO" ? "blue" : "purple"}
-                        justifyContent="flex-start"
-                        h="auto"
-                        minH="44px"
-                        whiteSpace="normal"
-                        textAlign="left"
-                        onClick={() => onSelect(option)}
+                    <ReactFlow
+                        nodes={nodes}
+                        edges={edges}
+                        nodeTypes={nodeTypes}
+                        edgeTypes={edgeTypes}
+                        nodesDraggable={false}
+                        nodesConnectable={false}
+                        elementsSelectable={false}
+                        deleteKeyCode={null}
+                        fitView
+                        fitViewOptions={{ padding: expanded ? 0.12 : 0.25 }}
+                        minZoom={0.25}
+                        onEdgeClick={(_, edge) => {
+                            const optionId = edge.data?.optionId;
+                            const option = optionId ? optionById.get(optionId) : undefined;
+                            if (option) onSelect(option);
+                        }}
+                        onNodeClick={(_, node) => {
+                            const optionId = node.data.optionId as string | undefined;
+                            const option = optionId ? optionById.get(optionId) : undefined;
+                            if (option) onSelect(option);
+                        }}
                     >
-                        {selectedId === option.id ? <LuCheck /> : <LuGitBranch />}
-                        {option.label}
-                    </Button>
-                ))}
-            </VStack>
-        </Flex>
+                        <Controls showInteractive={false} />
+                        <MiniMap pannable zoomable />
+                        <Background variant={BackgroundVariant.Dots} gap={14} size={1} />
+                    </ReactFlow>
+                </Box>
+                <VStack align="stretch" gap={2} w={{ base: "full", lg: "330px" }}>
+                    <Heading size="sm">{ambito === "PROCESO" ? "Operaciones disponibles" : "Salidas disponibles"}</Heading>
+                    <Text fontSize="sm" color="fg.muted">
+                        {ambito === "PROCESO"
+                            ? "Seleccione un nodo de operación. Esta lista ofrece la misma acción mediante teclado."
+                            : "Seleccione una arista. Esta lista ofrece la misma acción mediante teclado."}
+                    </Text>
+                    {graph.options.map((option) => (
+                        <Button
+                            key={option.id}
+                            variant={selectedId === option.id ? "solid" : "outline"}
+                            colorPalette={ambito === "PROCESO" ? "blue" : "purple"}
+                            justifyContent="flex-start"
+                            h="auto"
+                            minH="44px"
+                            whiteSpace="normal"
+                            textAlign="left"
+                            onClick={() => onSelect(option)}
+                        >
+                            {selectedId === option.id ? <LuCheck /> : <LuGitBranch />}
+                            {option.label}
+                        </Button>
+                    ))}
+                </VStack>
+            </Flex>
+        </VStack>
     );
 }
 
@@ -527,6 +548,7 @@ export default function ControlPointRoutePicker(props: Props) {
     const selectedProcessId = props.selectedPoint?.procesoProduccionId;
     const selectedFrontendNodeId = props.selectedPoint?.frontendNodeId;
     const hasTarget = categoriaId != null || Boolean(productoId?.trim());
+    const summary = useRouteControlSummary({ categoriaId, productoId, enabled: Boolean(graph) && !loading && !error });
 
     useEffect(() => {
         if (!hasTarget) {
@@ -651,6 +673,7 @@ export default function ControlPointRoutePicker(props: Props) {
                             ambito={ambito}
                             expanded={expanded}
                             onSelect={selectPoint}
+                            summary={summary}
                         />
                     </ReactFlowProvider>
                 </VStack>

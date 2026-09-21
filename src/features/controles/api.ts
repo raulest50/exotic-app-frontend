@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import EndPointsURL from "../../api/EndPointsURL";
+import { ROUTE_CONTROLS_CHANGED_EVENT } from "./routeControlSummary";
 import type {
     AmbitoControl,
     AplicabilidadPlanControl,
@@ -439,10 +440,12 @@ function createControlDomainApi(ambito: AmbitoControl): ControlDomainApi {
         },
         async publishVersion(planId, versionId) {
             const response = await axios.post<PlanWire>(`${base}/planes/${planId}/versiones/${versionId}/publicar`, null, requestOptions);
+            if (typeof window !== "undefined") window.dispatchEvent(new Event(ROUTE_CONTROLS_CHANGED_EVENT));
             return normalizePlan(response.data);
         },
         async retireVersion(planId, versionId) {
             const response = await axios.post<PlanWire>(`${base}/planes/${planId}/versiones/${versionId}/retirar`, null, requestOptions);
+            if (typeof window !== "undefined") window.dispatchEvent(new Event(ROUTE_CONTROLS_CHANGED_EVENT));
             return normalizePlan(response.data);
         },
         async listPendientes(filters = {}) {

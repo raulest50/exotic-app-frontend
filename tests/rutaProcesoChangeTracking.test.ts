@@ -54,6 +54,19 @@ describe("seguimiento de cambios de la ruta", () => {
         expect(buildSemanticSignature([refreshed], [])).toBe(buildSemanticSignature([original], []));
     });
 
+    test("los indicadores de control no generan versiones ni cambios de disposición", () => {
+        const original = node("1", 10, 20);
+        const decorated = {
+            ...original,
+            data: { ...original.data, processControls: [{ planId: 1 }], finalQualityControls: [{ planId: 2 }] },
+        };
+        const decoratedEdges = edges.map((edge) => ({
+            ...edge, type: "controlRoute", data: { controls: [{ planId: 3 }] },
+        }));
+        expect(buildSemanticSignature([decorated], decoratedEdges)).toBe(buildSemanticSignature([original], edges));
+        expect(buildLayoutSignature([decorated])).toBe(buildLayoutSignature([original]));
+    });
+
     test("los guardados son mutuamente excluyentes", () => {
         expect(getRouteSaveAvailability({
             hasCurrentVersion: true,
