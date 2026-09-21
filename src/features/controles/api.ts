@@ -535,6 +535,15 @@ function createControlDomainApi(ambito: AmbitoControl): ControlDomainApi {
 export const processControlApi = createControlDomainApi("PROCESO");
 export const qualityControlApi = createControlDomainApi("CALIDAD");
 
+/** Detalle publicado con los mismos permisos de lectura transversal que el diagrama. */
+export async function getRouteControlPlan(planId: number, numero: number, signal: AbortSignal): Promise<PlanControl> {
+    const response = await axios.get<PlanWire>(
+        `${endpoints.domain}/api/controles/ruta/planes/${planId}/versiones/${numero}`,
+        { ...requestOptions, signal },
+    );
+    return normalizePlan(response.data);
+}
+
 const catalogBase = `${endpoints.domain}/api/controles/catalogos`;
 
 export async function listMagnitudes(incluirInactivas = false): Promise<CatalogoMagnitud[]> {

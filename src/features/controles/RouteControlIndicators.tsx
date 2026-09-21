@@ -1,7 +1,9 @@
 import { Box, Button, Flex, HStack, Text, VStack } from "@chakra-ui/react";
 import { BezierEdge, EdgeLabelRenderer, getBezierPath, type Edge, type EdgeProps } from "@xyflow/react";
 import { LuFlaskConical, LuGauge } from "react-icons/lu";
+import { useRef, useState } from "react";
 import { Tooltip } from "../../components/ui/tooltip";
+import RouteControlDetailDialog from "./RouteControlDetailDialog";
 import type { AmbitoControl } from "./types";
 import type { RouteControlSummary } from "./routeControlSummary";
 
@@ -28,27 +30,43 @@ function ControlDetails({ controls }: { controls: RouteControlSummary[] }) {
 }
 
 export function RouteControlBadge({ controls, ambito }: { controls?: RouteControlSummary[]; ambito: AmbitoControl }) {
+    const [openedControls, setOpenedControls] = useState<RouteControlSummary[] | null>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
     if (!controls?.length) return null;
     const process = ambito === "PROCESO";
     const label = `${process ? "Proceso" : "Calidad"}: ${controls.length} ${controls.length === 1 ? "plan vigente" : "planes vigentes"}`;
     return (
-        <Tooltip content={<ControlDetails controls={controls} />} contentProps={{ maxW: "380px", zIndex: 10001 }} showArrow>
-            <Button
-                className="nodrag nopan"
-                size="xs"
-                variant="subtle"
-                colorPalette={process ? "blue" : "purple"}
-                borderWidth="1px"
-                pointerEvents="all"
-                aria-label={`${label}. ${controls.map((control) => `${control.codigo}: ${describeControl(control)}`).join("; ")}`}
-                onPointerDown={(event) => event.stopPropagation()}
-                onClick={(event) => event.stopPropagation()}
-                onKeyDown={(event) => event.stopPropagation()}
-            >
-                {process ? <LuGauge /> : <LuFlaskConical />}
-                {process ? "Proceso" : "Calidad"} · {controls.length}
-            </Button>
-        </Tooltip>
+        <>
+            <Tooltip content={<ControlDetails controls={controls} />} contentProps={{ maxW: "380px", zIndex: 10001 }} showArrow disabled={openedControls != null}>
+                <Button
+                    ref={triggerRef}
+                    className="nodrag nopan"
+                    size="xs"
+                    variant="subtle"
+                    colorPalette={process ? "blue" : "purple"}
+                    borderWidth="1px"
+                    pointerEvents="all"
+                    aria-label={`${label}. Ver mediciones y parámetros. ${controls.map((control) => `${control.codigo}: ${describeControl(control)}`).join("; ")}`}
+                    aria-haspopup="dialog"
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenedControls([...controls]);
+                    }}
+                    onKeyDown={(event) => event.stopPropagation()}
+                >
+                    {process ? <LuGauge /> : <LuFlaskConical />}
+                    {process ? "Proceso" : "Calidad"} · {controls.length}
+                </Button>
+            </Tooltip>
+            {openedControls && (
+                <RouteControlDetailDialog
+                    controls={openedControls}
+                    onClose={() => setOpenedControls(null)}
+                    finalFocusEl={() => triggerRef.current}
+                />
+            )}
+        </>
     );
 }
 
@@ -90,7 +108,7 @@ export function RouteControlLegend({ loading, error, unmapped = [], onRefresh }:
             <HStack gap={4} flexWrap="wrap">
                 <HStack color="blue.700"><LuGauge /><Text>Control de proceso</Text></HStack>
                 <HStack color="purple.700"><LuFlaskConical /><Text>Control de calidad</Text></HStack>
-                <Text color="fg.muted">Solo planes publicados y vigentes; los indicadores no representan resultados.</Text>
+                <Text color="fg.muted">Solo planes publicados y vigentes; los indicadores no representan resultados. Pulse un indicador para ver sus mediciones y parámetros.</Text>
                 <Button size="xs" variant="plain" onClick={onRefresh} disabled={loading}>Actualizar indicadores</Button>
             </HStack>
             {loading ? <Text role="status">Consultando controles vigentes…</Text> : null}
