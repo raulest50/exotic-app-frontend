@@ -1,5 +1,5 @@
 import { formatDecimalScale } from "./controlUi";
-import type { EstadoVersionPlanControl, PlanControl, VersionPlanControl } from "./types";
+import type { EstadoVersionPlanControl, PlanControlResumen, VersionPlanControl } from "./types";
 
 export type PlanVersionFilter = "TODAS" | EstadoVersionPlanControl;
 
@@ -10,34 +10,22 @@ export const PLAN_VERSION_FILTERS: ReadonlyArray<{ value: PlanVersionFilter; lab
     { value: "RETIRADA", label: "Retiradas" },
 ];
 
-export function selectPlanVersionGroups(plans: PlanControl[], filter: PlanVersionFilter) {
-    return plans.map((plan) => ({
-        plan,
-        versions: plan.versiones
-            .filter((version) => filter === "TODAS" || version.estado === filter)
-            .sort((left, right) => right.numero - left.numero),
-        draft: plan.versiones.find((version) => version.estado === "BORRADOR"),
-    })).filter((group) => group.versions.length > 0);
-}
-
-/** Permissions and draft existence always use the full plan, never its filtered rows. */
-export function getPlanVersionActions(plan: PlanControl, versionId: number, nivel: number) {
+/** References cover the full plan even when the server only returns versions matching the filter. */
+export function getPlanVersionActions(plan: PlanControlResumen, versionId: number, nivel: number) {
     const version = plan.versiones.find((item) => item.id === versionId);
-    const hasDraft = plan.versiones.some((item) => item.estado === "BORRADOR");
-    const current = plan.versiones.find((item) => item.estado === "VIGENTE");
-    const latestRetired = plan.versiones.filter((item) => item.estado === "RETIRADA")
-        .sort((left, right) => right.numero - left.numero)[0];
-    const copySource = current ?? latestRetired;
+    const copySource = plan.vigente ?? plan.ultimaRetirada;
+    const isDraft = version?.estado === "BORRADOR" && plan.borrador?.id === versionId;
+    const isCurrent = version?.estado === "VIGENTE" && plan.vigente?.id === versionId;
     return {
         view: nivel >= 1 && version != null,
-        edit: nivel >= 2 && version?.estado === "BORRADOR",
-        create: nivel >= 2 && !hasDraft && version != null && version.id === copySource?.id,
-        publish: nivel >= 3 && version?.estado === "BORRADOR",
-        retire: nivel >= 3 && version?.estado === "VIGENTE",
+        edit: nivel >= 2 && isDraft,
+        create: nivel >= 2 && !plan.borrador && version != null && version.id === copySource?.id,
+        publish: nivel >= 3 && isDraft,
+        retire: nivel >= 3 && isCurrent,
     };
 }
 
-export function planVersionDate(version: VersionPlanControl) {
+export function planVersionDate(version: Pick<VersionPlanControl, "estado" | "creadaEn" | "publicadaEn" | "retiradaEn">) {
     if (version.estado === "VIGENTE") return { label: "Publicada", value: version.publicadaEn };
     if (version.estado === "RETIRADA") return { label: "Retirada", value: version.retiradaEn };
     return { label: "Creada", value: version.creadaEn };

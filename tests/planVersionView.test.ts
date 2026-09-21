@@ -6,59 +6,55 @@ import {
     planReference,
     planVersionDate,
     planVersionFilterNotice,
-    selectPlanVersionGroups,
 } from "../src/features/controles/planVersionView";
-import type { AmbitoControl, EstadoVersionPlanControl, PlanControl, VersionPlanControl } from "../src/features/controles/types";
+import type { AmbitoControl, EstadoVersionPlanControl, PlanControlResumen, VersionPlanResumen } from "../src/features/controles/types";
 
-function version(numero: number, estado: EstadoVersionPlanControl): VersionPlanControl {
+function version(numero: number, estado: EstadoVersionPlanControl): VersionPlanResumen {
     return {
         id: numero + 100,
         numero,
         estado,
-        proposito: "Verificar peso",
-        responsableEjecucion: "Operador",
-        aplicabilidades: [],
-        caracteristicas: [],
+        cantidadAplicabilidades: 1,
+        cantidadCaracteristicas: 2,
         creadaEn: "2026-09-01T10:00:00Z",
         publicadaEn: estado === "BORRADOR" ? null : "2026-09-02T10:00:00Z",
         retiradaEn: estado === "RETIRADA" ? "2026-09-03T10:00:00Z" : null,
     };
 }
 
-function plan(ambito: AmbitoControl, versiones = [version(2, "VIGENTE"), version(1, "RETIRADA"), version(3, "BORRADOR")]): PlanControl {
-    return { id: 1, codigo: "PLAN-1", nombre: "Plan de peso", ambito, versiones };
+function plan(ambito: AmbitoControl, versiones = [version(2, "VIGENTE"), version(1, "RETIRADA"), version(3, "BORRADOR")]): PlanControlResumen {
+    return {
+        id: 1, codigo: "PLAN-1", nombre: "Plan de peso", ambito, versiones,
+        borrador: versiones.find((item) => item.estado === "BORRADOR") ?? null,
+        vigente: versiones.find((item) => item.estado === "VIGENTE") ?? null,
+        ultimaRetirada: versiones.filter((item) => item.estado === "RETIRADA").sort((a, b) => b.numero - a.numero)[0] ?? null,
+    };
 }
 
 for (const ambito of ["PROCESO", "CALIDAD"] as const) {
     describe(`listado de versiones de ${ambito}`, () => {
-        test("todas incluye retiradas y ordena por versión sin alterar el plan original", () => {
-            const original = plan(ambito);
-            const before = JSON.stringify(original);
-            const groups = selectPlanVersionGroups([original], "TODAS");
-            expect(groups[0].versions.map((item) => item.numero)).toEqual([3, 2, 1]);
-            expect(groups[0].plan).toBe(original);
-            expect(groups[0].versions[0]).toBe(original.versiones[2]);
-            expect(JSON.stringify(original)).toBe(before);
-        });
-
-        test("cada filtro muestra solo sus versiones y omite los planes sin coincidencias", () => {
-            const original = plan(ambito);
-            const retiredOnly = { ...plan(ambito, [version(1, "RETIRADA")]), id: 2 };
-            for (const state of ["VIGENTE", "BORRADOR", "RETIRADA"] as const) {
-                const groups = selectPlanVersionGroups([original, retiredOnly], state);
-                expect(groups.length).toBe(state === "RETIRADA" ? 2 : 1);
-                expect(groups.flatMap((group) => group.versions).every((item) => item.estado === state)).toBe(true);
-            }
-            expect(selectPlanVersionGroups([retiredOnly], "BORRADOR")).toEqual([]);
-            expect(selectPlanVersionGroups([], "TODAS")).toEqual([]);
-        });
-
         test("el borrador oculto sigue bloqueando otra nueva versión", () => {
             const original = plan(ambito);
-            const group = selectPlanVersionGroups([original], "VIGENTE")[0];
-            expect(group.versions.map((item) => item.numero)).toEqual([2]);
-            expect(group.draft?.numero).toBe(3);
-            expect(getPlanVersionActions(group.plan, group.versions[0].id, 3).create).toBe(false);
+            // The server returns only current rows, plus references to hidden versions.
+            const filtered = { ...original, versiones: [version(2, "VIGENTE")] };
+            expect(filtered.borrador?.numero).toBe(3);
+            expect(getPlanVersionActions(filtered, 102, 3).create).toBe(false);
+            expect(getPlanVersionActions(filtered, 103, 3).edit).toBe(false);
+        });
+
+        test("una vigente oculta impide copiar una retirada aunque no exista borrador", () => {
+            const filtered = {
+                ...plan(ambito, [version(1, "RETIRADA"), version(2, "VIGENTE")]),
+                versiones: [version(1, "RETIRADA")],
+            };
+            expect(getPlanVersionActions(filtered, 101, 3).create).toBe(false);
+        });
+
+        test("no habilita editar, publicar o retirar si las referencias ya no respaldan el estado de la fila", () => {
+            const stale = { ...plan(ambito), borrador: null, vigente: null };
+            expect(getPlanVersionActions(stale, 103, 3).edit).toBe(false);
+            expect(getPlanVersionActions(stale, 103, 3).publish).toBe(false);
+            expect(getPlanVersionActions(stale, 102, 3).retire).toBe(false);
         });
 
         test("nivel 1 consulta; nivel 2 edita; nivel 3 publica o retira la versión indicada", () => {

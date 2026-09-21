@@ -30,7 +30,8 @@ import { apiFailureDetail, listControlCategories, listMagnitudes, listUnidades, 
 import { CONTROL_NOUN, CONTROL_SCOPE_LABEL } from "./controlUi";
 import PlanVersionDetailDialog from "./PlanVersionDetailDialog";
 import PlanVersionList from "./PlanVersionList";
-import { getPlanVersionActions, PLAN_VERSION_FILTERS, planVersionFilterNotice, selectPlanVersionGroups, type PlanVersionFilter } from "./planVersionView";
+import { getPlanVersionActions, PLAN_VERSION_FILTERS, planVersionFilterNotice, type PlanVersionFilter } from "./planVersionView";
+import usePlanControlList from "./usePlanControlList";
 import ControlPointRoutePicker from "./QualityControlPointRoutePicker";
 import type {
     AplicabilidadPlanControl,
@@ -40,8 +41,11 @@ import type {
     CategoriaControlOption,
     ControlProductOption,
     PlanControl,
+    PlanControlResumen,
     PlanControlWrite,
+    PlanVersionDetalle,
     VersionPlanControl,
+    VersionPlanReferencia,
 } from "./types";
 
 interface PlanesControlTabProps {
@@ -51,8 +55,8 @@ interface PlanesControlTabProps {
 
 interface ConfirmAction {
     kind: "PUBLICAR" | "RETIRAR";
-    plan: PlanControl;
-    version: VersionPlanControl;
+    plan: PlanControlResumen;
+    version: VersionPlanReferencia;
 }
 
 const steps = [
@@ -109,7 +113,7 @@ function inferredPolicy(
     };
 }
 
-function versionToDraft(plan: PlanControl, version: VersionPlanControl): PlanControlWrite {
+function versionToDraft(plan: Omit<PlanControl, "versiones">, version: VersionPlanControl): PlanControlWrite {
     return {
         codigo: plan.codigo,
         nombre: plan.nombre,
@@ -220,17 +224,21 @@ function validateDraft(draft: PlanControlWrite, ambito: ControlDomainApi["ambito
 
 export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) {
     const toast = useAppToast();
-    const [plans, setPlans] = useState<PlanControl[]>([]);
+    const { query, result, loading, error: listError, load: loadPage } = usePlanControlList(api);
+    const plans = result?.content ?? [];
+    const appliedSearch = query.search;
+    const versionFilter = query.filter;
     const [magnitudes, setMagnitudes] = useState<CatalogoMagnitud[]>([]);
     const [unidades, setUnidades] = useState<CatalogoUnidad[]>([]);
     const [categorias, setCategorias] = useState<CategoriaControlOption[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [catalogLoading, setCatalogLoading] = useState(true);
+    const [catalogError, setCatalogError] = useState<string | null>(null);
+    const [fetchingVersion, setFetchingVersion] = useState(false);
     const [saving, setSaving] = useState(false);
     const [search, setSearch] = useState("");
-    const [appliedSearch, setAppliedSearch] = useState("");
-    const [versionFilter, setVersionFilter] = useState<PlanVersionFilter>("TODAS");
-    const [loadError, setLoadError] = useState<string | null>(null);
-    const [detailSelection, setDetailSelection] = useState<{ planId: number; versionId: number } | null>(null);
+    const loadError = listError ?? catalogError;
+    const [detailSelection, setDetailSelection] = useState<PlanVersionDetalle | null>(null);
+    const versionRequestId = useRef(0);
     const detailTriggerRef = useRef<HTMLButtonElement>(null);
     const searchRef = useRef<HTMLInputElement>(null);
     const [step, setStep] = useState(0);
@@ -243,51 +251,49 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     const [productPickerMode, setProductPickerMode] = useState<"SINGLE" | "MULTIPLE" | null>(null);
 
     const loadCatalogs = async () => {
-        const [nextMagnitudes, nextUnits] = await Promise.all([listMagnitudes(true), listUnidades(true)]);
-        setMagnitudes(nextMagnitudes);
-        setUnidades(nextUnits);
-    };
-
-    const load = async (query = appliedSearch) => {
-        setLoading(true);
-        setLoadError(null);
+        setCatalogLoading(true);
+        setCatalogError(null);
         try {
-            const [nextPlans, , nextCategories] = await Promise.all([
-                api.listPlanes({ search: query || undefined }), loadCatalogs(), listControlCategories(),
+            const [nextMagnitudes, nextUnits, nextCategories] = await Promise.all([
+                listMagnitudes(true), listUnidades(true), listControlCategories(),
             ]);
-            setPlans(nextPlans);
+            setMagnitudes(nextMagnitudes);
+            setUnidades(nextUnits);
             setCategorias(nextCategories);
-            setAppliedSearch(query);
         } catch (error) {
-            const message = apiFailureDetail(error, "Error de consulta.").message;
-            setLoadError(message);
-            toast({ title: "No fue posible cargar los planes", description: message, status: "error" });
+            setCatalogError(apiFailureDetail(error, "No fue posible cargar los catálogos.").message);
         } finally {
-            setLoading(false);
+            setCatalogLoading(false);
         }
     };
 
     useEffect(() => {
         let mounted = true;
-        setLoading(true);
-        setLoadError(null);
-        Promise.all([api.listPlanes(), listMagnitudes(true), listUnidades(true), listControlCategories()])
-            .then(([nextPlans, nextMagnitudes, nextUnits, nextCategories]) => {
+        setCatalogLoading(true);
+        setCatalogError(null);
+        Promise.all([listMagnitudes(true), listUnidades(true), listControlCategories()])
+            .then(([nextMagnitudes, nextUnits, nextCategories]) => {
                 if (!mounted) return;
-                setPlans(nextPlans);
                 setMagnitudes(nextMagnitudes);
                 setUnidades(nextUnits);
                 setCategorias(nextCategories);
             })
             .catch((error) => {
                 if (!mounted) return;
-                const message = apiFailureDetail(error, "Error de consulta.").message;
-                setLoadError(message);
-                toast({ title: "No fue posible cargar los planes", description: message, status: "error" });
+                setCatalogError(apiFailureDetail(error, "No fue posible cargar los catálogos.").message);
             })
-            .finally(() => mounted && setLoading(false));
-        return () => { mounted = false; };
-    }, [api, toast]);
+            .finally(() => mounted && setCatalogLoading(false));
+        return () => { mounted = false; versionRequestId.current += 1; };
+    }, [api]);
+
+    const searchPlans = () => {
+        void loadPage({ ...query, search: search.trim(), page: 0 });
+        if (catalogError) void loadCatalogs();
+    };
+
+    const changeFilter = (filter: PlanVersionFilter) => {
+        void loadPage({ ...query, filter, page: 0 });
+    };
 
     const startNew = () => {
         setEditingPlanId(undefined);
@@ -298,15 +304,38 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
         setEditorOpen(true);
     };
 
-    const editPlan = (plan: PlanControl, source: VersionPlanControl) => {
-        const actions = getPlanVersionActions(plan, source.id, nivel);
-        if (loading || saving || loadError || (!actions.edit && !actions.create)) return;
-        setEditingPlanId(plan.id);
-        setChangeReasonRequired(source.numero > 1 || source.estado !== "BORRADOR");
-        setDraft(versionToDraft(plan, source));
-        setValidationErrors([]);
-        setStep(0);
-        setEditorOpen(true);
+    const openVersion = async (plan: PlanControlResumen, source: VersionPlanReferencia, edit = false) => {
+        if (loading || saving || fetchingVersion || nivel < 1) return;
+        if (edit && nivel < 2) return;
+        const request = ++versionRequestId.current;
+        setFetchingVersion(true);
+        try {
+            const detail = await api.getVersionPlan(plan.id, source.id);
+            if (request !== versionRequestId.current) return;
+            if (!edit) {
+                setDetailSelection(detail);
+                return;
+            }
+            const actions = getPlanVersionActions(detail.plan, detail.version.id, nivel);
+            const allowed = source.estado === "BORRADOR" ? actions.edit : actions.create;
+            if (!allowed) {
+                toast({ title: "El estado del plan cambió", description: "Revise el listado actualizado antes de editar o crear una versión.", status: "warning" });
+                await loadPage(query);
+                return;
+            }
+            setEditingPlanId(detail.plan.id);
+            setChangeReasonRequired(detail.version.numero > 1 || detail.version.estado !== "BORRADOR");
+            setDraft(versionToDraft(detail.plan, detail.version));
+            setValidationErrors([]);
+            setStep(0);
+            setEditorOpen(true);
+        } catch (error) {
+            if (request === versionRequestId.current) {
+                toast({ title: "No fue posible consultar la versión", description: apiFailureDetail(error, "Error de consulta.").message, status: "error" });
+            }
+        } finally {
+            if (request === versionRequestId.current) setFetchingVersion(false);
+        }
     };
 
     const updateApplicability = (index: number, patch: Partial<AplicabilidadPlanControl>) => {
@@ -324,7 +353,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     };
 
     const save = async () => {
-        if (saving || loading || loadError || nivel < 2) return;
+        if (saving || loading || fetchingVersion || loadError || nivel < 2) return;
         const errors = validateDraft(draft, api.ambito, changeReasonRequired);
         setValidationErrors(errors);
         if (errors.length) return;
@@ -341,7 +370,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                 })),
             }, editingPlanId);
             toast({ title: "Borrador guardado", description: "La versión continúa editable hasta su publicación." + planVersionFilterNotice(versionFilter, "BORRADOR"), status: "success" });
-            await load();
+            await loadPage(query);
             setEditorOpen(false);
         } catch (error) {
             const detail = apiFailureDetail(error, "No fue posible guardar el borrador.");
@@ -367,7 +396,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                 toast({ title: "Versión retirada", description: "Los expedientes existentes conservan su versión congelada." + planVersionFilterNotice(versionFilter, "RETIRADA"), status: "success" });
             }
             setConfirmAction(null);
-            await load();
+            await loadPage(query);
         } catch (error) {
             toast({ title: "No fue posible cambiar la versión", description: apiFailureDetail(error, "Error de operación.").message, status: "error" });
         } finally {
@@ -376,10 +405,8 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     };
 
     const activeCatalogsByDimension = useMemo(() => new Map(magnitudes.map((item) => [item.id, item.dimension])), [magnitudes]);
-    const versionGroups = useMemo(() => selectPlanVersionGroups(plans, versionFilter), [plans, versionFilter]);
-    const detailPlan = plans.find((plan) => plan.id === detailSelection?.planId);
-    const detailVersion = detailPlan?.versiones.find((version) => version.id === detailSelection?.versionId);
-    const listBusy = loading || saving || Boolean(loadError);
+    const busy = loading || saving || catalogLoading || fetchingVersion;
+    const listBusy = busy || Boolean(loadError);
     const applicability = draft.aplicabilidades[0];
 
     const clearLocation = (): Partial<AplicabilidadPlanControl> => ({
@@ -419,14 +446,23 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
             <HStack align="end" gap={3} flexWrap="wrap">
                 <Field.Root flex="1" minW={{ base: "full", md: "280px" }}>
                     <Field.Label>Buscar plan</Field.Label>
-                    <Input ref={searchRef} value={search} disabled={loading || saving} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => event.key === "Enter" && void load(search.trim())} placeholder="Código o nombre" />
+                    <Input ref={searchRef} value={search} disabled={busy} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => event.key === "Enter" && searchPlans()} placeholder="Código o nombre" />
                 </Field.Root>
-                <Button onClick={() => void load(search.trim())} loading={loading} disabled={saving}>Buscar</Button>
+                <Button onClick={searchPlans} loading={loading} disabled={busy}>Buscar</Button>
                 <Field.Root w={{ base: "full", md: "190px" }}>
                     <Field.Label>Estado de la versión</Field.Label>
                     <NativeSelect.Root>
-                        <NativeSelect.Field value={versionFilter} disabled={saving} onChange={(event) => setVersionFilter(event.target.value as PlanVersionFilter)}>
+                        <NativeSelect.Field value={versionFilter} disabled={busy} onChange={(event) => changeFilter(event.target.value as PlanVersionFilter)}>
                             {PLAN_VERSION_FILTERS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                </Field.Root>
+                <Field.Root w={{ base: "full", md: "140px" }}>
+                    <Field.Label>Planes por página</Field.Label>
+                    <NativeSelect.Root>
+                        <NativeSelect.Field value={query.size} disabled={busy} onChange={(event) => void loadPage({ ...query, size: Number(event.target.value), page: 0 })}>
+                            {[10, 20, 50].map((size) => <option key={size} value={size}>{size}</option>)}
                         </NativeSelect.Field>
                         <NativeSelect.Indicator />
                     </NativeSelect.Root>
@@ -441,26 +477,30 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                     <Box>
                         <Text fontWeight="semibold">No fue posible actualizar el listado</Text>
                         <Text fontSize="sm">{loadError}</Text>
-                        <Text fontSize="sm">Pulse Buscar para reintentar. Los datos mostrados pueden estar desactualizados.</Text>
+                        <Text fontSize="sm">Pulse Buscar para reintentar la consulta.</Text>
                     </Box>
                 </Alert.Root>
             )}
 
             <Box borderWidth="1px" borderRadius="lg" overflowX="auto">
                 <PlanVersionList
-                    groups={versionGroups}
+                    plans={plans}
                     nivel={nivel}
                     busy={listBusy}
                     onDetail={(plan, version, trigger) => {
                         detailTriggerRef.current = trigger;
-                        setDetailSelection({ planId: plan.id, versionId: version.id });
+                        void openVersion(plan, version);
                     }}
-                    onEdit={editPlan}
+                    onEdit={(plan, version) => void openVersion(plan, version, true)}
                     onPublish={(plan, version) => setConfirmAction({ kind: "PUBLICAR", plan, version })}
                     onRetire={(plan, version) => setConfirmAction({ kind: "RETIRAR", plan, version })}
-                    onShowDraft={() => setVersionFilter("BORRADOR")}
+                    onShowDraft={(plan, trigger) => {
+                        if (!plan.borrador) return;
+                        detailTriggerRef.current = trigger;
+                        void openVersion(plan, plan.borrador);
+                    }}
                 />
-                {!loading && !loadError && !versionGroups.length && (
+                {!loading && !loadError && !plans.length && (
                     <Text py={8} textAlign="center" color="fg.muted">
                         {appliedSearch || versionFilter !== "TODAS"
                             ? "No hay versiones que coincidan con la búsqueda y el estado seleccionados."
@@ -470,9 +510,23 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                 {loading && <HStack justify="center" py={8}><Spinner size="sm" /><Text>Cargando planes…</Text></HStack>}
             </Box>
 
+            {result && (
+                <HStack justify="space-between" flexWrap="wrap" gap={3}>
+                    <Text fontSize="sm" color="fg.muted" aria-live="polite">
+                        {result.totalElements} {result.totalElements === 1 ? "plan encontrado" : "planes encontrados"}
+                    </Text>
+                    <HStack>
+                        <Button size="sm" variant="outline" disabled={listBusy || result.number === 0} onClick={() => void loadPage({ ...query, page: result.number - 1 })}>Anterior</Button>
+                        <Text fontSize="sm">Página {result.number + 1} de {Math.max(1, result.totalPages)}</Text>
+                        <Button size="sm" variant="outline" disabled={listBusy || result.number + 1 >= result.totalPages} onClick={() => void loadPage({ ...query, page: result.number + 1 })}>Siguiente</Button>
+                    </HStack>
+                </HStack>
+            )}
+            {fetchingVersion && <HStack role="status"><Spinner size="sm" /><Text>Cargando configuración de la versión…</Text></HStack>}
+
             <PlanVersionDetailDialog
-                plan={detailPlan}
-                version={detailVersion}
+                plan={detailSelection?.plan}
+                version={detailSelection?.version}
                 onClose={() => setDetailSelection(null)}
                 finalFocusEl={() => detailTriggerRef.current?.isConnected ? detailTriggerRef.current : searchRef.current}
             />

@@ -7,7 +7,7 @@ import StatusBadge from "./StatusBadge";
 import type { AplicabilidadPlanControl, CaracteristicaPlanControl, PlanControl, VersionPlanControl } from "./types";
 
 interface Props {
-    plan?: PlanControl;
+    plan?: Omit<PlanControl, "versiones">;
     version?: VersionPlanControl;
     onClose: () => void;
     finalFocusEl: () => HTMLElement | null;

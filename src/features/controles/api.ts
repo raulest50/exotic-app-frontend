@@ -23,7 +23,10 @@ import type {
     PageResponse,
     PendientesFilters,
     PlanControl,
+    PlanControlResumen,
     PlanControlWrite,
+    PlanesResumenFilters,
+    PlanVersionDetalle,
     RevalidacionControl,
     VersionPlanControl,
 } from "./types";
@@ -292,11 +295,15 @@ function serializePlanWrite(item: PlanControlWrite): PlanWriteWire {
 function normalizePlan(item: PlanWire): PlanControl {
     return {
         ...item,
-        versiones: item.versiones.map((version) => ({
-            ...version,
-            aplicabilidades: version.aplicabilidades.map(normalizeApplicability),
-            caracteristicas: version.caracteristicas.map(normalizeCharacteristic),
-        })),
+        versiones: item.versiones.map(normalizeVersion),
+    };
+}
+
+function normalizeVersion(version: VersionWire): VersionPlanControl {
+    return {
+        ...version,
+        aplicabilidades: version.aplicabilidades.map(normalizeApplicability),
+        caracteristicas: version.caracteristicas.map(normalizeCharacteristic),
     };
 }
 
@@ -396,6 +403,8 @@ function normalizeDeviation(item: DeviationWire): DesviacionControl {
 export interface ControlDomainApi {
     ambito: AmbitoControl;
     listPlanes: (params?: { search?: string; estado?: string }) => Promise<PlanControl[]>;
+    listPlanesResumen: (params?: PlanesResumenFilters) => Promise<PageResponse<PlanControlResumen>>;
+    getVersionPlan: (planId: number, versionId: number) => Promise<PlanVersionDetalle>;
     savePlan: (request: PlanControlWrite, planId?: number) => Promise<PlanControl>;
     publishVersion: (planId: number, versionId: number) => Promise<PlanControl>;
     retireVersion: (planId: number, versionId: number) => Promise<PlanControl>;
@@ -430,6 +439,18 @@ function createControlDomainApi(ambito: AmbitoControl): ControlDomainApi {
                     || plan.nombre.toLocaleLowerCase("es-CO").includes(search))
                 && (!params.estado || plan.versiones.some((version) => version.estado === params.estado))
             ));
+        },
+        async listPlanesResumen(params = {}) {
+            const response = await axios.get<PageResponse<PlanControlResumen>>(`${base}/planes/resumen`, {
+                ...requestOptions, params,
+            });
+            return response.data;
+        },
+        async getVersionPlan(planId, versionId) {
+            const response = await axios.get<{ plan: PlanControlResumen; version: VersionWire }>(
+                `${base}/planes/${planId}/versiones/${versionId}`, requestOptions,
+            );
+            return { ...response.data, version: normalizeVersion(response.data.version) };
         },
         async savePlan(request, planId) {
             const payload = serializePlanWrite(request);

@@ -1,21 +1,21 @@
 import { Badge, Button, HStack, Table, Text, VStack } from "@chakra-ui/react";
 import { CONTROL_SCOPE_LABEL, formatControlDate } from "./controlUi";
-import { getPlanVersionActions, planVersionDate, type selectPlanVersionGroups } from "./planVersionView";
+import { getPlanVersionActions, planVersionDate } from "./planVersionView";
 import StatusBadge from "./StatusBadge";
-import type { PlanControl, VersionPlanControl } from "./types";
+import type { PlanControlResumen, VersionPlanResumen } from "./types";
 
 interface Props {
-    groups: ReturnType<typeof selectPlanVersionGroups>;
+    plans: PlanControlResumen[];
     nivel: number;
     busy: boolean;
-    onDetail: (plan: PlanControl, version: VersionPlanControl, trigger: HTMLButtonElement) => void;
-    onEdit: (plan: PlanControl, version: VersionPlanControl) => void;
-    onPublish: (plan: PlanControl, version: VersionPlanControl) => void;
-    onRetire: (plan: PlanControl, version: VersionPlanControl) => void;
-    onShowDraft: () => void;
+    onDetail: (plan: PlanControlResumen, version: VersionPlanResumen, trigger: HTMLButtonElement) => void;
+    onEdit: (plan: PlanControlResumen, version: VersionPlanResumen) => void;
+    onPublish: (plan: PlanControlResumen, version: VersionPlanResumen) => void;
+    onRetire: (plan: PlanControlResumen, version: VersionPlanResumen) => void;
+    onShowDraft: (plan: PlanControlResumen, trigger: HTMLButtonElement) => void;
 }
 
-export default function PlanVersionList({ groups, nivel, busy, onDetail, onEdit, onPublish, onRetire, onShowDraft }: Props) {
+export default function PlanVersionList({ plans, nivel, busy, onDetail, onEdit, onPublish, onRetire, onShowDraft }: Props) {
     return (
         <Table.Root size="sm" minW="880px" aria-label="Planes y versiones de control">
             <Table.Header>
@@ -27,7 +27,7 @@ export default function PlanVersionList({ groups, nivel, busy, onDetail, onEdit,
                     <Table.ColumnHeader textAlign="end">Acciones</Table.ColumnHeader>
                 </Table.Row>
             </Table.Header>
-            {groups.map(({ plan, versions, draft }) => (
+            {plans.map((plan) => (
                 <Table.Body key={plan.id}>
                     <Table.Row bg="bg.subtle">
                         <Table.Cell colSpan={5}>
@@ -38,16 +38,16 @@ export default function PlanVersionList({ groups, nivel, busy, onDetail, onEdit,
                                         {CONTROL_SCOPE_LABEL[plan.ambito]}
                                     </Badge>
                                 </VStack>
-                                {draft && !versions.some((version) => version.id === draft.id) && (
+                                {plan.borrador && !plan.versiones.some((version) => version.id === plan.borrador?.id) && (
                                     <HStack>
-                                        <Text fontSize="xs">Existe un borrador v{draft.numero}.</Text>
-                                        <Button size="xs" variant="outline" disabled={busy} onClick={onShowDraft}>Ver borrador</Button>
+                                        <Text fontSize="xs">Existe un borrador v{plan.borrador.numero}.</Text>
+                                        <Button size="xs" variant="outline" disabled={busy} onClick={(event) => onShowDraft(plan, event.currentTarget)}>Ver borrador</Button>
                                     </HStack>
                                 )}
                             </HStack>
                         </Table.Cell>
                     </Table.Row>
-                    {versions.map((version) => {
+                    {plan.versiones.map((version) => {
                         const actions = getPlanVersionActions(plan, version.id, nivel);
                         const date = planVersionDate(version);
                         return (
@@ -59,12 +59,12 @@ export default function PlanVersionList({ groups, nivel, busy, onDetail, onEdit,
                                     <Text fontSize="sm">{formatControlDate(date.value)}</Text>
                                 </Table.Cell>
                                 <Table.Cell>
-                                    {version.aplicabilidades.length} {version.aplicabilidades.length === 1 ? "ubicación" : "ubicaciones"}
-                                    {" · "}{version.caracteristicas.length} {version.caracteristicas.length === 1 ? "medición" : "mediciones"}
+                                    {version.cantidadAplicabilidades} {version.cantidadAplicabilidades === 1 ? "ubicación" : "ubicaciones"}
+                                    {" · "}{version.cantidadCaracteristicas} {version.cantidadCaracteristicas === 1 ? "medición" : "mediciones"}
                                 </Table.Cell>
                                 <Table.Cell>
                                     <HStack justify="flex-end" flexWrap="wrap" gap={2}>
-                                        {actions.view && <Button size="xs" variant="outline" onClick={(event) => onDetail(plan, version, event.currentTarget)}>Ver detalle</Button>}
+                                        {actions.view && <Button size="xs" variant="outline" disabled={busy} onClick={(event) => onDetail(plan, version, event.currentTarget)}>Ver detalle</Button>}
                                         {actions.edit && <Button size="xs" variant="outline" disabled={busy} onClick={() => onEdit(plan, version)}>Editar borrador</Button>}
                                         {actions.create && <Button size="xs" variant="outline" disabled={busy} onClick={() => onEdit(plan, version)}>Nueva versión</Button>}
                                         {actions.publish && <Button size="xs" colorPalette="teal" disabled={busy} onClick={() => onPublish(plan, version)}>Publicar</Button>}

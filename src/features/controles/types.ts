@@ -141,6 +141,35 @@ export interface PlanControlWrite {
     caracteristicas: CaracteristicaPlanControl[];
 }
 
+export type VersionPlanReferencia = Pick<VersionPlanControl, "id" | "numero" | "estado">;
+
+export interface VersionPlanResumen extends VersionPlanReferencia {
+    creadaEn?: string | null;
+    publicadaEn?: string | null;
+    retiradaEn?: string | null;
+    cantidadAplicabilidades: number;
+    cantidadCaracteristicas: number;
+}
+
+export interface PlanControlResumen extends Omit<PlanControl, "versiones"> {
+    borrador: VersionPlanReferencia | null;
+    vigente: VersionPlanReferencia | null;
+    ultimaRetirada: VersionPlanReferencia | null;
+    versiones: VersionPlanResumen[];
+}
+
+export interface PlanVersionDetalle {
+    plan: PlanControlResumen;
+    version: VersionPlanControl;
+}
+
+export interface PlanesResumenFilters {
+    search?: string;
+    estado?: EstadoVersionPlanControl;
+    page?: number;
+    size?: number;
+}
+
 export interface ContextoControlRequerido {
     loteId: number;
     lote: string;
