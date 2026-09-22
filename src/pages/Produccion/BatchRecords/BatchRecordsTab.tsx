@@ -22,7 +22,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { getExactTabNivel } from "../../../auth/accessHelpers";
 import { useAuth } from "../../../context/AuthContext";
-import ControlExecutionForm from "../../../features/controles/ControlExecutionForm";
+import ProcessControlRegistrationForm from "../ControlProcesos/ProcessControlRegistrationForm";
 import { apiFailureDetail, processControlApi } from "../../../features/controles/api";
 import { formatControlDate } from "../../../features/controles/controlUi";
 import StatusBadge from "../../../features/controles/StatusBadge";
@@ -391,7 +391,7 @@ export default function BatchRecordsTab() {
                         </VStack>}
                     </Box>
 
-                    {selectedProcessRequirement && <Box borderWidth="1px" borderRadius="md" p={{ base: 3, md: 4 }}><ControlExecutionForm api={processControlApi} requirement={selectedProcessRequirement} onCancel={() => setSelectedProcessRequirement(null)} onSaved={() => { const id = detail.resumen.id; setSelectedProcessRequirement(null); void Promise.all([loadProcessEvidence(id), refreshPrevalidation(detail)]); }} /></Box>}
+                    {selectedProcessRequirement && <Box borderWidth="1px" borderRadius="md" p={{ base: 3, md: 4 }}><ProcessControlRegistrationForm key={selectedProcessRequirement.id} requirement={selectedProcessRequirement} onCancel={() => setSelectedProcessRequirement(null)} onSaved={() => { const id = detail.resumen.id; setSelectedProcessRequirement(null); void Promise.all([loadProcessEvidence(id), refreshPrevalidation(detail)]); }} /></Box>}
 
                     <Box borderWidth="1px" borderRadius="md" p={4}>
                         <Heading size="sm" mb={2}>Envío formal a Calidad</Heading>

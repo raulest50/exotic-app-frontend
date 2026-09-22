@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 import { useAppToast } from "../../components/ui/use-app-toast";
 import { apiFailureDetail, type ControlDomainApi } from "./api";
 import { formatControlDate, formatEnumLabel } from "./controlUi";
+import { ControlRequestKeys } from "./controlRequestKeys";
 import StatusBadge from "./StatusBadge";
 import type { DesviacionControl, DisposicionDesviacion, PageResponse } from "./types";
 
@@ -42,6 +43,7 @@ export default function DesviacionesControlTab({ api, nivel }: DesviacionesContr
     const [justification, setJustification] = useState("");
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [requestKeys] = useState(() => new ControlRequestKeys());
 
     const load = async (page = 0) => {
         setLoading(true);
@@ -76,11 +78,13 @@ export default function DesviacionesControlTab({ api, nivel }: DesviacionesContr
         if (!selected || !investigation.trim() || !resolution.trim()) return;
         setSaving(true);
         try {
-            await api.resolveDesviacion(selected.id, {
+            const request = {
                 investigacion: investigation.trim(),
                 resolucion: resolution.trim(),
                 disposicion: disposition,
-            });
+            };
+            await api.resolveDesviacion(selected.id, request,
+                requestKeys.forRequest(`${api.ambito}:resolver:${selected.id}`, request));
             toast({ title: "Desviación resuelta", description: "El resultado original permanece sin modificación.", status: "success" });
             setSelected(null);
             await load(result?.number ?? 0);
@@ -95,10 +99,12 @@ export default function DesviacionesControlTab({ api, nivel }: DesviacionesContr
         if (!selected || !justification.trim() || !disposition) return;
         setSaving(true);
         try {
-            await api.closeDesviacion(selected.id, {
+            const request = {
                 disposicion: disposition,
                 justificacionDisposicion: justification.trim(),
-            });
+            };
+            await api.closeDesviacion(selected.id, request,
+                requestKeys.forRequest(`${api.ambito}:cerrar:${selected.id}`, request));
             toast({ title: "Desviación cerrada", status: "success" });
             setSelected(null);
             await load(result?.number ?? 0);

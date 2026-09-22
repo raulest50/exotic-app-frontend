@@ -418,13 +418,13 @@ export interface ControlDomainApi {
     retireVersion: (planId: number, versionId: number) => Promise<PlanControl>;
     listPendientes: (filters?: PendientesFilters) => Promise<PageResponse<ControlRequerido>>;
     listEnsayosPendientes?: (filters?: EnsayoPendienteOptionFilters) => Promise<PageResponse<EnsayoPendienteOption>>;
-    execute: (request: EjecucionControlWrite) => Promise<EjecucionControl>;
-    revalidate?: (requirementId: number, justification: string) => Promise<RevalidacionControl>;
+    execute: (request: EjecucionControlWrite, idempotencyKey: string) => Promise<EjecucionControl>;
+    revalidate?: (requirementId: number, justification: string, idempotencyKey: string) => Promise<RevalidacionControl>;
     listHistorial: (filters?: HistorialFilters) => Promise<PageResponse<HistorialControlItem>>;
     getEjecucion: (id: number) => Promise<EjecucionControl>;
     listDesviaciones: (params?: { estado?: string; search?: string; page?: number; size?: number }) => Promise<PageResponse<DesviacionControl>>;
-    resolveDesviacion: (id: number, request: DesviacionResolveWrite) => Promise<DesviacionControl>;
-    closeDesviacion: (id: number, request: { disposicion: DisposicionDesviacion; justificacionDisposicion: string }) => Promise<DesviacionControl>;
+    resolveDesviacion: (id: number, request: DesviacionResolveWrite, idempotencyKey: string) => Promise<DesviacionControl>;
+    closeDesviacion: (id: number, request: { disposicion: DisposicionDesviacion; justificacionDisposicion: string }, idempotencyKey: string) => Promise<DesviacionControl>;
 }
 
 function createControlDomainApi(ambito: AmbitoControl): ControlDomainApi {
@@ -497,15 +497,17 @@ function createControlDomainApi(ambito: AmbitoControl): ControlDomainApi {
                 return response.data;
             },
         } : {}),
-        async execute(request) {
-            const response = await axios.post<ExecutionDetailWire>(`${base}/ejecuciones`, request, requestOptions);
+        async execute(request, idempotencyKey) {
+            const response = await axios.post<ExecutionDetailWire>(`${base}/ejecuciones`, request, {
+                ...requestOptions, headers: { "Idempotency-Key": idempotencyKey },
+            });
             return normalizeExecutionDetail(response.data);
         },
-        revalidate: ambito === "CALIDAD" ? async (requirementId, justification) => {
+        revalidate: ambito === "CALIDAD" ? async (requirementId, justification, idempotencyKey) => {
             const response = await axios.post<RevalidacionControl>(
                 `${base}/requisitos/${requirementId}/revalidaciones`,
                 { justificacion: justification },
-                requestOptions,
+                { ...requestOptions, headers: { "Idempotency-Key": idempotencyKey } },
             );
             return response.data;
         } : undefined,
@@ -535,12 +537,16 @@ function createControlDomainApi(ambito: AmbitoControl): ControlDomainApi {
             const page = asPage(response.data, params.page, params.size);
             return { ...page, content: page.content.map(normalizeDeviation) };
         },
-        async resolveDesviacion(id, request) {
-            const response = await axios.post<DeviationWire>(`${base}/desviaciones/${id}/resolver`, request, requestOptions);
+        async resolveDesviacion(id, request, idempotencyKey) {
+            const response = await axios.post<DeviationWire>(`${base}/desviaciones/${id}/resolver`, request, {
+                ...requestOptions, headers: { "Idempotency-Key": idempotencyKey },
+            });
             return normalizeDeviation(response.data);
         },
-        async closeDesviacion(id, request) {
-            const response = await axios.post<DeviationWire>(`${base}/desviaciones/${id}/cerrar`, request, requestOptions);
+        async closeDesviacion(id, request, idempotencyKey) {
+            const response = await axios.post<DeviationWire>(`${base}/desviaciones/${id}/cerrar`, request, {
+                ...requestOptions, headers: { "Idempotency-Key": idempotencyKey },
+            });
             return normalizeDeviation(response.data);
         },
     };

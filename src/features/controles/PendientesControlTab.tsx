@@ -13,13 +13,13 @@ import {
     Text,
     VStack,
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 
 import { useAppToast } from "../../components/ui/use-app-toast";
 import { apiFailureDetail, type ControlDomainApi } from "./api";
 import { CONTROL_NOUN, contextOrderLabel, formatControlDate, formatEnumLabel } from "./controlUi";
 import StatusBadge from "./StatusBadge";
-import ControlExecutionForm from "./ControlExecutionForm";
+import type { ControlRegistrationFormProps } from "./controlMeasurements";
 import QualityAssayPickerDialog from "./QualityAssayPickerDialog";
 import type {
     ControlRequerido,
@@ -31,9 +31,10 @@ import type {
 interface PendientesControlTabProps {
     api: ControlDomainApi;
     nivel: number;
+    registrationForm: ComponentType<ControlRegistrationFormProps>;
 }
 
-export default function PendientesControlTab({ api, nivel }: PendientesControlTabProps) {
+export default function PendientesControlTab({ api, nivel, registrationForm: RegistrationForm }: PendientesControlTabProps) {
     const toast = useAppToast();
     const [search, setSearch] = useState("");
     const [tipoOrden, setTipoOrden] = useState("");
@@ -143,7 +144,7 @@ export default function PendientesControlTab({ api, nivel }: PendientesControlTa
 
             {result && result.totalPages > 1 && <HStack justify="flex-end"><Button size="sm" disabled={result.number === 0} onClick={() => void load(result.number - 1)}>Anterior</Button><Text fontSize="sm">Página {result.number + 1} de {result.totalPages}</Text><Button size="sm" disabled={result.number + 1 >= result.totalPages} onClick={() => void load(result.number + 1)}>Siguiente</Button></HStack>}
 
-            {selected && <Box borderWidth="1px" borderRadius="lg" p={{ base: 3, md: 5 }}><ControlExecutionForm api={api} requirement={selected} onCancel={() => setSelected(null)} onSaved={() => { setSelected(null); void load(result?.number ?? 0); }} /></Box>}
+            {selected && <Box borderWidth="1px" borderRadius="lg" p={{ base: 3, md: 5 }}><RegistrationForm key={selected.id} requirement={selected} onCancel={() => setSelected(null)} onSaved={() => { setSelected(null); void load(result?.number ?? 0); }} /></Box>}
 
             {api.ambito === "CALIDAD" && api.listEnsayosPendientes && (
                 <QualityAssayPickerDialog

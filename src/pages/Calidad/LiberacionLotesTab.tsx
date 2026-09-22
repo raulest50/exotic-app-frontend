@@ -23,7 +23,7 @@ import { useEffect, useState } from "react";
 import { effectiveExactTabNivelFromSnapshot } from "../../auth/accessHelpers";
 import { useAccessSnapshot } from "../../auth/usePermissions";
 import { useAppToast } from "../../components/ui/use-app-toast";
-import ControlExecutionForm from "../../features/controles/ControlExecutionForm";
+import QualityControlRegistrationForm from "./ControlCalidad/QualityControlRegistrationForm";
 import { apiFailureDetail, qualityControlApi } from "../../features/controles/api";
 import { formatControlDate, formatEnumLabel } from "../../features/controles/controlUi";
 import StatusBadge from "../../features/controles/StatusBadge";
@@ -287,7 +287,7 @@ export default function LiberacionLotesTab({ workflowEnabled }: LiberacionLotesT
 
                 <Box borderWidth="1px" borderRadius="md" p={4}><Heading size="sm" mb={1}>Ensayos de Calidad del ciclo</Heading><Text fontSize="sm" color="fg.muted" mb={3}>Los resultados anteriores por revalidar se conservan; confirme su vigencia o repita el ensayo desde esta sección.</Text><VStack align="stretch" gap={2}>{qualityRequirements.map((requirement) => <Flex key={requirement.id} borderWidth="1px" borderRadius="md" p={3} justify="space-between" align={{ base: "stretch", md: "center" }} flexDir={{ base: "column", md: "row" }} gap={2}><Box><Text fontWeight="semibold">{requirement.planCodigo} · {requirement.planNombre}</Text><Text fontSize="sm" color="fg.muted">{formatEnumLabel(requirement.momentoEjecucion)} · v{requirement.versionNumero}</Text></Box><HStack><StatusBadge status={requirement.estado} />{registerLevel >= 2 && <Button size="xs" colorPalette="purple" onClick={() => setSelectedRequirement(requirement)}>{requirement.estado === "POR_REVALIDAR" ? "Revalidar / repetir" : "Registrar ensayo"}</Button>}</HStack></Flex>)}{qualityHistory.map((execution) => <Flex key={`history-${execution.id}`} borderWidth="1px" borderRadius="md" p={3} justify="space-between" gap={2}><Box><Text fontWeight="semibold">{execution.planCodigo} · ejecución #{execution.id}</Text><Text fontSize="sm" color="fg.muted">{formatControlDate(execution.fechaRegistro)} · {execution.usuarioNombreCompleto || execution.usuarioUsername}</Text></Box><StatusBadge status={execution.estado} /></Flex>)}{!qualityRequirements.length && !qualityHistory.length && <Text color="fg.muted">No hay ensayos de Calidad materializados para este expediente.</Text>}</VStack></Box>
 
-                {selectedRequirement && <Box borderWidth="1px" borderRadius="md" p={{ base: 3, md: 4 }}><ControlExecutionForm api={qualityControlApi} requirement={selectedRequirement} onCancel={() => setSelectedRequirement(null)} onSaved={() => { setSelectedRequirement(null); void refreshDetail(); }} /></Box>}
+                {selectedRequirement && <Box borderWidth="1px" borderRadius="md" p={{ base: 3, md: 4 }}><QualityControlRegistrationForm key={selectedRequirement.id} requirement={selectedRequirement} onCancel={() => setSelectedRequirement(null)} onSaved={() => { setSelectedRequirement(null); void refreshDetail(); }} /></Box>}
 
                 <Box borderWidth="1px" borderRadius="md" p={4}><HStack justify="space-between" mb={3}><Heading size="sm">Vista documental</Heading><Button size="sm" variant="outline" onClick={() => void viewPdf()}>Reconstruir PDF</Button></HStack>{pdfUrl ? <PdfFrame src={pdfUrl} title="Batch record para revisión" w="full" h={{ base: "480px", lg: "720px" }} borderWidth="1px" /> : <Text color="fg.muted">Abra el PDF para revisar el expediente completo y sus firmas.</Text>}</Box>
 
