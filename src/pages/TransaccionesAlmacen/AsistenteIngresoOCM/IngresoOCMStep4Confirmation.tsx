@@ -2,6 +2,7 @@
 import { Button, Flex, Heading, HStack, Icon, Text } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 
+import OcmReceptionStatus from "../../../features/ocmCierre/OcmReceptionStatus";
 import { RiSave3Fill } from "react-icons/ri";
 import { ImCheckboxChecked } from "react-icons/im";
 
@@ -12,10 +13,11 @@ const colorAnimation = keyframes`
 `;
 
 interface StepFourComponentProps {
+    ordenCompraId?: number;
     setActiveStep: (step: number) => void;
 }
 
-export default function IngresoOCMStep4Confirmation({setActiveStep}: StepFourComponentProps) {
+export default function IngresoOCMStep4Confirmation({setActiveStep, ordenCompraId}: StepFourComponentProps) {
 
     const onClickRegresar = () => {
         setActiveStep(0);
@@ -38,6 +40,8 @@ export default function IngresoOCMStep4Confirmation({setActiveStep}: StepFourCom
             <Text fontFamily="Comfortaa Variable">
                 El formato de ingreso a almacen fue enviado y guardado correctamente.
             </Text>
+
+            <OcmReceptionStatus ordenCompraId={ordenCompraId} />
 
             <Icon
                 w={"10em"}

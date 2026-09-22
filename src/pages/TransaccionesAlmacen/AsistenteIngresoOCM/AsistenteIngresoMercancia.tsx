@@ -53,7 +53,7 @@ export default function AsistenteIngresoMercancia() {
                 );
             case 4:
                 return (
-                    <IngresoOCMStep4Confirmation setActiveStep={setActiveStep}/>
+                    <IngresoOCMStep4Confirmation setActiveStep={setActiveStep} ordenCompraId={selectedOrder?.ordenCompraId}/>
                 );
             default:
                 return null;

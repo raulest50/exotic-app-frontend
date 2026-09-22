@@ -34,6 +34,7 @@ import {
     AREA_OPERATIVA_NOISE_SAMPLE_SECONDS_MIN,
     MASTER_DIRECTIVE_KEYS,
 } from "../../context/masterDirectiveConstants";
+import OcmCierreDirectivePanel from "./OcmCierreDirectivePanel";
 import { LuCircleHelp } from 'react-icons/lu';
 
 interface SuperMasterConfig {
@@ -668,6 +669,7 @@ export default function MasterDirectivesPage() {
                     <Tabs.Trigger value="area-operativa">Area Operativa</Tabs.Trigger>
                 </Tabs.List>
                 <Tabs.Content value="general" px={0}>
+                        <OcmCierreDirectivePanel />
                         <Table.Root variant="line">
                             <Table.Header>
                                 <Table.Row>

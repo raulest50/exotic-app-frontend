@@ -10,6 +10,7 @@ import {
     Portal,
 } from '@chakra-ui/react';
 import {getCondicionPagoText, getEstadoText, OrdenCompraMateriales} from '../types';
+import OcmReceptionStatus from "../../../features/ocmCierre/OcmReceptionStatus";
 import { formatCOP } from '../../../utils/formatters';
 
 interface OrdenCompraDetailsProps {
@@ -75,6 +76,7 @@ const OrdenCompraDetails: React.FC<OrdenCompraDetailsProps> = ({ isOpen, onClose
                                 <Text><strong>Plazo de Pago:</strong> {orden.plazoPago}</Text>
                                 <Text><strong>Observaciones:</strong> {orden.observaciones || '-'}</Text>
                             </Box>
+                            {isOpen && <OcmReceptionStatus ordenCompraId={orden.ordenCompraId} />}
                             <Box>
                                 <Text fontWeight="bold" mb={2}>Items de la Orden</Text>
                                 {orden.itemsOrdenCompra && orden.itemsOrdenCompra.length > 0 ? (

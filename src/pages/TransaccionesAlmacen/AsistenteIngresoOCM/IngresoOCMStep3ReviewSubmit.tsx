@@ -86,7 +86,7 @@ export default function IngresoOCMStep3ReviewSubmit({
             const backendMessage = getBackendMessage(error);
 
             toast({
-                title: isConflict ? "Limite de recepciones alcanzado" : "Error al registrar ingreso",
+                title: isConflict ? "No se pudo registrar la recepción" : "Error al registrar ingreso",
                 description: backendMessage || "No se pudo registrar el ingreso de materiales.",
                 status: "error",
                 duration: 6000,

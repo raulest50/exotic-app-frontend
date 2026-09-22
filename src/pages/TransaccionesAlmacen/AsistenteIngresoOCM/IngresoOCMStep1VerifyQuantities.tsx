@@ -17,6 +17,7 @@ import {
 import { useIngresoOcmDraft } from "./useIngresoOcmDraft";
 import { useOcmLotePreview } from "./useOcmLotePreview";
 import { useOcmReceptionData } from "./useOcmReceptionData";
+import OcmReceptionStatus from "../../../features/ocmCierre/OcmReceptionStatus";
 import { LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT } from "../../../context/masterDirectiveConstants";
 
 interface StepOneComponentProps {
@@ -150,6 +151,7 @@ export default function IngresoOCMStep1VerifyQuantities({
                     Verificar Cantidades y Lotes
                 </Heading>
 
+                <OcmReceptionStatus ordenCompraId={orden.ordenCompraId} />
                 {proveedorInconsistente && (
                     <Alert.Root status="warning" borderRadius="md" w="full" maxW="4xl">
                         <Alert.Indicator />
