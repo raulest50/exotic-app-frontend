@@ -118,7 +118,11 @@ export default function RouteControlDetailDialog({ controls, onClose, finalFocus
                                 )}
                             </VStack>
                         </Dialog.Body>
-                        <Dialog.Footer><Dialog.CloseTrigger asChild><Button variant="outline">Cerrar</Button></Dialog.CloseTrigger></Dialog.Footer>
+                        <Dialog.Footer>
+                            <Button type="button" variant="outline" minW="24" px={5} onClick={onClose}>
+                                Cerrar
+                            </Button>
+                        </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>
             </Portal>
