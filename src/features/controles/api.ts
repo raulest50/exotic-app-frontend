@@ -9,6 +9,7 @@ import type {
     CatalogoMagnitud,
     CatalogoUnidad,
     CategoriaControlOption,
+    CodigoPlanDisponibilidad,
     ControlProductOption,
     ControlRequerido,
     DesviacionControl,
@@ -202,6 +203,8 @@ export interface ApiFailureDetail {
     message: string;
     bloqueos: string[];
     status?: number;
+    errorCode?: string;
+    field?: string;
 }
 
 export function apiFailureDetail(error: unknown, fallback: string): ApiFailureDetail {
@@ -209,6 +212,8 @@ export function apiFailureDetail(error: unknown, fallback: string): ApiFailureDe
         const body = error.response?.data as {
             message?: string;
             error?: string;
+            errorCode?: string;
+            field?: string;
             bloqueos?: Array<string | { mensaje?: string; message?: string }>;
         } | undefined;
         return {
@@ -217,6 +222,8 @@ export function apiFailureDetail(error: unknown, fallback: string): ApiFailureDe
                 typeof item === "string" ? item : item.mensaje || item.message || "Bloqueo sin descripción"
             )),
             status: error.response?.status,
+            errorCode: body?.errorCode,
+            field: body?.field,
         };
     }
     return { message: error instanceof Error ? error.message : fallback, bloqueos: [] };
@@ -402,6 +409,7 @@ function normalizeDeviation(item: DeviationWire): DesviacionControl {
 
 export interface ControlDomainApi {
     ambito: AmbitoControl;
+    checkPlanCode: (codigo: string, signal?: AbortSignal) => Promise<CodigoPlanDisponibilidad>;
     listPlanes: (params?: { search?: string; estado?: string }) => Promise<PlanControl[]>;
     listPlanesResumen: (params?: PlanesResumenFilters) => Promise<PageResponse<PlanControlResumen>>;
     getVersionPlan: (planId: number, versionId: number) => Promise<PlanVersionDetalle>;
@@ -426,6 +434,12 @@ function createControlDomainApi(ambito: AmbitoControl): ControlDomainApi {
 
     return {
         ambito,
+        async checkPlanCode(codigo, signal) {
+            const response = await axios.get<CodigoPlanDisponibilidad>(`${base}/planes/disponibilidad-codigo`, {
+                ...requestOptions, params: { codigo }, signal,
+            });
+            return response.data;
+        },
         async listPlanes(params = {}) {
             const response = await axios.get<PlanWire[] | PageResponse<PlanWire>>(`${base}/planes`, {
                 ...requestOptions,

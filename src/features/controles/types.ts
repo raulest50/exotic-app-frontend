@@ -141,6 +141,11 @@ export interface PlanControlWrite {
     caracteristicas: CaracteristicaPlanControl[];
 }
 
+export interface CodigoPlanDisponibilidad {
+    codigoNormalizado: string;
+    disponible: boolean;
+}
+
 export type VersionPlanReferencia = Pick<VersionPlanControl, "id" | "numero" | "estado">;
 
 export interface VersionPlanResumen extends VersionPlanReferencia {

@@ -30,6 +30,9 @@ import { apiFailureDetail, listControlCategories, listMagnitudes, listUnidades, 
 import { CONTROL_NOUN, CONTROL_SCOPE_LABEL } from "./controlUi";
 import PlanVersionDetailDialog from "./PlanVersionDetailDialog";
 import PlanVersionList from "./PlanVersionList";
+import PlanValidationField from "./PlanValidationField";
+import { PlanCodeAvailabilityCheck } from "./planCodeAvailability";
+import { planIssueFromApi, validatePlan, validatePlanStep, type PlanStep, type PlanValidationIssue } from "./planValidation";
 import { getPlanVersionActions, PLAN_VERSION_FILTERS, planVersionFilterNotice, type PlanVersionFilter } from "./planVersionView";
 import usePlanControlList from "./usePlanControlList";
 import ControlPointRoutePicker from "./QualityControlPointRoutePicker";
@@ -144,25 +147,6 @@ function decimalOrNull(value: string): string | null {
     return value.trim() ? value.replace(",", ".") : null;
 }
 
-function validDecimal(value: string) {
-    if (!/^-?\d+(?:\.\d+)?$/.test(value)) return false;
-    const unsigned = value.startsWith("-") ? value.slice(1) : value;
-    const [integer, fraction = ""] = unsigned.split(".");
-    return integer.length <= 12 && fraction.length <= 8;
-}
-
-function compareDecimal(left: string, right: string) {
-    const scaled = (value: string) => {
-        const negative = value.startsWith("-");
-        const unsigned = negative ? value.slice(1) : value;
-        const [integer, fraction = ""] = unsigned.split(".");
-        const absolute = BigInt(`${integer}${fraction.padEnd(8, "0")}`);
-        return negative ? -absolute : absolute;
-    };
-    const difference = scaled(left) - scaled(right);
-    return difference < 0n ? -1 : difference > 0n ? 1 : 0;
-}
-
 function locationLabel(rule: AplicabilidadPlanControl, ambito: ControlDomainApi["ambito"]): string {
     if (!rule.ubicacionGraficaConfirmada) {
         return ambito === "PROCESO" ? "Seleccione una operación en la ruta." : "Seleccione una salida en la ruta.";
@@ -171,55 +155,6 @@ function locationLabel(rule: AplicabilidadPlanControl, ambito: ControlDomainApi[
     const operation = rule.procesoProduccionNombre || (rule.procesoProduccionId ? `Proceso ${rule.procesoProduccionId}` : "Operación");
     const area = rule.areaOperativaNombre || (rule.areaOperativaId ? `Área ${rule.areaOperativaId}` : "Área sin identificar");
     return ambito === "PROCESO" ? `Dentro de ${operation} · ${area}` : `Salida de ${operation} · ${area}`;
-}
-
-function validateDraft(draft: PlanControlWrite, ambito: ControlDomainApi["ambito"], changeReasonRequired: boolean): string[] {
-    const errors: string[] = [];
-    if (!draft.codigo.trim()) errors.push("El código del plan es obligatorio.");
-    if (!draft.nombre.trim()) errors.push("El nombre del plan es obligatorio.");
-    if (changeReasonRequired && !draft.motivoCambio?.trim()) errors.push("El motivo del cambio es obligatorio para una nueva versión.");
-    if (draft.aplicabilidades.length !== 1) errors.push("El plan debe tener exactamente una aplicación y una ubicación.");
-    if (!draft.caracteristicas.length) errors.push("Debe existir al menos una medición.");
-    draft.aplicabilidades.forEach((rule, index) => {
-        const prefix = draft.aplicabilidades.length === 1 ? "Aplicación" : `Aplicación ${index + 1}`;
-        if (!rule.productoId && !rule.categoriaId) errors.push(`${prefix}: seleccione un producto o una categoría.`);
-        if (rule.productoId && rule.categoriaId) errors.push(`${prefix}: producto y categoría son mutuamente excluyentes.`);
-        if (rule.puntoAplicacion === "SALIDA_OPERACION" && (!rule.areaOperativaId || !rule.procesoProduccionId)) {
-            errors.push(`${prefix}: una salida de operación exige área y proceso maestro.`);
-        }
-        if (!rule.ubicacionGraficaConfirmada) {
-            errors.push(`${prefix}: seleccione gráficamente ${ambito === "PROCESO" ? "la operación" : "la salida"} donde se realizará el control.`);
-        }
-        if (ambito === "PROCESO" && (rule.puntoAplicacion !== "SALIDA_OPERACION"
-            || rule.momentoEjecucion !== "DURANTE_FABRICACION"
-            || rule.puntoExigencia !== "INFORMATIVO")) {
-            errors.push(`${prefix}: un control de proceso debe ubicarse en una operación y siempre es informativo.`);
-        }
-    });
-    draft.caracteristicas.forEach((characteristic, index) => {
-        const prefix = `Medición ${index + 1}`;
-        if (!characteristic.nombre.trim()) errors.push(`${prefix}: el nombre es obligatorio.`);
-        if (!characteristic.magnitudId) errors.push(`${prefix}: la magnitud es obligatoria.`);
-        if (characteristic.cantidadMuestras < 1 || characteristic.unidadesPorMuestra < 1) errors.push(`${prefix}: el muestreo debe ser mayor que cero.`);
-        if (characteristic.tipo === "NUMERICA") {
-            if (!characteristic.unidadId) errors.push(`${prefix}: la unidad es obligatoria.`);
-            if (characteristic.escala < 0 || characteristic.escala > 8) errors.push(`${prefix}: la escala debe estar entre 0 y 8.`);
-            if (characteristic.limiteInferior == null && characteristic.limiteSuperior == null) errors.push(`${prefix}: configure al menos un límite.`);
-            const decimals = [characteristic.objetivo, characteristic.limiteInferior, characteristic.limiteSuperior].filter((value): value is string => value != null);
-            if (decimals.some((value) => !validDecimal(value))) errors.push(`${prefix}: objetivo y límites admiten hasta 12 dígitos enteros y 8 decimales.`);
-            if (decimals.every(validDecimal)) {
-                if (characteristic.limiteInferior != null && characteristic.limiteSuperior != null
-                    && compareDecimal(characteristic.limiteInferior, characteristic.limiteSuperior) > 0) errors.push(`${prefix}: el límite inferior no puede superar al superior.`);
-                if (characteristic.objetivo != null && characteristic.limiteInferior != null
-                    && compareDecimal(characteristic.objetivo, characteristic.limiteInferior) < 0) errors.push(`${prefix}: el objetivo está bajo el límite inferior.`);
-                if (characteristic.objetivo != null && characteristic.limiteSuperior != null
-                    && compareDecimal(characteristic.objetivo, characteristic.limiteSuperior) > 0) errors.push(`${prefix}: el objetivo supera el límite superior.`);
-            }
-        } else if (characteristic.valorBooleanoEsperado == null) {
-            errors.push(`${prefix}: indique el valor booleano esperado.`);
-        }
-    });
-    return errors;
 }
 
 export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) {
@@ -241,14 +176,68 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     const versionRequestId = useRef(0);
     const detailTriggerRef = useRef<HTMLButtonElement>(null);
     const searchRef = useRef<HTMLInputElement>(null);
-    const [step, setStep] = useState(0);
+    const [step, setStep] = useState<PlanStep>(0);
     const [editorOpen, setEditorOpen] = useState(false);
     const [editingPlanId, setEditingPlanId] = useState<number | undefined>();
     const [changeReasonRequired, setChangeReasonRequired] = useState(false);
     const [draft, setDraft] = useState<PlanControlWrite>(() => defaultsFor(api.ambito));
-    const [validationErrors, setValidationErrors] = useState<string[]>([]);
     const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
     const [productPickerMode, setProductPickerMode] = useState<"SINGLE" | "MULTIPLE" | null>(null);
+    const [attemptedSteps, setAttemptedSteps] = useState<PlanStep[]>([]);
+    const [serverValidation, setServerValidation] = useState<{
+        draft: PlanControlWrite; issues: PlanValidationIssue[]; messages: string[];
+    } | null>(null);
+    const [checkingCode, setCheckingCode] = useState(false);
+    const codeCheck = useRef(new PlanCodeAvailabilityCheck());
+    const editorRef = useRef<HTMLDivElement>(null);
+    const [focusIssue, setFocusIssue] = useState<PlanValidationIssue | null>(null);
+    const visibleServerValidation = serverValidation?.draft === draft ? serverValidation : null;
+    const validationIssues = [
+        ...validatePlan(draft, api.ambito, changeReasonRequired).filter((issue) => attemptedSteps.includes(issue.step)),
+        ...(visibleServerValidation?.issues ?? []),
+    ];
+    const validationErrors = [...new Set([
+        ...validationIssues.map((issue) => issue.message), ...(visibleServerValidation?.messages ?? []),
+    ])];
+
+    useEffect(() => {
+        const check = codeCheck.current;
+        check.cancel();
+        setCheckingCode(false);
+        return () => check.cancel();
+    }, [api, draft.codigo, editorOpen]);
+
+    useEffect(() => {
+        if (!focusIssue || !editorRef.current) return;
+        const fields = Array.from(editorRef.current.querySelectorAll<HTMLElement>("[data-plan-field]"));
+        const field = fields.find((item) => item.dataset.planField === focusIssue.field)
+            ?? fields.find((item) => item.dataset.planField === focusIssue.field.split(".")[0])
+            ?? editorRef.current;
+        const input = focusIssue.field === "ubicacion" ? field : field.querySelector<HTMLElement>(
+            "input:not([readonly]):not([disabled]), select:not([disabled]), textarea:not([readonly]):not([disabled]), button:not([disabled])",
+        ) ?? field;
+        input.focus();
+        field.scrollIntoView({ block: "nearest" });
+        setFocusIssue(null);
+    }, [focusIssue, step]);
+
+    const focusError = (issue: PlanValidationIssue) => {
+        setStep(issue.step);
+        setFocusIssue({ ...issue });
+    };
+
+    const resetValidation = () => {
+        codeCheck.current.cancel();
+        setCheckingCode(false);
+        setAttemptedSteps([]);
+        setServerValidation(null);
+        setFocusIssue(null);
+    };
+
+    const closeEditor = () => {
+        resetValidation();
+        setEditorOpen(false);
+    };
 
     const loadCatalogs = async () => {
         setCatalogLoading(true);
@@ -299,7 +288,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
         setEditingPlanId(undefined);
         setChangeReasonRequired(false);
         setDraft(defaultsFor(api.ambito));
-        setValidationErrors([]);
+        resetValidation();
         setStep(0);
         setEditorOpen(true);
     };
@@ -326,7 +315,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
             setEditingPlanId(detail.plan.id);
             setChangeReasonRequired(detail.version.numero > 1 || detail.version.estado !== "BORRADOR");
             setDraft(versionToDraft(detail.plan, detail.version));
-            setValidationErrors([]);
+            resetValidation();
             setStep(0);
             setEditorOpen(true);
         } catch (error) {
@@ -352,11 +341,44 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
         }));
     };
 
+    const nextStep = async () => {
+        if (saving || loading || fetchingVersion || catalogLoading || loadError || nivel < 2 || codeCheck.current.pending) return;
+        const errors = validatePlanStep(draft, api.ambito, changeReasonRequired, step);
+        setAttemptedSteps((current) => [...new Set([...current, step])]);
+        setServerValidation(null);
+        if (errors.length) { focusError(errors[0]); return; }
+        if (step === 1) { setStep(2); return; }
+        if (step !== 0) return;
+        if (editingPlanId != null) { setStep(1); return; }
+        setCheckingCode(true);
+        try {
+            const result = await codeCheck.current.check(api.checkPlanCode, draft.codigo);
+            if (!result) return;
+            if (!result.disponible) {
+                const issue: PlanValidationIssue = { step: 0, field: "codigo", message: "Ya existe un plan con ese código. Utilice un código diferente." };
+                setServerValidation({ draft, issues: [issue], messages: [] });
+                focusError(issue);
+                return;
+            }
+            setDraft((current) => ({ ...current, codigo: result.codigoNormalizado }));
+            setStep(1);
+        } catch (error) {
+            const detail = apiFailureDetail(error, "No fue posible comprobar la disponibilidad del código. Vuelva a pulsar Siguiente.");
+            const issue: PlanValidationIssue | null = detail.status === 400
+                ? { step: 0, field: "codigo", message: detail.message } : null;
+            setServerValidation({ draft, issues: issue ? [issue] : [], messages: issue ? [] : [detail.message] });
+            if (issue) focusError(issue);
+        } finally {
+            if (!codeCheck.current.pending) setCheckingCode(false);
+        }
+    };
+
     const save = async () => {
         if (saving || loading || fetchingVersion || loadError || nivel < 2) return;
-        const errors = validateDraft(draft, api.ambito, changeReasonRequired);
-        setValidationErrors(errors);
-        if (errors.length) return;
+        const errors = validatePlan(draft, api.ambito, changeReasonRequired);
+        setAttemptedSteps([0, 1, 2]);
+        setServerValidation(null);
+        if (errors.length) { focusError(errors[0]); return; }
         setSaving(true);
         try {
             await api.savePlan({
@@ -374,7 +396,9 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
             setEditorOpen(false);
         } catch (error) {
             const detail = apiFailureDetail(error, "No fue posible guardar el borrador.");
-            setValidationErrors([detail.message, ...detail.bloqueos]);
+            const issue = planIssueFromApi(detail);
+            setServerValidation({ draft, issues: issue ? [issue] : [], messages: issue ? detail.bloqueos : [detail.message, ...detail.bloqueos] });
+            if (issue) focusError(issue);
         } finally {
             setSaving(false);
         }
@@ -405,7 +429,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
     };
 
     const activeCatalogsByDimension = useMemo(() => new Map(magnitudes.map((item) => [item.id, item.dimension])), [magnitudes]);
-    const busy = loading || saving || catalogLoading || fetchingVersion;
+    const busy = loading || saving || catalogLoading || fetchingVersion || checkingCode;
     const listBusy = busy || Boolean(loadError);
     const applicability = draft.aplicabilidades[0];
 
@@ -532,7 +556,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
             />
 
             {nivel >= 2 && editorOpen && (
-                <Box borderWidth="1px" borderRadius="lg" p={{ base: 3, md: 5 }}>
+                <Box ref={editorRef} tabIndex={-1} borderWidth="1px" borderRadius="lg" p={{ base: 3, md: 5 }}>
                     <HStack justify="space-between" align="start" mb={5} flexWrap="wrap">
                         <Box><Heading size="sm">{editingPlanId ? "Borrador de nueva versión" : "Nuevo plan"}</Heading><Text fontSize="sm" color="fg.muted">La versión publicada será inmutable.</Text></Box>
                         <Badge colorPalette={api.ambito === "PROCESO" ? "blue" : "purple"}>{CONTROL_SCOPE_LABEL[api.ambito]}</Badge>
@@ -546,9 +570,9 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                     {validationErrors.length > 0 && <Alert.Root status="error" mb={4}><Alert.Indicator /><Box><Text fontWeight="semibold">Revise el borrador</Text>{validationErrors.map((error) => <Text key={error} fontSize="sm">• {error}</Text>)}</Box></Alert.Root>}
 
                     {step === 0 && <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={4}>
-                        <Field.Root required readOnly={editingPlanId != null} invalid={!draft.codigo.trim() && validationErrors.length > 0}><Field.Label>Código</Field.Label><Input value={draft.codigo} readOnly={editingPlanId != null} bg={editingPlanId != null ? "bg.subtle" : undefined} onChange={(event) => setDraft((current) => ({ ...current, codigo: event.target.value }))} placeholder="CP-PESO-ENVASE" maxLength={60} />{editingPlanId != null && <Field.HelperText>La identidad del plan es inmutable.</Field.HelperText>}</Field.Root>
-                        <Field.Root required readOnly={editingPlanId != null} invalid={!draft.nombre.trim() && validationErrors.length > 0}><Field.Label>Nombre</Field.Label><Input value={draft.nombre} readOnly={editingPlanId != null} bg={editingPlanId != null ? "bg.subtle" : undefined} onChange={(event) => setDraft((current) => ({ ...current, nombre: event.target.value }))} maxLength={160} /></Field.Root>
-                        <Field.Root required={changeReasonRequired} gridColumn={{ md: "1 / -1" }}><Field.Label>Motivo del cambio</Field.Label><Textarea value={draft.motivoCambio ?? ""} onChange={(event) => setDraft((current) => ({ ...current, motivoCambio: event.target.value }))} placeholder={changeReasonRequired ? "Explique por qué se crea esta versión" : "Opcional para la versión inicial"} maxLength={500} />{changeReasonRequired && <Field.HelperText>Obligatorio para publicar una versión v2 o posterior.</Field.HelperText>}</Field.Root>
+                        <PlanValidationField field="codigo" issues={validationIssues} disabled={checkingCode || saving} required readOnly={editingPlanId != null}><Field.Label>Código</Field.Label><Input value={draft.codigo} readOnly={editingPlanId != null} bg={editingPlanId != null ? "bg.subtle" : undefined} onChange={(event) => setDraft((current) => ({ ...current, codigo: event.target.value }))} placeholder="CP-PESO-ENVASE" maxLength={60} />{editingPlanId != null && <Field.HelperText>La identidad del plan es inmutable.</Field.HelperText>}</PlanValidationField>
+                        <PlanValidationField field="nombre" issues={validationIssues} disabled={checkingCode || saving} required readOnly={editingPlanId != null}><Field.Label>Nombre</Field.Label><Input value={draft.nombre} readOnly={editingPlanId != null} bg={editingPlanId != null ? "bg.subtle" : undefined} onChange={(event) => setDraft((current) => ({ ...current, nombre: event.target.value }))} maxLength={160} /></PlanValidationField>
+                        <PlanValidationField field="motivoCambio" issues={validationIssues} disabled={checkingCode || saving} required={changeReasonRequired} gridColumn={{ md: "1 / -1" }}><Field.Label>Motivo del cambio</Field.Label><Textarea value={draft.motivoCambio ?? ""} onChange={(event) => setDraft((current) => ({ ...current, motivoCambio: event.target.value }))} placeholder={changeReasonRequired ? "Explique por qué se crea esta versión" : "Opcional para la versión inicial"} maxLength={500} />{changeReasonRequired && <Field.HelperText>Obligatorio para publicar una versión v2 o posterior.</Field.HelperText>}</PlanValidationField>
                     </Grid>}
 
                     {step === 1 && (
@@ -595,7 +619,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                                         </Field.Root>
 
                                         {applicability.productoId != null ? (
-                                            <Field.Root required>
+                                            <PlanValidationField field="destino" issues={validationIssues} required>
                                                 <Field.Label>Producto</Field.Label>
                                                 <VStack align="stretch" gap={2}>
                                                     <Box borderWidth="1px" borderRadius="md" px={3} py={2} minH="40px">
@@ -610,9 +634,9 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                                                         {applicability.productoId ? "Cambiar producto" : "Seleccionar producto"}
                                                     </Button>
                                                 </VStack>
-                                            </Field.Root>
+                                            </PlanValidationField>
                                         ) : (
-                                            <Field.Root required>
+                                            <PlanValidationField field="destino" issues={validationIssues} required>
                                                 <Field.Label>Categoría</Field.Label>
                                                 <NativeSelect.Root>
                                                     <NativeSelect.Field
@@ -639,7 +663,7 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                                                     </NativeSelect.Field>
                                                     <NativeSelect.Indicator />
                                                 </NativeSelect.Root>
-                                            </Field.Root>
+                                            </PlanValidationField>
                                         )}
 
                                         {applicability.productoId == null && (
@@ -686,8 +710,11 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                                             </Field.Root>
                                         )}
 
-                                        <Box gridColumn={{ md: "1 / -1" }}>
+                                        <Box gridColumn={{ md: "1 / -1" }} data-plan-field="ubicacion" tabIndex={-1}>
                                             <VStack align="stretch" gap={3}>
+                                                {validationIssues.filter((issue) => issue.step === 1 && issue.field === "ubicacion").map((issue) => (
+                                                    <Text key={issue.message} color="fg.error" fontSize="sm">{issue.message}</Text>
+                                                ))}
                                                 <ControlPointRoutePicker
                                                     ambito={api.ambito}
                                                     productoId={applicability.productoId}
@@ -751,24 +778,24 @@ export default function PlanesControlTab({ api, nivel }: PlanesControlTabProps) 
                         </VStack>
                     )}
 
-                    {step === 2 && <VStack align="stretch" gap={4}>{draft.caracteristicas.map((characteristic, index) => {
+                    {step === 2 && <VStack align="stretch" gap={4} data-plan-field="caracteristicas" tabIndex={-1}>{draft.caracteristicas.map((characteristic, index) => {
                         const dimension = characteristic.magnitudId ? activeCatalogsByDimension.get(characteristic.magnitudId) : undefined;
                         const compatibleUnits = unidades.filter((unit) => unit.activo && (!dimension || unit.dimension === dimension));
                         return <Box key={index} borderWidth="1px" borderRadius="md" p={4}><HStack justify="space-between" mb={3}><Text fontWeight="semibold">Medición {index + 1}</Text><IconButton aria-label={`Eliminar medición ${index + 1}`} size="sm" variant="ghost" disabled={draft.caracteristicas.length === 1} onClick={() => setDraft((current) => ({ ...current, caracteristicas: current.caracteristicas.filter((_, position) => position !== index).map((item, position) => ({ ...item, orden: position + 1 })) }))}><LuTrash2 /></IconButton></HStack><Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={3}>
-                            <Field.Root required><Field.Label>Nombre de la medición</Field.Label><Input value={characteristic.nombre} onChange={(event) => updateCharacteristic(index, { nombre: event.target.value })} maxLength={120} /></Field.Root>
-                            <Field.Root required><Field.Label>Tipo</Field.Label><NativeSelect.Root><NativeSelect.Field value={characteristic.tipo} onChange={(event) => { const type = event.target.value as CaracteristicaPlanControl["tipo"]; updateCharacteristic(index, type === "NUMERICA" ? { tipo: type, valorBooleanoEsperado: null } : { tipo: type, unidadId: null, objetivo: null, limiteInferior: null, limiteSuperior: null }); }}><option value="NUMERICA">Numérica</option><option value="BOOLEANA">Booleana</option></NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root>
-                            <Field.Root required><Field.Label>Magnitud</Field.Label><NativeSelect.Root><NativeSelect.Field value={characteristic.magnitudId ?? ""} onChange={(event) => updateCharacteristic(index, { magnitudId: idOrNull(event.target.value), unidadId: null })}><option value="">Seleccionar</option>{magnitudes.filter((item) => item.activo).map((item) => <option key={item.id} value={item.id}>{item.nombre} · {item.dimension}</option>)}</NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root>
-                            {characteristic.tipo === "NUMERICA" ? <><Field.Root required><Field.Label>Unidad</Field.Label><NativeSelect.Root><NativeSelect.Field value={characteristic.unidadId ?? ""} onChange={(event) => updateCharacteristic(index, { unidadId: idOrNull(event.target.value) })}><option value="">Seleccionar</option>{compatibleUnits.map((item) => <option key={item.id} value={item.id}>{item.nombre} ({item.simbolo})</option>)}</NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root><Field.Root><Field.Label>Objetivo</Field.Label><Input inputMode="decimal" value={characteristic.objetivo ?? ""} onChange={(event) => updateCharacteristic(index, { objetivo: decimalOrNull(event.target.value) })} /></Field.Root><Field.Root><Field.Label>Límite inferior</Field.Label><Input inputMode="decimal" value={characteristic.limiteInferior ?? ""} onChange={(event) => updateCharacteristic(index, { limiteInferior: decimalOrNull(event.target.value) })} /></Field.Root><Field.Root><Field.Label>Límite superior</Field.Label><Input inputMode="decimal" value={characteristic.limiteSuperior ?? ""} onChange={(event) => updateCharacteristic(index, { limiteSuperior: decimalOrNull(event.target.value) })} /></Field.Root><Field.Root required><Field.Label>Decimales visibles</Field.Label><Input type="number" min={0} max={8} value={characteristic.escala} onChange={(event) => updateCharacteristic(index, { escala: Number(event.target.value) })} /></Field.Root></> : <Field.Root required><Field.Label>Valor esperado</Field.Label><NativeSelect.Root><NativeSelect.Field value={characteristic.valorBooleanoEsperado == null ? "" : String(characteristic.valorBooleanoEsperado)} onChange={(event) => updateCharacteristic(index, { valorBooleanoEsperado: event.target.value === "" ? null : event.target.value === "true" })}><option value="">Seleccionar</option><option value="true">Sí / verdadero</option><option value="false">No / falso</option></NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root>}
-                            <Field.Root required><Field.Label>Muestras</Field.Label><Input type="number" min={1} value={characteristic.cantidadMuestras} onChange={(event) => updateCharacteristic(index, { cantidadMuestras: Number(event.target.value) })} /></Field.Root><Field.Root required><Field.Label>Unidades por muestra</Field.Label><Input type="number" min={1} value={characteristic.unidadesPorMuestra} onChange={(event) => updateCharacteristic(index, { unidadesPorMuestra: Number(event.target.value) })} /></Field.Root>
+                            <PlanValidationField field={`caracteristicas.${index}.nombre`} issues={validationIssues} required><Field.Label>Nombre de la medición</Field.Label><Input value={characteristic.nombre} onChange={(event) => updateCharacteristic(index, { nombre: event.target.value })} maxLength={120} /></PlanValidationField>
+                            <PlanValidationField field={`caracteristicas.${index}.tipo`} issues={validationIssues} required><Field.Label>Tipo</Field.Label><NativeSelect.Root><NativeSelect.Field value={characteristic.tipo} onChange={(event) => { const type = event.target.value as CaracteristicaPlanControl["tipo"]; updateCharacteristic(index, type === "NUMERICA" ? { tipo: type, valorBooleanoEsperado: null } : { tipo: type, escala: 0, unidadId: null, objetivo: null, limiteInferior: null, limiteSuperior: null }); }}><option value="NUMERICA">Numérica</option><option value="BOOLEANA">Booleana</option></NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></PlanValidationField>
+                            <PlanValidationField field={`caracteristicas.${index}.magnitudId`} issues={validationIssues} required><Field.Label>Magnitud</Field.Label><NativeSelect.Root><NativeSelect.Field value={characteristic.magnitudId ?? ""} onChange={(event) => updateCharacteristic(index, { magnitudId: idOrNull(event.target.value), unidadId: null })}><option value="">Seleccionar</option>{magnitudes.filter((item) => item.activo).map((item) => <option key={item.id} value={item.id}>{item.nombre} · {item.dimension}</option>)}</NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></PlanValidationField>
+                            {characteristic.tipo === "NUMERICA" ? <><PlanValidationField field={`caracteristicas.${index}.unidadId`} issues={validationIssues} required><Field.Label>Unidad</Field.Label><NativeSelect.Root><NativeSelect.Field value={characteristic.unidadId ?? ""} onChange={(event) => updateCharacteristic(index, { unidadId: idOrNull(event.target.value) })}><option value="">Seleccionar</option>{compatibleUnits.map((item) => <option key={item.id} value={item.id}>{item.nombre} ({item.simbolo})</option>)}</NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></PlanValidationField><PlanValidationField field={`caracteristicas.${index}.objetivo`} issues={validationIssues}><Field.Label>Objetivo</Field.Label><Input inputMode="decimal" value={characteristic.objetivo ?? ""} onChange={(event) => updateCharacteristic(index, { objetivo: decimalOrNull(event.target.value) })} /></PlanValidationField><PlanValidationField field={`caracteristicas.${index}.limiteInferior`} issues={validationIssues}><Field.Label>Límite inferior</Field.Label><Input inputMode="decimal" value={characteristic.limiteInferior ?? ""} onChange={(event) => updateCharacteristic(index, { limiteInferior: decimalOrNull(event.target.value) })} /></PlanValidationField><PlanValidationField field={`caracteristicas.${index}.limiteSuperior`} issues={validationIssues}><Field.Label>Límite superior</Field.Label><Input inputMode="decimal" value={characteristic.limiteSuperior ?? ""} onChange={(event) => updateCharacteristic(index, { limiteSuperior: decimalOrNull(event.target.value) })} /></PlanValidationField><PlanValidationField field={`caracteristicas.${index}.escala`} issues={validationIssues} required><Field.Label>Decimales visibles</Field.Label><Input type="number" min={0} max={8} value={Number.isFinite(characteristic.escala) ? characteristic.escala : ""} onChange={(event) => updateCharacteristic(index, { escala: event.target.value === "" ? Number.NaN : Number(event.target.value) })} /></PlanValidationField></> : <PlanValidationField field={`caracteristicas.${index}.valorBooleanoEsperado`} issues={validationIssues} required><Field.Label>Valor esperado</Field.Label><NativeSelect.Root><NativeSelect.Field value={characteristic.valorBooleanoEsperado == null ? "" : String(characteristic.valorBooleanoEsperado)} onChange={(event) => updateCharacteristic(index, { valorBooleanoEsperado: event.target.value === "" ? null : event.target.value === "true" })}><option value="">Seleccionar</option><option value="true">Sí / verdadero</option><option value="false">No / falso</option></NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></PlanValidationField>}
+                            <PlanValidationField field={`caracteristicas.${index}.cantidadMuestras`} issues={validationIssues} required><Field.Label>Muestras</Field.Label><Input type="number" min={1} value={characteristic.cantidadMuestras} onChange={(event) => updateCharacteristic(index, { cantidadMuestras: Number(event.target.value) })} /></PlanValidationField><PlanValidationField field={`caracteristicas.${index}.unidadesPorMuestra`} issues={validationIssues} required><Field.Label>Unidades por muestra</Field.Label><Input type="number" min={1} value={characteristic.unidadesPorMuestra} onChange={(event) => updateCharacteristic(index, { unidadesPorMuestra: Number(event.target.value) })} /></PlanValidationField>
                         </Grid></Box>;
                     })}<Button alignSelf="start" size="sm" variant="outline" onClick={() => setDraft((current) => ({ ...current, caracteristicas: [...current.caracteristicas, newCharacteristic(current.caracteristicas.length + 1)] }))}><LuPlus />Agregar medición</Button></VStack>}
 
                     <HStack justify="space-between" mt={6} flexWrap="wrap">
-                        <Button variant="outline" disabled={step === 0 || saving} onClick={() => setStep((current) => current - 1)}>Anterior</Button>
+                        <Button variant="outline" disabled={step === 0 || saving} onClick={() => setStep(step === 2 ? 1 : 0)}>Anterior</Button>
                         <HStack>
-                            <Button variant="ghost" disabled={saving} onClick={() => setEditorOpen(false)}>Cancelar</Button>
+                            <Button variant="ghost" disabled={saving} onClick={closeEditor}>Cancelar</Button>
                             {step < steps.length - 1
-                                ? <Button colorPalette="teal" onClick={() => setStep((current) => current + 1)}>Siguiente</Button>
+                                ? <Button colorPalette="teal" disabled={listBusy} loading={checkingCode} onClick={() => void nextStep()}>Siguiente</Button>
                                 : <Button colorPalette="teal" disabled={listBusy} loading={saving} onClick={() => void save()}>Guardar borrador</Button>}
                         </HStack>
                     </HStack>
