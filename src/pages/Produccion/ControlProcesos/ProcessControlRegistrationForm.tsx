@@ -1,5 +1,6 @@
 import { Alert, Box, Button, Field, HStack, Text, Textarea, VStack } from "@chakra-ui/react";
 import { useRef, useState } from "react";
+import { LuArrowLeft } from "react-icons/lu";
 
 import { useAppToast } from "../../../components/ui/use-app-toast";
 import { apiFailureDetail, processControlApi } from "../../../features/controles/api";
@@ -15,7 +16,7 @@ import { ControlRequestKeys } from "../../../features/controles/controlRequestKe
 import { formatEnumLabel } from "../../../features/controles/controlUi";
 import type { EjecucionControlWrite } from "../../../features/controles/types";
 
-export default function ProcessControlRegistrationForm({ requirement, onSaved, onCancel }: ControlRegistrationFormProps) {
+export default function ProcessControlRegistrationForm({ requirement, onSaved, onCancel, onBack }: ControlRegistrationFormProps) {
     const toast = useAppToast();
     const [values, setValues] = useState<MeasurementValues>({});
     const [observations, setObservations] = useState("");
@@ -65,6 +66,9 @@ export default function ProcessControlRegistrationForm({ requirement, onSaved, o
 
     return (
         <VStack align="stretch" gap={4}>
+            {onBack && <Button alignSelf="flex-start" variant="outline" aria-label="Volver a controles pendientes" disabled={saving} onClick={() => { if (!submitting.current) onBack(); }}>
+                <LuArrowLeft /> Atrás
+            </Button>}
             <ControlRegistrationContext requirement={requirement} />
             {errors.length > 0 && <Alert.Root status="error"><Alert.Indicator /><Box><Text fontWeight="semibold">No se puede guardar</Text>{errors.map((error, index) => <Text key={index} fontSize="sm">• {error}</Text>)}</Box></Alert.Root>}
             {isRepeat && <Field.Root required disabled={saving} invalid={!repeatReason.trim() && errors.length > 0}>

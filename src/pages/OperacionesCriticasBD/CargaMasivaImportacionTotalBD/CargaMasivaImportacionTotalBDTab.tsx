@@ -7,17 +7,17 @@ import ImportacionTotalBDStep0Informacion from "./steps/ImportacionTotalBDStep0I
 import ImportacionTotalBDStep1Preparar from "./steps/ImportacionTotalBDStep1Preparar";
 import ImportacionTotalBDStep2Ejecutar from "./steps/ImportacionTotalBDStep2Ejecutar";
 
-const steps = [
-    { title: "Advertencias", description: "Entender el alcance destructivo" },
-    { title: "Archivo y token", description: "Seleccionar .dump y confirmar" },
-    { title: "Ejecutar importacion", description: "Lanzar el restore total" },
-];
-
 interface CargaMasivaImportacionTotalBDTabProps {
     onBackToSelector: () => void;
+    version?: 1 | 2;
 }
 
-export default function CargaMasivaImportacionTotalBDTab({ onBackToSelector }: CargaMasivaImportacionTotalBDTabProps) {
+export default function CargaMasivaImportacionTotalBDTab({ onBackToSelector, version = 1 }: CargaMasivaImportacionTotalBDTabProps) {
+    const steps = [
+        { title: "Advertencias", description: "Entender el alcance destructivo" },
+        { title: "Archivo y token", description: `Seleccionar ${version === 2 ? ".zip" : ".dump"} y confirmar` },
+        { title: "Ejecutar importacion", description: version === 2 ? "Restaurar BD y POE" : "Lanzar el restore total" },
+    ];
     const [activeStep, setActiveStep] = useState(0);
     const stepperBg = useColorModeValue("orange.50", "orange.900");
 
@@ -32,11 +32,12 @@ export default function CargaMasivaImportacionTotalBDTab({ onBackToSelector }: C
 
     function ConditionalRenderStep() {
         if (activeStep === 0) {
-            return <ImportacionTotalBDStep0Informacion setActiveStep={setActiveStep} />;
+            return <ImportacionTotalBDStep0Informacion version={version} setActiveStep={setActiveStep} />;
         }
         if (activeStep === 1) {
             return (
                 <ImportacionTotalBDStep1Preparar
+                    version={version}
                     setActiveStep={setActiveStep}
                     dumpFile={dumpFile}
                     setDumpFile={setDumpFile}
@@ -46,6 +47,7 @@ export default function CargaMasivaImportacionTotalBDTab({ onBackToSelector }: C
         if (activeStep === 2) {
             return (
                 <ImportacionTotalBDStep2Ejecutar
+                    version={version}
                     setActiveStep={setActiveStep}
                     dumpFile={dumpFile}
                     onReset={handleReset}

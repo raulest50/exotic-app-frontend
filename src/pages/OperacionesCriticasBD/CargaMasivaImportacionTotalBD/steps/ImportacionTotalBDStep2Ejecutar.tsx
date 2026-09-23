@@ -20,6 +20,7 @@ interface ImportacionTotalBDStep2EjecutarProps {
     dumpFile: File | null;
     onReset: () => void;
     setNavigationLocked: (locked: boolean) => void;
+    version?: 1 | 2;
 }
 
 function isImportJobResponse(value: unknown): value is BackupTotalImportJobResponse {
@@ -52,18 +53,22 @@ export default function ImportacionTotalBDStep2Ejecutar({
     dumpFile,
     onReset,
     setNavigationLocked,
+    version = 1,
 }: ImportacionTotalBDStep2EjecutarProps) {
     const [isExecuting, setIsExecuting] = useState(false);
     const [currentJobId, setCurrentJobId] = useState<string | null>(null);
     const [result, setResult] = useState<BackupTotalImportJobResponse | null>(null);
     const endpoints = useMemo(() => new EndPointsURL(), []);
     const toast = useAppToast();
+    const jobUrl = (jobId: string) => version === 2
+        ? endpoints.importacionBackupTotalV2Job(jobId)
+        : endpoints.importacionBackupTotalJob(jobId);
 
     const cleanupTerminalJob = async (jobIdOverride?: string) => {
         const jobId = jobIdOverride ?? currentJobId;
         if (!jobId) return;
         try {
-            await axios.delete(endpoints.importacionBackupTotalJob(jobId), {
+            await axios.delete(jobUrl(jobId), {
                 withCredentials: true,
             });
         } catch {
@@ -79,7 +84,7 @@ export default function ImportacionTotalBDStep2Ejecutar({
         if (!dumpFile) {
             toast({
                 title: "No hay archivo para importar",
-                description: "Seleccione un archivo .dump en el paso anterior antes de ejecutar la restauracion.",
+                description: `Seleccione un archivo ${version === 2 ? ".zip V2" : ".dump"} en el paso anterior.`,
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -89,27 +94,28 @@ export default function ImportacionTotalBDStep2Ejecutar({
 
         setIsExecuting(true);
         setNavigationLocked(true);
-        setResult(null);
+        let pending = currentJobId !== null && result !== null && !["LISTO", "ERROR", "EXPIRADO"].includes(result.estado);
 
         try {
             const formData = new FormData();
             formData.append("file", dumpFile);
 
-            const createResponse = await axios.post<BackupTotalImportJobResponse>(
-                endpoints.importacion_backup_total_create_job,
-                formData,
-                {
-                    headers: { "Content-Type": "multipart/form-data" },
-                    withCredentials: true,
-                }
-            );
+            const createResponse = pending && currentJobId
+                ? await axios.get<BackupTotalImportJobResponse>(jobUrl(currentJobId), { withCredentials: true })
+                : await axios.post<BackupTotalImportJobResponse>(
+                    version === 2 ? endpoints.importacion_backup_total_v2_create_job : endpoints.importacion_backup_total_create_job,
+                    formData,
+                    { withCredentials: true }
+                );
 
             let currentJob = createResponse.data;
             setCurrentJobId(currentJob.jobId);
             setResult(currentJob);
+            pending = true;
 
             while (true) {
                 if (currentJob.estado === "LISTO") {
+                    pending = false;
                     setResult(currentJob);
                     toast({
                         title: "Importacion total completada",
@@ -122,6 +128,7 @@ export default function ImportacionTotalBDStep2Ejecutar({
                 }
 
                 if (currentJob.estado === "ERROR" || currentJob.estado === "EXPIRADO") {
+                    pending = false;
                     setResult(currentJob);
                     throw new Error(
                         currentJob.message ?? "No fue posible completar la importacion total de la base de datos."
@@ -131,7 +138,7 @@ export default function ImportacionTotalBDStep2Ejecutar({
                 await wait(2000);
 
                 const statusResponse = await axios.get<BackupTotalImportJobResponse>(
-                    endpoints.importacionBackupTotalJob(currentJob.jobId),
+                    jobUrl(currentJob.jobId),
                     { withCredentials: true }
                 );
                 currentJob = statusResponse.data;
@@ -139,6 +146,7 @@ export default function ImportacionTotalBDStep2Ejecutar({
             }
         } catch (error: unknown) {
             if (axios.isAxiosError(error) && isImportJobResponse(error.response?.data)) {
+                pending = !["LISTO", "ERROR", "EXPIRADO"].includes(error.response.data.estado);
                 setResult(error.response.data);
                 toast({
                     title: "Operacion bloqueada",
@@ -148,7 +156,18 @@ export default function ImportacionTotalBDStep2Ejecutar({
                     isClosable: true,
                 });
             } else {
-                const message = error instanceof Error ? error.message : "No fue posible completar la importacion total.";
+                if (pending && axios.isAxiosError(error) && error.response?.status === 404) {
+                    pending = false;
+                    setResult(previous => previous ? {
+                        ...previous,
+                        estado: "EXPIRADO",
+                        message: "El servidor ya no conserva el resultado. Verifique el estado del destino antes de iniciar otra importación.",
+                    } : previous);
+                }
+                const responseData: unknown = axios.isAxiosError(error) ? error.response?.data : null;
+                const serverMessage = typeof responseData === "object" && responseData !== null && "message" in responseData
+                    && typeof responseData.message === "string" ? responseData.message : null;
+                const message = serverMessage || (error instanceof Error ? error.message : "No fue posible completar la importacion total.");
                 toast({
                     title: "Error en importacion total",
                     description: message,
@@ -159,7 +178,7 @@ export default function ImportacionTotalBDStep2Ejecutar({
             }
         } finally {
             setIsExecuting(false);
-            setNavigationLocked(false);
+            setNavigationLocked(pending);
         }
     };
 
@@ -171,18 +190,21 @@ export default function ImportacionTotalBDStep2Ejecutar({
     };
 
     const hasResult = result != null;
+    const hasPendingJob = result != null && !["LISTO", "ERROR", "EXPIRADO"].includes(result.estado);
 
     return (
         <VStack align="stretch" gap={6}>
             <Heading size="md" color="red.700">
-                Ejecutar Importacion Total
+                {version === 2 ? "Ejecutar importación total V2 · BD + POE" : "Ejecutar Importacion Total"}
             </Heading>
 
             {!hasResult && (
                 <Alert.Root status="warning">
                     <Alert.Indicator />
                     <Alert.Description>
-                        Se eliminara completamente la informacion actual y luego se restaurara el backup seleccionado.
+                        {version === 2
+                            ? "Se validará el ZIP completo y se restaurarán la base de datos y los POE. Los archivos de otros módulos se conservarán. "
+                            : "Se eliminara completamente la informacion actual y luego se restaurara el backup seleccionado. "}
                         Una vez iniciada la restauracion, no debe cerrarse la sesion ni asumir que la base sigue
                         disponible hasta recibir el resultado final.
                     </Alert.Description>
@@ -248,22 +270,23 @@ export default function ImportacionTotalBDStep2Ejecutar({
                 <Button
                     variant="outline"
                     onClick={() => setActiveStep(1)}
-                    disabled={isExecuting}
+                    disabled={isExecuting || hasPendingJob}
                 >
                     Atras
                 </Button>
 
-                {!hasResult ? (
+                {!hasResult || hasPendingJob ? (
                     <Button
                         colorPalette="red"
                         onClick={handleExecute}
                         loading={isExecuting}
+                        disabled={isExecuting}
                         loadingText="Ejecutando importacion..."
                     >
-                        Ejecutar importacion total
+                        {hasPendingJob ? "Consultar estado" : version === 2 ? "Ejecutar importación V2" : "Ejecutar importacion total"}
                     </Button>
                 ) : (
-                    <Button colorPalette="teal" onClick={handleReset}>
+                    <Button colorPalette="teal" onClick={handleReset} disabled={isExecuting}>
                         Reiniciar flujo
                     </Button>
                 )}

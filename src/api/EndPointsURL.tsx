@@ -254,6 +254,8 @@ export default class EndPointsURL{
     public exportacion_proveedores_json_con_contactos: string;
     public exportacion_backup_total_create_job: string;
     public importacion_backup_total_create_job: string;
+    public exportacion_backup_total_v2_create_job: string;
+    public importacion_backup_total_v2_create_job: string;
     public reset_non_production_passwords: string;
 
     // organigrama endpoints
@@ -445,6 +447,18 @@ export default class EndPointsURL{
 
     public importacionBackupTotalJob(jobId: string): string {
         return `${this.domain}/api/importacion-datos/backup-total/jobs/${encodeURIComponent(jobId)}`;
+    }
+
+    public exportacionBackupTotalV2Job(jobId: string): string {
+        return `${this.domain}/api/exportacion-datos/backup-total-v2/jobs/${encodeURIComponent(jobId)}`;
+    }
+
+    public exportacionBackupTotalV2Download(jobId: string): string {
+        return `${this.exportacionBackupTotalV2Job(jobId)}/download`;
+    }
+
+    public importacionBackupTotalV2Job(jobId: string): string {
+        return `${this.domain}/api/importacion-datos/backup-total-v2/jobs/${encodeURIComponent(jobId)}`;
     }
 
     private normalizeExcelExportOptions(options?: ExcelExportOptions | ExcelDecimalSeparator): ExcelExportOptions {
@@ -944,6 +958,8 @@ export default class EndPointsURL{
         this.exportacion_proveedores_json_con_contactos = `${domain}/api/exportacion-datos/proveedores/json-con-contactos`;
         this.exportacion_backup_total_create_job = `${domain}/api/exportacion-datos/backup-total/jobs`;
         this.importacion_backup_total_create_job = `${domain}/api/importacion-datos/backup-total/jobs`;
+        this.exportacion_backup_total_v2_create_job = `${domain}/api/exportacion-datos/backup-total-v2/jobs`;
+        this.importacion_backup_total_v2_create_job = `${domain}/api/importacion-datos/backup-total-v2/jobs`;
         this.reset_non_production_passwords = `${domain}/api/importacion-datos/password-sanitization/reset`;
 
         // contabilidad endpoints

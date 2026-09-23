@@ -1,6 +1,6 @@
 import { SimpleGrid, Container } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
-import { FaDatabase } from 'react-icons/fa';
+import { FaDatabase, FaFileArchive } from 'react-icons/fa';
 import { FaCube, FaCodeBranch, FaTruck } from 'react-icons/fa';
 import { FaCubes } from 'react-icons/fa6';
 import { IconType } from 'react-icons';
@@ -42,6 +42,29 @@ function ExportacionDatosTab(_props: ExportacionDatosTabProps) {
                     getJobUrl: (jobId) => endpoints.exportacionBackupTotalJob(jobId),
                     downloadUrl: (jobId) => endpoints.exportacionBackupTotalDownload(jobId),
                     deleteJobUrl: (jobId) => endpoints.exportacionBackupTotalJob(jobId),
+                    pollingIntervalMs: 2000,
+                },
+            },
+        },
+        {
+            titulo: "Exportación total V2 · BD + POE",
+            descripcion: "Descargar un ZIP con la base de datos y todas las versiones de documentos POE, incluidas las retiradas.",
+            icono: FaFileArchive,
+            config: {
+                tituloModal: "Confirmar exportación total V2",
+                alertDescripcion:
+                    "Se generará un ZIP con PostgreSQL y los documentos POE vigentes y retirados. " +
+                    "Esta versión todavía no incluye archivos de otros módulos. Si falta un POE o su contenido " +
+                    "no corresponde a la versión registrada, se informará el error y no se ofrecerá un respaldo incompleto.",
+                endpointUrl: endpoints.exportacion_backup_total_v2_create_job,
+                defaultFilename: "backup_total_v2.zip",
+                blobMimeType: "application/zip",
+                successDescription: "Se descargó el respaldo V2 de base de datos y POE.",
+                asyncJob: {
+                    createJobUrl: endpoints.exportacion_backup_total_v2_create_job,
+                    getJobUrl: (jobId) => endpoints.exportacionBackupTotalV2Job(jobId),
+                    downloadUrl: (jobId) => endpoints.exportacionBackupTotalV2Download(jobId),
+                    deleteJobUrl: (jobId) => endpoints.exportacionBackupTotalV2Job(jobId),
                     pollingIntervalMs: 2000,
                 },
             },

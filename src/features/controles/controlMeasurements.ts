@@ -5,6 +5,7 @@ export interface ControlRegistrationFormProps {
     requirement: ControlRequerido;
     onSaved: () => void;
     onCancel: () => void;
+    onBack?: () => void;
 }
 
 export type MeasurementValues = Record<string, string>;

@@ -178,7 +178,7 @@ export default function ConfirmarExportacionModal({
                 );
             }
 
-            setProgressMessage("Generando backup total PostgreSQL. Esto puede tardar unos minutos...");
+            setProgressMessage(currentJob.message || "Generando backup total PostgreSQL. Esto puede tardar unos minutos...");
             await wait(activeConfig.asyncJob.pollingIntervalMs ?? 2000);
 
             const statusResponse = await axios.get<BackupTotalJobResponse>(

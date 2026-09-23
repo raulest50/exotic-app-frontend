@@ -6,13 +6,16 @@ interface ImportacionTotalBDStep1PrepararProps {
     setActiveStep: (step: number) => void;
     dumpFile: File | null;
     setDumpFile: (file: File | null) => void;
+    version?: 1 | 2;
 }
 
 export default function ImportacionTotalBDStep1Preparar({
     setActiveStep,
     dumpFile,
     setDumpFile,
+    version = 1,
 }: ImportacionTotalBDStep1PrepararProps) {
+    const extension = version === 2 ? ".zip" : ".dump";
     const [randomToken, setRandomToken] = useState("");
     const [inputToken, setInputToken] = useState("");
     const toast = useAppToast();
@@ -31,12 +34,12 @@ export default function ImportacionTotalBDStep1Preparar({
         }
 
         const lowerName = file.name.toLowerCase();
-        if (!lowerName.endsWith(".dump")) {
+        if (!lowerName.endsWith(extension)) {
             setDumpFile(null);
             event.target.value = "";
             toast({
                 title: "Tipo de archivo no permitido",
-                description: "Solo se permiten archivos PostgreSQL .dump para la importacion total.",
+                description: `Esta importación solo acepta archivos ${extension}${version === 2 ? " generados por la exportación V2" : " de PostgreSQL"}.`,
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -52,23 +55,23 @@ export default function ImportacionTotalBDStep1Preparar({
             <Alert.Root status="warning">
                 <Alert.Indicator />
                 <Alert.Description>
-                    Al avanzar al siguiente paso se iniciara una restauracion total que primero vaciara la base
-                    actual. Verifique cuidadosamente el archivo antes de continuar.
+                    En el siguiente paso podrá ejecutar la restauración total{version === 2 ? " de base de datos y POE" : " de la base de datos"}.
+                    Verifique cuidadosamente el archivo antes de continuar.
                 </Alert.Description>
             </Alert.Root>
 
             <Box>
                 <Field.Root>
-                    <Field.Label>Archivo de backup total (.dump)</Field.Label>
+                    <Field.Label>Archivo de backup total {version === 2 ? "V2 " : ""}({extension})</Field.Label>
                     <Input
                         type="file"
-                        accept=".dump"
+                        accept={extension}
                         onChange={handleFileChange}
                     />
                 </Field.Root>
 
                 <Text mt={2} color="app.textMuted" fontSize="sm">
-                    {dumpFile ? `Archivo seleccionado: ${dumpFile.name}` : "Aun no ha seleccionado un archivo .dump."}
+                    {dumpFile ? `Archivo seleccionado: ${dumpFile.name}` : `Aún no ha seleccionado un archivo ${extension}.`}
                 </Text>
             </Box>
 

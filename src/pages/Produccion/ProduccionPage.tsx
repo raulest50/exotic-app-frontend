@@ -1,4 +1,5 @@
 import { Container } from "@chakra-ui/react";
+import { useCallback, useMemo, useState } from "react";
 
 import MyHeader from "../../components/MyHeader.tsx";
 import ModuleGroupedTabs, { type ModuleTabGroup } from "../../components/ModuleGroupedTabs.tsx";
@@ -12,7 +13,7 @@ import HistorialOrdenesTab from "./HistorialOrdenesTab/HistorialOrdenesTab.tsx";
 import MonitorearAreasOperativasTab from "./MonitorearAreasOperativasTab.tsx";
 import { PlaneacionProduccionTab } from "./ProgProdMensualTab/PlaneacionProduccionTab.tsx";
 import AprobacionMPSWeekTab from "./ProgProdSemanalTab/AprobacionMPSWeekTab.tsx";
-import ProgramacionProduccionSemanalTab from "./ProgProdSemanalTab/ProgramacionProduccionSemanalTab.tsx";
+import ProgramacionProduccionSemanalTab, { type MpsWeekRefreshSignal } from "./ProgProdSemanalTab/ProgramacionProduccionSemanalTab.tsx";
 import BatchRecordsTab from "./BatchRecords/BatchRecordsTab.tsx";
 import OrdenesFabricacionTab from "./OrdenesFabricacion/OrdenesFabricacionTab.tsx";
 import {
@@ -30,7 +31,10 @@ const exactProductionTabAccessRule = (tabId: string, minLevel = 1): AccessRule =
     ) >= minLevel
 );
 
-const PRODUCTION_GROUPS: ModuleTabGroup[] = [
+const buildProductionGroups = (
+    refreshSignal: MpsWeekRefreshSignal | null,
+    onMpsChanged: (weekStartDate: string) => void,
+): ModuleTabGroup[] => [
     {
         key: "planificacion-produccion",
         label: "Planificación de producción",
@@ -45,14 +49,14 @@ const PRODUCTION_GROUPS: ModuleTabGroup[] = [
             {
                 key: "programacion",
                 label: "Programación semanal",
-                render: () => <ProgramacionProduccionSemanalTab />,
+                render: () => <ProgramacionProduccionSemanalTab refreshSignal={refreshSignal} />,
                 accessRule: tabAccessRule(Modulo.PRODUCCION, "PROGRAMACION_PRODUCCION", 1),
                 flushContent: true,
             },
             {
                 key: "aprobacion-mps",
                 label: "Aprobación del MPS",
-                render: () => <AprobacionMPSWeekTab />,
+                render: () => <AprobacionMPSWeekTab onMpsChanged={onMpsChanged} />,
                 accessRule: tabAccessRule(Modulo.PRODUCCION, "APROBACION_MPS_WEEK", 1),
                 flushContent: true,
             },
@@ -146,6 +150,17 @@ const PRODUCTION_GROUPS: ModuleTabGroup[] = [
 
 export default function ProduccionPage() {
     const access = useAccessSnapshot();
+    const [refreshSignal, setRefreshSignal] = useState<MpsWeekRefreshSignal | null>(null);
+    const handleMpsChanged = useCallback((weekStartDate: string) => {
+        setRefreshSignal((previous) => ({
+            weekStartDate,
+            sequence: (previous?.sequence ?? 0) + 1,
+        }));
+    }, []);
+    const groups = useMemo(
+        () => buildProductionGroups(refreshSignal, handleMpsChanged),
+        [refreshSignal, handleMpsChanged],
+    );
 
     return (
         <Container
@@ -156,7 +171,7 @@ export default function ProduccionPage() {
             h="full"
         >
             <MyHeader title="Dirección Técnica y de Planta" />
-            <ModuleGroupedTabs groups={PRODUCTION_GROUPS} access={access} ariaLabel="Secciones de Producción" />
+            <ModuleGroupedTabs groups={groups} access={access} ariaLabel="Secciones de Producción" />
         </Container>
     );
 }

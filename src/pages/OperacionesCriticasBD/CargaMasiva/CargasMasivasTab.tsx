@@ -1,7 +1,7 @@
 import { Button, Container, Flex, SimpleGrid } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import { IconType } from "react-icons";
-import { FaArrowLeft, FaBell, FaDatabase, FaKey } from "react-icons/fa";
+import { FaArrowLeft, FaBell, FaDatabase, FaFileArchive, FaKey } from "react-icons/fa";
 import { FaBoxesStacked, FaCube, FaMoneyBillTransfer, FaWarehouse } from "react-icons/fa6";
 import CargaMasivaAlmacenTab from "./CargaMasivaAlmacenTab";
 import CargaMasivaMaterialesTab from "../CargaMasivaMateriales/CargaMasivaMaterialesTab";
@@ -12,7 +12,7 @@ import ResetPasswordsNoProductivoTab from "./ResetPasswordsNoProductivoTab";
 import CargaMasivaCostosTab from "../CargaMasivaCostos/CargaMasivaCostosTab";
 import CargaMasivaPuntosReordenTab from "../CargaMasivaPuntosReorden/CargaMasivaPuntosReordenTab";
 
-type MassiveLoadView = "selector" | "almacen" | "materiales" | "terminados" | "costos" | "puntos-reorden" | "importacion-total-bd" | "reset-passwords-staging";
+type MassiveLoadView = "selector" | "almacen" | "materiales" | "terminados" | "costos" | "puntos-reorden" | "importacion-total-bd" | "importacion-total-v2" | "reset-passwords-staging";
 
 interface MassiveLoadOption {
     key: Exclude<MassiveLoadView, "selector">;
@@ -75,6 +75,12 @@ export default function CargasMasivasTab({
                 descripcion: "Vaciar completamente la base e importar un backup .dump del sistema. Solo local y staging.",
                 icono: FaDatabase,
             });
+            options.push({
+                key: "importacion-total-v2",
+                titulo: "Importación total V2 · BD + POE",
+                descripcion: "Restaurar un ZIP de PostgreSQL y documentos POE. Solo local y staging.",
+                icono: FaFileArchive,
+            });
         }
 
         if (allowNonProductionPasswordReset) {
@@ -108,6 +114,9 @@ export default function CargasMasivasTab({
         if (activeView === "importacion-total-bd") {
             return <CargaMasivaImportacionTotalBDTab onBackToSelector={() => setActiveView("selector")} />;
         }
+        if (activeView === "importacion-total-v2") {
+            return <CargaMasivaImportacionTotalBDTab version={2} onBackToSelector={() => setActiveView("selector")} />;
+        }
         if (activeView === "reset-passwords-staging") {
             return <ResetPasswordsNoProductivoTab />;
         }
@@ -132,7 +141,7 @@ export default function CargasMasivasTab({
         );
     }
 
-    if (activeView === "importacion-total-bd" || activeView === "costos" || activeView === "puntos-reorden") {
+    if (activeView === "importacion-total-bd" || activeView === "importacion-total-v2" || activeView === "costos" || activeView === "puntos-reorden") {
         return (
             <Container minW={["auto", "container.lg", "container.xl"]} w="full" h="full">
                 {activeContent}

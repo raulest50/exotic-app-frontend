@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import {
     closestCenter,
@@ -78,6 +78,15 @@ interface ProgramacionEntry {
     lotesCancelados?: number;
     lotesCancelables?: number;
     lotesNoCancelables?: number;
+}
+
+export interface MpsWeekRefreshSignal {
+    weekStartDate: string;
+    sequence: number;
+}
+
+interface ProgramacionProduccionSemanalTabProps {
+    refreshSignal?: MpsWeekRefreshSignal | null;
 }
 
 const DAY_LABELS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
@@ -374,7 +383,7 @@ function DraggableEntryCard({
     );
 }
 
-export default function ProgramacionProduccionSemanalTab() {
+export default function ProgramacionProduccionSemanalTab({ refreshSignal }: ProgramacionProduccionSemanalTabProps = {}) {
     const { getNumberDirective, getBooleanDirective } = useMasterDirectives();
     const lockedDaysAhead = getNumberDirective(
         MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION,
@@ -401,10 +410,20 @@ export default function ProgramacionProduccionSemanalTab() {
     const [pickerDayIndex, setPickerDayIndex] = useState<number | null>(null);
     const [isLoadingDraft, setIsLoadingDraft] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [pendingRefresh, setPendingRefresh] = useState<MpsWeekRefreshSignal | null>(null);
+    const [refreshError, setRefreshError] = useState<string | null>(null);
+    const weekLoadRequestRef = useRef(0);
+    const observacionesRequestRef = useRef(0);
+    const entriesVersionRef = useRef(0);
+    const latestRefreshSequenceRef = useRef(0);
+    const receivedRefreshSequenceRef = useRef(0);
+    const attemptedRefreshSequenceRef = useRef(0);
+    const initialWeekStartDateRef = useRef(weekStartDate);
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
     const [editableFromDate, setEditableFromDate] = useState(() => getMpsEditableFromDate(lockedDaysAhead));
     const pickerDisclosure = useDisclosure();
     const weekChangeConfirmDisclosure = useDisclosure();
+    const refreshConfirmDisclosure = useDisclosure();
     const toast = useAppToast();
 
     const isApprovedEditMode = isApprovedEditEstado(currentDraft?.estado);
@@ -413,9 +432,18 @@ export default function ProgramacionProduccionSemanalTab() {
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
     const entriesFingerprint = useMemo(() => buildEntriesFingerprint(entries), [entries]);
     const hasUnsavedChanges = entriesFingerprint !== lastPersistedEntriesFingerprint;
+    const hasPendingRefresh = pendingRefresh?.weekStartDate === weekStartDate;
+    const isEditingBusy = isSaving || isLoadingDraft;
+
+    // Increment before each local edit so a pending response cannot erase it.
+    const updateEntries = (updater: (previous: ProgramacionEntry[]) => ProgramacionEntry[]) => {
+        if (isEditingBusy) return;
+        entriesVersionRef.current += 1;
+        setEntries(updater);
+    };
 
     const canEditEntry = useCallback((entry: ProgramacionEntry, targetDayIndex = entry.dayIndex): boolean => {
-        if (isReadOnly || (isEntryCanceled(entry) && !isPendingCancellation(entry))) {
+        if (isEditingBusy || isReadOnly || (isEntryCanceled(entry) && !isPendingCancellation(entry))) {
             return false;
         }
         if (isApprovedEditMode) {
@@ -425,10 +453,10 @@ export default function ProgramacionProduccionSemanalTab() {
             return false;
         }
         return isDraftMode;
-    }, [allowAddTerminadosToApprovedMps, editableFromDate, isApprovedEditMode, isDraftMode, isReadOnly, weekStartDate]);
+    }, [allowAddTerminadosToApprovedMps, editableFromDate, isApprovedEditMode, isDraftMode, isEditingBusy, isReadOnly, weekStartDate]);
 
     const canAddTerminadoOnDay = useCallback((dayIndex: number): boolean => {
-        if (isReadOnly || !isMonday(weekStartDate)) {
+        if (isEditingBusy || isReadOnly || !isMonday(weekStartDate)) {
             return false;
         }
         if (isDraftMode) {
@@ -438,7 +466,7 @@ export default function ProgramacionProduccionSemanalTab() {
             return allowAddTerminadosToApprovedMps;
         }
         return false;
-    }, [allowAddTerminadosToApprovedMps, editableFromDate, isApprovedEditMode, isDraftMode, isReadOnly, weekStartDate]);
+    }, [allowAddTerminadosToApprovedMps, editableFromDate, isApprovedEditMode, isDraftMode, isEditingBusy, isReadOnly, weekStartDate]);
 
     const hasDuplicateProductOnDay = useCallback((
         entry: ProgramacionEntry,
@@ -510,6 +538,7 @@ export default function ProgramacionProduccionSemanalTab() {
     }, [entries]);
 
     const loadObservaciones = useCallback(async (targetWeekStartDate: string | null) => {
+        const requestId = ++observacionesRequestRef.current;
         if (!targetWeekStartDate) {
             setObservaciones([]);
             setObservacionesError(null);
@@ -520,8 +549,10 @@ export default function ProgramacionProduccionSemanalTab() {
         setObservacionesError(null);
         try {
             const response = await ListarObservacionesMpsSemanal(targetWeekStartDate);
+            if (requestId !== observacionesRequestRef.current) return;
             setObservaciones(response);
         } catch (error) {
+            if (requestId !== observacionesRequestRef.current) return;
             if (isNotFoundError(error)) {
                 setObservaciones([]);
                 setObservacionesError(null);
@@ -529,23 +560,53 @@ export default function ProgramacionProduccionSemanalTab() {
                 setObservacionesError(getAxiosErrorMessage(error, "No fue posible cargar las observaciones del MPS."));
             }
         } finally {
-            setIsLoadingObservaciones(false);
+            if (requestId === observacionesRequestRef.current) {
+                setIsLoadingObservaciones(false);
+            }
         }
     }, []);
 
+    const applySavedMpsState = useCallback((saved: MpsSemanalDraftDTO) => {
+        setCurrentDraft(saved);
+        setWeekStartDate(saved.weekStartDate);
+        const savedEntries = buildEntriesFromDraft(saved);
+        setEntries(savedEntries);
+        setLastPersistedEntries(savedEntries);
+        setLastPersistedEntriesFingerprint(buildEntriesFingerprint(savedEntries));
+        setSelectedSemana((current) => current?.startDate === saved.weekStartDate ? {
+            ...current,
+            id: saved.semanaMpsId ?? current.id,
+            codigo: saved.semanaMpsCodigo ?? current.codigo,
+            mpsId: saved.mpsId,
+            estado: saved.estado,
+            fechaGeneracionOdps: saved.fechaGeneracionOdps,
+        } : current);
+        setObservaciones([]);
+        void loadObservaciones(saved.weekStartDate);
+    }, [loadObservaciones]);
+
     const loadWeekForProgramming = useCallback(async (
         targetWeekStartDate: string,
-        options: { showLoadedToast?: boolean } = {},
+        options: { showLoadedToast?: boolean; isRefresh?: boolean } = {},
     ): Promise<boolean> => {
+        const requestId = ++weekLoadRequestRef.current;
+        const entriesVersion = entriesVersionRef.current;
+        const refreshSequence = latestRefreshSequenceRef.current;
+        const canApplyResponse = () => requestId === weekLoadRequestRef.current
+            && entriesVersion === entriesVersionRef.current;
+        const clearCompletedRefresh = () => {
+            setPendingRefresh((pending) => pending?.weekStartDate === targetWeekStartDate
+                && pending.sequence <= refreshSequence ? null : pending);
+        };
+        observacionesRequestRef.current += 1;
+        setIsLoadingObservaciones(false);
+        setRefreshError(null);
         setIsLoadingDraft(true);
         try {
             const draft = await ObtenerMpsSemanal(targetWeekStartDate);
-            const draftEntries = buildEntriesFromDraft(draft);
-            setWeekStartDate(draft.weekStartDate);
-            setCurrentDraft(draft);
-            setEntries(draftEntries);
-            setLastPersistedEntries(draftEntries);
-            setLastPersistedEntriesFingerprint(buildEntriesFingerprint(draftEntries));
+            if (!canApplyResponse()) return false;
+            applySavedMpsState(draft);
+            clearCompletedRefresh();
             if (options.showLoadedToast) {
                 toast({
                     title: "Semana cargada",
@@ -557,13 +618,21 @@ export default function ProgramacionProduccionSemanalTab() {
             }
             return true;
         } catch (error) {
-            if (isNotFoundError(error)) {
+            if (!canApplyResponse()) return false;
+            if (isNotFoundError(error) && !options.isRefresh) {
                 setWeekStartDate(targetWeekStartDate);
                 setCurrentDraft(null);
                 setEntries([]);
                 setLastPersistedEntries([]);
                 setLastPersistedEntriesFingerprint("");
+                setSelectedSemana(null);
+                void loadObservaciones(null);
+                clearCompletedRefresh();
                 return true;
+            }
+            if (options.isRefresh) {
+                setRefreshError(getAxiosErrorMessage(error, "No fue posible actualizar el MPS. Intente nuevamente."));
+                return false;
             }
             toast({
                 title: "No se pudo abrir la semana",
@@ -574,9 +643,11 @@ export default function ProgramacionProduccionSemanalTab() {
             });
             return false;
         } finally {
-            setIsLoadingDraft(false);
+            if (requestId === weekLoadRequestRef.current) {
+                setIsLoadingDraft(false);
+            }
         }
-    }, [toast]);
+    }, [applySavedMpsState, loadObservaciones, toast]);
 
     useEffect(() => {
         setEditableFromDate(getMpsEditableFromDate(lockedDaysAhead));
@@ -587,24 +658,49 @@ export default function ProgramacionProduccionSemanalTab() {
     }, [lockedDaysAhead]);
 
     useEffect(() => {
-        void loadWeekForProgramming(weekStartDate);
+        latestRefreshSequenceRef.current = refreshSignal?.sequence ?? 0;
+        if (refreshSignal?.weekStartDate === weekStartDate
+            && refreshSignal.sequence > receivedRefreshSequenceRef.current) {
+            receivedRefreshSequenceRef.current = refreshSignal.sequence;
+            setPendingRefresh(refreshSignal);
+            setRefreshError(null);
+        }
+    }, [refreshSignal, weekStartDate]);
+
+    useEffect(() => {
+        void loadWeekForProgramming(initialWeekStartDateRef.current);
+        return () => {
+            weekLoadRequestRef.current += 1;
+            observacionesRequestRef.current += 1;
+        };
     }, [loadWeekForProgramming]);
 
     useEffect(() => {
-        if (currentDraft?.weekStartDate) {
-            void loadObservaciones(currentDraft.weekStartDate);
-        } else {
-            setObservaciones([]);
-            setObservacionesError(null);
-            setIsLoadingObservaciones(false);
+        if (!pendingRefresh || pendingRefresh.weekStartDate !== weekStartDate
+            || hasUnsavedChanges || isSaving || isLoadingDraft
+            || attemptedRefreshSequenceRef.current === pendingRefresh.sequence) {
+            return;
         }
-    }, [
-        currentDraft?.fechaActualizacion,
-        currentDraft?.mpsId,
-        currentDraft?.revisionNumero,
-        currentDraft?.weekStartDate,
-        loadObservaciones,
-    ]);
+        // One automatic attempt per notification. Errors are retried explicitly.
+        attemptedRefreshSequenceRef.current = pendingRefresh.sequence;
+        void loadWeekForProgramming(weekStartDate, { isRefresh: true });
+    }, [pendingRefresh, weekStartDate, hasUnsavedChanges, isSaving, isLoadingDraft, loadWeekForProgramming]);
+
+    const handleRefresh = () => {
+        if (isEditingBusy || !hasPendingRefresh) return;
+        if (hasUnsavedChanges) {
+            refreshConfirmDisclosure.onOpen();
+        } else {
+            void loadWeekForProgramming(weekStartDate, { isRefresh: true });
+        }
+    };
+
+    const handleConfirmRefresh = () => {
+        refreshConfirmDisclosure.onClose();
+        if (!isEditingBusy && hasPendingRefresh) {
+            void loadWeekForProgramming(weekStartDate, { isRefresh: true });
+        }
+    };
 
     const applyWeekChange = async (semana: SemanaMPSDTO) => {
         const wasLoaded = await loadWeekForProgramming(semana.startDate, { showLoadedToast: true });
@@ -614,7 +710,7 @@ export default function ProgramacionProduccionSemanalTab() {
     };
 
     const handleWeekChange = (semana: SemanaMPSDTO) => {
-        if (semana.startDate === weekStartDate) {
+        if (isEditingBusy || semana.startDate === weekStartDate) {
             return;
         }
         if (hasUnsavedChanges) {
@@ -626,7 +722,7 @@ export default function ProgramacionProduccionSemanalTab() {
     };
 
     const handleConfirmWeekChange = () => {
-        if (pendingSemanaChange) {
+        if (!isEditingBusy && pendingSemanaChange) {
             void applyWeekChange(pendingSemanaChange);
         }
         setPendingSemanaChange(null);
@@ -660,7 +756,7 @@ export default function ProgramacionProduccionSemanalTab() {
             });
             return;
         }
-        setEntries((prev) => {
+        updateEntries((prev) => {
             const existing = prev.find((entry) => (
                 entry.dayIndex === pickerDayIndex && entry.productoId === terminado.productoId
                 && !isEntryCanceled(entry)
@@ -674,7 +770,7 @@ export default function ProgramacionProduccionSemanalTab() {
 
     const handleEntryLotesChange = (entryId: string, valueAsString: string) => {
         const parsed = Number(valueAsString);
-        setEntries((prev) => prev.map((entry) => {
+        updateEntries((prev) => prev.map((entry) => {
             if (entry.id !== entryId || !canChangeEntryLotes(entry, isApprovedEditMode)) {
                 return entry;
             }
@@ -699,7 +795,7 @@ export default function ProgramacionProduccionSemanalTab() {
     };
 
     const adjustEntryLotes = (entryId: string, direction: 1 | -1) => {
-        setEntries((prev) => prev.map((entry) => {
+        updateEntries((prev) => prev.map((entry) => {
             if (entry.id !== entryId || !canChangeEntryLotes(entry, isApprovedEditMode)) {
                 return entry;
             }
@@ -720,7 +816,7 @@ export default function ProgramacionProduccionSemanalTab() {
     };
 
     const handleRemoveEntry = (entryId: string) => {
-        setEntries((prev) => prev.flatMap((entry) => {
+        updateEntries((prev) => prev.flatMap((entry) => {
             if (entry.id !== entryId) {
                 return [entry];
             }
@@ -738,23 +834,6 @@ export default function ProgramacionProduccionSemanalTab() {
             return [];
         }));
     };
-
-    const applySavedMpsState = useCallback((saved: MpsSemanalDraftDTO) => {
-        setCurrentDraft(saved);
-        setWeekStartDate(saved.weekStartDate);
-        const savedEntries = buildEntriesFromDraft(saved);
-        setEntries(savedEntries);
-        setLastPersistedEntries(savedEntries);
-        setLastPersistedEntriesFingerprint(buildEntriesFingerprint(savedEntries));
-        setSelectedSemana((current) => current?.startDate === saved.weekStartDate ? {
-            ...current,
-            id: saved.semanaMpsId ?? current.id,
-            codigo: saved.semanaMpsCodigo ?? current.codigo,
-            mpsId: saved.mpsId,
-            estado: saved.estado,
-            fechaGeneracionOdps: saved.fechaGeneracionOdps,
-        } : current);
-    }, []);
 
     const handleDragEnd = (event: DragEndEvent) => {
         const targetDayIndex = event.over ? parseDayDropTarget(event.over.id) : null;
@@ -796,13 +875,14 @@ export default function ProgramacionProduccionSemanalTab() {
             });
             return;
         }
-        setEntries((prev) => prev.map((candidate) => (
+        updateEntries((prev) => prev.map((candidate) => (
             candidate.id === entry.id ? { ...candidate, dayIndex: targetDayIndex } : candidate
         )));
     };
 
     const handleSaveApprovedChanges = async () => {
-        if (!currentDraft || !isApprovedEditMode || validationIssues.length > 0 || isReadOnly) {
+        if (!currentDraft || !isApprovedEditMode || validationIssues.length > 0 || isReadOnly
+            || isEditingBusy || hasPendingRefresh) {
             return;
         }
 
@@ -827,6 +907,9 @@ export default function ProgramacionProduccionSemanalTab() {
             return;
         }
 
+        weekLoadRequestRef.current += 1;
+        observacionesRequestRef.current += 1;
+        setIsLoadingObservaciones(false);
         setIsSaving(true);
         try {
             let latestSaved: MpsSemanalDraftDTO | null = null;
@@ -872,6 +955,7 @@ export default function ProgramacionProduccionSemanalTab() {
     };
 
     const handleSaveDraft = async () => {
+        if (isEditingBusy || hasPendingRefresh) return;
         if (isApprovedEditMode) {
             await handleSaveApprovedChanges();
             return;
@@ -879,6 +963,9 @@ export default function ProgramacionProduccionSemanalTab() {
         if (validationIssues.length > 0 || isReadOnly) {
             return;
         }
+        weekLoadRequestRef.current += 1;
+        observacionesRequestRef.current += 1;
+        setIsLoadingObservaciones(false);
         setIsSaving(true);
         try {
             const saved = await GuardarBorradorProgramacionSemanal({
@@ -940,6 +1027,9 @@ export default function ProgramacionProduccionSemanalTab() {
         if (!currentDraft) {
             return;
         }
+        if (hasPendingRefresh || isEditingBusy) {
+            throw new Error("Actualice el MPS antes de atender una observacion.");
+        }
         if (hasUnsavedChanges) {
             toast({
                 title: isApprovedEditMode ? "Guarde primero los cambios" : "Guarde primero el borrador",
@@ -950,6 +1040,7 @@ export default function ProgramacionProduccionSemanalTab() {
             });
             throw new Error("Hay cambios sin guardar.");
         }
+        const weekRequestId = weekLoadRequestRef.current;
         try {
             await AtenderObservacionMpsSemanal(observacionId, { respuestaCorreccion });
             toast({
@@ -959,7 +1050,9 @@ export default function ProgramacionProduccionSemanalTab() {
                 duration: 3000,
                 isClosable: true,
             });
-            await loadObservaciones(currentDraft.weekStartDate);
+            if (weekRequestId === weekLoadRequestRef.current) {
+                await loadObservaciones(currentDraft.weekStartDate);
+            }
         } catch (error) {
             toast({
                 title: "No se pudo atender la observacion",
@@ -974,7 +1067,8 @@ export default function ProgramacionProduccionSemanalTab() {
 
     const canSave = validationIssues.length === 0
         && !isReadOnly
-        && !isLoadingDraft
+        && !isEditingBusy
+        && !hasPendingRefresh
         && (!isWeekFullyLocked || isApprovedEditMode)
         && (isDraftMode || (isApprovedEditMode && hasUnsavedChanges));
 
@@ -1015,6 +1109,27 @@ export default function ProgramacionProduccionSemanalTab() {
                         PDF MPS
                     </Button>
                 </Flex>
+
+                {hasPendingRefresh && (
+                    <Box mt={3} p={3} bg="orange.50" borderWidth="1px" borderColor="orange.200" borderRadius="md" role="status">
+                        <Text fontWeight="semibold">El MPS fue actualizado desde Aprobacion.</Text>
+                        <Text fontSize="sm" mt={1}>
+                            {hasUnsavedChanges
+                                ? "Sus cambios sin guardar se conservan. Actualice la semana antes de guardar o atender observaciones."
+                                : "Actualice la semana para consultar el estado y las ordenes mas recientes."}
+                        </Text>
+                        {refreshError && <Text fontSize="sm" color="red.700" mt={1}>{refreshError}</Text>}
+                        <Button
+                            mt={2}
+                            size="sm"
+                            onClick={handleRefresh}
+                            loading={isLoadingDraft}
+                            disabled={isEditingBusy}
+                        >
+                            {refreshError ? "Reintentar actualizacion" : "Actualizar"}
+                        </Button>
+                    </Box>
+                )}
 
                 <Flex mt={3} gap={3} align="center" wrap="wrap">
                     <Badge colorPalette={currentDraft ? "blue" : "orange"}>
@@ -1103,7 +1218,7 @@ export default function ProgramacionProduccionSemanalTab() {
                                             const entryIssues = getEntryIssues(entry);
                                             const entryCanceled = isEntryCanceled(entry);
                                             const isEntryEditable = canEditEntry(entry);
-                                            const canChangeLotes = canChangeEntryLotes(entry, isApprovedEditMode);
+                                            const canChangeLotes = !isEditingBusy && canChangeEntryLotes(entry, isApprovedEditMode);
                                             const minLotes = getMinimumLotesForEntry(entry, isApprovedEditMode);
                                             const maxLotes = getMaximumLotesForEntry(entry, isEntryEditable);
                                             return (
@@ -1230,7 +1345,7 @@ export default function ProgramacionProduccionSemanalTab() {
                 error={observacionesError}
                 hasUnsavedChanges={hasUnsavedChanges}
                 onRetry={() => void loadObservaciones(currentDraft?.weekStartDate ?? null)}
-                onAtenderObservacion={handleAtenderObservacion}
+                onAtenderObservacion={hasPendingRefresh || isEditingBusy ? undefined : handleAtenderObservacion}
             />
 
             <TerminadoPicker4MPS
@@ -1238,6 +1353,33 @@ export default function ProgramacionProduccionSemanalTab() {
                 onClose={pickerDisclosure.onClose}
                 onSelectTerminado={handleSelectTerminado}
             />
+
+            <Dialog.Root open={refreshConfirmDisclosure.open} placement="center" onOpenChange={({ open }) => {
+                if (!open) refreshConfirmDisclosure.onClose();
+            }}>
+                <Portal>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content maxW="md">
+                            <Dialog.Header><Dialog.Title>Actualizar semana MPS</Dialog.Title></Dialog.Header>
+                            <Dialog.CloseTrigger asChild>
+                                <CloseButton aria-label="Cerrar" size="sm" />
+                            </Dialog.CloseTrigger>
+                            <Dialog.Body>
+                                <Text>
+                                    Hay cambios sin guardar. Al actualizar se descartaran y se cargara la informacion mas reciente del MPS.
+                                </Text>
+                            </Dialog.Body>
+                            <Dialog.Footer gap={3}>
+                                <Button variant="ghost" onClick={refreshConfirmDisclosure.onClose}>Cancelar</Button>
+                                <Button colorPalette="red" onClick={handleConfirmRefresh}>
+                                    Descartar cambios y actualizar
+                                </Button>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+                </Portal>
+            </Dialog.Root>
 
             <Dialog.Root open={weekChangeConfirmDisclosure.open} placement='center' onOpenChange={e => {
                 if (!e.open) {

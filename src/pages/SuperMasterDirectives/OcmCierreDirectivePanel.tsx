@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Box, Button, Dialog, Field, HStack, Input, NativeSelect, Portal, Spinner, Stack, Switch, Table, Text } from "@chakra-ui/react";
+import { FaInfoCircle } from "react-icons/fa";
 import { useAppToast } from "../../components/ui/use-app-toast";
 import { useAuth } from "../../context/AuthContext";
 import { useMasterDirectives } from "../../context/MasterDirectivesContext";
@@ -7,6 +8,7 @@ import { ENABLE_MASTER_SUPERMASTER_DIRECTIVES_ACCESS_DEFAULT, MASTER_DIRECTIVE_K
 import { cerrarOcmCompletas, consultarCierreConfig, guardarCierreConfig, ocmErrorMessage, previsualizarOcmCompletas } from "../../features/ocmCierre/api";
 import { formatOcmDate, parseOcmDays } from "../../features/ocmCierre/format";
 import type { OcmCierreCandidata, OcmCierreConfig, OcmCierreModo, OcmCierreResultado } from "../../features/ocmCierre/types";
+import OcmCierreHelpModal from "./OcmCierreHelpModal";
 
 const pageSize = 10;
 
@@ -25,6 +27,7 @@ export default function OcmCierreDirectivePanel() {
     const [configError, setConfigError] = useState("");
     const [previewLoading, setPreviewLoading] = useState(false);
     const [open, setOpen] = useState(false);
+    const [helpOpen, setHelpOpen] = useState(false);
     const [candidatas, setCandidatas] = useState<OcmCierreCandidata[]>([]);
     const [page, setPage] = useState(0);
     const [closing, setClosing] = useState(false);
@@ -116,7 +119,26 @@ export default function OcmCierreDirectivePanel() {
     return (
         <Box borderWidth="1px" borderRadius="lg" p={5} mb={6}>
             <Stack gap={4}>
-                <Text fontSize="lg" fontWeight="bold">Cierre de órdenes de compra de materiales</Text>
+                <HStack justify="space-between" align="start" flexWrap="wrap" gap={3}>
+                    <Text fontSize="lg" fontWeight="bold">Cierre de órdenes de compra de materiales</Text>
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        width="auto"
+                        flexShrink={0}
+                        px={4}
+                        disabled={busy || open}
+                        aria-haspopup="dialog"
+                        onClick={event => {
+                            event.currentTarget.focus();
+                            setHelpOpen(true);
+                        }}
+                    >
+                        <FaInfoCircle aria-hidden="true" />
+                        Cómo funciona
+                    </Button>
+                </HStack>
                 <Text fontSize="sm">Cada activación aplica a OCM cuya recepción se complete desde ese momento. Las que ya estaban completas se pueden cerrar con el botón de cierre manual.</Text>
                 {loading ? <HStack><Spinner size="sm" /><Text>Cargando configuración…</Text></HStack> : <>
                     {config && <>
@@ -158,6 +180,8 @@ export default function OcmCierreDirectivePanel() {
                     </Button>
                 </Box>
             </Stack>
+
+            <OcmCierreHelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
 
             <Dialog.Root open={open} size="xl" scrollBehavior="inside" closeOnEscape={!closing} closeOnInteractOutside={!closing}
                 onOpenChange={event => { if (!closing) setOpen(event.open); }}>

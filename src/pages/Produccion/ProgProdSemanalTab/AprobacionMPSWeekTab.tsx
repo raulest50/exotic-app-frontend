@@ -152,7 +152,11 @@ function SummaryLine({ label, value }: { label: string; value: number }) {
     );
 }
 
-export default function AprobacionMPSWeekTab() {
+interface AprobacionMPSWeekTabProps {
+    onMpsChanged?: (weekStartDate: string) => void;
+}
+
+export default function AprobacionMPSWeekTab({ onMpsChanged }: AprobacionMPSWeekTabProps = {}) {
     const toast = useAppToast();
     const [items, setItems] = useState<MpsSemanalListItemDTO[]>([]);
     const [selectedSemana, setSelectedSemana] = useState<SemanaMPSDTO | null>(null);
@@ -398,6 +402,7 @@ export default function AprobacionMPSWeekTab() {
         setApprovingWeekStartDate(mps.weekStartDate);
         try {
             await AprobarMpsSemanal({ weekStartDate: mps.weekStartDate });
+            onMpsChanged?.(mps.weekStartDate);
             toast({
                 title: "MPS aprobado",
                 description: `La semana ${getSemanaMpsLabel(mps)} quedo aprobada.`,
@@ -480,6 +485,7 @@ export default function AprobacionMPSWeekTab() {
         setGeneratingWeekStartDate(item.weekStartDate);
         try {
             const response = await GenerarOdpDesdeMps({ weekStartDate: item.weekStartDate });
+            onMpsChanged?.(item.weekStartDate);
             toast({
                 title: "ODPs generadas",
                 description: `Se crearon ${response.totalOrdenesCreadas} ordenes desde la semana ${getSemanaMpsLabel(item)}.`,

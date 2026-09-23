@@ -13,7 +13,7 @@ import {
     Text,
     VStack,
 } from "@chakra-ui/react";
-import { useEffect, useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 
 import { useAppToast } from "../../components/ui/use-app-toast";
 import { apiFailureDetail, type ControlDomainApi } from "./api";
@@ -47,6 +47,16 @@ export default function PendientesControlTab({ api, nivel, registrationForm: Reg
     const [selectedAssay, setSelectedAssay] = useState<EnsayoPendienteOption | null>(null);
     const [assayPickerOpen, setAssayPickerOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const viewTitleRef = useRef<HTMLHeadingElement>(null);
+    const previousSelectedId = useRef<number | null>(null);
+    const selectedId = selected?.id ?? null;
+
+    useEffect(() => {
+        if (previousSelectedId.current === selectedId) return;
+        previousSelectedId.current = selectedId;
+        viewTitleRef.current?.focus({ preventScroll: true });
+        viewTitleRef.current?.scrollIntoView({ block: "start" });
+    }, [selectedId]);
 
     const load = async (page = 0) => {
         setLoading(true);
@@ -83,9 +93,31 @@ export default function PendientesControlTab({ api, nivel, registrationForm: Reg
         return () => { mounted = false; };
     }, [api, toast]);
 
+    if (selected) {
+        const isRepeat = selected.ultimaEjecucionId != null || selected.estado === "POR_REVALIDAR";
+        const title = api.ambito === "CALIDAD"
+            ? (isRepeat ? "Repetir o revalidar ensayo de calidad" : "Registrar ensayo de calidad")
+            : (isRepeat ? "Repetir control de proceso" : "Registrar control de proceso");
+
+        return (
+            <VStack align="stretch" gap={5}>
+                <Heading ref={viewTitleRef} tabIndex={-1} size="md">{title}</Heading>
+                <Box borderWidth="1px" borderRadius="lg" p={{ base: 3, md: 5 }}>
+                    <RegistrationForm
+                        key={selected.id}
+                        requirement={selected}
+                        onBack={() => setSelected(null)}
+                        onCancel={() => setSelected(null)}
+                        onSaved={() => { setSelected(null); void load(result?.number ?? 0); }}
+                    />
+                </Box>
+            </VStack>
+        );
+    }
+
     return (
         <VStack align="stretch" gap={5}>
-            <Box><Heading size="md">{CONTROL_NOUN[api.ambito].pending}</Heading><Text mt={1} color="fg.muted">Solo aparecen requisitos resueltos por el backend para el producto, la orden y la etapa correspondientes.</Text></Box>
+            <Box><Heading ref={viewTitleRef} tabIndex={-1} size="md">{CONTROL_NOUN[api.ambito].pending}</Heading><Text mt={1} color="fg.muted">Solo aparecen requisitos resueltos por el backend para el producto, la orden y la etapa correspondientes.</Text></Box>
             <Flex gap={3} align="end" flexWrap="wrap">
                 <Field.Root flex="1" minW={{ base: "full", md: "260px" }}><Field.Label>Lote, producto, orden o plan</Field.Label><Input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => event.key === "Enter" && void load()} placeholder="Búsqueda por texto" /></Field.Root>
                 {api.ambito === "CALIDAD" && (
@@ -143,8 +175,6 @@ export default function PendientesControlTab({ api, nivel, registrationForm: Reg
             </Box>
 
             {result && result.totalPages > 1 && <HStack justify="flex-end"><Button size="sm" disabled={result.number === 0} onClick={() => void load(result.number - 1)}>Anterior</Button><Text fontSize="sm">Página {result.number + 1} de {result.totalPages}</Text><Button size="sm" disabled={result.number + 1 >= result.totalPages} onClick={() => void load(result.number + 1)}>Siguiente</Button></HStack>}
-
-            {selected && <Box borderWidth="1px" borderRadius="lg" p={{ base: 3, md: 5 }}><RegistrationForm key={selected.id} requirement={selected} onCancel={() => setSelected(null)} onSaved={() => { setSelected(null); void load(result?.number ?? 0); }} /></Box>}
 
             {api.ambito === "CALIDAD" && api.listEnsayosPendientes && (
                 <QualityAssayPickerDialog
