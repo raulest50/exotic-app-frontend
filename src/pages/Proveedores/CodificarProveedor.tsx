@@ -15,6 +15,7 @@ import {
     Checkbox,
     CheckboxGroup,
     Field,
+    Fieldset,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios, { AxiosError } from 'axios';
@@ -570,8 +571,8 @@ function CodificarProveedor() {
                         </Field.Root>
                     </GridItem>
                     <GridItem colSpan={[1, 2]}>
-                        <Field.Root >
-                            <Field.Label>Categorías</Field.Label>
+                        <Fieldset.Root>
+                            <Fieldset.Legend>Categorías</Fieldset.Legend>
                             <CheckboxGroup
                                 colorPalette="green"
                                 value={categorias.map(String)}
@@ -594,7 +595,7 @@ function CodificarProveedor() {
                                     <Checkbox.Root value="4"><Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Label>Equipos y otros servicios</Checkbox.Label></Checkbox.Root>
                                 </VStack>
                             </CheckboxGroup>
-                        </Field.Root>
+                        </Fieldset.Root>
                     </GridItem>
                 </Grid>
 
