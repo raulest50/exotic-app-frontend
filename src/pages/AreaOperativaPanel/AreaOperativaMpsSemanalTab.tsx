@@ -136,7 +136,7 @@ export default function AreaOperativaMpsSemanalTab() {
             if (activeMpsRequestRef.current === requestId) {
                 const status = axios.isAxiosError(err) ? err.response?.status ?? null : null;
                 setErrorStatus(status);
-                setError(getAxiosErrorMessage(err, "No fue posible cargar el MPS semanal seleccionado."));
+                setError(getAxiosErrorMessage(err, "No fue posible cargar el MPS OP seleccionado."));
             }
         } finally {
             if (activeMpsRequestRef.current === requestId) {
@@ -196,7 +196,7 @@ export default function AreaOperativaMpsSemanalTab() {
             })
             .catch((err) => {
                 if (!isCancelled) {
-                    setOdpsError(getAxiosErrorMessage(err, "No fue posible cargar las ODPs generadas del MPS semanal."));
+                    setOdpsError(getAxiosErrorMessage(err, "No fue posible cargar las ODPs generadas del MPS OP."));
                     setSelectedWeekOdps([]);
                     setSelectedMpsItemOrders(null);
                 }
@@ -231,7 +231,7 @@ export default function AreaOperativaMpsSemanalTab() {
             <Box borderWidth="1px" borderRadius="lg" bg="app.surface" p={4}>
                 <Flex justify="space-between" align="start" gap={3} wrap="wrap">
                     <Box>
-                        <Heading size="md">MPS semanal</Heading>
+                        <Heading size="md">MPS OP</Heading>
                         <Text color="app.textMuted" fontSize="sm" mt={1}>
                             Semana {selectedWeek.label.toLowerCase()}: {formatSemanaMpsDisplayDate(displayWeekStartDate)} a {formatSemanaMpsDisplayDate(displayWeekEndDate)}
                         </Text>
@@ -277,7 +277,7 @@ export default function AreaOperativaMpsSemanalTab() {
             {loading ? (
                 <Flex justify="center" align="center" py={12} gap={3}>
                     <Spinner size="xl" color="teal.500" />
-                    <Text color="app.textMuted">Cargando MPS semanal...</Text>
+                    <Text color="app.textMuted">Cargando MPS OP...</Text>
                 </Flex>
             ) : null}
 
@@ -285,7 +285,7 @@ export default function AreaOperativaMpsSemanalTab() {
                 <Alert.Root status={getAlertStatus(errorStatus)} borderRadius="md" alignItems="flex-start">
                     <Alert.Indicator />
                     <Box>
-                        <Text fontWeight="semibold">MPS semanal no disponible</Text>
+                        <Text fontWeight="semibold">MPS OP no disponible</Text>
                         <Text fontSize="sm">{error}</Text>
                     </Box>
                 </Alert.Root>

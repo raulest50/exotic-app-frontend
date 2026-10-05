@@ -46,6 +46,7 @@ import type { SeguimientoActionType } from "../Produccion/components/Seguimiento
 import AreaOperativaOrderDetailDrawer from "./AreaOperativaOrderDetailDrawer.tsx";
 import AreaOperativaFabricacionDetailDrawer from "./AreaOperativaFabricacionDetailDrawer.tsx";
 import AreaOperativaMpsSemanalTab from "./AreaOperativaMpsSemanalTab.tsx";
+import MpsFabricacionPanel from "../Produccion/MpsFabricacion/MpsFabricacionPanel";
 import type {
     AreaOperativaOrdenDetalleDTO,
     OrdenFabricacionOperativaDTO,
@@ -251,7 +252,9 @@ function CompletedPaginationControls({
 }
 
 export default function AreaOperativaPanel() {
-    const { meProfile, logout, areaResponsable } = useAuth();
+    const { meProfile, logout, areaResponsable, refreshAccesos } = useAuth();
+    const visibilidadMps = areaResponsable?.visibilidadMps ?? "SOLO_OP";
+    const alcanceMps = areaResponsable?.alcanceMps ?? "TODOS";
     const { loading: directivesLoading, getBooleanDirective, refreshDirectives } = useMasterDirectives();
     const toast = useAppToast();
     const emptyTitleColor = useColorModeValue("gray.700", "gray.200");
@@ -528,6 +531,9 @@ export default function AreaOperativaPanel() {
     }, []);
 
     const handleRefreshPanel = useCallback(async () => {
+        await refreshAccesos().catch(() => {
+            toast({ title: "No fue posible actualizar la configuración del área", status: "error" });
+        });
         await refreshDirectives();
         await fetchTablero({
             vista: effectiveTableroVista,
@@ -536,7 +542,13 @@ export default function AreaOperativaPanel() {
             completedOnly: false,
             preserveCurrentBoardOnError: true,
         });
-    }, [effectiveTableroVista, fetchTablero, refreshDirectives]);
+    }, [effectiveTableroVista, fetchTablero, refreshDirectives, refreshAccesos, toast]);
+
+    useEffect(() => {
+        void refreshAccesos().catch(() => {
+            toast({ title: "No fue posible actualizar la configuración del área", status: "error" });
+        });
+    }, [refreshAccesos, toast]);
 
     const openDetail = useCallback(async (orden: SeguimientoOrdenAreaCardDTO) => {
         setSelectedOrden(orden);
@@ -806,10 +818,11 @@ export default function AreaOperativaPanel() {
                 </HStack>
             </Box>
 
-            <Tabs.Root defaultValue="tablero" variant='outline' colorPalette="teal" lazyMount>
+            <Tabs.Root key={`${areaResponsable?.areaId}-${visibilidadMps}-${alcanceMps}`} defaultValue="tablero" variant='outline' colorPalette="teal" lazyMount>
                 <Tabs.List>
                     <Tabs.Trigger value="tablero" minH={12}>Tablero operativo</Tabs.Trigger>
-                    <Tabs.Trigger value="mps-semanal" minH={12}>MPS semanal</Tabs.Trigger>
+                    {visibilidadMps !== "SOLO_OF" && <Tabs.Trigger value="mps-semanal" minH={12}>MPS OP</Tabs.Trigger>}
+                    {visibilidadMps !== "SOLO_OP" && <Tabs.Trigger value="mps-of" minH={12}>MPS OF</Tabs.Trigger>}
                 </Tabs.List>
                     <Tabs.Content value="tablero" px={0} pb={0}>
                         <VStack w="full" gap={6} align="stretch">
@@ -982,9 +995,12 @@ export default function AreaOperativaPanel() {
                             ) : null}
                         </VStack>
                     </Tabs.Content>
-                    <Tabs.Content value="mps-semanal" px={0} pb={0}>
+                    {visibilidadMps !== "SOLO_OF" && <Tabs.Content value="mps-semanal" px={0} pb={0}>
                         <AreaOperativaMpsSemanalTab />
-                    </Tabs.Content>
+                    </Tabs.Content>}
+                    {visibilidadMps !== "SOLO_OP" && <Tabs.Content value="mps-of" px={0} pb={0}>
+                        <MpsFabricacionPanel operativo />
+                    </Tabs.Content>}
             </Tabs.Root>
 
             <Dialog.Root open={isActionOpen} size='lg' scrollBehavior="inside" placement='center' onOpenChange={e => {

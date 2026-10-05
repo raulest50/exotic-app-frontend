@@ -26,6 +26,7 @@ import SuperMasterDirectivesProtectedRoute from "./components/SuperMasterDirecti
 
 import { Modulo } from "./pages/Usuarios/GestionUsuarios/types.tsx";
 import OperacionesCriticasBDPage from "./pages/OperacionesCriticasBD/OperacionesCriticasBDPage.tsx";
+import MonitoreoErroresPage from "./pages/MonitoreoErrores/MonitoreoErroresPage.tsx";
 import ActivosFijosPage from "./pages/ActivosFijos/ActivosFijosPage.tsx";
 import ContabilidadPage from "./pages/Contabilidad/ContabilidadPage.tsx";
 import PersonalPage from "./pages/Personal/PersonalPage.tsx";
@@ -169,6 +170,15 @@ const router = createBrowserRouter(
                     element={
                         <AccessRoute accessRule={(access) => access.isMasterLike && moduleAccessRule(Modulo.OPERACIONES_CRITICAS_BD)(access)}>
                             <OperacionesCriticasBDPage/>
+                        </AccessRoute>
+                    }
+                />
+
+                <Route
+                    path="monitoreo_errores"
+                    element={
+                        <AccessRoute accessRule={(access) => access.isMasterLike}>
+                            <MonitoreoErroresPage/>
                         </AccessRoute>
                     }
                 />

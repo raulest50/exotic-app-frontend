@@ -10,10 +10,14 @@ import { User } from '../../Usuarios/GestionUsuarios/types';
 import CategoriaHabilitadaPickerModal from '../components/CategoriaHabilitadaPickerModal.tsx';
 import { AreaOperativaMutationDTO, CategoriaHabilitada } from '../ConsultaAreasOperativas/types.ts';
 import { LuSearch } from 'react-icons/lu';
+import AreaMpsSettings from '../components/AreaMpsSettings';
+import type { AlcanceMps, VisibilidadMps } from '../../../api/mpsAreaConfig';
 
 function CrearAreaProduccionTab() {
     const [nombre, setNombre] = useState('');
     const [descripcion, setDescripcion] = useState('');
+    const [visibilidadMps, setVisibilidadMps] = useState<VisibilidadMps>('SOLO_OP');
+    const [alcanceMps, setAlcanceMps] = useState<AlcanceMps>('TODOS');
     const [responsable, setResponsable] = useState<User | null>(null);
     const [categoriasHabilitadas, setCategoriasHabilitadas] = useState<CategoriaHabilitada[]>([]);
     const [isUserPickerOpen, setIsUserPickerOpen] = useState(false);
@@ -43,6 +47,8 @@ function CrearAreaProduccionTab() {
     const clearFields = () => {
         setNombre('');
         setDescripcion('');
+        setVisibilidadMps('SOLO_OP');
+        setAlcanceMps('TODOS');
         setResponsable(null);
         setCategoriasHabilitadas([]);
         setIsValidatingResponsable(false);
@@ -66,6 +72,8 @@ function CrearAreaProduccionTab() {
         const areaProduccionDTO: AreaOperativaMutationDTO = {
             nombre: nombre.trim(),
             descripcion: descripcion.trim(),
+            visibilidadMps,
+            alcanceMps,
             responsableId: responsable!.id,
             categoriaIds: categoriasHabilitadas.map((categoria) => categoria.categoriaId),
         };
@@ -216,6 +224,9 @@ function CrearAreaProduccionTab() {
                         </Wrap>
                     )}
                 </Field.Root>
+
+                <AreaMpsSettings visibilidad={visibilidadMps} alcance={alcanceMps}
+                    onVisibilidadChange={setVisibilidadMps} onAlcanceChange={setAlcanceMps} disabled={isSubmitting} />
 
                 <Button
                     colorPalette="teal"

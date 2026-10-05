@@ -311,7 +311,7 @@ export default function AprobacionMPSWeekTab({ onMpsChanged }: AprobacionMPSWeek
             })
             .catch((error) => {
                 if (!isCancelled) {
-                    setMpsDetailError(getAxiosErrorMessage(error, "La consulta del MPS semanal fallo."));
+                    setMpsDetailError(getAxiosErrorMessage(error, "La consulta del MPS OP fallo."));
                 }
             })
             .finally(() => {
@@ -437,7 +437,7 @@ export default function AprobacionMPSWeekTab({ onMpsChanged }: AprobacionMPSWeek
             });
             toast({
                 title: "Observacion registrada",
-                description: "La observacion quedo asociada al MPS semanal.",
+                description: "La observacion quedo asociada al MPS OP.",
                 status: "success",
                 duration: 3000,
                 isClosable: true,
@@ -563,7 +563,7 @@ export default function AprobacionMPSWeekTab({ onMpsChanged }: AprobacionMPSWeek
             <Box p={5} bg="white" borderRadius="md" boxShadow="sm">
                 <VStack align="stretch" gap={4}>
                     <Box>
-                        <Heading size="md">Aprobacion MPS semanal</Heading>
+                        <Heading size="md">Aprobación MPS OP</Heading>
                         <Text color="gray.600" mt={1}>
                             Seleccione una semana, revise el MPS completo y ejecute la aprobacion desde esta vista.
                         </Text>

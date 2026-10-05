@@ -108,6 +108,8 @@ export default class EndPointsURL{
     public averias_almacen_registrar: string;
     public produccion_batch_records: string;
     public produccion_ordenes_fabricacion: string;
+    public produccion_mps_of: string;
+    public area_operativa_panel_mps_of: string;
 
     // ingreso terminados almacen
     public ingreso_terminados_reporte_hyl: string;
@@ -819,6 +821,8 @@ export default class EndPointsURL{
         this.averias_almacen_registrar = `${domain}/${averias_res}/almacen/registrar`;
         this.produccion_batch_records = `${domain}/api/produccion/batch-records`;
         this.produccion_ordenes_fabricacion = `${domain}/api/produccion/ordenes-fabricacion`;
+        this.produccion_mps_of = `${domain}/api/produccion/mps-of`;
+        this.area_operativa_panel_mps_of = `${domain}/api/area-operativa-panel/mps-of`;
 
         // ingreso terminados almacen endpoints
         this.ingreso_terminados_reporte_hyl = `${domain}/${ingresos_terminados_res}/reporte-hyl`;

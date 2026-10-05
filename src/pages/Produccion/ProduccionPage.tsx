@@ -16,6 +16,7 @@ import AprobacionMPSWeekTab from "./ProgProdSemanalTab/AprobacionMPSWeekTab.tsx"
 import ProgramacionProduccionSemanalTab, { type MpsWeekRefreshSignal } from "./ProgProdSemanalTab/ProgramacionProduccionSemanalTab.tsx";
 import BatchRecordsTab from "./BatchRecords/BatchRecordsTab.tsx";
 import OrdenesFabricacionTab from "./OrdenesFabricacion/OrdenesFabricacionTab.tsx";
+import MpsFabricacionPanel from "./MpsFabricacion/MpsFabricacionPanel";
 import {
     DesviacionesControlProcesoTab,
     HistorialControlesProcesoTab,
@@ -48,16 +49,23 @@ const buildProductionGroups = (
             },
             {
                 key: "programacion",
-                label: "Programación semanal",
+                label: "MPS OP",
                 render: () => <ProgramacionProduccionSemanalTab refreshSignal={refreshSignal} />,
                 accessRule: tabAccessRule(Modulo.PRODUCCION, "PROGRAMACION_PRODUCCION", 1),
                 flushContent: true,
             },
             {
                 key: "aprobacion-mps",
-                label: "Aprobación del MPS",
+                label: "Aprobación MPS OP",
                 render: () => <AprobacionMPSWeekTab onMpsChanged={onMpsChanged} />,
                 accessRule: tabAccessRule(Modulo.PRODUCCION, "APROBACION_MPS_WEEK", 1),
+                flushContent: true,
+            },
+            {
+                key: "mps-of",
+                label: "MPS OF",
+                render: () => <MpsFabricacionPanel />,
+                accessRule: exactProductionTabAccessRule("CREAR_ORDEN_FABRICACION"),
                 flushContent: true,
             },
         ],

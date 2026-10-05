@@ -17,6 +17,8 @@ import {
     isAlmacenGeneralArea,
 } from './types';
 import { LuSearch } from 'react-icons/lu';
+import AreaMpsSettings from '../components/AreaMpsSettings';
+import type { AlcanceMps, VisibilidadMps } from '../../../api/mpsAreaConfig';
 
 const endpoints = new EndPointsURL();
 
@@ -95,6 +97,8 @@ export default function DetalleAreaOperativaDialog({
     const [isEditing, setIsEditing] = useState(false);
     const [editNombre, setEditNombre] = useState('');
     const [editDescripcion, setEditDescripcion] = useState('');
+    const [editVisibilidadMps, setEditVisibilidadMps] = useState<VisibilidadMps>('SOLO_OP');
+    const [editAlcanceMps, setEditAlcanceMps] = useState<AlcanceMps>('TODOS');
     const [editResponsable, setEditResponsable] = useState<User | null>(null);
     const [editCategoriasHabilitadas, setEditCategoriasHabilitadas] = useState<CategoriaHabilitada[]>([]);
     const [isUserPickerOpen, setIsUserPickerOpen] = useState(false);
@@ -162,6 +166,8 @@ export default function DetalleAreaOperativaDialog({
                 : null,
         );
         setEditCategoriasHabilitadas(cloneCategorias(area.categoriasHabilitadas ?? []));
+        setEditVisibilidadMps(area.visibilidadMps ?? 'SOLO_OP');
+        setEditAlcanceMps(area.alcanceMps ?? 'TODOS');
         setResponsableError(null);
         setIsEditing(true);
     };
@@ -172,6 +178,8 @@ export default function DetalleAreaOperativaDialog({
     };
 
     const hasChanges =
+        editVisibilidadMps !== (area.visibilidadMps ?? 'SOLO_OP') ||
+        editAlcanceMps !== (area.alcanceMps ?? 'TODOS') ||
         editNombre !== area.nombre ||
         editDescripcion !== (area.descripcion || '') ||
         editResponsable?.id !== area.responsableArea?.id ||
@@ -224,6 +232,8 @@ export default function DetalleAreaOperativaDialog({
         const dto: AreaOperativaMutationDTO = {
             nombre: editNombre.trim(),
             descripcion: editDescripcion.trim(),
+            visibilidadMps: editVisibilidadMps,
+            alcanceMps: editAlcanceMps,
             responsableId: editResponsable.id,
             categoriaIds: editCategoriasHabilitadas.map((categoria) => categoria.categoriaId),
             categoriasHabilitadas: editCategoriasHabilitadas.map((categoria) => ({
@@ -464,6 +474,13 @@ export default function DetalleAreaOperativaDialog({
                                                     </Text>
                                                 </Box>
 
+                                                <Box borderWidth="1px" borderColor="app.border" borderRadius="xl" bg="app.surface" p={4}>
+                                                    <AreaMpsSettings
+                                                        visibilidad={isEditing ? editVisibilidadMps : area.visibilidadMps ?? 'SOLO_OP'}
+                                                        alcance={isEditing ? editAlcanceMps : area.alcanceMps ?? 'TODOS'}
+                                                        readOnly={!isEditing || isSpecialSystemArea} disabled={isSaving}
+                                                        onVisibilidadChange={setEditVisibilidadMps} onAlcanceChange={setEditAlcanceMps} />
+                                                </Box>
                                                 <SimpleGrid columns={{ base: 1, md: 2 }} gap={5} alignItems="stretch">
                                                     <Box
                                                         borderWidth="1px"

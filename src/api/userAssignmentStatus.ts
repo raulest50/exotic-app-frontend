@@ -1,9 +1,12 @@
 import axios from "axios";
 import EndPointsURL from "./EndPointsURL.tsx";
+import type { AlcanceMps, VisibilidadMps } from "./mpsAreaConfig";
 
 export interface AreaResponsableSummary {
     areaId: number;
     nombre: string;
+    visibilidadMps?: VisibilidadMps;
+    alcanceMps?: AlcanceMps;
 }
 
 export interface UserAssignmentStatus {

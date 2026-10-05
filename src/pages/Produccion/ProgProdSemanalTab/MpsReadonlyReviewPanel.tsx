@@ -222,7 +222,7 @@ export default function MpsReadonlyReviewPanel({
             <Box>
                 <Flex justify="space-between" align="start" gap={3} wrap="wrap">
                     <Box>
-                        <Heading size="sm">Revision MPS semanal</Heading>
+                        <Heading size="sm">Revisión MPS OP</Heading>
                         <Text fontSize="sm" color="gray.600">
                             Semana {getSemanaMpsLabel(mps)} - {getSemanaMpsDateRange(mps)}
                         </Text>

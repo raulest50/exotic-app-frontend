@@ -1,3 +1,5 @@
+import type { AlcanceMps, VisibilidadMps } from "../../../api/mpsAreaConfig";
+
 export interface CategoriaHabilitada {
     categoriaId: number;
     categoriaNombre: string;
@@ -15,6 +17,8 @@ export interface AreaOperativa {
     areaId: number;
     nombre: string;
     descripcion: string;
+    visibilidadMps?: VisibilidadMps;
+    alcanceMps?: AlcanceMps;
     responsableArea: {
         id: number;
         cedula: number;
@@ -43,6 +47,8 @@ export interface AreaOperativaMutationDTO {
     nombre: string;
     descripcion: string;
     responsableId: number;
+    visibilidadMps?: VisibilidadMps;
+    alcanceMps?: AlcanceMps;
     categoriaIds?: number[];
     categoriasHabilitadas?: CategoriaHabilitadaMutation[];
 }
