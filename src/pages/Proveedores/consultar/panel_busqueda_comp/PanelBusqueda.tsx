@@ -10,6 +10,7 @@ import {
     Box,
     NativeSelect,
     Field,
+    Fieldset,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 
@@ -161,8 +162,8 @@ export default function PanelBusqueda({setEstado, setProveedorSeleccionado}: Pro
 
                     </Flex>
 
-                    <Field.Root mb={4} flex={1} disabled={searchType === TIPO_BUSQUEDA.ID} >
-                        <Field.Label>Categorías</Field.Label>
+                    <Fieldset.Root mb={4} flex={1} disabled={searchType === TIPO_BUSQUEDA.ID} >
+                        <Fieldset.Legend>Categorías</Fieldset.Legend>
                         <CheckboxGroup
                             colorPalette="green"
                             value={selectedCategories.map(String)}
@@ -176,7 +177,7 @@ export default function PanelBusqueda({setEstado, setProveedorSeleccionado}: Pro
                                 ))}
                             </Stack>
                         </CheckboxGroup>
-                    </Field.Root>
+                    </Fieldset.Root>
 
                 </Flex>
 
