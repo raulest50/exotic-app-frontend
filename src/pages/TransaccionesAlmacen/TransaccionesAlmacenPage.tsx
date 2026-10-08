@@ -9,7 +9,7 @@ import EndPointsURL from "../../api/EndPointsURL";
 import { useAuth } from "../../context/AuthContext";
 import GestionAveriasTab from "./GestionAverias/GestionAveriasTab.tsx";
 import { AsistenteIngresoTerminados } from "./AsistenteIngresoTerminados/AsistenteIngresoTerminados";
-import DispensacionV2Tab from "./DispensacionV2/DispensacionV2Tab";
+import DispensacionV2Tab from "@/pages/TransaccionesAlmacen/AsistenteDispensacion/DispensacionV2Tab";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
 import { tabAccessRule } from "../../auth/accessHelpers.ts";
 import { useAccessSnapshot } from "../../auth/usePermissions";
