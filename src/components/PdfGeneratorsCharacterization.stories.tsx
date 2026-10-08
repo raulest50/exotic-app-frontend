@@ -11,7 +11,7 @@ import ODP_PDF_Generator from "@/pages/Produccion/components/ODP_PDF_Generator";
 import type { MpsSemanalDraftDTO } from "@/pages/Produccion/ProgProdSemanalTab/MpsSemanalService";
 import { getMpsSemanalPdfBlob } from "@/pages/Produccion/ProgProdSemanalTab/pdf/MpsSemanalPdfGenerator";
 import type { OrdenProduccionDTO } from "@/pages/Produccion/types";
-import DispensacionPDF_Generator from "@/pages/TransaccionesAlmacen/AsistenteDispensacion/AsistenteDispensacionComponents/DispensacionPDF_Generator";
+import DispensacionPDF_Generator from "@/pages/TransaccionesAlmacen/HistorialDispensaciones/DispensacionPDF_Generator";
 
 let logoDataUrlPromise: Promise<string> | undefined;
 

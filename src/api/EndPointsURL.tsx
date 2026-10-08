@@ -98,8 +98,6 @@ export default class EndPointsURL{
     public cancel_orden_produccion: string;
     public search_ordenes_by_responsable:string;
     public produccion_terminado_data4pdf: string;
-    public dispensacion_odp_consulta: string;
-    public dispensacion_odp_busqueda_lote: string;
     public search_orden_by_lote: string;
     public averias_items_dispensados: string;
     public averias_registrar: string;
@@ -170,8 +168,6 @@ export default class EndPointsURL{
     public consolidado_materiales_ocm: string;
 
     // salidas de almacen (dispensacion)
-    public dispensacion_no_planificada: string;
-    public dispensacion: string;
     public dispensacion_v2_mps_semanal: string;
     public dispensacion_v2_preparacion: string;
     public dispensacion_v2_materiales_receta: string;
@@ -179,14 +175,7 @@ export default class EndPointsURL{
     public dispensacion_v2_finalizar: string;
     public dispensacion_v2_lotes_disponibles: string;
     public dispensacion_v2_ordenes_fabricacion: string;
-    public recomendar_lotes_multiple: string;
-
-    public listar_lotes_de_producto:string;
-    public lotes_disponibles_paginados: string;
-    public insumos_desglosados_orden: string;
-    public dispensacion_resumen_odp: string;
     public historial_dispensacion_filter: string;
-    public dispensacion_reposicion_averia: string;
 
 
     // user resources (solo autenticacion)
@@ -811,8 +800,6 @@ export default class EndPointsURL{
         this.cancel_orden_produccion = `${domain}/${produccion_res}/orden_produccion/{id}/cancel`;
         this.search_ordenes_by_responsable = `${domain}/${produccion_res}/ordenes_produccion/responsable/{responsableId}`;
         this.produccion_terminado_data4pdf = `${domain}/${produccion_res}/terminado/{id}/data4pdf`;
-        this.dispensacion_odp_consulta = `${domain}/${produccion_res}/dispensacion_odp_consulta`;
-        this.dispensacion_odp_busqueda_lote = `${domain}/${produccion_res}/dispensacion_odp_busqueda_lote`;
         this.search_orden_by_lote = `${domain}/${averias_res}/search_orden_by_lote`;
         this.averias_items_dispensados = `${domain}/${averias_res}/orden/{ordenProduccionId}/items-dispensados`;
         this.averias_registrar = `${domain}/${averias_res}/registrar`;
@@ -874,8 +861,6 @@ export default class EndPointsURL{
 
 
         // salidas de almacen (dispensacion)
-        this.dispensacion_no_planificada = `${domain}/${salidas_almacen_res}/dispensacion-no-planificada`;
-        this.dispensacion = `${domain}/${salidas_almacen_res}/dispensacion`;
         this.dispensacion_v2_mps_semanal = `${domain}/${salidas_almacen_res}/dispensacion-v2/mps-semanal`;
         this.dispensacion_v2_preparacion = `${domain}/${salidas_almacen_res}/dispensacion-v2/preparacion`;
         this.dispensacion_v2_materiales_receta = `${domain}/${salidas_almacen_res}/dispensacion-v2/materiales-receta`;
@@ -883,14 +868,7 @@ export default class EndPointsURL{
         this.dispensacion_v2_finalizar = `${domain}/${salidas_almacen_res}/dispensacion-v2/finalizar`;
         this.dispensacion_v2_lotes_disponibles = `${domain}/${salidas_almacen_res}/dispensacion-v2/materiales/{productoId}/lotes-disponibles`;
         this.dispensacion_v2_ordenes_fabricacion = `${domain}/${salidas_almacen_res}/dispensacion-v2/ordenes-fabricacion`;
-        this.recomendar_lotes_multiple = `${domain}/${salidas_almacen_res}/recomendar-lotes-multiple`;
-
-        this.listar_lotes_de_producto = `${domain}/${salidas_almacen_res}/lotes-disponibles`;
-        this.lotes_disponibles_paginados = `${domain}/${salidas_almacen_res}/lotes-disponibles-paginados`;
-        this.insumos_desglosados_orden = `${domain}/${salidas_almacen_res}/orden-produccion/{ordenProduccionId}/insumos-desglosados`;
-        this.dispensacion_resumen_odp = `${domain}/${salidas_almacen_res}/orden-produccion/{ordenProduccionId}/dispensacion-resumen`;
         this.historial_dispensacion_filter = `${domain}/${salidas_almacen_res}/historial_dispensacion_filter`;
-        this.dispensacion_reposicion_averia = `${domain}/${salidas_almacen_res}/dispensacion-reposicion-averia`;
 
 
         // user endpoints

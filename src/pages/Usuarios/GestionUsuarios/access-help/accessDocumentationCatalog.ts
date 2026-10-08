@@ -467,17 +467,10 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
         resumen: "Ingresos, dispensaciones, averías, historial y ajustes de inventario.",
         condiciones: [
             "Cada pestaña se muestra con su permiso propio; el permiso general conservado de versiones anteriores puede actuar como respaldo.",
-            "Algunas excepciones operativas toman el nivel máximo de todo el módulo.",
         ],
         tabs: [
             sameScopeTab("INGRESO_OCM", "Ingreso OCM", "Registra el ingreso de mercancía asociado a órdenes de compra.", "Consultar órdenes pendientes y completar el asistente de ingreso de mercancía."),
-            tab("HACER_DISPENSACION", "Hacer dispensación", "Permite preparar y registrar dispensaciones de materiales.", [
-                level(1, "Dispensación estándar", ["Ejecutar el flujo normal de dispensación sin superar la cantidad requerida por la receta." ]),
-                level(2, "Mismo alcance funcional", ["Mantiene la dispensación estándar del nivel 1."], ["No autoriza superar la cantidad requerida por la receta."]),
-                level(3, "Excepción de cantidad", ["Incluye el flujo normal y permite continuar cuando la suma dispensada supera la receta." ]),
-                level(4, "Mismo alcance funcional", ["Mantiene las capacidades del nivel 3."], ["No añade una operación diferente frente al nivel 3."]),
-            ], ["La excepción usa el nivel máximo del módulo, no únicamente el nivel de esta pestaña."]),
-            sameScopeTab("DISPENSACION_V2", "Dispensación v2", "Ejecuta la versión actualizada del flujo de dispensación.", "Consultar y completar las operaciones disponibles en el asistente de Dispensación v2."),
+            sameScopeTab("DISPENSACION_V2", "Hacer Dispensacion", "Prepara y registra dispensaciones de materiales para órdenes de producción y fabricación.", "Consultar y completar las operaciones disponibles en el asistente de dispensación."),
             sameScopeTab("HISTORIAL_DISPENSACIONES", "Historial de dispensaciones", "Presenta dispensaciones históricas y sus detalles.", "Consultar, filtrar y abrir el detalle de dispensaciones registradas."),
             tab("INGRESO_PRODUCTO_TERMINADO", "Ingreso de producto terminado", "Consulta reportes pendientes y controla el cierre de ingreso a almacén.", [
                 level(1, "Consulta", ["Consultar fechas y reportes de producción pendientes de ingreso."], ["Confirmar el cierre e ingresar producto terminado al almacén."]),

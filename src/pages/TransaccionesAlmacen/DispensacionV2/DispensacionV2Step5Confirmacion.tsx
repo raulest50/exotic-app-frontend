@@ -66,7 +66,7 @@ export default function DispensacionV2Step5Confirmacion({
             });
             onSuccess();
         } catch (err) {
-            const message = getAxiosErrorMessage(err, "No fue posible registrar la dispensacion v2.");
+            const message = getAxiosErrorMessage(err, "No fue posible registrar la dispensacion.");
             setError(message);
             setSubmitting(false);
             toast({

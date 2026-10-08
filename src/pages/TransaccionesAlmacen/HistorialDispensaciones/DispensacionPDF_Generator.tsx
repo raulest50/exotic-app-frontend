@@ -3,17 +3,15 @@ import { autoTable, type Table } from "jspdf-autotable";
 import {
     formatEmpresaIdentificacion,
     getEmpresaBrandingDocumentalVigente,
-} from "../../../../api/EmpresaIdentidadDocumentalApi";
-import { addContainedPng } from "../../../../utils/pdfBranding";
+} from "../../../api/EmpresaIdentidadDocumentalApi";
+import { addContainedPng } from "../../../utils/pdfBranding";
 
 interface jsPDFWithAutoTable extends jsPDF {
     lastAutoTable?: Table;
 }
 
 /**
- * Clase para encapsular los métodos necesarios para generar cualquier
- * documento PDF necesario en el tab de dispensación en el módulo de
- * transacciones de almacén.
+ * Genera los documentos PDF de las dispensaciones consultadas en el historial.
  */
 export default class DispensacionPDF_Generator {
     /**

@@ -170,7 +170,7 @@ export default function DispensacionV2Step3Materiales({
             }
         } catch (err) {
             if (activeRequestRef.current === requestId) {
-                setError(getAxiosErrorMessage(err, "No fue posible preparar la receta de materiales para la dispensacion v2."));
+                setError(getAxiosErrorMessage(err, "No fue posible preparar la receta de materiales para la dispensacion."));
                 onMaterialesRecetaChange(null);
             }
         } finally {
@@ -224,7 +224,7 @@ export default function DispensacionV2Step3Materiales({
             );
             onAsignacionReady(recalcularDispensacionV2(asignacion));
         } catch (err) {
-            setError(getAxiosErrorMessage(err, "No fue posible asignar lotes de origen para la dispensacion v2."));
+            setError(getAxiosErrorMessage(err, "No fue posible asignar lotes de origen para la dispensacion."));
         } finally {
             setAssigning(false);
         }

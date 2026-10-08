@@ -8,7 +8,7 @@ import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import DetalleDispensacionDialog from './DetalleDispensacionDialog.tsx';
-import DispensacionPDF_Generator_Class from '../AsistenteDispensacion/AsistenteDispensacionComponents/DispensacionPDF_Generator';
+import DispensacionPDF_Generator_Class from './DispensacionPDF_Generator';
 import { MovimientoDetalle } from '../types';
 
 const endpoints = new EndPointsURL();

@@ -1,7 +1,6 @@
 import MyHeader from "../../components/MyHeader";
 import { Container, Tabs, Spinner, Text } from "@chakra-ui/react";
 import AsistenteIngresoMercancia from "./AsistenteIngresoOCM/AsistenteIngresoMercancia";
-import { AsistenteDispensacion } from "./AsistenteDispensacion/AsistenteDispensacion.tsx";
 import AjustesInventarioTab from "./AjustesInventario/AjustesInventarioTab";
 import { HistorialDispensaciones } from "./HistorialDispensaciones/HistorialDispensaciones.tsx";
 import { useEffect, useMemo, useState, type JSX } from "react";
@@ -58,8 +57,7 @@ export default function TransaccionesAlmacenPage() {
 
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
         { key: "ingreso-ocm", label: "Ingreso OCM", render: () => <AsistenteIngresoMercancia />, accesoValido: tabAccessRule(Modulo.TRANSACCIONES_ALMACEN, "INGRESO_OCM", 1) },
-        { key: "hacer-dispensacion", label: "Hacer Dispensacion", render: () => <AsistenteDispensacion />, accesoValido: tabAccessRule(Modulo.TRANSACCIONES_ALMACEN, "HACER_DISPENSACION", 1) },
-        { key: "dispensacion-v2", label: "Dispensacion v2", render: () => <DispensacionV2Tab />, accesoValido: tabAccessRule(Modulo.TRANSACCIONES_ALMACEN, "DISPENSACION_V2", 1) },
+        { key: "dispensacion-v2", label: "Hacer Dispensacion", render: () => <DispensacionV2Tab />, accesoValido: tabAccessRule(Modulo.TRANSACCIONES_ALMACEN, "DISPENSACION_V2", 1) },
         { key: "historial-dispensaciones", label: "Historial Dispensaciones", render: () => <HistorialDispensaciones />, accesoValido: tabAccessRule(Modulo.TRANSACCIONES_ALMACEN, "HISTORIAL_DISPENSACIONES", 1) },
         { key: "ingreso-pt", label: "Ingreso Producto Terminado", render: () => <AsistenteIngresoTerminados />, accesoValido: tabAccessRule(Modulo.TRANSACCIONES_ALMACEN, "INGRESO_PRODUCTO_TERMINADO", 1) },
         { key: "gestion-averias", label: "Gestion Averias", render: () => <GestionAveriasTab />, accesoValido: tabAccessRule(Modulo.TRANSACCIONES_ALMACEN, "GESTION_AVERIAS", 1) },
