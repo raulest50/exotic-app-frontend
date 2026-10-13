@@ -21,7 +21,7 @@ import { useAppToast } from "@/components/ui/use-app-toast";
 import { RiSave3Fill } from "react-icons/ri";
 import CustomIntegerInput from "../../../components/CustomIntegerInput/CustomIntegerInput.tsx";
 import type { Categoria, UnidadTiempoVencimiento } from "../types.tsx";
-import { RutaProcesoCatDesigner } from "./RutaProcesoCatDesigner";
+import RutaProcesoCatDesigner from "./RutaProcesoCatDesigner/RutaProcesoCatDesigner.tsx";
 import { LuLock, LuLockOpen } from 'react-icons/lu';
 
 const PAGE_SIZE = 10;

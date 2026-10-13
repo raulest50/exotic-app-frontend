@@ -5,7 +5,7 @@ import {
     buildSemanticSignature,
     getRouteSaveAvailability,
     normalizeLayoutCoordinate,
-} from "../src/pages/Produccion/ConfParamsCategoria/RutaProcesoCatDesigner/changeTracking.ts";
+} from "../src/pages/Produccion/ConfParamsCategoria/RutaProcesoCatDesigner/RutaProcesoCatDesignerLogic.ts";
 import type { RutaProcesoNodeData } from "../src/pages/Produccion/ConfParamsCategoria/RutaProcesoCatDesigner/types.ts";
 
 function node(id: string, x: number, y: number): Node<RutaProcesoNodeData> {

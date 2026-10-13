@@ -43,19 +43,22 @@ import {
     AreaOperativa,
     ProcesoRutaOption,
     RutaProcesoCatDTO,
-    RutaProcesoEdgeDTO,
     RutaProcesoLayoutUpdateDTO,
-    RutaProcesoNodeDTO,
     RutaProcesoNodeData,
 } from "./types.ts";
 import { Categoria } from "../../types.tsx";
-import { ALMACEN_GENERAL_ID, getConnectionError, validateRuta } from "./rutaValidation.ts";
 import {
+    ALMACEN_GENERAL_ID,
     buildLayoutSignature,
     buildSemanticSignature,
+    getConnectionError,
+    getNextNodeId,
     getRouteSaveAvailability,
     normalizeLayoutCoordinate,
-} from "./changeTracking.ts";
+    toFlowEdges,
+    toFlowNodes,
+    validateRuta,
+} from "./RutaProcesoCatDesignerLogic.ts";
 import { LuArrowLeft, LuMaximize2, LuMinimize2, LuPlus, LuTrash2, LuX } from 'react-icons/lu';
 import { indexRouteControls } from "@/features/controles/routeControlSummary";
 import { useRouteControlSummary } from "@/features/controles/useRouteControlSummary";
@@ -84,40 +87,6 @@ interface Props {
 interface BackendErrorResponse {
     title?: string;
     message?: string;
-}
-
-function toFlowNodes(ruta: RutaProcesoCatDTO): Node<RutaProcesoNodeData>[] {
-    return ruta.nodes.map((node: RutaProcesoNodeDTO) => ({
-        id: node.id,
-        type: 'areaOperativaNode',
-        position: { x: node.posicionX, y: node.posicionY },
-        data: {
-            label: node.label || node.areaOperativaNombre || 'Sin asignar',
-            areaOperativaId: node.areaOperativaId,
-            areaOperativaNombre: node.areaOperativaNombre,
-            procesoProduccionId: node.procesoProduccionId ?? null,
-            procesoProduccionNombre: node.procesoProduccionNombre ?? null,
-            poeVigenteDisponible: node.poeVigenteDisponible ?? false,
-            poeVigenteVersion: node.poeVigenteVersion ?? null,
-            hasLeftHandle: node.hasLeftHandle ?? true,
-            hasRightHandle: node.hasRightHandle ?? true,
-            duracionEstimadaMinutos: node.duracionEstimadaMinutos ?? 0,
-            requiereJornadaLaboral: node.requiereJornadaLaboral ?? true,
-        },
-    }));
-}
-
-function toFlowEdges(ruta: RutaProcesoCatDTO): Edge[] {
-    return ruta.edges.map((edge: RutaProcesoEdgeDTO) => ({
-        id: edge.id,
-        source: edge.sourceNodeId,
-        target: edge.targetNodeId,
-    }));
-}
-
-function getNextNodeId(ruta: RutaProcesoCatDTO): number {
-    const maxId = Math.max(0, ...ruta.nodes.map((node) => Number.parseInt(node.id, 10) || 0));
-    return maxId + 1;
 }
 
 function formatVersionDate(value?: string | null): string {

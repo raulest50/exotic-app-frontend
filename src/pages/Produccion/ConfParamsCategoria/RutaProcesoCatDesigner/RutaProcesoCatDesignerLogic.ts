@@ -1,6 +1,47 @@
-import { Edge, Node } from "@xyflow/react";
-import { RutaProcesoNodeData } from "./types";
+import type { Edge, Node } from "@xyflow/react";
+import type {
+    RutaProcesoCatDTO,
+    RutaProcesoEdgeDTO,
+    RutaProcesoNodeDTO,
+    RutaProcesoNodeData,
+} from "./types.ts";
 
+// Conversión de la ruta recibida de la API al modelo del diseñador.
+export function toFlowNodes(ruta: RutaProcesoCatDTO): Node<RutaProcesoNodeData>[] {
+    return ruta.nodes.map((node: RutaProcesoNodeDTO) => ({
+        id: node.id,
+        type: 'areaOperativaNode',
+        position: { x: node.posicionX, y: node.posicionY },
+        data: {
+            label: node.label || node.areaOperativaNombre || 'Sin asignar',
+            areaOperativaId: node.areaOperativaId,
+            areaOperativaNombre: node.areaOperativaNombre,
+            procesoProduccionId: node.procesoProduccionId ?? null,
+            procesoProduccionNombre: node.procesoProduccionNombre ?? null,
+            poeVigenteDisponible: node.poeVigenteDisponible ?? false,
+            poeVigenteVersion: node.poeVigenteVersion ?? null,
+            hasLeftHandle: node.hasLeftHandle ?? true,
+            hasRightHandle: node.hasRightHandle ?? true,
+            duracionEstimadaMinutos: node.duracionEstimadaMinutos ?? 0,
+            requiereJornadaLaboral: node.requiereJornadaLaboral ?? true,
+        },
+    }));
+}
+
+export function toFlowEdges(ruta: RutaProcesoCatDTO): Edge[] {
+    return ruta.edges.map((edge: RutaProcesoEdgeDTO) => ({
+        id: edge.id,
+        source: edge.sourceNodeId,
+        target: edge.targetNodeId,
+    }));
+}
+
+export function getNextNodeId(ruta: RutaProcesoCatDTO): number {
+    const maxId = Math.max(0, ...ruta.nodes.map((node) => Number.parseInt(node.id, 10) || 0));
+    return maxId + 1;
+}
+
+// Validación de la ruta y de las conexiones.
 export const ALMACEN_GENERAL_ID = -1;
 export const ALMACEN_GENERAL_NOMBRE = "Almacen General";
 
@@ -253,4 +294,85 @@ function wouldCreateCycle(sourceId: string, targetId: string, edges: RutaEdge[])
 
 function uniqueErrors(errors: string[]): string[] {
     return Array.from(new Set(errors));
+}
+
+// Detección de cambios y disponibilidad de las opciones de guardado.
+export interface RouteSaveAvailabilityInput {
+    hasCurrentVersion: boolean;
+    isReadOnly: boolean;
+    isSaving: boolean;
+    isValid: boolean;
+    semanticDirty: boolean;
+    layoutDirty: boolean;
+}
+
+export interface RouteSaveAvailability {
+    canSaveNewVersion: boolean;
+    canSaveLayout: boolean;
+}
+
+export function normalizeLayoutCoordinate(value: number): number {
+    return Number(value.toFixed(2));
+}
+
+export function buildSemanticSignature(
+    nodes: Node<RutaProcesoNodeData>[],
+    edges: Edge[],
+): string {
+    return JSON.stringify({
+        nodes: nodes
+            .map((node) => ({
+                id: node.id,
+                areaOperativaId: node.data.areaOperativaId ?? null,
+                procesoProduccionId: node.data.procesoProduccionId ?? null,
+                label: node.data.label ?? "",
+                hasLeftHandle: node.data.hasLeftHandle ?? true,
+                hasRightHandle: node.data.hasRightHandle ?? true,
+                duracionEstimadaMinutos: node.data.duracionEstimadaMinutos ?? 0,
+                requiereJornadaLaboral: node.data.requiereJornadaLaboral ?? true,
+            }))
+            .sort((left, right) => left.id.localeCompare(right.id)),
+        edges: edges
+            .map((edge) => ({
+                id: edge.id,
+                source: edge.source,
+                target: edge.target,
+            }))
+            .sort((left, right) => left.id.localeCompare(right.id)),
+    });
+}
+
+export function buildLayoutSignature(nodes: Node<RutaProcesoNodeData>[]): string {
+    return JSON.stringify(
+        nodes
+            .map((node) => ({
+                id: node.id,
+                x: normalizeLayoutCoordinate(node.position.x),
+                y: normalizeLayoutCoordinate(node.position.y),
+            }))
+            .sort((left, right) => left.id.localeCompare(right.id)),
+    );
+}
+
+export function getRouteSaveAvailability({
+    hasCurrentVersion,
+    isReadOnly,
+    isSaving,
+    isValid,
+    semanticDirty,
+    layoutDirty,
+}: RouteSaveAvailabilityInput): RouteSaveAvailability {
+    return {
+        canSaveNewVersion:
+            !isReadOnly
+            && !isSaving
+            && isValid
+            && (!hasCurrentVersion || semanticDirty),
+        canSaveLayout:
+            !isReadOnly
+            && !isSaving
+            && hasCurrentVersion
+            && layoutDirty
+            && !semanticDirty,
+    };
 }
