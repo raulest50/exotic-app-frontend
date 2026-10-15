@@ -18,7 +18,6 @@ import axios from "axios";
 import BetterPagination from "../../../components/BetterPagination/BetterPagination.tsx";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import type { Material } from "../../Productos/types.tsx";
-import { normalizeProductId } from "../../Productos/productIdUtils.ts";
 import type { BiSearchType, MaterialSearchResponse } from "./types.ts";
 import { formatNumber, formatTipoMaterial } from "./utils.ts";
 
@@ -50,7 +49,7 @@ export default function MaterialSelectorModal({ isOpen, onClose, onSelectMateria
     const fetchMateriales = async (pageNumber: number = page, pageSize: number = size) => {
         setLoading(true);
         try {
-            const search = searchType === "ID" ? normalizeProductId(searchText.trim()) : searchText;
+            const search = searchType === "ID" ? searchText.trim().toUpperCase() : searchText;
             const response = await axios.post<MaterialSearchResponse>(endPoints.consulta_productos, {
                 search,
                 searchType,

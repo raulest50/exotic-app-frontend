@@ -2,11 +2,35 @@
 
 Estas instrucciones aplican a todo el repositorio `exotic-app-frontend`.
 
+## Arquitectura y congruencia con Gaphor
+
+- El repositorio de arquitectura busca reducir la deuda técnica, cognitiva y de
+  intención: facilitar la evolución del código, comprender el sistema y preservar
+  el propósito de sus decisiones. Mantener el modelo simple sirve a esos objetivos.
+- Leer `../exotic-app-architecture/AGENTS.md` antes de modificar código y
+  consultar `../exotic-app-architecture/ExoticApp.gaphor`. El modelo es la fuente
+  de verdad de la arquitectura explícitamente representada; mantener congruentes
+  los archivos, responsabilidades y relaciones del alcance modelado.
+- El modelado es simple e incremental. No exigir diagramas para módulos aún no
+  modelados ni interpretar cada detalle omitido como una restricción.
+- Antes de crear, eliminar, renombrar o mover archivos persistentes, comunicar
+  rutas, motivo e impacto en el modelo. Pedir autorización explícita si la
+  solicitud no autoriza ya esa operación concreta; no repetir autorizaciones.
+  Una refactorización genérica no autoriza por sí sola estas operaciones.
+- El usuario actualiza manualmente los diagramas. No editar el `.gaphor` sin
+  petición explícita. Entregar la lista de ajustes visuales necesarios, incluidos
+  cambios de responsabilidad o dependencias sin cambios de archivos, y declarar
+  pendiente la sincronización hasta comprobar el modelo actualizado.
+- Señalar discrepancias previas y consultar las decisiones que entren en
+  conflicto con el modelo. Si no se puede acceder a él, declarar la limitación;
+  no confundirla con ausencia de diagramas ni afirmar congruencia sin verificar.
+
 ## Contexto del proyecto
 
 - Este repositorio contiene únicamente el frontend. El backend Spring Boot está
   en un repositorio separado.
-- Hay dos repositorios hermanos, normalmente clonados junto a este:
+- Hay tres repositorios hermanos, normalmente clonados junto a este:
+  `../exotic-app-architecture` (modelo Gaphor),
   `../exotic-app-backend` y `../exotic-app-e2e`. La suite contractual de
   `exotic-app-e2e` lee directamente los tipos y adaptadores TypeScript de este
   repositorio, así que cambiar rutas de API, payloads o enums puede romperla sin
@@ -126,5 +150,7 @@ Antes de entregar un cambio de código:
   disponibles;
 - no deben introducirse lockfiles de otros gestores;
 - deben preservarse los cambios locales ajenos a la tarea;
+- debe revisarse la congruencia con el alcance modelado y declararse cualquier
+  actualización manual pendiente en Gaphor;
 - el informe final debe enumerar los comandos ejecutados, sus resultados y
   cualquier verificación que no haya sido posible completar.

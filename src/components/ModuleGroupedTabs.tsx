@@ -6,7 +6,7 @@ import type { AccessRule, AccessSnapshot } from "../auth/accessModel";
 export interface ModuleTabDefinition {
     key: string;
     label: string;
-    render: () => JSX.Element;
+    render: (isActive: boolean) => JSX.Element;
     accessRule: AccessRule;
     flushContent?: boolean;
 }
@@ -58,7 +58,7 @@ export default function ModuleGroupedTabs({
                     value={tab.key}
                     p={tab.flushContent ? 0 : { base: 2, md: 4 }}
                 >
-                    {tab.render()}
+                    {tab.render(activeGroup.key === group.key && activeTabKey(group) === tab.key)}
                 </Tabs.Content>
             ))}
         </Tabs.ContentGroup>
@@ -98,7 +98,7 @@ export default function ModuleGroupedTabs({
                     <Tabs.Content key={group.key} value={group.key} px={0} pb={0}>
                         {group.tabs.length === 1 ? (
                             <Box p={group.tabs[0].flushContent ? 0 : { base: 2, md: 4 }}>
-                                {group.tabs[0].render()}
+                                {group.tabs[0].render(activeGroup.key === group.key)}
                             </Box>
                         ) : (
                             <Tabs.Root

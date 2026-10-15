@@ -43,7 +43,7 @@ import {
     TIPOS_PRODUCTOS,
     UNIDADES,
 } from "../../types.tsx";
-import SemioterBriefCard from "../../components/SemioterBriefCard.tsx";
+import SemioterBriefCard from "../components/SemioterBriefCard.tsx";
 import BandejaBusqueda from "../CodificarSemioTermiTab/StepTwo/BandejaBusqueda.tsx";
 import BandejaSeleccion from "../CodificarSemioTermiTab/StepTwo/BandejaSeleccion.tsx";
 import PackagingTerminadoDefiner from "../consulta/ModSemioTerMFversions/StepThree/PackagingTerminadoDefiner.tsx";

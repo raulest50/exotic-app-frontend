@@ -42,7 +42,7 @@ import {IVA_VALUES} from "../../types.tsx";
 import DeleteProductoDialog from './DeleteProductoDialog.tsx';
 
 import { Modulo } from '../../../Usuarios/GestionUsuarios/types.tsx';
-import { useModuleAccessLevel } from '../../../../auth/usePermissions';
+import { useTabPermission } from '../../../../auth/usePermissions';
 import InsumoListCard from './InsumoListCard.tsx';
 import CardPackagingInfo from './CardPackagingInfo.tsx';
 import { LuArrowLeft, LuCheck, LuCircleHelp, LuPencil, LuTriangleAlert } from 'react-icons/lu';
@@ -78,7 +78,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     const [categoriaStatusError, setCategoriaStatusError] = useState<string | null>(null);
     const toast = useAppToast();
     const endPoints = new EndPointsURL();
-    const { nivel: productosAccessLevel } = useModuleAccessLevel(Modulo.PRODUCTOS);
+    const { nivel: productosAccessLevel } = useTabPermission(Modulo.PRODUCTOS, "MODIFICACIONES_PRODUCTOS");
     const { open: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
     const { open: isForceDeleteOpen, onOpen: onForceDeleteOpen, onClose: onForceDeleteClose } = useDisclosure();
     const { open: isHelpPrefijoOpen, onOpen: onHelpPrefijoOpen, onClose: onHelpPrefijoClose } = useDisclosure();

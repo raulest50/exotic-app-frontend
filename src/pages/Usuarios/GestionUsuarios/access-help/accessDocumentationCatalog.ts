@@ -76,6 +76,15 @@ const sameScopeTab = (
     observaciones,
 );
 
+function productOperationTab(tabId: string, label: string, capability: string, minNivel = 2): AccessTabDocumentation {
+    return tab(tabId, label, capability, Array.from({ length: 4 }, (_, index) => {
+        const nivel = index + 1;
+        return nivel < minNivel
+            ? level(nivel, "Sin acceso a la pestaña", [], [`Requiere nivel ${minNivel} o superior.`])
+            : level(nivel, "Acceso a la pestaña", [capability]);
+    }));
+}
+
 export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentation> = {
     [Modulo.USUARIOS]: {
         modulo: Modulo.USUARIOS,
@@ -126,12 +135,31 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
         modulo: Modulo.PRODUCTOS,
         label: "Productos",
         resumen: "Catálogo de materiales, productos terminados, semiterminados y procesos de producción.",
-        condiciones: ["El módulo utiliza un único permiso general y compara su nivel para habilitar funciones internas."],
+        condiciones: [
+            "Los tres grupos organizan la navegación; los permisos se asignan a las pestañas hijas.",
+            "MAIN conserva el acceso general anterior para las pestañas sin permiso específico. Para un acceso limitado a pestañas concretas, desactive MAIN y asigne únicamente esas pestañas.",
+            "Las pestañas de creación y procesos requieren nivel 2; Modificaciones requiere nivel 3. Consulta admite nivel 1 y habilita edición desde nivel 3.",
+        ],
         tabs: [
+            productOperationTab("CODIFICAR_MATERIAL", "Básicos · Codificar material", "Codificar materiales y cargar su ficha técnica inicial."),
+            tab("CONSULTA_PRODUCTOS", "Básicos · Consulta", "Consulta de productos y edición desde su detalle.", [
+                level(1, "Consulta", ["Buscar productos, abrir su detalle y consultar las fichas técnicas de materiales."], ["Editar productos o reemplazar fichas técnicas."]),
+                level(2, "Consulta", ["Mantiene las capacidades de consulta del nivel 1."]),
+                level(3, "Edición", ["Consultar y editar productos desde el detalle, gestionar su eliminación y reemplazar fichas técnicas de materiales."]),
+                level(4, "Mismo alcance funcional", ["Mantiene las capacidades del nivel 3."]),
+            ]),
+            productOperationTab("CODIFICAR_TERMINADO_SEMITERMINADO", "Terminados y semiterminados · Codificar", "Crear un terminado o semiterminado definiendo sus datos, insumos y proceso."),
+            productOperationTab("CATEGORIAS", "Terminados y semiterminados · Categorías", "Administrar categorías y sus plantillas de manufactura."),
+            productOperationTab("CREAR_DESDE_PLANTILLA", "Terminados y semiterminados · Crear desde plantilla", "Crear productos a partir de una plantilla de manufactura."),
+            productOperationTab("MODIFICACIONES_PRODUCTOS", "Terminados y semiterminados · Modificaciones", "Consultar y modificar productos existentes, incluyendo sus datos de manufactura.", 3),
+            productOperationTab("DEFINIR_PROCESO", "Procesos y recursos · Definir proceso", "Crear definiciones de procesos de producción."),
+            productOperationTab("CONSULTAR_PROCESOS", "Procesos y recursos · Consultar procesos", "Consultar, editar y eliminar procesos, y administrar sus documentos."),
+            productOperationTab("CREAR_RECURSO_PRODUCCION", "Procesos y recursos · Crear recurso", "Crear recursos de producción y asociar activos fijos."),
+            productOperationTab("CONSULTAR_RECURSOS_PRODUCCION", "Procesos y recursos · Consultar recursos", "Consultar y editar recursos de producción y sus activos fijos asociados."),
             tab(
                 "MAIN",
-                "Acceso general",
-                "El nivel del permiso general determina qué operaciones del catálogo de productos quedan disponibles.",
+                "Acceso general (compatibilidad)",
+                "Conserva el acceso anterior para pestañas sin asignación específica. Desactívelo para configurar acceso exclusivamente por pestañas hijas.",
                 [
                     level(1, "Consulta", [
                         "Ingresar al módulo y consultar materiales y productos existentes.",

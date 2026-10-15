@@ -1,5 +1,5 @@
 import { Card, Flex, Heading, Text, VStack, Separator } from "@chakra-ui/react";
-import {ProductoSemiter, TIPOS_PRODUCTOS} from "../types.tsx";
+import {ProductoSemiter, TIPOS_PRODUCTOS} from "../../types.tsx";
 
 interface props{
     semioter: ProductoSemiter;

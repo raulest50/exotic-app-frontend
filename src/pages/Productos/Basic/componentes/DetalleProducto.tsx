@@ -42,7 +42,7 @@ import {IVA_VALUES} from "../../types.tsx";
 import DeleteProductoDialog from '../../DefSemiTer/consulta/DeleteProductoDialog.tsx';
 
 import { Modulo } from '../../../Usuarios/GestionUsuarios/types.tsx';
-import { useModuleAccessLevel } from '../../../../auth/usePermissions';
+import { useTabPermission } from '../../../../auth/usePermissions';
 import { LuArrowLeft, LuPencil } from 'react-icons/lu';
 import FichaTecnicaMaterialCard from './FichaTecnicaMaterialCard';
 
@@ -67,7 +67,7 @@ export default function DetalleProducto({producto, setEstado, setProductoSelecci
     );
     const toast = useAppToast();
     const endPoints = new EndPointsURL();
-    const { nivel: productosAccessLevel } = useModuleAccessLevel(Modulo.PRODUCTOS);
+    const { nivel: productosAccessLevel } = useTabPermission(Modulo.PRODUCTOS, "CONSULTA_PRODUCTOS");
     const { open: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
     const {
         open: isInventareableOpen,
