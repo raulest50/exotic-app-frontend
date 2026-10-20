@@ -9,12 +9,12 @@ import CodificarMaterialesTab from "./Basic/CodificarMaterialesTab.tsx";
 import InformeProductosTab from "./Basic/InformeProductosTab.tsx";
 import CodificarSemioTermiTab from "./DefSemiTer/CodificarSemioTermiTab/CodificarSemioTermiTab.tsx";
 import { CategoriasTab } from "./DefSemiTer/CategoriasTab.tsx";
-import CrearDesdePlantillaTab from "./DefSemiTer/CrearDesdePlantilla/CrearDesdePlantillaTab.tsx";
 import InformeProductosTabAdvanced from "./DefSemiTer/consulta/InformeProductosTabAdvanced.tsx";
 import DefinicionProcesosTab from "./DefProcesses/ProcesosProduccion/DefinicionProcesosTab.tsx";
 import { ConsultaProcesosProduccion } from "./DefProcesses/ProcesosProduccion/ConsultaProcesosProduccion.tsx";
 import CrearRecursoProduccion from "./DefProcesses/RecursosProduccion/CrearRecursoProduccion.tsx";
 import ConsultaRecursosProduccion from "./DefProcesses/RecursosProduccion/ConsultaRecursosProduccion.tsx";
+import ProcessDesignerTab from "./ProcessDesigner/ProcessDesignerTab.tsx";
 
 const groups: ModuleTabGroup[] = [
     {
@@ -52,12 +52,6 @@ const groups: ModuleTabGroup[] = [
                 accessRule: tabAccessRule(Modulo.PRODUCTOS, "CATEGORIAS", 2),
             },
             {
-                key: "crear-desde-plantilla",
-                label: "Crear desde plantilla",
-                render: () => <CrearDesdePlantillaTab />,
-                accessRule: tabAccessRule(Modulo.PRODUCTOS, "CREAR_DESDE_PLANTILLA", 2),
-            },
-            {
                 key: "modificaciones",
                 label: "Modificaciones",
                 render: () => <InformeProductosTabAdvanced />,
@@ -67,7 +61,7 @@ const groups: ModuleTabGroup[] = [
     },
     {
         key: "procesos-recursos",
-        label: "Procesos y recursos",
+        label: "Process Designer",
         tabs: [
             {
                 key: "definicion-procesos",
@@ -92,6 +86,13 @@ const groups: ModuleTabGroup[] = [
                 label: "Consultar recursos",
                 render: () => <ConsultaRecursosProduccion />,
                 accessRule: tabAccessRule(Modulo.PRODUCTOS, "CONSULTAR_RECURSOS_PRODUCCION", 2),
+            },
+            {
+                key: "nuevo-process-designer",
+                label: "Nuevo Process Designer",
+                render: (isActive) => <ProcessDesignerTab isActive={isActive} />,
+                accessRule: tabAccessRule(Modulo.PRODUCTOS, "PROCESS_DESIGNER", 2),
+                flushContent: true,
             },
         ],
     },

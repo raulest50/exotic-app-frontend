@@ -139,6 +139,7 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
             "Los tres grupos organizan la navegación; los permisos se asignan a las pestañas hijas.",
             "MAIN conserva el acceso general anterior para las pestañas sin permiso específico. Para un acceso limitado a pestañas concretas, desactive MAIN y asigne únicamente esas pestañas.",
             "Las pestañas de creación y procesos requieren nivel 2; Modificaciones requiere nivel 3. Consulta admite nivel 1 y habilita edición desde nivel 3.",
+            "Nuevo Process Designer permite definir datos, insumos y conexiones, validar el borrador y clonar una referencia. El borrador es temporal: todavía no registra productos ni diagramas. Crear materiales desde su panel requiere además Codificar material, nivel 2.",
         ],
         tabs: [
             productOperationTab("CODIFICAR_MATERIAL", "Básicos · Codificar material", "Codificar materiales y cargar su ficha técnica inicial."),
@@ -149,13 +150,13 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
                 level(4, "Mismo alcance funcional", ["Mantiene las capacidades del nivel 3."]),
             ]),
             productOperationTab("CODIFICAR_TERMINADO_SEMITERMINADO", "Terminados y semiterminados · Codificar", "Crear un terminado o semiterminado definiendo sus datos, insumos y proceso."),
-            productOperationTab("CATEGORIAS", "Terminados y semiterminados · Categorías", "Administrar categorías y sus plantillas de manufactura."),
-            productOperationTab("CREAR_DESDE_PLANTILLA", "Terminados y semiterminados · Crear desde plantilla", "Crear productos a partir de una plantilla de manufactura."),
+            productOperationTab("CATEGORIAS", "Terminados y semiterminados · Categorías", "Administrar categorías de productos."),
             productOperationTab("MODIFICACIONES_PRODUCTOS", "Terminados y semiterminados · Modificaciones", "Consultar y modificar productos existentes, incluyendo sus datos de manufactura.", 3),
-            productOperationTab("DEFINIR_PROCESO", "Procesos y recursos · Definir proceso", "Crear definiciones de procesos de producción."),
-            productOperationTab("CONSULTAR_PROCESOS", "Procesos y recursos · Consultar procesos", "Consultar, editar y eliminar procesos, y administrar sus documentos."),
-            productOperationTab("CREAR_RECURSO_PRODUCCION", "Procesos y recursos · Crear recurso", "Crear recursos de producción y asociar activos fijos."),
-            productOperationTab("CONSULTAR_RECURSOS_PRODUCCION", "Procesos y recursos · Consultar recursos", "Consultar y editar recursos de producción y sus activos fijos asociados."),
+            productOperationTab("DEFINIR_PROCESO", "Process Designer · Definir proceso", "Crear definiciones de procesos de producción."),
+            productOperationTab("CONSULTAR_PROCESOS", "Process Designer · Consultar procesos", "Consultar, editar y eliminar procesos, y administrar sus documentos."),
+            productOperationTab("CREAR_RECURSO_PRODUCCION", "Process Designer · Crear recurso", "Crear recursos de producción y asociar activos fijos."),
+            productOperationTab("CONSULTAR_RECURSOS_PRODUCCION", "Process Designer · Consultar recursos", "Consultar y editar recursos de producción y sus activos fijos asociados."),
+            productOperationTab("PROCESS_DESIGNER", "Process Designer · Nuevo Process Designer", "Preparar y validar un borrador con materiales, semiterminados y procesos. Previsualizar un terminado o semiterminado y cargar sus datos completos o solo su grafo e insumos. No registra el producto ni modifica la referencia original."),
             tab(
                 "MAIN",
                 "Acceso general (compatibilidad)",
@@ -168,7 +169,7 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
                     level(2, "Creación y definición", [
                         "Incluye la consulta del nivel 1.",
                         "Codificar materiales, terminados y semiterminados.",
-                        "Administrar categorías, crear desde plantilla y definir procesos de producción.",
+                        "Administrar categorías y definir procesos de producción.",
                     ], ["Editar desde las vistas de detalle o usar la pestaña de modificaciones avanzadas."]),
                     level(3, "Modificación", [
                         "Incluye los niveles anteriores.",

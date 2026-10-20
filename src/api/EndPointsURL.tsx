@@ -59,10 +59,6 @@ export default class EndPointsURL{
     public update_categoria_tiempo_dias_fabricacion: string;
     public update_categoria_capacidad_productiva_diaria: string;
     public update_categoria_vida_util: string;
-    public get_categoria_manufacturing_template: string;
-    public save_categoria_manufacturing_template: string;
-    public delete_categoria_manufacturing_template: string;
-    public check_categoria_manufacturing_templates_exist_batch: string;
 
     // ruta proceso cat endpoints
     public get_ruta_proceso_cat: string;
@@ -753,10 +749,6 @@ export default class EndPointsURL{
         this.update_categoria_tiempo_dias_fabricacion = `${domain}/categorias/{categoriaId}/tiempo-dias-fabricacion`;
         this.update_categoria_capacidad_productiva_diaria = `${domain}/categorias/{categoriaId}/capacidad-productiva-diaria`;
         this.update_categoria_vida_util = `${domain}/categorias/{categoriaId}/vida-util`;
-        this.get_categoria_manufacturing_template = `${domain}/${productos_res}/categorias/{categoriaId}/manufacturing-template`;
-        this.save_categoria_manufacturing_template = `${domain}/${productos_res}/categorias/{categoriaId}/manufacturing-template`;
-        this.delete_categoria_manufacturing_template = `${domain}/${productos_res}/categorias/{categoriaId}/manufacturing-template`;
-        this.check_categoria_manufacturing_templates_exist_batch = `${domain}/${productos_res}/categorias/manufacturing-template/exists-batch`;
 
         // Ruta proceso cat endpoints
         const ruta_proceso_cat_res = 'api/ruta-proceso-cat';
