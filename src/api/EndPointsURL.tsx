@@ -9,6 +9,7 @@ export type ExcelExportOptions = {
 export default class EndPointsURL{
 
     // producto resource
+    public unidades_medida_producto: string;
     public search_mprima:string;
     public search_semi:string;
     public save_producto:string;
@@ -710,6 +711,7 @@ export default class EndPointsURL{
         const calidad_res = 'api/calidad';
 
         // productos endpoints
+        this.unidades_medida_producto = `${domain}/${productos_res}/unidades-medida`;
         this.search_mprima = `${domain}/${productos_res}/search_mprima`;
         this.search_semi = `${domain}/${productos_res}/search_semi`;
         this.save_producto = `${domain}/${productos_res}/save`;

@@ -4,7 +4,7 @@ import { GrCubes } from "react-icons/gr";
 import type { Producto } from "../../types.tsx";
 
 // Target describes a graph role. The existing workflow also manufactures semiterminados.
-export type TerminadoFlowNode = Node<{ producto: Pick<Producto, "nombre" | "tipo_producto"> }, "target">;
+export type TerminadoFlowNode = Node<{ producto: Pick<Producto, "nombre" | "tipo_producto">; output?: string }, "target">;
 
 export default function TerminadoNode({ data, selected, isConnectable }: NodeProps<TerminadoFlowNode>) {
     const { producto } = data;
@@ -18,6 +18,7 @@ export default function TerminadoNode({ data, selected, isConnectable }: NodePro
                 <Box bg="red.solid" color="red.contrast" w="full" p="2">
                     <Text fontWeight="bold" overflowWrap="anywhere">{producto.nombre}</Text>
                 </Box>
+                {data.output && <Text fontSize="sm" px="2">Salida: {data.output}</Text>}
                 <Icon boxSize="4em" color="orange.500" aria-hidden="true" asChild><GrCubes /></Icon>
                 <Handle type="target" position={Position.Left} id="i1" style={{ width: "2em", height: "2em" }} isConnectable={isConnectable} />
                 <Box bg="red.solid" color="red.contrast" w="full">

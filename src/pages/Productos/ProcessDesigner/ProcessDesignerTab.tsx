@@ -1,17 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { Badge, Box, Flex, Heading, Text } from "@chakra-ui/react";
+import { Badge, Box, Button, Flex, Heading, Text } from "@chakra-ui/react";
 import {
     addEdge, useEdgesState, useNodesState,
     type Connection, type Edge, type NodeChange, type ReactFlowInstance,
 } from "@xyflow/react";
 import AreaPickerGeneric from "../../../components/Pickers/AreaPickerGeneric/AreaPickerGeneric.tsx";
 import { ProcesoProduccionPicker } from "../DefProcesses/CreadorProcesos/components/ProcesoProduccionPicker/ProcesoProduccionPicker.tsx";
-import type { Producto, ProcesoProduccionEntity } from "../types.tsx";
+import type { Producto, ProcesoProduccionEntity, UnidadMedidaProducto } from "../types.tsx";
 import type { MaterialFlowNode } from "./NodesEdges/MaterialNode.tsx";
 import type { SemiterminadoFlowNode } from "./NodesEdges/SemiterminadoNode.tsx";
 import type { ProcessFlowNode } from "./NodesEdges/ProcessNode.tsx";
 import type { TerminadoFlowNode } from "./NodesEdges/TerminadoNode.tsx";
 import CabeceraDatos, { type DesignerProduct } from "./CabeceraDatos.tsx";
+import { useTabPermission } from "../../../auth/usePermissions.ts";
+import { Modulo } from "../../Usuarios/GestionUsuarios/types.tsx";
+import { listarUnidadesMedidaProducto, unidadesCompatibles } from "../UnidadesMedidaApi.ts";
+import { guardarProducto, toDesignerPayload, type SavedProductSummary } from "./ProcessDesignerApi.ts";
 import Validator from "./Validator.tsx";
 import ProcessDesignerCanvas from "./ProcessDesignerCanvas.tsx";
 import type { LoadedDraft } from "./LoadTerminadoDialog.tsx";
@@ -19,7 +23,7 @@ import type { LoadedDraft } from "./LoadTerminadoDialog.tsx";
 export type DesignerNode = MaterialFlowNode | SemiterminadoFlowNode | ProcessFlowNode | TerminadoFlowNode;
 const emptyDesignerProduct = (): DesignerProduct => ({
     productoId: "", nombre: "", tipo_producto: "T", tipoUnidades: "U", cantidadUnidad: "",
-    inventareable: true, requiereOrdenFabricacion: true, ivaPercentual: 0, rendimientoTeorico: "0",
+    inventareable: true, requiereOrdenFabricacion: true, ivaPercentual: 0, rendimientoTeorico: "0", cantidadSalidaReceta: "", unidadSalidaReceta: "", unidadContenidoPorEnvase: "",
 });
 
 function canConnect(connection: Connection | Edge, nodes: DesignerNode[], edges: Edge[]) {
@@ -39,6 +43,18 @@ function canConnect(connection: Connection | Edge, nodes: DesignerNode[], edges:
 }
 
 export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) {
+    const permission = useTabPermission(Modulo.PRODUCTOS, "PROCESS_DESIGNER");
+    const canSave = permission.ready && permission.nivel >= 2;
+    const [units, setUnits] = useState<UnidadMedidaProducto[]>([]);
+    const [unitError, setUnitError] = useState("");
+    const [unitRetry, setUnitRetry] = useState(0);
+    const [saving, setSaving] = useState(false);
+    const savingRef = useRef(false);
+    const [saveError, setSaveError] = useState("");
+    const [result, setResult] = useState<SavedProductSummary | null>(null);
+    const [savedId, setSavedId] = useState("");
+    const [savedDraft, setSavedDraft] = useState("");
+    const [saveRevision, setSaveRevision] = useState(0);
     const [product, setProduct] = useState<DesignerProduct>(emptyDesignerProduct);
     const [nodes, setNodes, changeNodes] = useNodesState<DesignerNode>([
         { id: "target", type: "target", position: { x: 850, y: 180 }, deletable: false, data: { producto: emptyDesignerProduct() } },
@@ -51,7 +67,32 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
     const [fitRevision, setFitRevision] = useState(0);
     const nextPosition = useRef(0);
     const selectedIds = nodes.filter((node) => node.type === "material" || node.type === "semiterminado").map((node) => node.data.producto.productoId);
+    const draftKey = JSON.stringify(toDesignerPayload(product, nodes, edges));
     const hasDraft = nodes.length > 1 || edges.length > 0 || JSON.stringify(product) !== JSON.stringify(emptyDesignerProduct());
+
+    useEffect(() => {
+        if (!isActive) return;
+        const controller = new AbortController();
+        setUnits([]); setUnitError("");
+        listarUnidadesMedidaProducto({ signal: controller.signal })
+            .then(data => { if (!controller.signal.aborted) setUnits(data); })
+            .catch(() => { if (!controller.signal.aborted) setUnitError("No se pudo cargar el catálogo de unidades. El guardado permanece deshabilitado."); });
+        return () => controller.abort();
+    }, [isActive, unitRetry]);
+
+    async function save() {
+        if (savingRef.current || !isActive || !canSave || savedId === product.productoId) return;
+        savingRef.current = true; setSaving(true); setSaveError("");
+        setProcessPickerOpen(false); setAreaNodeId(null);
+        try {
+            const saved = await guardarProducto(product, nodes, edges);
+            setSavedId(saved.id); setSavedDraft(draftKey); setResult(saved);
+        } catch (error) {
+            setSaveError(error instanceof Error ? error.message : "No se pudo guardar. El borrador se conserva.");
+        } finally {
+            savingRef.current = false; setSaving(false); setSaveRevision(n => n + 1);
+        }
+    }
 
     useEffect(() => {
         if (!isActive || !flow) return;
@@ -71,7 +112,7 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
         const position = { x: Math.floor(index / 4) * -280, y: (index % 4) * 250 };
         const node: MaterialFlowNode | SemiterminadoFlowNode = {
             id: crypto.randomUUID(), type: producto.tipo_producto === "S" ? "semiterminado" : "material",
-            data: { producto, cantidad: "" }, position, selected: true,
+            data: { producto, cantidad: "", unidad: producto.tipoUnidades }, position, selected: true,
         };
         setNodes((current) => current.some((n) => (n.type === "material" || n.type === "semiterminado") && n.data.producto.productoId === producto.productoId)
             ? current : [...current.map((n) => ({ ...n, selected: false })), node]);
@@ -97,8 +138,9 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
 
     function loadClone(draft: LoadedDraft) {
         // Commit the fully resolved draft together; failures before here cannot erase current work.
-        const targetProduct = draft.mode === "all" ? draft.product : product;
-        if (draft.mode === "all") setProduct(draft.product);
+        if (savingRef.current) return;
+        const targetProduct = draft.mode === "all" ? draft.product : { ...product, cantidadSalidaReceta: draft.output.quantity, unidadSalidaReceta: draft.output.unit };
+        setProduct(targetProduct); setSaveError(""); setSavedId("");
         setNodes(draft.nodes.map((node) => node.type === "target"
             ? { ...node, data: { producto: targetProduct } } : node));
         setEdges(draft.edges);
@@ -107,8 +149,10 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
     }
 
     const renderedNodes = nodes.map((node): DesignerNode => {
-        if (node.type === "target") return { ...node, data: { producto: { nombre: product.nombre || "Nuevo producto", tipo_producto: product.tipo_producto } } };
-        if (node.type === "material" || node.type === "semiterminado") return { ...node, data: { ...node.data, onQuantityChange: (cantidad: string) => {
+        if (node.type === "target") return { ...node, data: { producto: { nombre: product.nombre || "Nuevo producto", tipo_producto: product.tipo_producto }, output: product.cantidadSalidaReceta && product.unidadSalidaReceta ? `${product.cantidadSalidaReceta} ${product.unidadSalidaReceta}` : "Por definir" } };
+        if (node.type === "material" || node.type === "semiterminado") return { ...node, data: { ...node.data, units: unidadesCompatibles(units, node.data.producto.tipoUnidades), onUnitChange: (unidad: string) => {
+            setNodes(current => current.map(item => item.id === node.id && (item.type === "material" || item.type === "semiterminado") ? { ...item, data: { ...item.data, unidad } } : item));
+        }, onQuantityChange: (cantidad: string) => {
             setNodes((current) => current.map((item) => item.id === node.id && (item.type === "material" || item.type === "semiterminado") ? { ...item, data: { ...item.data, cantidad } } : item));
         } } };
         return node;
@@ -118,11 +162,13 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
         <Box w="calc(100vw - 3rem)" mx="calc(50% - 50vw + 1.5rem)" textAlign="left" py="3">
             <Flex align="center" justify="space-between" gap="3" flexWrap="wrap" mb="3">
                 <Heading size="md">Nuevo Process Designer</Heading>
-                <Badge colorPalette="orange">Borrador · sin guardar</Badge>
+                <Badge colorPalette={savedDraft === draftKey ? "green" : "orange"}>{savedDraft === draftKey ? "Producto guardado" : "Borrador · sin guardar"}</Badge>
             </Flex>
             {cloneSource && <Text mb="3" fontSize="sm" color="fg.muted">Referencia del grafo: {cloneSource}. Estás editando una copia.</Text>}
-            <CabeceraDatos product={product} onChange={setProduct} isActive={isActive} />
-            <Validator product={product} nodes={nodes} edges={edges} isActive={isActive} />
+            {unitError && <Flex role="alert" align="center" gap="3" mb="3" color="red.fg"><Text>{unitError}</Text><Button size="sm" onClick={() => setUnitRetry(n => n + 1)}>Reintentar</Button></Flex>}
+            {cloneSource && !product.cantidadSalidaReceta && <Text color="orange.fg" mb="3">La referencia no declara la salida física de su receta. Confirma la cantidad obtenida y las cantidades de los insumos antes de guardar.</Text>}
+            <Box inert={saving} aria-busy={saving}>
+            <CabeceraDatos product={product} onChange={setProduct} isActive={isActive} units={units} />
             <ProcessDesignerCanvas
                 isActive={isActive} nodes={renderedNodes} edges={edges} hasDraft={hasDraft}
                 onAddProduct={addProduct} onClone={loadClone} onAddProcess={() => setProcessPickerOpen(true)} onAssignArea={setAreaNodeId}
@@ -135,6 +181,10 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
                 isValidConnection={(connection) => canConnect(connection, nodes, edges)}
                 onConnect={(connection) => { if (canConnect(connection, nodes, edges)) setEdges((current) => addEdge(connection, current)); }}
             />
+            </Box>
+            <Validator product={product} nodes={nodes} edges={edges} isActive={isActive} units={units}
+                saving={saving} canSave={canSave} onSave={save} error={saveError} result={result}
+                onCloseResult={() => setResult(null)} savedId={savedId} revision={saveRevision} />
             <Text fontSize="xs" color="fg.muted" mt="2">El borrador se conserva al cambiar de pestaña, pero se pierde al salir de Productos o recargar. Quitar un nodo no elimina el producto del catálogo.</Text>
             {processPickerOpen && <ProcesoProduccionPicker isOpen onClose={() => setProcessPickerOpen(false)} onConfirm={addProcesses} alreadySelected={[]} />}
             {areaNodeId && <AreaPickerGeneric isOpen onClose={() => setAreaNodeId(null)} onSelectArea={(area) => {

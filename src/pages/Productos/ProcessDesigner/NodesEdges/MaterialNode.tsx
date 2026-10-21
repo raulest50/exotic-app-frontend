@@ -1,10 +1,10 @@
-import { Box, Flex, Icon, Input, Stack, Text } from "@chakra-ui/react";
+import { Box, Flex, Icon, Input, NativeSelect, Stack, Text } from "@chakra-ui/react";
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { PiCubeFocusThin } from "react-icons/pi";
 import type { ReactNode } from "react";
-import type { Producto } from "../../types.tsx";
+import type { Producto, UnidadMedidaProducto } from "../../types.tsx";
 
-export type InputNodeData = { producto: Producto; cantidad: string; onQuantityChange?: (value: string) => void };
+export type InputNodeData = { producto: Producto; cantidad: string; unidad: string; units?: UnidadMedidaProducto[]; onUnitChange?: (value: string) => void; onQuantityChange?: (value: string) => void };
 export type MaterialFlowNode = Node<InputNodeData, "material">;
 
 export default function MaterialNode({ data, selected, isConnectable }: NodeProps<MaterialFlowNode>) {
@@ -33,11 +33,16 @@ export function InputNodeCard({ data, selected, isConnectable, palette, label, i
                         {icon}
                     </Icon>
                     <Stack gap="0" minW="0">
-                        <Text fontSize="xs">Cantidad requerida</Text>
+                        <Text fontSize="xs">Cantidad para la receta</Text>
                         <Input className="nodrag nowheel" size="sm" type="number" min="0" step="any"
                             aria-label={`Cantidad requerida de ${producto.nombre}`} value={data.cantidad} readOnly={!data.onQuantityChange}
                             onChange={(event) => data.onQuantityChange?.(event.target.value)} />
-                        <Text fontSize="sm">{producto.tipoUnidades}</Text>
+                        {data.onUnitChange ? <NativeSelect.Root size="sm" className="nodrag nowheel">
+                            <NativeSelect.Field aria-label={`Unidad de ${producto.nombre}`} value={data.unidad} onChange={e => data.onUnitChange?.(e.target.value)}>
+                                <option value="">Elegir unidad</option>
+                                {data.units?.map(unit => <option key={unit.codigo} value={unit.codigo}>{unit.simbolo}</option>)}
+                            </NativeSelect.Field><NativeSelect.Indicator />
+                        </NativeSelect.Root> : <Text fontSize="sm">{data.unidad || producto.tipoUnidades}</Text>}
                     </Stack>
                 </Flex>
                 <Box bg="colorPalette.subtle" color="colorPalette.fg" w="full" p="1">

@@ -9,6 +9,16 @@ export const UNIDADES = { L: "L", KG: "KG", U: "U", G: "G" };
 export const TIPOS_MATERIALES = { materiaPrima: 1, materialDeEmpaque: 2 };
 export const IVA_VALUES = { iva_0: 0, iva_5: 5, iva_19: 19 };
 
+export type MagnitudUnidadProducto = "MASA" | "VOLUMEN" | "CONTEO";
+
+/** Las referencias de los factores son kg, L y U, respectivamente. */
+export interface UnidadMedidaProducto {
+    codigo: string;
+    simbolo: string;
+    magnitud: MagnitudUnidadProducto;
+    factorAReferencia: number;
+}
+
 export interface Producto {
     productoId: string;
     tipo_producto: string;
@@ -19,6 +29,7 @@ export interface Producto {
     requiereOrdenFabricacion?: boolean;
     tipoUnidades: string;
     cantidadUnidad: string;
+    unidadContenidoPorEnvase?: string;
     fechaCreacion?: string;
     ivaPercentual?: number;
     prefijoLote?: string;
@@ -34,6 +45,8 @@ export interface Insumo {
     cantidadRequerida: number;
     producto: Producto;
     subtotal?: number;
+    cantidadReceta?: string | number;
+    unidadReceta?: string;
 }
 
 export interface Semiterminado extends Producto {
@@ -124,6 +137,8 @@ export interface ProcesoDiseñado {
 export interface ProcesoProduccionCompleto extends ProcesoDiseñado {
     id?: number;
     rendimientoTeorico: number;
+    cantidadSalidaReceta?: string | number;
+    unidadSalidaReceta?: string;
 }
 
 export interface ProductoSemiter {
@@ -134,6 +149,7 @@ export interface ProductoSemiter {
     insumos?: Insumo[];
     tipoUnidades: string;
     cantidadUnidad: string;
+    unidadContenidoPorEnvase?: string;
     tipo_producto: string;
     procesoProduccionCompleto?: ProcesoProduccionCompleto;
     categoria?: Categoria;
@@ -196,6 +212,8 @@ export interface ProductoManufacturingInsumoDTO {
     tipoUnidades?: string;
     cantidadRequerida: number;
     subtotal?: number;
+    cantidadReceta?: string | number;
+    unidadReceta?: string;
 }
 
 export interface ProductoManufacturingInsumoEmpaqueDTO {
@@ -227,6 +245,7 @@ export interface ProductoManufacturingDTO {
     ivaPercentual?: number;
     tipoUnidades: string;
     cantidadUnidad: number;
+    unidadContenidoPorEnvase?: string;
     inventareable?: boolean;
     requiereOrdenFabricacion?: boolean;
     categoriaId?: number;

@@ -3,14 +3,15 @@ import { Box, Button, Field, Fieldset, Flex, Grid, Input, NativeSelect, SimpleGr
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
-import type { Categoria, ProductoSemiter } from "../types.tsx";
+import type { Categoria, ProductoSemiter, UnidadMedidaProducto } from "../types.tsx";
+import { unidadesCompatibles } from "../UnidadesMedidaApi.ts";
 import { normalizeProductId } from "../productIdUtils.ts";
 
-export type DesignerProduct = Omit<ProductoSemiter, "insumos" | "procesoProduccionCompleto"> & { rendimientoTeorico: string };
+export type DesignerProduct = Omit<ProductoSemiter, "insumos" | "procesoProduccionCompleto"> & { rendimientoTeorico: string; cantidadSalidaReceta: string; unidadSalidaReceta: string };
 const endpoints = new EndPointsURL();
 
-export default function CabeceraDatos({ product, onChange, isActive }: {
-    product: DesignerProduct; onChange: (product: DesignerProduct) => void; isActive: boolean;
+export default function CabeceraDatos({ product, onChange, isActive, units }: {
+    product: DesignerProduct; onChange: (product: DesignerProduct) => void; isActive: boolean; units: UnidadMedidaProducto[];
 }) {
     const [expanded, setExpanded] = useState(true);
     const [categories, setCategories] = useState<Categoria[]>([]);
@@ -45,7 +46,7 @@ export default function CabeceraDatos({ product, onChange, isActive }: {
                 <Field.Root w={{ base: "full", md: "64" }} flexShrink="0">
                     <Field.Label>Tipo de producto</Field.Label>
                     <NativeSelect.Root size="sm">
-                        <NativeSelect.Field value={product.tipo_producto} onChange={(e) => patch({ tipo_producto: e.target.value, categoria: undefined, casePack: undefined, inventareable: e.target.value === "T", requiereOrdenFabricacion: e.target.value === "T" })}>
+                        <NativeSelect.Field value={product.tipo_producto} onChange={(e) => patch({ tipo_producto: e.target.value, categoria: undefined, casePack: undefined, unidadSalidaReceta: "", inventareable: e.target.value === "T", requiereOrdenFabricacion: e.target.value === "T" })}>
                             <option value="T">Terminado</option>
                             <option value="S">Semiterminado</option>
                         </NativeSelect.Field>
@@ -94,14 +95,14 @@ export default function CabeceraDatos({ product, onChange, isActive }: {
                             </Box>
                             <Grid templateColumns="minmax(0, 1fr) 5.5rem" gap="2" alignItems="end">
                                 <Field.Root required>
-                                    <Field.Label>Contenido por unidad</Field.Label>
+                                    <Field.Label>Contenido por envase / presentación</Field.Label>
                                     <Input size="sm" type="number" min="0" step="any" value={product.cantidadUnidad} onChange={(e) => patch({ cantidadUnidad: e.target.value })} />
                                 </Field.Root>
                                 <Field.Root>
                                     <Field.Label>Unidad</Field.Label>
                                     <NativeSelect.Root size="sm">
-                                        <NativeSelect.Field value={product.tipoUnidades} onChange={(e) => patch({ tipoUnidades: e.target.value })}>
-                                            {["U", "KG", "G", "L"].map((unit) => <option key={unit}>{unit}</option>)}
+                                        <NativeSelect.Field value={product.unidadContenidoPorEnvase ?? ""} onChange={(e) => patch({ unidadContenidoPorEnvase: e.target.value })}>
+                                            <option value="">Elegir</option>{units.map((unit) => <option key={unit.codigo} value={unit.codigo}>{unit.simbolo}</option>)}
                                         </NativeSelect.Field>
                                         <NativeSelect.Indicator />
                                     </NativeSelect.Root>
@@ -112,6 +113,35 @@ export default function CabeceraDatos({ product, onChange, isActive }: {
                                 <Input size="sm" type="number" min="0" step="any" value={product.rendimientoTeorico} onChange={(e) => patch({ rendimientoTeorico: e.target.value })} />
                             </Field.Root>
                         </SimpleGrid>
+                    </Fieldset.Root>
+                    <Fieldset.Root size="sm" gap="2" minW="0" borderTopWidth="1px" pt="2">
+                        <Fieldset.Legend fontSize="xs" fontWeight="semibold" color="fg.muted">Salida de la receta</Fieldset.Legend>
+                        <SimpleGrid columns={{ base: 1, md: 3 }} gap="3">
+                            <Field.Root required>
+                                <Field.Label>Unidad del producto en inventario</Field.Label>
+                                <NativeSelect.Root size="sm">
+                                    <NativeSelect.Field value={product.tipoUnidades} onChange={e => patch({ tipoUnidades: e.target.value, unidadSalidaReceta: "" })}>
+                                        <option value="">Elegir</option>
+                                        {units.map(unit => <option key={unit.codigo} value={unit.codigo}>{unit.codigo} · {unit.magnitud.toLowerCase()}</option>)}
+                                    </NativeSelect.Field><NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                                <Field.HelperText>La salida se convierte a esta unidad para calcular los insumos.</Field.HelperText>
+                            </Field.Root>
+                            <Field.Root required>
+                                <Field.Label>Cantidad obtenida con esta receta</Field.Label>
+                                <Input size="sm" type="number" min="0" step="any" value={product.cantidadSalidaReceta} onChange={e => patch({ cantidadSalidaReceta: e.target.value })} />
+                            </Field.Root>
+                            <Field.Root required>
+                                <Field.Label>Unidad de la salida</Field.Label>
+                                <NativeSelect.Root size="sm">
+                                    <NativeSelect.Field value={product.unidadSalidaReceta} onChange={e => patch({ unidadSalidaReceta: e.target.value })}>
+                                        <option value="">Elegir</option>
+                                        {unidadesCompatibles(units, product.tipoUnidades).map(unit => <option key={unit.codigo} value={unit.codigo}>{unit.simbolo}</option>)}
+                                    </NativeSelect.Field><NativeSelect.Indicator />
+                                </NativeSelect.Root>
+                            </Field.Root>
+                        </SimpleGrid>
+                        <Text fontSize="xs" color="fg.muted">Todas las cantidades de insumos del lienzo corresponden a esta salida completa. El contenido del envase y el rendimiento teórico son datos independientes.</Text>
                     </Fieldset.Root>
                     <Fieldset.Root size="sm" gap="0" minW="0" borderTopWidth="1px" pt="2">
                         <Fieldset.Legend fontSize="xs" fontWeight="semibold" color="fg.muted">Configuración</Fieldset.Legend>

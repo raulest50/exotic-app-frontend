@@ -3,135 +3,35 @@ import {
     Badge, Box, Button, Checkbox, Dialog, Field, Flex, Heading, Input, NativeSelect,
     Portal, SimpleGrid, Spinner, Stack, Table, Tabs, Text,
 } from "@chakra-ui/react";
-import { Background, Controls, ReactFlow, type Edge } from "@xyflow/react";
+import { Background, Controls, ReactFlow } from "@xyflow/react";
 import axios from "axios";
-import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import { useColorMode } from "../../../components/ui/color-mode.tsx";
-import { fromProductoManufacturingResponse } from "../manufacturingMapper.ts";
-import type { NodoProcesoDTO, Producto, ProductoManufacturingDTO } from "../types.tsx";
-import type { DesignerProduct } from "./CabeceraDatos.tsx";
 import type { DesignerNode } from "./ProcessDesignerTab.tsx";
+import type { ProductoManufacturingDTO } from "../types.tsx";
+import { buscarReferencias, cargarReferencia, copyPreview, type LoadedDraft, type LoadMode, type Preview, type ProductPage, type SearchQuery } from "./ProcessDesignerApi.ts";
+export type { LoadedDraft } from "./ProcessDesignerApi.ts";
 import MaterialNode from "./NodesEdges/MaterialNode.tsx";
 import SemiterminadoNode from "./NodesEdges/SemiterminadoNode.tsx";
 import ProcessNode from "./NodesEdges/ProcessNode.tsx";
 import TerminadoNode from "./NodesEdges/TerminadoNode.tsx";
 
-const endpoints = new EndPointsURL();
 const nodeTypes = { material: MaterialNode, semiterminado: SemiterminadoNode, process: ProcessNode, target: TerminadoNode };
-type LoadMode = "all" | "graph";
-type GraphCopy = { nodes: DesignerNode[]; edges: Edge[]; source: string };
-export type LoadedDraft = GraphCopy & (
-    { mode: "all"; product: DesignerProduct } | { mode: "graph" }
-);
-type ProductPage = { content: Producto[]; totalPages: number };
-type SearchQuery = { kind: "T" | "S"; searchTerm: string; tipoBusqueda: "NOMBRE" | "ID"; page: number };
-type Preview = GraphCopy & { dto: ProductoManufacturingDTO; product: DesignerProduct; hasSavedGraph: boolean };
 type PreviewState = {
     id: string; status: "loading" | "ready" | "error";
     dto?: ProductoManufacturingDTO; prepared?: Preview; message?: string;
 };
-
-function buildPreview(dto: ProductoManufacturingDTO, products: Map<string, Producto>): Preview {
-    if (!["T", "S"].includes(dto.tipoProducto)) throw new Error("La referencia no es un terminado ni un semiterminado.");
-    const source = fromProductoManufacturingResponse(dto);
-    const saved = dto.procesoProduccionCompleto;
-    const product: DesignerProduct = {
-        productoId: source.productoId, prefijoLote: source.prefijoLote, nombre: source.nombre,
-        tipo_producto: source.tipo_producto, tipoUnidades: source.tipoUnidades, cantidadUnidad: source.cantidadUnidad,
-        observaciones: source.observaciones, costo: source.costo, ivaPercentual: source.ivaPercentual,
-        inventareable: source.inventareable, requiereOrdenFabricacion: source.requiereOrdenFabricacion,
-        categoria: source.categoria, casePack: source.casePack, rendimientoTeorico: String(saved?.rendimientoTeorico ?? 0),
-    };
-    const ids = new Set<string>();
-    const includedInputs = new Set<string>();
-    const inputNode = (productId: string, id: string, position: { x: number; y: number }): DesignerNode => {
-        const input = dto.insumos.find((i) => i.productoId === productId);
-        const producto = products.get(productId);
-        if (!input || !producto || !["M", "S"].includes(producto.tipo_producto)) {
-            throw new Error("No se pudo resolver el insumo " + productId + ".");
-        }
-        if (includedInputs.has(productId)) throw new Error("La referencia repite un insumo en el grafo.");
-        includedInputs.add(productId);
-        return { id, position, type: producto.tipo_producto === "S" ? "semiterminado" : "material",
-            data: { producto, cantidad: String(input.cantidadRequerida) } };
-    };
-    const hasSavedGraph = !!saved?.nodes.length;
-    let nodes: DesignerNode[];
-    let edges: Edge[];
-    if (hasSavedGraph && saved) {
-        if (saved.nodes.filter((n) => n.nodeType === "TARGET").length !== 1) {
-            throw new Error("El grafo de la referencia debe tener un único destino.");
-        }
-        nodes = saved.nodes.map((node) => {
-            if (!node.frontendId || ids.has(node.frontendId)) throw new Error("El grafo contiene identificadores de nodo vacíos o repetidos.");
-            if (!Number.isFinite(node.posicionX) || !Number.isFinite(node.posicionY)) throw new Error("El grafo contiene posiciones inválidas.");
-            ids.add(node.frontendId);
-            const base = { id: node.frontendId, position: { x: node.posicionX, y: node.posicionY } };
-            if (node.nodeType === "TARGET") return { ...base, type: "target", deletable: false, data: { producto: product } };
-            if (node.nodeType === "INSUMO") return inputNode(node.inputProductoId, base.id, base.position);
-            if (node.nodeType !== "PROCESO") throw new Error("El grafo contiene un tipo de nodo no reconocido.");
-            const proceso: NodoProcesoDTO = {
-                nodeType: "PROCESO", frontendId: base.id, posicionX: base.position.x, posicionY: base.position.y,
-                label: node.label, procesoId: node.procesoId, procesoNombre: node.procesoNombre,
-                areaOperativaId: node.areaOperativaId, areaOperativaNombre: node.areaOperativaNombre,
-                setUpTime: node.setUpTime, model: node.model, constantSeconds: node.constantSeconds,
-                throughputUnitsPerSec: node.throughputUnitsPerSec, secondsPerUnit: node.secondsPerUnit,
-                secondsPerBatch: node.secondsPerBatch, batchSize: node.batchSize,
-            };
-            return { ...base, type: "process", data: { proceso } };
-        });
-        if (includedInputs.size !== dto.insumos.length) throw new Error("La receta y el grafo tienen insumos diferentes. No se cargará una copia parcial.");
-        const edgeIds = new Set<string>();
-        edges = saved.edges.map((edge) => {
-            if (!ids.has(edge.sourceFrontendId) || !ids.has(edge.targetFrontendId)) throw new Error("Hay conexiones a nodos inexistentes.");
-            if (!edge.frontendId || edgeIds.has(edge.frontendId)) throw new Error("Hay identificadores de conexión vacíos o repetidos.");
-            edgeIds.add(edge.frontendId);
-            return { id: edge.frontendId, source: edge.sourceFrontendId, target: edge.targetFrontendId, type: "smoothstep" };
-        });
-    } else {
-        if (saved?.edges.length) throw new Error("La referencia tiene conexiones pero no tiene nodos.");
-        // A product without a saved graph can start a full draft from its recipe, without inventing connections.
-        nodes = dto.insumos.map((input, index) => inputNode(input.productoId, "input-" + index, { x: 0, y: index * 250 }));
-        nodes.push({ id: "target", type: "target", position: { x: 750, y: 180 }, deletable: false, data: { producto: product } });
-        edges = [];
-    }
-    return { dto, product, nodes, edges, hasSavedGraph, source: dto.productoId + " · " + dto.nombre };
-}
-
-function copyPreview(preview: Preview, mode: LoadMode): LoadedDraft {
-    const product = structuredClone(preview.product);
-    product.productoId = "";
-    product.prefijoLote = "";
-    if (product.casePack) {
-        delete product.casePack.id;
-        delete product.casePack.ean14;
-        product.casePack.insumosEmpaque?.forEach((item) => { delete item.id; });
-    }
-    const ids = new Map(preview.nodes.map((node) => [node.id, crypto.randomUUID()]));
-    const nodes = preview.nodes.map((original): DesignerNode => {
-        const node = structuredClone(original);
-        node.id = ids.get(original.id)!;
-        if (node.type === "process") node.data.proceso.frontendId = node.id;
-        if (node.type === "target") node.data = { producto: product };
-        return node;
-    });
-    const edges = preview.edges.map((edge) => ({
-        ...edge, id: crypto.randomUUID(), source: ids.get(edge.source)!, target: ids.get(edge.target)!, animated: true,
-    }));
-    const graph = { nodes, edges, source: preview.source };
-    return mode === "all" ? { ...graph, mode, product } : { ...graph, mode };
-}
 
 function SourceDetails({ dto }: { dto: ProductoManufacturingDTO }) {
     const yesNo = (value: boolean | undefined) => value == null ? "No informado" : value ? "Sí" : "No";
     const fields: [string, string | number | undefined][] = [
         ["Código", dto.productoId], ["Nombre", dto.nombre],
         ["Tipo", dto.tipoProducto === "S" ? "Semiterminado" : "Terminado"],
-        ["Contenido por unidad", String(dto.cantidadUnidad) + " " + dto.tipoUnidades],
+        ["Contenido por envase", String(dto.cantidadUnidad) + " " + (dto.unidadContenidoPorEnvase ?? "(unidad sin confirmar)")], ["Unidad del producto", dto.tipoUnidades],
         ["Categoría", dto.categoriaNombre ?? dto.categoriaId], ["Prefijo de lote", dto.prefijoLote],
         ["IVA (%)", dto.ivaPercentual], ["Costo", dto.costo],
         ["Inventariable", yesNo(dto.inventareable)], ["Requiere orden de fabricación", yesNo(dto.requiereOrdenFabricacion)],
         ["Rendimiento teórico", dto.procesoProduccionCompleto?.rendimientoTeorico],
+        ["Salida de la receta", dto.procesoProduccionCompleto?.cantidadSalidaReceta == null ? "Sin especificar: confirmar al copiar" : `${dto.procesoProduccionCompleto.cantidadSalidaReceta} ${dto.procesoProduccionCompleto.unidadSalidaReceta}`],
     ];
     return <Stack gap="4">
         <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
@@ -164,6 +64,7 @@ function SourcePreview({ state }: { state: PreviewState }) {
     const { dto, prepared } = state;
     if (!dto) return null;
     return <Stack gap="3" minW="0">
+        {dto.procesoProduccionCompleto?.cantidadSalidaReceta == null && <Text color="orange.fg" fontSize="sm">Receta histórica: las cantidades son coeficientes registrados. No se conoce su salida física; debes confirmarla al copiar.</Text>}
         <Flex gap="2" align="center" flexWrap="wrap">
             <Heading size="md" overflowWrap="anywhere">{dto.nombre}</Heading>
             <Badge colorPalette="teal">Solo lectura</Badge>
@@ -202,7 +103,7 @@ function SourcePreview({ state }: { state: PreviewState }) {
                         </Table.Row></Table.Header>
                         <Table.Body>{dto.insumos.map((input, index) => <Table.Row key={input.productoId + "-" + index}>
                             <Table.Cell>{input.productoId} · {input.productoNombre || input.productoId}</Table.Cell>
-                            <Table.Cell>{input.cantidadRequerida}</Table.Cell><Table.Cell>{input.tipoUnidades || "—"}</Table.Cell>
+                            <Table.Cell>{input.cantidadReceta ?? input.cantidadRequerida}</Table.Cell><Table.Cell>{(input.unidadReceta ?? input.tipoUnidades) || "—"}</Table.Cell>
                         </Table.Row>)}</Table.Body>
                     </Table.Root>
                     {dto.insumos.length === 0 && <Text fontSize="sm" mt="3">La referencia no tiene insumos.</Text>}
@@ -235,13 +136,7 @@ export default function LoadTerminadoDialog({ hasDraft, onClose, onLoad }: {
 
     useEffect(() => {
         const controller = new AbortController();
-        const request = query.kind === "T"
-            ? axios.post<ProductPage>(endpoints.search_terminados_picker,
-                { searchTerm: query.searchTerm, tipoBusqueda: query.tipoBusqueda, page: query.page, size: 10 },
-                { signal: controller.signal })
-            : axios.get<ProductPage>(endpoints.search_semi,
-                { params: { search: query.searchTerm, tipoBusqueda: query.tipoBusqueda, page: query.page, size: 10 }, signal: controller.signal });
-        request.then(({ data }) => {
+        buscarReferencias(query, controller.signal).then((data) => {
             if (!controller.signal.aborted) setResult({ key: queryKey, data });
         }).catch(() => {
             if (!controller.signal.aborted) setResult({ key: queryKey, error: "No se pudo consultar el catálogo. Intenta nuevamente." });
@@ -257,26 +152,8 @@ export default function LoadTerminadoDialog({ hasDraft, onClose, onLoad }: {
         let dto: ProductoManufacturingDTO | undefined;
         async function fetchPreview() {
             try {
-                const response = await axios.get<ProductoManufacturingDTO>(
-                    endpoints.get_producto_manufacturing.replace("{productoId}", encodeURIComponent(selected)),
-                    { signal: controller.signal });
-                dto = response.data;
-                if (dto.productoId !== selected) throw new Error("La respuesta no corresponde a la referencia seleccionada.");
-                if (controller.signal.aborted) return;
-                setPreview({ id: selected, status: "loading", dto, message: "Cargando insumos…" });
-                const products = new Map<string, Producto>();
-                const inputIds = [...new Set(dto.insumos.map((input) => input.productoId))];
-                for (let offset = 0; offset < inputIds.length; offset += 4) {
-                    const batch = await Promise.all(inputIds.slice(offset, offset + 4).map(async (id) => {
-                        const response = await axios.get<Producto>(
-                            endpoints.update_producto.replace("{productoId}", encodeURIComponent(id)), { signal: controller.signal });
-                        if (response.data.productoId !== id) throw new Error("El catálogo devolvió un insumo diferente al solicitado.");
-                        return response.data;
-                    }));
-                    if (controller.signal.aborted) return;
-                    batch.forEach((item) => products.set(item.productoId, item));
-                }
-                const prepared = buildPreview(dto, products);
+                const prepared = await cargarReferencia(selected, controller.signal);
+                dto = prepared.dto;
                 if (!controller.signal.aborted) setPreview({ id: selected, status: "ready", dto, prepared });
             } catch (cause) {
                 if (!controller.signal.aborted) {
@@ -390,16 +267,16 @@ export default function LoadTerminadoDialog({ hasDraft, onClose, onLoad }: {
                     <NativeSelect.Root size="sm">
                         <NativeSelect.Field value={mode} onChange={(event) => { setMode(event.target.value as LoadMode); setReplace(false); setLoadError(""); }}>
                             <option value="all">Datos completos, grafo e insumos</option>
-                            <option value="graph">Solo grafo e insumos; conservar cabecera</option>
+                            <option value="graph">Grafo, insumos y salida de receta; conservar identificación</option>
                         </NativeSelect.Field><NativeSelect.Indicator />
                     </NativeSelect.Root>
                     <Field.HelperText>{mode === "all"
-                        ? "El código, prefijo de lote y EAN14 quedarán vacíos para la nueva referencia."
-                        : "Conserva todos los datos actuales de la cabecera, incluido rendimiento y empaque. El destino del grafo usará el nombre y tipo actuales."}</Field.HelperText>
+                        ? "El código, prefijo y EAN14 quedarán vacíos. Confirma las cantidades y unidades de la receta."
+                        : "Conserva identificación, contenido, rendimiento y empaque. Reemplaza la salida de la receta junto con sus insumos; verifica que su unidad sea compatible con el producto actual."}</Field.HelperText>
                 </Field.Root>
                 {hasDraft && <Checkbox.Root checked={replace} onCheckedChange={(event) => setReplace(event.checked === true)}>
                     <Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>
-                    <Checkbox.Label>{mode === "all" ? "Confirmo reemplazar los datos y el grafo del borrador" : "Confirmo reemplazar solo el grafo y los insumos del borrador"}</Checkbox.Label>
+                    <Checkbox.Label>{mode === "all" ? "Confirmo reemplazar los datos y el grafo del borrador" : "Confirmo reemplazar el grafo, los insumos y la salida de la receta"}</Checkbox.Label>
                 </Checkbox.Root>}
                 {loadError && <Text role="alert" color="fg.error" fontSize="sm">{loadError}</Text>}
                 <Flex justify="space-between" align="center" gap="3" flexWrap="wrap">
