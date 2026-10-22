@@ -89,7 +89,7 @@ const groups: ModuleTabGroup[] = [
             },
             {
                 key: "nuevo-process-designer",
-                label: "Nuevo Process Designer",
+                label: "Process Designer v2",
                 render: (isActive) => <ProcessDesignerTab isActive={isActive} />,
                 accessRule: tabAccessRule(Modulo.PRODUCTOS, "PROCESS_DESIGNER", 2),
                 flushContent: true,

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, Field, Fieldset, Flex, IconButton, NativeSelect, Stack, Switch, Text } from "@chakra-ui/react";
-import { FiChevronLeft, FiChevronRight, FiCopy } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiCopy, FiMaximize, FiMinimize } from "react-icons/fi";
 import LoadTerminadoDialog, { type LoadedDraft } from "./LoadTerminadoDialog.tsx";
 
 export interface DesignerViewPreferences {
@@ -8,15 +8,21 @@ export interface DesignerViewPreferences {
     edgeType: "default" | "straight" | "step" | "smoothstep";
     animatedEdges: boolean;
     edgeWidth: 1 | 2 | 3 | 4;
+    showMiniMap: boolean;
 }
 
-export default function PD_Controls({ hasDraft, onClone, preferences, onPreferencesChange, onResetPreferences, preferencesSaved }: {
+export default function PD_Controls({ hasDraft, onClone, preferences, onPreferencesChange, onResetPreferences, preferencesSaved,
+    isFullscreen, fullscreenSupported, fullscreenBusy, onToggleFullscreen }: {
     hasDraft: boolean;
     onClone: (draft: LoadedDraft) => void;
     preferences: DesignerViewPreferences;
     onPreferencesChange: (preferences: DesignerViewPreferences) => void;
     onResetPreferences: () => void;
     preferencesSaved: boolean;
+    isFullscreen: boolean;
+    fullscreenSupported: boolean;
+    fullscreenBusy: boolean;
+    onToggleFullscreen: () => void;
 }) {
     const [collapsed, setCollapsed] = useState(true);
     const [open, setOpen] = useState(false);
@@ -38,23 +44,37 @@ export default function PD_Controls({ hasDraft, onClone, preferences, onPreferen
                 <Button size="sm" onClick={() => setOpen(true)}><FiCopy /> Clonar producto</Button>
                 <Fieldset.Root size="sm" gap="0" minW="0" borderTopWidth="1px" pt="2">
                     <Fieldset.Legend fontSize="sm" fontWeight="semibold">Navegación</Fieldset.Legend>
-                    <Field.Root>
-                        <Field.Label>Zoom con la rueda</Field.Label>
-                        <NativeSelect.Root size="sm">
-                            <NativeSelect.Field value={preferences.wheelZoom} onChange={(event) => onPreferencesChange({
-                                ...preferences, wheelZoom: event.target.value as DesignerViewPreferences["wheelZoom"],
-                            })}>
-                                <option value="ctrl">Ctrl + rueda</option>
-                                <option value="wheel">Rueda directamente</option>
-                            </NativeSelect.Field>
-                            <NativeSelect.Indicator />
-                        </NativeSelect.Root>
-                        <Field.HelperText>
-                            {preferences.wheelZoom === "ctrl"
-                                ? "Sin Ctrl, la rueda desplaza la página."
-                                : "La rueda hace zoom al estar sobre el lienzo."}
-                        </Field.HelperText>
-                    </Field.Root>
+                    <Stack gap="3">
+                        <Button size="sm" variant="outline" disabled={!fullscreenSupported || fullscreenBusy}
+                            onClick={onToggleFullscreen}>
+                            {isFullscreen ? <FiMinimize /> : <FiMaximize />}
+                            {isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
+                        </Button>
+                        {!fullscreenSupported && <Text fontSize="xs" color="fg.muted">Este navegador no permite pantalla completa.</Text>}
+                        <Switch.Root size="sm" colorPalette="teal" checked={preferences.showMiniMap}
+                            onCheckedChange={({ checked }) => onPreferencesChange({ ...preferences, showMiniMap: checked })}>
+                            <Switch.HiddenInput />
+                            <Switch.Control><Switch.Thumb /></Switch.Control>
+                            <Switch.Label>Mostrar minimapa</Switch.Label>
+                        </Switch.Root>
+                        <Field.Root>
+                            <Field.Label>Zoom con la rueda</Field.Label>
+                            <NativeSelect.Root size="sm">
+                                <NativeSelect.Field value={preferences.wheelZoom} onChange={(event) => onPreferencesChange({
+                                    ...preferences, wheelZoom: event.target.value as DesignerViewPreferences["wheelZoom"],
+                                })}>
+                                    <option value="ctrl">Ctrl + rueda</option>
+                                    <option value="wheel">Rueda directamente</option>
+                                </NativeSelect.Field>
+                                <NativeSelect.Indicator />
+                            </NativeSelect.Root>
+                            <Field.HelperText>
+                                {preferences.wheelZoom === "ctrl"
+                                    ? "Sin Ctrl, la rueda desplaza la página."
+                                    : "La rueda hace zoom al estar sobre el lienzo."}
+                            </Field.HelperText>
+                        </Field.Root>
+                    </Stack>
                 </Fieldset.Root>
                 <Fieldset.Root size="sm" gap="0" minW="0" borderTopWidth="1px" pt="2">
                     <Fieldset.Legend fontSize="sm" fontWeight="semibold">Conexiones</Fieldset.Legend>

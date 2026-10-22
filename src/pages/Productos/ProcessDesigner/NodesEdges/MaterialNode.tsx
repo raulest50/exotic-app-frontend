@@ -39,7 +39,6 @@ export function InputNodeCard({ data, selected, isConnectable, palette, label, i
                             onChange={(event) => data.onQuantityChange?.(event.target.value)} />
                         {data.onUnitChange ? <NativeSelect.Root size="sm" className="nodrag nowheel">
                             <NativeSelect.Field aria-label={`Unidad de ${producto.nombre}`} value={data.unidad} onChange={e => data.onUnitChange?.(e.target.value)}>
-                                <option value="">Elegir unidad</option>
                                 {data.units?.map(unit => <option key={unit.codigo} value={unit.codigo}>{unit.simbolo}</option>)}
                             </NativeSelect.Field><NativeSelect.Indicator />
                         </NativeSelect.Root> : <Text fontSize="sm">{data.unidad || producto.tipoUnidades}</Text>}

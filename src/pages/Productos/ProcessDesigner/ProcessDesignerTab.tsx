@@ -161,7 +161,7 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
     return (
         <Box w="calc(100vw - 3rem)" mx="calc(50% - 50vw + 1.5rem)" textAlign="left" py="3">
             <Flex align="center" justify="space-between" gap="3" flexWrap="wrap" mb="3">
-                <Heading size="md">Nuevo Process Designer</Heading>
+                <Heading size="md">Process Designer v2</Heading>
                 <Badge colorPalette={savedDraft === draftKey ? "green" : "orange"}>{savedDraft === draftKey ? "Producto guardado" : "Borrador · sin guardar"}</Badge>
             </Flex>
             {cloneSource && <Text mb="3" fontSize="sm" color="fg.muted">Referencia del grafo: {cloneSource}. Estás editando una copia.</Text>}
