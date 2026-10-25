@@ -2,7 +2,7 @@ import { useEffect, useState, useId } from "react";
 import { Box, Button, Flex, Icon, SimpleGrid, Text } from "@chakra-ui/react";
 import { FiCheckCircle, FiChevronDown, FiChevronUp, FiHelpCircle, FiXCircle } from "react-icons/fi";
 import OperationResultDialog from "./OperationResultDialog.tsx";
-import type { SavedProductSummary } from "./ProcessDesignerApi.ts";
+import type { EditingProduct, SavedProductSummary } from "./ProcessDesignerApi.ts";
 import type { UnidadMedidaProducto } from "../types.tsx";
 import { unidadesCompatibles } from "../UnidadesMedidaApi.ts";
 import type { Edge } from "@xyflow/react";
@@ -78,16 +78,18 @@ function validateDraft(product: DesignerProduct, nodes: DesignerNode[], edges: E
     ];
 }
 
-export default function Validator({ product, nodes, edges, isActive, units, saving, canSave, onSave, error, result, onCloseResult, savedId, revision }: {
+export default function Validator({ product, nodes, edges, isActive, units, saving, canSave, onSave, error, result, onCloseResult, editingProduct, hasUnsavedChanges, revision }: {
     product: DesignerProduct; nodes: DesignerNode[]; edges: Edge[]; isActive: boolean; units: UnidadMedidaProducto[];
     saving: boolean; canSave: boolean; onSave: () => Promise<void>; error: string;
-    result: SavedProductSummary | null; onCloseResult: () => void; savedId: string; revision: number;
+    result: SavedProductSummary | null; onCloseResult: () => void; editingProduct: EditingProduct | null; hasUnsavedChanges: boolean; revision: number;
 }) {
     const reasonId = useId();
     const [retry, setRetry] = useState(0);
     const [expanded, setExpanded] = useState(false);
     const [availability, setAvailability] = useState<{ key: string; code: boolean | null; prefix: boolean | null; failed?: boolean; pending?: boolean }>({ key: "", code: null, prefix: null });
-    const key = JSON.stringify([product.productoId, product.prefijoLote ?? ""]);
+    const editingId = editingProduct?.productoId;
+    const editingType = editingProduct?.tipoProducto;
+    const key = JSON.stringify([product.productoId, product.prefijoLote ?? "", editingId, editingType, revision]);
     useEffect(() => {
         if (!isActive) return;
         const controller = new AbortController();
@@ -95,12 +97,17 @@ export default function Validator({ product, nodes, edges, isActive, units, savi
         const timer = setTimeout(async () => {
             const requests: Promise<void>[] = [];
             if (validateProductId(product.productoId) === null) {
-                requests.push(axios.get(endpoints.update_producto.replace("{productoId}", encodeURIComponent(product.productoId)), { signal: controller.signal, withCredentials: true })
-                    .then(() => { if (!controller.signal.aborted) setAvailability((s) => ({ ...s, code: false })); })
-                    .catch((error: unknown) => { if (!controller.signal.aborted) setAvailability((s) => ({ ...s, code: axios.isAxiosError(error) && error.response?.status === 404 ? true : null, failed: s.failed || !(axios.isAxiosError(error) && error.response?.status === 404) })); }));
+                requests.push(axios.get<{ productoId: string; tipo_producto: string }>(endpoints.update_producto.replace("{productoId}", encodeURIComponent(product.productoId)), { signal: controller.signal, withCredentials: true })
+                    .then(({ data }) => { if (!controller.signal.aborted) setAvailability((s) => ({ ...s,
+                        code: !!editingId && data.productoId === editingId && data.tipo_producto === editingType
+                            && product.productoId === editingId && product.tipo_producto === editingType })); })
+                    .catch((error: unknown) => {
+                        const notFound = axios.isAxiosError(error) && error.response?.status === 404;
+                        if (!controller.signal.aborted) setAvailability((s) => ({ ...s, code: notFound ? !editingId : null, failed: s.failed || !notFound }));
+                    }));
             }
             if (product.prefijoLote && /^[A-Z0-9]{1,20}$/.test(product.prefijoLote)) {
-                requests.push(axios.get<{ valido: boolean }>(endpoints.validador_prefijo_lote, { params: { prefijoLote: product.prefijoLote }, signal: controller.signal, withCredentials: true })
+                requests.push(axios.get<{ valido: boolean }>(endpoints.validador_prefijo_lote, { params: { prefijoLote: product.prefijoLote, productoId: editingId }, signal: controller.signal, withCredentials: true })
                     .then(({ data }) => { if (!controller.signal.aborted) setAvailability((s) => ({ ...s, prefix: data.valido === true })); })
                     .catch(() => { if (!controller.signal.aborted) setAvailability(s => ({ ...s, failed: true })); }));
             }
@@ -108,14 +115,14 @@ export default function Validator({ product, nodes, edges, isActive, units, savi
             if (!controller.signal.aborted) setAvailability(s => ({ ...s, pending: false }));
         }, 600);
         return () => { clearTimeout(timer); controller.abort(); };
-    }, [isActive, key, product.productoId, product.prefijoLote, retry, revision]);
+    }, [isActive, key, product.productoId, product.tipo_producto, product.prefijoLote, editingId, editingType, retry, revision]);
     const checks = [...validateDraft(product, nodes, edges, units),
-        { label: "Código disponible en el catálogo", valid: availability.key === key ? availability.code : null },
+        { label: editingProduct ? "Producto existente e identidad conservada" : "Código disponible en el catálogo", valid: availability.key === key ? availability.code : null },
         ...(product.prefijoLote ? [{ label: "Prefijo disponible", valid: availability.key === key ? availability.prefix : null }] : []),
     ];
     const passed = checks.filter((c) => c.valid === true).length;
     const reason = saving ? "Guardando el producto…" : !canSave ? "No tienes permiso para guardar."
-        : savedId && savedId === product.productoId ? "Este código ya fue guardado. Para crear otro producto, usa un código y prefijo nuevos."
+        : !hasUnsavedChanges ? editingProduct ? "No hay cambios pendientes para guardar." : "Completa los datos para crear un producto."
         : availability.key !== key || availability.pending ? "Verificando código y prefijo…"
         : availability.failed ? "No se pudo verificar el catálogo. Reintenta la comprobación."
         : passed !== checks.length ? `Faltan ${checks.length - passed} comprobaciones. Abre la validación para revisar los detalles.` : "";
@@ -125,7 +132,7 @@ export default function Validator({ product, nodes, edges, isActive, units, savi
             {expanded ? <FiChevronUp /> : <FiChevronDown />} Validación en vivo · {passed}/{checks.length}
         </Button>
         <Button colorPalette="teal" disabled={!!reason || !isActive} loading={saving} loadingText="Guardando…" aria-describedby={reasonId}
-            onClick={() => { if (!reason) void onSave(); }}>Guardar producto</Button>
+            onClick={() => { if (!reason) void onSave(); }}>{editingProduct ? "Guardar cambios" : "Crear producto"}</Button>
         </Flex>
         <Text id={reasonId} fontSize="sm" color="fg.muted" mt="2" role="status">{reason || "La receta está lista para guardar."}</Text>
         {availability.failed && !saving && <Button size="sm" variant="outline" mt="2" onClick={() => setRetry(n => n + 1)}>Reintentar comprobación</Button>}

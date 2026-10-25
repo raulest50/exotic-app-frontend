@@ -15,7 +15,7 @@ import CabeceraDatos, { type DesignerProduct } from "./CabeceraDatos.tsx";
 import { useTabPermission } from "../../../auth/usePermissions.ts";
 import { Modulo } from "../../Usuarios/GestionUsuarios/types.tsx";
 import { listarUnidadesMedidaProducto, unidadesCompatibles } from "../UnidadesMedidaApi.ts";
-import { guardarProducto, toDesignerPayload, type SavedProductSummary } from "./ProcessDesignerApi.ts";
+import { guardarProducto, toDesignerPayload, type EditingProduct, type SavedProductSummary } from "./ProcessDesignerApi.ts";
 import Validator from "./Validator.tsx";
 import ProcessDesignerCanvas from "./ProcessDesignerCanvas.tsx";
 import type { LoadedDraft } from "./LoadTerminadoDialog.tsx";
@@ -52,7 +52,7 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
     const savingRef = useRef(false);
     const [saveError, setSaveError] = useState("");
     const [result, setResult] = useState<SavedProductSummary | null>(null);
-    const [savedId, setSavedId] = useState("");
+    const [editingProduct, setEditingProduct] = useState<EditingProduct | null>(null);
     const [savedDraft, setSavedDraft] = useState("");
     const [saveRevision, setSaveRevision] = useState(0);
     const [product, setProduct] = useState<DesignerProduct>(emptyDesignerProduct);
@@ -65,10 +65,12 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
     const [areaNodeId, setAreaNodeId] = useState<string | null>(null);
     const [cloneSource, setCloneSource] = useState("");
     const [fitRevision, setFitRevision] = useState(0);
+    const [resetRevision, setResetRevision] = useState(0);
     const nextPosition = useRef(0);
     const selectedIds = nodes.filter((node) => node.type === "material" || node.type === "semiterminado").map((node) => node.data.producto.productoId);
     const draftKey = JSON.stringify(toDesignerPayload(product, nodes, edges));
     const hasDraft = nodes.length > 1 || edges.length > 0 || JSON.stringify(product) !== JSON.stringify(emptyDesignerProduct());
+    const hasUnsavedChanges = hasDraft && savedDraft !== draftKey;
 
     useEffect(() => {
         if (!isActive) return;
@@ -81,12 +83,14 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
     }, [isActive, unitRetry]);
 
     async function save() {
-        if (savingRef.current || !isActive || !canSave || savedId === product.productoId) return;
+        if (savingRef.current || !isActive || !canSave || !hasUnsavedChanges) return;
         savingRef.current = true; setSaving(true); setSaveError("");
         setProcessPickerOpen(false); setAreaNodeId(null);
         try {
-            const saved = await guardarProducto(product, nodes, edges);
-            setSavedId(saved.id); setSavedDraft(draftKey); setResult(saved);
+            const saved = await guardarProducto(product, nodes, edges, editingProduct);
+            setProduct(saved.product); setEditingProduct(saved.identity);
+            setSavedDraft(JSON.stringify(toDesignerPayload(saved.product, nodes, edges))); setResult(saved);
+            if (!editingProduct) setResetRevision(n => n + 1);
         } catch (error) {
             setSaveError(error instanceof Error ? error.message : "No se pudo guardar. El borrador se conserva.");
         } finally {
@@ -136,16 +140,38 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
         setProcessPickerOpen(false); setFitRevision((n) => n + 1);
     }
 
-    function loadClone(draft: LoadedDraft) {
+    function loadDraft(draft: LoadedDraft) {
         // Commit the fully resolved draft together; failures before here cannot erase current work.
-        if (savingRef.current) return;
-        const targetProduct = draft.mode === "all" ? draft.product : { ...product, cantidadSalidaReceta: draft.output.quantity, unidadSalidaReceta: draft.output.unit };
-        setProduct(targetProduct); setSaveError(""); setSavedId("");
-        setNodes(draft.nodes.map((node) => node.type === "target"
-            ? { ...node, data: { producto: targetProduct } } : node));
+        if (savingRef.current || !isActive) return;
+        const targetProduct = draft.mode !== "graph" ? draft.product : { ...product, cantidadSalidaReceta: draft.output.quantity, unidadSalidaReceta: draft.output.unit };
+        const loadedNodes = draft.nodes.map((node) => node.type === "target"
+            ? { ...node, data: { producto: targetProduct } } : node);
+        setProduct(targetProduct); setSaveError(""); setResult(null);
+        setNodes(loadedNodes);
         setEdges(draft.edges);
-        setCloneSource(draft.source); nextPosition.current = draft.nodes.filter((n) => n.type === "material" || n.type === "semiterminado").length;
-        setAreaNodeId(null); setFitRevision((n) => n + 1);
+        if (draft.mode !== "graph") {
+            setEditingProduct(draft.mode === "edit" ? draft.identity : null);
+            setSavedDraft(draft.mode === "edit" ? JSON.stringify(toDesignerPayload(targetProduct, loadedNodes, draft.edges)) : "");
+            setResetRevision(n => n + 1);
+        }
+        // Importing only a graph keeps the current destination and its create/edit mode.
+        setCloneSource(draft.mode === "edit" ? "" : draft.source);
+        nextPosition.current = draft.nodes.filter((n) => n.type === "material" || n.type === "semiterminado").length;
+        setProcessPickerOpen(false); setAreaNodeId(null); setFitRevision((n) => n + 1); setSaveRevision(n => n + 1);
+    }
+
+    function clearDraft() {
+        if (savingRef.current || !isActive) return;
+        const initialProduct = emptyDesignerProduct();
+        setProduct(initialProduct);
+        setNodes([{ id: "target", type: "target", position: { x: 850, y: 180 }, deletable: false, data: { producto: initialProduct } }]);
+        setEdges([]);
+        setCloneSource(""); nextPosition.current = 0;
+        setProcessPickerOpen(false); setAreaNodeId(null);
+        setSaveError(""); setResult(null); setEditingProduct(null); setSavedDraft("");
+        setSaveRevision(n => n + 1);
+        setResetRevision(n => n + 1);
+        setFitRevision(n => n + 1);
     }
 
     const renderedNodes = nodes.map((node): DesignerNode => {
@@ -162,17 +188,19 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
         <Box w="calc(100vw - 3rem)" mx="calc(50% - 50vw + 1.5rem)" textAlign="left" py="3">
             <Flex align="center" justify="space-between" gap="3" flexWrap="wrap" mb="3">
                 <Heading size="md">Process Designer v2</Heading>
-                <Badge colorPalette={savedDraft === draftKey ? "green" : "orange"}>{savedDraft === draftKey ? "Producto guardado" : "Borrador · sin guardar"}</Badge>
+                <Badge colorPalette={hasUnsavedChanges ? "orange" : "green"}>{hasUnsavedChanges ? "Cambios sin guardar" : editingProduct ? "Sin cambios pendientes" : "Nuevo producto"}</Badge>
             </Flex>
-            {cloneSource && <Text mb="3" fontSize="sm" color="fg.muted">Referencia del grafo: {cloneSource}. Estás editando una copia.</Text>}
+            {editingProduct && <Text mb="3" fontSize="sm" fontWeight="semibold" overflowWrap="anywhere">Modificando {editingProduct.productoId} · {product.nombre}</Text>}
+            {cloneSource && <Text mb="3" fontSize="sm" color="fg.muted">Grafo importado de: {cloneSource}. {editingProduct ? `Los cambios se guardarán en ${editingProduct.productoId}.` : "Estás preparando un producto nuevo."}</Text>}
             {unitError && <Flex role="alert" align="center" gap="3" mb="3" color="red.fg"><Text>{unitError}</Text><Button size="sm" onClick={() => setUnitRetry(n => n + 1)}>Reintentar</Button></Flex>}
-            {cloneSource && !product.cantidadSalidaReceta && <Text color="orange.fg" mb="3">La referencia no declara la salida física de su receta. Confirma la cantidad obtenida y las cantidades de los insumos antes de guardar.</Text>}
+            {(cloneSource || editingProduct) && !product.cantidadSalidaReceta && <Text color="orange.fg" mb="3">La referencia no declara la salida física de su receta. Confirma la cantidad obtenida y las cantidades de los insumos antes de guardar.</Text>}
             <Box inert={saving} aria-busy={saving}>
-            <CabeceraDatos product={product} onChange={setProduct} isActive={isActive} units={units} />
+            {/* Reset the header's manual-prefix state while keeping its fullscreen inert wrapper mounted. */}
+            <Box><CabeceraDatos key={resetRevision} product={product} onChange={setProduct} isActive={isActive} units={units} isEditing={!!editingProduct} /></Box>
             <ProcessDesignerCanvas
                 product={product} onProductChange={setProduct} units={units}
-                isActive={isActive} nodes={renderedNodes} edges={edges} hasDraft={hasDraft}
-                onAddProduct={addProduct} onClone={loadClone} onAddProcess={() => setProcessPickerOpen(true)} onAssignArea={setAreaNodeId}
+                isActive={isActive} nodes={renderedNodes} edges={edges} hasDraft={hasUnsavedChanges} editingProductId={editingProduct?.productoId}
+                onAddProduct={addProduct} onLoad={loadDraft} onClear={clearDraft} onAddProcess={() => setProcessPickerOpen(true)} onAssignArea={setAreaNodeId}
                 onRemoveSelection={() => {
                     const removed = new Set(nodes.filter((n) => n.selected && n.type !== "target").map((n) => n.id));
                     setNodes((current) => current.filter((n) => !removed.has(n.id)));
@@ -185,7 +213,7 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
             </Box>
             <Validator product={product} nodes={nodes} edges={edges} isActive={isActive} units={units}
                 saving={saving} canSave={canSave} onSave={save} error={saveError} result={result}
-                onCloseResult={() => setResult(null)} savedId={savedId} revision={saveRevision} />
+                onCloseResult={() => setResult(null)} editingProduct={editingProduct} hasUnsavedChanges={hasUnsavedChanges} revision={saveRevision} />
             <Text fontSize="xs" color="fg.muted" mt="2">El borrador se conserva al cambiar de pestaña, pero se pierde al salir de Productos o recargar. Quitar un nodo no elimina el producto del catálogo.</Text>
             {processPickerOpen && <ProcesoProduccionPicker isOpen onClose={() => setProcessPickerOpen(false)} onConfirm={addProcesses} alreadySelected={[]} />}
             {areaNodeId && <AreaPickerGeneric isOpen onClose={() => setAreaNodeId(null)} onSelectArea={(area) => {

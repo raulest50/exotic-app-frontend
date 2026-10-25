@@ -57,8 +57,10 @@ interface Props {
     nodes: DesignerNode[];
     edges: Edge[];
     hasDraft: boolean;
+    editingProductId?: string;
     onAddProduct: (producto: Producto) => void;
-    onClone: (draft: LoadedDraft) => void;
+    onLoad: (draft: LoadedDraft) => void;
+    onClear: () => void;
     onAddProcess: () => void;
     onAssignArea: (nodeId: string) => void;
     onRemoveSelection: () => void;
@@ -70,7 +72,7 @@ interface Props {
 }
 
 export default function ProcessDesignerCanvas({
-    isActive, product, onProductChange, units, nodes, edges, hasDraft, onAddProduct, onClone, onAddProcess, onAssignArea,
+    isActive, product, onProductChange, units, nodes, edges, hasDraft, editingProductId, onAddProduct, onLoad, onClear, onAddProcess, onAssignArea,
     onRemoveSelection, onNodesChange, onEdgesChange, onInit, isValidConnection, onConnect,
 }: Props) {
     const { colorMode } = useColorMode();
@@ -253,7 +255,7 @@ export default function ProcessDesignerCanvas({
                         </ReactFlow>
                     </Box>
                 </Flex>
-                <PD_Controls hasDraft={hasDraft} onClone={onClone} preferences={preferences}
+                <PD_Controls hasDraft={hasDraft} editingProductId={editingProductId} onLoad={onLoad} onClear={onClear} preferences={preferences}
                     onPreferencesChange={changePreferences} onResetPreferences={() => changePreferences(DEFAULT_PREFERENCES)}
                     preferencesSaved={preferencesSaved} isFullscreen={isFullscreen} fullscreenSupported={fullscreenSupported}
                     fullscreenBusy={fullscreenBusy} onToggleFullscreen={() => void toggleFullscreen()} />

@@ -8,7 +8,7 @@ import axios from "axios";
 import { useColorMode } from "../../../components/ui/color-mode.tsx";
 import type { DesignerNode } from "./ProcessDesignerTab.tsx";
 import type { ProductoManufacturingDTO } from "../types.tsx";
-import { buscarReferencias, cargarReferencia, copyPreview, type LoadedDraft, type LoadMode, type Preview, type ProductPage, type SearchQuery } from "./ProcessDesignerApi.ts";
+import { buscarReferencias, cargarReferencia, copyPreview, editPreview, type LoadedDraft, type LoadMode, type Preview, type ProductPage, type SearchQuery } from "./ProcessDesignerApi.ts";
 export type { LoadedDraft } from "./ProcessDesignerApi.ts";
 import MaterialNode from "./NodesEdges/MaterialNode.tsx";
 import SemiterminadoNode from "./NodesEdges/SemiterminadoNode.tsx";
@@ -64,7 +64,7 @@ function SourcePreview({ state }: { state: PreviewState }) {
     const { dto, prepared } = state;
     if (!dto) return null;
     return <Stack gap="3" minW="0">
-        {dto.procesoProduccionCompleto?.cantidadSalidaReceta == null && <Text color="orange.fg" fontSize="sm">Receta histórica: las cantidades son coeficientes registrados. No se conoce su salida física; debes confirmarla al copiar.</Text>}
+        {dto.procesoProduccionCompleto?.cantidadSalidaReceta == null && <Text color="orange.fg" fontSize="sm">Receta histórica: las cantidades son coeficientes registrados. No se conoce su salida física; debes confirmar la salida y las cantidades antes de guardar.</Text>}
         <Flex gap="2" align="center" flexWrap="wrap">
             <Heading size="md" overflowWrap="anywhere">{dto.nombre}</Heading>
             <Badge colorPalette="teal">Solo lectura</Badge>
@@ -113,8 +113,8 @@ function SourcePreview({ state }: { state: PreviewState }) {
     </Stack>;
 }
 
-export default function LoadTerminadoDialog({ hasDraft, onClose, onLoad }: {
-    hasDraft: boolean; onClose: () => void; onLoad: (draft: LoadedDraft) => void;
+export default function LoadTerminadoDialog({ hasDraft, editingProductId, onClose, onLoad }: {
+    hasDraft: boolean; editingProductId?: string; onClose: () => void; onLoad: (draft: LoadedDraft) => void;
 }) {
     const [search, setSearch] = useState("");
     const [by, setBy] = useState<"NOMBRE" | "ID">("NOMBRE");
@@ -188,9 +188,9 @@ export default function LoadTerminadoDialog({ hasDraft, onClose, onLoad }: {
         if (disabledReason || !ready || loadingCopy.current) return;
         loadingCopy.current = true;
         try {
-            onLoad(copyPreview(ready, mode));
+            onLoad(mode === "edit" ? editPreview(ready) : copyPreview(ready, mode));
         } catch (cause) {
-            setLoadError(cause instanceof Error ? cause.message : "No se pudo preparar la copia.");
+            setLoadError(cause instanceof Error ? cause.message : "No se pudo cargar la referencia.");
             loadingCopy.current = false;
         }
     }
@@ -199,7 +199,7 @@ export default function LoadTerminadoDialog({ hasDraft, onClose, onLoad }: {
         <Portal><Dialog.Backdrop /><Dialog.Positioner><Dialog.Content maxW="90rem" h="calc(100dvh - 3rem)">
             <Dialog.Header>
                 <Dialog.Title>Cargar una referencia</Dialog.Title>
-                <Dialog.Description>Busca un terminado o semiterminado y revisa sus datos antes de cargar una copia.</Dialog.Description>
+                <Dialog.Description>Busca un terminado o semiterminado y revisa sus datos para clonarlo o modificarlo.</Dialog.Description>
             </Dialog.Header>
             <Dialog.Body minH="0">
                 <SimpleGrid columns={{ base: 1, lg: 2 }} gap="5">
@@ -263,26 +263,33 @@ export default function LoadTerminadoDialog({ hasDraft, onClose, onLoad }: {
             </Dialog.Body>
             <Dialog.Footer flexDirection="column" alignItems="stretch" gap="2" borderTopWidth="1px">
                 <Field.Root>
-                    <Field.Label>Qué cargar</Field.Label>
+                    <Field.Label>Acción</Field.Label>
                     <NativeSelect.Root size="sm">
                         <NativeSelect.Field value={mode} onChange={(event) => { setMode(event.target.value as LoadMode); setReplace(false); setLoadError(""); }}>
-                            <option value="all">Datos completos, grafo e insumos</option>
-                            <option value="graph">Grafo, insumos y salida de receta; conservar identificación</option>
+                            <option value="all">Clonar producto completo</option>
+                            <option value="graph">Importar grafo, insumos y salida de receta</option>
+                            <option value="edit">Cargar para modificar</option>
                         </NativeSelect.Field><NativeSelect.Indicator />
                     </NativeSelect.Root>
-                    <Field.HelperText>{mode === "all"
+                    <Field.HelperText>{mode === "edit"
+                        ? "Se cargarán todos los datos para modificar el producto seleccionado, conservando su código, tipo, prefijo y EAN-14."
+                        : mode === "all"
                         ? "El código, prefijo y EAN14 quedarán vacíos. Confirma las cantidades y unidades de la receta."
-                        : "Conserva identificación, contenido, rendimiento y empaque. Reemplaza la salida de la receta junto con sus insumos; verifica que su unidad sea compatible con el producto actual."}</Field.HelperText>
+                        : `Conserva identificación, contenido, rendimiento y empaque. Reemplaza el grafo, los insumos y la salida; verifica que su unidad sea compatible.${editingProductId ? ` Seguirás modificando ${editingProductId}.` : " Seguirás preparando un producto nuevo."}`}</Field.HelperText>
                 </Field.Root>
                 {hasDraft && <Checkbox.Root checked={replace} onCheckedChange={(event) => setReplace(event.checked === true)}>
                     <Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>
-                    <Checkbox.Label>{mode === "all" ? "Confirmo reemplazar los datos y el grafo del borrador" : "Confirmo reemplazar el grafo, los insumos y la salida de la receta"}</Checkbox.Label>
+                    <Checkbox.Label>{mode === "graph" ? "Confirmo reemplazar el grafo, los insumos y la salida de la receta" : "Confirmo descartar los cambios sin guardar y cargar la referencia seleccionada"}</Checkbox.Label>
                 </Checkbox.Root>}
                 {loadError && <Text role="alert" color="fg.error" fontSize="sm">{loadError}</Text>}
                 <Flex justify="space-between" align="center" gap="3" flexWrap="wrap">
-                    <Text fontSize="xs" color="fg.muted" role="status" flex="1">{disabledReason || "Se cargará un borrador. La referencia original permanece intacta."}</Text>
+                    <Text fontSize="xs" color="fg.muted" role="status" flex="1">{disabledReason || (mode === "edit"
+                        ? `Entrarás en modo edición de ${selected}. Los cambios se aplicarán al pulsar Guardar cambios.`
+                        : mode === "graph" && editingProductId
+                            ? `Importarás esta receta en ${editingProductId}. Los cambios se aplicarán al pulsar Guardar cambios.`
+                            : "Se cargará una copia para un producto nuevo. La referencia original permanece intacta.")}</Text>
                     <Button variant="outline" onClick={onClose}>Cancelar</Button>
-                    <Button colorPalette="teal" disabled={!!disabledReason} onClick={load}>Cargar copia</Button>
+                    <Button colorPalette="teal" disabled={!!disabledReason} onClick={load}>{mode === "edit" ? "Cargar para modificar" : mode === "graph" ? "Importar grafo y receta" : "Cargar copia"}</Button>
                 </Flex>
             </Dialog.Footer>
         </Dialog.Content></Dialog.Positioner></Portal>

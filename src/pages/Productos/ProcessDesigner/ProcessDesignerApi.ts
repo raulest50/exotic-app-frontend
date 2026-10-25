@@ -20,10 +20,12 @@ function quantityText(value: string | number | undefined): string {
     return text.replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
 }
 
-export type LoadMode = "all" | "graph";
+export type LoadMode = "all" | "graph" | "edit";
+export type EditingProduct = Pick<ProductoManufacturingDTO, "productoId" | "tipoProducto" | "fotoUrl" | "status">;
 type GraphCopy = { nodes: DesignerNode[]; edges: Edge[]; source: string; output: { quantity: string; unit: string } };
 export type LoadedDraft = GraphCopy & (
     { mode: "all"; product: DesignerProduct } | { mode: "graph" }
+    | { mode: "edit"; product: DesignerProduct; identity: EditingProduct }
 );
 export type ProductPage = { content: Producto[]; totalPages: number };
 export type SearchQuery = { kind: "T" | "S"; searchTerm: string; tipoBusqueda: "NOMBRE" | "ID"; page: number };
@@ -107,7 +109,7 @@ function buildPreview(dto: ProductoManufacturingDTO, products: Map<string, Produ
     return { dto, product, nodes, edges, hasSavedGraph, output: { quantity: product.cantidadSalidaReceta, unit: product.unidadSalidaReceta }, source: dto.productoId + " · " + dto.nombre };
 }
 
-export function copyPreview(preview: Preview, mode: LoadMode): LoadedDraft {
+export function copyPreview(preview: Preview, mode: Exclude<LoadMode, "edit">): LoadedDraft {
     const product = structuredClone(preview.product);
     product.productoId = "";
     product.prefijoLote = "";
@@ -129,6 +131,12 @@ export function copyPreview(preview: Preview, mode: LoadMode): LoadedDraft {
     }));
     const graph = { nodes, edges, source: preview.source, output: preview.output };
     return mode === "all" ? { ...graph, mode, product } : { ...graph, mode };
+}
+
+export function editPreview(preview: Preview): LoadedDraft {
+    const { product, nodes, edges, source, output, dto } = structuredClone(preview);
+    return { mode: "edit", product, nodes, edges, source, output,
+        identity: { productoId: dto.productoId, tipoProducto: dto.tipoProducto, fotoUrl: dto.fotoUrl, status: dto.status } };
 }
 
 
@@ -198,21 +206,49 @@ export function toDesignerPayload(product: DesignerProduct, nodes: DesignerNode[
     };
 }
 
-export type SavedProductSummary = { id: string; name: string; kind: string; quantity: string; unit: string };
+export type SavedProductSummary = {
+    id: string; name: string; kind: string; quantity: string; unit: string;
+    operation: "create" | "update"; product: DesignerProduct; identity: EditingProduct;
+};
 
-export async function guardarProducto(product: DesignerProduct, nodes: DesignerNode[], edges: Edge[]): Promise<SavedProductSummary> {
+export async function guardarProducto(product: DesignerProduct, nodes: DesignerNode[], edges: Edge[], editing: EditingProduct | null): Promise<SavedProductSummary> {
+    if (editing && (product.productoId !== editing.productoId || product.tipo_producto !== editing.tipoProducto)) {
+        throw new Error("No se puede cambiar el código ni el tipo del producto que estás modificando.");
+    }
     try {
-        const { data } = await axios.post<ProductoManufacturingDTO>(
-            endpoints.create_producto_manufacturing + "/designer", toDesignerPayload(product, nodes, edges), { withCredentials: true });
-        return { id: data.productoId, name: data.nombre, kind: data.tipoProducto,
-            quantity: quantityText(data.procesoProduccionCompleto?.cantidadSalidaReceta), unit: data.procesoProduccionCompleto?.unidadSalidaReceta ?? "" };
+        const payload = toDesignerPayload(product, nodes, edges);
+        // Updating must preserve fields outside the designer, especially the existing photo.
+        const { data } = editing
+            ? await axios.put<ProductoManufacturingDTO>(
+                endpoints.update_producto_manufacturing.replace("{productoId}", encodeURIComponent(editing.productoId)),
+                { ...payload, fotoUrl: editing.fotoUrl, status: editing.status }, { withCredentials: true })
+            : await axios.post<ProductoManufacturingDTO>(
+                endpoints.create_producto_manufacturing + "/designer", payload, { withCredentials: true });
+        if (data.productoId !== product.productoId || data.tipoProducto !== product.tipo_producto) {
+            throw new Error("La respuesta del guardado no corresponde al producto. Conservamos el borrador; verifica el catálogo antes de reintentar.");
+        }
+        const savedProduct: DesignerProduct = {
+            ...product, nombre: data.nombre, observaciones: data.observaciones,
+            costo: data.costo == null ? undefined : String(data.costo), ivaPercentual: data.ivaPercentual,
+            prefijoLote: data.prefijoLote, tipoUnidades: data.tipoUnidades,
+            cantidadUnidad: String(data.cantidadUnidad), unidadContenidoPorEnvase: data.unidadContenidoPorEnvase ?? "",
+            inventareable: data.inventareable, requiereOrdenFabricacion: data.tipoProducto === "T" || data.requiereOrdenFabricacion,
+            rendimientoTeorico: String(data.procesoProduccionCompleto?.rendimientoTeorico ?? 0),
+            cantidadSalidaReceta: quantityText(data.procesoProduccionCompleto?.cantidadSalidaReceta),
+            unidadSalidaReceta: data.procesoProduccionCompleto?.unidadSalidaReceta ?? "",
+        };
+        return { id: data.productoId, name: data.nombre, kind: data.tipoProducto, operation: editing ? "update" : "create",
+            quantity: savedProduct.cantidadSalidaReceta, unit: savedProduct.unidadSalidaReceta, product: savedProduct,
+            identity: { productoId: data.productoId, tipoProducto: data.tipoProducto, fotoUrl: data.fotoUrl, status: data.status } };
     } catch (error) {
         if (axios.isAxiosError(error)) {
             const detail = error.response?.data?.error;
             if (error.response && [400, 409].includes(error.response.status) && typeof detail === "string") throw Object.assign(new Error(detail), { cause: error });
             if (error.response?.status === 403) throw Object.assign(new Error("No tienes permiso para guardar este producto."), { cause: error });
             if (error.response?.status === 401) throw Object.assign(new Error("La sesión ha expirado. Vuelve a iniciar sesión antes de guardar."), { cause: error });
-            throw Object.assign(new Error("No se pudo confirmar el guardado. Conservamos el borrador; verifica si el código ya existe en el catálogo antes de reintentar."), { cause: error });
+            throw Object.assign(new Error(editing
+                ? "No se pudo confirmar la actualización. Conservamos los cambios; verifica el producto en el catálogo antes de reintentar."
+                : "No se pudo confirmar el guardado. Conservamos el borrador; verifica si el código ya existe en el catálogo antes de reintentar."), { cause: error });
         }
         throw error;
     }

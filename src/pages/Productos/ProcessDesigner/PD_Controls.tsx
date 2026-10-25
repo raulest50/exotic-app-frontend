@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Button, Field, Fieldset, Flex, IconButton, NativeSelect, Stack, Switch, Text } from "@chakra-ui/react";
-import { FiChevronLeft, FiChevronRight, FiCopy, FiMaximize, FiMinimize } from "react-icons/fi";
+import { useRef, useState } from "react";
+import { Button, Dialog, Field, Fieldset, Flex, IconButton, NativeSelect, Portal, Stack, Switch, Text } from "@chakra-ui/react";
+import { FiChevronLeft, FiChevronRight, FiCopy, FiMaximize, FiMinimize, FiTrash2 } from "react-icons/fi";
 import LoadTerminadoDialog, { type LoadedDraft } from "./LoadTerminadoDialog.tsx";
 
 export interface DesignerViewPreferences {
@@ -11,10 +11,12 @@ export interface DesignerViewPreferences {
     showMiniMap: boolean;
 }
 
-export default function PD_Controls({ hasDraft, onClone, preferences, onPreferencesChange, onResetPreferences, preferencesSaved,
+export default function PD_Controls({ hasDraft, editingProductId, onLoad, onClear, preferences, onPreferencesChange, onResetPreferences, preferencesSaved,
     isFullscreen, fullscreenSupported, fullscreenBusy, onToggleFullscreen }: {
     hasDraft: boolean;
-    onClone: (draft: LoadedDraft) => void;
+    editingProductId?: string;
+    onLoad: (draft: LoadedDraft) => void;
+    onClear: () => void;
     preferences: DesignerViewPreferences;
     onPreferencesChange: (preferences: DesignerViewPreferences) => void;
     onResetPreferences: () => void;
@@ -26,6 +28,9 @@ export default function PD_Controls({ hasDraft, onClone, preferences, onPreferen
 }) {
     const [collapsed, setCollapsed] = useState(true);
     const [open, setOpen] = useState(false);
+    const [clearOpen, setClearOpen] = useState(false);
+    const clearTriggerRef = useRef<HTMLButtonElement>(null);
+    const cancelClearRef = useRef<HTMLButtonElement>(null);
 
     return <>
         <Stack as="aside" aria-label="Controles del diseñador"
@@ -41,7 +46,10 @@ export default function PD_Controls({ hasDraft, onClone, preferences, onPreferen
                 </IconButton>
             </Flex>
             {!collapsed && <Stack gap="4">
-                <Button size="sm" onClick={() => setOpen(true)}><FiCopy /> Clonar producto</Button>
+                <Button size="sm" onClick={() => setOpen(true)}><FiCopy /> Clonar / Modificar</Button>
+                <Button ref={clearTriggerRef} size="sm" variant="outline" colorPalette="red" onClick={() => setClearOpen(true)}>
+                    <FiTrash2 /> Limpiar
+                </Button>
                 <Fieldset.Root size="sm" gap="0" minW="0" borderTopWidth="1px" pt="2">
                     <Fieldset.Legend fontSize="sm" fontWeight="semibold">Navegación</Fieldset.Legend>
                     <Stack gap="3">
@@ -125,9 +133,27 @@ export default function PD_Controls({ hasDraft, onClone, preferences, onPreferen
                 </Button>
             </Stack>}
         </Stack>
-        {open && <LoadTerminadoDialog hasDraft={hasDraft} onClose={() => setOpen(false)} onLoad={(draft) => {
-            onClone(draft);
+        {open && <LoadTerminadoDialog hasDraft={hasDraft} editingProductId={editingProductId} onClose={() => setOpen(false)} onLoad={(draft) => {
+            onLoad(draft);
             setOpen(false);
         }} />}
+        {clearOpen && <Dialog.Root open role="alertdialog" placement="center" closeOnInteractOutside={false}
+            initialFocusEl={() => cancelClearRef.current} finalFocusEl={() => clearTriggerRef.current}
+            onOpenChange={({ open }) => { if (!open) setClearOpen(false); }}>
+            <Portal><Dialog.Backdrop /><Dialog.Positioner><Dialog.Content mx="4" maxW="lg">
+                <Dialog.Header><Dialog.Title>¿Limpiar el diseño actual?</Dialog.Title></Dialog.Header>
+                <Dialog.Body>
+                    <Dialog.Description>
+                        Se descartarán los datos de cabecera, la receta, el grafo y el packaging del diseño actual para empezar de nuevo.
+                        Los cambios sin guardar se perderán.
+                    </Dialog.Description>
+                    <Text mt="3" fontSize="sm">Los productos guardados en el catálogo se conservarán.</Text>
+                </Dialog.Body>
+                <Dialog.Footer>
+                    <Button ref={cancelClearRef} variant="outline" onClick={() => setClearOpen(false)}>Cancelar</Button>
+                    <Button colorPalette="red" onClick={() => { onClear(); setClearOpen(false); }}>Limpiar diseño</Button>
+                </Dialog.Footer>
+            </Dialog.Content></Dialog.Positioner></Portal>
+        </Dialog.Root>}
     </>;
 }

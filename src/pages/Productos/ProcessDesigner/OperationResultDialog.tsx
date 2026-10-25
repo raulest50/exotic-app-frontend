@@ -6,10 +6,12 @@ export default function OperationResultDialog({ result, onClose }: {
 }) {
     return <Dialog.Root open placement="center" closeOnInteractOutside={false} onOpenChange={({ open }) => { if (!open) onClose(); }}>
         <Portal><Dialog.Backdrop /><Dialog.Positioner><Dialog.Content mx="4" maxW="lg">
-            <Dialog.Header><Dialog.Title>Producto guardado</Dialog.Title></Dialog.Header>
+            <Dialog.Header><Dialog.Title>{result.operation === "update" ? "Producto actualizado" : "Producto creado"}</Dialog.Title></Dialog.Header>
             <Dialog.Body>
                 <Stack gap="3">
-                    <Dialog.Description>El producto y su receta se registraron correctamente.</Dialog.Description>
+                    <Dialog.Description>{result.operation === "update"
+                        ? "Los cambios del producto y su receta se guardaron correctamente."
+                        : "El producto y su receta se registraron correctamente."}</Dialog.Description>
                     <Text fontWeight="semibold" overflowWrap="anywhere">{result.id} · {result.name}</Text>
                     <Text>{result.kind === "S" ? "Semiterminado" : "Terminado"}</Text>
                     <Text>Salida de la receta: {result.quantity} {result.unit}</Text>

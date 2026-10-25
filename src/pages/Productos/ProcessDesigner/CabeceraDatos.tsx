@@ -15,14 +15,14 @@ function sugerirPrefijoLote(nombre: string): string {
     return palabras.map((palabra) => palabra[0]).join("").slice(0, 20);
 }
 
-export default function CabeceraDatos({ product, onChange, isActive, units }: {
-    product: DesignerProduct; onChange: (product: DesignerProduct) => void; isActive: boolean; units: UnidadMedidaProducto[];
+export default function CabeceraDatos({ product, onChange, isActive, units, isEditing }: {
+    product: DesignerProduct; onChange: (product: DesignerProduct) => void; isActive: boolean; units: UnidadMedidaProducto[]; isEditing: boolean;
 }) {
     const [expanded, setExpanded] = useState(true);
     const [categories, setCategories] = useState<Categoria[]>([]);
     const [categoryError, setCategoryError] = useState(false);
     const [retry, setRetry] = useState(0);
-    const [manualPrefix, setManualPrefix] = useState(() => Boolean(product.prefijoLote));
+    const [manualPrefix, setManualPrefix] = useState(() => isEditing || Boolean(product.prefijoLote));
     const contentId = useId();
     useEffect(() => {
         if (!isActive) return;
@@ -36,7 +36,7 @@ export default function CabeceraDatos({ product, onChange, isActive, units }: {
     const patch = (changes: Partial<DesignerProduct>) => onChange({ ...product, ...changes });
     const suggestedPrefix = sugerirPrefijoLote(product.nombre);
     const isTerminado = product.tipo_producto === "T";
-    const inventoryLocked = isTerminado || product.requiereOrdenFabricacion;
+    const inventoryLocked = isEditing || isTerminado || product.requiereOrdenFabricacion;
     return (
         <Box borderWidth="1px" rounded="md" mb="3" p="3" bg="bg.panel">
             <Flex direction={{ base: "column", md: "row" }} align={{ base: "stretch", md: "center" }} gap="3">
@@ -52,13 +52,14 @@ export default function CabeceraDatos({ product, onChange, isActive, units }: {
                 </Button>
                 <Field.Root w={{ base: "full", md: "64" }} flexShrink="0">
                     <Field.Label>Tipo de producto</Field.Label>
-                    <NativeSelect.Root size="sm">
+                    <NativeSelect.Root size="sm" disabled={isEditing}>
                         <NativeSelect.Field value={product.tipo_producto} onChange={(e) => patch({ tipo_producto: e.target.value, categoria: undefined, casePack: undefined, unidadSalidaReceta: "", inventareable: e.target.value === "T", requiereOrdenFabricacion: e.target.value === "T" })}>
                             <option value="T">Terminado</option>
                             <option value="S">Semiterminado</option>
                         </NativeSelect.Field>
                         <NativeSelect.Indicator />
                     </NativeSelect.Root>
+                    {isEditing && <Field.HelperText>El tipo del producto existente se conserva.</Field.HelperText>}
                 </Field.Root>
             </Flex>
             <Box id={contentId} hidden={!expanded}>
@@ -67,11 +68,12 @@ export default function CabeceraDatos({ product, onChange, isActive, units }: {
                         <Fieldset.Legend fontSize="xs" fontWeight="semibold" color="fg.muted">Identificación</Fieldset.Legend>
                         <Grid templateColumns={{ base: "minmax(0, 1fr)", md: "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr)" }} gap="3">
                             <Field.Root required>
-                                <Field.Label>Código nuevo</Field.Label>
-                                <Input size="sm" value={product.productoId} onChange={(e) => patch({ productoId: normalizeProductId(e.target.value) })} />
+                                <Field.Label>{isEditing ? "Código" : "Código nuevo"}</Field.Label>
+                                <Input size="sm" readOnly={isEditing} value={product.productoId} onChange={(e) => patch({ productoId: normalizeProductId(e.target.value) })} />
+                                {isEditing && <Field.HelperText>Identificador del producto; no se puede modificar.</Field.HelperText>}
                             </Field.Root>
                             <Field.Root>
-                                <Field.Label>Prefijo de lote nuevo</Field.Label>
+                                <Field.Label>{isEditing ? "Prefijo de lote" : "Prefijo de lote nuevo"}</Field.Label>
                                 <Flex gap="2" w="full">
                                     <Input size="sm" minW="0" maxLength={20} value={product.prefijoLote ?? ""} onChange={(e) => {
                                         // Clearing the field is also a manual choice, including semiterminados without their own lots.
@@ -205,7 +207,7 @@ export default function CabeceraDatos({ product, onChange, isActive, units }: {
                                     <NativeSelect.Indicator />
                                 </NativeSelect.Root>
                                 {inventoryLocked && <Field.HelperText>
-                                    {isTerminado ? "Los terminados mantienen existencias." : "Requerido al usar una orden de fabricación."}
+                                    {isEditing ? "Se conserva la configuración de inventario del producto existente." : isTerminado ? "Los terminados mantienen existencias." : "Requerido al usar una orden de fabricación."}
                                 </Field.HelperText>}
                             </Field.Root>
                         </SimpleGrid>
