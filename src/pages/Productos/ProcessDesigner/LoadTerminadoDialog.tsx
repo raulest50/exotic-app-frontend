@@ -31,10 +31,11 @@ function SourceDetails({ dto }: { dto: ProductoManufacturingDTO }) {
         ["Unidad de salida e inventario", dto.tipoUnidades],
         ["Categoría", dto.categoriaNombre ?? dto.categoriaId], ["Prefijo de lote", dto.prefijoLote],
         ["IVA (%)", dto.ivaPercentual], ["Costo", dto.costo],
-        ["Inventariable", yesNo(dto.inventareable)], ["Requiere orden de fabricación", yesNo(dto.requiereOrdenFabricacion)],
+        ["Inventariable", yesNo(dto.inventareable)],
         ["Rendimiento teórico (histórico)", dto.procesoProduccionCompleto?.rendimientoTeorico],
         ["Salida de la receta", dto.procesoProduccionCompleto?.cantidadSalidaReceta == null ? "Sin especificar: confirmar al copiar" : `${dto.procesoProduccionCompleto.cantidadSalidaReceta} ${dto.tipoUnidades}`],
     ];
+    if (dto.tipoProducto === "S") fields.push(["Aplica para Orden Fabricacion", yesNo(dto.requiereOrdenFabricacion)]);
     return <Stack gap="4">
         <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
             {fields.map(([label, value]) => <Box key={label}>

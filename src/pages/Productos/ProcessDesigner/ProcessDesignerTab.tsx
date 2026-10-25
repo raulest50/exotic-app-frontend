@@ -23,7 +23,7 @@ import type { LoadedDraft } from "./LoadTerminadoDialog.tsx";
 export type DesignerNode = MaterialFlowNode | SemiterminadoFlowNode | ProcessFlowNode | TerminadoFlowNode;
 const emptyDesignerProduct = (): DesignerProduct => ({
     productoId: "", nombre: "", tipo_producto: "T", tipoUnidades: "U", cantidadUnidad: "",
-    inventareable: true, requiereOrdenFabricacion: true, ivaPercentual: 0, rendimientoTeorico: "0", cantidadSalidaReceta: "", unidadContenidoPorEnvase: "",
+    inventareable: true, requiereOrdenFabricacion: false, ivaPercentual: 0, rendimientoTeorico: "0", cantidadSalidaReceta: "", unidadContenidoPorEnvase: "",
 });
 
 function canConnect(connection: Connection | Edge, nodes: DesignerNode[], edges: Edge[]) {

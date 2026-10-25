@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from "react";
-import { Box, Button, Field, Fieldset, Flex, Grid, Input, NativeSelect, SimpleGrid, Stack, Text, Textarea } from "@chakra-ui/react";
+import { Box, Button, Checkbox, Field, Fieldset, Flex, Grid, Input, NativeSelect, SimpleGrid, Stack, Text, Textarea } from "@chakra-ui/react";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
@@ -54,7 +54,7 @@ export default function CabeceraDatos({ product, onChange, isActive, units, isEd
                 <Field.Root w={{ base: "full", md: "64" }} flexShrink="0">
                     <Field.Label>Tipo de producto</Field.Label>
                     <NativeSelect.Root size="sm" disabled={isEditing}>
-                        <NativeSelect.Field value={product.tipo_producto} onChange={(e) => patch({ tipo_producto: e.target.value, categoria: undefined, casePack: undefined, cantidadUnidad: "", unidadContenidoPorEnvase: "", inventareable: e.target.value === "T", requiereOrdenFabricacion: e.target.value === "T" })}>
+                        <NativeSelect.Field value={product.tipo_producto} onChange={(e) => patch({ tipo_producto: e.target.value, categoria: undefined, casePack: undefined, cantidadUnidad: "", unidadContenidoPorEnvase: "", inventareable: e.target.value === "T", requiereOrdenFabricacion: false })}>
                             <option value="T">Terminado</option>
                             <option value="S">Semiterminado</option>
                         </NativeSelect.Field>
@@ -142,7 +142,7 @@ export default function CabeceraDatos({ product, onChange, isActive, units, isEd
                     </Fieldset.Root>
                     <Fieldset.Root size="sm" gap="0" minW="0" borderTopWidth="1px" pt="2">
                         <Fieldset.Legend fontSize="xs" fontWeight="semibold" color="fg.muted">Configuración</Fieldset.Legend>
-                        <SimpleGrid columns={{ base: 1, md: 3 }} gap="3">
+                        <SimpleGrid columns={{ base: 1, md: isTerminado ? 2 : 3 }} gap="3">
                             <Field.Root>
                                 <Field.Label>IVA (%)</Field.Label>
                                 <NativeSelect.Root size="sm">
@@ -152,21 +152,13 @@ export default function CabeceraDatos({ product, onChange, isActive, units, isEd
                                     <NativeSelect.Indicator />
                                 </NativeSelect.Root>
                             </Field.Root>
-                            <Box minW="0">
-                                {product.tipo_producto === "S" ? <Field.Root>
-                                    <Field.Label>Orden de fabricación</Field.Label>
-                                    <NativeSelect.Root size="sm">
-                                        <NativeSelect.Field value={product.requiereOrdenFabricacion ? "si" : "no"} onChange={(e) => patch({ requiereOrdenFabricacion: e.target.value === "si", inventareable: e.target.value === "si" || product.inventareable })}>
-                                            <option value="si">Requiere orden</option>
-                                            <option value="no">Sin orden propia</option>
-                                        </NativeSelect.Field>
-                                        <NativeSelect.Indicator />
-                                    </NativeSelect.Root>
-                                </Field.Root> : <Stack gap="1.5">
-                                    <Text fontSize="sm" fontWeight="medium">Orden de fabricación</Text>
-                                    <Text fontSize="sm" color="fg.muted" minH="8" py="1.5">Requerida para terminados.</Text>
-                                </Stack>}
-                            </Box>
+                            {product.tipo_producto === "S" && <Checkbox.Root alignSelf="center"
+                                checked={product.requiereOrdenFabricacion === true}
+                                onCheckedChange={({ checked }) => patch({ requiereOrdenFabricacion: checked === true, inventareable: checked === true || product.inventareable })}>
+                                <Checkbox.HiddenInput />
+                                <Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>
+                                <Checkbox.Label>Aplica para Orden Fabricacion</Checkbox.Label>
+                            </Checkbox.Root>}
                             <Field.Root disabled={inventoryLocked}>
                                 <Field.Label>Inventariable</Field.Label>
                                 <NativeSelect.Root size="sm">

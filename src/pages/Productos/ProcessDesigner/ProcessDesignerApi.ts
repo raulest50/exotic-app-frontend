@@ -67,7 +67,7 @@ function buildPreview(dto: ProductoManufacturingDTO, products: Map<string, Produ
         tipo_producto: dto.tipoProducto, tipoUnidades: dto.tipoUnidades, cantidadUnidad: String(dto.cantidadUnidad),
         unidadContenidoPorEnvase: dto.unidadContenidoPorEnvase ?? "",
         observaciones: dto.observaciones, costo: dto.costo == null ? undefined : String(dto.costo), ivaPercentual: dto.ivaPercentual,
-        inventareable: dto.inventareable, requiereOrdenFabricacion: dto.tipoProducto === "T" || dto.requiereOrdenFabricacion,
+        inventareable: dto.inventareable, requiereOrdenFabricacion: dto.tipoProducto === "S" && dto.requiereOrdenFabricacion === true,
         categoria: dto.categoriaId == null ? undefined : { categoriaId: dto.categoriaId, categoriaNombre: dto.categoriaNombre ?? "", categoriaDescripcion: "" },
         casePack: dto.casePack ? { ...dto.casePack, insumosEmpaque: dto.casePack.insumosEmpaque?.map(i => {
             const material = products.get(i.materialId);
@@ -219,7 +219,9 @@ export function toDesignerPayload(product: DesignerProduct, nodes: DesignerNode[
         cantidadUnidad: hasContainerContent ? Number(product.cantidadUnidad) : 0,
         unidadContenidoPorEnvase: hasContainerContent ? product.unidadContenidoPorEnvase : undefined,
         observaciones: product.observaciones, ivaPercentual: product.ivaPercentual,
-        inventareable: product.inventareable, requiereOrdenFabricacion: product.requiereOrdenFabricacion,
+        inventareable: product.inventareable,
+        // Solo SemiTerminado tiene esta configuración; los terminados usan OrdenProduccion.
+        requiereOrdenFabricacion: product.tipo_producto === "S" ? product.requiereOrdenFabricacion === true : undefined,
         categoriaId: product.tipo_producto === "T" ? product.categoria?.categoriaId : undefined, prefijoLote: product.prefijoLote || undefined,
         insumos: nodes.flatMap(node => node.type === "material" || node.type === "semiterminado" ? [{
             productoId: node.data.producto.productoId, cantidadReceta: node.data.cantidad, unidadReceta: node.data.unidad,
@@ -267,7 +269,7 @@ export async function guardarProducto(product: DesignerProduct, nodes: DesignerN
             costo: data.costo == null ? undefined : String(data.costo), ivaPercentual: data.ivaPercentual,
             prefijoLote: data.prefijoLote, tipoUnidades: data.tipoUnidades,
             cantidadUnidad: String(data.cantidadUnidad), unidadContenidoPorEnvase: data.unidadContenidoPorEnvase ?? "",
-            inventareable: data.inventareable, requiereOrdenFabricacion: data.tipoProducto === "T" || data.requiereOrdenFabricacion,
+            inventareable: data.inventareable, requiereOrdenFabricacion: data.tipoProducto === "S" && data.requiereOrdenFabricacion === true,
             rendimientoTeorico: String(data.procesoProduccionCompleto?.rendimientoTeorico ?? 0),
             cantidadSalidaReceta: quantityText(data.procesoProduccionCompleto?.cantidadSalidaReceta),
         };
