@@ -142,7 +142,9 @@ export function editPreview(preview: Preview): LoadedDraft {
 
 export async function buscarReferencias(query: SearchQuery, signal: AbortSignal): Promise<ProductPage> {
     const response = query.kind === "T"
-        ? await axios.post<ProductPage>(endpoints.search_terminados_picker, { ...query, size: 10 }, { signal, withCredentials: true })
+        ? await axios.post<ProductPage>(endpoints.search_terminados_picker, {
+            searchTerm: query.searchTerm, tipoBusqueda: query.tipoBusqueda, page: query.page, size: 10,
+        }, { signal, withCredentials: true })
         : await axios.get<ProductPage>(endpoints.search_semi, { params: { search: query.searchTerm, tipoBusqueda: query.tipoBusqueda, page: query.page, size: 10 }, signal, withCredentials: true });
     return response.data;
 }
