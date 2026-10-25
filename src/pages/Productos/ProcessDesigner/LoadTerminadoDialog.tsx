@@ -26,12 +26,14 @@ function SourceDetails({ dto }: { dto: ProductoManufacturingDTO }) {
     const fields: [string, string | number | undefined][] = [
         ["Código", dto.productoId], ["Nombre", dto.nombre],
         ["Tipo", dto.tipoProducto === "S" ? "Semiterminado" : "Terminado"],
-        ["Contenido por envase", String(dto.cantidadUnidad) + " " + (dto.unidadContenidoPorEnvase ?? "(unidad sin confirmar)")], ["Unidad del producto", dto.tipoUnidades],
+        ["Contenido por envase", dto.tipoProducto === "T" && dto.tipoUnidades === "U"
+            ? String(dto.cantidadUnidad) + " " + (dto.unidadContenidoPorEnvase ?? "(unidad sin confirmar)") : "No aplica"],
+        ["Unidad de salida e inventario", dto.tipoUnidades],
         ["Categoría", dto.categoriaNombre ?? dto.categoriaId], ["Prefijo de lote", dto.prefijoLote],
         ["IVA (%)", dto.ivaPercentual], ["Costo", dto.costo],
         ["Inventariable", yesNo(dto.inventareable)], ["Requiere orden de fabricación", yesNo(dto.requiereOrdenFabricacion)],
         ["Rendimiento teórico (histórico)", dto.procesoProduccionCompleto?.rendimientoTeorico],
-        ["Salida de la receta", dto.procesoProduccionCompleto?.cantidadSalidaReceta == null ? "Sin especificar: confirmar al copiar" : `${dto.procesoProduccionCompleto.cantidadSalidaReceta} ${dto.procesoProduccionCompleto.unidadSalidaReceta}`],
+        ["Salida de la receta", dto.procesoProduccionCompleto?.cantidadSalidaReceta == null ? "Sin especificar: confirmar al copiar" : `${dto.procesoProduccionCompleto.cantidadSalidaReceta} ${dto.tipoUnidades}`],
     ];
     return <Stack gap="4">
         <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
@@ -290,7 +292,7 @@ export default function LoadTerminadoDialog({ hasDraft, editingProductId, onClos
                         ? "Se cargarán todos los datos para modificar el producto seleccionado, conservando su código, tipo, prefijo y EAN-14."
                         : mode === "all"
                         ? "El código, prefijo y EAN14 quedarán vacíos. Confirma las cantidades y unidades de la receta."
-                        : `Conserva identificación, contenido y empaque. Reemplaza el grafo, los insumos y la salida; verifica que su unidad sea compatible.${editingProductId ? ` Seguirás modificando ${editingProductId}.` : " Seguirás preparando un producto nuevo."}`}</Field.HelperText>
+                        : `Conserva identificación, unidad del producto, contenido y empaque. Reemplaza el grafo y los insumos; convierte la salida a la unidad del destino si es compatible.${editingProductId ? ` Seguirás modificando ${editingProductId}.` : " Seguirás preparando un producto nuevo."}`}</Field.HelperText>
                 </Field.Root>
                 {hasDraft && <Checkbox.Root checked={replace} onCheckedChange={(event) => setReplace(event.checked === true)}>
                     <Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>

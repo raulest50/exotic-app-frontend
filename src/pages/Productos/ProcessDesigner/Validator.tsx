@@ -48,10 +48,12 @@ function validateDraft(product: DesignerProduct, nodes: DesignerNode[], edges: E
     return [
         { label: "Código alfanumérico en mayúsculas", valid: product.productoId ? product.productoId.length <= 255 && validateProductId(product.productoId) === null : null },
         { label: "Nombre del producto", valid: product.nombre ? !!product.nombre.trim() && product.nombre.length <= 200 : null },
-        { label: "Contenido positivo y unidad de contenido válida", valid: product.cantidadUnidad ? positive(product.cantidadUnidad) && units.some(u => u.codigo === product.unidadContenidoPorEnvase) : null },
+        ...(product.tipo_producto === "T" && product.tipoUnidades === "U" ? [
+            { label: "Contenido por envase positivo y unidad válida", valid: product.cantidadUnidad ? positive(product.cantidadUnidad) && units.some(u => u.codigo === product.unidadContenidoPorEnvase) : null },
+        ] : []),
         { label: "Catálogo de unidades disponible", valid: units.length > 0 },
         { label: "Unidad de producto válida", valid: units.some(u => u.codigo === product.tipoUnidades) },
-        { label: "Salida positiva, hasta 12 decimales y unidad compatible", valid: amount(product.cantidadSalidaReceta) && unidadesCompatibles(units, product.tipoUnidades).some(u => u.codigo === product.unidadSalidaReceta) },
+        { label: "Salida positiva en la unidad del producto, hasta 12 decimales", valid: amount(product.cantidadSalidaReceta) && units.some(u => u.codigo === product.tipoUnidades) },
         { label: "Categoría del terminado", valid: product.tipo_producto === "S" || !!product.categoria?.categoriaId },
         { label: "Prefijo de lote", valid: product.prefijoLote ? /^[A-Z0-9]{1,20}$/.test(product.prefijoLote) : product.tipo_producto === "S" && !product.requiereOrdenFabricacion ? true : null },
         { label: "IVA válido", valid: [0, 5, 19].includes(product.ivaPercentual ?? 0) },

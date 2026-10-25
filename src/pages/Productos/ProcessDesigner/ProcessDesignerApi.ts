@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { Edge } from "@xyflow/react";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
-import type { Material, NodoProcesoDTO, Producto, ProductoManufacturingDTO, ProcesoFabricacionNodoDTO } from "../types.tsx";
+import type { Material, NodoProcesoDTO, Producto, ProductoManufacturingDTO, ProcesoFabricacionNodoDTO, UnidadMedidaProducto } from "../types.tsx";
 import type { DesignerProduct } from "./CabeceraDatos.tsx";
 import type { DesignerNode } from "./ProcessDesignerTab.tsx";
 
@@ -21,7 +21,7 @@ function quantityText(value: string | number | undefined): string {
 }
 
 export type LoadMode = "all" | "graph" | "edit";
-export type EditingProduct = Pick<ProductoManufacturingDTO, "productoId" | "tipoProducto" | "fotoUrl" | "status">;
+export type EditingProduct = Pick<ProductoManufacturingDTO, "productoId" | "tipoProducto" | "tipoUnidades" | "fotoUrl" | "status">;
 type GraphCopy = { nodes: DesignerNode[]; edges: Edge[]; source: string; output: { quantity: string; unit: string } };
 export type LoadedDraft = GraphCopy & (
     { mode: "all"; product: DesignerProduct } | { mode: "graph" }
@@ -30,6 +30,35 @@ export type LoadedDraft = GraphCopy & (
 export type ProductPage = { content: Producto[]; totalPages: number };
 export type SearchQuery = { kind: "T" | "S"; searchTerm: string; tipoBusqueda: "NOMBRE" | "ID"; page: number };
 export type Preview = GraphCopy & { dto: ProductoManufacturingDTO; product: DesignerProduct; hasSavedGraph: boolean };
+
+// Importar solo el grafo conserva la unidad del destino y convierte la cantidad,
+// sin reinterpretar, por ejemplo, 500 G como 500 KG ni redondear recetas en silencio.
+export function importedOutputQuantity(output: GraphCopy["output"], unit: string, units: UnidadMedidaProducto[]): string {
+    if (!output.quantity || output.unit === unit) return output.quantity;
+    const source = units.find(item => item.codigo === output.unit);
+    const target = units.find(item => item.codigo === unit);
+    if (!source || !target || source.magnitud !== target.magnitud) {
+        throw new Error(`La salida importada (${output.unit}) no es compatible con la unidad del destino (${unit}). Carga una copia completa o revisa la unidad del producto nuevo antes de importar.`);
+    }
+    // Aritmética decimal exacta a la escala del contrato NUMERIC(24,12).
+    const fixed = (value: string | number): bigint => {
+        const text = quantityText(value);
+        if (!/^\d{1,12}(?:\.\d{1,12})?$/.test(text)) throw new Error("La conversión de salida excede la precisión admitida.");
+        const [integer, decimals = ""] = text.split(".");
+        const amount = BigInt(integer + decimals.padEnd(12, "0"));
+        if (amount <= 0n) throw new Error("La cantidad y los factores de conversión deben ser positivos.");
+        return amount;
+    };
+    const numerator = fixed(output.quantity) * fixed(source.factorAReferencia);
+    const denominator = fixed(target.factorAReferencia);
+    const result = numerator / denominator;
+    if (numerator % denominator !== 0n || result >= 10n ** 24n) {
+        throw new Error("La salida convertida excede los 12 enteros o 12 decimales admitidos. El borrador se conserva.");
+    }
+    const digits = result.toString().padStart(13, "0");
+    return quantityText(digits.slice(0, -12) + "." + digits.slice(-12));
+}
+
 function buildPreview(dto: ProductoManufacturingDTO, products: Map<string, Producto>): Preview {
     if (!["T", "S"].includes(dto.tipoProducto)) throw new Error("La referencia no es un terminado ni un semiterminado.");
     const saved = dto.procesoProduccionCompleto;
@@ -51,9 +80,9 @@ function buildPreview(dto: ProductoManufacturingDTO, products: Map<string, Produ
             };
         }) } : undefined,
         rendimientoTeorico: String(saved?.rendimientoTeorico ?? 0),
-        cantidadSalidaReceta: quantityText(saved?.cantidadSalidaReceta), unidadSalidaReceta: saved?.unidadSalidaReceta ?? "",
+        cantidadSalidaReceta: quantityText(saved?.cantidadSalidaReceta),
     };
-    const output = { quantity: product.cantidadSalidaReceta, unit: product.unidadSalidaReceta };
+    const output = { quantity: product.cantidadSalidaReceta, unit: product.tipoUnidades };
     const ids = new Set<string>();
     const includedInputs = new Set<string>();
     const inputNode = (productId: string, id: string, position: { x: number; y: number }): DesignerNode => {
@@ -137,7 +166,7 @@ export function copyPreview(preview: Preview, mode: Exclude<LoadMode, "edit">): 
 export function editPreview(preview: Preview): LoadedDraft {
     const { product, nodes, edges, source, output, dto } = structuredClone(preview);
     return { mode: "edit", product, nodes, edges, source, output,
-        identity: { productoId: dto.productoId, tipoProducto: dto.tipoProducto, fotoUrl: dto.fotoUrl, status: dto.status } };
+        identity: { productoId: dto.productoId, tipoProducto: dto.tipoProducto, tipoUnidades: dto.tipoUnidades, fotoUrl: dto.fotoUrl, status: dto.status } };
 }
 
 
@@ -183,9 +212,12 @@ export async function cargarReferencia(id: string, signal: AbortSignal): Promise
 }
 
 export function toDesignerPayload(product: DesignerProduct, nodes: DesignerNode[], edges: Edge[]): ProductoManufacturingDTO {
+    const hasContainerContent = product.tipo_producto === "T" && product.tipoUnidades === "U";
     return {
         productoId: product.productoId, nombre: product.nombre.trim(), tipoProducto: product.tipo_producto,
-        tipoUnidades: product.tipoUnidades, cantidadUnidad: Number(product.cantidadUnidad), unidadContenidoPorEnvase: product.unidadContenidoPorEnvase,
+        tipoUnidades: product.tipoUnidades,
+        cantidadUnidad: hasContainerContent ? Number(product.cantidadUnidad) : 0,
+        unidadContenidoPorEnvase: hasContainerContent ? product.unidadContenidoPorEnvase : undefined,
         observaciones: product.observaciones, ivaPercentual: product.ivaPercentual,
         inventareable: product.inventareable, requiereOrdenFabricacion: product.requiereOrdenFabricacion,
         categoriaId: product.tipo_producto === "T" ? product.categoria?.categoriaId : undefined, prefijoLote: product.prefijoLote || undefined,
@@ -197,7 +229,7 @@ export function toDesignerPayload(product: DesignerProduct, nodes: DesignerNode[
         casePack: product.casePack ? { ...product.casePack, id: undefined, insumosEmpaque: product.casePack.insumosEmpaque?.map(i => ({ materialId: i.material.productoId, cantidad: i.cantidad, uom: i.uom })) } : undefined,
         procesoProduccionCompleto: {
             rendimientoTeorico: Number(product.rendimientoTeorico),
-            cantidadSalidaReceta: product.cantidadSalidaReceta, unidadSalidaReceta: product.unidadSalidaReceta,
+            cantidadSalidaReceta: product.cantidadSalidaReceta,
             nodes: nodes.map((node): ProcesoFabricacionNodoDTO => {
                 const base = { frontendId: node.id, posicionX: node.position.x, posicionY: node.position.y };
                 if (node.type === "target") return { ...base, nodeType: "TARGET" };
@@ -215,8 +247,8 @@ export type SavedProductSummary = {
 };
 
 export async function guardarProducto(product: DesignerProduct, nodes: DesignerNode[], edges: Edge[], editing: EditingProduct | null): Promise<SavedProductSummary> {
-    if (editing && (product.productoId !== editing.productoId || product.tipo_producto !== editing.tipoProducto)) {
-        throw new Error("No se puede cambiar el código ni el tipo del producto que estás modificando.");
+    if (editing && (product.productoId !== editing.productoId || product.tipo_producto !== editing.tipoProducto || product.tipoUnidades !== editing.tipoUnidades)) {
+        throw new Error("No se puede cambiar el código, el tipo ni la unidad del producto que estás modificando.");
     }
     try {
         const payload = toDesignerPayload(product, nodes, edges);
@@ -238,11 +270,10 @@ export async function guardarProducto(product: DesignerProduct, nodes: DesignerN
             inventareable: data.inventareable, requiereOrdenFabricacion: data.tipoProducto === "T" || data.requiereOrdenFabricacion,
             rendimientoTeorico: String(data.procesoProduccionCompleto?.rendimientoTeorico ?? 0),
             cantidadSalidaReceta: quantityText(data.procesoProduccionCompleto?.cantidadSalidaReceta),
-            unidadSalidaReceta: data.procesoProduccionCompleto?.unidadSalidaReceta ?? "",
         };
         return { id: data.productoId, name: data.nombre, kind: data.tipoProducto, operation: editing ? "update" : "create",
-            quantity: savedProduct.cantidadSalidaReceta, unit: savedProduct.unidadSalidaReceta, product: savedProduct,
-            identity: { productoId: data.productoId, tipoProducto: data.tipoProducto, fotoUrl: data.fotoUrl, status: data.status } };
+            quantity: savedProduct.cantidadSalidaReceta, unit: savedProduct.tipoUnidades, product: savedProduct,
+            identity: { productoId: data.productoId, tipoProducto: data.tipoProducto, tipoUnidades: data.tipoUnidades, fotoUrl: data.fotoUrl, status: data.status } };
     } catch (error) {
         if (axios.isAxiosError(error)) {
             const detail = error.response?.data?.error;

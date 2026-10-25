@@ -7,7 +7,8 @@ import type { Categoria, ProductoSemiter, UnidadMedidaProducto } from "../types.
 import { normalizeProductId } from "../productIdUtils.ts";
 
 // rendimientoTeorico se conserva para compatibilidad con v1; no se edita en este diseñador.
-export type DesignerProduct = Omit<ProductoSemiter, "insumos" | "procesoProduccionCompleto"> & { rendimientoTeorico: string; cantidadSalidaReceta: string; unidadSalidaReceta: string };
+// cantidadSalidaReceta usa tipoUnidades; ambos se editan en el nodo de salida.
+export type DesignerProduct = Omit<ProductoSemiter, "insumos" | "procesoProduccionCompleto"> & { rendimientoTeorico: string; cantidadSalidaReceta: string };
 const endpoints = new EndPointsURL();
 
 function sugerirPrefijoLote(nombre: string): string {
@@ -53,7 +54,7 @@ export default function CabeceraDatos({ product, onChange, isActive, units, isEd
                 <Field.Root w={{ base: "full", md: "64" }} flexShrink="0">
                     <Field.Label>Tipo de producto</Field.Label>
                     <NativeSelect.Root size="sm" disabled={isEditing}>
-                        <NativeSelect.Field value={product.tipo_producto} onChange={(e) => patch({ tipo_producto: e.target.value, categoria: undefined, casePack: undefined, unidadSalidaReceta: "", inventareable: e.target.value === "T", requiereOrdenFabricacion: e.target.value === "T" })}>
+                        <NativeSelect.Field value={product.tipo_producto} onChange={(e) => patch({ tipo_producto: e.target.value, categoria: undefined, casePack: undefined, cantidadUnidad: "", unidadContenidoPorEnvase: "", inventareable: e.target.value === "T", requiereOrdenFabricacion: e.target.value === "T" })}>
                             <option value="T">Terminado</option>
                             <option value="S">Semiterminado</option>
                         </NativeSelect.Field>
@@ -103,7 +104,7 @@ export default function CabeceraDatos({ product, onChange, isActive, units, isEd
                     </Fieldset.Root>
                     <Fieldset.Root size="sm" gap="0" minW="0" borderTopWidth="1px" pt="2">
                         <Fieldset.Legend fontSize="xs" fontWeight="semibold" color="fg.muted">Definición</Fieldset.Legend>
-                        <SimpleGrid columns={{ base: 1, md: 3 }} gap="3">
+                        <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
                             <Box minW="0">
                                 {isTerminado ? <Field.Root required>
                                     <Field.Label>Categoría</Field.Label>
@@ -121,7 +122,7 @@ export default function CabeceraDatos({ product, onChange, isActive, units, isEd
                                     <Text fontSize="sm" color="fg.muted" minH="8" py="1.5">Solo aplica a terminados.</Text>
                                 </Stack>}
                             </Box>
-                            <Grid templateColumns="minmax(0, 1fr) 5.5rem" gap="2" alignItems="end">
+                            {isTerminado && product.tipoUnidades === "U" ? <Grid templateColumns="minmax(0, 1fr) 5.5rem" gap="2" alignItems="end">
                                 <Field.Root required>
                                     <Field.Label>Contenido por envase / presentación</Field.Label>
                                     <Input size="sm" type="number" min="0" step="any" value={product.cantidadUnidad} onChange={(e) => patch({ cantidadUnidad: e.target.value })} />
@@ -135,18 +136,9 @@ export default function CabeceraDatos({ product, onChange, isActive, units, isEd
                                         <NativeSelect.Indicator />
                                     </NativeSelect.Root>
                                 </Field.Root>
-                            </Grid>
-                            <Field.Root required>
-                                <Field.Label>Unidad del producto en inventario</Field.Label>
-                                <NativeSelect.Root size="sm">
-                                    <NativeSelect.Field value={product.tipoUnidades} onChange={e => patch({ tipoUnidades: e.target.value, unidadSalidaReceta: "" })}>
-                                        <option value="">Elegir</option>
-                                        {units.map(unit => <option key={unit.codigo} value={unit.codigo}>{unit.codigo} · {unit.magnitud.toLowerCase()}</option>)}
-                                    </NativeSelect.Field><NativeSelect.Indicator />
-                                </NativeSelect.Root>
-                                <Field.HelperText>Define la cantidad obtenida y su unidad en el nodo de salida del grafo.</Field.HelperText>
-                            </Field.Root>
+                            </Grid> : <Text fontSize="sm" color="fg.muted">El contenido por envase aplica solo a terminados cuya salida se mide en U.</Text>}
                         </SimpleGrid>
+                        <Text fontSize="xs" color="fg.muted" mt="2">La cantidad obtenida y la unidad del producto se definen en el nodo de salida.</Text>
                     </Fieldset.Root>
                     <Fieldset.Root size="sm" gap="0" minW="0" borderTopWidth="1px" pt="2">
                         <Fieldset.Legend fontSize="xs" fontWeight="semibold" color="fg.muted">Configuración</Fieldset.Legend>

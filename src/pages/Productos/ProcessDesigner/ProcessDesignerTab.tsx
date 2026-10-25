@@ -15,7 +15,7 @@ import CabeceraDatos, { type DesignerProduct } from "./CabeceraDatos.tsx";
 import { useTabPermission } from "../../../auth/usePermissions.ts";
 import { Modulo } from "../../Usuarios/GestionUsuarios/types.tsx";
 import { listarUnidadesMedidaProducto, unidadesCompatibles } from "../UnidadesMedidaApi.ts";
-import { guardarProducto, toDesignerPayload, type EditingProduct, type SavedProductSummary } from "./ProcessDesignerApi.ts";
+import { guardarProducto, importedOutputQuantity, toDesignerPayload, type EditingProduct, type SavedProductSummary } from "./ProcessDesignerApi.ts";
 import Validator from "./Validator.tsx";
 import ProcessDesignerCanvas from "./ProcessDesignerCanvas.tsx";
 import type { LoadedDraft } from "./LoadTerminadoDialog.tsx";
@@ -23,7 +23,7 @@ import type { LoadedDraft } from "./LoadTerminadoDialog.tsx";
 export type DesignerNode = MaterialFlowNode | SemiterminadoFlowNode | ProcessFlowNode | TerminadoFlowNode;
 const emptyDesignerProduct = (): DesignerProduct => ({
     productoId: "", nombre: "", tipo_producto: "T", tipoUnidades: "U", cantidadUnidad: "",
-    inventareable: true, requiereOrdenFabricacion: true, ivaPercentual: 0, rendimientoTeorico: "0", cantidadSalidaReceta: "", unidadSalidaReceta: "", unidadContenidoPorEnvase: "",
+    inventareable: true, requiereOrdenFabricacion: true, ivaPercentual: 0, rendimientoTeorico: "0", cantidadSalidaReceta: "", unidadContenidoPorEnvase: "",
 });
 
 function canConnect(connection: Connection | Edge, nodes: DesignerNode[], edges: Edge[]) {
@@ -143,7 +143,9 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
     function loadDraft(draft: LoadedDraft) {
         // Commit the fully resolved draft together; failures before here cannot erase current work.
         if (savingRef.current || !isActive) return;
-        const targetProduct = draft.mode !== "graph" ? draft.product : { ...product, cantidadSalidaReceta: draft.output.quantity, unidadSalidaReceta: draft.output.unit };
+        const targetProduct = draft.mode !== "graph" ? draft.product : {
+            ...product, cantidadSalidaReceta: importedOutputQuantity(draft.output, product.tipoUnidades, units),
+        };
         const loadedNodes = draft.nodes.map((node) => node.type === "target"
             ? { ...node, data: { producto: targetProduct } } : node);
         setProduct(targetProduct); setSaveError(""); setResult(null);
@@ -177,10 +179,15 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
     const renderedNodes = nodes.map((node): DesignerNode => {
         if (node.type === "target") return { ...node, data: {
             producto: { nombre: product.nombre || "Nuevo producto", tipo_producto: product.tipo_producto },
-            output: { quantity: product.cantidadSalidaReceta, unit: product.unidadSalidaReceta },
-            units: unidadesCompatibles(units, product.tipoUnidades),
+            output: { quantity: product.cantidadSalidaReceta, unit: product.tipoUnidades },
+            units,
             onQuantityChange: (cantidadSalidaReceta: string) => setProduct(current => ({ ...current, cantidadSalidaReceta })),
-            onUnitChange: (unidadSalidaReceta: string) => setProduct(current => ({ ...current, unidadSalidaReceta })),
+            // Una unidad existente determina inventario, costos y cantidades de otras recetas.
+            onUnitChange: editingProduct ? undefined : (tipoUnidades: string) => setProduct(current => ({
+                ...current, tipoUnidades,
+                cantidadUnidad: current.tipo_producto === "T" && tipoUnidades === "U" ? current.cantidadUnidad : "",
+                unidadContenidoPorEnvase: current.tipo_producto === "T" && tipoUnidades === "U" ? current.unidadContenidoPorEnvase : "",
+            })),
         } };
         if (node.type === "material" || node.type === "semiterminado") return { ...node, data: { ...node.data, units: unidadesCompatibles(units, node.data.producto.tipoUnidades), onUnitChange: (unidad: string) => {
             setNodes(current => current.map(item => item.id === node.id && (item.type === "material" || item.type === "semiterminado") ? { ...item, data: { ...item.data, unidad } } : item));

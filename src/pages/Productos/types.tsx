@@ -27,7 +27,9 @@ export interface Producto {
     costo: number;
     inventareable?: boolean;
     requiereOrdenFabricacion?: boolean;
+    /** Unidad de inventario; en T/S también es la unidad de cantidadSalidaReceta. */
     tipoUnidades: string;
+    /** En v2, contenido por envase solo para T en U; conserva los usos históricos de otros módulos. */
     cantidadUnidad: string;
     unidadContenidoPorEnvase?: string;
     fechaCreacion?: string;
@@ -137,8 +139,8 @@ export interface ProcesoDiseñado {
 export interface ProcesoProduccionCompleto extends ProcesoDiseñado {
     id?: number;
     rendimientoTeorico: number;
+    /** Cantidad obtenida en tipoUnidades del producto destino. */
     cantidadSalidaReceta?: string | number;
-    unidadSalidaReceta?: string;
 }
 
 export interface ProductoSemiter {
@@ -243,6 +245,7 @@ export interface ProductoManufacturingDTO {
     observaciones?: string;
     costo?: number;
     ivaPercentual?: number;
+    /** Unidad única de salida de receta e inventario. */
     tipoUnidades: string;
     cantidadUnidad: number;
     unidadContenidoPorEnvase?: string;

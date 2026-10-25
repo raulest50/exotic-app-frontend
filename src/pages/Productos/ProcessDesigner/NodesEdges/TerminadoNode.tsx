@@ -6,6 +6,7 @@ import type { Producto, UnidadMedidaProducto } from "../../types.tsx";
 // Target describes a graph role. The existing workflow also manufactures semiterminados.
 export type TerminadoFlowNode = Node<{
     producto: Pick<Producto, "nombre" | "tipo_producto">;
+    // La unidad representa Producto.tipoUnidades: salida de receta e inventario.
     output?: { quantity: string; unit: string };
     units?: UnidadMedidaProducto[];
     onQuantityChange?: (value: string) => void;
@@ -33,16 +34,17 @@ export default function TerminadoNode({ data, selected, isConnectable }: NodePro
                             readOnly={!data.onQuantityChange} onChange={event => data.onQuantityChange?.(event.target.value)} />
                     </Field.Root>
                     <Field.Root required={!!data.onUnitChange}>
-                        <Field.Label fontSize="xs">Unidad de la salida</Field.Label>
+                        <Field.Label fontSize="xs">Unidad de salida e inventario</Field.Label>
                         {data.onUnitChange ? <NativeSelect.Root size="sm" className="nodrag nowheel">
                             <NativeSelect.Field aria-label={`Unidad de salida de ${producto.nombre}`} value={data.output?.unit ?? ""}
                                 onChange={event => data.onUnitChange?.(event.target.value)}>
                                 <option value="">Elegir</option>
-                                {data.units?.map(unit => <option key={unit.codigo} value={unit.codigo}>{unit.simbolo}</option>)}
+                                {data.units?.map(unit => <option key={unit.codigo} value={unit.codigo}>{unit.simbolo} · {unit.magnitud.toLowerCase()}</option>)}
                             </NativeSelect.Field><NativeSelect.Indicator />
                         </NativeSelect.Root> : <Text fontSize="sm">{data.output?.unit || "Sin especificar"}</Text>}
                     </Field.Root>
                     {data.onQuantityChange && <Text fontSize="xs" color="fg.muted">Las cantidades de todos los insumos corresponden a esta salida completa.</Text>}
+                    {data.onQuantityChange && !data.onUnitChange && <Text fontSize="xs" color="fg.muted">Se conserva la unidad del producto existente.</Text>}
                 </Stack>
                 <Icon boxSize="4em" color="orange.500" aria-hidden="true" asChild><GrCubes /></Icon>
                 <Handle type="target" position={Position.Left} id="i1" style={{ width: "2em", height: "2em" }} isConnectable={isConnectable} />

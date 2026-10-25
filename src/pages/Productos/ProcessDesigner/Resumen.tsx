@@ -41,11 +41,13 @@ export default function Resumen({ product, nodes, units }: {
     });
     const knownTotal = rows.reduce((sum, row) => sum + (row.cost ?? 0), 0);
     const complete = rows.length > 0 && rows.every(row => row.cost !== null) && Number.isFinite(knownTotal);
-    const output = inventoryQuantity(product.cantidadSalidaReceta, product.unidadSalidaReceta, product.tipoUnidades, units);
+    // La salida ya está expresada en la unidad de inventario; los insumos sí pueden necesitar conversión.
+    const outputAmount = nonNegativeNumber(product.cantidadSalidaReceta);
+    const output = outputAmount !== null && outputAmount > 0 && units.some(unit => unit.codigo === product.tipoUnidades) ? outputAmount : null;
     const perUnit = complete && output !== null ? knownTotal / output : null;
     const costPerUnit = perUnit !== null && Number.isFinite(perUnit) ? perUnit : null;
     const outputLabel = output !== null
-        ? `${numberFormat.format(Number(product.cantidadSalidaReceta))} ${symbol(product.unidadSalidaReceta)}` : "Salida por definir";
+        ? `${numberFormat.format(output)} ${symbol(product.tipoUnidades)}` : "Salida por definir";
 
     return <Box as="section" borderWidth="1px" rounded="md" mt="3" bg="bg.panel" aria-label="Resumen de la receta">
         <Button w="full" h="auto" minH="10" py="2" px="3" variant="ghost" justifyContent="start" whiteSpace="normal"
