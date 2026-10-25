@@ -30,7 +30,7 @@ function SourceDetails({ dto }: { dto: ProductoManufacturingDTO }) {
         ["Categoría", dto.categoriaNombre ?? dto.categoriaId], ["Prefijo de lote", dto.prefijoLote],
         ["IVA (%)", dto.ivaPercentual], ["Costo", dto.costo],
         ["Inventariable", yesNo(dto.inventareable)], ["Requiere orden de fabricación", yesNo(dto.requiereOrdenFabricacion)],
-        ["Rendimiento teórico", dto.procesoProduccionCompleto?.rendimientoTeorico],
+        ["Rendimiento teórico (histórico)", dto.procesoProduccionCompleto?.rendimientoTeorico],
         ["Salida de la receta", dto.procesoProduccionCompleto?.cantidadSalidaReceta == null ? "Sin especificar: confirmar al copiar" : `${dto.procesoProduccionCompleto.cantidadSalidaReceta} ${dto.procesoProduccionCompleto.unidadSalidaReceta}`],
     ];
     return <Stack gap="4">
@@ -290,7 +290,7 @@ export default function LoadTerminadoDialog({ hasDraft, editingProductId, onClos
                         ? "Se cargarán todos los datos para modificar el producto seleccionado, conservando su código, tipo, prefijo y EAN-14."
                         : mode === "all"
                         ? "El código, prefijo y EAN14 quedarán vacíos. Confirma las cantidades y unidades de la receta."
-                        : `Conserva identificación, contenido, rendimiento y empaque. Reemplaza el grafo, los insumos y la salida; verifica que su unidad sea compatible.${editingProductId ? ` Seguirás modificando ${editingProductId}.` : " Seguirás preparando un producto nuevo."}`}</Field.HelperText>
+                        : `Conserva identificación, contenido y empaque. Reemplaza el grafo, los insumos y la salida; verifica que su unidad sea compatible.${editingProductId ? ` Seguirás modificando ${editingProductId}.` : " Seguirás preparando un producto nuevo."}`}</Field.HelperText>
                 </Field.Root>
                 {hasDraft && <Checkbox.Root checked={replace} onCheckedChange={(event) => setReplace(event.checked === true)}>
                     <Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>

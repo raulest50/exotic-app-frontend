@@ -54,7 +54,7 @@ function validateDraft(product: DesignerProduct, nodes: DesignerNode[], edges: E
         { label: "Salida positiva, hasta 12 decimales y unidad compatible", valid: amount(product.cantidadSalidaReceta) && unidadesCompatibles(units, product.tipoUnidades).some(u => u.codigo === product.unidadSalidaReceta) },
         { label: "Categoría del terminado", valid: product.tipo_producto === "S" || !!product.categoria?.categoriaId },
         { label: "Prefijo de lote", valid: product.prefijoLote ? /^[A-Z0-9]{1,20}$/.test(product.prefijoLote) : product.tipo_producto === "S" && !product.requiereOrdenFabricacion ? true : null },
-        { label: "IVA y rendimiento válidos", valid: [0, 5, 19].includes(product.ivaPercentual ?? 0) && product.rendimientoTeorico.trim() !== "" && Number.isFinite(Number(product.rendimientoTeorico)) && Number(product.rendimientoTeorico) >= 0 },
+        { label: "IVA válido", valid: [0, 5, 19].includes(product.ivaPercentual ?? 0) },
         { label: "Insumos positivos, hasta 12 decimales y unidades compatibles", valid: inputs.length ? inputs.every((n) => amount(n.data.cantidad) && unidadesCompatibles(units, n.data.producto.tipoUnidades).some(u => u.codigo === n.data.unidad)) : null },
         { label: "Insumos distintos del producto destino", valid: inputs.length ? inputs.every((n) => n.data.producto.productoId !== product.productoId) : null },
         { label: "Procesos y áreas asignados", valid: processes.length ? processes.every((n) => positive(n.data.proceso.procesoId) && positive(n.data.proceso.areaOperativaId)) : null },

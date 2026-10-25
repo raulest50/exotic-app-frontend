@@ -4,9 +4,9 @@ import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import type { Categoria, ProductoSemiter, UnidadMedidaProducto } from "../types.tsx";
-import { unidadesCompatibles } from "../UnidadesMedidaApi.ts";
 import { normalizeProductId } from "../productIdUtils.ts";
 
+// rendimientoTeorico se conserva para compatibilidad con v1; no se edita en este diseñador.
 export type DesignerProduct = Omit<ProductoSemiter, "insumos" | "procesoProduccionCompleto"> & { rendimientoTeorico: string; cantidadSalidaReceta: string; unidadSalidaReceta: string };
 const endpoints = new EndPointsURL();
 
@@ -136,15 +136,6 @@ export default function CabeceraDatos({ product, onChange, isActive, units, isEd
                                     </NativeSelect.Root>
                                 </Field.Root>
                             </Grid>
-                            <Field.Root>
-                                <Field.Label>Rendimiento teórico</Field.Label>
-                                <Input size="sm" type="number" min="0" step="any" value={product.rendimientoTeorico} onChange={(e) => patch({ rendimientoTeorico: e.target.value })} />
-                            </Field.Root>
-                        </SimpleGrid>
-                    </Fieldset.Root>
-                    <Fieldset.Root size="sm" gap="2" minW="0" borderTopWidth="1px" pt="2">
-                        <Fieldset.Legend fontSize="xs" fontWeight="semibold" color="fg.muted">Salida de la receta</Fieldset.Legend>
-                        <SimpleGrid columns={{ base: 1, md: 3 }} gap="3">
                             <Field.Root required>
                                 <Field.Label>Unidad del producto en inventario</Field.Label>
                                 <NativeSelect.Root size="sm">
@@ -153,23 +144,9 @@ export default function CabeceraDatos({ product, onChange, isActive, units, isEd
                                         {units.map(unit => <option key={unit.codigo} value={unit.codigo}>{unit.codigo} · {unit.magnitud.toLowerCase()}</option>)}
                                     </NativeSelect.Field><NativeSelect.Indicator />
                                 </NativeSelect.Root>
-                                <Field.HelperText>La salida se convierte a esta unidad para calcular los insumos.</Field.HelperText>
-                            </Field.Root>
-                            <Field.Root required>
-                                <Field.Label>Cantidad obtenida con esta receta</Field.Label>
-                                <Input size="sm" type="number" min="0" step="any" value={product.cantidadSalidaReceta} onChange={e => patch({ cantidadSalidaReceta: e.target.value })} />
-                            </Field.Root>
-                            <Field.Root required>
-                                <Field.Label>Unidad de la salida</Field.Label>
-                                <NativeSelect.Root size="sm">
-                                    <NativeSelect.Field value={product.unidadSalidaReceta} onChange={e => patch({ unidadSalidaReceta: e.target.value })}>
-                                        <option value="">Elegir</option>
-                                        {unidadesCompatibles(units, product.tipoUnidades).map(unit => <option key={unit.codigo} value={unit.codigo}>{unit.simbolo}</option>)}
-                                    </NativeSelect.Field><NativeSelect.Indicator />
-                                </NativeSelect.Root>
+                                <Field.HelperText>Define la cantidad obtenida y su unidad en el nodo de salida del grafo.</Field.HelperText>
                             </Field.Root>
                         </SimpleGrid>
-                        <Text fontSize="xs" color="fg.muted">Todas las cantidades de insumos del lienzo corresponden a esta salida completa. El contenido del envase y el rendimiento teórico son datos independientes.</Text>
                     </Fieldset.Root>
                     <Fieldset.Root size="sm" gap="0" minW="0" borderTopWidth="1px" pt="2">
                         <Fieldset.Legend fontSize="xs" fontWeight="semibold" color="fg.muted">Configuración</Fieldset.Legend>

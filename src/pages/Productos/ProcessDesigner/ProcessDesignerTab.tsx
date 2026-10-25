@@ -175,7 +175,13 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
     }
 
     const renderedNodes = nodes.map((node): DesignerNode => {
-        if (node.type === "target") return { ...node, data: { producto: { nombre: product.nombre || "Nuevo producto", tipo_producto: product.tipo_producto }, output: product.cantidadSalidaReceta && product.unidadSalidaReceta ? `${product.cantidadSalidaReceta} ${product.unidadSalidaReceta}` : "Por definir" } };
+        if (node.type === "target") return { ...node, data: {
+            producto: { nombre: product.nombre || "Nuevo producto", tipo_producto: product.tipo_producto },
+            output: { quantity: product.cantidadSalidaReceta, unit: product.unidadSalidaReceta },
+            units: unidadesCompatibles(units, product.tipoUnidades),
+            onQuantityChange: (cantidadSalidaReceta: string) => setProduct(current => ({ ...current, cantidadSalidaReceta })),
+            onUnitChange: (unidadSalidaReceta: string) => setProduct(current => ({ ...current, unidadSalidaReceta })),
+        } };
         if (node.type === "material" || node.type === "semiterminado") return { ...node, data: { ...node.data, units: unidadesCompatibles(units, node.data.producto.tipoUnidades), onUnitChange: (unidad: string) => {
             setNodes(current => current.map(item => item.id === node.id && (item.type === "material" || item.type === "semiterminado") ? { ...item, data: { ...item.data, unidad } } : item));
         }, onQuantityChange: (cantidad: string) => {

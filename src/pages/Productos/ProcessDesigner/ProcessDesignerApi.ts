@@ -53,6 +53,7 @@ function buildPreview(dto: ProductoManufacturingDTO, products: Map<string, Produ
         rendimientoTeorico: String(saved?.rendimientoTeorico ?? 0),
         cantidadSalidaReceta: quantityText(saved?.cantidadSalidaReceta), unidadSalidaReceta: saved?.unidadSalidaReceta ?? "",
     };
+    const output = { quantity: product.cantidadSalidaReceta, unit: product.unidadSalidaReceta };
     const ids = new Set<string>();
     const includedInputs = new Set<string>();
     const inputNode = (productId: string, id: string, position: { x: number; y: number }): DesignerNode => {
@@ -78,7 +79,7 @@ function buildPreview(dto: ProductoManufacturingDTO, products: Map<string, Produ
             if (!Number.isFinite(node.posicionX) || !Number.isFinite(node.posicionY)) throw new Error("El grafo contiene posiciones inválidas.");
             ids.add(node.frontendId);
             const base = { id: node.frontendId, position: { x: node.posicionX, y: node.posicionY } };
-            if (node.nodeType === "TARGET") return { ...base, type: "target", deletable: false, data: { producto: product } };
+            if (node.nodeType === "TARGET") return { ...base, type: "target", deletable: false, data: { producto: product, output } };
             if (node.nodeType === "INSUMO") return inputNode(node.inputProductoId, base.id, base.position);
             if (node.nodeType !== "PROCESO") throw new Error("El grafo contiene un tipo de nodo no reconocido.");
             const proceso: NodoProcesoDTO = {
@@ -103,10 +104,10 @@ function buildPreview(dto: ProductoManufacturingDTO, products: Map<string, Produ
         if (saved?.edges.length) throw new Error("La referencia tiene conexiones pero no tiene nodos.");
         // A product without a saved graph can start a full draft from its recipe, without inventing connections.
         nodes = dto.insumos.map((input, index) => inputNode(input.productoId, "input-" + index, { x: 0, y: index * 250 }));
-        nodes.push({ id: "target", type: "target", position: { x: 750, y: 180 }, deletable: false, data: { producto: product } });
+        nodes.push({ id: "target", type: "target", position: { x: 750, y: 180 }, deletable: false, data: { producto: product, output } });
         edges = [];
     }
-    return { dto, product, nodes, edges, hasSavedGraph, output: { quantity: product.cantidadSalidaReceta, unit: product.unidadSalidaReceta }, source: dto.productoId + " · " + dto.nombre };
+    return { dto, product, nodes, edges, hasSavedGraph, output, source: dto.productoId + " · " + dto.nombre };
 }
 
 export function copyPreview(preview: Preview, mode: Exclude<LoadMode, "edit">): LoadedDraft {
@@ -123,7 +124,7 @@ export function copyPreview(preview: Preview, mode: Exclude<LoadMode, "edit">): 
         const node = structuredClone(original);
         node.id = ids.get(original.id)!;
         if (node.type === "process") node.data.proceso.frontendId = node.id;
-        if (node.type === "target") node.data = { producto: product };
+        if (node.type === "target") node.data = { ...node.data, producto: product };
         return node;
     });
     const edges = preview.edges.map((edge) => ({
