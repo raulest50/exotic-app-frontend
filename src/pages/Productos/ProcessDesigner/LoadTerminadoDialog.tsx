@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
     Badge, Box, Button, Checkbox, Dialog, Field, Flex, Heading, Input, NativeSelect,
     Portal, SimpleGrid, Spinner, Stack, Table, Tabs, Text,
@@ -116,6 +116,8 @@ function SourcePreview({ state }: { state: PreviewState }) {
 export default function LoadTerminadoDialog({ hasDraft, editingProductId, onClose, onLoad }: {
     hasDraft: boolean; editingProductId?: string; onClose: () => void; onLoad: (draft: LoadedDraft) => void;
 }) {
+    const searchPanelId = useId();
+    const [searchCollapsed, setSearchCollapsed] = useState(false);
     const [search, setSearch] = useState("");
     const [by, setBy] = useState<"NOMBRE" | "ID">("NOMBRE");
     const [query, setQuery] = useState<SearchQuery>({ kind: "T", searchTerm: "", tipoBusqueda: "NOMBRE", page: 0 });
@@ -196,14 +198,27 @@ export default function LoadTerminadoDialog({ hasDraft, editingProductId, onClos
     }
 
     return <Dialog.Root open size="cover" scrollBehavior="inside" onOpenChange={(event) => { if (!event.open) onClose(); }}>
-        <Portal><Dialog.Backdrop /><Dialog.Positioner><Dialog.Content maxW="90rem" h="calc(100dvh - 3rem)">
+        <Portal><Dialog.Backdrop /><Dialog.Positioner><Dialog.Content
+            w="min(90rem, calc(100vw - 3rem))" maxW="calc(100vw - 3rem)"
+            minW={{ base: "0", md: "min(40rem, calc(100vw - 3rem))" }}
+            h="calc(100dvh - 3rem)" maxH="calc(100dvh - 3rem)" minH="min(36rem, calc(100dvh - 3rem))"
+            resize={{ base: "none", md: "both" }} overflow="auto">
             <Dialog.Header>
-                <Dialog.Title>Cargar una referencia</Dialog.Title>
+                <Flex justify="space-between" align="center" gap="3" flexWrap="wrap">
+                    <Dialog.Title>Cargar una referencia</Dialog.Title>
+                    <Button type="button" size="sm" variant="outline" aria-expanded={!searchCollapsed}
+                        aria-controls={searchPanelId} onClick={() => setSearchCollapsed((collapsed) => !collapsed)}>
+                        {searchCollapsed ? "Mostrar búsqueda" : "Ocultar búsqueda"}
+                    </Button>
+                </Flex>
                 <Dialog.Description>Busca un terminado o semiterminado y revisa sus datos para clonarlo o modificarlo.</Dialog.Description>
+                <Text fontSize="xs" color="fg.muted" display={{ base: "none", md: "block" }}>
+                    Arrastra la esquina inferior derecha para ajustar el tamaño del diálogo.
+                </Text>
             </Dialog.Header>
             <Dialog.Body minH="0">
-                <SimpleGrid columns={{ base: 1, lg: 2 }} gap="5">
-                    <Stack gap="3" minW="0">
+                <SimpleGrid templateColumns={searchCollapsed ? "minmax(0, 1fr)" : "repeat(auto-fit, minmax(min(100%, 22rem), 1fr))"} gap="5">
+                    <Stack id={searchPanelId} gap="3" minW="0" display={searchCollapsed ? "none" : "flex"}>
                         <Field.Root><Field.Label>Tipo de producto</Field.Label>
                             <NativeSelect.Root size="sm">
                                 <NativeSelect.Field value={query.kind} onChange={(event) => changeQuery({ ...query, kind: event.target.value as "T" | "S", page: 0 })}>
