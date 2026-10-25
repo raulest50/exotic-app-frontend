@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { Edge } from "@xyflow/react";
 import EndPointsURL from "../../../api/EndPointsURL.tsx";
-import type { NodoProcesoDTO, Producto, ProductoManufacturingDTO, ProcesoFabricacionNodoDTO } from "../types.tsx";
+import type { Material, NodoProcesoDTO, Producto, ProductoManufacturingDTO, ProcesoFabricacionNodoDTO } from "../types.tsx";
 import type { DesignerProduct } from "./CabeceraDatos.tsx";
 import type { DesignerNode } from "./ProcessDesignerTab.tsx";
 
@@ -38,9 +38,16 @@ function buildPreview(dto: ProductoManufacturingDTO, products: Map<string, Produ
         observaciones: dto.observaciones, costo: dto.costo == null ? undefined : String(dto.costo), ivaPercentual: dto.ivaPercentual,
         inventareable: dto.inventareable, requiereOrdenFabricacion: dto.tipoProducto === "T" || dto.requiereOrdenFabricacion,
         categoria: dto.categoriaId == null ? undefined : { categoriaId: dto.categoriaId, categoriaNombre: dto.categoriaNombre ?? "", categoriaDescripcion: "" },
-        casePack: dto.casePack ? { ...dto.casePack, insumosEmpaque: dto.casePack.insumosEmpaque?.map(i => ({
-            cantidad: i.cantidad, uom: i.uom, material: { productoId: i.materialId, nombre: i.materialNombre ?? i.materialId, tipoUnidades: i.uom ?? "" },
-        })) } : undefined,
+        casePack: dto.casePack ? { ...dto.casePack, insumosEmpaque: dto.casePack.insumosEmpaque?.map(i => {
+            const material = products.get(i.materialId);
+            if (!material || material.tipo_producto !== "M" || !("tipoMaterial" in material) || material.tipoMaterial !== 2) {
+                throw new Error("No se pudo resolver el material de empaque " + i.materialId + ".");
+            }
+            return {
+                cantidad: i.cantidad, uom: i.uom?.trim() || material.tipoUnidades,
+                material: { productoId: material.productoId, nombre: material.nombre, tipoUnidades: material.tipoUnidades, tipoMaterial: material.tipoMaterial },
+            };
+        }) } : undefined,
         rendimientoTeorico: String(saved?.rendimientoTeorico ?? 0),
         cantidadSalidaReceta: quantityText(saved?.cantidadSalidaReceta), unidadSalidaReceta: saved?.unidadSalidaReceta ?? "",
     };
@@ -132,12 +139,26 @@ export async function buscarReferencias(query: SearchQuery, signal: AbortSignal)
     return response.data;
 }
 
+export type PackagingPage = { content: Material[]; totalPages: number };
+export async function buscarMaterialesEmpaque(query: { searchTerm: string; tipoBusqueda: "NOMBRE" | "ID"; page: number }, signal: AbortSignal): Promise<PackagingPage> {
+    const { data } = await axios.get<PackagingPage>(endpoints.search_p4_receta_v2, {
+        params: { ...query, clasificacion: "M", tipoMaterial: 2, size: 10 }, signal, withCredentials: true,
+    });
+    if (data.content.some(material => material.tipo_producto !== "M" || material.tipoMaterial !== 2)) {
+        throw new Error("El catálogo devolvió materiales que no son de empaque.");
+    }
+    return data;
+}
+
 export async function cargarReferencia(id: string, signal: AbortSignal): Promise<Preview> {
     const { data: dto } = await axios.get<ProductoManufacturingDTO>(
         endpoints.get_producto_manufacturing.replace("{productoId}", encodeURIComponent(id)), { signal, withCredentials: true });
     if (dto.productoId !== id) throw new Error("La respuesta no corresponde a la referencia seleccionada.");
     const products = new Map<string, Producto>();
-    const ids = [...new Set(dto.insumos.map(input => input.productoId))];
+    const ids = [...new Set([
+        ...dto.insumos.map(input => input.productoId),
+        ...(dto.casePack?.insumosEmpaque ?? []).map(input => input.materialId),
+    ])];
     for (let offset = 0; offset < ids.length; offset += 4) {
         const batch = await Promise.all(ids.slice(offset, offset + 4).map(async productId => {
             const { data } = await axios.get<Producto>(endpoints.update_producto.replace("{productoId}", encodeURIComponent(productId)), { signal, withCredentials: true });

@@ -7,7 +7,8 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useColorMode } from "../../../components/ui/color-mode.tsx";
-import type { Producto } from "../types.tsx";
+import type { Producto, UnidadMedidaProducto } from "../types.tsx";
+import type { DesignerProduct } from "./CabeceraDatos.tsx";
 import type { DesignerNode } from "./ProcessDesignerTab.tsx";
 import type { LoadedDraft } from "./LoadTerminadoDialog.tsx";
 import MaterialSemiTerPanel from "./MaterialSemiTerPanel.tsx";
@@ -16,6 +17,8 @@ import MaterialNode from "./NodesEdges/MaterialNode.tsx";
 import SemiterminadoNode from "./NodesEdges/SemiterminadoNode.tsx";
 import ProcessNode from "./NodesEdges/ProcessNode.tsx";
 import TerminadoNode from "./NodesEdges/TerminadoNode.tsx";
+import PackagingDefinition from "./PackagingDefinition.tsx";
+import Resumen from "./Resumen.tsx";
 
 const nodeTypes = { material: MaterialNode, semiterminado: SemiterminadoNode, process: ProcessNode, target: TerminadoNode };
 const MIN_HEIGHT = 360;
@@ -48,6 +51,9 @@ function readPreferences(): DesignerViewPreferences {
 
 interface Props {
     isActive: boolean;
+    product: DesignerProduct;
+    onProductChange: (product: DesignerProduct) => void;
+    units: UnidadMedidaProducto[];
     nodes: DesignerNode[];
     edges: Edge[];
     hasDraft: boolean;
@@ -64,7 +70,7 @@ interface Props {
 }
 
 export default function ProcessDesignerCanvas({
-    isActive, nodes, edges, hasDraft, onAddProduct, onClone, onAddProcess, onAssignArea,
+    isActive, product, onProductChange, units, nodes, edges, hasDraft, onAddProduct, onClone, onAddProcess, onAssignArea,
     onRemoveSelection, onNodesChange, onEdgesChange, onInit, isValidConnection, onConnect,
 }: Props) {
     const { colorMode } = useColorMode();
@@ -188,7 +194,7 @@ export default function ProcessDesignerCanvas({
         return () => observer.disconnect();
     }, []);
 
-    return <Box ref={workspaceRef} borderWidth={isFullscreen ? "0" : "1px"} rounded={isFullscreen ? "none" : "lg"} overflow="hidden" bg="bg.panel"
+    return <><Box ref={workspaceRef} borderWidth={isFullscreen ? "0" : "1px"} rounded={isFullscreen ? "none" : "lg"} overflow="hidden" bg="bg.panel"
         position={isFullscreen ? "fixed" : undefined} inset={isFullscreen ? "0" : undefined} zIndex={isFullscreen ? "overlay" : undefined}
         display={isFullscreen ? "flex" : "block"} flexDirection="column" h={isFullscreen ? "100dvh" : undefined}
         onKeyDown={(event) => {
@@ -289,5 +295,9 @@ export default function ProcessDesignerCanvas({
                 <Text id={resizeHintId} fontSize="xs" color="fg.muted">Arrastra para ajustar la altura · ↑ / ↓ con teclado</Text>
             </Flex>
         </Box>
-    </Box>;
+    </Box>
+        {product.tipo_producto === "T" && <PackagingDefinition value={product.casePack} isActive={isActive}
+            onChange={casePack => onProductChange({ ...product, casePack })} />}
+        <Resumen product={product} nodes={nodes} units={units} />
+    </>;
 }

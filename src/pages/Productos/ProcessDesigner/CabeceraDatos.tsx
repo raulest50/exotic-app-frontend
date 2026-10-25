@@ -10,6 +10,11 @@ import { normalizeProductId } from "../productIdUtils.ts";
 export type DesignerProduct = Omit<ProductoSemiter, "insumos" | "procesoProduccionCompleto"> & { rendimientoTeorico: string; cantidadSalidaReceta: string; unidadSalidaReceta: string };
 const endpoints = new EndPointsURL();
 
+function sugerirPrefijoLote(nombre: string): string {
+    const palabras = nombre.normalize("NFD").replace(/\p{M}/gu, "").toUpperCase().match(/[A-Z0-9]+/g) ?? [];
+    return palabras.map((palabra) => palabra[0]).join("").slice(0, 20);
+}
+
 export default function CabeceraDatos({ product, onChange, isActive, units }: {
     product: DesignerProduct; onChange: (product: DesignerProduct) => void; isActive: boolean; units: UnidadMedidaProducto[];
 }) {
@@ -17,6 +22,7 @@ export default function CabeceraDatos({ product, onChange, isActive, units }: {
     const [categories, setCategories] = useState<Categoria[]>([]);
     const [categoryError, setCategoryError] = useState(false);
     const [retry, setRetry] = useState(0);
+    const [manualPrefix, setManualPrefix] = useState(() => Boolean(product.prefijoLote));
     const contentId = useId();
     useEffect(() => {
         if (!isActive) return;
@@ -28,6 +34,7 @@ export default function CabeceraDatos({ product, onChange, isActive, units }: {
         return () => controller.abort();
     }, [isActive, retry]);
     const patch = (changes: Partial<DesignerProduct>) => onChange({ ...product, ...changes });
+    const suggestedPrefix = sugerirPrefijoLote(product.nombre);
     const isTerminado = product.tipo_producto === "T";
     const inventoryLocked = isTerminado || product.requiereOrdenFabricacion;
     return (
@@ -65,11 +72,30 @@ export default function CabeceraDatos({ product, onChange, isActive, units }: {
                             </Field.Root>
                             <Field.Root>
                                 <Field.Label>Prefijo de lote nuevo</Field.Label>
-                                <Input size="sm" maxLength={20} value={product.prefijoLote ?? ""} onChange={(e) => patch({ prefijoLote: e.target.value.toUpperCase() })} />
+                                <Flex gap="2" w="full">
+                                    <Input size="sm" minW="0" maxLength={20} value={product.prefijoLote ?? ""} onChange={(e) => {
+                                        // Clearing the field is also a manual choice, including semiterminados without their own lots.
+                                        setManualPrefix(true);
+                                        patch({ prefijoLote: e.target.value.toUpperCase() });
+                                    }} />
+                                    <Button type="button" size="sm" variant="outline" flexShrink="0" disabled={!suggestedPrefix}
+                                        aria-label="Usar prefijo sugerido desde el nombre" onClick={() => {
+                                            setManualPrefix(false);
+                                            patch({ prefijoLote: suggestedPrefix });
+                                        }}>Sugerir</Button>
+                                </Flex>
+                                <Field.HelperText>
+                                    {manualPrefix
+                                        ? "Prefijo manual. Sugerir lo vuelve a generar desde el nombre."
+                                        : "Se actualiza con las iniciales al cambiar el nombre. Puedes editarlo."}
+                                </Field.HelperText>
                             </Field.Root>
                             <Field.Root required>
                                 <Field.Label>Nombre</Field.Label>
-                                <Input size="sm" value={product.nombre} onChange={(e) => patch({ nombre: e.target.value })} />
+                                <Input size="sm" value={product.nombre} onChange={(e) => {
+                                    const nombre = e.target.value;
+                                    patch(manualPrefix ? { nombre } : { nombre, prefijoLote: sugerirPrefijoLote(nombre) });
+                                }} />
                             </Field.Root>
                         </Grid>
                     </Fieldset.Root>
@@ -188,7 +214,6 @@ export default function CabeceraDatos({ product, onChange, isActive, units }: {
                         <Field.Label>Observaciones</Field.Label>
                         <Textarea rows={2} value={product.observaciones ?? ""} onChange={(e) => patch({ observaciones: e.target.value })} />
                     </Field.Root>
-                    {product.casePack && <Text fontSize="sm" color="fg.muted">Empaque de la referencia clonada conservado: {product.casePack.unitsPerCase} unidades por caja y {product.casePack.insumosEmpaque?.length ?? 0} insumos de empaque.</Text>}
                 </Stack>}
             </Box>
         </Box>

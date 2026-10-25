@@ -170,6 +170,7 @@ export default function ProcessDesignerTab({ isActive }: { isActive: boolean }) 
             <Box inert={saving} aria-busy={saving}>
             <CabeceraDatos product={product} onChange={setProduct} isActive={isActive} units={units} />
             <ProcessDesignerCanvas
+                product={product} onProductChange={setProduct} units={units}
                 isActive={isActive} nodes={renderedNodes} edges={edges} hasDraft={hasDraft}
                 onAddProduct={addProduct} onClone={loadClone} onAddProcess={() => setProcessPickerOpen(true)} onAssignArea={setAreaNodeId}
                 onRemoveSelection={() => {

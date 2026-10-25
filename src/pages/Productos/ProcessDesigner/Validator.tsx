@@ -66,7 +66,15 @@ function validateDraft(product: DesignerProduct, nodes: DesignerNode[], edges: E
         }) : null },
         { label: "Entradas y salidas completas", valid: hasGraph ? inputs.every((n) => incoming(n.id) === 0 && outgoing(n.id) === 1) && processes.every((n) => incoming(n.id) > 0 && outgoing(n.id) === 1) && targets.every((n) => incoming(n.id) > 0 && outgoing(n.id) === 0) : null },
         { label: "Sin ciclos ni nodos desconectados del destino", valid: hasGraph ? processed === nodes.length && nodes.every((n) => visited.has(n.id)) : null },
-        ...(product.casePack ? [{ label: "Unidades y cantidades del empaque", valid: Number.isInteger(product.casePack.unitsPerCase) && product.casePack.unitsPerCase >= 1 && (product.casePack.insumosEmpaque ?? []).every((i) => positive(i.cantidad)) }] : []),
+        ...(product.casePack ? [
+            { label: "Unidades por caja enteras y positivas", valid: product.tipo_producto === "T" && Number.isInteger(product.casePack.unitsPerCase) && product.casePack.unitsPerCase >= 1 && product.casePack.unitsPerCase <= 2147483647 },
+            { label: "Materiales de empaque sin repetir, cantidades y unidades válidas", valid: !!product.casePack.insumosEmpaque?.length
+                && new Set(product.casePack.insumosEmpaque.map(item => item.material.productoId)).size === product.casePack.insumosEmpaque.length
+                && product.casePack.insumosEmpaque.every(item => !!item.material.productoId && item.material.tipoMaterial === 2 && positive(item.cantidad)
+                    && !!item.uom && item.uom.length <= 12 && item.uom === item.material.tipoUnidades) },
+            { label: "EAN-14, dimensiones y peso del empaque válidos (opcionales)", valid: (!product.casePack.ean14 || /^\d{14}$/.test(product.casePack.ean14))
+                && [product.casePack.largoCm, product.casePack.anchoCm, product.casePack.altoCm, product.casePack.grossWeightKg].every(value => value == null || positive(value)) },
+        ] : []),
     ];
 }
 
