@@ -734,9 +734,9 @@ export default function ProgramacionProduccionSemanalTab({ refreshSignal }: Prog
         weekChangeConfirmDisclosure.onClose();
     };
 
-    const handleSelectTerminado = (terminado: TerminadoPickerResult) => {
-        if (pickerDayIndex == null) {
-            return;
+    const handleSelectTerminados = (terminados: TerminadoPickerResult[]): boolean => {
+        if (pickerDayIndex == null || terminados.length === 0) {
+            return false;
         }
         if (!canAddTerminadoOnDay(pickerDayIndex)) {
             const isApprovedDirectiveBlocked = isApprovedEditMode && !allowAddTerminadosToApprovedMps;
@@ -754,18 +754,22 @@ export default function ProgramacionProduccionSemanalTab({ refreshSignal }: Prog
                 duration: 4000,
                 isClosable: true,
             });
-            return;
+            return false;
         }
+        const dayIndex = pickerDayIndex;
         updateEntries((prev) => {
-            const existing = prev.find((entry) => (
-                entry.dayIndex === pickerDayIndex && entry.productoId === terminado.productoId
-                && !isEntryCanceled(entry)
-            ));
-            if (existing) {
-                return prev;
+            const existingIds = new Set(prev
+                .filter(entry => entry.dayIndex === dayIndex && !isEntryCanceled(entry))
+                .map(entry => entry.productoId));
+            const additions: ProgramacionEntry[] = [];
+            for (const terminado of terminados) {
+                if (existingIds.has(terminado.productoId)) continue;
+                existingIds.add(terminado.productoId);
+                additions.push(buildEntryFromTerminado(terminado, dayIndex));
             }
-            return [...prev, buildEntryFromTerminado(terminado, pickerDayIndex)];
+            return additions.length ? [...prev, ...additions] : prev;
         });
+        return true;
     };
 
     const handleEntryLotesChange = (entryId: string, valueAsString: string) => {
@@ -1349,9 +1353,13 @@ export default function ProgramacionProduccionSemanalTab({ refreshSignal }: Prog
             />
 
             <TerminadoPicker4MPS
+                key={`${weekStartDate}:${pickerDayIndex}`}
                 isOpen={pickerDisclosure.open}
                 onClose={pickerDisclosure.onClose}
-                onSelectTerminado={handleSelectTerminado}
+                onSelectTerminados={handleSelectTerminados}
+                alreadySelectedIds={entries.filter(entry => entry.dayIndex === pickerDayIndex && !isEntryCanceled(entry)).map(entry => entry.productoId)}
+                dayLabel={pickerDayIndex == null ? undefined : `${DAY_LABELS[pickerDayIndex]} · ${addDays(weekStartDate, pickerDayIndex)}`}
+                canConfirm={pickerDayIndex != null && canAddTerminadoOnDay(pickerDayIndex)}
             />
 
             <Dialog.Root open={refreshConfirmDisclosure.open} placement="center" onOpenChange={({ open }) => {

@@ -4,22 +4,29 @@ import TerminadoPicker4MPS, { type TerminadoPickerResult } from "./TerminadoPick
 
 export const Default = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedTerminado, setSelectedTerminado] = useState<TerminadoPickerResult | null>(null);
+    const [selectedTerminados, setSelectedTerminados] = useState<TerminadoPickerResult[]>([]);
 
-    const handleSelectTerminado = (terminado: TerminadoPickerResult) => {
-        setSelectedTerminado(terminado);
-        console.log("Selected terminado MPS:", terminado);
+    const handleSelectTerminados = (terminados: TerminadoPickerResult[]): boolean => {
+        setSelectedTerminados(previous => {
+            const ids = new Set(previous.map(producto => producto.productoId));
+            return [...previous, ...terminados.filter(producto => {
+                if (ids.has(producto.productoId)) return false;
+                ids.add(producto.productoId);
+                return true;
+            })];
+        });
+        return true;
     };
 
     return (
         <VStack gap={4} align="start" p={5}>
             <Button colorPalette="blue" onClick={() => setIsOpen(true)}>
-                Abrir Selector MPS de Producto Terminado
+                Agregar terminados al día
             </Button>
 
-            {selectedTerminado && (
-                <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50" width="100%">
-                    <Text fontWeight="bold">Producto Seleccionado:</Text>
+            <Text>{selectedTerminados.length} terminados agregados al día</Text>
+            {selectedTerminados.map(selectedTerminado => (
+                <Box key={selectedTerminado.productoId} p={4} borderWidth="1px" borderRadius="md" bg="bg.subtle" width="100%">
                     <Text>ID: {selectedTerminado.productoId}</Text>
                     <HStack wrap="wrap">
                         <Text>Nombre: {selectedTerminado.nombre}</Text>
@@ -31,12 +38,15 @@ export const Default = () => {
                         </Badge>
                     </HStack>
                 </Box>
-            )}
+            ))}
+            {selectedTerminados.length > 0 && <Button variant="outline" onClick={() => setSelectedTerminados([])}>Limpiar día de ejemplo</Button>}
 
             <TerminadoPicker4MPS
                 isOpen={isOpen}
                 onClose={() => setIsOpen(false)}
-                onSelectTerminado={handleSelectTerminado}
+                onSelectTerminados={handleSelectTerminados}
+                alreadySelectedIds={selectedTerminados.map(producto => producto.productoId)}
+                dayLabel="Lunes de ejemplo"
             />
         </VStack>
     );
