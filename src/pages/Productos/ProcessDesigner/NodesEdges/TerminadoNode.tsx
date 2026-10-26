@@ -1,4 +1,4 @@
-import { Box, Field, Icon, Input, NativeSelect, Stack, Text } from "@chakra-ui/react";
+import { Box, Field, Grid, Icon, Input, NativeSelect, Stack, Text } from "@chakra-ui/react";
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { GrCubes } from "react-icons/gr";
 import type { Producto, UnidadMedidaProducto } from "../../types.tsx";
@@ -25,25 +25,29 @@ export default function TerminadoNode({ data, selected, isConnectable }: NodePro
                 <Box bg="red.solid" color="red.contrast" w="full" p="2">
                     <Text fontWeight="bold" overflowWrap="anywhere">{producto.nombre}</Text>
                 </Box>
-                <Stack w="full" px="2" gap="2">
-                    <Field.Root required={!!data.onQuantityChange}>
-                        <Field.Label fontSize="xs">Cantidad obtenida con esta receta</Field.Label>
-                        <Input className="nodrag nowheel" size="sm" type="number" min="0" step="any"
-                            aria-label={`Cantidad obtenida de ${producto.nombre}`} value={data.output?.quantity ?? ""}
-                            placeholder={data.onQuantityChange ? "Cantidad" : "Sin especificar"}
-                            readOnly={!data.onQuantityChange} onChange={event => data.onQuantityChange?.(event.target.value)} />
-                    </Field.Root>
-                    <Field.Root required={!!data.onUnitChange}>
-                        <Field.Label fontSize="xs">Unidad de salida e inventario</Field.Label>
-                        {data.onUnitChange ? <NativeSelect.Root size="sm" className="nodrag nowheel">
-                            <NativeSelect.Field aria-label={`Unidad de salida de ${producto.nombre}`} value={data.output?.unit ?? ""}
-                                onChange={event => data.onUnitChange?.(event.target.value)}>
-                                <option value="">Elegir</option>
-                                {data.units?.map(unit => <option key={unit.codigo} value={unit.codigo}>{unit.simbolo} · {unit.magnitud.toLowerCase()}</option>)}
-                            </NativeSelect.Field><NativeSelect.Indicator />
-                        </NativeSelect.Root> : <Text fontSize="sm">{data.output?.unit || "Sin especificar"}</Text>}
-                    </Field.Root>
-                    {data.onQuantityChange && <Text fontSize="xs" color="fg.muted">Las cantidades de todos los insumos corresponden a esta salida completa.</Text>}
+                {/* El puerto izquierdo ocupa 1em dentro del nodo; reservar espacio para los controles. */}
+                <Stack w="full" pl="6" pr="3" gap="2">
+                    <Grid w="full" templateColumns="minmax(0, 1fr) 5rem" gap="2" alignItems="end">
+                        <Field.Root minW="0" required={!!data.onQuantityChange}>
+                            <Field.Label fontSize="xs">Cantidad obtenida</Field.Label>
+                            <Input className="nodrag nowheel" size="sm" type="number" min="0" step="any" minW="0"
+                                aria-label={`Cantidad obtenida de ${producto.nombre}`} value={data.output?.quantity ?? ""}
+                                placeholder={data.onQuantityChange ? "Cantidad" : "Sin especificar"}
+                                readOnly={!data.onQuantityChange} onChange={event => data.onQuantityChange?.(event.target.value)} />
+                        </Field.Root>
+                        <Field.Root minW="0" required={!!data.onUnitChange}>
+                            <Field.Label fontSize="xs">Unidad</Field.Label>
+                            {data.onUnitChange ? <NativeSelect.Root size="sm" className="nodrag nowheel" w="full">
+                                <NativeSelect.Field aria-label={`Unidad de salida e inventario de ${producto.nombre}`} value={data.output?.unit ?? ""}
+                                    onChange={event => data.onUnitChange?.(event.target.value)}>
+                                    <option value="">Elegir</option>
+                                    {data.units?.map(unit => <option key={unit.codigo} value={unit.codigo}>{unit.codigo}</option>)}
+                                </NativeSelect.Field><NativeSelect.Indicator />
+                            </NativeSelect.Root> : <Text w="full" minH="8" display="flex" alignItems="center" justifyContent="center"
+                                borderWidth="1px" rounded="sm" bg="bg.subtle" fontSize="sm" fontWeight="medium"
+                                title="Unidad de salida e inventario">{data.output?.unit || "—"}</Text>}
+                        </Field.Root>
+                    </Grid>
                     {data.onQuantityChange && !data.onUnitChange && <Text fontSize="xs" color="fg.muted">Se conserva la unidad del producto existente.</Text>}
                 </Stack>
                 <Icon boxSize="4em" color="orange.500" aria-hidden="true" asChild><GrCubes /></Icon>

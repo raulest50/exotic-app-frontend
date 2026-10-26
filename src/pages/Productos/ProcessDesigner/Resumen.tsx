@@ -7,6 +7,8 @@ import type { DesignerNode } from "./ProcessDesignerTab.tsx";
 
 const numberFormat = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 12 });
 const moneyFormat = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 6 });
+// Redondeo visual del total; los cálculos conservan su precisión.
+const recipeTotalFormat = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 function nonNegativeNumber(value: unknown): number | null {
     if ((typeof value !== "number" && typeof value !== "string") || String(value).trim() === "") return null;
@@ -56,7 +58,7 @@ export default function Resumen({ product, nodes, units }: {
             <Flex flex="1" gap="2" justify="space-between" flexWrap="wrap" textAlign="start" fontSize="sm">
                 <Text>Resumen · {rows.length} {rows.length === 1 ? "insumo" : "insumos"} · {outputLabel}</Text>
                 <Text color={complete ? "fg" : "fg.muted"}>
-                    {complete ? `${moneyFormat.format(knownTotal)} COP · estimado de receta` : rows.length ? "Costo incompleto" : "Sin calcular"}
+                    {complete ? `${recipeTotalFormat.format(knownTotal)} COP · estimado de receta` : rows.length ? "Costo incompleto" : "Sin calcular"}
                 </Text>
             </Flex>
         </Button>
@@ -85,7 +87,7 @@ export default function Resumen({ product, nodes, units }: {
                     </Table.Root>
                 </Table.ScrollArea>
                 <Flex mt="3" gap={{ base: "2", md: "6" }} justify="end" flexWrap="wrap" fontSize="sm">
-                    <Text>{complete ? "Total receta" : "Subtotal conocido"}: <strong>{Number.isFinite(knownTotal) ? moneyFormat.format(knownTotal) : "No calculable"} COP</strong></Text>
+                    <Text>{complete ? "Total receta" : "Subtotal conocido"}: <strong>{Number.isFinite(knownTotal) ? recipeTotalFormat.format(knownTotal) : "No calculable"} COP</strong></Text>
                     <Text>Costo por 1 {symbol(product.tipoUnidades)} de salida: <strong>{costPerUnit !== null ? `${moneyFormat.format(costPerUnit)} COP` : "Sin calcular"}</strong></Text>
                 </Flex>
                 {!complete && <Text mt="2" fontSize="xs" color="fg.warning">Estimación incompleta: revisa los costos, cantidades y unidades indicados. Los datos faltantes no se consideran cero.</Text>}
