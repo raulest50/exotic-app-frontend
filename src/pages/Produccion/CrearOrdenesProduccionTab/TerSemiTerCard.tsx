@@ -61,18 +61,6 @@ const TerSemiTerCard = ({ productoSeleccionado, canProduce, onSearchClick, canti
         return insumo.tipoUnidades || "KG"; // Usar "KG" como fallback si tipoUnidades no está definido
     };
 
-    // Función para calcular la cantidad ajustada según la cantidad a producir
-    const calcularCantidadAjustada = (cantidadBase: number): number => {
-        return cantidadBase * cantidadAProducir;
-    };
-
-    // Verificar si hay suficiente stock para la cantidad ajustada
-    const verificarStockSuficiente = (insumo: InsumoWithStock): boolean => {
-        const cantidadAjustada = calcularCantidadAjustada(insumo.cantidadRequerida);
-        return insumo.stockActual >= cantidadAjustada;
-    };
-
-
     // Función para determinar si un insumo es un semiterminado
     const esSemiterminado = (insumo: InsumoWithStock): boolean => {
         if (insumo.tipo_producto === 'S') {
@@ -134,15 +122,22 @@ const TerSemiTerCard = ({ productoSeleccionado, canProduce, onSearchClick, canti
     };
 
     // Componente recursivo para renderizar insumos y sus subinsumos
-    const renderInsumoRecursivo = (insumo: InsumoWithStock, nivel: number = 0, parentId: string = '') => {
+    const renderInsumoRecursivo = (
+        insumo: InsumoWithStock,
+        nivel: number = 0,
+        parentId: string = '',
+        cantidadProductoPadre: number = cantidadAProducir,
+    ) => {
         // Clave React para el elemento (composite ID)
         const reactKey = `${parentId}-${insumo.insumoId}`;
 
         // ID real del insumo (usado para el estado de expansión)
         const insumoId = insumo.insumoId;
 
-        const cantidadAjustada = calcularCantidadAjustada(insumo.cantidadRequerida);
-        const tieneStock = verificarStockSuficiente(insumo);
+        // El coeficiente expresa insumo por unidad del producto padre. En cada
+        // nivel se escala por la cantidad requerida de ese padre, sin redondear.
+        const cantidadAjustada = insumo.cantidadRequerida * cantidadProductoPadre;
+        const tieneStock = insumo.stockActual >= cantidadAjustada;
         const esSemi = esSemiterminado(insumo);
         const isExpanded = expandedSemiterminados[insumoId] || false;
         const tieneSubInsumos = insumo.subInsumos && insumo.subInsumos.length > 0;
@@ -254,7 +249,7 @@ const TerSemiTerCard = ({ productoSeleccionado, canProduce, onSearchClick, canti
                                         </Table.Header>
                                         <Table.Body>
                                             {insumo.subInsumos?.map(subInsumo => 
-                                                renderInsumoRecursivo(subInsumo, nivel + 1, insumoId)
+                                                renderInsumoRecursivo(subInsumo, nivel + 1, reactKey, cantidadAjustada)
                                             )}
                                         </Table.Body>
                                     </Table.Root>
