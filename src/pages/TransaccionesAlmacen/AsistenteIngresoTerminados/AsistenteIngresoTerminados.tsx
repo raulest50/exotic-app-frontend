@@ -32,6 +32,7 @@ import { formatCantidad, sameCantidad } from "./produccionCierreUtils";
 import type {
     CierreProduccionResponse,
     EdicionReporteProduccion,
+    FiltrosLecturaTerminados,
     PendientesProduccionFecha,
     ResumenPendientesProduccion,
 } from "./types";
@@ -72,6 +73,7 @@ export function AsistenteIngresoTerminados() {
 
     const [resumen, setResumen] = useState<ResumenPendientesProduccion | null>(null);
     const [seleccion, setSeleccion] = useState<PendientesProduccionFecha | null>(null);
+    const [filtrosLectura, setFiltrosLectura] = useState<FiltrosLecturaTerminados>({ nombre: "", categoriaId: null });
     const [ediciones, setEdiciones] = useState<Record<number, EdicionReporteProduccion>>({});
     const [paso, setPaso] = useState(1);
     const [hylGenerado, setHylGenerado] = useState(false);
@@ -112,6 +114,7 @@ export function AsistenteIngresoTerminados() {
         setError(null);
         try {
             const pendientes = await fetchPendientesFecha(fecha);
+            setFiltrosLectura({ nombre: "", categoriaId: null });
             if (pendientes.reportes.length === 0) {
                 setSeleccion(null);
                 await cargarResumen();
@@ -223,6 +226,7 @@ export function AsistenteIngresoTerminados() {
 
     const volverAlResumen = async () => {
         setSeleccion(null);
+        setFiltrosLectura({ nombre: "", categoriaId: null });
         setResultado(null);
         setError(null);
         await cargarResumen();
@@ -321,7 +325,7 @@ export function AsistenteIngresoTerminados() {
             <Flex justify="space-between" gap={3} align={{ base: "flex-start", md: "center" }} flexDir={{ base: "column", md: "row" }}>
                 <Box>
                     <Heading size="md">Producción del {formatFecha(seleccion.fechaProduccion)}</Heading>
-                    <Text mt={1} color="app.textSubtle">{seleccion.reportes.length} lote(s) visibles · {reportesIngresables.length} disponible(s) para ingreso</Text>
+                    <Text mt={1} color="app.textSubtle">{seleccion.reportes.length} lote(s) de la fecha · {reportesIngresables.length} disponible(s) para ingreso</Text>
                 </Box>
                 <Button size="sm" variant="ghost" onClick={volverAlResumen}><LuArrowLeft />Cambiar fecha
                                     </Button>
@@ -354,7 +358,22 @@ export function AsistenteIngresoTerminados() {
                 <Alert.Root status="warning"><Alert.Indicator />Los lotes permanecen visibles, pero ninguno está liberado por Calidad.</Alert.Root>
             ) : null}
 
-            {paso === 1 ? <IngresoTerminadosStep1Lectura reportes={seleccion.reportes} /> : null}
+            {paso === 1 ? (
+                <VStack align="stretch" gap={4}>
+                    <Alert.Root status="info" borderRadius="md">
+                        <Alert.Indicator />
+                        <Text>
+                            Los filtros solo cambian esta vista. Los pasos siguientes incluyen todos los lotes disponibles
+                            de esta fecha ({reportesIngresables.length}), aunque el filtro los oculte.
+                        </Text>
+                    </Alert.Root>
+                    <IngresoTerminadosStep1Lectura
+                        reportes={seleccion.reportes}
+                        filtros={filtrosLectura}
+                        onFiltrosChange={setFiltrosLectura}
+                    />
+                </VStack>
+            ) : null}
             {paso === 2 ? (
                 <IngresoTerminadosStep2Correccion
                     fechaProduccion={seleccion.fechaProduccion}

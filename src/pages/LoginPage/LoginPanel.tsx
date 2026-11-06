@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useColorModeValue } from "../../components/ui/color-mode";
 import { useAuth } from '../../context/AuthContext.tsx';
 import { useNavigate } from 'react-router-dom';
+import { deploymentPath, toRouterPath } from '../../utils/deploymentPaths';
 import {
     Button,
     Container,
@@ -227,7 +228,7 @@ export default function LoginPanel() {
             await login(username, password);
             //console.log(response);
             const returnTo = consumeReturnTo();
-            navigate(returnTo ?? '/', { replace: true });
+            navigate(returnTo ? toRouterPath(returnTo) ?? '/' : '/', { replace: true });
             // after successful login, go to home or wherever you want
             // No necesitamos desactivar el estado de carga aquí porque la página se redirigirá
         } catch (error) {
@@ -345,7 +346,7 @@ export default function LoginPanel() {
                             >
                                 <Box boxSize={{ base: "9rem", sm: "12rem", md: "16.8rem", "2xl": "14rem" }}>
                                     <Image
-                                        src="/logo_novum.png"
+                                        src={deploymentPath('/logo_novum.png')}
                                         alt="Laboratorios Novum S.A.S."
                                         w="full"
                                         h="full"

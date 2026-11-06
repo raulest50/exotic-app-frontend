@@ -8,6 +8,7 @@ import React, {
     useState,
 } from 'react';
 import axios from 'axios';
+import { deploymentPath } from "../utils/deploymentPaths";
 import EndPointsURL from "../api/EndPointsURL.tsx";
 import {
     clearUserCache,
@@ -145,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearAuthenticationState();
 
         if (redirect && !isPublicAuthPath(currentPathname)) {
-            window.location.replace("/login");
+            window.location.replace(deploymentPath("/login"));
         }
     }, [clearAuthenticationState]);
 

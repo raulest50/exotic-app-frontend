@@ -280,7 +280,8 @@ const router = createBrowserRouter(
 
             </Route>
         </>
-    )
+    ),
+    { basename: import.meta.env.BASE_URL }
 )
 
 function App() {

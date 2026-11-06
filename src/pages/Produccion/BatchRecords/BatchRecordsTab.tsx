@@ -27,6 +27,7 @@ import { apiFailureDetail, processControlApi } from "../../../features/controles
 import { formatControlDate } from "../../../features/controles/controlUi";
 import StatusBadge from "../../../features/controles/StatusBadge";
 import type { ControlRequerido, HistorialControlItem } from "../../../features/controles/types";
+import DespejeLineaDetalle from "../../../features/despeje/DespejeLineaDetalle";
 import { Modulo } from "../../Usuarios/GestionUsuarios/types";
 import {
     atenderSeccionCorreccion,
@@ -80,6 +81,7 @@ export default function BatchRecordsTab() {
     const [loadingPdf, setLoadingPdf] = useState(false);
     const [motivoEnvio, setMotivoEnvio] = useState("");
     const [sending, setSending] = useState(false);
+    const [despejeBusy, setDespejeBusy] = useState(false);
     const [prevalidation, setPrevalidation] = useState<BatchRecordSendPrevalidation | null>(null);
     const [prevalidating, setPrevalidating] = useState(false);
     const [correctionReasons, setCorrectionReasons] = useState<Record<number, string>>({});
@@ -161,7 +163,7 @@ export default function BatchRecordsTab() {
     };
 
     const atenderSeccion = async (sectionId: number) => {
-        if (!detail) return;
+        if (!detail || despejeBusy) return;
         const justificacion = correctionReasons[sectionId]?.trim();
         if (!justificacion) {
             toast({ title: "La justificación es obligatoria", status: "warning" });
@@ -182,6 +184,7 @@ export default function BatchRecordsTab() {
     };
 
     const abrir = async (item: BatchRecordListItem) => {
+        if (despejeBusy) return;
         setLoadingDetail(true);
         setPdfUrl((current) => {
             if (current) URL.revokeObjectURL(current);
@@ -204,6 +207,7 @@ export default function BatchRecordsTab() {
     };
 
     const enviarRevision = async () => {
+        if (despejeBusy) return;
         if (!detail || !motivoEnvio.trim()) {
             toast({ title: "El motivo es obligatorio", status: "warning" });
             return;
@@ -312,7 +316,7 @@ export default function BatchRecordsTab() {
                                 <Table.Cell>{item.productoId} · {item.productoNombre}</Table.Cell>
                                 <Table.Cell><Badge colorPalette={palette(item.estado)}>{item.estado}</Badge></Table.Cell>
                                 <Table.Cell><Badge colorPalette={palette(item.estadoSincronizacion)}>{item.estadoSincronizacion}</Badge></Table.Cell>
-                                <Table.Cell><Button size="xs" variant="outline" onClick={() => void abrir(item)}>Abrir</Button></Table.Cell>
+                                <Table.Cell><Button size="xs" variant="outline" disabled={despejeBusy} onClick={() => void abrir(item)}>Abrir</Button></Table.Cell>
                             </Table.Row>
                         ))}</Table.Body>
                     </Table.Root>
@@ -382,6 +386,19 @@ export default function BatchRecordsTab() {
                     </SimpleGrid>
 
                     <Box borderWidth="1px" borderRadius="md" p={4}>
+                        <Heading size="sm" mb={2}>Despejes de línea</Heading>
+                        <Text fontSize="sm" color="app.textMuted" mb={3}>Los documentos conservan la plantilla y el contexto utilizados en cada intento. También se incluyen en el PDF del expediente.</Text>
+                        {detail.despejesLinea?.length ? <VStack align="stretch" gap={4}>
+                            {detail.despejesLinea.map((ejecucion) => <Box key={ejecucion.id} borderWidth="1px" borderRadius="md" p={{ base: 3, md: 4 }}>
+                                <DespejeLineaDetalle ejecucion={ejecucion} permitirRevision disabled={despejeBusy || sending || loadingDetail || attendingSectionId !== null} onBusyChange={setDespejeBusy} onUpdated={(updated) => setDetail((current) => current ? {
+                                    ...current,
+                                    despejesLinea: current.despejesLinea?.map((item) => item.id === updated.id ? updated : item),
+                                } : current)} />
+                            </Box>)}
+                        </VStack> : <Text color="app.textMuted">No hay despejes enviados para este expediente.</Text>}
+                    </Box>
+
+                    <Box borderWidth="1px" borderRadius="md" p={4}>
                         <Heading size="sm" mb={1}>Controles de proceso del expediente</Heading>
                         <Text fontSize="sm" color="fg.muted" mb={3}>El contexto, plan y versión fueron congelados por el backend. Calidad no puede modificar estas mediciones.</Text>
                         {nivelControlesProceso < 1 && nivelHistorialProceso < 1 ? <Alert.Root status="info"><Alert.Indicator />Se requiere acceso al registro o al historial de controles de proceso para consultar esta evidencia neutral.</Alert.Root> : <VStack align="stretch" gap={2}>
@@ -407,7 +424,7 @@ export default function BatchRecordsTab() {
                                         {section.estado === "PENDIENTE" && nivelExpedientes >= 2 ? (
                                             <HStack mt={3} align="end" flexWrap="wrap">
                                                 <Field.Root flex="1" minW="260px" required><Field.Label>Justificación de la corrección</Field.Label><Textarea value={correctionReasons[section.id] ?? ""} onChange={(event) => setCorrectionReasons((current) => ({ ...current, [section.id]: event.target.value }))} maxLength={500} /></Field.Root>
-                                                <Button colorPalette="purple" loading={attendingSectionId === section.id} disabled={!correctionReasons[section.id]?.trim()} onClick={() => void atenderSeccion(section.id)}>Marcar atendida</Button>
+                                                <Button colorPalette="purple" loading={attendingSectionId === section.id} disabled={despejeBusy || !correctionReasons[section.id]?.trim()} onClick={() => void atenderSeccion(section.id)}>Marcar atendida</Button>
                                             </HStack>
                                         ) : section.justificacion ? <Text fontSize="sm" mt={2}>{section.justificacion}</Text> : null}
                                     </Box>
@@ -422,7 +439,7 @@ export default function BatchRecordsTab() {
                         {["LISTO_PARA_REVISION", "DEVUELTO_PRODUCCION", "EN_CORRECCION"].includes(detail.resumen.estado) ? (
                             <VStack align="stretch" gap={3}>
                                 <Field.Root required><Field.Label>Motivo del {detail.resumen.estado === "LISTO_PARA_REVISION" ? "envío" : "reenvío"}</Field.Label><Textarea value={motivoEnvio} onChange={(event) => setMotivoEnvio(event.target.value)} maxLength={500} /><Field.HelperText>La revisión y la firma conservarán este texto.</Field.HelperText></Field.Root>
-                                <HStack justify="flex-end" flexWrap="wrap"><Button variant="outline" loading={prevalidating} onClick={() => void refreshPrevalidation()}>Actualizar prevalidación</Button><Button colorPalette="teal" loading={sending} disabled={nivelExpedientes < 2 || !motivoEnvio.trim() || prevalidation?.permitido !== true} onClick={() => void enviarRevision()}>{detail.resumen.estado === "LISTO_PARA_REVISION" ? "Enviar a Calidad" : "Reenviar a Calidad"}</Button></HStack>
+                                <HStack justify="flex-end" flexWrap="wrap"><Button variant="outline" loading={prevalidating} onClick={() => void refreshPrevalidation()}>Actualizar prevalidación</Button><Button colorPalette="teal" loading={sending} disabled={despejeBusy || nivelExpedientes < 2 || !motivoEnvio.trim() || prevalidation?.permitido !== true} onClick={() => void enviarRevision()}>{detail.resumen.estado === "LISTO_PARA_REVISION" ? "Enviar a Calidad" : "Reenviar a Calidad"}</Button></HStack>
                                 {nivelExpedientes < 2 && <Text fontSize="sm" color="fg.muted">Se requiere nivel 2 en Expedientes digitales.</Text>}
                             </VStack>
                         ) : <Text color="fg.muted">Estado actual: {detail.resumen.estado.replace(/_/g, " ")}.</Text>}

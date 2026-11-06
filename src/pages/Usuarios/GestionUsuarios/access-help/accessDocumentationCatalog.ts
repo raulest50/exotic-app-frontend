@@ -86,6 +86,27 @@ function productOperationTab(tabId: string, label: string, capability: string, m
 }
 
 export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentation> = {
+    [Modulo.AGENT_ASSISTANT]: {
+        modulo: Modulo.AGENT_ASSISTANT,
+        label: "Asistente Exotic",
+        resumen: "Acceso al asistente flotante y separación entre lectura y escritura.",
+        condiciones: [
+            "Sin asignación el asistente permanece oculto. Los permisos vigentes se verifican con el servidor.",
+            "Master y Super Master conservan la excepción administrativa global, equivalente al nivel 2.",
+            "Actualmente sólo existe la vista previa visual: no se ejecutan consultas ni operaciones de escritura.",
+            "Estos permisos no sustituyen los controles por operación y objeto de los módulos que se integren en el futuro.",
+        ],
+        tabs: [tab("MAIN", "Permisos del asistente", "El nivel 2 incluye las capacidades del nivel 1.", [
+            level(1, "Sólo lectura", [
+                "Mostrar y abrir el asistente con perfil de sólo lectura.",
+                "Reservar el permiso para futuras consultas, todavía no conectadas.",
+            ], ["Autorizar operaciones de escritura o modificar datos mediante el asistente."]),
+            level(2, "Lectura y escritura", [
+                "Incluye el acceso de lectura del nivel 1.",
+                "Reservar además el permiso de escritura para futuras operaciones del asistente, todavía no conectadas.",
+            ], ["Ejecutar operaciones reales durante esta fase visual."]),
+        ])],
+    },
     [Modulo.USUARIOS]: {
         modulo: Modulo.USUARIOS,
         label: "Usuarios",
@@ -213,6 +234,22 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
                 "Consultar la información necesaria y ejecutar las operaciones de aprobación disponibles en esta pestaña.",
                 4,
                 ["Algunas consultas son compartidas con Programación semanal."],
+            ),
+            sameScopeTab(
+                "PROGRAMACION_MPS_OF",
+                "MPS OF",
+                "Programa tandas de semiterminados marcados para orden de fabricación, independientemente de las OP.",
+                "Consultar y guardar el borrador, atender observaciones y editar o cancelar tandas aprobadas cuando su estado y las directivas OF lo permitan.",
+                4,
+                ["Exige permiso exacto. No hereda Programación MPS OP ni Crear orden de fabricación. Las cantidades emitidas se conservan; para cambiarlas se cancela y reemplaza la tanda."],
+            ),
+            sameScopeTab(
+                "APROBACION_MPS_OF",
+                "Aprobación MPS OF",
+                "Revisa y aprueba la programación de fabricación para stock y emite sus OF.",
+                "Consultar la semana, registrar y cerrar observaciones, aprobar el MPS OF y emitir sus órdenes de fabricación.",
+                4,
+                ["Exige permiso exacto e independiente de Aprobación MPS OP. La aprobación exige observaciones cerradas; la emisión requiere activo el flujo de Batch Record."],
             ),
             tab(
                 "CREAR_ODP_MANUALMENTE",

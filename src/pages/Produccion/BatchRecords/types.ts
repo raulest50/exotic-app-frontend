@@ -1,3 +1,5 @@
+import type { EjecucionDespeje } from "../../../features/despeje/types";
+
 export type EstadoBatchRecord =
     | "BORRADOR"
     | "EN_EJECUCION"
@@ -294,6 +296,7 @@ export interface BatchRecordDetail {
     seccionesCorreccion: BatchRecordSeccionCorreccion[];
     lotesOrigen: BatchRecordVinculoGenealogia[];
     lotesDestino: BatchRecordVinculoGenealogia[];
+    despejesLinea?: EjecucionDespeje[];
 }
 
 export interface PageResponse<T> {

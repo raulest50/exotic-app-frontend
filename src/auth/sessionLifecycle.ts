@@ -1,10 +1,11 @@
 import { jwtDecode } from "jwt-decode";
+import { deploymentStorageKey, isUnambiguousPath, toRouterPath } from "../utils/deploymentPaths";
 
-export const AUTH_TOKEN_STORAGE_KEY = "authToken";
-export const SESSION_EVENT_STORAGE_KEY = "auth.session.event.v1";
+export const AUTH_TOKEN_STORAGE_KEY = deploymentStorageKey("authToken");
+export const SESSION_EVENT_STORAGE_KEY = deploymentStorageKey("auth.session.event.v1");
 
-const SESSION_NOTICE_STORAGE_KEY = "auth.session.notice.v1";
-const SESSION_RETURN_TO_STORAGE_KEY = "auth.session.returnTo.v1";
+const SESSION_NOTICE_STORAGE_KEY = deploymentStorageKey("auth.session.notice.v1");
+const SESSION_RETURN_TO_STORAGE_KEY = deploymentStorageKey("auth.session.returnTo.v1");
 
 export type SessionEndReason =
     | "TOKEN_EXPIRED"
@@ -33,10 +34,10 @@ const normalizePathname = (pathname: string): string => {
 };
 
 export const isLoginPath = (pathname: string): boolean =>
-    normalizePathname(pathname) === "/login";
+    normalizePathname(toRouterPath(pathname) ?? "") === "/login";
 
 export const isResetPasswordPath = (pathname: string): boolean =>
-    normalizePathname(pathname) === "/reset-password";
+    normalizePathname(toRouterPath(pathname) ?? "") === "/reset-password";
 
 export const isPublicAuthPath = (pathname: string): boolean =>
     isLoginPath(pathname) || isResetPasswordPath(pathname);
@@ -73,10 +74,12 @@ export const sanitizeInternalReturnTo = (candidate: string | null): string | nul
     if (!candidate || !candidate.startsWith("/") || candidate.startsWith("//")) {
         return null;
     }
+    const pathname = candidate.split(/[?#]/, 1)[0];
+    if (!isUnambiguousPath(pathname) || toRouterPath(pathname) === null) return null;
 
     try {
         const parsed = new URL(candidate, window.location.origin);
-        if (parsed.origin !== window.location.origin) return null;
+        if (parsed.origin !== window.location.origin || toRouterPath(parsed.pathname) === null) return null;
         if (isPublicAuthPath(parsed.pathname)) return null;
         return `${parsed.pathname}${parsed.search}${parsed.hash}`;
     } catch {

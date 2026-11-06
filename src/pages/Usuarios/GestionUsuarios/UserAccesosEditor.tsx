@@ -449,7 +449,9 @@ export default function UserAccesosEditor({ user, onBack, onSaved }: Props) {
                                                                                 {Array.from({ length: tab.maxNivel }, (_, index) => index + 1).map(
                                                                                     (nivel) => (
                                                                                         <option key={nivel} value={nivel}>
-                                                                                            Nivel {nivel}
+                                                                                            {modulo === Modulo.AGENT_ASSISTANT
+                                                                                                ? `Nivel ${nivel} · ${nivel === 1 ? "Sólo lectura" : "Lectura y escritura"}`
+                                                                                                : `Nivel ${nivel}`}
                                                                                         </option>
                                                                                     )
                                                                                 )}

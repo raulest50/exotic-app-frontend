@@ -10,7 +10,7 @@ import {
 describe("catálogo de documentación de accesos", () => {
     test("cubre todos los módulos y pestañas configurables", () => {
         expect(ACCESS_DOCUMENTATION_MODULES).toHaveLength(Object.values(Modulo).length);
-        expect(ACCESS_DOCUMENTATION_MODULES.flatMap((module) => module.tabs)).toHaveLength(77);
+        expect(ACCESS_DOCUMENTATION_MODULES.flatMap((module) => module.tabs)).toHaveLength(79);
 
         for (const modulo of Object.values(Modulo)) {
             expect(ACCESS_DOCUMENTATION_CATALOG[modulo].modulo).toBe(modulo);
@@ -60,6 +60,8 @@ describe("catálogo de documentación de accesos", () => {
             ["PLANEACION_PRODUCCION", 4],
             ["PROGRAMACION_PRODUCCION", 4],
             ["APROBACION_MPS_WEEK", 4],
+            ["PROGRAMACION_MPS_OF", 4],
+            ["APROBACION_MPS_OF", 4],
             ["CREAR_ODP_MANUALMENTE", 4],
             ["CREAR_ORDEN_FABRICACION", 2],
             ["PLANES_CONTROL_PROCESO", 3],

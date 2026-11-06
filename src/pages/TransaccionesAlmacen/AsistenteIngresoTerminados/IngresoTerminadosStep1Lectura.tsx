@@ -1,18 +1,57 @@
-import { Badge, Box, HStack, Table, Text, VStack } from "@chakra-ui/react";
-import type { ReporteProduccionPendiente } from "./types";
+import { Alert, Badge, Box, HStack, Table, Text, VStack } from "@chakra-ui/react";
+import { useMemo } from "react";
+import FiltrosIngresoTerminados from "./FiltrosIngresoTerminados";
+import type { FiltrosLecturaTerminados, ReporteProduccionPendiente } from "./types";
 import { consolidarProductos, formatCantidad } from "./produccionCierreUtils";
 
 interface Props {
     reportes: ReporteProduccionPendiente[];
+    filtros: FiltrosLecturaTerminados;
+    onFiltrosChange: (value: FiltrosLecturaTerminados) => void;
 }
 
-export default function IngresoTerminadosStep1Lectura({ reportes }: Props) {
-    const consolidados = consolidarProductos(reportes);
+function normalizarNombre(value: string): string {
+    return value.normalize("NFD").replace(/\p{M}/gu, "").trim().toLocaleLowerCase("es");
+}
+
+export default function IngresoTerminadosStep1Lectura({ reportes, filtros, onFiltrosChange }: Props) {
+    const categorias = useMemo(() => {
+        const porId = new Map<number, string>();
+        reportes.forEach((reporte) => {
+            if (reporte.categoriaId != null && !porId.has(reporte.categoriaId)) {
+                porId.set(
+                    reporte.categoriaId,
+                    reporte.categoriaNombre?.trim() || `Categoría ${reporte.categoriaId}`,
+                );
+            }
+        });
+        return Array.from(porId, ([categoriaId, categoriaNombre]) => ({ categoriaId, categoriaNombre }))
+            .sort((left, right) => left.categoriaNombre.localeCompare(right.categoriaNombre, "es")
+                || left.categoriaId - right.categoriaId);
+    }, [reportes]);
+    const reportesVisibles = useMemo(() => {
+        const nombre = normalizarNombre(filtros.nombre);
+        return reportes.filter((reporte) =>
+            normalizarNombre(reporte.productoNombre).includes(nombre)
+            && (filtros.categoriaId === null || reporte.categoriaId === filtros.categoriaId));
+    }, [filtros.categoriaId, filtros.nombre, reportes]);
+    const consolidados = consolidarProductos(reportesVisibles);
+    const totalProductos = new Set(reportes.map((reporte) => reporte.productoId)).size;
 
     return (
         <VStack align="stretch" gap={5}>
+            <FiltrosIngresoTerminados value={filtros} categorias={categorias} onChange={onFiltrosChange} />
+            <Text role="status" fontSize="sm" color="app.textMuted">
+                {consolidados.length} de {totalProductos} producto(s) · {reportesVisibles.length} de {reportes.length} lote(s)
+            </Text>
+            {reportesVisibles.length === 0 ? (
+                <Alert.Root status="info" borderRadius="md">
+                    <Alert.Indicator />
+                    No hay productos que coincidan con los filtros. Ajuste el nombre o la categoría, o limpie los filtros.
+                </Alert.Root>
+            ) : null}
             {consolidados.map((producto) => {
-                const lotes = reportes.filter((reporte) => reporte.productoId === producto.productoId);
+                const lotes = reportesVisibles.filter((reporte) => reporte.productoId === producto.productoId);
                 return (
                     <Box key={producto.productoId} borderWidth="1px" borderRadius="md" overflow="hidden">
                         <HStack

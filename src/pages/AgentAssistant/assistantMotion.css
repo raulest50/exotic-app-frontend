@@ -1,0 +1,111 @@
+[data-agent-assistant] [data-exotic-mascot] [data-part="mascot"] {
+  animation: exotic-assistant-breathe 6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+[data-agent-assistant] [data-exotic-mascot] [data-part="shadow"] {
+  animation: exotic-assistant-shadow 6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+[data-agent-assistant] [data-exotic-mascot] [data-part="eyes-group"] {
+  animation: exotic-assistant-blink 7.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+[data-agent-assistant] [data-exotic-mascot] [data-part="arm-wave"] {
+  transform-box: fill-box;
+  transform-origin: 8% 84%;
+}
+
+/* A greeting runs once per keyboard focus or pointer entry. */
+[data-agent-assistant]
+  [data-mascot-interactive]:focus-visible
+  [data-part="arm-wave"] {
+  animation: exotic-assistant-wave 820ms ease-in-out 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-agent-assistant]
+    [data-mascot-interactive]:hover
+    [data-part="arm-wave"] {
+    animation: exotic-assistant-wave 820ms ease-in-out 1;
+  }
+}
+
+[data-agent-assistant][data-motion-paused="true"]
+  [data-exotic-mascot]
+  [data-part],
+[data-agent-assistant][data-state="hidden"] [data-exotic-mascot] [data-part] {
+  animation-play-state: paused;
+}
+
+@keyframes exotic-assistant-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.5px);
+  }
+}
+
+@keyframes exotic-assistant-shadow {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 0.16;
+    transform: scaleX(0.98);
+  }
+}
+
+@keyframes exotic-assistant-blink {
+  0%,
+  86%,
+  88.8%,
+  91.6%,
+  100% {
+    transform: scaleY(1);
+  }
+  87.2%,
+  87.6%,
+  90%,
+  90.4% {
+    transform: scaleY(0.08);
+  }
+}
+
+@keyframes exotic-assistant-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  22%,
+  62% {
+    transform: rotate(-9deg);
+  }
+  42%,
+  82% {
+    transform: rotate(5deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-agent-assistant]
+    [data-exotic-mascot]
+    :is(
+      [data-part="mascot"],
+      [data-part="shadow"],
+      [data-part="eyes-group"],
+      [data-part="arm-wave"]
+    ) {
+    animation: none !important;
+    transform: none !important;
+  }
+}

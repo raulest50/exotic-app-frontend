@@ -12,22 +12,34 @@ import {
     VStack,
     Field,
 } from "@chakra-ui/react";
-import type {
-    MpsSemanalDraftDTO,
-    MpsSemanalObservacionDTO,
-    MpsSemanalObservacionEstado,
-    MpsSemanalObservacionTipo,
-} from "./MpsSemanalService";
+// Contrato de presentación compartido: no conoce servicios, órdenes ni DTO de OP u OF.
+type MpsSemanalObservacionEstado = "ABIERTA" | "ATENDIDA" | "CERRADA";
+type MpsSemanalObservacionTipo = "BLOQUEANTE" | "ADVERTENCIA" | "INFORMATIVA" | "OTRO";
+interface MpsObservacionView {
+    observacionId: number;
+    revisionMps: number;
+    autorUsername: string;
+    mensaje: string;
+    tipo: MpsSemanalObservacionTipo;
+    estado: MpsSemanalObservacionEstado;
+    respuestaCorreccion: string | null;
+    atendidaPorUsername: string | null;
+    fechaAtencion: string | null;
+    cerradaPorUsername: string | null;
+    fechaCierre: string | null;
+    fechaCreacion: string;
+}
 
 type MpsObservacionesMode = "programacion" | "aprobacion";
 
 interface MpsObservacionesPanelProps {
     mode: MpsObservacionesMode;
-    mps: MpsSemanalDraftDTO | null;
-    observaciones: MpsSemanalObservacionDTO[];
+    mps: { estado: string } | null;
+    observaciones: MpsObservacionView[];
     isLoading: boolean;
     error: string | null;
     hasUnsavedChanges?: boolean;
+    disabled?: boolean;
     onRetry?: () => void;
     onCreateObservacion?: (tipo: MpsSemanalObservacionTipo, mensaje: string) => Promise<void>;
     onAtenderObservacion?: (observacionId: number, respuestaCorreccion: string) => Promise<void>;
@@ -121,6 +133,7 @@ export default function MpsObservacionesPanel({
     isLoading,
     error,
     hasUnsavedChanges = false,
+    disabled = false,
     onRetry,
     onCreateObservacion,
     onAtenderObservacion,
@@ -150,7 +163,7 @@ export default function MpsObservacionesPanel({
 
     const handleCreate = async () => {
         const mensaje = newMensaje.trim();
-        if (!mensaje || !onCreateObservacion) {
+        if (disabled || !mensaje || !onCreateObservacion) {
             return;
         }
         setPendingAction("create");
@@ -167,7 +180,7 @@ export default function MpsObservacionesPanel({
 
     const handleAttend = async (observacionId: number) => {
         const respuesta = respuestas[observacionId]?.trim() ?? "";
-        if (!respuesta || !onAtenderObservacion) {
+        if (disabled || !respuesta || !onAtenderObservacion) {
             return;
         }
         setPendingAction(`attend-${observacionId}`);
@@ -186,7 +199,7 @@ export default function MpsObservacionesPanel({
     };
 
     const handleClose = async (observacionId: number) => {
-        if (!onCerrarObservacion) {
+        if (disabled || !onCerrarObservacion) {
             return;
         }
         setPendingAction(`close-${observacionId}`);
@@ -258,7 +271,7 @@ export default function MpsObservacionesPanel({
                                     colorPalette="orange"
                                     onClick={() => void handleCreate()}
                                     loading={pendingAction === "create"}
-                                    disabled={!newMensaje.trim()}
+                                    disabled={disabled || !newMensaje.trim()}
                                 >
                                     Registrar observacion
                                 </Button>
@@ -300,7 +313,7 @@ export default function MpsObservacionesPanel({
                         <VStack align="stretch" gap={3}>
                             {observaciones.map((observacion) => {
                                 const responseValue = respuestas[observacion.observacionId] ?? "";
-                                const attendDisabled = hasUnsavedChanges || !responseValue.trim();
+                                const attendDisabled = disabled || hasUnsavedChanges || !responseValue.trim();
                                 return (
                                     <Box
                                         key={observacion.observacionId}
@@ -385,6 +398,7 @@ export default function MpsObservacionesPanel({
                                                     colorPalette="green"
                                                     onClick={() => void handleClose(observacion.observacionId)}
                                                     loading={pendingAction === `close-${observacion.observacionId}`}
+                                                    disabled={disabled}
                                                 >
                                                     Aceptar correccion
                                                 </Button>

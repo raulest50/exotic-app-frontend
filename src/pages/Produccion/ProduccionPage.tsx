@@ -17,6 +17,8 @@ import ProgramacionProduccionSemanalTab, { type MpsWeekRefreshSignal } from "./P
 import BatchRecordsTab from "./BatchRecords/BatchRecordsTab.tsx";
 import OrdenesFabricacionTab from "./OrdenesFabricacion/OrdenesFabricacionTab.tsx";
 import MpsFabricacionPanel from "./MpsFabricacion/MpsFabricacionPanel";
+import AprobacionMpsFabricacionTab from "./MpsFabricacion/AprobacionMpsFabricacionTab";
+import type { MpsOfRefreshSignal } from "./MpsFabricacion/mpsFabricacionApi";
 import {
     DesviacionesControlProcesoTab,
     HistorialControlesProcesoTab,
@@ -35,6 +37,8 @@ const exactProductionTabAccessRule = (tabId: string, minLevel = 1): AccessRule =
 const buildProductionGroups = (
     refreshSignal: MpsWeekRefreshSignal | null,
     onMpsChanged: (weekStartDate: string) => void,
+    ofRefreshSignal: MpsOfRefreshSignal | null,
+    onMpsOfChanged: (weekStartDate: string, origin: MpsOfRefreshSignal["origin"]) => void,
 ): ModuleTabGroup[] => [
     {
         key: "planificacion-produccion",
@@ -64,8 +68,15 @@ const buildProductionGroups = (
             {
                 key: "mps-of",
                 label: "MPS OF",
-                render: () => <MpsFabricacionPanel />,
-                accessRule: exactProductionTabAccessRule("CREAR_ORDEN_FABRICACION"),
+                render: () => <MpsFabricacionPanel refreshSignal={ofRefreshSignal} onMpsChanged={week => onMpsOfChanged(week, "programacion")} />,
+                accessRule: exactProductionTabAccessRule("PROGRAMACION_MPS_OF"),
+                flushContent: true,
+            },
+            {
+                key: "aprobacion-mps-of",
+                label: "Aprobación MPS OF",
+                render: () => <AprobacionMpsFabricacionTab refreshSignal={ofRefreshSignal} onMpsChanged={week => onMpsOfChanged(week, "aprobacion")} />,
+                accessRule: exactProductionTabAccessRule("APROBACION_MPS_OF"),
                 flushContent: true,
             },
         ],
@@ -159,6 +170,10 @@ const buildProductionGroups = (
 export default function ProduccionPage() {
     const access = useAccessSnapshot();
     const [refreshSignal, setRefreshSignal] = useState<MpsWeekRefreshSignal | null>(null);
+    const [ofRefreshSignal, setOfRefreshSignal] = useState<MpsOfRefreshSignal | null>(null);
+    const handleMpsOfChanged = useCallback((weekStartDate: string, origin: MpsOfRefreshSignal["origin"]) => {
+        setOfRefreshSignal(previous => ({ weekStartDate, origin, sequence: (previous?.sequence ?? 0) + 1 }));
+    }, []);
     const handleMpsChanged = useCallback((weekStartDate: string) => {
         setRefreshSignal((previous) => ({
             weekStartDate,
@@ -166,8 +181,8 @@ export default function ProduccionPage() {
         }));
     }, []);
     const groups = useMemo(
-        () => buildProductionGroups(refreshSignal, handleMpsChanged),
-        [refreshSignal, handleMpsChanged],
+        () => buildProductionGroups(refreshSignal, handleMpsChanged, ofRefreshSignal, handleMpsOfChanged),
+        [refreshSignal, handleMpsChanged, ofRefreshSignal, handleMpsOfChanged],
     );
 
     return (

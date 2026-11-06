@@ -19,6 +19,8 @@ export interface ReporteProduccionPendiente {
     lote: string;
     productoId: string;
     productoNombre: string;
+    categoriaId: number | null;
+    categoriaNombre: string | null;
     tipoUnidades: string | null;
     cantidadPlaneada: number;
     cantidadReportada: number;
@@ -38,6 +40,11 @@ export interface ReporteProduccionPendiente {
 export interface PendientesProduccionFecha {
     fechaProduccion: string;
     reportes: ReporteProduccionPendiente[];
+}
+
+export interface FiltrosLecturaTerminados {
+    nombre: string;
+    categoriaId: number | null;
 }
 
 export interface EdicionReporteProduccion {

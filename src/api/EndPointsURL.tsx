@@ -1,10 +1,13 @@
 
+import { isUnambiguousPath } from '../utils/deploymentPaths';
+
 export type ExcelDecimalSeparator = "COMMA" | "DOT";
 export type ExcelExportMode = "NUMERIC" | "TEXT_DETERMINISTIC";
 export type ExcelExportOptions = {
     exportMode?: ExcelExportMode;
     decimalSeparator?: ExcelDecimalSeparator;
 };
+type AppEnvironment = 'local' | 'staging' | 'production';
 
 export default class EndPointsURL{
 
@@ -177,6 +180,7 @@ export default class EndPointsURL{
 
     // user resources (solo autenticacion)
     public me:string; // endpoint para obtener usuario completo
+    public agent_assistant_access: string;
     public login:string;
     public request_reset_passw:string;
     public set_new_passw:string;
@@ -867,6 +871,7 @@ export default class EndPointsURL{
 
         // user endpoints
         this.me = `${domain}/${auth_res}/me`;
+        this.agent_assistant_access = `${domain}/agent-assistant/access`;
         this.login = `${domain}/${auth_res}/login`;
         this.request_reset_passw = `${domain}/${auth_res}/request_reset_passw`;
         this.set_new_passw = `${domain}/${auth_res}/set_new_passw`;
@@ -1072,29 +1077,59 @@ export default class EndPointsURL{
     }
 
 
-    // Method to return the correct domain name
-    static getDomain(): string {
+    private static getConfiguration(): { domain: string; environment: AppEnvironment } {
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+        const appEnvironment = import.meta.env.VITE_APP_ENV;
+
+        // Public builds declare both values; builds for local access can omit both.
+        if (apiBaseUrl !== undefined || appEnvironment !== undefined) {
+            if (!apiBaseUrl || !appEnvironment) {
+                throw new Error('VITE_API_BASE_URL y VITE_APP_ENV deben configurarse juntas.');
+            }
+            if (appEnvironment !== 'local' && appEnvironment !== 'staging' && appEnvironment !== 'production') {
+                throw new Error('VITE_APP_ENV debe ser local, staging o production.');
+            }
+
+            let url: URL;
+            try {
+                url = new URL(apiBaseUrl);
+            } catch {
+                throw new Error('VITE_API_BASE_URL debe ser una URL absoluta válida.');
+            }
+
+            const isLoopback = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+            if (url.protocol !== 'https:' && !(url.protocol === 'http:' && isLoopback)) {
+                throw new Error('VITE_API_BASE_URL requiere HTTPS; HTTP solo se admite en localhost o 127.0.0.1.');
+            }
+            const rawUrl = /^https?:\/\/[^/?#]+(\/[^?#]*)?$/i.exec(apiBaseUrl);
+            if (url.username || url.password || !rawUrl || /\s/.test(apiBaseUrl) || apiBaseUrl.includes('\\')
+                || (rawUrl[1] ?? '').includes('%') || !isUnambiguousPath(rawUrl[1] ?? '/')) {
+                throw new Error('VITE_API_BASE_URL no admite credenciales, consulta, fragmento ni rutas ambiguas.');
+            }
+
+            return { domain: `${url.origin}${url.pathname.replace(/\/$/, '')}`, environment: appEnvironment };
+        }
+
         const hostname = window.location.hostname;
-
-        // Entorno local
-        if (hostname === "localhost" || hostname === "127.0.0.1") {
-            return "http://localhost:8080";
+        switch (hostname) {
+            case 'localhost':
+            case '127.0.0.1':
+                return { domain: 'http://localhost:8080', environment: 'local' };
+            case 'exotic-app-frontend-staging.onrender.com':
+                return { domain: 'https://exotic-app-backend-staging.onrender.com', environment: 'staging' };
+            case 'lac-manufacture-frontend.onrender.com':
+                return { domain: 'https://lac-manufacture-backend.onrender.com', environment: 'production' };
+            default:
+                throw new Error('Host sin configuración: defina VITE_API_BASE_URL y VITE_APP_ENV antes de compilar.');
         }
-
-        // Entorno staging
-        if (hostname.includes("staging")) {
-            return "https://exotic-app-backend-staging.onrender.com";
-        }
-
-        // Producción (default)
-        return "https://lac-manufacture-backend.onrender.com";
     }
 
-    static getEnvironment(): 'local' | 'staging' | 'production' {
-        const hostname = window.location.hostname;
-        if (hostname === "localhost" || hostname === "127.0.0.1") return 'local';
-        if (hostname.includes("staging")) return 'staging';
-        return 'production';
+    static getDomain(): string {
+        return EndPointsURL.getConfiguration().domain;
+    }
+
+    static getEnvironment(): AppEnvironment {
+        return EndPointsURL.getConfiguration().environment;
     }
 
 

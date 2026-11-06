@@ -32,6 +32,7 @@ export function isModulo(value: string): value is Modulo {
 }
 
 export function moduleLabel(modulo: Modulo): string {
+    if (modulo === Modulo.AGENT_ASSISTANT) return "Asistente Exotic";
     return modulo.replace(/_/g, " ");
 }
 

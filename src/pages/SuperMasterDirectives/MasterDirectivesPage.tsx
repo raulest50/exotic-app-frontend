@@ -115,7 +115,8 @@ function isIntegerInRange(value: string, min: number, max: number) {
 }
 
 function getNumericDirectiveBounds(directive: MasterDirective) {
-    if (directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION
+        || directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_FABRICACION_DIAS_BLOQUEO_EDICION) {
         return { min: 0, max: 7, error: "Debe ser un entero entre 0 y 7" };
     }
 
@@ -239,11 +240,18 @@ function getProductionDirectiveLabel(directive: MasterDirective) {
     if (directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO) {
         return "Agregar terminados en MPS aprobada";
     }
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_FABRICACION_DIAS_BLOQUEO_EDICION) {
+        return "Dias bloqueados para edicion MPS OF";
+    }
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_FABRICACION_PERMITIR_AGREGAR_SEMITERMINADOS_APROBADO) {
+        return "Agregar semiterminados en MPS OF aprobado";
+    }
     return directive.nombre;
 }
 
 function getProductionDirectiveUnit(directive: MasterDirective) {
-    if (directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION
+        || directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_FABRICACION_DIAS_BLOQUEO_EDICION) {
         return "dias";
     }
     return null;
@@ -449,6 +457,16 @@ export default function MasterDirectivesPage() {
         [masterDirectives]
     );
 
+    const mpsOfDiasBloqueoDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.MPS_FABRICACION_DIAS_BLOQUEO_EDICION),
+        [masterDirectives]
+    );
+
+    const mpsOfAgregarSemiterminadosDirective = useMemo(
+        () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.MPS_FABRICACION_PERMITIR_AGREGAR_SEMITERMINADOS_APROBADO),
+        [masterDirectives]
+    );
+
     const batchRecordWorkflowDirective = useMemo(
         () => findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED),
         [masterDirectives]
@@ -465,8 +483,8 @@ export default function MasterDirectivesPage() {
     );
 
     const productionDirectives = useMemo(
-        () => [batchRecordWorkflowDirective, dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective].filter(isPresentDirective),
-        [batchRecordWorkflowDirective, dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective]
+        () => [batchRecordWorkflowDirective, dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective, mpsOfDiasBloqueoDirective, mpsOfAgregarSemiterminadosDirective].filter(isPresentDirective),
+        [batchRecordWorkflowDirective, dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective, mpsOfDiasBloqueoDirective, mpsOfAgregarSemiterminadosDirective]
     );
 
     const panelDirectives = useMemo(
@@ -477,7 +495,7 @@ export default function MasterDirectivesPage() {
     const hasAllNoiseDirectives = Boolean(noiseEnabledDirective && noiseIntervalDirective && noiseSampleDirective);
     const hasAllInactivityDirectives = Boolean(inactivityEnabledDirective && inactivityThresholdDirective && inactivityCheckIntervalDirective);
     const hasAllPanelDirectives = Boolean(panelHistoricoToggleDirective && panelAdminCorrectionDirective);
-    const hasAllProductionDirectives = Boolean(batchRecordWorkflowDirective && dispensacionNoBloqueaDirective && mpsDiasBloqueoDirective && mpsAgregarTerminadosAprobadoDirective);
+    const hasAllProductionDirectives = Boolean(batchRecordWorkflowDirective && dispensacionNoBloqueaDirective && mpsDiasBloqueoDirective && mpsAgregarTerminadosAprobadoDirective && mpsOfDiasBloqueoDirective && mpsOfAgregarSemiterminadosDirective);
 
     const superMasterHasChanges =
         canManageSuperMasterConfig &&

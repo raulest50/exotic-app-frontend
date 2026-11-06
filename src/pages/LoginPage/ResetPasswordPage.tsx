@@ -15,6 +15,7 @@ import {
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../api/EndPointsURL.tsx';
+import { deploymentPath } from '../../utils/deploymentPaths';
 
 // Function to calculate password strength
 const calculatePasswordStrength = (password: string): { strength: number, color: string, text: string } => {
@@ -154,7 +155,7 @@ export default function ResetPasswordPage() {
                 w="full"
             >
                 <Box boxSize={{ base: "8rem", sm: "10rem", md: "3xs" }}>
-                    <Image src={'/logo_exotic.svg'} />
+                    <Image src={deploymentPath('/logo_exotic.svg')} />
                 </Box>
                 <Heading fontSize={{ base: "2xl", md: "3xl" }} textAlign="center">
                     Restablecer Contraseña

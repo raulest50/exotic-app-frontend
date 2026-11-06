@@ -54,6 +54,9 @@ import type {
 } from "./areaOperativaPanel.types.ts";
 import { useAreaOperativaNoiseSampler } from "./Analitica/Noise/useAreaOperativaNoiseSampler.ts";
 import { formatSemanaMpsDisplayDate } from "../Produccion/ProgProdSemanalTab/semanaMps.utils.ts";
+import DespejeLineaFormulario from "../../features/despeje/DespejeLineaFormulario";
+import { despejeError, prepararDespeje } from "../../features/despeje/despejeApi";
+import type { PreparacionDespeje } from "../../features/despeje/types";
 
 const endpoints = new EndPointsURL();
 const PoeViewerDialog = lazy(() => import("./PoeViewerDialog.tsx"));
@@ -302,6 +305,12 @@ export default function AreaOperativaPanel() {
     const [fechaVencimiento, setFechaVencimiento] = useState("");
     const [motivoDiferenciaCantidad, setMotivoDiferenciaCantidad] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const [preparacionDespeje, setPreparacionDespeje] = useState<PreparacionDespeje | null>(null);
+    const [despejeLoad, setDespejeLoad] = useState(0);
+    const [despejeBusy, setDespejeBusy] = useState(false);
+    const [despejeDirty, setDespejeDirty] = useState(false);
+    const [errorDespeje, setErrorDespeje] = useState<string | null>(null);
+    const actionSubmittingRef = useRef(false);
 
     const [detailLoading, setDetailLoading] = useState(false);
     const [detail, setDetail] = useState<AreaOperativaOrdenDetalleDTO | null>(null);
@@ -600,6 +609,10 @@ export default function AreaOperativaPanel() {
         }
         setSelectedAction(action);
         setSelectedOrden(orden);
+        setPreparacionDespeje(null);
+        setDespejeBusy(false);
+        setDespejeDirty(false);
+        setErrorDespeje(null);
         setObservaciones("");
         setCantidadProducida("");
         setFechaVencimiento("");
@@ -633,7 +646,38 @@ export default function AreaOperativaPanel() {
         openActionModal(action, card);
     };
 
+    const prepararInicio = async (nuevoIntento = false): Promise<PreparacionDespeje> => {
+        if (!selectedOrden || selectedAction !== "iniciar") throw new Error("Seleccione una operación para iniciar.");
+        const isFabricacion = selectedOrden.tipoOrden === "OF";
+        const operacionId = selectedOrden.operacionFabricacionId;
+        if (isFabricacion && !operacionId) throw new Error("La tarjeta no identifica la operación de fabricación.");
+        const result = await prepararDespeje({
+            ...(isFabricacion ? { operacionId: operacionId! } : { seguimientoId: selectedOrden.id }),
+            nuevoIntento,
+        });
+        setPreparacionDespeje(result);
+        setDespejeDirty(false);
+        setDespejeLoad((current) => current + 1);
+        setErrorDespeje(null);
+        return result;
+    };
+
+    const actualizarRequisitoDespeje = async (nuevoIntento = false) => {
+        if (actionSubmittingRef.current || despejeBusy || despejeDirty) return;
+        actionSubmittingRef.current = true;
+        setSubmitting(true);
+        try {
+            await prepararInicio(nuevoIntento);
+        } catch (cause) {
+            setErrorDespeje(despejeError(cause));
+        } finally {
+            actionSubmittingRef.current = false;
+            setSubmitting(false);
+        }
+    };
+
     const handleSubmitAction = async () => {
+        if (actionSubmittingRef.current || despejeBusy) return;
         if (boardSnapshotStale) {
             toast({
                 title: "Tablero pendiente de actualización",
@@ -662,9 +706,14 @@ export default function AreaOperativaPanel() {
             });
             return;
         }
+        actionSubmittingRef.current = true;
         setSubmitting(true);
 
         try {
+            if (selectedAction === "iniciar") {
+                const preparation = await prepararInicio();
+                if (!preparation.puedeIniciar) return;
+            }
             if (isFabricacion) {
                 const operacionId = selectedOrden.operacionFabricacionId;
                 if (!operacionId) throw new Error("La tarjeta no identifica la operación de fabricación.");
@@ -722,6 +771,7 @@ export default function AreaOperativaPanel() {
                 setCompletedPage(0);
             }
         } catch (err: any) {
+            if (selectedAction === "iniciar") setErrorDespeje(despejeError(err));
             toast({
                 title: "Error",
                 description: err.response?.data?.message || err.message || "No fue posible registrar el cambio.",
@@ -730,6 +780,7 @@ export default function AreaOperativaPanel() {
                 isClosable: true,
             });
         } finally {
+            actionSubmittingRef.current = false;
             setSubmitting(false);
         }
     };
@@ -1004,7 +1055,7 @@ export default function AreaOperativaPanel() {
             </Tabs.Root>
 
             <Dialog.Root open={isActionOpen} size='lg' scrollBehavior="inside" placement='center' onOpenChange={e => {
-                if (!e.open) {
+                if (!e.open && !submitting && !despejeBusy) {
                     onActionClose();
                 }
             }}>
@@ -1012,10 +1063,10 @@ export default function AreaOperativaPanel() {
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content maxW="lg" mx={{ base: 2, md: 4 }} maxH="calc(100dvh - 2rem)">
+                        <Dialog.Content maxW={preparacionDespeje?.ejecucion ? "3xl" : "lg"} mx={{ base: 2, md: 4 }} maxH="calc(100dvh - 2rem)">
                             <Dialog.Header><Dialog.Title>{actionMeta.title}</Dialog.Title></Dialog.Header>
                             <Dialog.CloseTrigger asChild>
-                                <CloseButton aria-label="Cerrar" size="sm" />
+                                <CloseButton aria-label="Cerrar" size="sm" disabled={submitting || despejeBusy} />
                             </Dialog.CloseTrigger>
                             <Dialog.Body>
                                 {selectedOrden ? (
@@ -1039,6 +1090,22 @@ export default function AreaOperativaPanel() {
                                             <Text fontWeight="bold" mb={1}>Estado actual</Text>
                                             <Text>{selectedOrden.estadoDescripcion}</Text>
                                         </Box>
+                                        {selectedAction === "iniciar" && <>
+                                            {errorDespeje && <Alert.Root status="error"><Alert.Indicator />{errorDespeje}</Alert.Root>}
+                                            {preparacionDespeje?.motivo && <Alert.Root status={preparacionDespeje.puedeIniciar ? "info" : "warning"}><Alert.Indicator />{preparacionDespeje.motivo}</Alert.Root>}
+                                            {preparacionDespeje?.ejecucion && <DespejeLineaFormulario
+                                                key={`${preparacionDespeje.ejecucion.id}-${despejeLoad}`}
+                                                ejecucion={preparacionDespeje.ejecucion}
+                                                disabled={submitting || despejeBusy}
+                                                onBusyChange={setDespejeBusy}
+                                                onDirtyChange={setDespejeDirty}
+                                                onUpdated={(updated) => setPreparacionDespeje((current) => current?.ejecucion?.id === updated.id
+                                                    ? { ...current, ejecucion: updated, puedeIniciar: false } : current)}
+                                                onNuevoIntento={() => void actualizarRequisitoDespeje(true)}
+                                            />}
+                                            {preparacionDespeje && <Button alignSelf="flex-start" size="sm" variant="outline" disabled={submitting || despejeBusy || despejeDirty} onClick={() => void actualizarRequisitoDespeje()}>Actualizar requisito de despeje</Button>}
+                                            {despejeDirty && <Text fontSize="sm" color="app.textMuted">Hay cambios locales sin guardar. Guarde el borrador o complete la revisión antes de actualizar el requisito. Recargar desde el servidor permite descartarlos con confirmación.</Text>}
+                                        </>}
                                         {selectedAction === "completar" && selectedOrden.esNodoFinal ? (
                                             <Field.Root required>
                                                 <Field.Label>Cantidad producida</Field.Label>
@@ -1113,7 +1180,7 @@ export default function AreaOperativaPanel() {
                                     flex={{ base: "1 1 45%", sm: "initial" }}
                                     variant="ghost"
                                     onClick={onActionClose}
-                                    disabled={submitting}
+                                    disabled={submitting || despejeBusy}
                                 >
                                     Cancelar
                                 </Button>
@@ -1125,6 +1192,10 @@ export default function AreaOperativaPanel() {
                                     loading={submitting}
                                     disabled={
                                         boardSnapshotStale
+                                        || despejeBusy
+                                        || (selectedAction === "iniciar" && preparacionDespeje !== null
+                                            && !preparacionDespeje.puedeIniciar
+                                            && !["APROBADA", "UTILIZADA"].includes(preparacionDespeje.ejecucion?.estado ?? ""))
                                         || (
                                             selectedAction === "completar"
                                             && Boolean(selectedOrden?.esNodoFinal)

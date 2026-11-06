@@ -19,6 +19,7 @@ import {
 import { LuSearch } from 'react-icons/lu';
 import AreaMpsSettings from '../components/AreaMpsSettings';
 import type { AlcanceMps, VisibilidadMps } from '../../../api/mpsAreaConfig';
+import DespejeAreaConfig from '../../../features/despeje/DespejeAreaConfig';
 
 const endpoints = new EndPointsURL();
 
@@ -104,6 +105,7 @@ export default function DetalleAreaOperativaDialog({
     const [isUserPickerOpen, setIsUserPickerOpen] = useState(false);
     const [isCategoriaPickerOpen, setIsCategoriaPickerOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isDespejeBusy, setIsDespejeBusy] = useState(false);
     const [isValidatingResponsable, setIsValidatingResponsable] = useState(false);
     const [responsableError, setResponsableError] = useState<string | null>(null);
     const [areaUnidades, setAreaUnidades] = useState<UnidadMedidaAreaOperativa[]>([]);
@@ -186,7 +188,7 @@ export default function DetalleAreaOperativaDialog({
         !sameCategoriaSelection(editCategoriasHabilitadas, area.categoriasHabilitadas ?? []);
 
     const isFormValid = editNombre.trim() !== '' && editResponsable !== null;
-    const canSave = isFormValid && hasChanges && !isSaving && !isValidatingResponsable && !responsableError;
+    const canSave = isFormValid && hasChanges && !isSaving && !isDespejeBusy && !isValidatingResponsable && !responsableError;
 
     const handleSelectUser = async (user: User) => {
         setIsValidatingResponsable(true);
@@ -384,7 +386,7 @@ export default function DetalleAreaOperativaDialog({
             closeOnInteractOutside={!isEditing}
             scrollBehavior="inside"
             onOpenChange={e => {
-                if (!e.open) {
+                if (!e.open && !isSaving && !isDespejeBusy) {
                     onClose();
                 }
             }}
@@ -429,7 +431,7 @@ export default function DetalleAreaOperativaDialog({
                             </Flex>
                         </Dialog.Header>
                         <Dialog.CloseTrigger asChild>
-                            <CloseButton aria-label="Cerrar" size="sm" disabled={isSaving} top={4} right={4} />
+                            <CloseButton aria-label="Cerrar" size="sm" disabled={isSaving || isDespejeBusy} top={4} right={4} />
                         </Dialog.CloseTrigger>
                         <Dialog.Body p={0} overflow="hidden" display="flex" flexDirection="column" minH={0}>
                             {isSpecialSystemArea && (
@@ -459,10 +461,11 @@ export default function DetalleAreaOperativaDialog({
                                 flex="1"
                                 minH={0}
                             >
-                                <Tabs.List px={{ base: 2, md: 6 }} flexShrink={0} bg="app.surface">
+                                <Tabs.List px={{ base: 2, md: 6 }} flexShrink={0} bg="app.surface" overflowX="auto">
                                     <Tabs.Trigger value="informacion" flex="1" whiteSpace="nowrap" py={3}>Información</Tabs.Trigger>
                                     <Tabs.Trigger value="categorias" flex="1" whiteSpace="nowrap" py={3}>Categorías</Tabs.Trigger>
                                     <Tabs.Trigger value="unidades" flex="1" whiteSpace="nowrap" py={3}>Unidades</Tabs.Trigger>
+                                    <Tabs.Trigger value="despeje" flex="1" whiteSpace="nowrap" py={3}>Despeje</Tabs.Trigger>
                                 </Tabs.List>
                                 <Box flex="1" minH={0} overflowY="auto" bg="app.surfaceSubtle">
                                         <Tabs.Content value="informacion" px={{ base: 4, md: 6 }} py={5} minH="100%">
@@ -654,6 +657,9 @@ export default function DetalleAreaOperativaDialog({
                                                 onUnidadesLoaded={handleUnidadesLoaded}
                                             />
                                         </Tabs.Content>
+                                        <Tabs.Content value="despeje" px={{ base: 4, md: 6 }} py={5} minH="100%">
+                                            <DespejeAreaConfig key={area.areaId} areaId={area.areaId} isReadOnly={isSpecialSystemArea} onBusyChange={setIsDespejeBusy} />
+                                        </Tabs.Content>
                                 </Box>
                             </Tabs.Root>
                         </Dialog.Body>
@@ -677,7 +683,7 @@ export default function DetalleAreaOperativaDialog({
                                         {hasChanges && <Badge colorPalette="orange">Cambios sin guardar</Badge>}
                                     </Box>
                                     <HStack justify="flex-end">
-                                        <Button variant="ghost" onClick={cancelEdit} disabled={isSaving}>
+                                        <Button variant="ghost" onClick={cancelEdit} disabled={isSaving || isDespejeBusy}>
                                             Cancelar
                                         </Button>
                                         <Button
@@ -692,10 +698,10 @@ export default function DetalleAreaOperativaDialog({
                             ) : (
                                 <HStack w="full" justify="flex-end">
                                     {!isSpecialSystemArea && (
-                                        <Button colorPalette="teal" onClick={enterEditMode}><FiEdit />Editar área
+                                        <Button colorPalette="teal" disabled={isDespejeBusy} onClick={enterEditMode}><FiEdit />Editar área
                                                                             </Button>
                                     )}
-                                    <Button variant="outline" onClick={onClose}>
+                                    <Button variant="outline" disabled={isDespejeBusy} onClick={onClose}>
                                         Cerrar
                                     </Button>
                                 </HStack>

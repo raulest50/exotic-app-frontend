@@ -1,5 +1,6 @@
 // ExcelOCGenerator.ts
 import ExcelJS from 'exceljs';
+import { deploymentPath } from '../../utils/deploymentPaths';
 import {getCondicionPagoText, getRegimenTributario, ItemOrdenCompra, OrdenCompraMateriales} from './types';
 
 export class ExcelOCGenerator {
@@ -26,7 +27,7 @@ export class ExcelOCGenerator {
         worksheet.getColumn('I').width = 32;
 
 
-        const response = await fetch('/logo_exotic.png');
+        const response = await fetch(deploymentPath('/logo_exotic.png'));
         const blob = await response.blob();
         const base64PNG = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
