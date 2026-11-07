@@ -596,6 +596,23 @@ export default function AreaOperativaPanel() {
         }
     }, [onDetailOpen, toast]);
 
+    const refreshTrasConsumoSemiterminados = useCallback(async () => {
+        if (!detail) return;
+        const response = await axios.get<AreaOperativaOrdenDetalleDTO>(
+            endpoints.area_operativa_panel_detalle_operativo_orden.replace("{ordenId}", String(detail.orden.ordenId)),
+            { withCredentials: true },
+        );
+        setDetail((current) => current?.orden.ordenId === response.data.orden.ordenId ? response.data : current);
+        // Starting an operation prepares its clearance again; do not replace an open clearance form here.
+        await fetchTablero({
+            vista: effectiveTableroVista,
+            page: completedPageRef.current,
+            search: historicalSearchRef.current,
+            completedOnly: false,
+            preserveCurrentBoardOnError: true,
+        });
+    }, [detail, effectiveTableroVista, fetchTablero]);
+
     const openActionModal = (action: SeguimientoActionType, orden: SeguimientoOrdenAreaCardDTO) => {
         if (boardSnapshotStale) {
             toast({
@@ -1237,6 +1254,7 @@ export default function AreaOperativaPanel() {
                     loading={detailLoading}
                     currentAreaId={areaResponsable?.areaId ?? null}
                     onOpenPoe={setPoeViewerTarget}
+                    onConsumosRegistrados={refreshTrasConsumoSemiterminados}
                 />
             )}
             {poeViewerTarget ? (

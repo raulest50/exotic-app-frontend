@@ -104,6 +104,45 @@ export interface PoeOperativoDTO {
     contentType: string;
 }
 
+export interface ConsumoSemiterminadoRequerimientoDTO {
+    productoId: string;
+    productoNombre: string;
+    unidadMedida: string;
+    cantidadRequerida: string;
+    cantidadRegistrada: string;
+    cantidadPendiente: string;
+}
+
+export interface ConsumoSemiterminadoLoteDTO {
+    loteId: number;
+    batchNumber: string;
+    fechaVencimiento: string | null;
+    estadoCalidad: string | null;
+    cantidadDisponible: string;
+}
+
+export interface ConsumoSemiterminadoRegistroDTO {
+    transaccionId: number;
+    fecha: string;
+    usuario: string;
+    observaciones: string | null;
+    items: Array<{ productoId: string; loteId: number; batchNumber: string; cantidad: string }>;
+}
+
+export interface ConsumoSemiterminadosContextoDTO {
+    ordenId: number;
+    seguimientoId: number;
+    rutaProcesoVersionId: number | null;
+    rutaProcesoNodeId: number | null;
+    areaOperativaId: number;
+    areaOperativaNombre: string;
+    legacy: boolean;
+    puedeRegistrar: boolean;
+    motivoBloqueo: string | null;
+    requerimientos: ConsumoSemiterminadoRequerimientoDTO[];
+    registros: ConsumoSemiterminadoRegistroDTO[];
+}
+
 export interface PoeViewerTarget {
     url: string;
     procesoNombre: string;

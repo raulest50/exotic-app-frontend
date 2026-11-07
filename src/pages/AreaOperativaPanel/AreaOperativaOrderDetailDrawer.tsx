@@ -1,6 +1,7 @@
 import { CloseButton, Accordion, Badge, Box, Button, Drawer, Flex, HStack, SimpleGrid, Spinner, Stack, Table, Text, VStack, Tabs, Separator, Portal } from "@chakra-ui/react";
 import { useColorModeValue } from "../../components/ui/color-mode";
 import EndPointsURL from "../../api/EndPointsURL.tsx";
+import AreaOperativaConsumoSemiterminadosPanel from "./AreaOperativaConsumoSemiterminadosPanel";
 import { Background, BackgroundVariant, Edge, Handle, MiniMap, Node, NodeProps, NodeTypes, Position, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
@@ -25,6 +26,7 @@ interface Props {
     loading: boolean;
     currentAreaId?: number | null;
     onOpenPoe: (target: PoeViewerTarget) => void;
+    onConsumosRegistrados?: () => void | Promise<void>;
 }
 
 const endpoints = new EndPointsURL();
@@ -262,6 +264,7 @@ export default function AreaOperativaOrderDetailDrawer({
     loading,
     currentAreaId,
     onOpenPoe,
+    onConsumosRegistrados,
 }: Props) {
     const routeNodes = buildRouteNodes(detail, currentAreaId);
     const routeEdges = buildRouteEdges(detail);
@@ -448,6 +451,15 @@ export default function AreaOperativaOrderDetailDrawer({
                                                                         </Text>
                                                                     </>
                                                                 ) : null}
+                                                                {item.areaId != null && item.areaId === currentAreaId && (
+                                                                    <AreaOperativaConsumoSemiterminadosPanel
+                                                                        key={`${detail.orden.ordenId}:${item.seguimientoId}`}
+                                                                        ordenId={detail.orden.ordenId}
+                                                                        seguimientoId={item.seguimientoId}
+                                                                        active={isOpen}
+                                                                        onRegistrado={onConsumosRegistrados}
+                                                                    />
+                                                                )}
                                                             </Box>
                                                         ))}
                                                     </VStack>

@@ -45,6 +45,7 @@ import {
     RutaProcesoCatDTO,
     RutaProcesoLayoutUpdateDTO,
     RutaProcesoNodeData,
+    SemiterminadoRutaOption,
 } from "./types.ts";
 import { Categoria } from "../../types.tsx";
 import {
@@ -124,6 +125,12 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
     const [lastSavedSemanticSignature, setLastSavedSemanticSignature] = useState<string | null>(null);
     const [lastSavedLayoutSignature, setLastSavedLayoutSignature] = useState<string | null>(null);
     const [motivoCambio, setMotivoCambio] = useState('');
+    const [semiterminadoSearch, setSemiterminadoSearch] = useState('');
+    const [semiterminadoQuery, setSemiterminadoQuery] = useState('');
+    const [semiterminadoOptions, setSemiterminadoOptions] = useState<SemiterminadoRutaOption[]>([]);
+    const [semiterminadoInfo, setSemiterminadoInfo] = useState<Record<string, SemiterminadoRutaOption>>({});
+    const [loadingSemiterminados, setLoadingSemiterminados] = useState(false);
+    const [semiterminadoError, setSemiterminadoError] = useState<string | null>(null);
 
     const boxRef = useRef<HTMLDivElement>(null);
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -196,6 +203,28 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
         return nodes.find((node) => node.id === selectedElement.id) ?? null;
     }, [nodes, selectedElement]);
     const selectedNodeIsAlmacen = selectedNode?.data.areaOperativaId === ALMACEN_GENERAL_ID;
+    const selectedNodeId = selectedNode?.id;
+
+    useEffect(() => {
+        if (!selectedNodeId || selectedNodeIsAlmacen) return;
+        const controller = new AbortController();
+        setLoadingSemiterminados(true);
+        setSemiterminadoError(null);
+        const base = endPoints.get_ruta_proceso_cat.replace('{categoriaId}', String(categoria.categoriaId));
+        axios.get<SemiterminadoRutaOption[]>(`${base}/semiterminados-candidatos`, {
+            params: { search: semiterminadoQuery || undefined }, signal: controller.signal,
+        }).then(({ data }) => {
+            if (controller.signal.aborted) return;
+            setSemiterminadoOptions(data);
+            setSemiterminadoInfo(previous => ({ ...previous, ...Object.fromEntries(data.map(item => [item.productoId, item])) }));
+        }).catch((cause: unknown) => {
+            if (!controller.signal.aborted && !axios.isCancel(cause)) {
+                setSemiterminadoOptions([]);
+                setSemiterminadoError('No fue posible consultar los semiterminados de las recetas de esta categoría.');
+            }
+        }).finally(() => { if (!controller.signal.aborted) setLoadingSemiterminados(false); });
+        return () => controller.abort();
+    }, [categoria.categoriaId, endPoints.get_ruta_proceso_cat, selectedNodeId, selectedNodeIsAlmacen, semiterminadoQuery]);
 
     const onConnect = useCallback(
         (params: Connection) => {
@@ -339,6 +368,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
             position: { x: 200, y: nodes.length * 150 },
             data: {
                 label: area.nombre,
+                semiterminadoIds: [],
                 areaOperativaId: area.areaId,
                 areaOperativaNombre: area.nombre,
                 procesoProduccionId: null,
@@ -452,6 +482,7 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     poeVigenteDisponible: node.data.poeVigenteDisponible ?? false,
                     poeVigenteVersion: node.data.poeVigenteVersion ?? null,
                     label: node.data.label || '',
+                    semiterminadoIds: [...(node.data.semiterminadoIds ?? [])].sort(),
                     hasLeftHandle: node.data.hasLeftHandle ?? true,
                     hasRightHandle: node.data.hasRightHandle ?? true,
                     duracionEstimadaMinutos: node.data.duracionEstimadaMinutos ?? 0,
@@ -924,6 +955,32 @@ function RutaProcesoCatDesignerContent({ categoria, onBack }: Props) {
                     </Flex>
 
                     <Separator my={4} />
+                    {!selectedNodeIsAlmacen && <Box mb={4}>
+                        <Heading size="sm">Semiterminados consumidos en esta área</Heading>
+                        <Text mt={1} fontSize="sm" color="app.textSubtle">Asigne los semiterminados de las recetas de esta categoría. Cada OP usará solo los que necesite su receta congelada; las cantidades y los lotes se registran en el panel operativo.</Text>
+                        <Flex mt={3} gap={2} align="end" wrap="wrap">
+                            <Field.Root flex="1" minW="200px"><Field.Label htmlFor="ruta-semiterminado-search">Buscar semiterminado</Field.Label><Input id="ruta-semiterminado-search" value={semiterminadoSearch} onChange={e => setSemiterminadoSearch(e.target.value)} placeholder="Código o nombre" /></Field.Root>
+                            <Button variant="outline" loading={loadingSemiterminados} onClick={() => setSemiterminadoQuery(semiterminadoSearch.trim())}>Buscar</Button>
+                        </Flex>
+                        {semiterminadoError && <Text role="alert" mt={2} color="red.fg">{semiterminadoError}</Text>}
+                        <Flex mt={3} gap={2} wrap="wrap">
+                            {(selectedNode.data.semiterminadoIds ?? []).map(id => <Flex key={id} borderWidth="1px" borderRadius="md" align="center" gap={2} p={2}>
+                                <Text fontSize="sm">{id} · {semiterminadoInfo[id]?.nombre ?? 'Semiterminado asignado'}</Text>
+                                <Button size="xs" variant="outline" colorPalette="red" disabled={isReadOnly || isMutating} onClick={() => updateSelectedNodeData({ semiterminadoIds: (selectedNode.data.semiterminadoIds ?? []).filter(item => item !== id) })}>Quitar</Button>
+                            </Flex>)}
+                        </Flex>
+                        <Box mt={3} maxH="240px" overflowY="auto">
+                            {semiterminadoOptions.filter(option => !(selectedNode.data.semiterminadoIds ?? []).includes(option.productoId)).map(option => {
+                                const owner = nodes.find(node => node.id !== selectedNode.id && node.data.semiterminadoIds?.includes(option.productoId));
+                                return <Flex key={option.productoId} align="center" justify="space-between" gap={3} py={2} borderBottomWidth="1px">
+                                    <Box><Text fontSize="sm">{option.productoId} · {option.nombre} ({option.unidadMedida})</Text>{owner && <Text fontSize="xs" color="app.textSubtle">Asignado a {owner.data.label}</Text>}</Box>
+                                    <Button size="xs" variant="outline" disabled={isReadOnly || isMutating || !!owner} onClick={() => updateSelectedNodeData({ semiterminadoIds: [...(selectedNode.data.semiterminadoIds ?? []), option.productoId] })}>Asignar</Button>
+                                </Flex>;
+                            })}
+                            {!loadingSemiterminados && !semiterminadoError && semiterminadoOptions.length === 0 && <Text fontSize="sm" color="app.textSubtle">No se encontraron semiterminados candidatos.</Text>}
+                        </Box>
+                        <Text mt={2} fontSize="xs" color="app.textSubtle">Cambiar estas asignaciones requiere guardar una nueva versión funcional de la ruta.</Text>
+                    </Box>}
                     {selectedNodeIsAlmacen ? (
                         <Text fontSize="sm" color="app.textSubtle">
                             Almacén General no ejecuta un proceso productivo y no requiere POE.

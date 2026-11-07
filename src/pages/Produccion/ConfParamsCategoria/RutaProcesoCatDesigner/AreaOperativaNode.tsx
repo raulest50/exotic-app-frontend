@@ -117,6 +117,7 @@ export default function AreaOperativaNode(props: NodeProps) {
                             ) : null}
                             <Flex gap={2} justify="center" wrap="wrap">
                                 <Badge colorPalette="purple">{duracionEstimadaMinutos} min</Badge>
+                                {(data.semiterminadoIds?.length ?? 0) > 0 && <Badge colorPalette="blue">Consume {data.semiterminadoIds!.length} semiterminado(s)</Badge>}
                                 <Badge colorPalette={requiereJornadaLaboral ? "green" : "orange"}>
                                     {requiereJornadaLaboral ? "Jornada" : "Continuo"}
                                 </Badge>

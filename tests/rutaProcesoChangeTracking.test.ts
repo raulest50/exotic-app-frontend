@@ -5,6 +5,8 @@ import {
     buildSemanticSignature,
     getRouteSaveAvailability,
     normalizeLayoutCoordinate,
+    toFlowNodes,
+    validateRuta,
 } from "../src/pages/Produccion/ConfParamsCategoria/RutaProcesoCatDesigner/RutaProcesoCatDesignerLogic.ts";
 import type { RutaProcesoNodeData } from "../src/pages/Produccion/ConfParamsCategoria/RutaProcesoCatDesigner/types.ts";
 
@@ -31,6 +33,31 @@ function node(id: string, x: number, y: number): Node<RutaProcesoNodeData> {
 const edges: Edge[] = [{ id: "e-1-2", source: "1", target: "2" }];
 
 describe("seguimiento de cambios de la ruta", () => {
+    test("asignar semiterminados cambia la versión funcional, sin cambiar la disposición", () => {
+        const original = [node("1", 10, 20)];
+        const assigned = [{ ...original[0], data: { ...original[0].data, semiterminadoIds: ["S2", "S1"] } }];
+        const reordered = [{ ...assigned[0], data: { ...assigned[0].data, semiterminadoIds: ["S1", "S2"] } }];
+        expect(buildSemanticSignature(assigned, [])).not.toBe(buildSemanticSignature(original, []));
+        expect(buildSemanticSignature(assigned, [])).toBe(buildSemanticSignature(reordered, []));
+        expect(buildLayoutSignature(assigned)).toBe(buildLayoutSignature(original));
+    });
+
+    test("conserva las asignaciones al cargar una versión y admite versiones anteriores sin ellas", () => {
+        const base = { id: "1", posicionX: 1, posicionY: 2, areaOperativaId: 1, areaOperativaNombre: "Área", procesoProduccionId: 1, procesoProduccionNombre: "Proceso", poeVigenteDisponible: true, poeVigenteVersion: 1, label: "Área", hasLeftHandle: true, hasRightHandle: true, duracionEstimadaMinutos: 1, requiereJornadaLaboral: true };
+        const ruta = { categoriaId: 1, nodes: [{ ...base, semiterminadoIds: ["S1"] }], edges: [] };
+        expect(toFlowNodes(ruta)[0].data.semiterminadoIds).toEqual(["S1"]);
+        expect(toFlowNodes({ ...ruta, nodes: [base] })[0].data.semiterminadoIds).toEqual([]);
+    });
+
+    test("rechaza un semiterminado en varias áreas o en Almacén General", () => {
+        const first = node("1", 1, 1);
+        const second = node("2", 2, 2);
+        first.data.semiterminadoIds = ["S1"];
+        second.data.semiterminadoIds = ["S1"];
+        expect(validateRuta([first, second], edges).errors).toContain("El semiterminado S1 solo puede asignarse a un área de la ruta.");
+        first.data.areaOperativaId = -1;
+        expect(validateRuta([first], []).errors).toContain("Almacen General no puede consumir semiterminados asignados a la ruta.");
+    });
     test("normaliza coordenadas a dos decimales", () => {
         expect(normalizeLayoutCoordinate(12.345)).toBe(12.35);
         expect(normalizeLayoutCoordinate(-0.004)).toBe(-0);

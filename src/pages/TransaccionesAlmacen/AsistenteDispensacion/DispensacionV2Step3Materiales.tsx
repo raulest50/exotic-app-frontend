@@ -269,6 +269,15 @@ export default function DispensacionV2Step3Materiales({
                 ) : null}
             </Box>
 
+            <Alert.Root status="info" borderRadius="md">
+                <Alert.Indicator />
+                <Alert.Content>
+                    <Alert.Description>
+                        En las OP con consumo por área, los semiterminados asignados a la ruta se seleccionan y descuentan por lote desde el panel operativo. No se dispensan otra vez en este asistente. Las OP anteriores conservan su flujo original.
+                    </Alert.Description>
+                </Alert.Content>
+            </Alert.Root>
+
             {cantidadesPlanificadasDiferentes ? (
                 <Alert.Root status="warning" borderRadius="md" alignItems="flex-start">
                     <Alert.Indicator />
@@ -300,6 +309,11 @@ export default function DispensacionV2Step3Materiales({
 
             {!loading && materialesReceta ? (
                 <VStack align="stretch" gap={4}>
+                    {materialesReceta.materiales.length === 0 && (
+                        <Text fontSize="sm" color="app.textMuted">
+                            No hay materiales para dispensar en este asistente. Esto no significa que la receta esté vacía: consulte los semiterminados de cada área en el detalle operativo de la OP.
+                        </Text>
+                    )}
                     <Box borderWidth="1px" borderRadius="md" bg="app.surface" p={4}>
                         <Table.ScrollArea>
                             <Table.Root size="sm" variant="line">

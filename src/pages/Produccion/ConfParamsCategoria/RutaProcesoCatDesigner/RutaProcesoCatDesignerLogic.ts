@@ -14,6 +14,7 @@ export function toFlowNodes(ruta: RutaProcesoCatDTO): Node<RutaProcesoNodeData>[
         position: { x: node.posicionX, y: node.posicionY },
         data: {
             label: node.label || node.areaOperativaNombre || 'Sin asignar',
+            semiterminadoIds: [...(node.semiterminadoIds ?? [])],
             areaOperativaId: node.areaOperativaId,
             areaOperativaNombre: node.areaOperativaNombre,
             procesoProduccionId: node.procesoProduccionId ?? null,
@@ -65,6 +66,7 @@ export function validateRuta(nodes: RutaNode[], edges: RutaEdge[]): RutaValidati
     const adjacency = new Map<string, Set<string>>();
     const indegree = new Map<string, number>();
     const areaIds = new Set<number>();
+    const consumidorPorSemiterminado = new Map<string, string>();
     let almacenCount = 0;
 
     for (const node of nodes) {
@@ -74,6 +76,14 @@ export function validateRuta(nodes: RutaNode[], edges: RutaEdge[]): RutaValidati
         }
 
         const areaId = node.data.areaOperativaId;
+        const semiterminados = node.data.semiterminadoIds ?? [];
+        if (areaId === ALMACEN_GENERAL_ID && semiterminados.length > 0) errors.push("Almacen General no puede consumir semiterminados asignados a la ruta.");
+        if (semiterminados.some(id => !id.trim()) || new Set(semiterminados).size !== semiterminados.length) errors.push("Las asignaciones de semiterminados deben tener códigos válidos sin repetir.");
+        for (const productoId of semiterminados) {
+            const owner = consumidorPorSemiterminado.get(productoId);
+            if (owner && owner !== node.id) errors.push(`El semiterminado ${productoId} solo puede asignarse a un área de la ruta.`);
+            consumidorPorSemiterminado.set(productoId, node.id);
+        }
         if (areaId == null) {
             errors.push("Todos los nodos deben tener un área operativa asignada.");
             continue;
@@ -326,6 +336,7 @@ export function buildSemanticSignature(
                 areaOperativaId: node.data.areaOperativaId ?? null,
                 procesoProduccionId: node.data.procesoProduccionId ?? null,
                 label: node.data.label ?? "",
+                semiterminadoIds: [...(node.data.semiterminadoIds ?? [])].sort(),
                 hasLeftHandle: node.data.hasLeftHandle ?? true,
                 hasRightHandle: node.data.hasRightHandle ?? true,
                 duracionEstimadaMinutos: node.data.duracionEstimadaMinutos ?? 0,

@@ -11,8 +11,15 @@ export interface ProcesoRutaOption {
     poeVigenteVersion: number | null;
 }
 
+export interface SemiterminadoRutaOption {
+    productoId: string;
+    nombre: string;
+    unidadMedida: string;
+}
+
 export interface RutaProcesoNodeData {
     [key: string]: unknown;
+    semiterminadoIds?: string[];
     label: string;
     areaOperativaId: number | null;
     areaOperativaNombre: string | null;
@@ -27,6 +34,7 @@ export interface RutaProcesoNodeData {
 }
 
 export interface RutaProcesoNodeDTO {
+    semiterminadoIds?: string[];
     id: string;
     posicionX: number;
     posicionY: number;
