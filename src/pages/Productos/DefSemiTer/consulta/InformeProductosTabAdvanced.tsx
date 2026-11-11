@@ -2,16 +2,15 @@
  * Componente: InformeProductosTabAdvanced
  * 
  * Ubicación en la navegación:
- * Productos > Definir Terminado/Semiterminado > Modificaciones (pestaña)
+ * Productos > Básicos > Modificaciones (pestaña)
  * 
  * Descripción:
- * Componente avanzado para la modificación y gestión de productos que ofrece funcionalidades
- * como ordenamiento, filtrado por fecha y visualización mejorada.
- * Este componente es exclusivo para la sección de Definir Terminado/Semiterminado
- * y solo es accesible para usuarios con nivel de acceso 3 o superior.
+ * Catálogo de terminados y semiterminados para consultar su detalle, gestionar sus
+ * datos básicos y abrir la modificación de manufactura en Process Designer v2.
+ * Requiere Modificaciones nivel 3; abrir el diseñador exige además su permiso nivel 2.
  * 
  * Cuando se hace clic en "Ver Detalle" en la tabla de resultados, se abre el
- * componente DetalleProductoAdvanced.tsx con la información detallada del producto.
+ * componente DetalleProductoSemiTer.tsx con la información detallada del producto.
  */
 
 import {
@@ -26,63 +25,77 @@ import {
     NativeSelect,
     Field,
     Fieldset,
+    Text,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import MyPagination from "../../../../components/MyPagination.tsx";
 import { Producto } from "../../types.tsx";
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
 import DetalleProductoSemiTer from "./DetalleProductoSemiTer.tsx";
-import ModSemiTerMFWizard from "./ModSemiTerMFWizard.tsx";
 
 const endpoints = new EndPointsURL();
 
-export default function InformeProductosTabAdvanced() {
+type ProductQuery = { search: string; categories: string[]; page: number; size: number };
+
+export default function InformeProductosTabAdvanced({ onEditInDesigner, refreshRevision = 0, returnRevision = 0 }: {
+    onEditInDesigner: (producto: Producto) => void;
+    refreshRevision?: number;
+    returnRevision?: number;
+}) {
     const [chkbox, setChkbox] = useState<string[]>(["semiterminado", "terminado"]);
     const [searchText, setSearchText] = useState("");
     const [productos, setProductos] = useState<Producto[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
+    const [query, setQuery] = useState<ProductQuery | null>(null);
+    const [searchError, setSearchError] = useState("");
     const pageSize = 10;
 
     // Estados para manejar la visualización del detalle
     const [estado, setEstado] = useState(0);
     const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
 
+    useEffect(() => {
+        if (returnRevision === 0) return;
+        setEstado(0);
+        setProductoSeleccionado(null);
+    }, [returnRevision]);
+
     // Estado adicional para características avanzadas
     const [sortBy, setSortBy] = useState<string>("nombre");
     const [filterByDate, setFilterByDate] = useState<string>("");
 
-    // Fetch products given a page number
-    const fetchProductos = async (pageNumber: number) => {
+    // The submitted query is separate from the inputs, so returning from the designer
+    // refreshes the same result page even if an unsubmitted search was being written.
+    useEffect(() => {
+        if (!query) return;
+        const controller = new AbortController();
         setLoading(true);
-        try {
-            const response = await axios.post(endpoints.consulta_productos, {
-                search: searchText,
-                categories: chkbox,
-                page: pageNumber,
-                size: pageSize
-                // Removed sortBy and filterByDate parameters as they're not supported by the backend
-            });
-            setProductos(response.data.content);
-            setTotalPages(response.data.totalPages);
-            setPage(response.data.number);
-        } catch (error) {
-            console.error("Error searching productos:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        setSearchError("");
+        axios.post(endpoints.consulta_productos, query, { signal: controller.signal }).then(({ data }) => {
+            if (!controller.signal.aborted) {
+                setProductos(data.content);
+                setTotalPages(data.totalPages);
+                setPage(data.number);
+            }
+        }).catch(() => {
+            if (!controller.signal.aborted) setSearchError("No se pudo actualizar el listado. La búsqueda y la página se conservan; intenta nuevamente.");
+        }).finally(() => {
+            if (!controller.signal.aborted) setLoading(false);
+        });
+        return () => controller.abort();
+    }, [query, refreshRevision]);
 
     // Initiate a new search, resetting to page 0
     const handleSearch = () => {
-        fetchProductos(0);
+        setQuery({ search: searchText, categories: [...chkbox], page: 0, size: pageSize });
     };
 
     // Handle page changes from the pagination component
     const handlePageChange = (newPage: number) => {
-        fetchProductos(newPage);
+        setQuery(current => current ? { ...current, page: newPage } : null);
     };
 
     // Función para ver el detalle de un producto
@@ -91,36 +104,32 @@ export default function InformeProductosTabAdvanced() {
         setEstado(1);
     };
 
-    const handleReturnToList = () => {
-        setEstado(0);
-        setProductoSeleccionado(null);
-        handleSearch();
+    const refreshCurrentPage = () => {
+        setQuery(current => current ? { ...current } : null);
     };
+    const searchFeedback = searchError && <Flex role="alert" gap={3} align="center" mb={3} flexWrap="wrap">
+        <Text color="fg.error">{searchError}</Text>
+        <Button size="sm" variant="outline" onClick={refreshCurrentPage} loading={loading}>Reintentar actualización</Button>
+    </Flex>;
 
     // Renderizado condicional basado en el estado
-    if (estado === 2 && productoSeleccionado) {
-        return (
-            <ModSemiTerMFWizard
-                producto={productoSeleccionado}
-                onClose={handleReturnToList}
-                refreshSearch={handleSearch}
-            />
-        );
-    }
-
     if (estado === 1 && productoSeleccionado) {
-        return (
+        return <>
+            {searchFeedback}
             <DetalleProductoSemiTer
                 producto={productoSeleccionado}
                 setEstado={setEstado}
                 setProductoSeleccionado={setProductoSeleccionado}
-                refreshSearch={handleSearch}
+                refreshSearch={refreshCurrentPage}
+                onEditInDesigner={onEditInDesigner}
+                refreshRevision={refreshRevision}
             />
-        );
+        </>;
     }
 
     return (
         <Flex direction="column" p={4}>
+            {searchFeedback}
             <Flex direction="row" align="center" gap={10} w="full" mb={4}>
                 <Field.Root>
                     <Field.Label>Buscar:</Field.Label>

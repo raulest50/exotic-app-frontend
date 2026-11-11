@@ -17,11 +17,18 @@ export interface ModuleTabGroup {
     tabs: ModuleTabDefinition[];
 }
 
+export interface ModuleTabSelection {
+    groupKey: string;
+    tabKey: string;
+}
+
 interface ModuleGroupedTabsProps {
     groups: ModuleTabGroup[];
     access: AccessSnapshot;
     ariaLabel: string;
     emptyMessage?: string;
+    selection?: ModuleTabSelection;
+    onSelectionChange?: (selection: ModuleTabSelection) => void;
 }
 
 export default function ModuleGroupedTabs({
@@ -29,6 +36,8 @@ export default function ModuleGroupedTabs({
     access,
     ariaLabel,
     emptyMessage = "No tienes acceso a ninguna opción de este módulo.",
+    selection,
+    onSelectionChange,
 }: ModuleGroupedTabsProps) {
     const [selectedGroupKey, setSelectedGroupKey] = useState("");
     const [selectedTabByGroup, setSelectedTabByGroup] = useState<Record<string, string>>({});
@@ -40,13 +49,13 @@ export default function ModuleGroupedTabs({
         }))
         .filter((group) => group.tabs.length > 0), [access, groups]);
 
-    const activeGroup = visibleGroups.find((group) => group.key === selectedGroupKey)
+    const activeGroup = visibleGroups.find((group) => group.key === (selection?.groupKey ?? selectedGroupKey))
         ?? visibleGroups[0];
 
     if (!activeGroup) return <Text py={8}>{emptyMessage}</Text>;
 
     const activeTabKey = (group: (typeof visibleGroups)[number]) => {
-        const requested = selectedTabByGroup[group.key];
+        const requested = selection?.groupKey === group.key ? selection.tabKey : selectedTabByGroup[group.key];
         return group.tabs.some((tab) => tab.key === requested) ? requested : group.tabs[0].key;
     };
 
@@ -68,7 +77,11 @@ export default function ModuleGroupedTabs({
         <Tabs.Root
             value={activeGroup.key}
             onValueChange={({ value }) => {
-                if (visibleGroups.some((group) => group.key === value)) setSelectedGroupKey(value);
+                const group = visibleGroups.find((group) => group.key === value);
+                if (group) {
+                    setSelectedGroupKey(value);
+                    onSelectionChange?.({ groupKey: value, tabKey: activeTabKey(group) });
+                }
             }}
             variant="enclosed"
             colorPalette="teal"
@@ -106,6 +119,7 @@ export default function ModuleGroupedTabs({
                                 onValueChange={({ value }) => {
                                     if (group.tabs.some((tab) => tab.key === value)) {
                                         setSelectedTabByGroup((current) => ({ ...current, [group.key]: value }));
+                                        onSelectionChange?.({ groupKey: group.key, tabKey: value });
                                     }
                                 }}
                                 variant="line"

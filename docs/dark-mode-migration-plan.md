@@ -234,6 +234,12 @@ Use this template when closing a module migration:
 
 ### Module: `Productos`
 
+- Maintenance note (2026-11-10): the legacy T/S creation and modification
+  wizards, their exclusive canvas/nodes, mapper, and summary card were removed.
+  The paths below document the earlier migration. The process picker and its
+  story remain in `DefProcesses/CreadorProcesos/components/ProcesoProduccionPicker/`.
+  Categories and the advanced product catalogue now appear under Básicos;
+  their source files remain in `DefSemiTer/`.
 - Status: ✅ Migrado
 - Files changed:
   - `src/pages/Productos/Basic/componentes/DetalleProducto.tsx`

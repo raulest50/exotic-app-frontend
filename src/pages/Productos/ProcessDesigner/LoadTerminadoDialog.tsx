@@ -116,8 +116,9 @@ function SourcePreview({ state }: { state: PreviewState }) {
     </Stack>;
 }
 
-export default function LoadTerminadoDialog({ hasDraft, editingProductId, onClose, onLoad }: {
+export default function LoadTerminadoDialog({ hasDraft, editingProductId, exactProductId, onClose, onLoad }: {
     hasDraft: boolean; editingProductId?: string; onClose: () => void; onLoad: (draft: LoadedDraft) => void;
+    exactProductId?: string;
 }) {
     const searchPanelId = useId();
     const [searchCollapsed, setSearchCollapsed] = useState(false);
@@ -125,10 +126,10 @@ export default function LoadTerminadoDialog({ hasDraft, editingProductId, onClos
     const [by, setBy] = useState<"NOMBRE" | "ID">("NOMBRE");
     const [query, setQuery] = useState<SearchQuery>({ kind: "T", searchTerm: "", tipoBusqueda: "NOMBRE", page: 0 });
     const [result, setResult] = useState<{ key: string; data?: ProductPage; error?: string } | null>(null);
-    const [selected, setSelected] = useState("");
+    const [selected, setSelected] = useState(exactProductId ?? "");
     const [preview, setPreview] = useState<PreviewState | null>(null);
     const [revision, setRevision] = useState(0);
-    const [mode, setMode] = useState<LoadMode>("all");
+    const [mode, setMode] = useState<LoadMode>(exactProductId ? "edit" : "all");
     const [replace, setReplace] = useState(false);
     const [loadError, setLoadError] = useState("");
     const previewRequest = useRef<AbortController | null>(null);
@@ -138,8 +139,10 @@ export default function LoadTerminadoDialog({ hasDraft, editingProductId, onClos
     const listLoading = !currentResult;
     const currentPreview = preview?.id === selected ? preview : null;
     const ready = currentPreview?.status === "ready" ? currentPreview.prepared : undefined;
+    const hideSearch = !!exactProductId || searchCollapsed;
 
     useEffect(() => {
+        if (exactProductId) return;
         const controller = new AbortController();
         buscarReferencias(query, controller.signal).then((data) => {
             if (!controller.signal.aborted) setResult({ key: queryKey, data });
@@ -147,7 +150,7 @@ export default function LoadTerminadoDialog({ hasDraft, editingProductId, onClos
             if (!controller.signal.aborted) setResult({ key: queryKey, error: "No se pudo consultar el catálogo. Intenta nuevamente." });
         });
         return () => controller.abort();
-    }, [query, queryKey]);
+    }, [query, queryKey, exactProductId]);
 
     useEffect(() => {
         if (!selected) return;
@@ -208,20 +211,22 @@ export default function LoadTerminadoDialog({ hasDraft, editingProductId, onClos
             resize={{ base: "none", md: "both" }} overflow="auto">
             <Dialog.Header>
                 <Flex justify="space-between" align="center" gap="3" flexWrap="wrap">
-                    <Dialog.Title>Cargar una referencia</Dialog.Title>
-                    <Button type="button" size="sm" variant="outline" aria-expanded={!searchCollapsed}
+                    <Dialog.Title>{exactProductId ? `Modificar ${exactProductId}` : "Cargar una referencia"}</Dialog.Title>
+                    {!exactProductId && <Button type="button" size="sm" variant="outline" aria-expanded={!searchCollapsed}
                         aria-controls={searchPanelId} onClick={() => setSearchCollapsed((collapsed) => !collapsed)}>
                         {searchCollapsed ? "Mostrar búsqueda" : "Ocultar búsqueda"}
-                    </Button>
+                    </Button>}
                 </Flex>
-                <Dialog.Description>Busca un terminado o semiterminado y revisa sus datos para clonarlo o modificarlo.</Dialog.Description>
+                <Dialog.Description>{exactProductId
+                    ? "Revisa el producto seleccionado en el catálogo antes de cargarlo para modificar. Se conservará su identidad."
+                    : "Busca un terminado o semiterminado y revisa sus datos para clonarlo o modificarlo."}</Dialog.Description>
                 <Text fontSize="xs" color="fg.muted" display={{ base: "none", md: "block" }}>
                     Arrastra la esquina inferior derecha para ajustar el tamaño del diálogo.
                 </Text>
             </Dialog.Header>
             <Dialog.Body minH="0">
-                <SimpleGrid templateColumns={searchCollapsed ? "minmax(0, 1fr)" : "repeat(auto-fit, minmax(min(100%, 22rem), 1fr))"} gap="5">
-                    <Stack id={searchPanelId} gap="3" minW="0" display={searchCollapsed ? "none" : "flex"}>
+                <SimpleGrid templateColumns={hideSearch ? "minmax(0, 1fr)" : "repeat(auto-fit, minmax(min(100%, 22rem), 1fr))"} gap="5">
+                    {!exactProductId && <Stack id={searchPanelId} gap="3" minW="0" display={hideSearch ? "none" : "flex"}>
                         <Field.Root><Field.Label>Tipo de producto</Field.Label>
                             <NativeSelect.Root size="sm">
                                 <NativeSelect.Field value={query.kind} onChange={(event) => changeQuery({ ...query, kind: event.target.value as "T" | "S", page: 0 })}>
@@ -263,7 +268,7 @@ export default function LoadTerminadoDialog({ hasDraft, editingProductId, onClos
                             <Text fontSize="sm">{query.page + 1} / {currentResult.data.totalPages}</Text>
                             <Button size="sm" disabled={query.page + 1 >= currentResult.data.totalPages} onClick={() => changeQuery({ ...query, page: query.page + 1 })}>Siguiente</Button>
                         </Flex>}
-                    </Stack>
+                    </Stack>}
                     <Box minW="0" borderWidth="1px" rounded="md" p="3">
                         {!selected && <Text color="fg.muted">Selecciona una referencia para ver sus datos, grafo e insumos.</Text>}
                         {selected && (!currentPreview || currentPreview.status === "loading") && <Flex role="status" gap="2" mb="3" align="center">
@@ -282,13 +287,13 @@ export default function LoadTerminadoDialog({ hasDraft, editingProductId, onClos
             <Dialog.Footer flexDirection="column" alignItems="stretch" gap="2" borderTopWidth="1px">
                 <Field.Root>
                     <Field.Label>Acción</Field.Label>
-                    <NativeSelect.Root size="sm">
+                    {!exactProductId && <NativeSelect.Root size="sm">
                         <NativeSelect.Field value={mode} onChange={(event) => { setMode(event.target.value as LoadMode); setReplace(false); setLoadError(""); }}>
                             <option value="all">Clonar producto completo</option>
                             <option value="graph">Importar grafo, insumos y salida de receta</option>
                             <option value="edit">Cargar para modificar</option>
                         </NativeSelect.Field><NativeSelect.Indicator />
-                    </NativeSelect.Root>
+                    </NativeSelect.Root>}
                     <Field.HelperText>{mode === "edit"
                         ? "Se cargarán todos los datos para modificar el producto seleccionado, conservando su código, tipo, prefijo y EAN-14."
                         : mode === "all"

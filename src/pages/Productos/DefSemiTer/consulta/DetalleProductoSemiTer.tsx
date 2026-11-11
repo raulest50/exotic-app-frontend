@@ -34,7 +34,7 @@ import {
     Portal,
 } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { CasePack, Categoria, Insumo, Material, Producto, ProductoBasicUpdatePayload } from "../../types.tsx";
 import axios from 'axios';
 import EndPointsURL from "../../../../api/EndPointsURL.tsx";
@@ -60,15 +60,16 @@ type Props = {
     setEstado: (estado: number) => void;
     setProductoSeleccionado?: (producto: Producto) => void;
     refreshSearch?: () => void;
+    onEditInDesigner?: (producto: Producto) => void;
+    refreshRevision?: number;
 };
-export default function DetalleProductoSemiTer({producto, setEstado, setProductoSeleccionado, refreshSearch}: Props) {
+export default function DetalleProductoSemiTer({producto, setEstado, setProductoSeleccionado, refreshSearch, onEditInDesigner, refreshRevision = 0}: Props) {
     const [editMode, setEditMode] = useState(false);
     const [productoData, setProductoData] = useState<ProductoDetalle>({...producto});
     const [productoOriginalData, setProductoOriginalData] = useState<ProductoDetalle>({...producto});
     const [isFormValid, setIsFormValid] = useState<boolean>(true);
     const [hasChanges, setHasChanges] = useState<boolean>(false);
     const [isLoadingDetalle, setIsLoadingDetalle] = useState<boolean>(false);
-    const detalleFetchAttemptedRef = useRef<string | null>(null);
     const [prefijoVerificado, setPrefijoVerificado] = useState<boolean>(false);
     const [verificandoPrefijo, setVerificandoPrefijo] = useState<boolean>(false);
     const [categoriasDisponibles, setCategoriasDisponibles] = useState<Categoria[]>([]);
@@ -79,6 +80,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     const toast = useAppToast();
     const endPoints = new EndPointsURL();
     const { nivel: productosAccessLevel } = useTabPermission(Modulo.PRODUCTOS, "MODIFICACIONES_PRODUCTOS");
+    const designerPermission = useTabPermission(Modulo.PRODUCTOS, "PROCESS_DESIGNER");
     const { open: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
     const { open: isForceDeleteOpen, onOpen: onForceDeleteOpen, onClose: onForceDeleteClose } = useDisclosure();
     const { open: isHelpPrefijoOpen, onOpen: onHelpPrefijoOpen, onClose: onHelpPrefijoClose } = useDisclosure();
@@ -198,8 +200,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
         setCategoriaStatusError(null);
         setLoadingCategorias(false);
         setLoadingCategoriaEditability(false);
-        detalleFetchAttemptedRef.current = null;
-    }, [producto]);
+    }, [producto, refreshRevision]);
 
     // Manejar cambios en los campos editables
     const handleInputChange = (
@@ -298,13 +299,11 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
         producto.tipo_producto,
     ]);
 
-    // Cargar detalles cuando faltan los insumos en productos semiterminados o terminados
+    // Refresh the complete detail after a designer save, including an unchanged selected ID.
     useEffect(() => {
         const isSemiOTerminado = producto.tipo_producto === 'S' || producto.tipo_producto === 'T';
-        const hasInsumos = Array.isArray(productoData.insumos) && productoData.insumos.length > 0;
-        const detalleYaSolicitado = detalleFetchAttemptedRef.current === producto.productoId;
 
-        if (!isSemiOTerminado || hasInsumos || detalleYaSolicitado) {
+        if (!isSemiOTerminado) {
             return;
         }
 
@@ -312,9 +311,10 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
         const fetchDetalleProducto = async () => {
             setIsLoadingDetalle(true);
             try {
-                const url = endPoints.update_producto.replace('{productoId}', producto.productoId);
+                const url = endPoints.update_producto.replace('{productoId}', encodeURIComponent(producto.productoId));
                 const response = await axios.get(url);
                 if (isMounted) {
+                    if (response.data.productoId !== producto.productoId) throw new Error('El detalle recibido corresponde a otro producto.');
                     setProductoData(response.data);
                     setProductoOriginalData(response.data);
                 }
@@ -334,7 +334,6 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
                 });
             } finally {
                 if (isMounted) {
-                    detalleFetchAttemptedRef.current = producto.productoId;
                     setIsLoadingDetalle(false);
                 }
             }
@@ -345,7 +344,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
         return () => {
             isMounted = false;
         };
-    }, [endPoints.update_producto, producto.productoId, producto.tipo_producto, productoData.insumos, toast]);
+    }, [endPoints.update_producto, producto, refreshRevision, toast]);
 
     // Validar datos antes de guardar
     const validateData = (showToast: boolean = true): boolean => {
@@ -594,7 +593,7 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
     const isMaterial = producto.tipo_producto === 'M';
     const isSemiOTerminado = producto.tipo_producto === 'S' || producto.tipo_producto === 'T';
     const isTerminado = producto.tipo_producto === 'T';
-    const canUseWizard = canEdit && isSemiOTerminado && !editMode;
+    const canUseDesigner = canEdit && designerPermission.ready && designerPermission.nivel >= 2 && !isLoadingDetalle;
 
     const prefijoUnchanged = ((productoData as Producto).prefijoLote ?? '').trim() === ((productoOriginalData as Producto).prefijoLote ?? '').trim();
     const prefijoActual = ((productoData as Producto).prefijoLote ?? '').trim();
@@ -650,11 +649,8 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
         return 'No especificado';
     };
 
-    const handleOpenWizard = () => {
-        if (typeof setProductoSeleccionado === 'function') {
-            setProductoSeleccionado({ ...productoData });
-        }
-        setEstado(2);
+    const handleOpenDesigner = () => {
+        if (canUseDesigner && isSemiOTerminado) onEditInDesigner?.({ ...productoData });
     };
 
     const renderActionButtons = () => {
@@ -698,11 +694,14 @@ export default function DetalleProductoSemiTer({producto, setEstado, setProducto
 
         return (
             <HStack>
-                {canUseWizard && (
-                    <Button colorPalette="teal" onClick={handleOpenWizard}>
-                        Modificar Insumos y Proceso de Produccion
+                {canEdit && isSemiOTerminado && onEditInDesigner && <VStack align="start" gap={1}>
+                    <Button colorPalette="teal" disabled={!canUseDesigner} onClick={handleOpenDesigner}>
+                        Modificar en Process Designer v2
                     </Button>
-                )}
+                    {designerPermission.ready && designerPermission.nivel < 2 && <Text fontSize="xs" color="fg.muted">
+                        Requiere permiso Process Designer, nivel 2.
+                    </Text>}
+                </VStack>}
                 {canEdit && (
                     <Button colorPalette="green" onClick={() => setEditMode(true)}><LuPencil />Editar
                                             </Button>

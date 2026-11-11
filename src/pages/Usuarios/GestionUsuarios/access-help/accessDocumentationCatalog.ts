@@ -157,27 +157,31 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
         label: "Productos",
         resumen: "Catálogo de materiales, productos terminados, semiterminados y procesos de producción.",
         condiciones: [
-            "Los tres grupos organizan la navegación; los permisos se asignan a las pestañas hijas.",
+            "Los grupos Básicos y Process Designer organizan la navegación; los permisos se asignan a las pestañas hijas. Categorías y Modificaciones están en Básicos.",
             "MAIN conserva el acceso general anterior para las pestañas sin permiso específico. Para un acceso limitado a pestañas concretas, desactive MAIN y asigne únicamente esas pestañas.",
             "Las pestañas de creación y procesos requieren nivel 2; Modificaciones requiere nivel 3. Consulta admite nivel 1 y habilita edición desde nivel 3.",
-            "Nuevo Process Designer permite definir datos, insumos y conexiones, validar el borrador y clonar una referencia. El borrador es temporal: todavía no registra productos ni diagramas. Crear materiales desde su panel requiere además Codificar material, nivel 2.",
+            "Process Designer v2 permite crear y modificar terminados y semiterminados, definir sus datos, insumos, empaque y conexiones, validar y guardar, y clonar referencias. El borrador sin guardar es temporal. Crear materiales desde su panel requiere además Codificar material, nivel 2.",
+            "Abrir la modificación en Process Designer v2 desde el catálogo de Modificaciones exige ambos permisos: Modificaciones nivel 3 y Process Designer nivel 2.",
+            "La codificación anterior de terminados y semiterminados fue retirada. Su permiso conservado no abre una pestaña ni sustituye el permiso de Process Designer v2.",
         ],
         tabs: [
             productOperationTab("CODIFICAR_MATERIAL", "Básicos · Codificar material", "Codificar materiales y cargar su ficha técnica inicial."),
             tab("CONSULTA_PRODUCTOS", "Básicos · Consulta", "Consulta de productos y edición desde su detalle.", [
                 level(1, "Consulta", ["Buscar productos, abrir su detalle y consultar las fichas técnicas de materiales."], ["Editar productos o reemplazar fichas técnicas."]),
                 level(2, "Consulta", ["Mantiene las capacidades de consulta del nivel 1."]),
-                level(3, "Edición", ["Consultar y editar productos desde el detalle, gestionar su eliminación y reemplazar fichas técnicas de materiales."]),
+                level(3, "Edición", ["Consultar y editar datos básicos de productos, eliminar materiales y reemplazar sus fichas técnicas."]),
                 level(4, "Mismo alcance funcional", ["Mantiene las capacidades del nivel 3."]),
             ]),
-            productOperationTab("CODIFICAR_TERMINADO_SEMITERMINADO", "Terminados y semiterminados · Codificar", "Crear un terminado o semiterminado definiendo sus datos, insumos y proceso."),
-            productOperationTab("CATEGORIAS", "Terminados y semiterminados · Categorías", "Administrar categorías de productos."),
-            productOperationTab("MODIFICACIONES_PRODUCTOS", "Terminados y semiterminados · Modificaciones", "Consultar y modificar productos existentes, incluyendo sus datos de manufactura.", 3),
+            tab("CODIFICAR_TERMINADO_SEMITERMINADO", "Codificación anterior (retirada)", "Permiso conservado sin una pestaña vigente asociada.", Array.from({ length: 4 }, (_, index) =>
+                level(index + 1, "Sin pestaña asociada", [], ["La codificación anterior fue retirada. Este permiso no habilita Process Designer v2."]),
+            )),
+            productOperationTab("CATEGORIAS", "Básicos · Categorías", "Consultar y crear categorías de productos."),
+            productOperationTab("MODIFICACIONES_PRODUCTOS", "Básicos · Modificaciones", "Consultar terminados y semiterminados, editar sus datos básicos y gestionar su eliminación. Abrir la modificación de manufactura en Process Designer v2 requiere además Process Designer nivel 2.", 3),
             productOperationTab("DEFINIR_PROCESO", "Process Designer · Definir proceso", "Crear definiciones de procesos de producción."),
             productOperationTab("CONSULTAR_PROCESOS", "Process Designer · Consultar procesos", "Consultar, editar y eliminar procesos, y administrar sus documentos."),
             productOperationTab("CREAR_RECURSO_PRODUCCION", "Process Designer · Crear recurso", "Crear recursos de producción y asociar activos fijos."),
             productOperationTab("CONSULTAR_RECURSOS_PRODUCCION", "Process Designer · Consultar recursos", "Consultar y editar recursos de producción y sus activos fijos asociados."),
-            productOperationTab("PROCESS_DESIGNER", "Process Designer · Nuevo Process Designer", "Preparar y validar un borrador con materiales, semiterminados y procesos. Previsualizar un terminado o semiterminado y cargar sus datos completos o solo su grafo e insumos. No registra el producto ni modifica la referencia original."),
+            productOperationTab("PROCESS_DESIGNER", "Process Designer · Process Designer v2", "Crear, validar y guardar terminados y semiterminados con su receta, empaque y grafo. Previsualizar referencias, clonar productos o importar su grafo e insumos, y cargar un producto existente para modificarlo conservando su identidad."),
             tab(
                 "MAIN",
                 "Acceso general (compatibilidad)",
@@ -185,16 +189,16 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
                 [
                     level(1, "Consulta", [
                         "Ingresar al módulo y consultar materiales y productos existentes.",
-                        "Abrir las áreas de operaciones básicas y definición de terminados o semiterminados.",
+                        "Abrir Básicos y consultar los productos existentes según el nivel requerido por cada pestaña.",
                     ], ["Codificar materiales, administrar definiciones o modificar productos existentes."]),
                     level(2, "Creación y definición", [
                         "Incluye la consulta del nivel 1.",
-                        "Codificar materiales, terminados y semiterminados.",
+                        "Codificar materiales y crear o modificar terminados y semiterminados en Process Designer v2.",
                         "Administrar categorías y definir procesos de producción.",
-                    ], ["Editar desde las vistas de detalle o usar la pestaña de modificaciones avanzadas."]),
+                    ], ["Editar desde las vistas de detalle o usar la pestaña Modificaciones."]),
                     level(3, "Modificación", [
                         "Incluye los niveles anteriores.",
-                        "Editar productos existentes y acceder a modificaciones avanzadas.",
+                        "Editar productos existentes y acceder a Modificaciones en Básicos.",
                     ]),
                     level(4, "Mismo alcance funcional", ["Mantiene las capacidades del nivel 3."], [
                         "La implementación actual no añade una operación diferente frente al nivel 3.",
