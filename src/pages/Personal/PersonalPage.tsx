@@ -5,9 +5,10 @@ import { IncorporarPersonal } from "./IncorporarPersonal.tsx";
 import { ConsultaDePersonal } from "./ConsultaDePersonal.tsx";
 import { HorasExtraPersonal } from "./HorasExtraPersonal.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
-import { tabAccessRule } from "../../auth/accessHelpers.ts";
+import { exactTabAccessRuleWithMasterBypass, tabAccessRule } from "../../auth/accessHelpers.ts";
 import { useAccessSnapshot } from "../../auth/usePermissions";
 import type { AccessRule } from "../../auth/accessModel.ts";
+import PermisosPersonal from "./Permisos/PermisosPersonal";
 
 export default function PersonalPage() {
     const access = useAccessSnapshot();
@@ -17,6 +18,7 @@ export default function PersonalPage() {
         { key: "incorporacion", label: "Incorporacion", render: () => <IncorporarPersonal />, accesoValido: tabAccessRule(Modulo.PERSONAL_PLANTA, "INCORPORACION", 1) },
         { key: "consulta", label: "Consulta", render: () => <ConsultaDePersonal />, accesoValido: tabAccessRule(Modulo.PERSONAL_PLANTA, "CONSULTA", 1) },
         { key: "horas-extra", label: "Horas Extra", render: () => <HorasExtraPersonal />, accesoValido: tabAccessRule(Modulo.PERSONAL_PLANTA, "CONSULTA", 1) },
+        { key: "permisos", label: "Permisos", render: () => <PermisosPersonal />, accesoValido: exactTabAccessRuleWithMasterBypass(Modulo.PERSONAL_PLANTA, "PERMISOS", 1) },
     ];
 
     const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));
@@ -25,11 +27,11 @@ export default function PersonalPage() {
         : (visibleTabs[0]?.key ?? "");
 
     return (
-        <Container minW={["auto", "container.lg", "container.xl"]} w={"full"} h={"full"}>
+        <Container minW={0} maxW="full" w="full" h="full" px={{ base: 2, md: 5 }}>
             <MyHeader title={"Personal"} />
             <Flex direction="column" w="full" h="full">
-                <Tabs.Root value={activeTab} onValueChange={({ value }) => setSelectedTab(value)}>
-                    <Tabs.List>
+                <Tabs.Root value={activeTab} onValueChange={({ value }) => setSelectedTab(value)} w="full" minW={0} lazyMount>
+                    <Tabs.List flexWrap="wrap">
                         {visibleTabs.map((tab) => (
                             <Tabs.Trigger
                                 key={tab.key}

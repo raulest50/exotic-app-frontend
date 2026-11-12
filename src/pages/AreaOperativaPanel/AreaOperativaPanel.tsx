@@ -54,7 +54,7 @@ import type {
 } from "./areaOperativaPanel.types.ts";
 import { useAreaOperativaNoiseSampler } from "./Analitica/Noise/useAreaOperativaNoiseSampler.ts";
 import { formatSemanaMpsDisplayDate } from "../Produccion/ProgProdSemanalTab/semanaMps.utils.ts";
-import DespejeLineaFormulario from "../../features/despeje/DespejeLineaFormulario";
+import DespejesLineaPanel from "../../features/despeje/DespejesLineaPanel";
 import { despejeError, prepararDespeje } from "../../features/despeje/despejeApi";
 import type { PreparacionDespeje } from "../../features/despeje/types";
 
@@ -306,9 +306,9 @@ export default function AreaOperativaPanel() {
     const [motivoDiferenciaCantidad, setMotivoDiferenciaCantidad] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [preparacionDespeje, setPreparacionDespeje] = useState<PreparacionDespeje | null>(null);
-    const [despejeLoad, setDespejeLoad] = useState(0);
     const [despejeBusy, setDespejeBusy] = useState(false);
     const [despejeDirty, setDespejeDirty] = useState(false);
+    const [confirmarCierreDespeje, setConfirmarCierreDespeje] = useState(false);
     const [errorDespeje, setErrorDespeje] = useState<string | null>(null);
     const actionSubmittingRef = useRef(false);
 
@@ -629,6 +629,7 @@ export default function AreaOperativaPanel() {
         setPreparacionDespeje(null);
         setDespejeBusy(false);
         setDespejeDirty(false);
+        setConfirmarCierreDespeje(false);
         setErrorDespeje(null);
         setObservaciones("");
         setCantidadProducida("");
@@ -663,28 +664,38 @@ export default function AreaOperativaPanel() {
         openActionModal(action, card);
     };
 
-    const prepararInicio = async (nuevoIntento = false): Promise<PreparacionDespeje> => {
+    const solicitarCerrarAccion = () => {
+        if (actionSubmittingRef.current || despejeBusy) return;
+        if (selectedAction === "iniciar" && despejeDirty) {
+            setConfirmarCierreDespeje(true);
+            return;
+        }
+        onActionClose();
+    };
+
+    const prepararInicio = async (nuevoIntento = false, familiaId?: number): Promise<PreparacionDespeje> => {
         if (!selectedOrden || selectedAction !== "iniciar") throw new Error("Seleccione una operación para iniciar.");
+        if (nuevoIntento && familiaId == null) throw new Error("Seleccione la plantilla para preparar otro intento.");
         const isFabricacion = selectedOrden.tipoOrden === "OF";
         const operacionId = selectedOrden.operacionFabricacionId;
         if (isFabricacion && !operacionId) throw new Error("La tarjeta no identifica la operación de fabricación.");
         const result = await prepararDespeje({
             ...(isFabricacion ? { operacionId: operacionId! } : { seguimientoId: selectedOrden.id }),
             nuevoIntento,
+            ...(familiaId != null ? { familiaId } : {}),
         });
         setPreparacionDespeje(result);
         setDespejeDirty(false);
-        setDespejeLoad((current) => current + 1);
         setErrorDespeje(null);
         return result;
     };
 
-    const actualizarRequisitoDespeje = async (nuevoIntento = false) => {
+    const actualizarRequisitoDespeje = async (nuevoIntento = false, familiaId?: number) => {
         if (actionSubmittingRef.current || despejeBusy || despejeDirty) return;
         actionSubmittingRef.current = true;
         setSubmitting(true);
         try {
-            await prepararInicio(nuevoIntento);
+            await prepararInicio(nuevoIntento, familiaId);
         } catch (cause) {
             setErrorDespeje(despejeError(cause));
         } finally {
@@ -694,7 +705,7 @@ export default function AreaOperativaPanel() {
     };
 
     const handleSubmitAction = async () => {
-        if (actionSubmittingRef.current || despejeBusy) return;
+        if (actionSubmittingRef.current || despejeBusy || (selectedAction === "iniciar" && despejeDirty)) return;
         if (boardSnapshotStale) {
             toast({
                 title: "Tablero pendiente de actualización",
@@ -1073,14 +1084,14 @@ export default function AreaOperativaPanel() {
 
             <Dialog.Root open={isActionOpen} size='lg' scrollBehavior="inside" placement='center' onOpenChange={e => {
                 if (!e.open && !submitting && !despejeBusy) {
-                    onActionClose();
+                    solicitarCerrarAccion();
                 }
             }}>
                 <Portal>
 
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
-                        <Dialog.Content maxW={preparacionDespeje?.ejecucion ? "3xl" : "lg"} mx={{ base: 2, md: 4 }} maxH="calc(100dvh - 2rem)">
+                        <Dialog.Content maxW={preparacionDespeje?.requisitos.length ? "3xl" : "lg"} mx={{ base: 2, md: 4 }} maxH="calc(100dvh - 2rem)">
                             <Dialog.Header><Dialog.Title>{actionMeta.title}</Dialog.Title></Dialog.Header>
                             <Dialog.CloseTrigger asChild>
                                 <CloseButton aria-label="Cerrar" size="sm" disabled={submitting || despejeBusy} />
@@ -1109,19 +1120,25 @@ export default function AreaOperativaPanel() {
                                         </Box>
                                         {selectedAction === "iniciar" && <>
                                             {errorDespeje && <Alert.Root status="error"><Alert.Indicator />{errorDespeje}</Alert.Root>}
-                                            {preparacionDespeje?.motivo && <Alert.Root status={preparacionDespeje.puedeIniciar ? "info" : "warning"}><Alert.Indicator />{preparacionDespeje.motivo}</Alert.Root>}
-                                            {preparacionDespeje?.ejecucion && <DespejeLineaFormulario
-                                                key={`${preparacionDespeje.ejecucion.id}-${despejeLoad}`}
-                                                ejecucion={preparacionDespeje.ejecucion}
-                                                disabled={submitting || despejeBusy}
+                                            {preparacionDespeje && <DespejesLineaPanel
+                                                preparacion={preparacionDespeje}
+                                                disabled={submitting}
                                                 onBusyChange={setDespejeBusy}
                                                 onDirtyChange={setDespejeDirty}
-                                                onUpdated={(updated) => setPreparacionDespeje((current) => current?.ejecucion?.id === updated.id
-                                                    ? { ...current, ejecucion: updated, puedeIniciar: false } : current)}
-                                                onNuevoIntento={() => void actualizarRequisitoDespeje(true)}
+                                                onUpdated={(updated) => setPreparacionDespeje((current) => current ? {
+                                                    ...current,
+                                                    puedeIniciar: false,
+                                                    motivo: null,
+                                                    requisitos: current.requisitos.map((requisito) => requisito.ejecucion?.id === updated.id ? {
+                                                        ...requisito,
+                                                        ejecucion: updated,
+                                                        listo: ["APROBADA", "UTILIZADA"].includes(updated.estado),
+                                                        motivo: "Estado actualizado. Confirme el inicio para verificar la vigencia del conjunto.",
+                                                    } : requisito),
+                                                } : current)}
+                                                onNuevoIntento={(familiaId) => void actualizarRequisitoDespeje(true, familiaId)}
+                                                onRefresh={() => void actualizarRequisitoDespeje()}
                                             />}
-                                            {preparacionDespeje && <Button alignSelf="flex-start" size="sm" variant="outline" disabled={submitting || despejeBusy || despejeDirty} onClick={() => void actualizarRequisitoDespeje()}>Actualizar requisito de despeje</Button>}
-                                            {despejeDirty && <Text fontSize="sm" color="app.textMuted">Hay cambios locales sin guardar. Guarde el borrador o complete la revisión antes de actualizar el requisito. Recargar desde el servidor permite descartarlos con confirmación.</Text>}
                                         </>}
                                         {selectedAction === "completar" && selectedOrden.esNodoFinal ? (
                                             <Field.Root required>
@@ -1192,11 +1209,12 @@ export default function AreaOperativaPanel() {
                                 ) : null}
                             </Dialog.Body>
                             <Dialog.Footer gap={3} flexWrap="wrap">
+                                {confirmarCierreDespeje && despejeDirty && <Alert.Root status="warning" w="full"><Alert.Indicator /><VStack align="stretch" gap={2}><Text>Hay cambios locales sin guardar. Cerrar los descarta; los borradores ya guardados permanecen en el servidor.</Text><HStack flexWrap="wrap"><Button size="sm" variant="outline" onClick={() => setConfirmarCierreDespeje(false)}>Volver a los formularios</Button><Button size="sm" variant="outline" disabled={submitting || despejeBusy} onClick={() => { setDespejeDirty(false); setConfirmarCierreDespeje(false); onActionClose(); }}>Descartar cambios y cerrar</Button></HStack></VStack></Alert.Root>}
                                 <Button
                                     minH={12}
                                     flex={{ base: "1 1 45%", sm: "initial" }}
                                     variant="ghost"
-                                    onClick={onActionClose}
+                                    onClick={solicitarCerrarAccion}
                                     disabled={submitting || despejeBusy}
                                 >
                                     Cancelar
@@ -1210,9 +1228,10 @@ export default function AreaOperativaPanel() {
                                     disabled={
                                         boardSnapshotStale
                                         || despejeBusy
-                                        || (selectedAction === "iniciar" && preparacionDespeje !== null
+                                        || (selectedAction === "iniciar" && (despejeDirty || (preparacionDespeje !== null
                                             && !preparacionDespeje.puedeIniciar
-                                            && !["APROBADA", "UTILIZADA"].includes(preparacionDespeje.ejecucion?.estado ?? ""))
+                                            && (preparacionDespeje.requisitos.length === 0
+                                                || preparacionDespeje.requisitos.some((requisito) => !requisito.listo || !requisito.ejecucion)))))
                                         || (
                                             selectedAction === "completar"
                                             && Boolean(selectedOrden?.esNodoFinal)

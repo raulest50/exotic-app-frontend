@@ -5,6 +5,8 @@ import type {
     DespejeAreaConfiguracionWrite,
     EjecucionDespeje,
     EjecucionDespejeWrite,
+    FamiliaDespeje,
+    FamiliaDespejeWrite,
     PlantillaDespeje,
     PlantillaDespejeWrite,
     PreparacionDespeje,
@@ -34,6 +36,14 @@ export async function consultarPlantillasDespeje(areaId: number): Promise<Planti
     return (await axios.get<PlantillaDespeje[]>(`${base}/areas/${areaId}/plantillas`, options)).data;
 }
 
+export async function consultarFamiliasDespeje(areaId: number): Promise<FamiliaDespeje[]> {
+    return (await axios.get<FamiliaDespeje[]>(`${base}/areas/${areaId}/familias`, options)).data;
+}
+
+export async function crearFamiliaDespeje(areaId: number, request: FamiliaDespejeWrite): Promise<FamiliaDespeje> {
+    return (await axios.post<FamiliaDespeje>(`${base}/areas/${areaId}/familias`, request, options)).data;
+}
+
 export async function guardarPlantillaDespeje(areaId: number, request: PlantillaDespejeWrite): Promise<PlantillaDespeje> {
     return (await axios.post<PlantillaDespeje>(`${base}/areas/${areaId}/plantillas`, request, options)).data;
 }
@@ -47,7 +57,11 @@ export async function retirarPlantillaDespeje(id: number): Promise<PlantillaDesp
 }
 
 export async function prepararDespeje(request: PrepararDespejeRequest): Promise<PreparacionDespeje> {
-    return (await axios.post<PreparacionDespeje>(`${base}/ejecuciones/preparar`, request, options)).data;
+    const { data } = await axios.post<PreparacionDespeje>(`${base}/ejecuciones/preparar`, request, options);
+    if (!Array.isArray(data.requisitos) || !Array.isArray(data.avisos)) {
+        throw new Error("El servidor no devolvió el conjunto de formularios de despeje. Actualice la aplicación y verifique la versión del servicio.");
+    }
+    return data;
 }
 
 export async function consultarDespeje(id: number): Promise<EjecucionDespeje> {

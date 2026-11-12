@@ -12,6 +12,8 @@ import { IVA_VALUES, TIPOS_MATERIALES, TIPOS_PRODUCTOS, UNIDADES, type Material 
 
 const endpoints = new EndPointsURL();
 const MAX_PDF_BYTES = 10 * 1024 * 1024;
+const MAX_COSTO_INICIAL = 9_999_999_999_999;
+const COSTO_INICIAL_ERROR = "Ingresa un entero entre 0 y 9999999999999, sin decimales ni notación exponencial.";
 
 interface Props {
     onClose: () => void;
@@ -21,7 +23,7 @@ interface Props {
 export default function CreateNewMaterialDialog({ onClose, onCreated }: Props) {
     const [form, setForm] = useState({
         codigo: "", nombre: "", observaciones: "", cantidadUnidad: "", tipoUnidades: UNIDADES.KG,
-        tipoMaterial: TIPOS_MATERIALES.materiaPrima, ivaPercentual: 0,
+        tipoMaterial: TIPOS_MATERIALES.materiaPrima, ivaPercentual: 0, costoInicial: "0",
         inventareable: true, consumoDirecto: false, puntoReorden: "-1", prefijoLote: "",
     });
     const [file, setFile] = useState<File | null>(null);
@@ -30,6 +32,9 @@ export default function CreateNewMaterialDialog({ onClose, onCreated }: Props) {
     const submitting = useRef(false);
     const permission = useTabPermission(Modulo.PRODUCTOS, "CODIFICAR_MATERIAL");
     const canCreate = permission.ready && permission.nivel >= 2;
+    const costoInicial = Number(form.costoInicial);
+    const costoInicialInvalido = !/^\d*$/.test(form.costoInicial)
+        || !Number.isSafeInteger(costoInicial) || costoInicial > MAX_COSTO_INICIAL;
     function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
         setForm((current) => ({ ...current, [key]: value }));
     }
@@ -52,6 +57,10 @@ export default function CreateNewMaterialDialog({ onClose, onCreated }: Props) {
             setError("La cantidad por unidad debe ser un número positivo.");
             return;
         }
+        if (costoInicialInvalido) {
+            setError(COSTO_INICIAL_ERROR);
+            return;
+        }
         if (form.inventareable && (!form.puntoReorden.trim() || !Number.isFinite(puntoReorden)
             || (puntoReorden !== -1 && puntoReorden < 0))) {
             setError("El punto de reorden debe ser -1 (sin alertas) o un número mayor o igual a cero.");
@@ -69,7 +78,7 @@ export default function CreateNewMaterialDialog({ onClose, onCreated }: Props) {
             productoId: codigo,
             nombre: form.nombre.trim(),
             observaciones: form.observaciones.trim(),
-            costo: 0,
+            costo: costoInicial,
             tipo_producto: TIPOS_PRODUCTOS.materiaPrima,
             tipoMaterial: form.tipoMaterial,
             tipoUnidades: form.tipoUnidades,
@@ -154,6 +163,17 @@ export default function CreateNewMaterialDialog({ onClose, onCreated }: Props) {
                                         <Field.Root required>
                                             <Field.Label>Cantidad por unidad <Field.RequiredIndicator /></Field.Label>
                                             <Input required type="number" step="any" min="0" value={form.cantidadUnidad} onChange={(event) => update("cantidadUnidad", event.target.value)} />
+                                        </Field.Root>
+                                        <Field.Root invalid={costoInicialInvalido}>
+                                            <Field.Label>Costo unitario inicial (COP / {form.tipoUnidades})</Field.Label>
+                                            <Input
+                                                type="text" inputMode="numeric" value={form.costoInicial}
+                                                onChange={(event) => update("costoInicial", event.target.value)}
+                                            />
+                                            <Field.HelperText>
+                                                Sin IVA, por cada {form.tipoUnidades} de inventario. Usa 0 si aún no se conoce; vacío equivale a 0.
+                                            </Field.HelperText>
+                                            <Field.ErrorText>{COSTO_INICIAL_ERROR}</Field.ErrorText>
                                         </Field.Root>
                                         <Field.Root>
                                             <Field.Label>IVA</Field.Label>

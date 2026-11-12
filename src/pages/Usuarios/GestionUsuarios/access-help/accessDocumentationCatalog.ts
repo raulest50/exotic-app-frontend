@@ -590,10 +590,16 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
         modulo: Modulo.PERSONAL_PLANTA,
         label: "Personal de planta",
         resumen: "Incorporación, consulta y gestión de información del personal.",
-        condiciones: ["Cada pestaña se muestra con su permiso propio; el permiso general conservado de versiones anteriores puede actuar como respaldo."],
+        condiciones: ["Incorporación y Consulta admiten el permiso general conservado de versiones anteriores. Permisos exige su asignación específica PERSONAL_PLANTA / PERMISOS.", "Master y Super Master tienen acceso administrativo; la excepción no permite firmar por otro trabajador ni sustituir al jefe asignado."],
         tabs: [
             sameScopeTab("INCORPORACION", "Incorporación", "Registra nuevos integrantes del personal.", "Consultar y completar el flujo de incorporación de personal."),
             sameScopeTab("CONSULTA", "Consulta", "Consulta personal y da acceso también a Horas extra.", "Consultar información del personal y utilizar la pestaña de Horas extra."),
+            tab("PERMISOS", "Permisos", "Solicitudes de permiso laboral, firmas, decisión del jefe e historial.", [
+                level(1, "Solicitudes propias", ["Consultar y crear solicitudes propias, editar borradores y firmar para presentarlos cuando la cuenta esté vinculada a un trabajador activo y tenga jefe asignado."]),
+                level(2, "Revisión del jefe", ["Incluye las solicitudes propias del nivel 1.", "Consultar y decidir las solicitudes presentadas que le fueron asignadas como jefe; la aprobación requiere su firma explícita."], ["Aprobar solicitudes propias o sustituir a otro jefe."]),
+                level(3, "Consulta general", ["Incluye las capacidades del nivel 2.", "Consultar todos los expedientes y sus PDF, firmas, soportes e historial."]),
+                level(4, "Configuración administrativa", ["Incluye las capacidades del nivel 3.", "Vincular trabajadores con cuentas, configurar jefes autorizadores y anular solicitudes con un motivo."], ["Firmar en nombre del trabajador o aprobar sin ser el jefe asignado."]),
+            ], ["La identidad, el responsable y las acciones disponibles se verifican en el servidor para cada expediente."]),
         ],
     },
     [Modulo.BINTELLIGENCE]: {

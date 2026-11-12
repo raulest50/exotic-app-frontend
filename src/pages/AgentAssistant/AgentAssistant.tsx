@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import type { FormEvent, KeyboardEvent, PointerEvent } from "react";
 import { Box, Button, Field, Heading, IconButton, Input, Text } from "@chakra-ui/react";
 import { LuArrowUp, LuChevronRight, LuEyeOff, LuMessageCircle, LuMinus, LuSparkles } from "react-icons/lu";
 import { ExoticMascot } from "./ExoticMascot";
@@ -10,6 +10,22 @@ export interface AgentAssistantProps {
     initialState?: "open" | "collapsed" | "hidden";
     canWrite?: boolean;
 }
+
+type AssistantCorner = `${"top" | "bottom"}-${"left" | "right"}`;
+type AssistantDrag = {
+    pointerId: number;
+    startX: number;
+    startY: number;
+    bounds: DOMRect;
+    moved: boolean;
+};
+
+const cornerLabels: Record<AssistantCorner, string> = {
+    "top-left": "superior izquierda",
+    "top-right": "superior derecha",
+    "bottom-left": "inferior izquierda",
+    "bottom-right": "inferior derecha",
+};
 
 const suggestions = [
     "¿Qué productos necesitan reposición?",
@@ -26,16 +42,22 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false }:
     const [view, setView] = useState(initialState);
     const [draft, setDraft] = useState("");
     const [question, setQuestion] = useState<string | null>(null);
+    const [corner, setCorner] = useState<AssistantCorner>("bottom-right");
+    const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
     const [motionPaused, setMotionPaused] = useState(() => typeof document !== "undefined" && document.hidden);
+    const anchorRef = useRef<HTMLDivElement>(null);
     const launcherRef = useRef<HTMLButtonElement>(null);
     const restoreRef = useRef<HTMLButtonElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const pendingFocus = useRef<"launcher" | "restore" | "input" | null>(null);
+    const dragRef = useRef<AssistantDrag | null>(null);
+    const suppressClick = useRef(false);
     const id = useId();
     const panelId = `${id}-panel`;
     const titleId = `${id}-title`;
     const inputId = `${id}-question`;
     const hintId = `${id}-hint`;
+    const moveHelpId = `${id}-move-help`;
 
     useEffect(() => {
         const updateVisibility = () => setMotionPaused(document.hidden);
@@ -69,7 +91,81 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false }:
         setView("collapsed");
     };
 
+    const startDrag = (event: PointerEvent<HTMLButtonElement>) => {
+        if (!event.isPrimary || event.button !== 0 || !anchorRef.current) return;
+        suppressClick.current = false;
+        dragRef.current = {
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startY: event.clientY,
+            bounds: anchorRef.current.getBoundingClientRect(),
+            moved: false,
+        };
+        event.currentTarget.setPointerCapture(event.pointerId);
+    };
+
+    const moveDrag = (event: PointerEvent<HTMLButtonElement>) => {
+        const drag = dragRef.current;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        const x = event.clientX - drag.startX;
+        const y = event.clientY - drag.startY;
+        // Small pointer movements remain an ordinary click/tap.
+        if (!drag.moved && Math.hypot(x, y) < 6) return;
+        drag.moved = true;
+        const { bounds } = drag;
+        setDragOffset({
+            x: Math.max(8 - bounds.left, Math.min(x, window.innerWidth - bounds.right - 8)),
+            y: Math.max(8 - bounds.top, Math.min(y, window.innerHeight - bounds.bottom - 8)),
+        });
+    };
+
+    const finishDrag = (event: PointerEvent<HTMLButtonElement>) => {
+        const drag = dragRef.current;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        dragRef.current = null;
+        suppressClick.current = drag.moved;
+        if (drag.moved) {
+            const vertical = event.clientY < window.innerHeight / 2 ? "top" : "bottom";
+            const horizontal = event.clientX < window.innerWidth / 2 ? "left" : "right";
+            setCorner(`${vertical}-${horizontal}`);
+        }
+        setDragOffset(null);
+    };
+
+    const cancelDrag = (event?: PointerEvent<HTMLButtonElement>) => {
+        if (!dragRef.current || (event && event.pointerId !== dragRef.current.pointerId)) return;
+        const { pointerId, moved } = dragRef.current;
+        dragRef.current = null;
+        suppressClick.current = moved;
+        setDragOffset(null);
+        if (launcherRef.current?.hasPointerCapture(pointerId)) {
+            launcherRef.current.releasePointerCapture(pointerId);
+        }
+    };
+
+    const moveWithKeyboard = (event: KeyboardEvent<HTMLButtonElement>) => {
+        if (!event.altKey || !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        cancelDrag();
+        setCorner((current) => {
+            let vertical: "top" | "bottom" = current.startsWith("top") ? "top" : "bottom";
+            let horizontal: "left" | "right" = current.endsWith("left") ? "left" : "right";
+            if (event.key === "ArrowUp") vertical = "top";
+            if (event.key === "ArrowDown") vertical = "bottom";
+            if (event.key === "ArrowLeft") horizontal = "left";
+            if (event.key === "ArrowRight") horizontal = "right";
+            return `${vertical}-${horizontal}`;
+        });
+    };
+
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === "Escape" && dragRef.current) {
+            event.preventDefault();
+            event.stopPropagation();
+            cancelDrag();
+            return;
+        }
         if (event.key === "Escape" && view === "open") {
             event.stopPropagation();
             minimize();
@@ -86,12 +182,22 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false }:
 
     return (
         <Box
+            ref={anchorRef}
             className={styles.assistantAnchor}
             data-agent-assistant=""
             data-state={view}
-            data-motion-paused={motionPaused ? "true" : "false"}
+            data-corner={corner}
+            data-dragging={dragOffset ? "true" : "false"}
+            data-motion-paused={motionPaused || dragOffset ? "true" : "false"}
+            style={dragOffset ? { transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)` } : undefined}
             onKeyDown={handleKeyDown}
         >
+            <span id={moveHelpId} className={styles.screenReaderOnly}>
+                Arrastra el personaje a una esquina para mover el asistente. También puedes usar Alt y las flechas con el personaje enfocado.
+            </span>
+            <span className={styles.screenReaderOnly} role="status" aria-live="polite">
+                Asistente en la esquina {cornerLabels[corner]}.
+            </span>
             {view === "hidden" ? (
                 <Button ref={restoreRef} className={styles.restoreButton} onClick={restore} variant="plain">
                     <LuMessageCircle aria-hidden="true" /> Mostrar asistente
@@ -178,7 +284,22 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false }:
                             aria-label={view === "open" ? "Minimizar asistente Exotic" : "Abrir asistente Exotic"}
                             aria-expanded={view === "open"}
                             aria-controls={view === "open" ? panelId : undefined}
-                            onClick={() => view === "open" ? minimize() : open()}
+                            aria-describedby={moveHelpId}
+                            title="Arrastra a una esquina para mover · Alt + flechas"
+                            onPointerDown={startDrag}
+                            onPointerMove={moveDrag}
+                            onPointerUp={finishDrag}
+                            onPointerCancel={cancelDrag}
+                            onLostPointerCapture={cancelDrag}
+                            onKeyDown={moveWithKeyboard}
+                            onClick={(event) => {
+                                if (suppressClick.current && event.detail !== 0) {
+                                    suppressClick.current = false;
+                                    return;
+                                }
+                                if (view === "open") minimize();
+                                else open();
+                            }}
                         >
                             <ExoticMascot decorative />
                             <span className={styles.launcherLabel}>Exotic · asistente</span>

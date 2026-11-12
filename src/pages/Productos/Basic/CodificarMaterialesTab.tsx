@@ -24,12 +24,15 @@ import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import {IVA_VALUES} from "../types.tsx"
 
 const MAX_FICHA_TECNICA_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_COSTO_INICIAL = 9_999_999_999_999;
+const COSTO_INICIAL_ERROR = "Ingresa un entero entre 0 y 9999999999999, sin decimales ni notación exponencial.";
 
 function CodificarMaterialesTab() {
     const [nombre, setNombre] = useState('');
     const [observaciones, setObservaciones] = useState('');
     const [tipo_unidad, setTipo_unidad] = useState(UNIDADES.KG);
     const [cantidad_unidad, setCantidad_unidad] = useState('');
+    const [costoInicialStr, setCostoInicialStr] = useState('0');
     const [codigo, setCodigo] = useState('');
     const [prefijoLote, setPrefijoLote] = useState('');
     const [url_ftecnica, setUrl_ftecnica] = useState('');
@@ -44,11 +47,15 @@ function CodificarMaterialesTab() {
 
     const toast = useAppToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const costoInicial = Number(costoInicialStr);
+    const costoInicialInvalido = !/^\d*$/.test(costoInicialStr)
+        || !Number.isSafeInteger(costoInicial) || costoInicial > MAX_COSTO_INICIAL;
 
     const clearMP_Cod_Fields = () => {
         setNombre('');
         setObservaciones('');
         setCantidad_unidad('');
+        setCostoInicialStr('0');
         setCodigo('');
         setPrefijoLote('');
         setUrl_ftecnica('');
@@ -99,6 +106,16 @@ function CodificarMaterialesTab() {
                 description: "La 'Cantidad por Unidad' debe ser un numero positivo.",
                 status: "warning",
                 duration: 3000,
+                isClosable: true,
+            });
+            return false;
+        }
+        if (costoInicialInvalido) {
+            toast({
+                title: "Validation Error",
+                description: COSTO_INICIAL_ERROR,
+                status: "warning",
+                duration: 4000,
                 isClosable: true,
             });
             return false;
@@ -219,7 +236,7 @@ function CodificarMaterialesTab() {
             productoId: normalizedCodigo,
             nombre,
             observaciones,
-            costo: 0,
+            costo: costoInicial,
             tipoUnidades: tipo_unidad,
             cantidadUnidad: cantidad_unidad,
             tipo_producto: TIPOS_PRODUCTOS.materiaPrima,
@@ -373,6 +390,23 @@ function CodificarMaterialesTab() {
                                 />
                             </Field.Root>
                         </Flex>
+                    </GridItem>
+
+                    <GridItem colSpan={1}>
+                        <Field.Root invalid={costoInicialInvalido}>
+                            <Field.Label>Costo unitario inicial (COP / {tipo_unidad})</Field.Label>
+                            <Input
+                                type="text"
+                                inputMode="numeric"
+                                value={costoInicialStr}
+                                onChange={(e) => setCostoInicialStr(e.target.value)}
+                                bg="app.inputFilled" variant="subtle" borderRadius={0}
+                            />
+                            <Field.HelperText fontSize="xs">
+                                Sin IVA, por cada {tipo_unidad} de inventario. Usa 0 si aún no se conoce; vacío equivale a 0.
+                            </Field.HelperText>
+                            <Field.ErrorText>{COSTO_INICIAL_ERROR}</Field.ErrorText>
+                        </Field.Root>
                     </GridItem>
 
                     <GridItem colSpan={1}>

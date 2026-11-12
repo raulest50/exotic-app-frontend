@@ -33,7 +33,7 @@ import type {
 } from "./informesGlobales.types";
 import { LuRepeat } from 'react-icons/lu';
 
-type ReportPage = "almacen" | "produccion";
+type ReportPage = "almacen" | "produccion" | "gestion-humana" | "consumo-teorico-materiales";
 type DateMode = "fecha_unica" | "rango";
 
 interface ReportState<T> {
@@ -146,7 +146,7 @@ export default function InformesGlobalesTab() {
         if (activePage === "almacen") {
             if (inventoryRequestQueryKey.current === appliedQueryKey) return;
             void loadInventory(appliedQuery);
-        } else {
+        } else if (activePage === "produccion") {
             if (productionRequestQueryKey.current === appliedQueryKey) return;
             void loadProduction(appliedQuery);
         }
@@ -179,7 +179,7 @@ export default function InformesGlobalesTab() {
         if (nextQueryKey === appliedQueryKey) {
             if (activePage === "almacen") {
                 void loadInventory(currentQuery);
-            } else {
+            } else if (activePage === "produccion") {
                 void loadProduction(currentQuery);
             }
         }
@@ -198,6 +198,7 @@ export default function InformesGlobalesTab() {
         <Stack gap={{ base: 4, md: 5 }}>
             <ButtonGroup
                 attached
+                flexWrap="wrap"
                 w={{ base: "full", md: "fit-content" }}
                 aria-label="Página del informe global"
             >
@@ -227,143 +228,173 @@ export default function InformesGlobalesTab() {
                 >
                     Producción
                 </Button>
+                <Button
+                    flex={{ base: 1, md: "initial" }}
+                    minH="44px"
+                    h="auto"
+                    py={2}
+                    whiteSpace="normal"
+                    colorPalette={activePage === "gestion-humana" ? "green" : undefined}
+                    variant={activePage === "gestion-humana" ? "solid" : "outline"}
+                    onClick={() => setActivePage("gestion-humana")}
+                    aria-pressed={activePage === "gestion-humana"}
+                >
+                    Gestión Humana
+                </Button>
+                <Button
+                    flex={{ base: 1, md: "initial" }}
+                    minH="44px"
+                    h="auto"
+                    py={2}
+                    whiteSpace="normal"
+                    colorPalette={activePage === "consumo-teorico-materiales" ? "green" : undefined}
+                    variant={activePage === "consumo-teorico-materiales" ? "solid" : "outline"}
+                    onClick={() => setActivePage("consumo-teorico-materiales")}
+                    aria-pressed={activePage === "consumo-teorico-materiales"}
+                >
+                    Consumo Teórico Materiales
+                </Button>
             </ButtonGroup>
 
-            <Card.Root variant="outline">
-                <Card.Body p={{ base: 3, md: 5 }}>
-                    <Stack gap={4}>
-                        <Stack
-                            direction={{ base: "column", md: "row" }}
-                            align={{ base: "flex-start", md: "center" }}
-                            justify="space-between"
-                            gap={2}
-                        >
-                            <Stack gap={1}>
-                                <Text fontWeight="semibold">Periodo de movimientos y producción</Text>
-                                <Text color="app.textMuted" fontSize="sm">
-                                    El stock, las OCM pendientes, las OP abiertas y la cobertura representan el estado actual.
-                                </Text>
-                            </Stack>
-                            <Badge
-                                colorPalette="blue"
-                                whiteSpace="normal"
-                                textAlign="center"
-                            >
-                                Periodo aplicado: {queryPeriodLabel(appliedQuery)}
-                            </Badge>
-                        </Stack>
-
-                        <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={4}>
-                            <Field.Root>
-                                <Field.Label>Tipo de consulta</Field.Label>
-                                <NativeSelect.Root>
-                                    <NativeSelect.Field
-                                        minH="44px"
-                                        value={dateMode}
-                                        onChange={(event) => setDateMode(event.target.value as DateMode)}>
-                                        <option value="fecha_unica">Fecha única</option>
-                                        <option value="rango">Rango de fechas</option>
-                                    </NativeSelect.Field>
-                                    <NativeSelect.Indicator />
-                                </NativeSelect.Root>
-                            </Field.Root>
-
-                            {dateMode === "fecha_unica" ? (
-                                <Field.Root required invalid={!date}>
-                                    <Field.Label>Fecha</Field.Label>
-                                    <Input
-                                        minH="44px"
-                                        type="date"
-                                        value={date}
-                                        onChange={(event) => setDate(event.target.value)}
-                                    />
-                                    <Field.ErrorText>Seleccione una fecha.</Field.ErrorText>
-                                </Field.Root>
-                            ) : (
-                                <>
-                                    <Field.Root required invalid={!startDate || rangeInverted}>
-                                        <Field.Label>Fecha desde</Field.Label>
-                                        <Input
-                                            minH="44px"
-                                            type="date"
-                                            value={startDate}
-                                            onChange={(event) => setStartDate(event.target.value)}
-                                        />
-                                        <Field.ErrorText>Revise la fecha inicial.</Field.ErrorText>
-                                    </Field.Root>
-                                    <Field.Root
-                                        required
-                                        invalid={!endDate || rangeInverted || rangeTooLong}
+            {activePage === "almacen" || activePage === "produccion" ? (
+                <>
+                    <Card.Root variant="outline">
+                        <Card.Body p={{ base: 3, md: 5 }}>
+                            <Stack gap={4}>
+                                <Stack
+                                    direction={{ base: "column", md: "row" }}
+                                    align={{ base: "flex-start", md: "center" }}
+                                    justify="space-between"
+                                    gap={2}
+                                >
+                                    <Stack gap={1}>
+                                        <Text fontWeight="semibold">Periodo de movimientos y producción</Text>
+                                        <Text color="app.textMuted" fontSize="sm">
+                                            El stock, las OCM pendientes, las OP abiertas y la cobertura representan el estado actual.
+                                        </Text>
+                                    </Stack>
+                                    <Badge
+                                        colorPalette="blue"
+                                        whiteSpace="normal"
+                                        textAlign="center"
                                     >
-                                        <Field.Label>Fecha hasta</Field.Label>
-                                        <Input
-                                            minH="44px"
-                                            type="date"
-                                            value={endDate}
-                                            onChange={(event) => setEndDate(event.target.value)}
-                                        />
-                                        <Field.ErrorText>
-                                            {rangeTooLong
-                                                ? `El rango máximo es de ${MAX_RANGE_DAYS} días.`
-                                                : "La fecha final debe ser posterior a la inicial."}
-                                        </Field.ErrorText>
+                                        Periodo aplicado: {queryPeriodLabel(appliedQuery)}
+                                    </Badge>
+                                </Stack>
+
+                                <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={4}>
+                                    <Field.Root>
+                                        <Field.Label>Tipo de consulta</Field.Label>
+                                        <NativeSelect.Root>
+                                            <NativeSelect.Field
+                                                minH="44px"
+                                                value={dateMode}
+                                                onChange={(event) => setDateMode(event.target.value as DateMode)}>
+                                                <option value="fecha_unica">Fecha única</option>
+                                                <option value="rango">Rango de fechas</option>
+                                            </NativeSelect.Field>
+                                            <NativeSelect.Indicator />
+                                        </NativeSelect.Root>
                                     </Field.Root>
-                                </>
-                            )}
-                        </SimpleGrid>
 
-                        <Stack
-                            direction={{ base: "column", md: "row" }}
-                            align={{ base: "stretch", md: "center" }}
-                            justify="space-between"
-                            gap={3}
-                        >
-                            <HStack gap={2} flexWrap="wrap">
-                                <Text color="app.textMuted" fontSize="sm">
-                                    El periodo se comparte entre Almacén y Producción.
-                                </Text>
-                                {hasUnappliedChanges ? (
-                                    <Badge colorPalette="yellow">Cambios sin aplicar</Badge>
-                                ) : null}
-                            </HStack>
-                            <Button
-                                colorPalette="green"
-                                onClick={applyPeriod}
-                                loading={activeIsLoading}
-                                disabled={!datesAreValid}
-                                minH="44px"
-                                w={{ base: "full", md: "auto" }}><LuRepeat />Aplicar periodo
-                                                            </Button>
-                        </Stack>
-                    </Stack>
-                </Card.Body>
-            </Card.Root>
+                                    {dateMode === "fecha_unica" ? (
+                                        <Field.Root required invalid={!date}>
+                                            <Field.Label>Fecha</Field.Label>
+                                            <Input
+                                                minH="44px"
+                                                type="date"
+                                                value={date}
+                                                onChange={(event) => setDate(event.target.value)}
+                                            />
+                                            <Field.ErrorText>Seleccione una fecha.</Field.ErrorText>
+                                        </Field.Root>
+                                    ) : (
+                                        <>
+                                            <Field.Root required invalid={!startDate || rangeInverted}>
+                                                <Field.Label>Fecha desde</Field.Label>
+                                                <Input
+                                                    minH="44px"
+                                                    type="date"
+                                                    value={startDate}
+                                                    onChange={(event) => setStartDate(event.target.value)}
+                                                />
+                                                <Field.ErrorText>Revise la fecha inicial.</Field.ErrorText>
+                                            </Field.Root>
+                                            <Field.Root
+                                                required
+                                                invalid={!endDate || rangeInverted || rangeTooLong}
+                                            >
+                                                <Field.Label>Fecha hasta</Field.Label>
+                                                <Input
+                                                    minH="44px"
+                                                    type="date"
+                                                    value={endDate}
+                                                    onChange={(event) => setEndDate(event.target.value)}
+                                                />
+                                                <Field.ErrorText>
+                                                    {rangeTooLong
+                                                        ? `El rango máximo es de ${MAX_RANGE_DAYS} días.`
+                                                        : "La fecha final debe ser posterior a la inicial."}
+                                                </Field.ErrorText>
+                                            </Field.Root>
+                                        </>
+                                    )}
+                                </SimpleGrid>
 
-            {activeIsLoading && activeHasCurrentData ? (
-                <Progress.Root size="xs" value={null} colorPalette="green" borderRadius="full">
-                    <Progress.Track>
-                        <Progress.Range />
-                    </Progress.Track>
-                </Progress.Root>
-            ) : null}
+                                <Stack
+                                    direction={{ base: "column", md: "row" }}
+                                    align={{ base: "stretch", md: "center" }}
+                                    justify="space-between"
+                                    gap={3}
+                                >
+                                    <HStack gap={2} flexWrap="wrap">
+                                        <Text color="app.textMuted" fontSize="sm">
+                                            El periodo se comparte entre Almacén y Producción.
+                                        </Text>
+                                        {hasUnappliedChanges ? (
+                                            <Badge colorPalette="yellow">Cambios sin aplicar</Badge>
+                                        ) : null}
+                                    </HStack>
+                                    <Button
+                                        colorPalette="green"
+                                        onClick={applyPeriod}
+                                        loading={activeIsLoading}
+                                        disabled={!datesAreValid}
+                                        minH="44px"
+                                        w={{ base: "full", md: "auto" }}><LuRepeat />Aplicar periodo
+                                                                    </Button>
+                                </Stack>
+                            </Stack>
+                        </Card.Body>
+                    </Card.Root>
 
-            {activeError ? <ErrorPanel message={activeError} /> : null}
+                    {activeIsLoading && activeHasCurrentData ? (
+                        <Progress.Root size="xs" value={null} colorPalette="green" borderRadius="full">
+                            <Progress.Track>
+                                <Progress.Range />
+                            </Progress.Track>
+                        </Progress.Root>
+                    ) : null}
 
-            {activePage === "almacen" ? (
-                activeHasCurrentData && inventory.data ? (
-                    <InformeAlmacenPage
-                        report={inventory.data}
-                    />
-                ) : activeIsLoading ? (
-                    <LoadingPanel label="Cargando inventario y movimientos…" />
-                ) : null
-            ) : activeHasCurrentData && production.data ? (
-                <InformeProduccionPage
-                    key={production.dataQueryKey ?? appliedQueryKey}
-                    report={production.data}
-                />
-            ) : activeIsLoading ? (
-                <LoadingPanel label="Cargando informe de producción…" />
+                    {activeError ? <ErrorPanel message={activeError} /> : null}
+
+                    {activePage === "almacen" ? (
+                        activeHasCurrentData && inventory.data ? (
+                            <InformeAlmacenPage
+                                report={inventory.data}
+                            />
+                        ) : activeIsLoading ? (
+                            <LoadingPanel label="Cargando inventario y movimientos…" />
+                        ) : null
+                    ) : activeHasCurrentData && production.data ? (
+                        <InformeProduccionPage
+                            key={production.dataQueryKey ?? appliedQueryKey}
+                            report={production.data}
+                        />
+                    ) : activeIsLoading ? (
+                        <LoadingPanel label="Cargando informe de producción…" />
+                    ) : null}
+                </>
             ) : null}
         </Stack>
     );

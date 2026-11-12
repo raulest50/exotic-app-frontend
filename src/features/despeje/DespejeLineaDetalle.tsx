@@ -25,20 +25,29 @@ export default function DespejeLineaDetalle({ ejecucion, permitirRevision = fals
     const [motivo, setMotivo] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
+    const [recibida, setRecibida] = useState(ejecucion);
     const submitting = useRef(false);
     const blocked = disabled || saving;
     const mismoActor = meProfile?.id != null && meProfile.id === ejecucion.enviadaPor?.id;
     const puedeRevisar = permitirRevision && Boolean(onUpdated) && nivelRevision >= 2
         && meProfile?.id != null && !mismoActor && ejecucion.estado === "PENDIENTE_REVISION";
+    const cambioRecibido = recibida.id !== ejecucion.id || recibida.version !== ejecucion.version || recibida.estado !== ejecucion.estado;
+    const motivoObsoleto = cambioRecibido && motivo !== "";
+
+    if (cambioRecibido && motivo === "" && !saving && !submitting.current) {
+        setRecibida(ejecucion);
+        setError(null);
+    }
 
     const revisar = async (aprobar: boolean) => {
-        if (!puedeRevisar || disabled || !motivo.trim() || submitting.current) return;
+        if (!puedeRevisar || disabled || motivoObsoleto || !motivo.trim() || submitting.current) return;
         submitting.current = true;
         setSaving(true);
         onBusyChange?.(true);
         setError(null);
         try {
             const updated = await revisarDespeje(ejecucion.id, ejecucion.version, aprobar, motivo.trim());
+            setRecibida(updated);
             setMotivo("");
             onDirtyChange?.(false);
             onUpdated?.(updated);
@@ -57,6 +66,7 @@ export default function DespejeLineaDetalle({ ejecucion, permitirRevision = fals
                 <Heading size="sm">Despeje #{ejecucion.id} · intento {ejecucion.intento}</Heading>
                 <Badge colorPalette={ejecucion.estado === "APROBADA" || ejecucion.estado === "UTILIZADA" ? "green" : ejecucion.estado === "RECHAZADA" || ejecucion.estado === "INVALIDADA" ? "red" : "orange"}>{ejecucion.estado.replace(/_/g, " ")}</Badge>
             </HStack>
+            <Text fontSize="sm" fontWeight="semibold">Plantilla: {ejecucion.familiaNombre ?? ejecucion.plantilla.familiaNombre ?? ejecucion.plantilla.nombre}</Text>
             <SimpleGrid columns={{ base: 1, md: 2 }} gap={3} fontSize="sm">
                 <Box><Text color="app.textMuted">Área y operación</Text><Text>{ejecucion.areaNombre} · {ejecucion.ordenFabricacionId != null ? `OF-${ejecucion.ordenFabricacionId}` : `OP-${ejecucion.ordenProduccionId}`}</Text></Box>
                 <Box><Text color="app.textMuted">Plantilla congelada</Text><Text>{ejecucion.plantilla.nombre} · v{ejecucion.plantilla.numero}</Text></Box>
@@ -88,9 +98,10 @@ export default function DespejeLineaDetalle({ ejecucion, permitirRevision = fals
             {ejecucion.estado === "PENDIENTE_REVISION" && <Alert.Root status="info"><Alert.Indicator />El despeje requiere revisión por otra persona autorizada antes del inicio.</Alert.Root>}
             {permitirRevision && mismoActor && ejecucion.estado === "PENDIENTE_REVISION" && <Text fontSize="sm" color="app.textMuted">La persona que envió el despeje no puede revisarlo.</Text>}
             {error && <Alert.Root status="error"><Alert.Indicator />{error}</Alert.Root>}
+            {motivoObsoleto && <Alert.Root status="warning"><Alert.Indicator /><VStack align="stretch" gap={2}><Text>El documento cambió. El motivo local se conserva, pero no se enviará sobre la nueva versión.</Text><Text whiteSpace="pre-wrap">{motivo}</Text><Button size="sm" variant="outline" alignSelf="flex-start" disabled={blocked} onClick={() => { setMotivo(""); onDirtyChange?.(false); }}>Descartar motivo local</Button></VStack></Alert.Root>}
             {puedeRevisar && <VStack align="stretch" gap={3}>
                 <Field.Root required disabled={blocked}><Field.Label>Motivo de la revisión</Field.Label><Textarea value={motivo} onChange={(event) => { setMotivo(event.target.value); onDirtyChange?.(event.target.value !== ""); }} maxLength={2000} /></Field.Root>
-                <HStack justify="flex-end" flexWrap="wrap"><Button variant="outline" disabled={blocked || !motivo.trim()} onClick={() => void revisar(false)}>Rechazar despeje</Button><Button colorPalette="teal" loading={saving} disabled={blocked || !motivo.trim()} onClick={() => void revisar(true)}>Aprobar despeje</Button></HStack>
+                <HStack justify="flex-end" flexWrap="wrap"><Button variant="outline" disabled={blocked || motivoObsoleto || !motivo.trim()} onClick={() => void revisar(false)}>Rechazar despeje</Button><Button colorPalette="teal" loading={saving} disabled={blocked || motivoObsoleto || !motivo.trim()} onClick={() => void revisar(true)}>Aprobar despeje</Button></HStack>
             </VStack>}
         </VStack>
     );

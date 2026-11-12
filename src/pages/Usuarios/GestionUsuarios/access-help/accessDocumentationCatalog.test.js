@@ -10,7 +10,7 @@ import {
 describe("catálogo de documentación de accesos", () => {
     test("cubre todos los módulos y pestañas configurables", () => {
         expect(ACCESS_DOCUMENTATION_MODULES).toHaveLength(Object.values(Modulo).length);
-        expect(ACCESS_DOCUMENTATION_MODULES.flatMap((module) => module.tabs)).toHaveLength(79);
+        expect(ACCESS_DOCUMENTATION_MODULES.flatMap((module) => module.tabs)).toHaveLength(80);
 
         for (const modulo of Object.values(Modulo)) {
             expect(ACCESS_DOCUMENTATION_CATALOG[modulo].modulo).toBe(modulo);

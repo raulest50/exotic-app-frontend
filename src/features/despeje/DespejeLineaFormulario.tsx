@@ -11,6 +11,7 @@ interface Props {
     disabled?: boolean;
     onBusyChange?: (busy: boolean) => void;
     onDirtyChange?: (dirty: boolean) => void;
+    nuevoIntentoDisabled?: boolean;
 }
 
 interface RespuestaDraft {
@@ -30,8 +31,9 @@ function crearRespuestas(ejecucion: EjecucionDespeje): Record<number, RespuestaD
     }));
 }
 
-export default function DespejeLineaFormulario({ ejecucion: initial, onUpdated, onNuevoIntento, disabled = false, onBusyChange, onDirtyChange }: Props) {
+export default function DespejeLineaFormulario({ ejecucion: initial, onUpdated, onNuevoIntento, disabled = false, onBusyChange, onDirtyChange, nuevoIntentoDisabled = false }: Props) {
     const [ejecucion, setEjecucion] = useState(initial);
+    const [recibida, setRecibida] = useState(initial);
     const [respuestas, setRespuestas] = useState(() => crearRespuestas(initial));
     const [confirmaAntecedente, setConfirmaAntecedente] = useState(initial.confirmaAntecedenteDesconocido);
     const [observacionAntecedente, setObservacionAntecedente] = useState(initial.observacionAntecedente ?? "");
@@ -45,6 +47,21 @@ export default function DespejeLineaFormulario({ ejecucion: initial, onUpdated, 
     const submitting = useRef(false);
     const blocked = disabled || saving;
 
+    const cambioRecibido = recibida.id !== initial.id || recibida.version !== initial.version || recibida.estado !== initial.estado;
+    // No reconocer un snapshot pendiente hasta poder aplicarlo sin perder cambios locales.
+    if (cambioRecibido && !dirty && !saving && !submitting.current
+        && (initial.id !== ejecucion.id || initial.version >= ejecucion.version)) {
+        setRecibida(initial);
+        setEjecucion(initial);
+        setRespuestas(crearRespuestas(initial));
+        setConfirmaAntecedente(initial.confirmaAntecedenteDesconocido);
+        setObservacionAntecedente(initial.observacionAntecedente ?? "");
+        setObservaciones(initial.observaciones ?? "");
+        setErrors([]);
+        setMessage(null);
+        setConfirmarRecarga(false);
+    }
+
     const cambiarDirty = (value: boolean) => {
         setDirty(value);
         onDirtyChange?.(value);
@@ -56,6 +73,8 @@ export default function DespejeLineaFormulario({ ejecucion: initial, onUpdated, 
     };
 
     const actualizar = (updated: EjecucionDespeje) => {
+        // El eco de una escritura propia no es una recarga externa.
+        setRecibida(updated);
         setEjecucion(updated);
         onUpdated(updated);
     };
@@ -151,6 +170,7 @@ export default function DespejeLineaFormulario({ ejecucion: initial, onUpdated, 
             {ejecucion.estado === "BORRADOR" ? <>
                 <Box bg="app.surfaceSubtle" borderWidth="1px" borderRadius="md" p={4}>
                     <Heading size="sm">Despeje de {ejecucion.areaNombre}</Heading>
+                    <Text fontSize="sm" fontWeight="semibold">Plantilla: {ejecucion.familiaNombre ?? ejecucion.plantilla.familiaNombre ?? ejecucion.plantilla.nombre}</Text>
                     <Text fontSize="sm">{ejecucion.ordenFabricacionId != null ? `OF-${ejecucion.ordenFabricacionId}` : `OP-${ejecucion.ordenProduccionId}`} · {ejecucion.productoActualNombre ?? ejecucion.productoActualId} · Lote {ejecucion.loteActualNumero}</Text>
                     <Text fontSize="sm">Anterior: {ejecucion.antecedenteConocido ? `${ejecucion.productoAnteriorNombre ?? ejecucion.productoAnteriorId ?? "Sin producto anterior"} · ${ejecucion.loteAnteriorNumero ?? "Sin lote anterior"}` : "Antecedente desconocido"}</Text>
                     <Text fontSize="sm">{ejecucion.plantilla.nombre} · v{ejecucion.plantilla.numero} · Intento {ejecucion.intento}</Text>
@@ -176,7 +196,7 @@ export default function DespejeLineaFormulario({ ejecucion: initial, onUpdated, 
                 <Field.Root disabled={blocked}><Field.Label>Observaciones del despeje</Field.Label><Textarea value={observaciones} onChange={(event) => { setObservaciones(event.target.value); cambiarDirty(true); }} maxLength={5000} /></Field.Root>
                 <HStack justify="flex-end" flexWrap="wrap"><Button variant="outline" disabled={blocked} onClick={() => void guardar(false)}>Guardar borrador</Button><Button colorPalette="teal" loading={saving} disabled={blocked} onClick={() => void guardar(true)}>Guardar y enviar despeje</Button></HStack>
             </> : <DespejeLineaDetalle key={`${ejecucion.id}-${detalleLoad}`} ejecucion={ejecucion} permitirRevision disabled={blocked} onUpdated={actualizar} onBusyChange={(value) => { submitting.current = value; setSaving(value); onBusyChange?.(value); }} onDirtyChange={cambiarDirty} />}
-            <HStack flexWrap="wrap"><Button size="sm" variant="outline" disabled={blocked} onClick={() => void recargar()}>Recargar desde el servidor</Button>{["RECHAZADA", "INVALIDADA"].includes(ejecucion.estado) && <Button size="sm" variant="outline" disabled={blocked} onClick={onNuevoIntento}>Preparar nuevo intento</Button>}</HStack>
+            <HStack flexWrap="wrap"><Button size="sm" variant="outline" disabled={blocked} onClick={() => void recargar()}>Recargar desde el servidor</Button>{["RECHAZADA", "INVALIDADA"].includes(ejecucion.estado) && <Button size="sm" variant="outline" disabled={blocked || nuevoIntentoDisabled} onClick={onNuevoIntento}>Preparar nuevo intento</Button>}</HStack>
             {confirmarRecarga && <Alert.Root status="warning"><Alert.Indicator /><VStack align="stretch" gap={2}><Text>Recargar descartará los cambios locales sin guardar.</Text><HStack flexWrap="wrap"><Button size="sm" variant="outline" disabled={blocked} onClick={() => setConfirmarRecarga(false)}>Conservar cambios</Button><Button size="sm" variant="outline" disabled={blocked} onClick={() => void recargar(true)}>Descartar y recargar</Button></HStack></VStack></Alert.Root>}
             {ejecucion.estado === "BORRADOR" && <Text fontSize="xs" color="app.textMuted">Recargar sustituye los cambios locales por el último borrador guardado.</Text>}
         </VStack>

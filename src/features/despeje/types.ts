@@ -3,6 +3,17 @@ export type TipoItemDespeje = "SI_NO_NA" | "NUMERO";
 export type RespuestaDespeje = "SI" | "NO" | "NA";
 export type EstadoDespeje = "BORRADOR" | "PENDIENTE_REVISION" | "APROBADA" | "RECHAZADA" | "INVALIDADA" | "UTILIZADA";
 
+export interface FamiliaDespeje {
+    id: number;
+    areaId: number;
+    nombre: string;
+    version: number;
+}
+
+export interface FamiliaDespejeWrite {
+    nombre: string;
+}
+
 export interface DespejeAreaConfiguracion {
     areaId: number;
     requiereDespeje: boolean;
@@ -49,9 +60,12 @@ export interface PlantillaDespeje {
     vigenteHasta: string | null;
     version: number;
     items: ItemPlantillaDespeje[];
+    familiaId: number;
+    familiaNombre: string;
 }
 
 export interface PlantillaDespejeWrite {
+    familiaId: number;
     id?: number;
     version?: number;
     nombre: string;
@@ -109,6 +123,8 @@ export interface EjecucionDespeje {
     contenidoSha256: string | null;
     version: number;
     respuestas: RespuestaItemDespeje[];
+    familiaId?: number | null;
+    familiaNombre?: string | null;
 }
 
 export interface EjecucionDespejeWrite {
@@ -123,6 +139,15 @@ export interface PrepararDespejeRequest {
     seguimientoId?: number;
     operacionId?: number;
     nuevoIntento?: boolean;
+    familiaId?: number;
+}
+
+export interface RequisitoDespeje {
+    familiaId: number;
+    familiaNombre: string;
+    listo: boolean;
+    motivo: string;
+    ejecucion: EjecucionDespeje | null;
 }
 
 export interface PreparacionDespeje {
@@ -130,5 +155,6 @@ export interface PreparacionDespeje {
     requiereRevision: boolean;
     puedeIniciar: boolean;
     motivo: string | null;
-    ejecucion: EjecucionDespeje | null;
+    requisitos: RequisitoDespeje[];
+    avisos: string[];
 }

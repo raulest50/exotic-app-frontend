@@ -6,6 +6,7 @@ import { canvasToPngFile } from "./firmaCanvasUtils";
 
 interface FirmaCanvasProps {
     disabled?: boolean;
+    canvasHeight?: number;
     onChange: (firma: FirmaVisualSeleccionada | null) => void;
     onError: (message: string) => void;
 }
@@ -13,7 +14,7 @@ interface FirmaCanvasProps {
 const CANVAS_WIDTH = 900;
 const CANVAS_HEIGHT = 300;
 
-export default function FirmaCanvas({ disabled = false, onChange, onError }: FirmaCanvasProps) {
+export default function FirmaCanvas({ disabled = false, canvasHeight = CANVAS_HEIGHT, onChange, onError }: FirmaCanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const drawingRef = useRef(false);
     const hasStrokeRef = useRef(false);
@@ -114,7 +115,7 @@ export default function FirmaCanvas({ disabled = false, onChange, onError }: Fir
                 <canvas
                     ref={canvasRef}
                     width={CANVAS_WIDTH}
-                    height={CANVAS_HEIGHT}
+                    height={canvasHeight}
                     aria-label="Área para dibujar la firma visual"
                     onPointerDown={handlePointerDown}
                     onPointerMove={handlePointerMove}

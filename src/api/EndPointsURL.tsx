@@ -206,6 +206,7 @@ export default class EndPointsURL{
     public personal_hora_extra_aprobar: string;
     public personal_hora_extra_rechazar: string;
     public personal_hora_extra_anular: string;
+    public personal_permisos: string;
 
     // carga masiva (operaciones criticas BD)
     public carga_masiva_template_inventario: string;
@@ -894,6 +895,7 @@ export default class EndPointsURL{
         this.personal_hora_extra_aprobar = `${domain}/${personal_res}/horas-extra/{id}/aprobar`;
         this.personal_hora_extra_rechazar = `${domain}/${personal_res}/horas-extra/{id}/rechazar`;
         this.personal_hora_extra_anular = `${domain}/${personal_res}/horas-extra/{id}/anular`;
+        this.personal_permisos = `${domain}/${personal_res}/permisos`;
 
         // carga masiva (operaciones criticas BD)
         this.carga_masiva_template_inventario = `${domain}/api/carga-masiva/template-inventario`;

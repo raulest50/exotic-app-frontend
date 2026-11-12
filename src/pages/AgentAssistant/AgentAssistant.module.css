@@ -85,13 +85,51 @@
   --assistant-ink: #192331;
   --assistant-blue: #145feb;
   --assistant-wine: #711449;
+  --assistant-edge-x: 24px;
+  --assistant-edge-y: 20px;
+  --assistant-bottom-gap: 0px;
   position: fixed;
   z-index: var(--chakra-z-index-popover, 1500);
-  right: max(24px, env(safe-area-inset-right));
-  bottom: max(20px, env(safe-area-inset-bottom));
+  right: max(var(--assistant-edge-x), env(safe-area-inset-right));
+  bottom: calc(max(var(--assistant-edge-y), env(safe-area-inset-bottom)) + var(--assistant-bottom-gap));
   max-width: calc(100% - 48px);
   color: var(--chakra-colors-fg, var(--assistant-ink));
   font-family: var(--chakra-fonts-body, sans-serif);
+}
+
+/* Leave space for the fixed environment badge in its shared corner. */
+.assistantAnchor[data-corner="bottom-right"] {
+  --assistant-bottom-gap: 44px;
+}
+
+.assistantAnchor[data-corner^="top"] {
+  top: max(var(--assistant-edge-y), env(safe-area-inset-top));
+  bottom: auto;
+}
+
+.assistantAnchor[data-corner$="left"] {
+  right: auto;
+  left: max(var(--assistant-edge-x), env(safe-area-inset-left));
+}
+
+.assistantAnchor[data-corner^="top"] .assistantCluster {
+  flex-direction: column-reverse;
+}
+
+.assistantAnchor[data-corner$="left"] .assistantCluster {
+  align-items: flex-start;
+}
+
+.assistantAnchor[data-corner$="left"] .mascotDock {
+  flex-direction: row-reverse;
+}
+
+.assistantAnchor[data-corner$="left"] .launcherHint {
+  text-align: left;
+}
+
+.assistantAnchor[data-dragging="true"] .launcher {
+  cursor: grabbing;
 }
 
 .assistantCluster {
@@ -123,7 +161,9 @@
   border: 0;
   border-radius: 24px;
   background: transparent;
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -170,7 +210,7 @@
   width: 380px;
   min-width: 0;
   max-width: 100%;
-  max-height: calc(100dvh - 208px);
+  max-height: calc(100dvh - 208px - var(--assistant-bottom-gap));
   overflow: hidden;
   border: 1px solid var(--chakra-colors-border, #e3e4e5);
   border-radius: 24px;
@@ -467,8 +507,8 @@
   }
 
   .assistantAnchor {
-    right: max(12px, env(safe-area-inset-right));
-    bottom: max(12px, env(safe-area-inset-bottom));
+    --assistant-edge-x: 12px;
+    --assistant-edge-y: 12px;
     max-width: calc(100% - 24px);
   }
 
@@ -477,7 +517,7 @@
   }
 
   .panel {
-    max-height: calc(100dvh - 170px);
+    max-height: calc(100dvh - 170px - var(--assistant-bottom-gap));
     border-radius: 20px;
   }
 
@@ -525,7 +565,7 @@
   }
 
   .panel {
-    max-height: calc(100dvh - 145px);
+    max-height: calc(100dvh - 145px - var(--assistant-bottom-gap));
   }
 }
 
@@ -540,7 +580,7 @@
   }
 
   .panel {
-    max-height: calc(100dvh - 80px);
+    max-height: calc(100dvh - 80px - var(--assistant-bottom-gap));
   }
 
   .panelHeader {
