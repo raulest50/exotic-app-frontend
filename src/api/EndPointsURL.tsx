@@ -376,58 +376,8 @@ export default class EndPointsURL{
         return `${this.domain}/api/super-master-directives/directives/${encodeURIComponent(nombre)}`;
     }
 
-    public getProductoById(productoId: string): string {
-        return `${this.domain}/productos/${encodeURIComponent(productoId)}`;
-    }
-
-    public biProveedorLeadTime(
-        proveedorId: string,
-        materialId: string,
-        fechaCorte?: string,
-        ventanaDias?: number
-    ): string {
-        const base = `${this.domain}/bi/proveedores/lead-time`;
-        const q = new URLSearchParams({
-            proveedorId,
-            materialId,
-        });
-        if (fechaCorte) q.set("fechaCorte", fechaCorte);
-        if (ventanaDias != null) q.set("ventanaDias", String(ventanaDias));
-        return `${base}?${q.toString()}`;
-    }
-
     public biProveedorLeadTimeKpi(proveedorId: string): string {
         return `${this.domain}/bi/proveedores/${encodeURIComponent(proveedorId)}/lead-time-kpi`;
-    }
-
-    public biMaterialLeadTimes(
-        materialId: string,
-        fechaCorte?: string,
-        ventanaDias?: number,
-        page?: number,
-        size?: number,
-        direction?: string
-    ): string {
-        const base = `${this.domain}/bi/proveedores/materiales/${encodeURIComponent(materialId)}/lead-times`;
-        const q = new URLSearchParams();
-        if (fechaCorte) q.set("fechaCorte", fechaCorte);
-        if (ventanaDias != null) q.set("ventanaDias", String(ventanaDias));
-        if (page != null) q.set("page", String(page));
-        if (size != null) q.set("size", String(size));
-        if (direction) q.set("direction", direction);
-        return `${base}?${q.toString()}`;
-    }
-
-    public biMaterialReorderPointEstimate(
-        materialId: string,
-        fechaCorte?: string,
-        ventanaDias?: number
-    ): string {
-        const base = `${this.domain}/bi/proveedores/materiales/${encodeURIComponent(materialId)}/reorder-point-estimate`;
-        const q = new URLSearchParams();
-        if (fechaCorte) q.set("fechaCorte", fechaCorte);
-        if (ventanaDias != null) q.set("ventanaDias", String(ventanaDias));
-        return q.toString() ? `${base}?${q.toString()}` : base;
     }
 
     public exportacionBackupTotalJob(jobId: string): string {

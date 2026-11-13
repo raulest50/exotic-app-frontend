@@ -605,25 +605,16 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
     [Modulo.BINTELLIGENCE]: {
         modulo: Modulo.BINTELLIGENCE,
         label: "Business Intelligence",
-        resumen: "Informes operativos, series de tiempo, personal y análisis de aprovisionamiento.",
+        resumen: "Informes operativos, análisis de personal y una pestaña reservada para trazabilidad.",
         condiciones: [
-            "Los cuatro informes principales usan permiso de pestaña; el permiso general conservado de versiones anteriores puede actuar como respaldo.",
-            "Aprovisionamiento se muestra cuando existe cualquier acceso al módulo y no exige su permiso exacto.",
+            "Las pestañas usan su permiso específico; el permiso general conservado de versiones anteriores puede actuar como respaldo.",
+            "Trazabilidad está vacía y todavía no ofrece consultas ni operaciones.",
         ],
         tabs: [
             sameScopeTab("INFORMES_DIARIOS", "Informes diarios", "Presenta indicadores y reportes diarios.", "Consultar y utilizar los informes diarios disponibles."),
             sameScopeTab("INFORMES_GLOBALES", "Informes globales", "Presenta análisis consolidados e indicadores globales.", "Consultar y utilizar los informes globales disponibles."),
-            sameScopeTab("SERIES_TIEMPO_PROYECCIONES", "Series de tiempo y proyecciones", "Presenta análisis históricos y proyecciones.", "Consultar y utilizar las series de tiempo y proyecciones disponibles."),
+            sameScopeTab("TRAZABILIDAD", "Trazabilidad", "Reserva una pestaña para las funciones de trazabilidad; actualmente está vacía.", "Abrir la pestaña de Trazabilidad, actualmente sin contenido."),
             sameScopeTab("PERSONAL", "Personal", "Presenta indicadores y análisis relacionados con el personal.", "Consultar y utilizar los análisis de personal disponibles."),
-            sameScopeTab(
-                "APROVISIONAMIENTO",
-                "Aprovisionamiento",
-                "Analiza lead time y aprovisionamiento para combinaciones de material y proveedor.",
-                "Seleccionar materiales y proveedores y consultar los análisis de aprovisionamiento disponibles.",
-                4,
-                undefined,
-                ["El nivel mostrado en la pantalla corresponde al máximo del módulo, pero actualmente no habilita acciones adicionales."],
-            ),
         ],
     },
     [Modulo.OPERACIONES_CRITICAS_BD]: {

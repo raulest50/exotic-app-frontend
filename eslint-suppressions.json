@@ -147,16 +147,6 @@
       "count": 3
     }
   },
-  "src/pages/Bintelligence/AprovisionamientoTab/ReorderPointView.tsx": {
-    "react-hooks/exhaustive-deps": {
-      "count": 1
-    }
-  },
-  "src/pages/Bintelligence/AprovisionamientoTab/types.ts": {
-    "@typescript-eslint/no-empty-object-type": {
-      "count": 1
-    }
-  },
   "src/pages/Bintelligence/InformeGlobalUi.tsx": {
     "react-refresh/only-export-components": {
       "count": 8

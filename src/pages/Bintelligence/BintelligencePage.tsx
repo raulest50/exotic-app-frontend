@@ -9,15 +9,13 @@ import {
 import MyHeader from "../../components/MyHeader.tsx";
 import { my_style_tab } from "../../styles/styles_general.tsx";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
-import { moduleAccessRule, tabAccessRule } from "../../auth/accessHelpers.ts";
+import { tabAccessRule } from "../../auth/accessHelpers.ts";
 import { useAccessSnapshot } from "../../auth/usePermissions";
 import type { AccessRule } from "../../auth/accessModel.ts";
 
 const InformesDiariosTab = lazy(() => import("./InformesDiariosTab/InformesDiariosTab.tsx"));
 const InformesGlobalesTab = lazy(() => import("./InformesGlobalesTab.tsx"));
-const TimeSeriesTab = lazy(() => import("./TimeSeriesTab.tsx"));
 const PersonalBiTab = lazy(() => import("./PersonalBiTab/PersonalBiTab.tsx"));
-const AprovisionamientoTab = lazy(() => import("./AprovisionamientoTab/AprovisionamientoTab.tsx"));
 
 function TabLoadingFallback() {
     return (
@@ -33,14 +31,8 @@ export default function BintelligencePage() {
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
         { key: "informes-diarios", label: "Informes Diarios", render: () => <InformesDiariosTab />, accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "INFORMES_DIARIOS", 1) },
         { key: "informes-globales", label: "Informes Globales", render: () => <InformesGlobalesTab />, accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "INFORMES_GLOBALES", 1) },
-        { key: "series-tiempo", label: "Series De Tiempo y Proyecciones", render: () => <TimeSeriesTab />, accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "SERIES_TIEMPO_PROYECCIONES", 1) },
+        { key: "trazabilidad", label: "Trazabilidad", render: () => <></>, accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "TRAZABILIDAD", 1) },
         { key: "personal", label: "Personal", render: () => <PersonalBiTab />, accesoValido: tabAccessRule(Modulo.BINTELLIGENCE, "PERSONAL", 1) },
-        {
-            key: "aprovisionamiento",
-            label: "Aprovisionamiento",
-            render: () => <AprovisionamientoTab />,
-            accesoValido: moduleAccessRule(Modulo.BINTELLIGENCE, 1),
-        },
     ];
 
     const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));
