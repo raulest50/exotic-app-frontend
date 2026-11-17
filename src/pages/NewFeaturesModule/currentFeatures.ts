@@ -1,3 +1,5 @@
+import productosModificacionesGuia from "./assets/productos-modificaciones-guia.png";
+
 export type NewFeatureAccess =
     | { kind: "home" }
     | { kind: "area" }
@@ -63,6 +65,11 @@ export const currentFeatures: readonly NewFeature[] = [
         access: {
             kind: "module", module: "PRODUCTOS", tabId: "MODIFICACIONES_PRODUCTOS", minLevel: 3,
             requiredTabs: [{ tabId: "PROCESS_DESIGNER", minLevel: 2 }],
+        },
+        image: {
+            src: productosModificacionesGuia,
+            alt: "Guía de Productos: 1 señala Básicos, 2 Modificaciones y 3 el botón Modificar en Process Designer v2. Datos de demostración.",
+            caption: "1 Básicos → 2 Modificaciones → Ver Detalle → 3 Modificar en Process Designer v2. Guía anotada basada en una captura con datos de demostración.",
         },
     },
     {

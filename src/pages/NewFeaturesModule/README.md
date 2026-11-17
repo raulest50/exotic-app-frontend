@@ -40,4 +40,13 @@ con `access.kind: "area"`; no necesita modificar ese panel.
 - Catálogo revisado el 2026-11-17: cambios de usuario de los cuatro commits frontend
   `72fb3fc`, `bc5b92f`, `aeff8a3`, `66c7772`. Se omiten ajustes internos y pantallas vacías.
   La historia aislada usa ejemplos propios; el catálogo real es `currentFeatures.ts`.
+- Imágenes: capturar componentes reales en navegador oculto con datos ficticios,
+  sin escritorio, cuentas personales ni escrituras de negocio. Conservar origen y
+  guía numerada en `assets/`; revisar que la edición no cambie textos ni controles.
+  La captura de Productos usa API/sesión en memoria y datos de demostración;
+  acredita la interfaz, no una prueba integrada del backend. Recorrido:
+  Básicos → Modificaciones → buscar → Ver Detalle → Modificar en Process Designer v2.
+  `productos-modificaciones-captura.jpg` es el origen; `productos-modificaciones-guia.png`
+  es la guía editada con imagegen. El JPG original conserva la evidencia de pruebas.
+  Renovar capturas solo cuando el usuario lo solicite, junto con el catálogo.
 - Gaphor: no había un diagrama específico; cualquier representación nueva es manual.
