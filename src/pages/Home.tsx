@@ -54,7 +54,6 @@ export default function Home() {
     const { colorMode, toggleColorMode } = useColorMode();
     const { loading: directivesLoading, getBooleanDirective } = useMasterDirectives();
 
-    const versionBgColor = useColorModeValue("purple.200", "purple.600");
     const userBgColor = useColorModeValue("green.200", "green.600");
 
     useEffect(() => {
@@ -125,21 +124,6 @@ export default function Home() {
                 </Heading>
                 <Flex gap={2} wrap="wrap" justify={{ base: "flex-start", md: "flex-end" }} align="center">
                     <NewFeaturesButton />
-                    <Box
-                        transform={{ base: "none", sm: "skewX(-20deg)" }}
-                        px={{ base: 2, md: "1em" }}
-                        py={{ base: 1, md: 0 }}
-                        backgroundColor={versionBgColor}
-                        alignContent="center"
-                        borderRadius={{ base: "md", sm: 0 }}
-                        maxW="full"
-                        overflow="hidden"
-                    >
-                        <Box transform={{ base: "none", sm: "skewX(10deg)" }}>
-                            <SplitText text="Version: 3.0" fontSize={{ base: "sm", md: "md", lg: "xl" }} />
-                        </Box>
-                    </Box>
-
                     <Box
                         transform={{ base: "none", sm: "skewX(-20deg)" }}
                         px={{ base: 2, md: "1em" }}
