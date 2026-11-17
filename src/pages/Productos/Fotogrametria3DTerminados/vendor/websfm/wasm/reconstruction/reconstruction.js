@@ -1,0 +1,830 @@
+/* @ts-self-types="./reconstruction.d.ts" */
+
+/**
+ * The points every camera may observe, held for the searches of one extension run.
+ */
+export class GuidedSearch {
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        GuidedSearchFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_guidedsearch_free(ptr, 0);
+    }
+    /**
+     * `pos`: x, y, z per point; `ref_start`/`refs`: each point's reference descriptors
+     * (128 bytes each; n_points + 1 offsets, in descriptors); `view_start`/`view_img`:
+     * the images that already observe each point; `cell_start`/`cell_pts`: the points
+     * of each cull cell, ascending. `tau2`: the squared distance threshold; `ratio2`:
+     * the squared ratio the best must beat the runner-up by.
+     * @param {Float64Array} pos
+     * @param {Uint32Array} ref_start
+     * @param {Uint8Array} refs
+     * @param {Uint32Array} view_start
+     * @param {Uint32Array} view_img
+     * @param {Uint32Array} cell_start
+     * @param {Uint32Array} cell_pts
+     * @param {number} gate_px
+     * @param {number} tau2
+     * @param {number} ratio2
+     */
+    constructor(pos, ref_start, refs, view_start, view_img, cell_start, cell_pts, gate_px, tau2, ratio2) {
+        const ptr0 = passArrayF64ToWasm0(pos, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArray32ToWasm0(ref_start, wasm.__wbindgen_malloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passArray8ToWasm0(refs, wasm.__wbindgen_malloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ptr3 = passArray32ToWasm0(view_start, wasm.__wbindgen_malloc);
+        const len3 = WASM_VECTOR_LEN;
+        const ptr4 = passArray32ToWasm0(view_img, wasm.__wbindgen_malloc);
+        const len4 = WASM_VECTOR_LEN;
+        const ptr5 = passArray32ToWasm0(cell_start, wasm.__wbindgen_malloc);
+        const len5 = WASM_VECTOR_LEN;
+        const ptr6 = passArray32ToWasm0(cell_pts, wasm.__wbindgen_malloc);
+        const len6 = WASM_VECTOR_LEN;
+        const ret = wasm.guidedsearch_new(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6, gate_px, tau2, ratio2);
+        this.__wbg_ptr = ret;
+        GuidedSearchFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * Search a group of cameras. Per camera c: `imgs[c]`, its image index; `p[CAM_STRIDE·c..]`,
+     * R (row-major), t, fx, fy, cx, cy; `kp_start`, its keypoints in `xy` (n_cams + 1
+     * offsets, in keypoints); `desc_start`, its descriptors in `desc` (in bytes; a
+     * keypoint past the camera's share has none); `used`, 1 per keypoint already in a
+     * track; `cc_start`/`cc`, the cull cells it may see. Returns [windows, then
+     * (point, camera, keypoint, squared distance) per proposal], cameras in order.
+     * @param {Uint32Array} imgs
+     * @param {Float64Array} p
+     * @param {Uint32Array} kp_start
+     * @param {Float64Array} xy
+     * @param {Uint32Array} desc_start
+     * @param {Uint8Array} desc
+     * @param {Uint8Array} used
+     * @param {Uint32Array} cc_start
+     * @param {Uint32Array} cc
+     * @returns {Float64Array}
+     */
+    search(imgs, p, kp_start, xy, desc_start, desc, used, cc_start, cc) {
+        const ptr0 = passArray32ToWasm0(imgs, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArrayF64ToWasm0(p, wasm.__wbindgen_malloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passArray32ToWasm0(kp_start, wasm.__wbindgen_malloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ptr3 = passArrayF64ToWasm0(xy, wasm.__wbindgen_malloc);
+        const len3 = WASM_VECTOR_LEN;
+        const ptr4 = passArray32ToWasm0(desc_start, wasm.__wbindgen_malloc);
+        const len4 = WASM_VECTOR_LEN;
+        const ptr5 = passArray8ToWasm0(desc, wasm.__wbindgen_malloc);
+        const len5 = WASM_VECTOR_LEN;
+        const ptr6 = passArray8ToWasm0(used, wasm.__wbindgen_malloc);
+        const len6 = WASM_VECTOR_LEN;
+        const ptr7 = passArray32ToWasm0(cc_start, wasm.__wbindgen_malloc);
+        const len7 = WASM_VECTOR_LEN;
+        const ptr8 = passArray32ToWasm0(cc, wasm.__wbindgen_malloc);
+        const len8 = WASM_VECTOR_LEN;
+        const ret = wasm.guidedsearch_search(this.__wbg_ptr, ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6, ptr7, len7, ptr8, len8);
+        var v10 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+        return v10;
+    }
+}
+if (Symbol.dispose) GuidedSearch.prototype[Symbol.dispose] = GuidedSearch.prototype.free;
+
+/**
+ * Bundle adjustment by sparse Levenberg–Marquardt with the Schur complement.
+ *
+ * Jointly refines every camera pose (6-DOF: left-perturbed so(3) rotation +
+ * translation) and every 3D point, and — when `refine_mode > 0` — a small set of
+ * shared per-sensor intrinsic parameters (self-calibration). Points are always
+ * eliminated by the Schur complement; the reduced system holds the camera poses
+ * plus the intrinsic groups, stored block-sparse (a camera couples only with the
+ * cameras it shares points with) and solved by block-Jacobi PCG when large, dense
+ * Cholesky when small (`solve_reduced_with`, `DENSE_MAX_N`). Huber robustification (an
+ * adaptive threshold tracking the residual median) keeps surviving gross
+ * mis-triangulations from dragging the solution.
+ *
+ * Intrinsic self-calibration is opt-in and modest: each sensor group carries a
+ * focal **scale** `s` (init 1, multiplying every member camera's fx/fy) and,
+ * for `refine_mode == 2`, shared principal-point offsets `dcx, dcy`. Modelling
+ * the focal as a scale (not an absolute) preserves any per-camera differences in
+ * the seed intrinsics while still sharing one degree of freedom across the group.
+ *
+ * GCP support: `anchor_flat`/`anchor_weight` optionally pull specific 3D points
+ * toward a known target position (e.g. a GCP triangulated in this same SfM
+ * frame) with an extra quadratic residual `Σ_axis w_axis·(pt − target)²`. This only ever
+ * touches that point's own 3×3 block (gradient + diagonal Hessian) — no camera
+ * Jacobian, no new coupling — so it folds into the existing per-point Schur
+ * elimination for free. Empty anchor arrays reduce to today's behaviour exactly.
+ * Camera-pose support: `camera_prior_flat` optionally pulls camera centres
+ * `C = -R^T t` and rotations toward known poses in this same SfM frame. Position
+ * rows carry a full 3×3 precision matrix in solver axes: the survey's per-axis σ
+ * (E, N, Up) rotated into the SfM frame, `s²·Rᵀ·diag(1/σ²)·R`, so a vertical σ stays
+ * vertical whatever pair seeded the model. Orientation uses
+ * the tangent residual `Log(R R_target^T)` and a full 3×3 precision matrix,
+ * allowing the caller to transform per-OPK uncertainties into solver axes.
+ *
+ * # Inputs
+ * - `cameras_flat`: n_cam × 12 floats `[R(9)|t(3), …]`
+ * - `intrinsics_flat`: n_cam × 4 floats `[fx,fy,cx,cy, …]` (the seed / base K)
+ * - `pts_flat`: n_pts × 3 floats `[x,y,z, …]`
+ * - `obs_index`: n_obs × 2 u32 `[cam_i, pt_i, …]` and `obs_px`: n_obs × 2 floats
+ *   `[pixel_x, pixel_y, …]`. Indices are integers on purpose: as f32 they were exact
+ *   only to 2²⁴, so above 16.7 M points observations silently attached to the wrong
+ *   point (TODO ▸ SC-6).
+ * - `anchor_flat`: n_anchor × 4 doubles `[pt_i, target_x, target_y, target_z, …]`
+ * - `observation_weight`: n_obs × 2 inverse-variance pixel weights (X/Y);
+ *   tie points use one detection pixel (1/f², baObservations.js tieWeightOf), GCP
+ *   marks their declared pixel variances
+ * - `anchor_weight`: n_anchor × 9 floats, row-major 3×3 precision matrices
+ * - `camera_prior_flat`: n_prior × 31 floats
+ *   `[cam_i, target_x, target_y, target_z, position_precision(9),
+ *     target_R(9), orientation_precision(9), …]`, matrices row-major. An all-zero
+ *   orientation precision matrix makes the row position-only.
+ * - `max_iters`: outer LM iterations
+ * - `sensor_of_cam`: n_cam ints — per-camera sensor id (shared → shared focal);
+ *   `< 0` (or a short/empty list) ⇒ that camera is its own group
+ * - `refine_mask`: **bitmask** of the shared per-sensor intrinsics to self-calibrate:
+ *   1 = focal scale s, 2 = principal point (dcx,dcy), 4 = radial k1, 8 = k2, 16 = k3,
+ *   32 = k4 (fisheye only). 0 ⇒ poses+points only. The per-group param vector is the
+ *   ordered subset `[s?, dcx?, dcy?, k1?, k2?, k3?, k4?, τ?]` (kdim ≤ 8; τ: bundle_adjust_rs). fy stays locked
+ *   to fx (single scale). A coefficient a group's lens does not have (k4 on a Brown
+ *   group, k3 on a two-term fisheye) is held at its seed.
+ * - `fixed_cam`: n_cam bytes, non-zero ⇒ that camera's pose is held fixed (local BA:
+ *   the cameras outside the window keep their observations as constraints but are
+ *   not variables). Empty ⇒ every camera is free, the original behaviour exactly.
+ * - `solver_flat`: solver policy `[pcg_min_n, rel_tol, max_iter, accept_partial,
+ *   function_tol, precond, direct, warm, huber]`; empty / NaN slots ⇒
+ *   `SolverOpts::DEFAULT` (see there).
+ * - `fisheye_flat`: n_cam × 5 floats `[terms, k1, k2, k3, k4, …]`. `terms` 0 ⇒ the
+ *   camera is pinhole (+ the Brown self-cal residual) and its observations are in the
+ *   undistorted frame; its k1…k3 slots seed that residual (the app passes zeros; the
+ *   BAL bench, examples/bal.rs, the problems' own k1, k2); `terms` 1–4 ⇒ a Kannala–Brandt fisheye with those seed
+ *   coefficients, observed in the pixels the lens recorded, of which the first `terms`
+ *   may be self-calibrated (the k bits then refine the fisheye's own polynomial).
+ *   Cameras sharing a sensor group must share a lens. Empty ⇒ every camera pinhole,
+ *   the original behaviour exactly.
+ *
+ * # Output
+ * `[cameras_flat(n_cam×12), pts_flat(n_pts×3), intrinsics_flat(n_cam×8),
+ *   cost_before, cost_after, anchor_rms_after, camera_prior_rms_after,
+ *   solver stats (BA_STATS_LEN), cost_trace…]` — the returned
+ * intrinsics are the **refined** effective K per camera as `[fx,fy,cx,cy,k1,k2,k3,k4]`
+ * — for a pinhole camera the self-calibrated Brown residual (0 for the bits not set
+ * in `refine_mask`, k4 always 0), for a fisheye camera its full refined Kannala–Brandt
+ * coefficients (the seed when nothing was refined); cost_before/cost_after are RMS reprojection error in
+ * pixels (anchors do not affect them); anchor_rms_after is the RMS anchor
+ * residual in the caller's world units, and camera_prior_rms_after is the RMS
+ * camera-centre residual (both 0 when their respective prior list is empty).
+ * @param {Float32Array} cameras_flat
+ * @param {Float32Array} intrinsics_flat
+ * @param {Float32Array} pts_flat
+ * @param {Uint32Array} obs_index
+ * @param {Float32Array} obs_px
+ * @param {Float32Array} observation_weight
+ * @param {Float64Array} anchor_flat
+ * @param {Float32Array} anchor_weight
+ * @param {Float32Array} camera_prior_flat
+ * @param {number} max_iters
+ * @param {Int32Array} sensor_of_cam
+ * @param {number} refine_mask
+ * @param {Float32Array} solver_flat
+ * @param {Uint8Array} fixed_cam
+ * @param {Float32Array} fisheye_flat
+ * @returns {Float32Array}
+ */
+export function bundle_adjust(cameras_flat, intrinsics_flat, pts_flat, obs_index, obs_px, observation_weight, anchor_flat, anchor_weight, camera_prior_flat, max_iters, sensor_of_cam, refine_mask, solver_flat, fixed_cam, fisheye_flat) {
+    const ptr0 = passArrayF32ToWasm0(cameras_flat, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArrayF32ToWasm0(intrinsics_flat, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passArrayF32ToWasm0(pts_flat, wasm.__wbindgen_malloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passArray32ToWasm0(obs_index, wasm.__wbindgen_malloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ptr4 = passArrayF32ToWasm0(obs_px, wasm.__wbindgen_malloc);
+    const len4 = WASM_VECTOR_LEN;
+    const ptr5 = passArrayF32ToWasm0(observation_weight, wasm.__wbindgen_malloc);
+    const len5 = WASM_VECTOR_LEN;
+    const ptr6 = passArrayF64ToWasm0(anchor_flat, wasm.__wbindgen_malloc);
+    const len6 = WASM_VECTOR_LEN;
+    const ptr7 = passArrayF32ToWasm0(anchor_weight, wasm.__wbindgen_malloc);
+    const len7 = WASM_VECTOR_LEN;
+    const ptr8 = passArrayF32ToWasm0(camera_prior_flat, wasm.__wbindgen_malloc);
+    const len8 = WASM_VECTOR_LEN;
+    const ptr9 = passArray32ToWasm0(sensor_of_cam, wasm.__wbindgen_malloc);
+    const len9 = WASM_VECTOR_LEN;
+    const ptr10 = passArrayF32ToWasm0(solver_flat, wasm.__wbindgen_malloc);
+    const len10 = WASM_VECTOR_LEN;
+    const ptr11 = passArray8ToWasm0(fixed_cam, wasm.__wbindgen_malloc);
+    const len11 = WASM_VECTOR_LEN;
+    const ptr12 = passArrayF32ToWasm0(fisheye_flat, wasm.__wbindgen_malloc);
+    const len12 = WASM_VECTOR_LEN;
+    const ret = wasm.bundle_adjust(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6, ptr7, len7, ptr8, len8, max_iters, ptr9, len9, refine_mask, ptr10, len10, ptr11, len11, ptr12, len12);
+    var v14 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v14;
+}
+
+/**
+ * `bundle_adjust_rs` for the cameras of a rig (plan-after-0.7 ▸ MSP-1): a multispectral
+ * camera's lenses, triggered together. The photos of one capture share one pose, the
+ * capture's (its reference lens's), and each lens sees from a fixed offset to it:
+ * x_cam = R_o·(R_c·X + t_c) + t_o, the offset the same for every capture. The solver
+ * keeps one pose block per capture; with refine bit 128 each sensor group's offset
+ * rotation is refined (three slots after τ, ω: R_o = Exp(ω)·R_o⁰), its lever arm t_o
+ * kept (a few centimetres, too short to resolve from the photos). A group none of
+ * whose cameras has an offset (the reference lens, or photos outside the rig) has no ω.
+ *
+ * - `capture_of_cam`: n_cam ints; cameras with the same non-negative value share a pose
+ *   block, a negative value (or a short list) is a pose of its own.
+ * - `offset_flat`: n_cam × 13 floats `[has, R_o(9), t_o(3), …]`; `has` 0 (or a short
+ *   list) ⇒ no offset: the camera's pose is its capture's.
+ *
+ * A capture's pose starts from a camera without an offset where it has one, else from
+ * its first camera with the offset taken off; it is held fixed only when every camera
+ * in it is. A camera-centre prior acts on the capture's pose: give one per capture.
+ * Output: `bundle_adjust_rs`'s, each camera's pose being its composed pose.
+ * @param {Float32Array} cameras_flat
+ * @param {Float32Array} intrinsics_flat
+ * @param {Float32Array} pts_flat
+ * @param {Uint32Array} obs_index
+ * @param {Float32Array} obs_px
+ * @param {Float32Array} observation_weight
+ * @param {Float64Array} anchor_flat
+ * @param {Float32Array} anchor_weight
+ * @param {Float32Array} camera_prior_flat
+ * @param {number} max_iters
+ * @param {Int32Array} sensor_of_cam
+ * @param {number} refine_mask
+ * @param {Float32Array} solver_flat
+ * @param {Uint8Array} fixed_cam
+ * @param {Float32Array} fisheye_flat
+ * @param {Float32Array} rs_flat
+ * @param {Int32Array} capture_of_cam
+ * @param {Float32Array} offset_flat
+ * @returns {Float32Array}
+ */
+export function bundle_adjust_rig(cameras_flat, intrinsics_flat, pts_flat, obs_index, obs_px, observation_weight, anchor_flat, anchor_weight, camera_prior_flat, max_iters, sensor_of_cam, refine_mask, solver_flat, fixed_cam, fisheye_flat, rs_flat, capture_of_cam, offset_flat) {
+    const ptr0 = passArrayF32ToWasm0(cameras_flat, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArrayF32ToWasm0(intrinsics_flat, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passArrayF32ToWasm0(pts_flat, wasm.__wbindgen_malloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passArray32ToWasm0(obs_index, wasm.__wbindgen_malloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ptr4 = passArrayF32ToWasm0(obs_px, wasm.__wbindgen_malloc);
+    const len4 = WASM_VECTOR_LEN;
+    const ptr5 = passArrayF32ToWasm0(observation_weight, wasm.__wbindgen_malloc);
+    const len5 = WASM_VECTOR_LEN;
+    const ptr6 = passArrayF64ToWasm0(anchor_flat, wasm.__wbindgen_malloc);
+    const len6 = WASM_VECTOR_LEN;
+    const ptr7 = passArrayF32ToWasm0(anchor_weight, wasm.__wbindgen_malloc);
+    const len7 = WASM_VECTOR_LEN;
+    const ptr8 = passArrayF32ToWasm0(camera_prior_flat, wasm.__wbindgen_malloc);
+    const len8 = WASM_VECTOR_LEN;
+    const ptr9 = passArray32ToWasm0(sensor_of_cam, wasm.__wbindgen_malloc);
+    const len9 = WASM_VECTOR_LEN;
+    const ptr10 = passArrayF32ToWasm0(solver_flat, wasm.__wbindgen_malloc);
+    const len10 = WASM_VECTOR_LEN;
+    const ptr11 = passArray8ToWasm0(fixed_cam, wasm.__wbindgen_malloc);
+    const len11 = WASM_VECTOR_LEN;
+    const ptr12 = passArrayF32ToWasm0(fisheye_flat, wasm.__wbindgen_malloc);
+    const len12 = WASM_VECTOR_LEN;
+    const ptr13 = passArrayF32ToWasm0(rs_flat, wasm.__wbindgen_malloc);
+    const len13 = WASM_VECTOR_LEN;
+    const ptr14 = passArray32ToWasm0(capture_of_cam, wasm.__wbindgen_malloc);
+    const len14 = WASM_VECTOR_LEN;
+    const ptr15 = passArrayF32ToWasm0(offset_flat, wasm.__wbindgen_malloc);
+    const len15 = WASM_VECTOR_LEN;
+    const ret = wasm.bundle_adjust_rig(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6, ptr7, len7, ptr8, len8, max_iters, ptr9, len9, refine_mask, ptr10, len10, ptr11, len11, ptr12, len12, ptr13, len13, ptr14, len14, ptr15, len15);
+    var v17 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v17;
+}
+
+/**
+ * `bundle_adjust` with a rolling-shutter model (rsh, plan-after-0.7 ▸ RSH). A camera
+ * whose rows are read one after another over the readout time τ sees each row from
+ * a slightly different place: from C + τ·s·v, where v is the camera centre's velocity
+ * (model units per second) and s = (row − cy)/H the row's time from the principal row
+ * as a fraction of the readout. The solver takes the observed row for s (exact to
+ * first order) and applies the shift to the point instead: x_cam = R·(X − τ·s·v) + t,
+ * so the pose and point Jacobians keep their form and τ adds one column, −s·R·v.
+ * The pose is the one at the principal row (what the camera-centre priors constrain).
+ *
+ * - `rs_flat`: n_cam × 5 floats `[vx, vy, vz, H, τ0, …]`; H ≤ 0 (or a short list) ⇒
+ *   that camera reads all rows at once. τ0 is the readout time in seconds; with refine
+ *   bit 64 the group's τ is refined from its first camera's τ0 (the slot follows k4).
+ *
+ * Output: `bundle_adjust`'s, with n_cam floats — each camera's τ after the solve —
+ * between the solver stats and the cost trace.
+ * @param {Float32Array} cameras_flat
+ * @param {Float32Array} intrinsics_flat
+ * @param {Float32Array} pts_flat
+ * @param {Uint32Array} obs_index
+ * @param {Float32Array} obs_px
+ * @param {Float32Array} observation_weight
+ * @param {Float64Array} anchor_flat
+ * @param {Float32Array} anchor_weight
+ * @param {Float32Array} camera_prior_flat
+ * @param {number} max_iters
+ * @param {Int32Array} sensor_of_cam
+ * @param {number} refine_mask
+ * @param {Float32Array} solver_flat
+ * @param {Uint8Array} fixed_cam
+ * @param {Float32Array} fisheye_flat
+ * @param {Float32Array} rs_flat
+ * @returns {Float32Array}
+ */
+export function bundle_adjust_rs(cameras_flat, intrinsics_flat, pts_flat, obs_index, obs_px, observation_weight, anchor_flat, anchor_weight, camera_prior_flat, max_iters, sensor_of_cam, refine_mask, solver_flat, fixed_cam, fisheye_flat, rs_flat) {
+    const ptr0 = passArrayF32ToWasm0(cameras_flat, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArrayF32ToWasm0(intrinsics_flat, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passArrayF32ToWasm0(pts_flat, wasm.__wbindgen_malloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passArray32ToWasm0(obs_index, wasm.__wbindgen_malloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ptr4 = passArrayF32ToWasm0(obs_px, wasm.__wbindgen_malloc);
+    const len4 = WASM_VECTOR_LEN;
+    const ptr5 = passArrayF32ToWasm0(observation_weight, wasm.__wbindgen_malloc);
+    const len5 = WASM_VECTOR_LEN;
+    const ptr6 = passArrayF64ToWasm0(anchor_flat, wasm.__wbindgen_malloc);
+    const len6 = WASM_VECTOR_LEN;
+    const ptr7 = passArrayF32ToWasm0(anchor_weight, wasm.__wbindgen_malloc);
+    const len7 = WASM_VECTOR_LEN;
+    const ptr8 = passArrayF32ToWasm0(camera_prior_flat, wasm.__wbindgen_malloc);
+    const len8 = WASM_VECTOR_LEN;
+    const ptr9 = passArray32ToWasm0(sensor_of_cam, wasm.__wbindgen_malloc);
+    const len9 = WASM_VECTOR_LEN;
+    const ptr10 = passArrayF32ToWasm0(solver_flat, wasm.__wbindgen_malloc);
+    const len10 = WASM_VECTOR_LEN;
+    const ptr11 = passArray8ToWasm0(fixed_cam, wasm.__wbindgen_malloc);
+    const len11 = WASM_VECTOR_LEN;
+    const ptr12 = passArrayF32ToWasm0(fisheye_flat, wasm.__wbindgen_malloc);
+    const len12 = WASM_VECTOR_LEN;
+    const ptr13 = passArrayF32ToWasm0(rs_flat, wasm.__wbindgen_malloc);
+    const len13 = WASM_VECTOR_LEN;
+    const ret = wasm.bundle_adjust_rs(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6, ptr7, len7, ptr8, len8, max_iters, ptr9, len9, refine_mask, ptr10, len10, ptr11, len11, ptr12, len12, ptr13, len13);
+    var v15 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v15;
+}
+
+/**
+ * @param {Uint8Array} ref_gray
+ * @param {number} ref_w
+ * @param {number} ref_h
+ * @param {Float32Array} ref_k
+ * @param {Uint8Array} src_gray
+ * @param {Uint32Array} src_dims
+ * @param {Float32Array} src_k
+ * @param {Float32Array} src_rel
+ * @param {Uint8Array} src_mask
+ * @param {Float32Array} seed_depth
+ * @param {number} depth_min
+ * @param {number} depth_max
+ * @param {number} window
+ * @param {number} iterations
+ * @param {number} best_k
+ * @param {number} seed
+ * @param {number} perturb_start
+ * @param {number} sigma_spatial
+ * @param {number} sigma_color
+ * @param {number} view_selection
+ * @param {number} window_step
+ * @param {Float32Array} seed_normals
+ * @param {Float32Array} prior
+ * @param {number} prior_alpha
+ * @param {number} prior_gamma
+ * @param {number} prior_sig_d
+ * @param {number} prior_sig_n
+ * @param {Float32Array} src_depth
+ * @param {number} geom_weight
+ * @param {number} geom_max
+ * @returns {Float32Array}
+ */
+export function compute_depth_map(ref_gray, ref_w, ref_h, ref_k, src_gray, src_dims, src_k, src_rel, src_mask, seed_depth, depth_min, depth_max, window, iterations, best_k, seed, perturb_start, sigma_spatial, sigma_color, view_selection, window_step, seed_normals, prior, prior_alpha, prior_gamma, prior_sig_d, prior_sig_n, src_depth, geom_weight, geom_max) {
+    const ptr0 = passArray8ToWasm0(ref_gray, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArrayF32ToWasm0(ref_k, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passArray8ToWasm0(src_gray, wasm.__wbindgen_malloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passArray32ToWasm0(src_dims, wasm.__wbindgen_malloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ptr4 = passArrayF32ToWasm0(src_k, wasm.__wbindgen_malloc);
+    const len4 = WASM_VECTOR_LEN;
+    const ptr5 = passArrayF32ToWasm0(src_rel, wasm.__wbindgen_malloc);
+    const len5 = WASM_VECTOR_LEN;
+    const ptr6 = passArray8ToWasm0(src_mask, wasm.__wbindgen_malloc);
+    const len6 = WASM_VECTOR_LEN;
+    const ptr7 = passArrayF32ToWasm0(seed_depth, wasm.__wbindgen_malloc);
+    const len7 = WASM_VECTOR_LEN;
+    const ptr8 = passArrayF32ToWasm0(seed_normals, wasm.__wbindgen_malloc);
+    const len8 = WASM_VECTOR_LEN;
+    const ptr9 = passArrayF32ToWasm0(prior, wasm.__wbindgen_malloc);
+    const len9 = WASM_VECTOR_LEN;
+    const ptr10 = passArrayF32ToWasm0(src_depth, wasm.__wbindgen_malloc);
+    const len10 = WASM_VECTOR_LEN;
+    const ret = wasm.compute_depth_map(ptr0, len0, ref_w, ref_h, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6, ptr7, len7, depth_min, depth_max, window, iterations, best_k, seed, perturb_start, sigma_spatial, sigma_color, view_selection, window_step, ptr8, len8, ptr9, len9, prior_alpha, prior_gamma, prior_sig_d, prior_sig_n, ptr10, len10, geom_weight, geom_max);
+    var v12 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v12;
+}
+
+/**
+ * @param {Uint8Array} ref_gray
+ * @param {number} ref_w
+ * @param {number} ref_h
+ * @param {Float32Array} ref_k
+ * @param {Uint8Array} src_gray
+ * @param {Uint32Array} src_dims
+ * @param {Float32Array} src_k
+ * @param {Float32Array} src_rel
+ * @param {Uint8Array} src_mask
+ * @param {number} window
+ * @param {number} best_k
+ * @param {number} sigma_spatial
+ * @param {number} sigma_color
+ * @param {number} window_step
+ * @param {Float32Array} hyps
+ * @returns {Float32Array}
+ */
+export function plane_costs(ref_gray, ref_w, ref_h, ref_k, src_gray, src_dims, src_k, src_rel, src_mask, window, best_k, sigma_spatial, sigma_color, window_step, hyps) {
+    const ptr0 = passArray8ToWasm0(ref_gray, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArrayF32ToWasm0(ref_k, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passArray8ToWasm0(src_gray, wasm.__wbindgen_malloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passArray32ToWasm0(src_dims, wasm.__wbindgen_malloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ptr4 = passArrayF32ToWasm0(src_k, wasm.__wbindgen_malloc);
+    const len4 = WASM_VECTOR_LEN;
+    const ptr5 = passArrayF32ToWasm0(src_rel, wasm.__wbindgen_malloc);
+    const len5 = WASM_VECTOR_LEN;
+    const ptr6 = passArray8ToWasm0(src_mask, wasm.__wbindgen_malloc);
+    const len6 = WASM_VECTOR_LEN;
+    const ptr7 = passArrayF32ToWasm0(hyps, wasm.__wbindgen_malloc);
+    const len7 = WASM_VECTOR_LEN;
+    const ret = wasm.plane_costs(ptr0, len0, ref_w, ref_h, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6, window, best_k, sigma_spatial, sigma_color, window_step, ptr7, len7);
+    var v9 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v9;
+}
+
+/**
+ * Recover camera pose from the essential matrix E using a cheirality check.
+ *
+ * # Inputs
+ * - `pts_a`: flat N×2 pixel coords [x0,y0,x1,y1,…] for camera A
+ * - `pts_b`: flat N×2 pixel coords for camera B
+ * - `e_flat`: 9 floats, E matrix row-major
+ * - `fx,fy,cx,cy`: intrinsics of camera A (used for back-projection in cheirality)
+ *
+ * # Output
+ * `[R00…R22, tx, ty, tz]` = 12 floats (R for camera B relative to A, t unit vector),
+ * or empty Vec on failure.
+ * @param {Float32Array} pts_a
+ * @param {Float32Array} pts_b
+ * @param {Float32Array} e_flat
+ * @param {number} fx
+ * @param {number} fy
+ * @param {number} cx
+ * @param {number} cy
+ * @returns {Float32Array}
+ */
+export function recover_pose(pts_a, pts_b, e_flat, fx, fy, cx, cy) {
+    const ptr0 = passArrayF32ToWasm0(pts_a, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArrayF32ToWasm0(pts_b, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passArrayF32ToWasm0(e_flat, wasm.__wbindgen_malloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ret = wasm.recover_pose(ptr0, len0, ptr1, len1, ptr2, len2, fx, fy, cx, cy);
+    var v4 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v4;
+}
+
+/**
+ * Estimate camera pose from 3D-2D correspondences via P3P (Lambda-Twist) inside
+ * an MSAC loop, then a Gauss-Newton polish on the inliers.
+ *
+ * The minimal 3-point P3P sampler is dramatically more stable than the old
+ * 6-point DLT on near-planar / aerial scenes (the geometry that previously
+ * failed to register), MSAC scoring picks a cleaner consensus than plain inlier
+ * counting, and the analytic-Jacobian refinement drives the pose to the true
+ * minimum rather than the best minimal-sample estimate.
+ *
+ * # Inputs
+ * - `pts_3d`: flat N×3 world points `[x,y,z,…]`
+ * - `pts_2d`: flat N×2 pixel observations `[x,y,…]`
+ * - `fx,fy,cx,cy`: camera intrinsics
+ * - `ransac_thresh_px`: inlier reprojection threshold (pixels)
+ * - `max_iters`: RANSAC iterations
+ *
+ * # Output
+ * `[R00…R22, tx,ty,tz, inlier_0, inlier_1, …, inlier_N]` = 12 + N floats,
+ * or empty Vec on failure.
+ * @param {Float32Array} pts_3d
+ * @param {Float32Array} pts_2d
+ * @param {number} fx
+ * @param {number} fy
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} ransac_thresh_px
+ * @param {number} max_iters
+ * @returns {Float32Array}
+ */
+export function solve_pnp(pts_3d, pts_2d, fx, fy, cx, cy, ransac_thresh_px, max_iters) {
+    const ptr0 = passArrayF32ToWasm0(pts_3d, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArrayF32ToWasm0(pts_2d, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.solve_pnp(ptr0, len0, ptr1, len1, fx, fy, cx, cy, ransac_thresh_px, max_iters);
+    var v3 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v3;
+}
+
+/**
+ * Triangulate N point pairs via linear DLT.
+ *
+ * # Inputs
+ * - `pts_a`: flat N×2 pixel coords (normalised image coords, i.e. after K^{-1})
+ * - `pts_b`: flat N×2 pixel coords (normalised)
+ * - `p_a`: 12 floats, 3×4 projection matrix for camera A (row-major, in normalised coords)
+ * - `p_b`: 12 floats, 3×4 for camera B
+ *
+ * # Output
+ * Flat N×3 `[x,y,z, …]`. NaN triples for degenerate rows.
+ * @param {Float32Array} pts_a
+ * @param {Float32Array} pts_b
+ * @param {Float32Array} p_a
+ * @param {Float32Array} p_b
+ * @returns {Float32Array}
+ */
+export function triangulate_dlt(pts_a, pts_b, p_a, p_b) {
+    const ptr0 = passArrayF32ToWasm0(pts_a, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArrayF32ToWasm0(pts_b, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passArrayF32ToWasm0(p_a, wasm.__wbindgen_malloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passArrayF32ToWasm0(p_b, wasm.__wbindgen_malloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ret = wasm.triangulate_dlt(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
+    var v5 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v5;
+}
+
+/**
+ * Undistort the pixels of several images through one Brown bag.
+ *
+ * `xy`: every image's keypoints, [x0, y0, x1, y1, …], image after image; `starts`: the
+ * first point of each image, plus the total (n_images + 1 entries); `k`: [fx, fy, cx, cy]
+ * per image, the K each image's pixels are normalised about; `d`: [k1, k2, k3, k4, k5,
+ * k6, p1, p2]; `iters`: the Newton step cap. A point whose x is NaN (a missing
+ * keypoint) stays NaN. The images run on the thread pool in the threaded build.
+ * @param {Float64Array} xy
+ * @param {Uint32Array} starts
+ * @param {Float64Array} k
+ * @param {Float64Array} d
+ * @param {number} iters
+ * @returns {Float64Array}
+ */
+export function undistort_brown_pixels(xy, starts, k, d, iters) {
+    const ptr0 = passArrayF64ToWasm0(xy, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArray32ToWasm0(starts, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ptr2 = passArrayF64ToWasm0(k, wasm.__wbindgen_malloc);
+    const len2 = WASM_VECTOR_LEN;
+    const ptr3 = passArrayF64ToWasm0(d, wasm.__wbindgen_malloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ret = wasm.undistort_brown_pixels(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, iters);
+    var v5 = getArrayF64FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
+    return v5;
+}
+function __wbg_get_imports() {
+    const import0 = {
+        __proto__: null,
+        __wbg___wbindgen_throw_ea4887a5f8f9a9db: function(arg0, arg1) {
+            throw new Error(getStringFromWasm0(arg0, arg1));
+        },
+        __wbindgen_init_externref_table: function() {
+            const table = wasm.__wbindgen_externrefs;
+            const offset = table.grow(4);
+            table.set(0, undefined);
+            table.set(offset + 0, undefined);
+            table.set(offset + 1, null);
+            table.set(offset + 2, true);
+            table.set(offset + 3, false);
+        },
+    };
+    return {
+        __proto__: null,
+        "./reconstruction_bg.js": import0,
+    };
+}
+
+const GuidedSearchFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_guidedsearch_free(ptr, 1));
+
+function getArrayF32FromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return getFloat32ArrayMemory0().subarray(ptr / 4, ptr / 4 + len);
+}
+
+function getArrayF64FromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return getFloat64ArrayMemory0().subarray(ptr / 8, ptr / 8 + len);
+}
+
+let cachedFloat32ArrayMemory0 = null;
+function getFloat32ArrayMemory0() {
+    if (cachedFloat32ArrayMemory0 === null || cachedFloat32ArrayMemory0.byteLength === 0) {
+        cachedFloat32ArrayMemory0 = new Float32Array(wasm.memory.buffer);
+    }
+    return cachedFloat32ArrayMemory0;
+}
+
+let cachedFloat64ArrayMemory0 = null;
+function getFloat64ArrayMemory0() {
+    if (cachedFloat64ArrayMemory0 === null || cachedFloat64ArrayMemory0.byteLength === 0) {
+        cachedFloat64ArrayMemory0 = new Float64Array(wasm.memory.buffer);
+    }
+    return cachedFloat64ArrayMemory0;
+}
+
+function getStringFromWasm0(ptr, len) {
+    return decodeText(ptr >>> 0, len);
+}
+
+let cachedUint32ArrayMemory0 = null;
+function getUint32ArrayMemory0() {
+    if (cachedUint32ArrayMemory0 === null || cachedUint32ArrayMemory0.byteLength === 0) {
+        cachedUint32ArrayMemory0 = new Uint32Array(wasm.memory.buffer);
+    }
+    return cachedUint32ArrayMemory0;
+}
+
+let cachedUint8ArrayMemory0 = null;
+function getUint8ArrayMemory0() {
+    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
+        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachedUint8ArrayMemory0;
+}
+
+function passArray32ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 4, 4) >>> 0;
+    getUint32ArrayMemory0().set(arg, ptr / 4);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
+function passArray8ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 1, 1) >>> 0;
+    getUint8ArrayMemory0().set(arg, ptr / 1);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
+function passArrayF32ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 4, 4) >>> 0;
+    getFloat32ArrayMemory0().set(arg, ptr / 4);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
+function passArrayF64ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 8, 8) >>> 0;
+    getFloat64ArrayMemory0().set(arg, ptr / 8);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
+let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+cachedTextDecoder.decode();
+const MAX_SAFARI_DECODE_BYTES = 2146435072;
+let numBytesDecoded = 0;
+function decodeText(ptr, len) {
+    numBytesDecoded += len;
+    if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {
+        cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+        cachedTextDecoder.decode();
+        numBytesDecoded = len;
+    }
+    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+}
+
+let WASM_VECTOR_LEN = 0;
+
+let wasmModule, wasmInstance, wasm;
+function __wbg_finalize_init(instance, module) {
+    wasmInstance = instance;
+    wasm = instance.exports;
+    wasmModule = module;
+    cachedFloat32ArrayMemory0 = null;
+    cachedFloat64ArrayMemory0 = null;
+    cachedUint32ArrayMemory0 = null;
+    cachedUint8ArrayMemory0 = null;
+    wasm.__wbindgen_start();
+    return wasm;
+}
+
+async function __wbg_load(module, imports) {
+    if (typeof Response === 'function' && module instanceof Response) {
+        if (typeof WebAssembly.instantiateStreaming === 'function') {
+            try {
+                return await WebAssembly.instantiateStreaming(module, imports);
+            } catch (e) {
+                const validResponse = module.ok && expectedResponseType(module.type);
+
+                if (validResponse && module.headers.get('Content-Type') !== 'application/wasm') {
+                    console.warn("`WebAssembly.instantiateStreaming` failed because your server does not serve Wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);
+
+                } else { throw e; }
+            }
+        }
+
+        const bytes = await module.arrayBuffer();
+        return await WebAssembly.instantiate(bytes, imports);
+    } else {
+        const instance = await WebAssembly.instantiate(module, imports);
+
+        if (instance instanceof WebAssembly.Instance) {
+            return { instance, module };
+        } else {
+            return instance;
+        }
+    }
+
+    function expectedResponseType(type) {
+        switch (type) {
+            case 'basic': case 'cors': case 'default': return true;
+        }
+        return false;
+    }
+}
+
+function initSync(module) {
+    if (wasm !== undefined) return wasm;
+
+
+    if (module !== undefined) {
+        if (Object.getPrototypeOf(module) === Object.prototype) {
+            ({module} = module)
+        } else {
+            console.warn('using deprecated parameters for `initSync()`; pass a single object instead')
+        }
+    }
+
+    const imports = __wbg_get_imports();
+    if (!(module instanceof WebAssembly.Module)) {
+        module = new WebAssembly.Module(module);
+    }
+    const instance = new WebAssembly.Instance(module, imports);
+    return __wbg_finalize_init(instance, module);
+}
+
+async function __wbg_init(module_or_path) {
+    if (wasm !== undefined) return wasm;
+
+
+    if (module_or_path !== undefined) {
+        if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
+            ({module_or_path} = module_or_path)
+        } else {
+            console.warn('using deprecated parameters for the initialization function; pass a single object instead')
+        }
+    }
+
+    if (module_or_path === undefined) {
+        module_or_path = new URL('reconstruction_bg.wasm', import.meta.url);
+    }
+    const imports = __wbg_get_imports();
+
+    if (typeof module_or_path === 'string' || (typeof Request === 'function' && module_or_path instanceof Request) || (typeof URL === 'function' && module_or_path instanceof URL)) {
+        module_or_path = fetch(module_or_path);
+    }
+
+    const { instance, module } = await __wbg_load(await module_or_path, imports);
+
+    return __wbg_finalize_init(instance, module);
+}
+
+export { initSync, __wbg_init as default };

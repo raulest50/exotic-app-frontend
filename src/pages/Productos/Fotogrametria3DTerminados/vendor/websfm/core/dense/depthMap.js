@@ -1,0 +1,700 @@
+// Stage A, one reference image at a time: source-view selection, the sparse depth seed,
+// the coarse-to-fine gray pyramid around the PatchMatch kernel (depthMapForImage, with
+// its GPU↔CPU validation), the per-map speckle filter, quality presets and Stage A's
+// knobs (depthMapSettings). The cross-view filter that follows is geomFilter.js.
+
+import { computeDepthMap, planeCosts } from '../sfm/reconstruction.js'
+import { DENSE_TUNING } from '../tuning.js'
+import { normalizeRegion } from '../products/region.js'
+import { viewIndex, positionsInRegion } from './sparseInput.js'
+import { DEPTHMAP_DEFAULTS } from '../defaults.user.js'
+import { levelPerturbStarts } from './refineSchedule.js'
+import { cameraCenter, triangulationAngle, toScaledPx } from '../sfm/geometry.js'
+import { relativePose, project } from './denseGeometry.js'
+import { numOpt, boolOpt } from './denseOptions.js'
+import { projectDensePeakBytes, workingPixels } from './memBudget.js'
+import { filterSettings } from './geomFilter.js'
+import { buildPlanarPrior } from './planarPrior.js'
+
+// ── Stage A helpers ──────────────────────────────────────────────────────────
+
+// Pick the best source views for a reference image: candidates that share the
+// most sparse 3D points with the reference at a healthy parallax angle. Returns
+// up to `maxSources` source uuids, best first.
+//   cameras: Map<uuid, { R, t, K }>   sparse: the packed sparse input (sparseInput.js)
+//   index: viewIndex(sparse) — pass the run's one index; built here when omitted.
+// Walks only the points the reference sees: O(its observations), not O(points).
+export function selectSourceViews(cameras, sparse, refUuid, opts = {}, index = viewIndex(sparse)) {
+  // maxSources is user-facing (DEPTHMAP_DEFAULTS); the angle window is internal (tuning.js).
+  const {
+    maxSources = DEPTHMAP_DEFAULTS.maxSources,
+    minAngleDeg = DENSE_TUNING.minAngleDeg,
+    maxAngleDeg = DENSE_TUNING.maxAngleDeg,
+  } = opts
+  const refCam = cameras.get(refUuid)
+  if (!refCam) return []
+  const Cref = cameraCenter(refCam)
+  const centers = new Map()
+  const score = new Map()
+
+  const { pos, vstart, vcam, viewUuids } = sparse
+  const pt = { x: 0, y: 0, z: 0 }
+  for (const i of index.get(refUuid) ?? []) {
+    pt.x = pos[3 * i]
+    pt.y = pos[3 * i + 1]
+    pt.z = pos[3 * i + 2]
+    for (let k = vstart[i]; k < vstart[i + 1]; k++) {
+      const u = viewUuids[vcam[k]]
+      if (u === refUuid || !cameras.has(u)) continue
+      if (!centers.has(u)) centers.set(u, cameraCenter(cameras.get(u)))
+      const ang = triangulationAngle(Cref, centers.get(u), pt)
+      if (ang >= minAngleDeg && ang <= maxAngleDeg) score.set(u, (score.get(u) || 0) + 1)
+    }
+  }
+  return [...score.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, maxSources)
+    .map(([u]) => u)
+}
+
+// Seed a depth map + depth range for a reference image from the sparse cloud:
+// project every point (`pos`, flat xyz) in front of the reference camera, splat its
+// depth to the nearest working pixel. Returns { seedDepth: Float32Array(w*h),
+// depthMin, depthMax } where the range is a padded 5–95th percentile of the seeds.
+export function seedDepthFromSparse(refCam, pos, width, height) {
+  const seed = new Float32Array(width * height) // 0 ⇒ no seed
+  const depths = []
+  for (let i = 0; i < pos.length; i += 3) {
+    const p = project(refCam, pos[i], pos[i + 1], pos[i + 2])
+    if (!p) continue
+    const u = Math.round(p.u),
+      v = Math.round(p.v)
+    if (u < 0 || v < 0 || u >= width || v >= height) continue
+    seed[v * width + u] = p.depth
+    depths.push(p.depth)
+  }
+  if (depths.length < 2) return { seedDepth: seed, depthMin: 0, depthMax: 0 }
+  depths.sort((a, b) => a - b)
+  const at = (q) => depths[Math.min(depths.length - 1, Math.max(0, Math.round(q * (depths.length - 1))))]
+  const lo = at(0.05),
+    hi = at(0.95)
+  const pad = (hi - lo) * 0.25 || hi * 0.1
+  return { seedDepth: seed, depthMin: Math.max(1e-4, lo - pad), depthMax: hi + pad, seeded: depths.length }
+}
+
+// ── Coarse-to-fine pyramid helpers (Step 2 — fixes freckle) ──────────────────
+// PatchMatch propagates ~1px per red-black sweep, so at high working resolution
+// information from the sparse seed can't reach most pixels and each pixel is
+// stuck on its random init (salt-and-pepper depth). Running the SAME kernel on a
+// gray pyramid — coarsest first, then upsampling each level's depth as the next
+// level's full-coverage seed — lets a match found at low resolution propagate
+// globally for free. Depth is view-space (invariant under image rescale), so no
+// depth value scaling is needed between levels — only the intrinsics scale.
+
+// 2× box-downsample a Uint8 grayscale plane. Floor dims (≥1): an odd last row/column is
+// dropped, not squeezed in, so coarse pixel u is exactly fine pixels 2u…2u+1 and the
+// coarse grid is the fine one at a factor of exactly ½ (halfScale). Returns { gray,w,h }.
+function downsampleGray2x(gray, w, h) {
+  const nw = Math.max(1, w >> 1),
+    nh = Math.max(1, h >> 1)
+  const out = new Uint8Array(nw * nh)
+  for (let v = 0; v < nh; v++) {
+    const v0 = 2 * v,
+      v1 = Math.min(v0 + 1, h - 1)
+    for (let u = 0; u < nw; u++) {
+      const u0 = 2 * u,
+        u1 = Math.min(u0 + 1, w - 1)
+      out[v * nw + u] = (gray[v0 * w + u0] + gray[v0 * w + u1] + gray[v1 * w + u0] + gray[v1 * w + u1] + 2) >> 2
+    }
+  }
+  return { gray: out, w: nw, h: nh }
+}
+
+// 2× max-pool a 0/1 exclusion mask: a downsampled texel is masked if ANY of its
+// (up to) four contributors is masked (so a coarse warp can't sample near a
+// frame/fiducial edge that the fine mask would have rejected).
+function downsampleMaskMax2x(mask, w, h) {
+  const nw = Math.max(1, w >> 1),
+    nh = Math.max(1, h >> 1)
+  const out = new Uint8Array(nw * nh)
+  for (let v = 0; v < nh; v++) {
+    const v0 = 2 * v,
+      v1 = Math.min(v0 + 1, h - 1)
+    for (let u = 0; u < nw; u++) {
+      const u0 = 2 * u,
+        u1 = Math.min(u0 + 1, w - 1)
+      out[v * nw + u] = mask[v0 * w + u0] || mask[v0 * w + u1] || mask[v1 * w + u0] || mask[v1 * w + u1] ? 1 : 0
+    }
+  }
+  return out
+}
+
+// The coarse/fine factor of a downsampleGray2x axis of `n` fine pixels: exactly ½ (the
+// odd last pixel is cropped, not resampled), or 1 for a 1-px axis that cannot halve.
+// floor(n/2)/n — what the level dims suggest — is NOT it on an odd axis: 20/41 put the
+// far edge of a 41-px level half a coarse pixel off.
+const halfScale = (n) => (n >= 2 ? 0.5 : 1)
+
+// Nearest-neighbour upsample a depth plane cw×ch → fw×fh, the inverse of one
+// downsampleGray2x step (edge-preserving: keeps depth discontinuities crisp for the next
+// level's refinement to sharpen).
+function upsampleDepthNearest(depth, cw, ch, fw, fh) {
+  const out = new Float32Array(fw * fh)
+  const sx = halfScale(fw),
+    sy = halfScale(fh)
+  for (let v = 0; v < fh; v++) {
+    // Centre-aligned nearest (geometry.js toScaledPx): fine pixel centre v + ½ lands at
+    // (v + ½)·½ on the coarse grid, i.e. coarse pixel ⌊v/2⌋; a cropped odd last row
+    // takes the last coarse row.
+    const sv = Math.min(ch - 1, ((v + 0.5) * sy) | 0)
+    for (let u = 0; u < fw; u++) {
+      const su = Math.min(cw - 1, ((u + 0.5) * sx) | 0)
+      out[v * fw + u] = depth[sv * cw + su]
+    }
+  }
+  return out
+}
+
+// Scale intrinsics with independent horizontal/vertical factors — one pyramid step is
+// halfScale per axis, which differs only on a 1-px axis. The principal point moves by
+// the centre-aligned rule (geometry.js toScaledPx).
+function scaleKxy(K, sx, sy) {
+  return { fx: K.fx * sx, fy: K.fy * sy, cx: toScaledPx(K.cx, sx), cy: toScaledPx(K.cy, sy) }
+}
+
+// Number of pyramid levels so the coarsest longest side is ≈ `coarseLong` (default
+// 600 — low enough that even a Medium-quality working image gets a coarse level to
+// carry global propagation). 1 level (no pyramid) when the working image is already
+// at/under that.
+function pyramidLevelCount(w, h, coarseLong = DENSE_TUNING.coarseLong) {
+  const long = Math.max(w, h)
+  if (long <= coarseLong) return 1
+  return Math.floor(Math.log2(long / coarseLong)) + 1
+}
+
+// Run PatchMatch for one reference image given already-rasterised pixels. `ref`
+// and each `sources[i]` carry { gray, width/w, height/h }; cameras carry the
+// scaled working K.
+//   ref:     { gray, width, height, K, cam:{R,t,K?} }
+//   sources: [{ gray, w, h, K, cam }]   (cam = full { R, t, K } pose)
+// `computeDepthMapFn` is the per-pixel depth-map kernel (default: the WASM
+// implementation). The worker injects a WebGPU backend here when available — both
+// share the (refGray, refW, refH, refK, sources, opts) → { depth, cost, w, h }
+// contract, so this orchestration is backend-agnostic.
+// `pos`: the sparse positions (flat xyz Float64Array; sparseInput.js `pos`).
+export async function depthMapForImage(
+  ref,
+  sources,
+  pos,
+  settings = {},
+  computeDepthMapFn = computeDepthMap,
+  hooks = {},
+) {
+  // window/iterations/bestK are user-facing (DEPTHMAP_DEFAULTS); coarseLong is internal (tuning.js).
+  const window = numOpt(settings.window, DEPTHMAP_DEFAULTS.window, { int: true, min: 1 })
+  const iterations = numOpt(settings.iterations, DEPTHMAP_DEFAULTS.iterations, { int: true, min: 1 })
+  const bestK = numOpt(settings.bestK, 3, { int: true, min: 1 })
+  const coarseLong = numOpt(settings.coarseLong, DENSE_TUNING.coarseLong, { int: true, min: 1 })
+  // Bilateral-weighted NCC (mvs.rs Bilateral): σc in grey levels (0 = plain NCC), σs in
+  // px, by default the window radius (COLMAP's). The same at every pyramid level.
+  const sigmaColor = numOpt(settings.bilateralSigmaColor, DENSE_TUNING.bilateralSigmaColor, { min: 0 })
+  // Every other window row and column (mvs.rs Patch) when 2.
+  const windowStep = numOpt(settings.windowStep, DENSE_TUNING.windowStep, { int: true, min: 1, max: 2 })
+  const sigmaSpatial = numOpt(settings.bilateralSigmaSpatial, Math.min(5, Math.max(1, window)), { positive: true })
+  const refCamScaled = { R: ref.cam.R, t: ref.cam.t, K: ref.K }
+  // Depth range is view-space (resolution-invariant): derive it once from the
+  // working-res projection (most sparse points visible → tightest percentiles).
+  // A region narrows the depth search to the sparse points inside it.
+  const region = normalizeRegion(settings.region)
+  const seedPos = region ? positionsInRegion(pos, region) : pos
+  const { depthMin, depthMax, seeded } = seedDepthFromSparse(refCamScaled, seedPos, ref.width, ref.height)
+  if (!(depthMax > depthMin)) return null // no sparse support → can't bound depth
+
+  // Relative poses are resolution-independent (R,t only) — shared across levels.
+  const src = sources.map((s) => {
+    const { R, t } = relativePose(ref.cam, s.cam)
+    return { gray: s.gray, w: s.w, h: s.h, K: s.K, R, t, mask: s.mask ?? null }
+  })
+
+  // Build the gray pyramid, coarsest → finest. The finest level IS the working
+  // resolution, so it reuses ref/src directly (no copy); coarser levels are 2×
+  // box-downsampled (masks max-pooled). Each level carries its own scaled K.
+  const nLevels = pyramidLevelCount(ref.width, ref.height, coarseLong)
+  const finest = {
+    gray: ref.gray,
+    w: ref.width,
+    h: ref.height,
+    K: ref.K,
+    srcs: src.map((s) => ({ gray: s.gray, w: s.w, h: s.h, K: s.K, R: s.R, t: s.t, mask: s.mask })),
+  }
+  const levels = [finest]
+  for (let l = 1; l < nLevels; l++) {
+    const cur = levels[0]
+    const dr = downsampleGray2x(cur.gray, cur.w, cur.h)
+    const level = {
+      gray: dr.gray,
+      w: dr.w,
+      h: dr.h,
+      K: scaleKxy(cur.K, halfScale(cur.w), halfScale(cur.h)),
+      srcs: cur.srcs.map((s) => {
+        const ds = downsampleGray2x(s.gray, s.w, s.h)
+        return {
+          gray: ds.gray,
+          w: ds.w,
+          h: ds.h,
+          K: scaleKxy(s.K, halfScale(s.w), halfScale(s.h)),
+          R: s.R,
+          t: s.t,
+          mask: s.mask ? downsampleMaskMax2x(s.mask, s.w, s.h) : null,
+        }
+      }),
+    }
+    levels.unshift(level)
+  }
+
+  // Coarse-to-fine sweep: seed the coarsest from the sparse cloud (the Region's points
+  // when one is set, the same `seedPos` the depth range came from — a point outside it
+  // would be clamped into the range and could overwrite a good seed on its pixel), then
+  // upsample each level's depth as the next (finer) level's full-coverage seed. Coarser
+  // levels get more iterations (cheap, and they carry the global propagation).
+  if (levels.length > 1) {
+    const plan = levels.map((L, li) => `${L.w}×${L.h}×${iterations + (levels.length - 1 - li)}it`).join(' → ')
+    hooks.onLog?.(`coarse-to-fine ${levels.length} levels (${sources.length} src) — ${plan}`, 'debug', 'Dense')
+  }
+  const baseSeed = (ref.width * 73856093) ^ (ref.height * 19349663)
+  // Per-level progress weights (this image is 0..1): a level's cost ≈ its pixels ×
+  // its iteration count, so the finest level dominates — the fraction advances after
+  // each level resolves (per-sweep would need a callback from the Rust kernel).
+  const levelWeight = levels.map((L, li) => L.w * L.h * (iterations + (levels.length - 1 - li)))
+  const totalWeight = levelWeight.reduce((a, b) => a + b, 0) || 1
+  let doneWeight = 0
+  let dm = null,
+    prevDepth = null,
+    prevW = 0,
+    prevH = 0
+  // Refinement continues across levels rather than restarting (refineSchedule.js).
+  const perturbStarts = levelPerturbStarts(levels.map((_, li) => iterations + (levels.length - 1 - li)))
+  for (let li = 0; li < levels.length; li++) {
+    const L = levels[li]
+    let seedDepth
+    if (li === 0) {
+      const camL = { R: ref.cam.R, t: ref.cam.t, K: L.K }
+      seedDepth = seedDepthFromSparse(camL, seedPos, L.w, L.h).seedDepth
+    } else {
+      seedDepth = upsampleDepthNearest(prevDepth, prevW, prevH, L.w, L.h)
+    }
+    const levelIters = iterations + (levels.length - 1 - li) // coarsest gets the most
+    dm = await computeDepthMapFn(L.gray, L.w, L.h, L.K, L.srcs, {
+      depthMin,
+      depthMax,
+      seedDepth,
+      window,
+      iterations: levelIters,
+      bestK,
+      seed: (baseSeed ^ (li * 0x9e3779b1)) >>> 0,
+      perturbStart: perturbStarts[li],
+      sigmaSpatial,
+      sigmaColor,
+      viewSelection: settings.viewSelection === 'acmh' ? 'acmh' : 'bestk',
+      windowStep,
+      threads: numOpt(settings.threads, 0, { int: true, min: 0 }),
+    })
+    if (!dm) return null
+    prevDepth = dm.depth
+    prevW = L.w
+    prevH = L.h
+    doneWeight += levelWeight[li]
+    hooks.onProgress?.(doneWeight / totalWeight)
+  }
+
+  // ACMP (Xu & Tao 2020): the credible pixels of the finished map, triangulated in the image,
+  // give every pixel inside a triangle a planar prior (planarPrior.js), and PatchMatch runs
+  // again at the working resolution from this map with that prior in its cost (mvs.rs
+  // prior_cost). The paper's α 0.18, γ 0.5, σ_d = range / 64, σ_n = 5°.
+  if (boolOpt(settings.planarPrior, DENSE_TUNING.planarPrior)) {
+    const L = levels[levels.length - 1]
+    const pp = buildPlanarPrior({ depth: dm.depth, cost: dm.cost, width: L.w, height: L.h }, L.K, {
+      grid: DENSE_TUNING.priorGrid,
+      maxCost: numOpt(settings.priorMaxCost, DENSE_TUNING.priorMaxCost, { positive: true }),
+    })
+    hooks.onLog?.(
+      `planar prior: ${pp.support} support points, ${pp.triangles} triangles, ` +
+        `${((100 * pp.covered) / (L.w * L.h)).toFixed(0)} % of pixels covered`,
+      'debug',
+      'Dense',
+    )
+    if (pp.covered > 0) {
+      const npix = L.w * L.h
+      const prior = new Float32Array(4 * npix)
+      for (let i = 0; i < npix; i++) {
+        prior[4 * i] = pp.depth[i]
+        prior[4 * i + 1] = pp.normal[3 * i]
+        prior[4 * i + 2] = pp.normal[3 * i + 1]
+        prior[4 * i + 3] = pp.normal[3 * i + 2]
+      }
+      const next = await computeDepthMapFn(L.gray, L.w, L.h, L.K, L.srcs, {
+        depthMin,
+        depthMax,
+        seedDepth: dm.depth,
+        seedNormals: dm.normals ?? null,
+        prior,
+        priorAlpha: DENSE_TUNING.priorAlpha,
+        priorGamma: DENSE_TUNING.priorGamma,
+        priorSigD: (depthMax - depthMin) / 64,
+        priorSigN: (DENSE_TUNING.priorSigNDeg * Math.PI) / 180,
+        window,
+        iterations: numOpt(settings.priorIterations, DENSE_TUNING.priorIterations, { int: true, min: 1 }),
+        bestK,
+        seed: (baseSeed ^ 0x2545f491) >>> 0,
+        perturbStart: DENSE_TUNING.priorPerturbStart,
+        sigmaSpatial,
+        sigmaColor,
+        viewSelection: settings.viewSelection === 'acmh' ? 'acmh' : 'bestk',
+        windowStep,
+        threads: numOpt(settings.threads, 0, { int: true, min: 0 }),
+      })
+      if (next) dm = next
+    }
+  }
+
+  // GPU↔CPU validation (WebGPU port), over every source:
+  //   1. cost consistency — score the GPU's own final (depth, normal) with the Rust cost
+  //      a CPU run uses (mvs.rs plane_costs). Judged on the median difference
+  //      (DENSE_TUNING.gpuCheckWarn / gpuCheckMax): `gpuCheck.ok` false means the GPU
+  //      computes something else, and the caller moves the run to the CPU.
+  //   2. convergence — the median final cost; PatchMatch should pull this well
+  //      below the ~1.0 of random/unmatched (the signal the sweeps actually work).
+  let gpuCheck = null
+  if (hooks.validate && src.length) {
+    const k = Math.min(Math.max(bestK, 1), src.length) // reported best-K (upper bound)
+    const stride = Math.max(1, Math.floor(dm.depth.length / 4000))
+    const idx = []
+    const hyps = []
+    for (let i = 0; i < dm.depth.length; i += stride) {
+      const n = dm.normals ? [dm.normals[i * 3], dm.normals[i * 3 + 1], dm.normals[i * 3 + 2]] : [0, 0, -1]
+      idx.push(i)
+      hyps.push({ u: i % ref.width, v: (i / ref.width) | 0, depth: dm.depth[i], n })
+    }
+    const cpu = await planeCosts(ref.gray, ref.width, ref.height, ref.K, src, hyps, {
+      window,
+      bestK,
+      sigmaSpatial,
+      sigmaColor,
+      windowStep,
+    })
+    const costs = idx.map((i) => dm.cost[i]).sort((a, b) => a - b)
+    // No reference (planeCosts refused the input): no verdict either way.
+    const diffs = cpu ? idx.map((i, j) => Math.abs(cpu[j].agg - dm.cost[i])).sort((a, b) => a - b) : []
+    const n = diffs.length
+    const at = (q) => (n ? diffs[Math.min(n - 1, Math.floor(q * n))] : 0)
+    gpuCheck = {
+      rms: n ? Math.sqrt(diffs.reduce((s, d) => s + d * d, 0) / n) : 0,
+      median: at(0.5),
+      p90: at(0.9),
+      max: n ? diffs[n - 1] : 0,
+      n,
+      ok: !(at(0.5) > DENSE_TUNING.gpuCheckMax),
+    }
+    const medCost = costs.length ? costs[costs.length >> 1] : 0
+    hooks.onLog?.(
+      `GPU validate: cost consistency RMS ${gpuCheck.rms.toExponential(2)} (median ${gpuCheck.median.toExponential(2)}, ` +
+        `90 % ${gpuCheck.p90.toExponential(2)}, max ${gpuCheck.max.toExponential(2)}) ` +
+        `over ${n} px; median final cost ${medCost.toFixed(3)} (${src.length} src, best-${k})`,
+      gpuCheck.median > DENSE_TUNING.gpuCheckWarn ? 'warn' : 'success',
+      'Dense',
+    )
+  }
+
+  // Carry the seeding diagnostics through so the caller can log them.
+  return { ...dm, depthMin, depthMax, seeded, ...(gpuCheck ? { gpuCheck } : {}) }
+}
+
+// The geometric-consistency pass for one image (ACMP's last stage, Xu & Tao 2020; COLMAP's
+// geom_consistency): PatchMatch again at the working resolution from the image's finished
+// map, each source's cost raised by the forward–backward reprojection error through that
+// source's own finished depth (mvs.rs Geom). It needs every map of the run first.
+// `photo`: { depth, normals } of the reference; `srcDepth`: the sources' depth planes, in
+// `sources` order (null where missing). The depth range and seeding are depthMapForImage's.
+export async function geomDepthMapForImage(
+  ref,
+  sources,
+  pos,
+  photo,
+  srcDepth,
+  settings = {},
+  computeDepthMapFn = computeDepthMap,
+) {
+  const window = numOpt(settings.window, DEPTHMAP_DEFAULTS.window, { int: true, min: 1 })
+  const bestK = numOpt(settings.bestK, 3, { int: true, min: 1 })
+  const region = normalizeRegion(settings.region)
+  const seedPos = region ? positionsInRegion(pos, region) : pos
+  const { depthMin, depthMax, seeded } = seedDepthFromSparse(
+    { R: ref.cam.R, t: ref.cam.t, K: ref.K },
+    seedPos,
+    ref.width,
+    ref.height,
+  )
+  if (!(depthMax > depthMin)) return null
+  const srcs = sources.map((s) => {
+    const { R, t } = relativePose(ref.cam, s.cam)
+    return { gray: s.gray, w: s.w, h: s.h, K: s.K, R, t, mask: s.mask ?? null }
+  })
+  const sigmaColor = numOpt(settings.bilateralSigmaColor, DENSE_TUNING.bilateralSigmaColor, { min: 0 })
+  const dm = await computeDepthMapFn(ref.gray, ref.width, ref.height, ref.K, srcs, {
+    depthMin,
+    depthMax,
+    seedDepth: photo.depth,
+    seedNormals: photo.normals ?? null,
+    srcDepth,
+    geomWeight: numOpt(settings.geomWeight, DENSE_TUNING.geomWeight, { min: 0 }),
+    geomMax: numOpt(settings.geomMax, DENSE_TUNING.geomMaxPx, { positive: true }),
+    window,
+    iterations: numOpt(settings.geomIterations, DENSE_TUNING.geomIterations, { int: true, min: 1 }),
+    bestK,
+    seed: ((ref.width * 73856093) ^ (ref.height * 19349663) ^ 0x5bd1e995) >>> 0,
+    perturbStart: DENSE_TUNING.geomPerturbStart,
+    sigmaSpatial: numOpt(settings.bilateralSigmaSpatial, Math.min(5, Math.max(1, window)), { positive: true }),
+    sigmaColor,
+    viewSelection: settings.viewSelection === 'acmh' ? 'acmh' : 'bestk',
+    windowStep: numOpt(settings.windowStep, DENSE_TUNING.windowStep, { int: true, min: 1, max: 2 }),
+    threads: numOpt(settings.threads, 0, { int: true, min: 0 }),
+  })
+  return dm ? { ...dm, depthMin, depthMax, seeded } : null
+}
+
+// Post-process one depth plane to suppress the noise the per-image photometric
+// PatchMatch leaves behind (the cross-view geometric check only happens later, at
+// fusion). Two effects in a single (2·radius+1)² pass over valid pixels:
+//   • speckle / flying-pixel removal — a valid pixel whose depth disagrees with
+//     its local median by more than `relTol` (relative), or that sits in a region
+//     with fewer than `minValidNeighbors` valid depths, is dropped (set to 0).
+//   • smoothing — surviving pixels are set to the local median (edge-preserving),
+//     unless `smooth` is false.
+// Pure: returns { depth: Float32Array, removed, smoothed }; input is not mutated.
+// The median of the 3×3 window centred on `idx`, or 0 when any of its nine depths is a
+// hole (the caller then takes the general path). Paeth's median-of-9 network: 19
+// compare-swaps leave the median in the middle slot.
+function median9(depth, idx, w) {
+  let a0 = depth[idx - w - 1],
+    a1 = depth[idx - w],
+    a2 = depth[idx - w + 1],
+    a3 = depth[idx - 1],
+    a4 = depth[idx],
+    a5 = depth[idx + 1],
+    a6 = depth[idx + w - 1],
+    a7 = depth[idx + w],
+    a8 = depth[idx + w + 1],
+    t
+  if (!(a0 > 0 && a1 > 0 && a2 > 0 && a3 > 0 && a5 > 0 && a6 > 0 && a7 > 0 && a8 > 0)) return 0
+  if (a1 > a2) ((t = a1), (a1 = a2), (a2 = t))
+  if (a4 > a5) ((t = a4), (a4 = a5), (a5 = t))
+  if (a7 > a8) ((t = a7), (a7 = a8), (a8 = t))
+  if (a0 > a1) ((t = a0), (a0 = a1), (a1 = t))
+  if (a3 > a4) ((t = a3), (a3 = a4), (a4 = t))
+  if (a6 > a7) ((t = a6), (a6 = a7), (a7 = t))
+  if (a1 > a2) ((t = a1), (a1 = a2), (a2 = t))
+  if (a4 > a5) ((t = a4), (a4 = a5), (a5 = t))
+  if (a7 > a8) ((t = a7), (a7 = a8), (a8 = t))
+  if (a0 > a3) a3 = a0
+  if (a5 > a8) a5 = a8
+  if (a4 > a7) ((t = a4), (a4 = a7), (a7 = t))
+  if (a3 > a6) a6 = a3
+  if (a1 > a4) a4 = a1
+  if (a2 > a5) a2 = a5
+  if (a4 > a7) a4 = a7
+  if (a4 > a2) ((t = a4), (a4 = a2), (a2 = t))
+  if (a6 > a4) a4 = a6
+  if (a4 > a2) a4 = a2
+  return a4
+}
+
+// The filter's options, resolved once (filterDepthMap, filterDepthMapChunked).
+function filterOptions(opts) {
+  return {
+    radius: numOpt(opts.radius, 1, { int: true, min: 1 }),
+    relTol: numOpt(opts.relTol, DEPTHMAP_DEFAULTS.filterRelTol / 100, { positive: true }),
+    minValidNeighbors: numOpt(opts.minValidNeighbors, 4, { int: true, min: 0 }),
+    smooth: boolOpt(opts.smooth, true),
+  }
+}
+
+// Rows v0…v1−1 of the filter into `out`; returns the counts for those rows. Each output
+// pixel reads only `depth`, so row blocks can run in any order or with pauses between.
+function filterRows(depth, out, w, h, v0, v1, { radius, relTol, minValidNeighbors, smooth }) {
+  // The window's valid depths, kept sorted as they arrive (insertion into a fixed
+  // buffer): a JS array pushed and comparator-sorted per pixel cost ~15 s on each
+  // 27 MP map of a film block at High.
+  const win = new Float64Array((2 * radius + 1) ** 2)
+  let removed = 0,
+    smoothed = 0
+  for (let v = v0; v < v1; v++) {
+    for (let u = 0; u < w; u++) {
+      const idx = v * w + u
+      const d = depth[idx]
+      if (!(d > 0)) continue // already a hole
+      // A full 3×3 window inside the map (most pixels at the default radius): its
+      // median from a fixed 19-comparison network, the same value as the sort below,
+      // about four times faster.
+      if (radius === 1 && u > 0 && v > 0 && u < w - 1 && v < h - 1) {
+        const med = median9(depth, idx, w)
+        if (med > 0) {
+          if (Math.abs(d - med) > relTol * med) {
+            removed++
+            continue
+          }
+          out[idx] = smooth ? med : d
+          if (smooth && med !== d) smoothed++
+          continue
+        }
+      }
+      let n = 0
+      for (let dv = -radius; dv <= radius; dv++) {
+        const vv = v + dv
+        if (vv < 0 || vv >= h) continue
+        for (let du = -radius; du <= radius; du++) {
+          const uu = u + du
+          if (uu < 0 || uu >= w) continue
+          const nd = depth[vv * w + uu]
+          if (nd > 0) {
+            let j = n++
+            while (j > 0 && win[j - 1] > nd) {
+              win[j] = win[j - 1]
+              j--
+            }
+            win[j] = nd
+          }
+        }
+      }
+      if (n < minValidNeighbors) {
+        removed++
+        continue
+      } // isolated → drop
+      const med = win[n >> 1]
+      if (Math.abs(d - med) > relTol * med) {
+        removed++
+        continue
+      } // speckle → drop
+      out[idx] = smooth ? med : d
+      if (smooth && med !== d) smoothed++
+    }
+  }
+  return { removed, smoothed }
+}
+
+export function filterDepthMap(depth, w, h, opts = {}) {
+  const out = new Float32Array(depth.length)
+  const { removed, smoothed } = filterRows(depth, out, w, h, 0, h, filterOptions(opts))
+  return { depth: out, removed, smoothed }
+}
+
+// The same filter in blocks of rows, awaiting `pause()` between them: the depth worker
+// runs it while the next map matches on the GPU, and a pause lets that map's next band be
+// submitted instead of leaving the GPU idle for the whole filter. Same output.
+export async function filterDepthMapChunked(depth, w, h, opts = {}, pause = async () => {}, rowsPerBlock = 64) {
+  const out = new Float32Array(depth.length)
+  const o = filterOptions(opts)
+  let removed = 0,
+    smoothed = 0
+  for (let v0 = 0; v0 < h; v0 += rowsPerBlock) {
+    const r = filterRows(depth, out, w, h, v0, Math.min(h, v0 + rowsPerBlock), o)
+    removed += r.removed
+    smoothed += r.smoothed
+    if (v0 + rowsPerBlock < h) await pause()
+  }
+  return { depth: out, removed, smoothed }
+}
+
+// ── Step 3: quality presets + derived params ─────────────────────────────────
+// Metashape-style *relative* quality presets replace an absolute pixel count as
+// the primary control. Each preset is a fraction of the largest native image
+// dimension; the derived working longest-side is floored at 200px (below that a
+// depth map is useless). `ultra` = native resolution (no downscale).
+const QUALITY_FRACTION = { low: 1 / 8, medium: 1 / 4, high: 1 / 2, ultra: 1 }
+
+// Resolve a quality preset + the largest native image dimension → working maxDim.
+export function qualityToMaxDim(quality, nativeLongSide) {
+  const f = QUALITY_FRACTION[quality] ?? QUALITY_FRACTION.medium
+  return Math.max(200, Math.round((nativeLongSide || 0) * f))
+}
+
+// The highest depth quality at or below `quality` whose projected peak fits `budget`
+// (memBudget.js projectDensePeakBytes over the images' real working sizes) — the
+// depth stage steps down and says so rather than refusing, as fusion re-plans its
+// step. `sizes`: [{ width, height }] of each image's working basis (native, or the
+// film canonical frame). Returns { quality, maxDim, proj, steps } (steps = levels
+// dropped) or null when not even Low fits; `proj` is the chosen level's projection.
+export const DEPTH_QUALITY_ORDER = ['ultra', 'high', 'medium', 'low']
+export function fitDepthQuality({
+  quality,
+  sizes,
+  budget,
+  backend = 'wasm',
+  nSources = 6,
+  streamMaps = true,
+  geomConsistency = true,
+  full = false,
+}) {
+  const nativeLong = sizes.reduce((m, s) => Math.max(m, s.width || 0, s.height || 0), 0)
+  const start = Math.max(0, DEPTH_QUALITY_ORDER.indexOf(quality))
+  for (let k = start; k < DEPTH_QUALITY_ORDER.length; k++) {
+    const q = DEPTH_QUALITY_ORDER[k]
+    const maxDim = qualityToMaxDim(q, nativeLong)
+    const proj = projectDensePeakBytes({
+      nImages: sizes.length,
+      maxDim,
+      nSources,
+      backend,
+      pixels: sizes.map((s) => workingPixels(s.width, s.height, maxDim)),
+      retainedMaps: streamMaps ? 1 : sizes.length,
+      filterMaps: geomConsistency && !streamMaps ? sizes.length : 0,
+      planarPrior: full,
+      geomPass: full,
+      geomCacheMaps: DENSE_TUNING.geomDepthCache,
+    })
+    if (proj.total <= budget) return { quality: q, maxDim, proj, steps: k - start }
+  }
+  return null
+}
+
+// The method a run uses (DEPTHMAP_DEFAULTS.method): 'full' or 'fast', 'auto' (or blank) =
+// full on the GPU, fast on the CPU, where the full chain costs several times the time.
+export function resolveDepthMethod(setting, onGpu) {
+  if (setting === 'full' || setting === 'fast') return setting
+  return onGpu ? 'full' : 'fast'
+}
+
+// The view selection a call uses when the store did not set it: ACMH on the GPU, best-K on
+// the CPU (the Auto method's choice).
+export function resolveViewSelection(setting, onGpu) {
+  if (setting === 'acmh' || setting === 'bestk') return setting
+  return onGpu ? 'acmh' : 'bestk'
+}
+
+// Per-image best-K from the number of available source views: average roughly the
+// better half, clamped to [1, 4] (occlusion-robust without over-smoothing).
+export function autoBestK(nSources) {
+  return Math.min(4, Math.max(1, Math.ceil(nSources / 2)))
+}
+
+// Stage A's knobs (workers/ops/dense.js computeDepthMaps), read through the engine-
+// boundary checks above: a blank / non-finite / out-of-range value takes its default.
+// bestK null ⇒ auto per image; maxDim (the store resolves Quality into it) defaults to
+// 800 px when absent. The cross-view filter's four come from filterSettings.
+export function depthMapSettings(settings = {}) {
+  return {
+    quality: Object.hasOwn(QUALITY_FRACTION, settings.quality) ? settings.quality : DEPTHMAP_DEFAULTS.quality,
+    maxDim: numOpt(settings.maxDim, 800, { int: true, min: 1 }),
+    maxSources: numOpt(settings.maxSources, DEPTHMAP_DEFAULTS.maxSources, { int: true, min: 1 }),
+    minAngleDeg: numOpt(settings.minAngleDeg, DENSE_TUNING.minAngleDeg, { min: 0, max: 90 }),
+    window: numOpt(settings.window, DEPTHMAP_DEFAULTS.window, { int: true, min: 1 }),
+    iterations: numOpt(settings.iterations, DEPTHMAP_DEFAULTS.iterations, { int: true, min: 1 }),
+    bestK: numOpt(settings.bestK, null, { int: true, min: 1 }),
+    speckleFilter: boolOpt(settings.speckleFilter, DEPTHMAP_DEFAULTS.speckleFilter),
+    filterRadius: numOpt(settings.filterRadius, 1, { int: true, min: 1 }),
+    filterRelTol: numOpt(settings.filterRelTol, DEPTHMAP_DEFAULTS.filterRelTol / 100, { positive: true }),
+    coarseLong: numOpt(settings.coarseLong, DENSE_TUNING.coarseLong, { int: true, min: 1 }),
+    geomConsistency: boolOpt(settings.geomConsistency, DEPTHMAP_DEFAULTS.geomConsistency),
+    ...filterSettings(settings),
+    streamMaps: boolOpt(settings.streamMaps, false),
+  }
+}

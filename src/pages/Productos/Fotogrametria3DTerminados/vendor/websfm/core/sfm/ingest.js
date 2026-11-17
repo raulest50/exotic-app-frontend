@@ -1,0 +1,419 @@
+// SfM ingest (pure): everything that moves keypoints ONCE, before reconstruction
+// starts, so the rest of the pipeline is pinhole in one pixel frame per sensor.
+// Lifted verbatim from `reconstructSingleModel` (singleModel.js), in the order it runs there:
+//   1. applyFiducialFrames  — film scans: scan px → one canonical frame per sensor
+//   2. resolveIntrinsics    — one K per image (after 1: film K comes from the frame)
+//   3. gcpObservationMover  — GCP marks follow every keypoint move (here and the
+//                             self-cal fold later)
+//   4. undistortAtIngest    — the calibrated lens (Brown / rational / fisheye)
+//                             removed from the keypoints
+//   5. refitMovedPairs      — matching's F was fitted on the raw keypoints; also
+//                             drops matches on keypoints ingest dropped (fisheye)
+// Each mutates the images / GCPs / pairs it is given, as the inline code did; the
+// caller's `input` is already this sub-run's own copy (sfm.js cloneSfmInput).
+
+import { resolveK } from './reconstruction.js'
+import { undistortPixel, undistortKeypoint, distortionOf, FISHEYE_MAX_RAY_DEG } from './distortion.js'
+import { fitFundamental } from './fundamental.js'
+import { canonicalFrame, scanToCanonical } from './fiducials.js'
+import { calibratedFiducialPairs } from './fiducialModel.js'
+import { mapPositions, kpX, kpY } from './keypointSet.js'
+import { asPairList, Uint32PairList } from './matchCodec.js'
+import { fitFiducialTransform } from './fiducialCalibration.js'
+import { pluralize } from '../textFormat.js'
+
+// ── Fiducial interior orientation (F4) ───────────────────────────────────
+// Scanned film: fit each image's scan→mm affine from its clicked fiducial
+// marks, build ONE canonical pixel frame per sensor (median fitted pitch),
+// and move that image's keypoints into the frame. This is the exact analogue
+// of the distortion undistort below — scan geometry removed once at ingest,
+// keypoint indices preserved (matches reference them), so the whole pipeline
+// stays pinhole with one shared K per sensor. resolveK then returns the
+// canonical K via `sensor._fiducialK` (path 0). Runs BEFORE the K-map so the
+// resolveK below sees the stashed frame.
+// Returns uuid → { A, transform, frame } for every film image it moved.
+export function applyFiducialFrames({ imgs, gcps, log }) {
+  const fiducialTransforms = new Map() // uuid → { A, frame }
+  {
+    const filmGroups = new Map() // sensorId → [{ img, fit }]
+    for (const img of imgs) {
+      const s = img.sensor
+      const cal = s?.fiducialCalibration
+      if (s?.kind !== 'film' || !cal?.marks?.length) continue
+      const obs = calibratedFiducialPairs(img, s)
+      const fit = fitFiducialTransform(obs, cal.transform || 'affine', { spacingMm: cal.reseau?.spacingMm })
+      if (!fit) {
+        log(
+          `${img.name} — fiducial fit failed (${pluralize(obs.length, 'usable mark')}, ` +
+            `need ≥3); falling back to standard intrinsics`,
+          'warn',
+          'Reconstruction',
+        )
+        continue
+      }
+      const pitchUm = fit.pitchMm * 1000
+      log(
+        `${img.name} — fiducial ${cal.transform || 'affine'} fit: pitch ${pitchUm.toFixed(2)}µm/px, ` +
+          `${fit.rotDeg == null ? '' : `rot ${fit.rotDeg.toFixed(2)}°, shear ${fit.shear.toFixed(4)}, `}RMS ${fit.rmsUm.toFixed(1)}µm` +
+          (fit.residual
+            ? ` over ${pluralize(fit.crosses, 'reseau cross', 'reseau crosses')}, film deformation ` +
+              `${fit.affineRmsUm.toFixed(1)}µm RMS corrected`
+            : ''),
+        'info',
+        'Reconstruction',
+      )
+      if (fit.rmsUm > 0.5 * pitchUm) {
+        log(
+          `${img.name} — fiducial residual ${fit.rmsUm.toFixed(1)}µm exceeds ` +
+            `½ pixel (${(0.5 * pitchUm).toFixed(1)}µm) — check the clicked marks`,
+          'warn',
+          'Reconstruction',
+        )
+      }
+      const sid = img.sensorId ?? '__nosensor__'
+      if (!filmGroups.has(sid)) filmGroups.set(sid, [])
+      filmGroups.get(sid).push({ img, fit, calibration: cal })
+    }
+    for (const [sid, entries] of filmGroups) {
+      const pitches = entries.map((e) => e.fit.pitchMm).sort((a, b) => a - b)
+      const pitchMm = pitches[Math.floor(pitches.length / 2)] // median: one frame doesn't chase a single scan
+      const fiducials = entries[0].calibration
+      // Orientation of scan→mm: a y-up certificate against y-down scan rows is a
+      // reflection (det < 0). The canonical frame must undo it or the whole model
+      // comes out mirrored (see canonicalFrame). Majority vote over the batch.
+      const reflected = entries.filter(({ fit }) => {
+        const h = fit.forward ?? null,
+          A = fit.A ?? null
+        const det = h ? h[0] * h[4] - h[1] * h[3] : A ? A[0] * A[4] - A[1] * A[3] : NaN
+        return det < 0
+      }).length
+      const yUp = reflected * 2 > entries.length
+      if (yUp) {
+        log(
+          `sensor ${sid} — fiducial coordinates are y-up against y-down scan rows; ` +
+            'the canonical frame flips y so the camera stays proper (not mirrored)',
+          'info',
+          'Reconstruction',
+        )
+      }
+      const frame = canonicalFrame(fiducials, pitchMm, { yUp })
+      if (!frame) {
+        log(
+          `sensor ${sid} — could not build canonical frame (need ≥3 marks); ` +
+            `film images fall back to standard intrinsics`,
+          'warn',
+          'Reconstruction',
+        )
+        continue
+      }
+      const source = `fiducial interior orientation (${fiducials.focalMm}mm ÷ ${(pitchMm * 1000).toFixed(2)}µm/px)`
+      log(
+        `sensor ${sid} — canonical frame ${frame.width}×${frame.height}px, ` +
+          `K fx=${frame.K.fx.toFixed(1)} cx=${frame.K.cx.toFixed(1)} cy=${frame.K.cy.toFixed(1)} ` +
+          `(median pitch ${(pitchMm * 1000).toFixed(2)}µm/px over ${pluralize(entries.length, 'image')})`,
+        'info',
+        'Reconstruction',
+      )
+      for (const { img, fit } of entries) {
+        const scanTransform = fit.forward ? fit : fit.A
+        img.sensor._fiducialK = { fx: frame.K.fx, fy: frame.K.fy, cx: frame.K.cx, cy: frame.K.cy, source }
+        if (img.kp?.n) img.kp = mapPositions(img.kp, (x, y) => scanToCanonical(x, y, scanTransform, frame))
+        fiducialTransforms.set(img.uuid, { A: fit.A ?? null, transform: fit.forward ? fit : null, frame })
+      }
+    }
+    // GCP observations are in scan space too — push film-image observations
+    // through the same scan→canonical map, or their reprojection residuals
+    // explode only on film projects (they meet the same camera K downstream).
+    if (fiducialTransforms.size && gcps.length) {
+      let remapped = 0
+      for (const g of gcps) {
+        for (const o of g.observations || []) {
+          const t = fiducialTransforms.get(o.uuid)
+          if (!t) continue
+          const c = scanToCanonical(o.px, o.py, t.transform ?? t.A, t.frame)
+          o.px = c.x
+          o.py = c.y
+          remapped++
+        }
+      }
+      if (remapped) {
+        log(
+          `remapped ${pluralize(remapped, 'GCP observation')} on film images ` + `into the canonical frame`,
+          'info',
+          'Reconstruction',
+        )
+      }
+    }
+  }
+  return fiducialTransforms
+}
+
+// ── Build K map ────────────────────────────────────────────────────────
+// `intrinsicsRecord` (sensorId → run-record row) gets each sensor's nominal focal.
+export function resolveIntrinsics({ imgs, intrinsicsRecord, log }) {
+  const Kmap = new Map() // uuid → K
+  let defaultKCount = 0
+  const ppWarned = new Set() // sensorId (or uuid) already warned about an off-centre principal point
+  for (const img of imgs) {
+    const K = resolveK(img.meta, img.sensor)
+    Kmap.set(img.uuid, K)
+    if (K.source.startsWith('default')) defaultKCount++
+    // Nominal focal per sensor, before any self-calibration touches it — the
+    // "from" half of the fx trajectory the digest reports (B4: 2389 → 2566 is a
+    // healthy run, 2389 → 4796 is a runaway, and only the pair distinguishes them).
+    const sid = img.sensorId ?? `image:${img.uuid}`
+    if (!intrinsicsRecord.has(sid)) {
+      intrinsicsRecord.set(sid, {
+        sensorId: img.sensorId ?? null,
+        label: img.sensor?.label ?? null,
+        fxNominal: K.fx,
+        source: K.source,
+        fxFinal: null,
+        cx: null,
+        cy: null,
+      })
+    }
+    const implied = K.impliedFilmWidthMm != null ? ` [implies ${K.impliedFilmWidthMm.toFixed(0)}mm film width]` : ''
+    log(
+      `K[${img.name}] fx=${K.fx.toFixed(1)} fy=${K.fy.toFixed(1)} ` +
+        `cx=${K.cx.toFixed(1)} cy=${K.cy.toFixed(1)} — ${K.source}${implied}`,
+      'debug',
+      'Reconstruction',
+    )
+    // A real principal point sits within a few % of the image centre. A cx/cy
+    // far outside that is virtually always a convention mix-up — Metashape and
+    // friends export cx/cy as OFFSETS from the centre, while websfm's sensor
+    // table takes absolute pixels. Warn once per sensor, loudly: a corner
+    // principal point silently destroys every downstream geometry gate.
+    const iw = img.sensor?.width || img.meta?.width
+    const ih = img.sensor?.height || img.meta?.height
+    if (iw && ih && (Math.abs(K.cx - iw / 2) > 0.05 * iw || Math.abs(K.cy - ih / 2) > 0.05 * ih)) {
+      const key = img.sensorId ?? img.uuid
+      if (!ppWarned.has(key)) {
+        ppWarned.add(key)
+        log(
+          `principal point cx=${K.cx.toFixed(1)} cy=${K.cy.toFixed(1)} is far from ` +
+            `the image centre (${(iw / 2).toFixed(0)}, ${(ih / 2).toFixed(0)}) — the sensor table takes ` +
+            `ABSOLUTE pixels. If this calibration came from Metashape (which reports centre offsets), ` +
+            `enter ${(iw / 2).toFixed(1)} + cx and ${(ih / 2).toFixed(1)} + cy instead.`,
+          'warn',
+          'Reconstruction',
+        )
+      }
+    }
+    // The pixel-pitch path can silently produce an off-standard film width (a
+    // ~9% focal error on the CA…V set). Flag it so the user checks pitch/format.
+    if (K.impliedFilmWidthMm != null && K.filmWidthOk === false) {
+      log(
+        `K[${img.name}] implied film width ${K.impliedFilmWidthMm.toFixed(0)}mm ` +
+          `is not a standard aerial format (~230/240mm) — check the scan pixel pitch, or use the ` +
+          `film/sensor-format (mm) field instead of pixel size.`,
+        'warn',
+        'Reconstruction',
+      )
+    }
+  }
+  return { Kmap, defaultKCount }
+}
+
+// GCP marks meet the same cameras as the keypoints, so they must live in the
+// same frame: whatever moves an image's keypoints (calibrated undistortion
+// here, the self-cal fold later) moves that image's marks too. Otherwise the
+// anchored BA pulls the model toward raw-lens marks at σ≈1 px.
+// Returns moveGcpObs(uuid, map): apply a pixel map to that image's GCP marks.
+export function gcpObservationMover(gcps) {
+  const gcpObsByUuid = new Map()
+  for (const g of gcps) {
+    for (const o of g.observations || []) {
+      if (o.uuid == null || !Number.isFinite(o.px) || !Number.isFinite(o.py)) continue
+      if (!gcpObsByUuid.has(o.uuid)) gcpObsByUuid.set(o.uuid, [])
+      gcpObsByUuid.get(o.uuid).push(o)
+    }
+  }
+  const moveGcpObs = (uuid, map) => {
+    for (const o of gcpObsByUuid.get(uuid) || []) {
+      const u = map(o.px, o.py)
+      o.px = u.x
+      o.py = u.y
+    }
+  }
+  return moveGcpObs
+}
+
+// ── Undistort keypoints at ingest ────────────────────────────────────────
+// Remove the calibrated lens once, up front, so every downstream step (init,
+// PnP, triangulation, BA) is pure pinhole. Keypoint indices are preserved
+// (matches reference them), only positions move. A fisheye keypoint too far
+// off-axis for a pinhole frame (distortion.js FISHEYE_MAX_RAY_DEG) becomes a
+// missing (NaN) keypoint, which every track/BA consumer already skips (hasKp).
+// `recordedByUuid` keeps what was undistorted: each image's keypoint set as the lens
+// recorded it (sets are immutable, so this costs a reference), its GCP marks, and the
+// K and lens of the undistortion. The run's lens state (selfCalFold.js) re-derives the
+// pinhole view from these whenever the lens or K changes, instead of correcting the
+// view on top of earlier corrections.
+export function undistortAtIngest({ imgs, Kmap, moveGcpObs, log }) {
+  let undistortedImgs = 0
+  let anyCalibratedDistortion = false
+  const undistortedUuids = new Set()
+  const recordedByUuid = new Map() // uuid → { kp, marks: [[x, y], …], K, lens }
+  let shiftSum = 0,
+    shiftMax = 0,
+    shiftN = 0,
+    dropped = 0,
+    fisheyeKps = 0
+  for (const img of imgs) {
+    const dist = distortionOf(img.sensor)
+    if (!dist || !img.kp?.n) continue
+    // A fisheye with every k zero is the bare equidistant projection — no
+    // calibration to protect, so 'auto' self-cal may still solve its focal and
+    // principal point (bundleSession.js keeps radial terms off with fisheye).
+    if (!dist.fisheye || dist.k1 || dist.k2 || dist.k3 || dist.k4) anyCalibratedDistortion = true
+    const K = Kmap.get(img.uuid)
+    if (dist.fisheye) fisheyeKps += img.kp.n
+    const marks = []
+    moveGcpObs(img.uuid, (x, y) => (marks.push([x, y]), { x, y }))
+    recordedByUuid.set(img.uuid, { kp: img.kp, marks, K: { fx: K.fx, fy: K.fy, cx: K.cx, cy: K.cy }, lens: dist })
+    img.kp = mapPositions(img.kp, (x, y) => {
+      const u = undistortKeypoint(x, y, K, dist)
+      // eslint-disable-next-line no-self-compare
+      if (u.x !== u.x) {
+        dropped++
+        return u
+      }
+      const d = Math.hypot(u.x - x, u.y - y)
+      shiftSum += d
+      if (d > shiftMax) shiftMax = d
+      shiftN++
+      return u
+    })
+    moveGcpObs(img.uuid, (x, y) => undistortPixel(x, y, K, dist))
+    undistortedImgs++
+    undistortedUuids.add(img.uuid)
+  }
+  if (undistortedImgs > 0) {
+    log(
+      `undistorted keypoints on ${undistortedImgs}/${pluralize(imgs.length, 'image')} ` +
+        `(lens distortion removed at ingest — pipeline stays pinhole; ` +
+        `mean shift ${(shiftSum / Math.max(1, shiftN)).toFixed(2)}px, max ${shiftMax.toFixed(2)}px)`,
+      'info',
+      'Reconstruction',
+    )
+  }
+  if (dropped > 0) {
+    log(
+      `dropped ${dropped} of ${pluralize(fisheyeKps, 'fisheye keypoint')} more than ${FISHEYE_MAX_RAY_DEG}° off-axis ` +
+        '(too stretched in the pinhole frame to measure reliably)',
+      'info',
+      'Reconstruction',
+    )
+  }
+  return { anyCalibratedDistortion, undistortedUuids, recordedByUuid }
+}
+
+// ── Re-fit pairwise F on the moved keypoints ─────────────────────────────
+// Each pair's F was fitted during matching, on RAW (distorted / scan-space)
+// keypoints. Everything that reads e.F — the init pair's essential
+// decomposition, the focal estimate from pairs — would otherwise keep
+// operating on the stale geometry, which for a wide-angle lens (tens of px of
+// displacement) systematically bends every relative rotation. The stored
+// matches are already RANSAC inliers, so a trimmed least-squares 8-point on
+// the moved coordinates is enough — no re-RANSAC. Applies to both keypoint
+// moves above: Brown undistortion and the film scan→canonical affine.
+//
+// The re-fit is lazy: `e.F` becomes a property that fits on its first read and
+// keeps the result. Only a few dozen pairs are ever read (the probed init
+// candidates), and re-fitting all of them was most of SfM's start-up on a big block
+// (900 cameras: 46 of 49 s for 17,870 pairs). The values are the eager fit's.
+// `movedUuids`: the images whose keypoints moved (undistortion + film frames).
+// `bridgePairs` (the weak PnP bridges) only lose their dropped-keypoint matches;
+// nothing reads their F.
+export function refitMovedPairs({ donePairs, bridgePairs = [], movedUuids, imageByUuid, log }) {
+  if (movedUuids.size > 0) {
+    let pending = 0,
+      skipped = 0,
+      droppedMatches = 0
+    const bridges = new Set(bridgePairs)
+    for (const e of [...donePairs, ...bridgePairs]) {
+      if (!movedUuids.has(e.idA) && !movedUuids.has(e.idB)) continue
+      const iA = imageByUuid(e.idA),
+        iB = imageByUuid(e.idB)
+      if (!iA || !iB || !e.matches?.length) {
+        if (e.F) skipped++
+        continue
+      }
+      // A keypoint dropped at ingest (a fisheye ray far off-axis) is NaN: its matches
+      // leave the pair here, once, so no init/PnP/triangulation path ever reads one.
+      const m = asPairList(e.matches)
+      const kept = []
+      for (let i = 0; i < m.length; i++) {
+        const xa = kpX(iA.kp, m.a(i)),
+          xb = kpX(iB.kp, m.b(i))
+        // eslint-disable-next-line no-self-compare
+        if (xa !== xa || xb !== xb) continue
+        kept.push(m.a(i), m.b(i))
+      }
+      const n = kept.length / 2
+      if (n < m.length) {
+        droppedMatches += m.length - n
+        e.matches = new Uint32PairList(Uint32Array.from(kept))
+        if (e.inlierCount != null) e.inlierCount = n
+      }
+      if (!e.F || bridges.has(e)) continue
+      if (n < 8) {
+        skipped++
+        continue
+      }
+      refitOnRead(e, iA, iB)
+      pending++
+    }
+    if (droppedMatches > 0) {
+      log(
+        `dropped ${pluralize(droppedMatches, 'match', 'matches')} on fisheye keypoints too far off-axis`,
+        'info',
+        'Reconstruction',
+      )
+    }
+    if (pending > 0) {
+      log(
+        `F of ${pluralize(pending, 'pair')} re-fitted on the moved keypoints when first read` +
+          `${skipped ? ` (${skipped} skipped)` : ''} (the distorted-space fit is stale)`,
+        'info',
+        'Reconstruction',
+      )
+    }
+  }
+}
+
+// Whether a pair has an F, without fitting a lazy one (a filter over every pair must
+// not re-fit them all).
+export function hasFundamental(e) {
+  return Object.getOwnPropertyDescriptor(e, 'F')?.get ? true : !!e.F
+}
+
+function refitOnRead(e, iA, iB) {
+  let F = e.F,
+    fresh = false
+  Object.defineProperty(e, 'F', {
+    configurable: true,
+    enumerable: true,
+    get() {
+      if (!fresh) {
+        fresh = true
+        const m = asPairList(e.matches)
+        const ptsA = new Array(m.length),
+          ptsB = new Array(m.length)
+        for (let i = 0; i < m.length; i++) {
+          ptsA[i] = { x: kpX(iA.kp, m.a(i)), y: kpY(iA.kp, m.a(i)) }
+          ptsB[i] = { x: kpX(iB.kp, m.b(i)), y: kpY(iB.kp, m.b(i)) }
+        }
+        const fit = fitFundamental(ptsA, ptsB)
+        if (fit) F = fit.F
+      }
+      return F
+    },
+    set(v) {
+      F = v
+      fresh = true
+    },
+  })
+}

@@ -18,7 +18,9 @@ const typescriptRecommended = typescriptEslint.configs["flat/recommended"].map(
 
 export default [
   {
-    ignores: ["build/**", "dist/**"],
+    // Pinned third-party sources retain their upstream style and license notices.
+    // Our TypeScript adapter and worker remain covered by the normal gates.
+    ignores: ["build/**", "dist/**", "src/pages/Productos/Fotogrametria3DTerminados/vendor/**"],
   },
   js.configs.recommended,
   ...typescriptRecommended,

@@ -292,6 +292,7 @@ export default function CrearOCM() {
                         <ProveedorCard
                             selectedProveedor={selectedProveedor}
                             onSearchClick={() => setIsProveedorPickerOpen(true)}
+                            mostrarLeadTimeKpi
                             leadTimeKpi={leadTimeKpi}
                             isLeadTimeKpiLoading={isLeadTimeKpiLoading}
                             leadTimeKpiError={leadTimeKpiError}

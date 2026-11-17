@@ -207,7 +207,7 @@
 .panel {
   display: flex;
   flex-direction: column;
-  width: 380px;
+  width: 440px;
   min-width: 0;
   max-width: 100%;
   max-height: calc(100dvh - 208px - var(--assistant-bottom-gap));
@@ -305,6 +305,149 @@
   color: var(--chakra-colors-fg-muted, #586471);
   font-size: 12px;
   line-height: 1.75;
+}
+
+.readOnlyBadge {
+  margin-top: 4px;
+  color: var(--chakra-colors-fg-muted, #586471);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.connectionCard {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid var(--chakra-colors-border, #e3e4e5);
+  border-radius: 12px;
+  background: var(--chakra-colors-bg-muted, #f3f4f5);
+}
+
+.connectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.connectionCopy,
+.operationId {
+  margin-top: 6px;
+  color: var(--chakra-colors-fg-muted, #586471);
+  font-size: 11px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.connectionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.authorizationLink {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--chakra-colors-fg, var(--assistant-ink));
+  font-size: 12px;
+  line-height: 1.6;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.modelField {
+  margin-top: 16px;
+  font-size: 12px;
+}
+
+.proposalCard {
+  min-width: 0;
+  margin: 0 20px 14px;
+  padding: 14px;
+  border: 1px solid var(--chakra-colors-border, #e3e4e5);
+  border-radius: 14px;
+  background: var(--chakra-colors-bg-panel, #fff);
+}
+
+.sqlBlock {
+  max-height: 200px;
+  margin-top: 10px;
+  padding: 10px;
+  overflow: auto;
+  border-radius: 8px;
+  color: var(--chakra-colors-fg, var(--assistant-ink));
+  background: var(--chakra-colors-bg-muted, #f3f4f5);
+  font-family: var(--chakra-fonts-mono, monospace);
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: pre;
+}
+
+.resultScroll {
+  max-height: 300px;
+  margin-top: 12px;
+  overflow: auto;
+  border: 1px solid var(--chakra-colors-border, #e3e4e5);
+  border-radius: 8px;
+}
+
+.resultTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.resultTable caption {
+  padding: 8px;
+  color: var(--chakra-colors-fg-muted, #586471);
+  text-align: left;
+}
+
+.resultTable th,
+.resultTable td {
+  min-width: 80px;
+  max-width: 280px;
+  padding: 8px;
+  border-top: 1px solid var(--chakra-colors-border, #e3e4e5);
+  overflow-wrap: anywhere;
+  text-align: left;
+  vertical-align: top;
+  white-space: pre-wrap;
+}
+
+.resultTable th {
+  background: var(--chakra-colors-bg-muted, #f3f4f5);
+  font-weight: 600;
+}
+
+.actionNotice,
+.errorNotice {
+  margin: 0 20px 14px;
+  font-size: 11px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.actionNotice {
+  color: var(--chakra-colors-fg-muted, #586471);
+}
+
+.errorNotice,
+.errorText {
+  color: var(--chakra-colors-fg-error, #9b2424);
+}
+
+.errorText {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.authorizationLink:focus-visible,
+.resultScroll:focus-visible {
+  outline: 3px solid var(--assistant-blue);
+  outline-offset: 3px;
 }
 
 .suggestions {

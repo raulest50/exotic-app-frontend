@@ -1,5 +1,6 @@
 
 import axios from 'axios';
+import process from 'node:process';
 
 // Define server URL
 const server = "http://localhost:8080";
@@ -8,7 +9,11 @@ const server = "http://localhost:8080";
 const ep_all_users = server + "/usuarios";
 const ep_cargos = server + "/organigrama";
 
-const token = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJtYXN0ZXIiLCJhY2Nlc29zIjoiIiwiaWF0IjoxNzUyMjQ4ODE0LCJleHAiOjE3NTIzMzUyMTR9.u1tT_ISLT8sK504zblqRVuShZ5NQ-pmxJV10NlguosYsBoiS4WotBt9kHjNc4szb";
+// Supply a local token when running this scratch script with Bun. Never use VITE_* for credentials.
+const token = process.env.EXOTIC_SANDBOX_TOKEN;
+if (!token || !token.trim()) {
+    throw new Error("Define EXOTIC_SANDBOX_TOKEN en el entorno local antes de ejecutar sandbox.tsx.");
+}
 
 const headers = {
     'Authorization': `Bearer ${token}`
@@ -37,10 +42,8 @@ const getAllUsers = async () => {
   try {
     const response = await axios.get(ep_all_users, {headers});
     return response.data;
-  } catch (error) {
-    // Handle any errors
-    console.error('Error fetching users:', error);
-    throw error;
+  } catch {
+    throw new Error("No se pudo completar la consulta local del sandbox.");
   }
 };
 
@@ -48,10 +51,8 @@ const getOrganigrama = async () => {
     try {
         const response = await axios.get(ep_cargos, {headers});
         return response.data;
-    } catch (error) {
-        // Handle any errors
-        console.error('Error fetching users:', error);
-        throw error;
+    } catch {
+        throw new Error("No se pudo completar la consulta local del sandbox.");
     }
 };
 

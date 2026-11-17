@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Badge, Box, Button, Flex, Heading, Text } from "@chakra-ui/react";
 import {
     addEdge, useEdgesState, useNodesState,
@@ -19,6 +19,8 @@ import { guardarProducto, importedOutputQuantity, toDesignerPayload, type Editin
 import Validator from "./Validator.tsx";
 import ProcessDesignerCanvas from "./ProcessDesignerCanvas.tsx";
 import LoadTerminadoDialog, { type LoadedDraft } from "./LoadTerminadoDialog.tsx";
+
+const FotogrametriaMain = lazy(() => import("../Fotogrametria3DTerminados/FotogrametriaMain.tsx"));
 
 export type DesignerNode = MaterialFlowNode | SemiterminadoFlowNode | ProcessFlowNode | TerminadoFlowNode;
 export interface CatalogueEditRequest { requestId: number; productoId: string }
@@ -75,6 +77,8 @@ export default function ProcessDesignerTab({ isActive, editRequest, onEditReques
     const [cloneSource, setCloneSource] = useState("");
     const [fitRevision, setFitRevision] = useState(0);
     const [resetRevision, setResetRevision] = useState(0);
+    const [photoSessionRevision, setPhotoSessionRevision] = useState(0);
+    const [photoPending, setPhotoPending] = useState(false);
     const nextPosition = useRef(0);
     const selectedIds = nodes.filter((node) => node.type === "material" || node.type === "semiterminado").map((node) => node.data.producto.productoId);
     const draftKey = JSON.stringify(toDesignerPayload(product, nodes, edges));
@@ -165,6 +169,7 @@ export default function ProcessDesignerTab({ isActive, editRequest, onEditReques
         setNodes(loadedNodes);
         setEdges(draft.edges);
         if (draft.mode !== "graph") {
+            setPhotoSessionRevision(value => value + 1); setPhotoPending(false);
             setEditingProduct(draft.mode === "edit" ? draft.identity : null);
             setSavedDraft(loadedBaseline);
             setResetRevision(n => n + 1);
@@ -179,6 +184,7 @@ export default function ProcessDesignerTab({ isActive, editRequest, onEditReques
         if (savingRef.current || !isActive) return;
         const initialProduct = emptyDesignerProduct();
         setProduct(initialProduct);
+        setPhotoSessionRevision(value => value + 1); setPhotoPending(false);
         setNodes([{ id: "target", type: "target", position: { x: 850, y: 180 }, deletable: false, data: { producto: initialProduct } }]);
         setEdges([]);
         setCloneSource(""); nextPosition.current = 0;
@@ -226,10 +232,16 @@ export default function ProcessDesignerTab({ isActive, editRequest, onEditReques
             {(cloneSource || editingProduct) && !product.cantidadSalidaReceta && <Text color="orange.fg" mb="3">La referencia no declara la salida física de su receta. Confirma la cantidad obtenida y las cantidades de los insumos antes de guardar.</Text>}
             <Box inert={saving} aria-busy={saving}>
             {/* Reset the header's manual-prefix state while keeping its fullscreen inert wrapper mounted. */}
-            <Box><CabeceraDatos key={resetRevision} product={product} onChange={setProduct} isActive={isActive} units={units} isEditing={!!editingProduct} /></Box>
+            <Box><CabeceraDatos key={resetRevision} product={product} onChange={next => {
+                if (product.tipo_producto === "T" && next.tipo_producto !== "T") {
+                    if (photoPending && !window.confirm("Cambiar a semiterminado descartará las fotos y el borrador 3D local. ¿Continuar?")) return;
+                    setPhotoSessionRevision(value => value + 1); setPhotoPending(false);
+                }
+                setProduct(next);
+            }} isActive={isActive} units={units} isEditing={!!editingProduct} /></Box>
             <ProcessDesignerCanvas
                 product={product} onProductChange={setProduct} units={units}
-                isActive={isActive} nodes={renderedNodes} edges={edges} hasDraft={hasUnsavedChanges} editingProductId={editingProduct?.productoId}
+                isActive={isActive} nodes={renderedNodes} edges={edges} hasDraft={hasUnsavedChanges || photoPending} editingProductId={editingProduct?.productoId}
                 onAddProduct={addProduct} onLoad={loadDraft} onClear={clearDraft} onAddProcess={() => setProcessPickerOpen(true)} onAssignArea={setAreaNodeId}
                 onRemoveSelection={() => {
                     const removed = new Set(nodes.filter((n) => n.selected && n.type !== "target").map((n) => n.id));
@@ -240,6 +252,10 @@ export default function ProcessDesignerTab({ isActive, editRequest, onEditReques
                 isValidConnection={(connection) => canConnect(connection, nodes, edges)}
                 onConnect={(connection) => { if (canConnect(connection, nodes, edges)) setEdges((current) => addEdge(connection, current)); }}
             />
+            {product.tipo_producto === "T" && <Suspense fallback={<Text p="3" color="fg.muted">Cargando asistente 3D opcional…</Text>}>
+                <FotogrametriaMain key={photoSessionRevision} isActive={isActive} disabled={saving} canEdit={canSave}
+                    productoId={editingProduct?.tipoProducto === "T" ? editingProduct.productoId : undefined} onPendingChange={setPhotoPending} />
+            </Suspense>}
             </Box>
             <Validator product={product} nodes={nodes} edges={edges} isActive={isActive} units={units}
                 saving={saving} canSave={canSave} onSave={save} error={saveError} result={result}
@@ -250,7 +266,7 @@ export default function ProcessDesignerTab({ isActive, editRequest, onEditReques
                 <Button variant="outline" onClick={onCancelEditRequest}>Volver a Modificaciones</Button>
             </Box>}
             {editRequest && isActive && canSave && <LoadTerminadoDialog key={editRequest.requestId}
-                exactProductId={editRequest.productoId} hasDraft={hasUnsavedChanges} editingProductId={editingProduct?.productoId}
+                exactProductId={editRequest.productoId} hasDraft={hasUnsavedChanges || photoPending} editingProductId={editingProduct?.productoId}
                 onClose={() => onCancelEditRequest?.()} onLoad={draft => {
                     loadDraft(draft);
                     onEditRequestLoaded?.();

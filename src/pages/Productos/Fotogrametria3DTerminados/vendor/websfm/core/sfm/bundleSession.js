@@ -1,0 +1,1145 @@
+// Every bundle adjustment one single-model run performs, over that run's shared model
+// state: the local window solve, the guarded global solve (acceptance, self-cal
+// validation before commit, the self-cal report and the distortion fold via
+// selfCalFold.js), the camera-prior and GCP-anchored solves, and the summed solver
+// statistics for the run record. Solves read and write `cameras` and the track store
+// in place; point ids are held only within one solve (the caller's refreshTracks
+// renumbers them between solves).
+//
+// createBundleSession(ctx) — ctx = {
+//   cfg, cameras, tracks, ids, keypointsAt, imageByUuid, sensorIntByUuid,
+//   intrinsicsRecord, selfCalRecord, selfCal (createSelfCalFold), cameraPriors, gcps,
+//   modelReprojStats, log,
+//   fixedCameras?,  Set of uuids no solve may move (extending a saved model,
+//                   extendModel.js); a solve then holds K too, and takes only the points
+//                   a free camera sees, with the fixed cameras that see them
+//   rig?,           rigModel.js: a capture's photos share one pose in the global and
+//                   survey solves, whose plain global solves refine the lens offsets
+//                   (the local window solves keep every camera its own pose)
+// }
+// Created before registration: register.js runs the interleaved (R3) and local
+// solves through it. `cfg` must already carry the resolved gates and refineIntrinsics.
+
+import { bundleAdjust } from './reconstruction.js'
+import { validateSelfCalUpdate } from './selfCalGuard.js'
+import { focalSigmaNote } from './focalSigma.js'
+import { distortPixel } from './distortion.js'
+import {
+  buildCameraPriorConstraints as buildSurveyPriorConstraints,
+  qualifyingGcps,
+  buildGcpAnchors,
+} from './surveyConstraints.js'
+import { surveyGradePositions } from './cameraPriors.js'
+import { compareRobustCost, projectFullXYZ } from './baAcceptance.js'
+import {
+  buildBaObservations,
+  appendObservations,
+  trackPositions,
+  mapObservations,
+  tieWeightOf,
+} from './baObservations.js'
+import { fmtStats } from './modelStats.js'
+import { attachRollingShutter, captureSeconds } from './rollingShutter.js'
+import { pluralize } from '../textFormat.js'
+import { demAnchors } from './demAnchors.js'
+import { demHoldSampler } from './demHoldGrid.js'
+import { frameFromSimilarity } from '../products/georef.js'
+import { cameraCenter } from './geometry.js'
+
+export function createBundleSession(ctx) {
+  const {
+    cfg,
+    cameras,
+    tracks,
+    ids,
+    keypointsAt,
+    imageByUuid,
+    sensorIntByUuid,
+    intrinsicsRecord,
+    selfCalRecord,
+    selfCal,
+    cameraPriors,
+    gcps,
+    modelReprojStats,
+    log,
+    fixedCameras = null,
+    rig = null,
+    demHold = null,
+  } = ctx
+  const isFixed = (uuid) => !!fixedCameras?.has(uuid)
+  // Defaults + rationale for these live in defaults.user.js (baIterations,
+  // refineIntrinsics); `cfg` already merged them.
+  const { baIterations, refineIntrinsics } = cfg
+  // Ties weigh what one detection pixel measures against the survey terms (tieWeightOf).
+  const tieWeight = tieWeightOf(cfg.detectScaleFactor)
+  if (tieWeight !== 1 && (cameraPriors?.length || gcps?.length || demHold))
+    log(
+      `Bundle adjustment: a tie point counts as ${Math.sqrt(1 / tieWeight).toFixed(2)} px (one detection pixel) ` +
+        'against the GCPs and camera positions',
+      'info',
+      'Reconstruction',
+    )
+
+  // Rolling shutter (cfg.rollingShutter 'on', rollingShutter.js): before each solve every
+  // registered camera gets its velocity from its neighbours in the current model and its
+  // group's readout time, which the global solves refine (bundle.rs bundle_adjust_rs).
+  const rollingShutter = cfg.rollingShutter === 'on'
+  const rsFrame = (uuid) => {
+    const img = imageByUuid(uuid)
+    if (!img) return null
+    return {
+      t: captureSeconds(img.meta),
+      h: img.sensor?.height || img.meta?.height || null,
+      group: sensorIntByUuid.get(uuid) ?? `image:${uuid}`,
+      film: !!img.sensor?.fiducialCalibration,
+    }
+  }
+  const prepareRollingShutter = () => {
+    if (rollingShutter) attachRollingShutter(cameras, rsFrame)
+  }
+
+  // A BA's camera index by image index (−1 = not in the solve), from its uuid → index map.
+  const camIdxOfImg = (camIdxOf) => (img) => camIdxOf.get(ids.uuid(img)) ?? -1
+  // Write a solve's refined positions back: solve point r is point ptIds[r].
+  const setTrackPositions = (ptIds, pos) => {
+    for (let r = 0; r < ptIds.length; r++) tracks.setPosition(ptIds[r], pos[3 * r], pos[3 * r + 1], pos[3 * r + 2])
+  }
+
+  // What every bundle adjustment's linear solves did (bundle.rs SolveStats), summed for
+  // the run record: the PCG-vs-Cholesky decision (TODO ▸ MEM ▸ PCG) is made from these.
+  const baSolverTotals = {
+    calls: 0,
+    ms: 0,
+    maxN: 0,
+    solves: 0,
+    cholesky: 0,
+    pcgConverged: 0,
+    pcgPartial: 0,
+    pcgFallback: 0,
+    pcgNotPd: 0,
+    pcgIters: 0,
+    pcgItersMax: 0,
+    threads: 1,
+  }
+  const noteBaSolver = (label, result) => {
+    const s = result?.solver
+    if (!s) return
+    const T = baSolverTotals
+    T.calls++
+    T.ms += result.ms ?? 0
+    T.maxN = Math.max(T.maxN, s.n)
+    for (const k of ['solves', 'cholesky', 'pcgConverged', 'pcgPartial', 'pcgFallback', 'pcgNotPd', 'pcgIters'])
+      T[k] += s[k]
+    T.pcgItersMax = Math.max(T.pcgItersMax, s.pcgItersMax)
+    T.threads = Math.max(T.threads, result.threads ?? 1)
+    const pcg = s.pcgConverged + s.pcgPartial + s.pcgFallback + s.pcgNotPd
+    log(
+      `${label} solver — n ${s.n}, ${pluralize(s.solves, 'solve')}: ` +
+        (pcg
+          ? `PCG ${s.pcgConverged} converged / ${s.pcgPartial} partial / ${s.pcgFallback} → Cholesky / ` +
+            `${s.pcgNotPd} not PD, ${s.pcgIters} CG it (max ${s.pcgItersMax})`
+          : `${s.cholesky} Cholesky`) +
+        `; ${((result.ms ?? 0) / 1000).toFixed(1)}s`,
+      'debug',
+      'Reconstruction',
+    )
+  }
+
+  // The frame a solve runs in: every camera's observations in the pixels its lens
+  // recorded — the view re-distorted with the K and lens it was undistorted about, which
+  // recovers them exactly — with that whole lens on its K (selfCalFold.js baLensOf), so
+  // bundle.rs fits the lens itself: Brown k1–k3, p1, p2 or a fisheye's Kannala–Brandt
+  // k1–k4. An honest pixel error at any field angle, and self-calibration solves the
+  // lens rather than a correction to it. A rational lens's camera stays in the pinhole
+  // view. Returns the solve's kList, observations and whether it needs `fullLens`.
+  function lensFrame(uuidList, kList, observations) {
+    const lenses = uuidList.map((u) => selfCal.baLensOf(u))
+    const fullLens = lenses.some((l) => l && !l.fisheye)
+    if (!lenses.some(Boolean)) return { kList, observations, fullLens }
+    const distorts = (l) => !!l && (l.fisheye || !!(l.k1 || l.k2 || l.k3 || l.p1 || l.p2))
+    return {
+      kList: kList.map((K, ci) => (lenses[ci] ? { ...K, ...lenses[ci] } : { ...K, k1: 0, k2: 0, k3: 0, p1: 0, p2: 0 })),
+      observations: mapObservations(observations, (ci) => {
+        const lens = lenses[ci],
+          K = kList[ci]
+        return distorts(lens) ? (x, y) => distortPixel(x, y, K, lens) : null
+      }),
+      fullLens,
+    }
+  }
+
+  // Local bundle adjustment (COLMAP's, between the geometric global solves): the newly
+  // registered camera and the `window − 1` registered cameras sharing the most points
+  // with it are free, with every point the new camera observes; the other cameras
+  // observing those points stay fixed (bundle.rs `fixed_cam`), so their observations
+  // constrain the window without moving the rest of the model. Poses and points only —
+  // self-calibration stays with the global solves. Off unless cfg.localBaWindow > 0.
+  async function runLocalBundleAdjust(uuid, window, iters) {
+    const img = ids.img(uuid)
+    const set = keypointsAt(img)
+    if (!(window > 1) || !(iters > 0) || !set || !cameras.has(uuid) || cameras.size <= 2) return
+    const ptSet = new Set()
+    for (let kp = 0, n = set.xy.length / 2; kp < n; kp++) {
+      const p = tracks.pointAt(img, kp)
+      if (p >= 0) ptSet.add(p)
+    }
+    if (ptSet.size < 10) return
+    const shared = new Map() // camera uuid → points shared with the new camera
+    for (const p of ptSet)
+      tracks.forEachView(p, (vi) => {
+        const u = ids.uuid(vi)
+        if (u !== uuid && cameras.has(u)) shared.set(u, (shared.get(u) ?? 0) + 1)
+      })
+    const free = [
+      uuid,
+      ...[...shared]
+        .filter(([u]) => !isFixed(u))
+        .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+        .slice(0, window - 1)
+        .map(([u]) => u),
+    ]
+    const freeSet = new Set(free)
+    const fixed = [...shared.keys()].filter((u) => !freeSet.has(u))
+    const uuidList = [...free, ...fixed]
+    prepareRollingShutter()
+    const camList = uuidList.map((u) => cameras.get(u))
+    const camIdxOf = new Map(uuidList.map((u, i) => [u, i]))
+    const ptIds = [...ptSet]
+    const { kList, observations, fullLens } = lensFrame(
+      uuidList,
+      camList.map((c) => c.K),
+      buildBaObservations(tracks, ptIds, (vi) => camIdxOf.get(ids.uuid(vi)) ?? -1, keypointsAt, tieWeight),
+    )
+    const posBefore = trackPositions(tracks, ptIds)
+    const result = await bundleAdjust(camList, kList, posBefore, observations, {
+      maxIters: iters,
+      refineIntrinsics: 'none',
+      fullLens,
+      solver: cfg.baSolver,
+      flatPoints: true,
+      fixedCams: fixed.map((_, k) => free.length + k),
+    })
+    noteBaSolver('local BA', result)
+    if (!result) return
+    if (result.costAfter > result.costBefore) {
+      const robust = compareRobustCost({
+        before: { cams: camList, Ks: kList, points: posBefore },
+        after: { cams: result.cameras, Ks: kList, points: result.pos },
+        observations,
+      })
+      if (!robust.improved) return
+    }
+    free.forEach((u, ci) => {
+      const old = cameras.get(u)
+      cameras.set(u, { ...old, ...result.cameras[ci], K: old.K })
+    })
+    setTrackPositions(ptIds, result.pos)
+    log(
+      `local BA (${imageByUuid(uuid)?.name ?? uuid}) — ${free.length} free + ${fixed.length} fixed cameras, ` +
+        `${ptIds.length} points: RMS ${result.costBefore.toFixed(2)} → ${result.costAfter.toFixed(2)}px`,
+      'debug',
+      'Reconstruction',
+    )
+  }
+
+  // Convert project-CRS camera poses into targets in the current arbitrary SfM
+  // frame. The best-fit position similarity removes the global gauge; imported
+  // orientations are then composed through its rotation into the same frame.
+  // Constraint construction lives in surveyConstraints.js (shared with gradual
+  // selection, so a refinement can never drop what this solve was held to).
+  const buildCameraPriorConstraints = (uuidList, reference = null) =>
+    buildSurveyPriorConstraints({
+      cameras,
+      cameraPriors,
+      uuidList,
+      minCameras: cfg.cameraPriorBaMinCameras,
+      reference,
+    })
+
+  // Survey-grade positions that a prior solve can use on these cameras, or null.
+  const positionsHoldBlock = (uuidList) => {
+    const grade = surveyGradePositions(cameraPriors, cfg.selfCalDecentringHeldSigma, cfg.cameraPriorBaMinCameras)
+    return grade.held && buildCameraPriorConstraints(uuidList) ? grade : null
+  }
+
+  const cameraPriorReprojectionAccepts = (result) => {
+    const allowance = Math.max(
+      cfg.cameraPriorMaxReprojIncreasePx,
+      result.costBefore * cfg.cameraPriorMaxReprojIncreaseFrac,
+    )
+    return result.costAfter <= result.costBefore + allowance
+  }
+
+  // Run one global bundle adjustment, apply it (guarded: never commit a result
+  // that worsens the cost), and log RMS / convergence trace. Reused for the interim
+  // (R3) solves and each post-filter re-solve. `refineMode` overrides `refineIntrinsics`
+  // per call: interim/pre-filter solves pass 'none' (self-calibration against the
+  // pre-filter mess drifted cx/cy 180px on B1), only post-filter passes refine.
+  // `cameraPriors` (optional) adds GNSS/pose centre constraints. A prior-constrained
+  // solve is SUPPOSED to trade some image residual for geometry, so it is judged by
+  // the bounded-increase rule (cameraPriorReprojectionAccepts), not "cost must fall".
+  //
+  // `refineOnly(uuid)` (optional) limits which cameras' refined intrinsics are kept:
+  // the others keep their K, as if their group had been held fixed (the crate cannot
+  // hold one group fixed while refining another). Their poses still come from the
+  // joint solve, so a caller re-settles with a 'none' solve afterwards.
+  // `gcp` (optional, from buildGcpAnchors): GCP anchor points appended after the real
+  // tracks, their mark observations and the anchor residuals — so a GCP-anchored solve
+  // can refine intrinsics through the same validation + fold path as every other pass.
+  let lastSolve = null // see runBundleAdjust
+  // `warm`: the model is already converged (a re-solve after a filter, a
+  // retriangulation or with survey constraints added), so the solve may stop earlier.
+  // Brown's decentring terms under the auto schedule are a model-selection decision, made
+  // once a run: null until the first solve that would free them, then 'kept' or 'dropped'.
+  let decentring = null
+  const withoutDecentring = (mode) =>
+    String(mode)
+      .split(',')
+      .filter((t) => t.trim() !== 'p')
+      .join(',') || 'none'
+
+  async function runBundleAdjust(
+    label,
+    iters,
+    refineMode = refineIntrinsics,
+    { cameraPriors = null, refineOnly = null, gcp = null, warm = false, lensSigma = false } = {},
+  ) {
+    // Any solve replaces the record of the last one; it is set again below only when
+    // this one leaves a converged model (refinePipeline.js skips a re-solve of it).
+    lastSolve = null
+    if (!(cameras.size >= 2 && tracks.liveCount() >= 10 && iters > 0)) {
+      log(
+        `${label} skipped (cameras=${cameras.size}, ` + `points=${tracks.liveCount()}, iters=${iters})`,
+        'debug',
+        'Reconstruction',
+      )
+      return
+    }
+    // With fixed cameras: the points a free camera sees, and the fixed cameras that see
+    // them (the rest of the model is already solved and cannot move).
+    let ptIds = tracks.liveIds()
+    let uuidList = [...cameras.keys()]
+    if (fixedCameras?.size) {
+      refineMode = 'none'
+      const freeImg = new Set(uuidList.filter((u) => !isFixed(u)).map((u) => ids.img(u)))
+      const seen = new Set()
+      ptIds = ptIds.filter((p) => {
+        let free = false
+        tracks.forEachView(p, (vi) => {
+          if (freeImg.has(vi)) free = true
+        })
+        if (free) tracks.forEachView(p, (vi) => seen.add(ids.uuid(vi)))
+        return free
+      })
+      uuidList = [...uuidList.filter((u) => !isFixed(u)), ...uuidList.filter((u) => isFixed(u) && seen.has(u))]
+      if (!freeImg.size || ptIds.length < 10) {
+        log(`${label} skipped (no free camera with points)`, 'debug', 'Reconstruction')
+        return
+      }
+    }
+    // Decentring (p1, p2) under the auto schedule: freed only where it explains the
+    // observations. The first solve that would free it runs with and without it from the
+    // same start (below); a run that dropped it keeps it off. An explicit refine string
+    // that asks for it is used as given.
+    const hasP = /(^|,)\s*p\s*(,|$)/.test(String(refineMode))
+    if (hasP && cfg.selfCalStaged && decentring === 'dropped') refineMode = withoutDecentring(refineMode)
+    const trialP = hasP && cfg.selfCalStaged && decentring === null
+    prepareRollingShutter()
+    const camList = uuidList.map((u) => cameras.get(u))
+    const sensorOfCam = uuidList.map((u) => sensorIntByUuid.get(u) ?? -1)
+    const camIdxOf = new Map(uuidList.map((u, i) => [u, i]))
+    const fixedCams = fixedCameras?.size ? uuidList.flatMap((u, i) => (isFixed(u) ? [i] : [])) : null
+    // Point rank in this solve → point id; the solve's point i is ptIds[i].
+    const tieObs = buildBaObservations(tracks, ptIds, camIdxOfImg(camIdxOf), keypointsAt, tieWeight)
+    // kList / observations in the solve's frame: a fisheye camera's in recorded pixels
+    // with its lens on K (lensFrame). Everything below — the diagnostic, the robust
+    // acceptance, the validation — judges the solve in that same frame.
+    const { kList, observations, fullLens } = lensFrame(
+      uuidList,
+      camList.map((c) => c.K),
+      gcp ? appendObservations(tieObs, gcp.observations) : tieObs,
+    )
+    const posBefore = gcp ? trackPositions(tracks, ptIds, gcp.anchorPts) : trackPositions(tracks, ptIds)
+    // A survey-constrained solve (camera priors or GCP anchors) is judged by the
+    // bounded-increase rule, not "cost must fall".
+    const constrained = !!(cameraPriors || gcp)
+    log(
+      `${label} — ${camList.length} cameras, ${ptIds.length} points, ` +
+        `${observations.n} observations, ${iters} iters`,
+      'info',
+      'Reconstruction',
+    )
+    // Diagnostic: where do the gross pre-solve residuals sit? Grouped by camera, split
+    // by the observed point's track length (2 = freshly triangulated, ≥3 = extended).
+    {
+      const { cam: oCam, pt: oPt, x: oX, y: oY } = observations
+      const errs = new Float64Array(observations.n)
+      for (let i = 0; i < observations.n; i++) {
+        const j = oPt[i]
+        const q = projectFullXYZ(
+          camList[oCam[i]],
+          kList[oCam[i]],
+          posBefore[3 * j],
+          posBefore[3 * j + 1],
+          posBefore[3 * j + 2],
+        )
+        errs[i] = q ? Math.hypot(q.x - oX[i], q.y - oY[i]) : Infinity
+      }
+      // A typed array sorts numerically and natively (a comparator sort of ~10⁶
+      // residuals was seconds a run, every BA logs this): the same order, the same median.
+      const sorted = errs.filter(Number.isFinite).sort()
+      const med = sorted[Math.floor(sorted.length / 2)] ?? 0
+      const gross = Math.max(50, 20 * med)
+      const byCam = new Map()
+      errs.forEach((e, i) => {
+        if (!(e > gross)) return
+        const ci = oCam[i]
+        const rec = byCam.get(ci) ?? { n: 0, fresh: 0, max: 0 }
+        const pid = ptIds[oPt[i]]
+        rec.n++
+        if (pid != null && tracks.viewCount(pid) <= 2) rec.fresh++
+        rec.max = Math.max(rec.max, e)
+        byCam.set(ci, rec)
+      })
+      if (byCam.size) {
+        const top = [...byCam]
+          .sort((a, b) => b[1].n - a[1].n)
+          .slice(0, 6)
+          .map(
+            ([ci, r]) =>
+              `${imageByUuid(uuidList[ci])?.name ?? ci} ${r.n} (${r.fresh} on 2-view pts, max ${r.max.toFixed(0)}px)`,
+          )
+        const total = [...byCam.values()].reduce((s, r) => s + r.n, 0)
+        log(
+          `${label} pre-solve gross residuals (>${gross.toFixed(0)}px): ${total} obs on ${pluralize(byCam.size, 'camera')}; ` +
+            `top: ${top.join('; ')}`,
+          'debug',
+          'Reconstruction',
+        )
+      }
+    }
+
+    const solve = (mode) =>
+      bundleAdjust(camList, kList, posBefore, observations, {
+        maxIters: iters,
+        refineIntrinsics: mode,
+        fullLens,
+        refineReadout: rollingShutter,
+        ...(rig ? { rig: rig.attach(uuidList), refineRig: !fixedCameras?.size } : {}),
+        sensorOfCam,
+        solver: warm ? { ...cfg.baSolver, warm: true } : cfg.baSolver,
+        flatPoints: true,
+        ...(fixedCams?.length ? { fixedCams } : {}),
+        ...(cameraPriors ? { cameraPriors } : {}),
+        ...(gcp ? { gcpAnchors: gcp.anchors } : {}),
+        // The lens terms' σ: only on the solves that settle the lens (post-filter, and
+        // those held by priors, GCPs or a DEM), not the many interim ones.
+        lensSigma: lensSigma && mode !== 'none',
+      })
+    let result = await solve(refineMode)
+    noteBaSolver(label, result)
+    // The decentring trial: the same solve without p1, p2. They stay only if they lower
+    // the reprojection RMS by selfCalDecentringMinGain: a decentred lens does (quarry,
+    // 4 %); on a centred or already undistorted one they only trade with the poses.
+    // Under survey-grade camera positions they stay without a trial: the positions hold
+    // the camera heights, and a decentring too small to lower the RMS still moves the
+    // ground under them through the focal (tuning.js selfCalDecentringHeldSigma).
+    const held = trialP && result ? positionsHoldBlock(uuidList) : null
+    if (held) {
+      decentring = 'kept'
+      log(
+        `${label} decentring p1, p2 kept without a trial: ${held.surveyGrade} of ${held.total} camera ` +
+          `positions within ${cfg.selfCalDecentringHeldSigma} m hold the block`,
+        'info',
+        'Reconstruction',
+      )
+    } else if (trialP && result) {
+      const without = await solve(withoutDecentring(refineMode))
+      noteBaSolver(`${label} (without p1, p2)`, without)
+      if (without?.costAfter != null && result.costAfter != null) {
+        const gain = 1 - result.costAfter / without.costAfter
+        decentring = gain >= cfg.selfCalDecentringMinGain ? 'kept' : 'dropped'
+        log(
+          `${label} decentring p1, p2 ${decentring}: RMS ${result.costAfter.toFixed(3)}px with, ` +
+            `${without.costAfter.toFixed(3)}px without (${(100 * gain).toFixed(1)}% better; kept from ` +
+            `${(100 * cfg.selfCalDecentringMinGain).toFixed(0)}%)`,
+          'info',
+          'Reconstruction',
+        )
+        if (decentring === 'dropped') {
+          result = without
+          refineMode = withoutDecentring(refineMode)
+        }
+      }
+    }
+    if (!result) {
+      log(`${label} returned no result (skipped)`, 'warn', 'Reconstruction')
+      return
+    }
+    if (constrained && result.costAfter > result.costBefore + 0.01 && !cameraPriorReprojectionAccepts(result)) {
+      log(
+        `${label} REJECTED — reprojection RMS ${result.costBefore.toFixed(2)}px → ` +
+          `${result.costAfter.toFixed(2)}px exceeds the survey-constraint safety bound`,
+        'warn',
+        'Reconstruction',
+      )
+      return
+    }
+    // A correct bundle adjustment can only lower the cost; reject a worsening
+    // result rather than commit a diverged model. But a fully converged model
+    // can tick up by a float epsilon on a no-op re-solve — that's convergence,
+    // not divergence, so don't cry wolf (< 0.01px is below any real-world
+    // meaning). Only warn + reject when the cost genuinely grows (≥ 0.01px).
+    // The guard judges the solve by the cost it minimised. The crate descends a
+    // Huber-robust cost but reports plain RMS, and a correct robust solve can raise
+    // plain RMS by letting down-weighted outliers drift. Rejecting those kept newly
+    // registered cameras unrefined and seeded the later RMS 185–902 px interim
+    // starts (baAcceptance.js). So a plain-RMS rise is only a rejection when the
+    // robust cost rose too.
+    if (!constrained && result.costBefore != null && result.costAfter != null && result.costAfter > result.costBefore) {
+      const delta = result.costAfter - result.costBefore
+      const afterKs =
+        refineMode !== 'none' && result.intrinsics ? kList.map((k, ci) => ({ ...k, ...result.intrinsics[ci] })) : kList
+      const robust = compareRobustCost({
+        before: { cams: camList, Ks: kList, points: posBefore },
+        after: { cams: result.cameras, Ks: afterKs, points: result.pos },
+        observations,
+      })
+      if (delta < 0.01) {
+        log(
+          `${label} already converged (RMS ${result.costBefore.toFixed(2)}px unchanged); ` +
+            `keeping the pre-BA estimate`,
+          'debug',
+          'Reconstruction',
+        )
+        lastSolve = { mode: refineMode, converged: true }
+        return
+      }
+      if (!robust.improved) {
+        log(
+          `${label} REJECTED — RMS ${result.costBefore.toFixed(2)}px → ` +
+            `${result.costAfter.toFixed(2)}px and robust cost ${robust.before.toFixed(2)} → ` +
+            `${robust.after.toFixed(2)}px (Huber δ ${robust.delta.toFixed(1)}px) would worsen the model; ` +
+            'keeping the pre-BA estimate',
+          'warn',
+          'Reconstruction',
+        )
+        return
+      }
+      log(
+        `${label} accepted — plain RMS ${result.costBefore.toFixed(2)}px → ${result.costAfter.toFixed(2)}px rose, ` +
+          `but the robust cost it minimises fell ${robust.before.toFixed(2)} → ${robust.after.toFixed(2)}px ` +
+          `(Huber δ ${robust.delta.toFixed(1)}px): outliers were down-weighted, not the fit worsened`,
+        'info',
+        'Reconstruction',
+      )
+    }
+
+    // The refined intrinsics this solve proposes, per camera; null where none are
+    // kept (no self-calibration, or a camera `refineOnly` excludes).
+    const refined =
+      refineMode !== 'none' && result.intrinsics
+        ? result.intrinsics.map((rk, ci) => (!refineOnly || refineOnly(uuidList[ci]) ? rk : null))
+        : null
+
+    // Self-calibration is destructive only after this point: accepted radial terms
+    // are folded into every image's keypoints. Validate the detached BA result first,
+    // and reject the whole update transaction if any shared sensor is implausible.
+    // Reprojection cost alone cannot catch focal/distortion overfit on thin blocks.
+    if (refined) {
+      const checkedGroups = new Set()
+      const proposals = []
+      let rejected = null
+      for (let ci = 0; ci < uuidList.length; ci++) {
+        if (!refined[ci]) continue
+        const groupKey = selfCal.groupOf(uuidList[ci])
+        if (checkedGroups.has(groupKey)) continue
+        checkedGroups.add(groupKey)
+        const uuid = uuidList[ci]
+        const img = imageByUuid(uuid)
+        const sid = img?.sensorId ?? `image:${uuid}`
+        const rec = intrinsicsRecord.get(sid)
+        const nominalFx = rec?.fxNominal ?? kList[ci]?.fx
+        // A default-FOV focal is a guess, not a measurement: wide bounds (selfCalGuard.js).
+        const focalIsGuess = !!rec?.source?.startsWith('default')
+        const { width, height } = selfCal.kFrameDims(img)
+        const proposed = refined[ci]
+        const verdict = validateSelfCalUpdate(
+          {
+            before: kList[ci],
+            proposed,
+            nominalFx,
+            width,
+            height,
+            focalIsGuess,
+          },
+          {
+            maxFocalStepFrac: cfg.selfCalMaxFocalStepFrac,
+            maxFocalNominalFrac: cfg.selfCalMaxFocalNominalFrac,
+            maxGuessFocalStepFrac: cfg.selfCalGuessFocalStepFrac,
+            maxGuessFocalNominalFrac: cfg.selfCalGuessFocalNominalFrac,
+            maxPrincipalOffsetFrac: cfg.selfCalMaxPrincipalOffsetFrac,
+            maxCornerShiftFrac: cfg.selfCalMaxCornerShiftFrac,
+          },
+        )
+        proposals.push({
+          sensorId: img?.sensorId ?? null,
+          fxBefore: kList[ci]?.fx ?? null,
+          fxProposed: proposed?.fx ?? null,
+          fxSigma: result.lensSigma?.[ci]?.fx ?? null,
+          k1: proposed?.k1 ?? 0,
+          k2: proposed?.k2 ?? 0,
+          k3: proposed?.k3 ?? 0,
+          accepted: verdict.ok,
+          rejectionCode: verdict.code,
+          rejectionReason: verdict.reason,
+        })
+        if (!verdict.ok && !rejected) rejected = verdict
+      }
+      selfCalRecord.adjustments.push({ label, mode: refineMode, accepted: !rejected, sensors: proposals })
+      if (rejected) {
+        log(
+          `${label} self-calibration REJECTED before commit — ${rejected.reason}; ` +
+            'keeping cameras, points, intrinsics, and keypoints unchanged',
+          'warn',
+          'Reconstruction',
+        )
+        return
+      }
+    }
+    uuidList.forEach((uuid, ci) => {
+      const old = cameras.get(uuid)
+      // Merge refined intrinsics into K (keeps impliedFilmWidthMm / source meta)
+      // so subsequent BA passes and reprojection stats use the calibrated focal. The
+      // radial terms are zeroed: the fold below moves them into the keypoints.
+      const rk = refined?.[ci]
+      // Only the pinhole K lands on the camera; a fisheye's lens lives in the
+      // self-cal state (selfCalFold.js lensOf) and Brown terms fold into the keypoints.
+      const K = rk ? { ...old.K, fx: rk.fx, fy: rk.fy, cx: rk.cx, cy: rk.cy, k1: 0, k2: 0, k3: 0 } : old.K
+      if (!isFixed(uuid)) cameras.set(uuid, { ...old, ...result.cameras[ci], K })
+    })
+    setTrackPositions(ptIds, result.pos)
+    rig?.update(cameras)
+
+    // Each self-cal group this solve refined → the index of its first camera here.
+    const solvedGroups = new Map()
+    if (refined) {
+      uuidList.forEach((uuid, ci) => {
+        const key = selfCal.groupOf(uuid)
+        if (refined[ci] && !solvedGroups.has(key)) solvedGroups.set(key, ci)
+      })
+    }
+
+    // Self-calibration report: one line per group (before → after focal, the refined
+    // principal-point offset + radial coeffs, and the implied film width). Never
+    // written back to the sensor table — the user decides whether to adopt it.
+    const wantsCxcy = refineMode.includes('cxcy')
+    if (solvedGroups.size) {
+      for (const [key, ci] of solvedGroups) {
+        const g = sensorOfCam[ci]
+        const rk = refined[ci]
+        const fx0 = kList[ci].fx,
+          fx1 = rk.fx
+        const pct = fx0 ? (100 * (fx1 - fx0)) / fx0 : 0
+        let implied = ''
+        const w0 = kList[ci].impliedFilmWidthMm
+        if (w0 != null && fx1) implied = `, implied film width ${w0.toFixed(0)}mm → ${((w0 * fx0) / fx1).toFixed(0)}mm`
+        const cxcy = wantsCxcy
+          ? `, cx ${kList[ci].cx.toFixed(1)}→${rk.cx.toFixed(1)}, cy ${kList[ci].cy.toFixed(1)}→${rk.cy.toFixed(1)}`
+          : ''
+        // The group's whole solved lens: Brown k1–k3, p1, p2 (the non-zero ones), or a
+        // fisheye's Kannala–Brandt terms, before → after.
+        const kterms = rk.fisheye
+          ? ['k1', 'k2', 'k3', 'k4']
+              .slice(0, rk.fisheyeTerms || 4)
+              .map((k) => `${k} ${(kList[ci][k] ?? 0).toFixed(5)}→${(rk[k] ?? 0).toFixed(5)}`)
+          : ['k1', 'k2', 'k3', 'p1', 'p2'].filter((k) => rk[k]).map((k) => `${k} ${rk[k].toFixed(5)}`)
+        const kdist = kterms.length ? `, ${rk.fisheye ? 'fisheye ' : ''}${kterms.join(', ')}` : ''
+        // A sensorless camera is a group of its own: one line each, so debug-level
+        // (a sensorless set would otherwise print a line per image per pass).
+        const who = g >= 0 ? `sensor group ${g}` : `camera ${imageByUuid(uuidList[ci])?.name ?? key} (no sensor)`
+        const sigma = result.lensSigma?.[ci]?.fx
+        const pm = sigma > 0 ? ` ± ${sigma.toFixed(1)}` : ''
+        log(
+          `${label} self-calibration — ${who}: ` +
+            `fx ${fx0.toFixed(1)} → ${fx1.toFixed(1)}${pm} (${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%)${cxcy}${kdist}${implied}`,
+          g >= 0 ? 'info' : 'debug',
+          'Reconstruction',
+        )
+        if (g >= 0) {
+          // The last solve of the focal is the run's σ (finaliseIntrinsics keeps the row);
+          // one that moved it without a σ leaves none rather than an earlier solve's.
+          const rec = intrinsicsRecord.get(imageByUuid(uuidList[ci])?.sensorId ?? `image:${uuidList[ci]}`)
+          if (rec) rec.fxSigma = sigma > 0 ? sigma : null
+          if (sigma > 0) log(`${label}: ${focalSigmaNote(fx1, sigma)}`, 'info', 'Reconstruction')
+        }
+      }
+    }
+
+    // Propagate the refined calibration to every image of each solved group and fold
+    // the radial terms into the keypoints (selfCalFold.js ▸ fold).
+    if (solvedGroups.size) selfCal.fold({ label, refineMode, solvedGroups, refined, kList, camIdxOf })
+
+    if (result.costBefore != null && result.costAfter != null) {
+      log(
+        `${label} RMS ${result.costBefore.toFixed(2)}px → ${result.costAfter.toFixed(2)}px ` +
+          `(${result.costAfter <= result.costBefore ? '−' : '+'}${Math.abs(result.costBefore - result.costAfter).toFixed(2)}px)`,
+        'success',
+        'Reconstruction',
+      )
+    }
+    const trace = result.costTrace ?? []
+    if (trace.length >= 2) {
+      const fmtTrace =
+        trace.length <= 8
+          ? trace.map((c) => c.toFixed(1))
+          : [...trace.slice(0, 3), '…', ...trace.slice(-3)].map((c) => (typeof c === 'number' ? c.toFixed(1) : c))
+      const last = trace[trace.length - 1],
+        prev = trace[trace.length - 2]
+      const lastDrop = prev > 0 ? (prev - last) / prev : 0
+      const verdict =
+        lastDrop > 0.02
+          ? `still descending (${(lastDrop * 100).toFixed(1)}% on last iter — raising baIterations may help)`
+          : // Saying "converged" at the cap hid that every BA ran all its iterations
+            // (St Nazaire: 30 × ~4 s each after the first had already converged).
+            trace.length >= iters
+            ? `plateaued, but ran all ${trace.length} iterations (no stopping rule fired)`
+            : `converged in ${trace.length} iter`
+      log(`${label} convergence (RMS px) — ${fmtTrace.join(' → ')}; ${verdict}`, 'debug', 'Reconstruction')
+    }
+    log(`${label} reprojection — ${fmtStats(modelReprojStats())}`, 'info', 'Reconstruction')
+    // Converged: LM stopped on its own rule before the iteration cap.
+    lastSolve = { mode: refineMode, converged: trace.length > 0 && trace.length < iters }
+    return result
+  }
+
+  async function runCameraPriorBundleAdjust() {
+    if (!(
+      cameraPriors.length >= cfg.cameraPriorBaMinCameras &&
+      cameras.size >= cfg.cameraPriorBaMinCameras &&
+      tracks.liveCount() >= 10 &&
+      baIterations > 0
+    ))
+      return
+    for (let round = 0; round < cfg.cameraPriorBaRounds; round++) {
+      const uuidList = [...cameras.keys()]
+      const constrained = buildCameraPriorConstraints(uuidList)
+      if (!constrained) {
+        log(
+          `camera-prior bundle adjustment skipped — fewer than ${cfg.cameraPriorBaMinCameras} ` +
+            'registered, non-collinear 3D camera positions',
+          'debug',
+          'Reconstruction',
+        )
+        return
+      }
+      prepareRollingShutter()
+      const camList = uuidList.map((u) => cameras.get(u))
+      const camIdxOf = new Map(uuidList.map((u, i) => [u, i]))
+      log(
+        `camera-prior bundle adjustment (round ${round + 1}/${cfg.cameraPriorBaRounds}) — ` +
+          `${pluralize(constrained.priors.length, 'camera')}, seed RMS ${constrained.fit.rms.toPrecision(3)} project units`,
+        'info',
+        'Reconstruction',
+      )
+      // Experiment (cameraPriorRefineIntrinsics): let the GNSS-constrained solve re-estimate
+      // focal / principal point / distortion. With fixed K a self-calibration that is
+      // slightly wrong (the nadir focal–height correlation that domes a block) cannot be
+      // corrected by the priors: the quarry stalled at 0.43 m centre residual against
+      // ±3 cm RTK. Routed through runBundleAdjust so the distortion fold, the composed
+      // self-cal record and the self-cal validation all apply exactly as elsewhere.
+      // 'auto' takes the mode of the last post-filter pass (refinePipeline.js records it).
+      if (cfg.cameraPriorRefineIntrinsics && cfg.cameraPriorRefineIntrinsics !== 'none') {
+        const mode =
+          cfg.cameraPriorRefineIntrinsics === 'auto'
+            ? (selfCalRecord.passes.at(-1)?.mode ?? refineIntrinsics)
+            : cfg.cameraPriorRefineIntrinsics
+        const r = await runBundleAdjust(
+          `camera-prior bundle adjustment (round ${round + 1}, intrinsics '${mode}')`,
+          baIterations,
+          mode,
+          { cameraPriors: constrained.priors, warm: true, lensSigma: true },
+        )
+        if (!r) return
+        log(
+          `camera-prior bundle adjustment centre residual → ` +
+            `${(r.cameraPriorRmsAfter * constrained.fit.scale).toPrecision(3)} project units`,
+          'success',
+          'Reconstruction',
+        )
+        continue
+      }
+      const ptIds = tracks.liveIds()
+      const lf = lensFrame(
+        uuidList,
+        camList.map((c) => c.K),
+        buildBaObservations(tracks, ptIds, camIdxOfImg(camIdxOf), keypointsAt, tieWeight),
+      )
+      const result = await bundleAdjust(camList, lf.kList, trackPositions(tracks, ptIds), lf.observations, {
+        maxIters: baIterations,
+        refineIntrinsics: 'none',
+        fullLens: lf.fullLens,
+        flatPoints: true,
+        sensorOfCam: uuidList.map((u) => sensorIntByUuid.get(u) ?? -1),
+        cameraPriors: constrained.priors,
+        ...(rig ? { rig: rig.attach(uuidList) } : {}),
+        solver: cfg.baSolver,
+      })
+      noteBaSolver(`camera-prior bundle adjustment (round ${round + 1})`, result)
+      if (!result) return
+      if (!cameraPriorReprojectionAccepts(result)) {
+        log(
+          `camera-prior bundle adjustment REJECTED — reprojection RMS ` +
+            `${result.costBefore.toFixed(2)}px → ${result.costAfter.toFixed(2)}px exceeds the safety bound`,
+          'warn',
+          'Reconstruction',
+        )
+        return
+      }
+      uuidList.forEach((uuid, ci) => cameras.set(uuid, { ...cameras.get(uuid), ...result.cameras[ci] }))
+      setTrackPositions(ptIds, result.pos)
+      log(
+        `camera-prior bundle adjustment RMS ${result.costBefore.toFixed(2)}px → ` +
+          `${result.costAfter.toFixed(2)}px; centre residual → ` +
+          `${(result.cameraPriorRmsAfter * constrained.fit.scale).toPrecision(3)} project units`,
+        'success',
+        'Reconstruction',
+      )
+    }
+  }
+
+  // GCP-in-BA (F2, deferred half): once the pipeline has settled, pull the
+  // triangulated position of each GCP toward its surveyed position via
+  // bundle.rs's anchor residual — GCPs constrain the reconstruction directly
+  // rather than only fitting a post-hoc similarity. `gcps[].observations` are
+  // pre-resolved to `{ uuid, px, py, accuracyX, accuracyY }` (the store maps imageId → uuid before
+  // crossing into the worker).
+  //
+  // Runs (triangulate → fit → anchored BA) twice — hard-coded, not a user
+  // setting — as cheap insurance against a poor seed similarity on the first
+  // pass; the *actual* georeference used for products is a fresh post-hoc fit
+  // (useReconstructionStore.georeference()) run on demand against whatever
+  // cameras this leaves in the sparse cloud, so this step only needs to be
+  // "good enough to help the poses converge", not final.
+  async function runGcpAnchoredBundleAdjust() {
+    const qualifying = qualifyingGcps(gcps, cameras)
+    if (qualifying.length < 3) {
+      if (gcps.length) {
+        log(
+          `GCP anchoring skipped (${qualifying.length}/3 GCPs ` + `with ≥2 registered views)`,
+          'debug',
+          'Reconstruction',
+        )
+      }
+      return
+    }
+
+    for (let round = 0; round < 2; round++) {
+      const uuidList = [...cameras.keys()]
+      prepareRollingShutter()
+      const camList = uuidList.map((u) => cameras.get(u))
+      const kList = camList.map((c) => c.K)
+      const sensorOfCam = uuidList.map((u) => sensorIntByUuid.get(u) ?? -1)
+      const camIdxOf = new Map(uuidList.map((u, i) => [u, i]))
+      const ptIds = tracks.liveIds()
+      const setup = await buildGcpAnchors({ cameras, qualifying, camIdxOf, firstPointIndex: ptIds.length })
+      if (setup.error) {
+        log(`GCP anchoring stopped (${setup.error})`, 'warn', 'Reconstruction')
+        return
+      }
+      const { fit, frame, anchorPts, anchors } = setup
+      // GCPs define the one project↔SfM similarity for all survey constraints
+      // in this joint pass, keeping point and camera targets in the same gauge.
+      const constrainedCameras = buildCameraPriorConstraints(uuidList, { fit, frame })
+
+      log(
+        `GCP-anchored bundle adjustment (round ${round + 1}/2) — ` +
+          `${pluralize(anchors.length, 'GCP')}, seed scale ${fit.scale.toPrecision(4)}, ` +
+          `seed RMS ${fit.rms.toPrecision(3)}`,
+        'info',
+        'Reconstruction',
+      )
+
+      // With enough control, let the anchored solve re-estimate the intrinsics, as
+      // Metashape's GCP optimisation does. Fixed K cannot undo a focal error: over a
+      // nadir block f and flying height trade off, so the free network's relief scales
+      // with it and only control at different heights pins it down. Casa Grande 1978
+      // (certificate 152.9 mm, self-cal 5687 px, Metashape with GCPs ≈ 133 mm): fixed K
+      // left checkpoints at 8.6 m vertical RMS. Routed through runBundleAdjust, so the
+      // self-cal validation, the distortion fold (GCP marks move with it) and the
+      // composed self-cal record apply exactly as in every other pass.
+      const gcpMode =
+        cfg.gcpRefineIntrinsics === 'auto'
+          ? (selfCalRecord.passes.at(-1)?.mode ?? refineIntrinsics)
+          : (cfg.gcpRefineIntrinsics ?? 'none')
+      if (gcpMode && gcpMode !== 'none' && anchors.length >= (cfg.gcpRefineIntrinsicsMinGcps ?? 5)) {
+        const r = await runBundleAdjust(
+          `GCP-anchored bundle adjustment (round ${round + 1}, intrinsics '${gcpMode}')`,
+          baIterations,
+          gcpMode,
+          { cameraPriors: constrainedCameras?.priors ?? null, gcp: setup, lensSigma: true },
+        )
+        if (!r) return
+        log(
+          `GCP-anchored bundle adjustment anchor residual → ${(r.anchorRmsAfter * fit.scale).toPrecision(3)} project units`,
+          'success',
+          'Reconstruction',
+        )
+        continue
+      }
+
+      const lf = lensFrame(
+        uuidList,
+        kList,
+        appendObservations(
+          buildBaObservations(tracks, ptIds, camIdxOfImg(camIdxOf), keypointsAt, tieWeight),
+          setup.observations,
+        ),
+      )
+
+      const result = await bundleAdjust(camList, lf.kList, trackPositions(tracks, ptIds, anchorPts), lf.observations, {
+        maxIters: baIterations,
+        refineIntrinsics: 'none',
+        fullLens: lf.fullLens,
+        sensorOfCam,
+        gcpAnchors: anchors,
+        flatPoints: true,
+        cameraPriors: constrainedCameras?.priors ?? [],
+        ...(rig ? { rig: rig.attach(uuidList) } : {}),
+        solver: cfg.baSolver,
+      })
+      noteBaSolver(`GCP-anchored bundle adjustment (round ${round + 1})`, result)
+      if (!result) {
+        log('GCP-anchored bundle adjustment returned no result (skipped)', 'warn', 'Reconstruction')
+        return
+      }
+      // Like a camera-prior solve, an anchored solve is SUPPOSED to trade some image
+      // residual for geometry: pulling a domed or bent free network onto its control
+      // costs reprojection by construction. So it is judged by the same bounded-increase
+      // rule, not "cost must fall". The old 0.01 px gate rejected Casa Grande's 1978
+      // block at 1.69 → 1.71 px and left its checkpoints at 10.6 m vertical RMS.
+      if (result.costAfter > result.costBefore + 0.01 && !cameraPriorReprojectionAccepts(result)) {
+        log(
+          `GCP-anchored bundle adjustment REJECTED — reprojection RMS ` +
+            `${result.costBefore.toFixed(2)}px → ${result.costAfter.toFixed(2)}px exceeds the survey-constraint safety bound`,
+          'warn',
+          'Reconstruction',
+        )
+        return
+      }
+      uuidList.forEach((uuid, ci) => {
+        cameras.set(uuid, { ...cameras.get(uuid), ...result.cameras[ci] })
+      })
+      // Only the original (non-anchor) points are kept — the synthetic anchor
+      // points were scratch space for this BA pass, not real SIFT tracks.
+      setTrackPositions(ptIds, result.pos)
+      log(
+        `GCP-anchored bundle adjustment RMS ${result.costBefore.toFixed(2)}px → ` +
+          `${result.costAfter.toFixed(2)}px, anchor residual → ${(result.anchorRmsAfter * fit.scale).toPrecision(3)} project units` +
+          (constrainedCameras
+            ? `, camera-centre residual → ` + `${(result.cameraPriorRmsAfter * fit.scale).toPrecision(3)} project units`
+            : ''),
+        'success',
+        'Reconstruction',
+      )
+    }
+  }
+
+  // F13 — Georeference ▸ Hold to a reference DEM: the settled model solved again with
+  // its tie points over stable ground held to a reference DEM along the vertical
+  // (demAnchors.js), so a block held only by drone GPS or a few GCPs cannot bend. The
+  // frame comes from the GCPs (three or more triangulated) or else the camera
+  // positions, and is held inside the solve by them; the anchors are rebuilt each
+  // round, as a point that moves sideways meets the DEM elsewhere. The intrinsics are
+  // re-estimated as in the GCP pass: the bend is the focal and radial distortion
+  // trading against the block's curvature, which fixed intrinsics cannot undo.
+  //   demHold = { grid (demHoldGrid.js, survey frame), sigma (survey units), reference }
+  // → a record for the run summary ({ reference, sigma, rounds, after, frame: 'gcps' |
+  //   'cameras', sim: the SfM → survey-frame similarity when the cameras placed it,
+  //   shift: the height it was moved by between the cameras and the DEM }),
+  //   or null when it did not run.
+  async function runDemAnchoredBundleAdjust() {
+    if (!demHold?.grid || fixedCameras?.size) return null
+    const sample = demHoldSampler(demHold.grid)
+    const sigma = demHold.sigma
+    // Both heights in one known datum (sparseRun.js demHoldInput): the DEM also sets the
+    // model's height. Otherwise it holds the shape only, the median difference taken out
+    // as an unknown datum shift, and the GCPs or camera positions place the model.
+    const absolute = demHold.absolute !== false
+    const rounds = cfg.demHoldRounds ?? 2
+    const record = { reference: demHold.reference ?? null, sigma, rounds: [], after: null, frame: null }
+    // The frame of this model now: GCPs when three or more triangulate, else the
+    // camera positions. null when there is neither.
+    const frameNow = async (uuidList, ptCount) => {
+      const camIdxOf = new Map(uuidList.map((u, i) => [u, i]))
+      const qualifying = qualifyingGcps(gcps, cameras)
+      let gcpSetup = null
+      if (qualifying.length >= 3) {
+        const setup = await buildGcpAnchors({ cameras, qualifying, camIdxOf, firstPointIndex: ptCount })
+        if (!setup.error) gcpSetup = setup
+      }
+      const priorSet = buildCameraPriorConstraints(
+        uuidList,
+        gcpSetup ? { fit: gcpSetup.fit, frame: gcpSetup.frame } : null,
+      )
+      if (gcpSetup) return { gcpSetup, priorSet, frame: gcpSetup.frame, fit: gcpSetup.fit, source: 'gcps' }
+      if (priorSet) {
+        return {
+          gcpSetup: null,
+          priorSet,
+          frame: frameFromSimilarity(priorSet.fit, 'camera-prior'),
+          fit: priorSet.fit,
+          source: 'cameras',
+        }
+      }
+      return null
+    }
+    const anchorsNow = (ptIds, frame) =>
+      demAnchors({
+        points: {
+          pos: trackPositions(tracks, ptIds),
+          vcount: Uint32Array.from(ptIds, (p) => tracks.viewCount(p)),
+        },
+        frame,
+        sample,
+        sigma,
+        maxAnchors: cfg.demHoldMaxAnchors ?? 4000,
+        relative: !absolute,
+      })
+    const fmt = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}`
+    // Each round fits the frame to the cameras again (an outer iteration: a focal far
+    // off at the start, as a default FOV guess, is pulled in over the rounds rather than
+    // traded for the camera heights), then solves with the anchors in it. The model is
+    // placed in the LAST round's frame (record.sim → the cloud's heldFrame), not in a
+    // fresh fit after it: that solve weighed the camera positions against the DEM, and
+    // a refit to the cameras alone would lift a block held onto the DEM back onto loose
+    // GPS heights. GCPs held in the solve are accurate enough to refit to, as the
+    // georeference does after it.
+    let last = null
+    for (let round = 0; round < rounds; round++) {
+      if (!(cameras.size >= 2 && tracks.liveCount() >= 10 && baIterations > 0)) return null
+      const uuidList = [...cameras.keys()]
+      const ptIds = tracks.liveIds()
+      const held = await frameNow(uuidList, ptIds.length)
+      if (!held) {
+        log(
+          'Hold to a reference DEM skipped — the model needs three or more GCPs or camera positions to place it on the DEM',
+          'warn',
+          'Reconstruction',
+        )
+        return null
+      }
+      record.frame = held.source
+      const { anchors, stats } = anchorsNow(ptIds, held.frame)
+      if (anchors.length < (cfg.demHoldMinAnchors ?? 20)) {
+        log(
+          `Hold to a reference DEM skipped — ${pluralize(stats.candidates, 'tie point')} over stable ground on the ` +
+            `reference, ${stats.used} usable; it needs at least ${cfg.demHoldMinAnchors ?? 20}`,
+          'warn',
+          'Reconstruction',
+        )
+        return round ? record : null
+      }
+      record.rounds.push({ ...stats })
+      last = held
+      // The SfM → survey-frame similarity this round holds the model in (plain data for
+      // the store); the last round's stays.
+      if (absolute && held.source === 'cameras')
+        record.sim = { scale: held.fit.scale, R: held.fit.R.map((row) => [...row]), t: [...held.fit.t] }
+      else delete record.sim
+      log(
+        `Hold to a reference DEM (round ${round + 1}/${rounds}) — ${pluralize(anchors.length, 'tie point')} held ` +
+          `(σ ${stats.sigma.toPrecision(3)}${stats.sigma > sigma ? `: the DEM disagrees with the photos by ${stats.scatter.toPrecision(3)} about a smooth surface, more than the ${sigma.toPrecision(3)} given` : ''}), ` +
+          `${stats.rejected} left out as too far from the DEM; height against the ` +
+          `DEM ${fmt(stats.median)} median, NMAD ${stats.nmad.toFixed(2)}, in the ${held.source === 'gcps' ? 'GCPs' : 'camera positions'}' frame`,
+        'info',
+        'Reconstruction',
+      )
+      const gcpSetup = held.gcpSetup
+      const gcp = {
+        anchorPts: gcpSetup?.anchorPts ?? [],
+        observations: gcpSetup?.observations ?? [],
+        anchors: [...anchors, ...(gcpSetup?.anchors ?? [])],
+      }
+      const mode =
+        cfg.gcpRefineIntrinsics === 'auto'
+          ? (selfCalRecord.passes.at(-1)?.mode ?? refineIntrinsics)
+          : (cfg.gcpRefineIntrinsics ?? 'none')
+      const r = await runBundleAdjust(
+        `DEM-held bundle adjustment (round ${round + 1}, intrinsics '${mode}')`,
+        baIterations,
+        mode,
+        { cameraPriors: held.priorSet?.priors ?? null, gcp, lensSigma: true },
+      )
+      if (!r) return record.rounds.length > 1 ? record : null
+    }
+    // Where the tie points sit against the DEM now, in the frame they were held in.
+    const uuidList = [...cameras.keys()]
+    const ptIds = tracks.liveIds()
+    const held = last?.source === 'cameras' ? last : await frameNow(uuidList, ptIds.length)
+    if (held) {
+      record.after = anchorsNow(ptIds, held.frame).stats
+      // The block's height between the two kinds of control, in closed form. A shift of
+      // the whole block up or down changes no image residual, so only the camera
+      // positions and the held tie points weigh it, and at a DEM's σ of metres they are a
+      // ten-thousandth of the solve's cost: the iterative solve does not settle that
+      // direction. Its least-squares value moves the frame the model is placed in:
+      // d = (W_dem·m + Σ wᵢ·cᵢ) / (W_dem + Σ wᵢ), m the median height above the DEM, cᵢ
+      // each camera's height above its position, W and w the inverse vertical variances.
+      if (record.sim && Number.isFinite(record.after.median)) {
+        const s2 = held.fit.scale * held.fit.scale
+        let wCams = 0,
+          wc = 0
+        for (const p of held.priorSet?.priors ?? []) {
+          const cam = cameras.get(uuidList[p.camIdx])
+          const w = (p.weights?.[2] ?? 0) / s2
+          if (!cam || !(w > 0)) continue
+          const c = held.frame.fromSfm(cameraCenter(cam))[2] - held.frame.fromSfm(p.target)[2]
+          if (!Number.isFinite(c)) continue
+          wCams += w
+          wc += w * c
+        }
+        const wDem = record.after.used / (record.after.sigma * record.after.sigma)
+        const d = (wDem * record.after.median + wc) / (wDem + wCams)
+        record.sim.t[2] -= d
+        record.after = { ...record.after, median: record.after.median - d }
+        record.shift = d
+        log(
+          `Hold to a reference DEM: the block placed ${fmt(-d)} in height, between the camera positions ` +
+            `(${pluralize(held.priorSet?.priors?.length ?? 0, 'camera')}, now ${fmt(wCams ? wc / wCams - d : 0)} ` +
+            `from them) and the DEM by their weights`,
+          'info',
+          'Reconstruction',
+        )
+      }
+      if (!absolute)
+        log(
+          'Hold to a reference DEM held the shape only: the heights of the ' +
+            `${held.source === 'gcps' ? 'GCPs' : 'camera positions'} and of the DEM are not in one known datum, so ` +
+            'the offset between them was left out. Declare both datums to let the DEM set the height too.',
+          'info',
+          'Reconstruction',
+        )
+      const before = record.rounds[0]
+      log(
+        `Hold to a reference DEM: height against the DEM NMAD ${before.nmad.toFixed(2)} → ` +
+          `${record.after.nmad.toFixed(2)}, median ${fmt(before.median)} → ${fmt(record.after.median)} ` +
+          `(${pluralize(record.after.used, 'tie point')})`,
+        'success',
+        'Reconstruction',
+      )
+    }
+    return record
+  }
+
+  return {
+    runBundleAdjust,
+    runLocalBundleAdjust,
+    runCameraPriorBundleAdjust,
+    runGcpAnchoredBundleAdjust,
+    runDemAnchoredBundleAdjust,
+    // { mode, converged } of the last runBundleAdjust, or null (none, rejected, skipped).
+    lastSolve: () => lastSolve,
+    solverTotals: baSolverTotals,
+  }
+}

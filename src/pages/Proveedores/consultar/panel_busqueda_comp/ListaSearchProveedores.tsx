@@ -16,13 +16,14 @@ export function ListaSearchProveedores({ proveedores, onVerDetalle }: Props) {
                         <Table.ColumnHeader>Nombre</Table.ColumnHeader>
                         <Table.ColumnHeader>Ciudad</Table.ColumnHeader>
                         <Table.ColumnHeader>Departamento</Table.ColumnHeader>
+                        <Table.ColumnHeader>Lead time negociado (días calendario)</Table.ColumnHeader>
                         <Table.ColumnHeader>Ver Detalle</Table.ColumnHeader>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
                     {proveedores.length === 0 ? (
                         <Table.Row>
-                            <Table.Cell colSpan={5} textAlign="center">
+                            <Table.Cell colSpan={6} textAlign="center">
                                 <Text py={4}>No se encontraron proveedores con los criterios de búsqueda.</Text>
                             </Table.Cell>
                         </Table.Row>
@@ -36,6 +37,7 @@ export function ListaSearchProveedores({ proveedores, onVerDetalle }: Props) {
                                 <Table.Cell>{proveedor.nombre}</Table.Cell>
                                 <Table.Cell>{proveedor.ciudad || '-'}</Table.Cell>
                                 <Table.Cell>{proveedor.departamento || '-'}</Table.Cell>
+                                <Table.Cell>{proveedor.leadTimeNegociado ?? 'No definido'}</Table.Cell>
                                 <Table.Cell>
                                     <Button 
                                         size="sm" 

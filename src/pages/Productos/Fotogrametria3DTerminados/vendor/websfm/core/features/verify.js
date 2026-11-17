@@ -1,0 +1,176 @@
+import init, { verify_matches_hf } from '../../wasm/matching/matching.js'
+
+// Geometric verification gate shared by BOTH matcher paths — brute-force
+// (bruteforce.js) and learned LightGlue (lightglue.js) output both flow through
+// verifyMatches (F-RANSAC) + inlierSpread before a pair counts as verified.
+
+let initPromise = null
+
+// verify_matches_hf's `verifier` argument.
+const VERIFIER_CODE = { ransac: 0, magsac: 1 }
+
+function ensureWasm() {
+  if (!initPromise) initPromise = init()
+  return initPromise
+}
+
+/**
+ * Fundamental matrix estimation (RANSAC or MAGSAC++, `options.verifier`) on a set
+ * of putative matches.
+ *
+ * @param {Keypoints} kpsA - typed keypoints of image A (original px; core/features/keypoints.js)
+ * @param {Keypoints} kpsB - typed keypoints of image B
+ * @param {Array<{ia,ib}>} matches - putative match pairs (indices into kpsA/kpsB)
+ * @param {object} options
+ * @returns {Promise<{ F: number[][], inlierMask: Float32Array, inlierCount: number, hInlierCount: number } | null>}
+ */
+export async function verifyMatches(kpsA, kpsB, matches, options = {}) {
+  const { ptsA, ptsB } = packMatchedPoints(kpsA, kpsB, matches)
+  return verifyPointPairs(ptsA, ptsB, options)
+}
+
+/**
+ * The putatives' coordinates as two flat `[x0, y0, x1, y1, …]` Float32Arrays —
+ * row i is `matches[i]`. This is all verification needs, and it is what the store
+ * posts to the worker: cloning two whole keypoint OBJECT arrays per pair (10k
+ * objects each) cost ~5 ms of main-thread serialization per pair.
+ */
+export function packMatchedPoints(kpsA, kpsB, matches) {
+  const n = matches.length
+  const ptsA = new Float32Array(n * 2)
+  const ptsB = new Float32Array(n * 2)
+  for (let i = 0; i < n; i++) {
+    const { ia, ib } = matches[i]
+    ptsA[i * 2] = kpsA.x(ia)
+    ptsA[i * 2 + 1] = kpsA.y(ia)
+    ptsB[i * 2] = kpsB.x(ib)
+    ptsB[i * 2 + 1] = kpsB.y(ib)
+  }
+  return { ptsA, ptsB }
+}
+
+/**
+ * The putatives best first, for PROSAC sampling in the F-RANSAC (crates/matching
+ * `verify_matches_hf`): by descriptor distance (lower first; nearest-neighbour matching)
+ * or by the matcher's confidence (higher first; LightGlue). `keep` (verifyFrame.js
+ * mapVerifyPoints) lists the rows sent when some were left out. → Uint32Array of row
+ * indices, or null when the matches carry neither (uniform sampling).
+ */
+export function qualityOrder(matches, keep = null) {
+  const n = keep ? keep.length : matches.length
+  const at = (r) => matches[keep ? keep[r] : r]
+  const key = new Float64Array(n)
+  for (let r = 0; r < n; r++) {
+    const m = at(r)
+    if (Number.isFinite(m?.dist)) key[r] = m.dist
+    else if (Number.isFinite(m?.score)) key[r] = -m.score
+    else return null
+  }
+  const order = Uint32Array.from({ length: n }, (_, r) => r)
+  return order.sort((a, b) => key[a] - key[b] || a - b)
+}
+
+/**
+ * `verifyMatches` over pre-packed putative coordinates (see `packMatchedPoints`).
+ * Same result shape; `inlierMask[i]` refers to point pair i.
+ */
+export async function verifyPointPairs(ptsA, ptsB, options = {}) {
+  // hSkipBelow: skip the homography RANSAC (only the H/F degeneracy label needs it)
+  // for pairs the caller will reject anyway. Pass the caller's own hard acceptance
+  // floor (`minMatches`) so a skipped pair is guaranteed rejected before its label
+  // is read; default 0 ⇒ never skip.
+  // verifier: 'ransac' (RANSAC + local optimisation) or 'magsac' (MAGSAC++,
+  // crates/matching/src/magsac.rs) — both for F and the H-vs-F homography, with the
+  // inliers taken within ransacThreshPx of the model either way.
+  // order: the rows best first (qualityOrder), for PROSAC sampling; null ⇒ uniform.
+  const { ransacThreshPx = 2.0, maxIters = 10000, hSkipBelow = 0, verifier = 'ransac', order = null } = options
+  await ensureWasm()
+
+  if (ptsA.length / 2 < 8) return null
+
+  // Layout: [F00..F22, hInlierCount, inlier_0, inlier_1, …] (see verify_matches_hf).
+  const raw = verify_matches_hf(
+    ptsA,
+    ptsB,
+    ransacThreshPx,
+    maxIters,
+    hSkipBelow,
+    VERIFIER_CODE[verifier] ?? 0,
+    order ?? new Uint32Array(0),
+  )
+  if (raw.length === 0) return null
+
+  const F = [
+    [raw[0], raw[1], raw[2]],
+    [raw[3], raw[4], raw[5]],
+    [raw[6], raw[7], raw[8]],
+  ]
+  const hInlierCount = raw[9]
+  const inlierMask = raw.slice(10)
+  const inlierCount = inlierMask.reduce((s, v) => s + (v > 0.5 ? 1 : 0), 0)
+
+  return { F, inlierMask, inlierCount, hInlierCount }
+}
+
+/**
+ * Positional spread of the accepted (inlier) correspondences — a geometry check no
+ * count/ratio/H-vs-F gate can see. Two failure modes leave a positional fingerprint:
+ *
+ *   - many-to-one convergence: several distinct points in image A all match keypoints
+ *     stacked at ~one location in image B (e.g. duplicate scale/octave SIFT keypoints
+ *     on one strong blob — each index-distinct, so cross-check and the ratio test both
+ *     pass, and a homography can't fit them so the H/F flag reads healthy). The image-B
+ *     positions collapse to a handful of unique spots.
+ *   - epipole degeneracy: RANSAC satisfies every epipolar constraint by piling the
+ *     inliers into one tiny image region.
+ *
+ * Returns, over the inlier set: `count`, the number of unique rounded positions in
+ * each image (`uniqueA`/`uniqueB`), and the bounding-box diagonal in px (`extentA`/
+ * `extentB`). The caller rejects either signature. `matches[i]` must align with
+ * `inlierMask[i]` (i.e. the same putative list handed to `verifyMatches`).
+ */
+// A rounded position as one Set key: an exact number while both cells are under 2²⁵ in
+// magnitude (a Set counts −0 and 0 as one, as their strings are), else the string. One
+// string per inlier was most of this function on the page's main thread.
+const CELL_SPAN = 2 ** 26
+const cellKey = (cx, cy) =>
+  Math.abs(cx) < CELL_SPAN / 2 && Math.abs(cy) < CELL_SPAN / 2 ? cx * CELL_SPAN + cy : `${cx},${cy}`
+
+export function inlierSpread(kpsA, kpsB, matches, inlierMask, roundPx = 1) {
+  const seenA = new Set(),
+    seenB = new Set()
+  let minAx = Infinity,
+    minAy = Infinity,
+    maxAx = -Infinity,
+    maxAy = -Infinity
+  let minBx = Infinity,
+    minBy = Infinity,
+    maxBx = -Infinity,
+    maxBy = -Infinity
+  let count = 0
+  for (let i = 0; i < matches.length; i++) {
+    if (!(inlierMask[i] > 0.5)) continue
+    const ax = kpsA.x(matches[i].ia),
+      ay = kpsA.y(matches[i].ia)
+    const bx = kpsB.x(matches[i].ib),
+      by = kpsB.y(matches[i].ib)
+    count++
+    seenA.add(cellKey(Math.round(ax / roundPx), Math.round(ay / roundPx)))
+    seenB.add(cellKey(Math.round(bx / roundPx), Math.round(by / roundPx)))
+    if (ax < minAx) minAx = ax
+    if (ax > maxAx) maxAx = ax
+    if (ay < minAy) minAy = ay
+    if (ay > maxAy) maxAy = ay
+    if (bx < minBx) minBx = bx
+    if (bx > maxBx) maxBx = bx
+    if (by < minBy) minBy = by
+    if (by > maxBy) maxBy = by
+  }
+  return {
+    count,
+    uniqueA: seenA.size,
+    uniqueB: seenB.size,
+    extentA: count ? Math.hypot(maxAx - minAx, maxAy - minAy) : 0,
+    extentB: count ? Math.hypot(maxBx - minBx, maxBy - minBy) : 0,
+  }
+}

@@ -39,6 +39,19 @@ const ProveedorLeadTimeKpiHelpModal: React.FC<ProveedorLeadTimeKpiHelpModalProps
                                 </Text>
 
                                 <Text fontSize="sm">
+                                    El lead time negociado es una referencia manual del proveedor en días calendario enteros.
+                                    Un campo vacío significa que no está definido; 0 indica entrega el mismo día.
+                                    No se recalcula a partir de las compras ni reemplaza el tiempo de entrega de cada OCM.
+                                </Text>
+
+                                <Text fontSize="sm">
+                                    El observado es la mediana histórica por par OCM-material, expresada en días de 24 horas
+                                    y puede contener decimales. La diferencia resta el negociado al observado: un valor positivo
+                                    indica una duración observada mayor. Solo se muestra con un KPI vigente y ambos valores
+                                    disponibles; no representa una tasa de cumplimiento de entregas.
+                                </Text>
+
+                                <Text fontSize="sm">
                                     Para planeacion, el dato mas correcto suele ser el lead time por par material-proveedor,
                                     porque un mismo proveedor puede entregar materiales distintos con tiempos diferentes.
                                 </Text>

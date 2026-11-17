@@ -1,0 +1,161 @@
+// Bundle-adjustment observation lists (pure).
+//
+// One observation = one point seen by one camera at one keypoint. Every SfM bundle
+// adjustment used to build an object per observation (`{camIdx, ptIdx, x, y}`) and
+// bundleAdjust then flattened them again; at millions of observations those objects
+// were a large share of the worker heap. An `ObservationList` is the same data as
+// parallel typed arrays:
+//   { n, cam: Int32Array, pt: Int32Array, x: Float64Array, y: Float64Array,
+//     wx: Float64Array | null, wy: Float64Array | null }
+// x/y stay Float64: the acceptance check (baAcceptance.js) and the diagnostics read
+// them at full precision; only the wasm hand-off rounds to Float32, as before.
+// Weights are null when every observation has weight 1 (the SIFT tracks).
+
+import { hasKp } from './keypointSet.js'
+import { fillArray } from '../bigArray.js'
+
+export function isObservationList(o) {
+  return !!o && !Array.isArray(o) && o.cam instanceof Int32Array
+}
+
+/**
+ * Observations of every live point of `tracks` (trackStore.js) in every camera of
+ * `camIdxOf`, in point order and, within a point, in the order of its views. Point
+ * index in the list = the point's rank among the live points, which is its index in
+ * the matching flat position array (`trackPositions`).
+ * @param {object} tracks
+ * @param {Int32Array} ids                      tracks.liveIds() — rank → point id
+ * @param {(img: number) => number} camIdxOf    −1 ⇒ skip
+ * @param {(img: number) => {n:number, xy:Float64Array} | null | undefined} keypointsAt
+ *   the image's KeypointSet (keypointSet.js)
+ * @param {number} [tieWeight] every observation's weight (tieWeightOf); 1 ⇒ no weights
+ */
+export function buildBaObservations(tracks, ids, camIdxOf, keypointsAt, tieWeight = 1) {
+  let cap = 0
+  for (let r = 0; r < ids.length; r++) cap += tracks.viewCount(ids[r])
+  const cam = new Int32Array(cap),
+    pt = new Int32Array(cap)
+  const x = new Float64Array(cap),
+    y = new Float64Array(cap)
+  let n = 0
+  for (let r = 0; r < ids.length; r++) {
+    tracks.forEachView(ids[r], (img, kpIdx) => {
+      const ci = camIdxOf(img)
+      if (ci == null || ci === -1) return
+      const set = keypointsAt(img)
+      if (!hasKp(set, kpIdx)) return
+      cam[n] = ci
+      pt[n] = r
+      x[n] = set.xy[2 * kpIdx]
+      y[n] = set.xy[2 * kpIdx + 1]
+      n++
+    })
+  }
+  if (tieWeight === 1) return { n, cam, pt, x, y, wx: null, wy: null }
+  return {
+    n,
+    cam,
+    pt,
+    x,
+    y,
+    wx: fillArray(new Float64Array(n), tieWeight),
+    wy: fillArray(new Float64Array(n), tieWeight),
+  }
+}
+
+/**
+ * The weight of a tie-point observation against the survey terms of a bundle adjustment
+ * (GCP anchors and marks, camera positions, a held DEM), 1 / σ² with σ in native pixels.
+ * A keypoint is measured in the detection raster and mapped back to native pixels
+ * (scaleContext.js), so its σ is one detection pixel: `detectScaleFactor` native pixels.
+ * Weighting it as one native pixel made the ties count f² times what they measure, and
+ * the GCPs and positions that much less. Iceland 1980 film (f 4.8): GCP checkpoints V
+ * 2.46 → 1.02 m; quarry with RTK (f 2.3): cameras against RTK 10.4 / 5.4 → 6.3 / 4.4 cm;
+ * tie residuals unchanged (CHANGELOG ▸ GCPs and RTK positions hold the model more firmly).
+ * All ties share the factor, so their own balance, the robust loss (in raw pixels) and the
+ * solution of a run with no survey terms stay as they were. GCP marks are hand-placed in
+ * native pixels and keep their own accuracy.
+ */
+export function tieWeightOf(detectScaleFactor) {
+  const f = Number.isFinite(detectScaleFactor) && detectScaleFactor > 1 ? detectScaleFactor : 1
+  return 1 / (f * f)
+}
+
+/** Positions of the points `ids` as one flat Float64Array [x0,y0,z0, x1,…], plus `extra` [{x,y,z}]. */
+export function trackPositions(tracks, ids, extra = []) {
+  const pos = new Float64Array(3 * (ids.length + extra.length))
+  for (let r = 0; r < ids.length; r++) {
+    const p = ids[r]
+    pos[3 * r] = tracks.x(p)
+    pos[3 * r + 1] = tracks.y(p)
+    pos[3 * r + 2] = tracks.z(p)
+  }
+  extra.forEach((q, i) => {
+    const j = 3 * (ids.length + i)
+    pos[j] = q.x
+    pos[j + 1] = q.y
+    pos[j + 2] = q.z
+  })
+  return pos
+}
+
+/**
+ * A new list: `list` followed by `extra` observation records
+ * (`{camIdx, ptIdx, x, y, weightX?, weightY?}`, e.g. GCP marks).
+ */
+export function appendObservations(list, extra) {
+  const n = list.n + extra.length
+  const cam = new Int32Array(n),
+    pt = new Int32Array(n)
+  const x = new Float64Array(n),
+    y = new Float64Array(n)
+  const wx = fillArray(new Float64Array(n), 1),
+    wy = fillArray(new Float64Array(n), 1)
+  cam.set(list.cam.subarray(0, list.n))
+  pt.set(list.pt.subarray(0, list.n))
+  x.set(list.x.subarray(0, list.n))
+  y.set(list.y.subarray(0, list.n))
+  if (list.wx) {
+    wx.set(list.wx.subarray(0, list.n))
+    wy.set(list.wy.subarray(0, list.n))
+  }
+  for (let i = 0; i < extra.length; i++) {
+    const o = extra[i],
+      j = list.n + i
+    cam[j] = o.camIdx
+    pt[j] = o.ptIdx
+    x[j] = o.x
+    y[j] = o.y
+    wx[j] = o.weightX ?? 1
+    wy[j] = o.weightY ?? 1
+  }
+  return { n, cam, pt, x, y, wx, wy }
+}
+
+/**
+ * The same observations with some cameras' pixels moved — `mapFor(camIdx)` returns a
+ * pixel map (x, y) → { x, y } or null to keep that camera's as they are. Used to hand
+ * a fisheye camera's observations to the crate in the pixels its lens recorded
+ * (bundleSession.js). Returns `observations` itself when no camera has a map.
+ */
+export function mapObservations(observations, mapFor) {
+  const { n, cam } = observations
+  const maps = new Map()
+  const mapOf = (ci) => {
+    if (!maps.has(ci)) maps.set(ci, mapFor(ci) ?? null)
+    return maps.get(ci)
+  }
+  let any = false
+  for (let i = 0; i < n && !any; i++) any = !!mapOf(cam[i])
+  if (!any) return observations
+  const x = Float64Array.from(observations.x.subarray(0, n)),
+    y = Float64Array.from(observations.y.subarray(0, n))
+  for (let i = 0; i < n; i++) {
+    const m = mapOf(cam[i])
+    if (!m) continue
+    const p = m(x[i], y[i])
+    x[i] = p.x
+    y[i] = p.y
+  }
+  return { ...observations, x, y }
+}

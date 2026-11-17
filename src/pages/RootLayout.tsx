@@ -2,14 +2,17 @@
 import {Outlet} from 'react-router-dom'
 import { Flex } from '@chakra-ui/react';
 import { AuthorizedAgentAssistant } from './AgentAssistant/AuthorizedAgentAssistant';
+import { NewFeaturesProvider } from './NewFeaturesModule/NewFeaturesProvider';
 
 
 function RootLayout(){
     return(
-        <Flex direction={'column'}>
-            <Outlet/>
-            <AuthorizedAgentAssistant />
-        </Flex>
+        <NewFeaturesProvider>
+            <Flex direction={'column'}>
+                <Outlet/>
+                <AuthorizedAgentAssistant />
+            </Flex>
+        </NewFeaturesProvider>
     );
 }
 

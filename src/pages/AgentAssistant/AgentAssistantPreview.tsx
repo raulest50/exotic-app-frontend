@@ -46,7 +46,7 @@ export function AgentAssistantPreview({ initialState = "open", canWrite = false 
                     </Box>
                 </Box>
             </Box>
-            <AgentAssistant initialState={initialState} canWrite={canWrite} />
+            <AgentAssistant initialState={initialState} canWrite={canWrite} preview />
         </Box>
     );
 }

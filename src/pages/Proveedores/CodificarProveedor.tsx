@@ -34,6 +34,7 @@ import { FaFileCircleQuestion, FaFileCircleCheck } from "react-icons/fa6";
 const endPoints = new EndPointsURL();
 
 const TIPOS_ID = {cc:0, nit:1};
+const LEAD_TIME_NEGOCIADO_MAX = 2_147_483_647;
 
 function CodificarProveedor() {
     // Basic proveedor fields
@@ -51,6 +52,7 @@ function CodificarProveedor() {
     const [observacion, setObservacion] = useState('');
     // New state for condición de pago (e.g., "credito" or "contado")
     const [condicionPago, setCondicionPago] = useState('0');
+    const [leadTimeNegociadoInput, setLeadTimeNegociadoInput] = useState('');
     const [limiteRecepcionesParcialesOcm, setLimiteRecepcionesParcialesOcm] = useState(
         String(LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT)
     );
@@ -83,6 +85,14 @@ function CodificarProveedor() {
         return trimmed ? Number(trimmed) : undefined;
     };
 
+    const leadTimeNegociadoTexto = leadTimeNegociadoInput.trim();
+    const leadTimeNegociado = leadTimeNegociadoTexto === '' ? null : Number(leadTimeNegociadoTexto);
+    const leadTimeNegociadoValido = leadTimeNegociado === null || (
+        /^\d+$/.test(leadTimeNegociadoTexto) &&
+        Number.isInteger(leadTimeNegociado) &&
+        leadTimeNegociado >= 0 && leadTimeNegociado <= LEAD_TIME_NEGOCIADO_MAX
+    );
+
     const handleLimiteRecepcionesParcialesOcmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.trim();
 
@@ -111,6 +121,16 @@ function CodificarProveedor() {
 
     // Validation function: returns true only if all data is valid.
     const datosProveedorValidos = (): boolean => {
+        if (!leadTimeNegociadoValido) {
+            toast({
+                title: 'Lead time negociado inválido',
+                description: 'Ingrese días enteros entre 0 y 2147483647, o deje el campo vacío.',
+                status: 'warning',
+                duration: 5000,
+                isClosable: true,
+            });
+            return false;
+        }
         // Check basic required fields
         if (
             !id.trim() ||
@@ -383,6 +403,7 @@ function CodificarProveedor() {
             observacion,
             categorias,
             condicionPago,
+            leadTimeNegociado,
             limiteRecepcionesParcialesOcm: parseLimiteRecepcionesParcialesOcm() ?? LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT,
             // Files will be sent via FormData
         };
@@ -428,6 +449,7 @@ function CodificarProveedor() {
             setObservacion('');
             setCategorias([]);
             setCondicionPago('');
+            setLeadTimeNegociadoInput('');
             setLimiteRecepcionesParcialesOcm(String(LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT));
             setContactos([{ fullName: '', cargo: '', cel: '', email: '' }]);
             setRutFile(null);
@@ -699,6 +721,23 @@ function CodificarProveedor() {
                                 </NativeSelect.Field>
                                 <NativeSelect.Indicator />
                             </NativeSelect.Root>
+                        </Field.Root>
+                    </GridItem>
+                    <GridItem>
+                        <Field.Root invalid={!leadTimeNegociadoValido}>
+                            <Field.Label>Lead time negociado (días calendario)</Field.Label>
+                            <Input
+                                inputMode="numeric"
+                                value={leadTimeNegociadoInput}
+                                onChange={(e) => setLeadTimeNegociadoInput(e.target.value)}
+                                placeholder="No definido"
+                            />
+                            <Field.HelperText>
+                                Referencia acordada con el proveedor, registrada manualmente. Opcional; 0 indica entrega el mismo día.
+                            </Field.HelperText>
+                            <Field.ErrorText>
+                                Ingrese días enteros entre 0 y 2147483647, o deje el campo vacío.
+                            </Field.ErrorText>
                         </Field.Root>
                     </GridItem>
                     <GridItem colSpan={[1, 2]}>

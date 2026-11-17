@@ -37,6 +37,8 @@ type Props = {
     refreshSearch?: () => void;
 };
 
+const LEAD_TIME_NEGOCIADO_MAX = 2_147_483_647;
+
 /**
  * Componente que muestra la información detallada de un proveedor dado.
  * Permite edición de ciertos campos si el usuario tiene nivel de acceso 3.
@@ -44,6 +46,9 @@ type Props = {
 export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado, refreshSearch}: Props) {
     const [editMode, setEditMode] = useState(false);
     const [proveedorData, setProveedorData] = useState<Proveedor>({...proveedor});
+    const [leadTimeNegociadoInput, setLeadTimeNegociadoInput] = useState(
+        proveedor.leadTimeNegociado?.toString() ?? ''
+    );
     const [limiteRecepcionesParcialesOcmInput, setLimiteRecepcionesParcialesOcmInput] = useState(
         proveedor.limiteRecepcionesParcialesOcm?.toString() ?? String(LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT)
     );
@@ -67,8 +72,17 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
         return trimmed ? Number(trimmed) : undefined;
     };
 
+    const leadTimeNegociadoTexto = leadTimeNegociadoInput.trim();
+    const leadTimeNegociado = leadTimeNegociadoTexto === '' ? null : Number(leadTimeNegociadoTexto);
+    const leadTimeNegociadoValido = leadTimeNegociado === null || (
+        /^\d+$/.test(leadTimeNegociadoTexto) &&
+        Number.isInteger(leadTimeNegociado) &&
+        leadTimeNegociado >= 0 && leadTimeNegociado <= LEAD_TIME_NEGOCIADO_MAX
+    );
+
     // Inicializar un contacto vacío si el proveedor no tiene contactos
     useEffect(() => {
+        setLeadTimeNegociadoInput(proveedor.leadTimeNegociado?.toString() ?? '');
         // Si el proveedor no tiene contactos o contactos es undefined, inicializar con un contacto vacío
         setLimiteRecepcionesParcialesOcmInput(
             proveedor.limiteRecepcionesParcialesOcm?.toString() ?? String(LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT)
@@ -194,6 +208,18 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
 
     // Validar datos antes de guardar
     const validateData = (showToast: boolean = true): boolean => {
+        if (!leadTimeNegociadoValido) {
+            if (showToast) {
+                toast({
+                    title: 'Lead time negociado inválido',
+                    description: 'Ingrese días enteros entre 0 y 2147483647, o deje el campo vacío.',
+                    status: 'warning',
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+            return false;
+        }
         // Validar régimen tributario
         if (proveedorData.regimenTributario < 0 || proveedorData.regimenTributario > 3) {
             if (showToast) {
@@ -330,6 +356,9 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
 
     // Función para verificar si hay cambios en los datos
     const checkForChanges = () => {
+        if (leadTimeNegociado !== (proveedor.leadTimeNegociado ?? null)) {
+            return true;
+        }
         // Verificar cambios en campos simples
         if (proveedorData.regimenTributario !== proveedor.regimenTributario ||
             proveedorData.condicionPago !== proveedor.condicionPago) {
@@ -375,7 +404,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
             const hasDataChanges = checkForChanges();
             setHasChanges(hasDataChanges);
         }
-    }, [proveedorData, limiteRecepcionesParcialesOcmInput, editMode, rutFile, camaraFile]);
+    }, [proveedorData, limiteRecepcionesParcialesOcmInput, leadTimeNegociadoInput, editMode, rutFile, camaraFile]);
 
     // Guardar cambios
     const handleSaveChanges = async () => {
@@ -387,7 +416,8 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
             // Crear FormData para enviar archivos
             const proveedorPayload: Proveedor = {
                 ...proveedorData,
-            limiteRecepcionesParcialesOcm: parseLimiteRecepcionesParcialesOcm() ?? LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT,
+                leadTimeNegociado,
+                limiteRecepcionesParcialesOcm: parseLimiteRecepcionesParcialesOcm() ?? LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT,
             };
             const formData = new FormData();
             formData.append(
@@ -423,6 +453,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
 
             // Actualizar el proveedor en la vista local con los datos completos del servidor
             setProveedorData(response.data);
+            setLeadTimeNegociadoInput(response.data.leadTimeNegociado?.toString() ?? '');
             setLimiteRecepcionesParcialesOcmInput(
                 response.data.limiteRecepcionesParcialesOcm?.toString() ?? String(LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT)
             );
@@ -492,6 +523,7 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                             onClick={() => {
                                 setEditMode(false);
                                 setProveedorData({...proveedor});
+                                setLeadTimeNegociadoInput(proveedor.leadTimeNegociado?.toString() ?? '');
                                 setLimiteRecepcionesParcialesOcmInput(
                                     proveedor.limiteRecepcionesParcialesOcm?.toString() ?? String(LIMITE_PROVEEDOR_RECEPCIONES_OCM_DEFAULT)
                                 );
@@ -565,6 +597,30 @@ export function DetalleProveedor({proveedor, setEstado, setProveedorSeleccionado
                                         </Field.Root>
                                     ) : (
                                         <Text>{proveedor.condicionPago}</Text>
+                                    )}
+                                </Box>
+                                <Box w="full">
+                                    {editMode ? (
+                                        <Field.Root invalid={!leadTimeNegociadoValido}>
+                                            <Field.Label>Lead time negociado (días calendario)</Field.Label>
+                                            <Input
+                                                inputMode="numeric"
+                                                value={leadTimeNegociadoInput}
+                                                onChange={(e) => setLeadTimeNegociadoInput(e.target.value)}
+                                                placeholder="No definido"
+                                            />
+                                            <Field.HelperText>
+                                                Referencia manual acordada con el proveedor. Vacío elimina el dato; 0 indica entrega el mismo día.
+                                            </Field.HelperText>
+                                            <Field.ErrorText>
+                                                Ingrese días enteros entre 0 y 2147483647, o deje el campo vacío.
+                                            </Field.ErrorText>
+                                        </Field.Root>
+                                    ) : (
+                                        <>
+                                            <Text fontWeight="bold">Lead time negociado:</Text>
+                                            <Text>{proveedor.leadTimeNegociado == null ? 'No definido' : `${proveedor.leadTimeNegociado} días calendario`}</Text>
+                                        </>
                                     )}
                                 </Box>
                                 <Box>

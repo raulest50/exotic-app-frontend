@@ -1,0 +1,219 @@
+// Footprint synthesis: project an image's four corners onto a horizontal ground
+// plane from a known camera pose (exterior orientation) + intrinsics. Used when
+// positions/rotations are available but no footprint polygons were imported.
+//
+// CRS-agnostic: the camera centre and the returned ring are in whatever CRS the
+// caller works in (the project working CRS in practice). Angles are degrees in
+// the photogrammetric omega/phi/kappa convention Metashape and Pix4D write: the
+// rotation matrix R below turns a photo-space vector (x right, y up, the camera
+// looking down −z) into object space, so its columns are the photo axes on the
+// ground and Rᵀ maps object space into the photo.
+
+// The omega/phi/kappa rotation R = Rx(ω)·Ry(φ)·Rz(κ), photo → object. At
+// omega=phi=kappa=0 this is the identity, i.e. a nadir camera looking straight
+// down with image x→east, y→north. Row-major 3×3. Checked against Metashape's own
+// Omega Phi Kappa export (core/io/metashapeXml.test.js), whose r11…r33 are Rᵀ.
+export function opkMatrix(omegaDeg, phiDeg, kappaDeg) {
+  const d = Math.PI / 180
+  const co = Math.cos(omegaDeg * d),
+    so = Math.sin(omegaDeg * d)
+  const cp = Math.cos(phiDeg * d),
+    sp = Math.sin(phiDeg * d)
+  const ck = Math.cos(kappaDeg * d),
+    sk = Math.sin(kappaDeg * d)
+  return [
+    [cp * ck, -cp * sk, sp],
+    [co * sk + so * sp * ck, co * ck - so * sp * sk, -so * cp],
+    [so * sk - co * sp * ck, so * ck + co * sp * sk, co * cp],
+  ]
+}
+
+// The inverse of opkMatrix: omega/phi/kappa (degrees) of a photo → object rotation.
+// Null at phi = ±90°, where omega and kappa turn about the same axis.
+export function opkFromMatrix(M) {
+  const phi = Math.asin(Math.max(-1, Math.min(1, M[0][2])))
+  if (Math.abs(Math.cos(phi)) < 1e-9) return null
+  const d = 180 / Math.PI
+  return {
+    omega: Math.atan2(-M[1][2], M[2][2]) * d,
+    phi: phi * d,
+    kappa: Math.atan2(-M[0][1], M[0][0]) * d,
+  }
+}
+
+// Resolve a sensor's focal length to pixels. Returns null when it can't be
+// determined (focal in mm with no pixel size — e.g. a bare EXIF sensor).
+export function focalPx(sensor) {
+  if (!sensor || sensor.focal == null) return null
+  if (sensor.focalUnit === 'px') return sensor.focal
+  // A focal value with a pixel size (mm/px) converts to pixels; an explicit mm
+  // focal without one is unusable here.
+  if (sensor.pixelSize) return sensor.focal / sensor.pixelSize
+  // No unit and no pixel size: assume already in pixels (calibration files
+  // usually carry focal in px). EXIF-derived sensors set focalUnit:'mm', so
+  // they take the branch above and return null when pixelSize is missing.
+  return sensor.focalUnit == null ? sensor.focal : null
+}
+
+// Minimum depression angle (degrees below horizontal) a corner ray must have to
+// count. A ray grazing the ground plane (near-horizontal) hits it tens of
+// thousands of km away — a footprint "covering the whole earth" — which is the
+// signature of a bad focal (near-180° FOV from a garbage EXIF focal) or an
+// oblique pose that sees past the horizon. At 1° the far corner sits at most
+// ~57× the flying height, so genuine near-nadir aerial always clears it while the
+// earth-spanning garbage is rejected. See projectFootprint's 'diverges' result.
+export const MIN_RAY_DEPRESSION_DEG = 1
+
+// Project one pixel (u,v) through the camera onto plane Z = groundZ.
+// Returns [X, Y] (object space) or null if the ray doesn't usefully descend to
+// the plane (camera at/below it, a ray pointing up — the horizon — or a ray so
+// near-horizontal it would land absurdly far away; see MIN_RAY_DEPRESSION_DEG).
+export function projectPixelToGround(u, v, { R, center, focal, cx, cy, groundZ, minSinDepression = 0 }) {
+  // Image-space ray direction: photo x right, photo y up (pixel rows grow down,
+  // hence the negation), optical axis at -focal.
+  const vx = u - cx
+  const vy = -(v - cy)
+  const vz = -focal
+  // Object-space direction = R · [vx, vy, vz].
+  const dx = R[0][0] * vx + R[0][1] * vy + R[0][2] * vz
+  const dy = R[1][0] * vx + R[1][1] * vy + R[1][2] * vz
+  const dz = R[2][0] * vx + R[2][1] * vy + R[2][2] * vz
+  if (dz === 0) return null
+  const s = (groundZ - center[2]) / dz
+  if (s <= 0) return null // plane is behind the camera along this ray
+  // Reject a near-horizontal (grazing) ray: its depression below horizontal is
+  // asin(-dz / |d|). Too shallow ⇒ the intersection is implausibly far.
+  if (minSinDepression > 0) {
+    const len = Math.hypot(dx, dy, dz)
+    if (len === 0 || -dz / len < minSinDepression) return null
+  }
+  return [center[0] + s * dx, center[1] + s * dy]
+}
+
+// Project the four image corners onto plane Z = groundZ. Returns a discriminated
+// result so callers can report *why* a footprint couldn't be made:
+//   { rings: [[ [x,y], …, firstAgain ]] }   success (single closed ring)
+//   { error: 'invalid' }      bad intrinsics or missing camera centre
+//   { error: 'below_plane' }  camera at/below the ground plane (raise camera Z or
+//                             lower the elevation)
+//   { error: 'diverges' }     a corner ray points away from the plane — the view
+//                             is too oblique (sees past the horizon) or the
+//                             orientation angles use an unexpected convention
+//
+// pose:   { x, y, z, omega, phi, kappa }  — centre in object space, angles in degrees
+// sensor: { focal(px), cx, cy, width, height } — cx/cy default to the image centre
+export function projectFootprint(pose, sensor, groundZ) {
+  const focal = sensor.focal
+  const { width, height } = sensor
+  if (!(focal > 0) || !(width > 0) || !(height > 0)) return { error: 'invalid' }
+  if (pose.x == null || pose.y == null || pose.z == null || groundZ == null) return { error: 'invalid' }
+  if (groundZ >= pose.z) return { error: 'below_plane' } // camera must be above the plane
+
+  const cx = sensor.cx ?? width / 2
+  const cy = sensor.cy ?? height / 2
+  const R = opkMatrix(pose.omega ?? 0, pose.phi ?? 0, pose.kappa ?? 0)
+  const minSinDepression = Math.sin((MIN_RAY_DEPRESSION_DEG * Math.PI) / 180)
+  const ctx = { R, center: [pose.x, pose.y, pose.z], focal, cx, cy, groundZ, minSinDepression }
+
+  const corners = [
+    [0, 0],
+    [width, 0],
+    [width, height],
+    [0, height],
+  ]
+  const ring = []
+  for (const [u, v] of corners) {
+    const g = projectPixelToGround(u, v, ctx)
+    if (!g) return { error: 'diverges' }
+    ring.push(g)
+  }
+  ring.push([ring[0][0], ring[0][1]]) // close the ring (GeoJSON convention)
+  return { rings: [ring] }
+}
+
+// Monoplotting tolerance: a corner is placed once its ray passes within
+// TERRAIN_TOL (metres, the pose frame's vertical units) of the terrain, or after
+// TERRAIN_MAX_ITER refinements. Footprints are coverage outlines, so a decimetre
+// is far below what a terrain model resolves.
+export const TERRAIN_TOL = 0.1
+export const TERRAIN_MAX_ITER = 40
+
+// Project the four image corners onto a terrain surface instead of one plane.
+// `heightAt(x, y)` gives the ground height (sync or async, same frame and
+// vertical datum as the pose) or null off the surface. Monoplotting: along each
+// corner ray, f(s) = ray height − terrain height is positive at the camera; the
+// first guess is where the ray meets the plane through the terrain under the
+// camera, pushed farther out while the ray is still above the ground there, and
+// the crossing is then refined inside that bracket (regula falsi, Illinois
+// variant). Unlike re-reading the height at each plane hit, this cannot overshoot
+// on ground steeper than the ray. Returns projectFootprint's shapes, plus
+// { error: 'off_terrain' } when the surface has no height under the camera or
+// along a corner ray.
+export async function projectFootprintOnTerrain(pose, sensor, heightAt) {
+  if (pose.x == null || pose.y == null || pose.z == null) return { error: 'invalid' }
+  const below = await heightAt(pose.x, pose.y)
+  if (below == null || !Number.isFinite(below)) return { error: 'off_terrain' }
+  // The plane pass validates intrinsics, the camera-above-ground rule and the
+  // grazing-ray guard, so every ray below descends steeply enough.
+  const first = projectFootprint(pose, sensor, below)
+  if (first.error) return first
+
+  const { width, height, focal } = sensor
+  const cx = sensor.cx ?? width / 2,
+    cy = sensor.cy ?? height / 2
+  const R = opkMatrix(pose.omega ?? 0, pose.phi ?? 0, pose.kappa ?? 0)
+  // Ray height above the terrain at parameter s along direction d, or null.
+  const above = async (d, s) => {
+    const h = await heightAt(pose.x + s * d[0], pose.y + s * d[1])
+    return h == null || !Number.isFinite(h) ? null : pose.z + s * d[2] - h
+  }
+
+  const ring = []
+  for (const [u, v] of [
+    [0, 0],
+    [width, 0],
+    [width, height],
+    [0, height],
+  ]) {
+    // Object-space direction R · [u − cx, −(v − cy), −focal], as projectPixelToGround.
+    const r = [u - cx, -(v - cy), -focal]
+    const d = R.map((row) => row[0] * r[0] + row[1] * r[1] + row[2] * r[2])
+    let s0 = 0,
+      f0 = pose.z - below
+    let s1 = (below - pose.z) / d[2]
+    let f1 = await above(d, s1)
+    // Still above the ground at the first guess: the terrain falls away, go farther.
+    for (let k = 0; f1 != null && f1 > 0 && k < 8; k++) {
+      s0 = s1
+      f0 = f1
+      s1 *= 2
+      f1 = await above(d, s1)
+    }
+    if (f1 == null) return { error: 'off_terrain' }
+    if (f1 > 0) return { error: 'diverges' }
+    let side = 0
+    for (let k = 0; k < TERRAIN_MAX_ITER && Math.abs(f1) >= TERRAIN_TOL; k++) {
+      const s = s1 - (f1 * (s1 - s0)) / (f1 - f0)
+      const f = await above(d, s)
+      if (f == null) return { error: 'off_terrain' }
+      if (f > 0) {
+        s0 = s
+        f0 = f
+        if (side === 1) f1 /= 2
+        side = 1
+      } else {
+        s1 = s
+        f1 = f
+        if (side === -1) f0 /= 2
+        side = -1
+      }
+      if (Math.abs(f) < TERRAIN_TOL) {
+        s1 = s
+        f1 = f
+      }
+    }
+    ring.push([pose.x + s1 * d[0], pose.y + s1 * d[1]])
+  }
+  ring.push([ring[0][0], ring[0][1]])
+  return { rings: [ring] }
+}

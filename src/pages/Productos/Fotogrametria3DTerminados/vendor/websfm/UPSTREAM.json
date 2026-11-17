@@ -1,0 +1,685 @@
+{
+  "project": "WebSfM",
+  "repository": "https://github.com/fdahle/websfm",
+  "tag": "v0.8.0",
+  "commit": "610227960eddc22f1d5baaf81c0ecd2143eef6af",
+  "license": "MIT",
+  "scope": "Local object reconstruction: SIFT, matching, incremental SfM, CPU PatchMatch MVS, fusion, screened Poisson, atlas texturing. No upstream UI, storage, server, model weights or geographic inputs.",
+  "adaptations": [
+    "core/crs.js: reject geographic-only APIs; the product input contract supplies no CRS, GCPs or survey priors.",
+    "core/sfm/reconstruction.js: force original single-thread WebAssembly, omitting the optional shared-memory Rayon build.",
+    "engine.js and engine.d.ts: Exotic facade and typed boundary; numerical algorithms are from upstream."
+  ],
+  "externalPackages": {
+    "delaunator": "5.0.1",
+    "robust-predicates (transitive)": "3.0.3"
+  },
+  "files": [
+    {
+      "path": "core/sfm/sfm.js",
+      "upstreamSha256": "43e99382e54324ad5788a195957cb9a5b2d1e4f1c93e9544145c3c587fe90229",
+      "sha256": "43e99382e54324ad5788a195957cb9a5b2d1e4f1c93e9544145c3c587fe90229",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/progressPlan.js",
+      "upstreamSha256": "995191c67908eff90c626e39ce38d82fcde7e5cd5b20737d1a28aa50245ee881",
+      "sha256": "995191c67908eff90c626e39ce38d82fcde7e5cd5b20737d1a28aa50245ee881",
+      "adapted": false
+    },
+    {
+      "path": "core/tuning.js",
+      "upstreamSha256": "b43f1c522642e5ac7882c330460f981cefc5da99d2c2054272ec2b04fdfac665",
+      "sha256": "b43f1c522642e5ac7882c330460f981cefc5da99d2c2054272ec2b04fdfac665",
+      "adapted": false
+    },
+    {
+      "path": "core/scaleContext.js",
+      "upstreamSha256": "94b3e1b10f35b759ac2e19a9b4a4190b430dc27e7dee08e203c409d171f231ad",
+      "sha256": "94b3e1b10f35b759ac2e19a9b4a4190b430dc27e7dee08e203c409d171f231ad",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/multiModel.js",
+      "upstreamSha256": "dc9483e56a20b50a784e900e7150b97e5b73534c801df0f73d3c26a38d49a629",
+      "sha256": "dc9483e56a20b50a784e900e7150b97e5b73534c801df0f73d3c26a38d49a629",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/geometry.js",
+      "upstreamSha256": "504a0c66edbaf7de9bba405d742619e574e853f6ddfff26a4268842eae658525",
+      "sha256": "504a0c66edbaf7de9bba405d742619e574e853f6ddfff26a4268842eae658525",
+      "adapted": false
+    },
+    {
+      "path": "core/products/georef.js",
+      "upstreamSha256": "00a5fb502a75b03aab94d10d6f83e318bd32b8f2553caeb04cbbf6584c06fa95",
+      "sha256": "00a5fb502a75b03aab94d10d6f83e318bd32b8f2553caeb04cbbf6584c06fa95",
+      "adapted": false
+    },
+    {
+      "path": "core/products/projection.js",
+      "upstreamSha256": "6ddeece32040aea4c4a24ad1f66c979600bdea9dffe73164e6599d06cc6d6a58",
+      "sha256": "6ddeece32040aea4c4a24ad1f66c979600bdea9dffe73164e6599d06cc6d6a58",
+      "adapted": false
+    },
+    {
+      "path": "core/products/localFrame.js",
+      "upstreamSha256": "3bcc958057d47b3718f5bcbfe02e800ff63d359896dcd35d9fd4fd61aa07a670",
+      "sha256": "3bcc958057d47b3718f5bcbfe02e800ff63d359896dcd35d9fd4fd61aa07a670",
+      "adapted": false
+    },
+    {
+      "path": "core/products/tiles3d.js",
+      "upstreamSha256": "e77f701a40113adb1753b796cb50479aa7830d37eef2b1a0203908dfc2d3b237",
+      "sha256": "e77f701a40113adb1753b796cb50479aa7830d37eef2b1a0203908dfc2d3b237",
+      "adapted": false
+    },
+    {
+      "path": "core/lod/streamed.js",
+      "upstreamSha256": "9a7d62487ce9d8dbd0894068477fd5c4bddbb093205f393c7e43a0be0e2856c2",
+      "sha256": "9a7d62487ce9d8dbd0894068477fd5c4bddbb093205f393c7e43a0be0e2856c2",
+      "adapted": false
+    },
+    {
+      "path": "core/products/cloudEdit.js",
+      "upstreamSha256": "834f22b0e3e98bfb82ecfcb82d85c1aa5aa11619e280099e9ea76d28168f52da",
+      "sha256": "834f22b0e3e98bfb82ecfcb82d85c1aa5aa11619e280099e9ea76d28168f52da",
+      "adapted": false
+    },
+    {
+      "path": "core/dense/voxelAccumulator.js",
+      "upstreamSha256": "797746a33b61e817d1a1509aaaa7de6ebf6c39961408a0699a48e6d385f8cf10",
+      "sha256": "797746a33b61e817d1a1509aaaa7de6ebf6c39961408a0699a48e6d385f8cf10",
+      "adapted": false
+    },
+    {
+      "path": "core/bigArray.js",
+      "upstreamSha256": "9036857869f508426a6a7b1e6132bcfb0bf68d1481339123bd60ad18ad395f32",
+      "sha256": "9036857869f508426a6a7b1e6132bcfb0bf68d1481339123bd60ad18ad395f32",
+      "adapted": false
+    },
+    {
+      "path": "core/bufferLimit.js",
+      "upstreamSha256": "07adae9325c040f43e1b1eccc96a80fecb986c5e662dc5a68fd79a54c51a42f0",
+      "sha256": "07adae9325c040f43e1b1eccc96a80fecb986c5e662dc5a68fd79a54c51a42f0",
+      "adapted": false
+    },
+    {
+      "path": "core/bigCollections.js",
+      "upstreamSha256": "5429657c34ae6790c8dbb33b8ae22079236ec26da7cf6259b3384583e2fb9a44",
+      "sha256": "5429657c34ae6790c8dbb33b8ae22079236ec26da7cf6259b3384583e2fb9a44",
+      "adapted": false
+    },
+    {
+      "path": "core/products/knn.js",
+      "upstreamSha256": "8a2cb52b88742e95068126c95f6e5ad09227214177d18c3ecf0fe13b720a19dc",
+      "sha256": "8a2cb52b88742e95068126c95f6e5ad09227214177d18c3ecf0fe13b720a19dc",
+      "adapted": false
+    },
+    {
+      "path": "core/defaults.user.js",
+      "upstreamSha256": "ed5ce78146342e2157b0bf4c030f1d8f02ecbafcbdba06ef5b5f61fe851a951f",
+      "sha256": "ed5ce78146342e2157b0bf4c030f1d8f02ecbafcbdba06ef5b5f61fe851a951f",
+      "adapted": false
+    },
+    {
+      "path": "core/constants.js",
+      "upstreamSha256": "e88d3cc9ed868dd0279f9aade41fceca22cc5f3876990b7984c5455219bb8f2d",
+      "sha256": "e88d3cc9ed868dd0279f9aade41fceca22cc5f3876990b7984c5455219bb8f2d",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/sparsePoints.js",
+      "upstreamSha256": "58ebcadc332945bd25715cd9ad6c315d138371303b13020ee23dfabed0561d68",
+      "sha256": "58ebcadc332945bd25715cd9ad6c315d138371303b13020ee23dfabed0561d68",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/modelMerge.js",
+      "upstreamSha256": "6d3e0e5560364e0acf8ff0f9ffcc2b1fe8d0f07c2280a03e2080654d03cb3cbd",
+      "sha256": "6d3e0e5560364e0acf8ff0f9ffcc2b1fe8d0f07c2280a03e2080654d03cb3cbd",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/matchCodec.js",
+      "upstreamSha256": "36377ffc3cfd9dc50ff27165d6c675048e969cec7ec3fa8aa328a970941cc878",
+      "sha256": "36377ffc3cfd9dc50ff27165d6c675048e969cec7ec3fa8aa328a970941cc878",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/keypointSet.js",
+      "upstreamSha256": "b8f44207f24184b885085739c0ef0bc3798972b6749ccd1d4420bb5270bce8b1",
+      "sha256": "b8f44207f24184b885085739c0ef0bc3798972b6749ccd1d4420bb5270bce8b1",
+      "adapted": false
+    },
+    {
+      "path": "core/features/keypoints.js",
+      "upstreamSha256": "f2cb71540cf921eee6d6aea83c6daf2741871d546d164b2ca4ad3af3dfa978fa",
+      "sha256": "f2cb71540cf921eee6d6aea83c6daf2741871d546d164b2ca4ad3af3dfa978fa",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/singleModel.js",
+      "upstreamSha256": "db47f75b985471fb18ddbb258b3731cd25e39330ef929a0fe41979224d5a39a3",
+      "sha256": "db47f75b985471fb18ddbb258b3731cd25e39330ef929a0fe41979224d5a39a3",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/displayFrame.js",
+      "upstreamSha256": "3871af715dcdb37036e6b63e7c5ca2290013de38c01bf1d4fee68db0f4b89b11",
+      "sha256": "3871af715dcdb37036e6b63e7c5ca2290013de38c01bf1d4fee68db0f4b89b11",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/distortion.js",
+      "upstreamSha256": "162f136e2684fa543355f67c241a20f0895f004fc1d146cd8e7eb1244b6af501",
+      "sha256": "162f136e2684fa543355f67c241a20f0895f004fc1d146cd8e7eb1244b6af501",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/fiducials.js",
+      "upstreamSha256": "79b8dd86cc917fa92e4a18e7d772ffd50a2a08aba6c2d375ca6a050b6567e245",
+      "sha256": "79b8dd86cc917fa92e4a18e7d772ffd50a2a08aba6c2d375ca6a050b6567e245",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/fiducialCalibration.js",
+      "upstreamSha256": "aa2ad1f8057936b6717eb3e10ec271264e9cb14394127fd63f160ca9d5dce51c",
+      "sha256": "aa2ad1f8057936b6717eb3e10ec271264e9cb14394127fd63f160ca9d5dce51c",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/rollingShutter.js",
+      "upstreamSha256": "56498e17c4a6a2cd90c54d3eb9e4b132c0b7ce8375a3fd2bbafafa8039ccb11b",
+      "sha256": "56498e17c4a6a2cd90c54d3eb9e4b132c0b7ce8375a3fd2bbafafa8039ccb11b",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/ingest.js",
+      "upstreamSha256": "8ffab69f13230f9357d646eae7d16620d6838c6034aa6fd3fee08a89e7bc889b",
+      "sha256": "8ffab69f13230f9357d646eae7d16620d6838c6034aa6fd3fee08a89e7bc889b",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/reconstruction.js",
+      "upstreamSha256": "563eda147f8e689c2a90ede1bce3ffa9ed89b3a9b16045dddcd5aacb4715c2a5",
+      "sha256": "942a9e2d4f5413e9463ed232d4c2d281213e02d6aa3a5a7ba427ca502f46ba7a",
+      "adapted": true
+    },
+    {
+      "path": "wasm/reconstruction/reconstruction.js",
+      "upstreamSha256": "e2003136677e129eb3a20b92fd5905ba99b867b0094158c3f9bc94f39bedf9cc",
+      "sha256": "e2003136677e129eb3a20b92fd5905ba99b867b0094158c3f9bc94f39bedf9cc",
+      "adapted": false
+    },
+    {
+      "path": "wasm/reconstruction/reconstruction_bg.wasm",
+      "upstreamSha256": "0f9dce5d5c6013e138f1479a8b41dc84dac2e8edfe3173d55b946c80b2d14ef4",
+      "sha256": "0f9dce5d5c6013e138f1479a8b41dc84dac2e8edfe3173d55b946c80b2d14ef4",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/baObservations.js",
+      "upstreamSha256": "96f67ebedfe652fb96229fee99fd72809e8a60688fc4052f8309f925a415b868",
+      "sha256": "96f67ebedfe652fb96229fee99fd72809e8a60688fc4052f8309f925a415b868",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/filmFormat.js",
+      "upstreamSha256": "d3c1eb08dc020e88e73ea7944b24d874138ae1c20b145cf96bca9753a0fd481a",
+      "sha256": "d3c1eb08dc020e88e73ea7944b24d874138ae1c20b145cf96bca9753a0fd481a",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/fundamental.js",
+      "upstreamSha256": "5f39cb4383cca842969c4014fd6d38d1214a2184871ff9bd342c233ee8470850",
+      "sha256": "5f39cb4383cca842969c4014fd6d38d1214a2184871ff9bd342c233ee8470850",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/fiducialModel.js",
+      "upstreamSha256": "416adefdcd89428f8d50eb1bfce94e21da0b12b3a62a35ba555778c581cc5c1c",
+      "sha256": "416adefdcd89428f8d50eb1bfce94e21da0b12b3a62a35ba555778c581cc5c1c",
+      "adapted": false
+    },
+    {
+      "path": "core/textFormat.js",
+      "upstreamSha256": "256d2bed9fab9a8f13cb4ad7ca057a30ed431cb378717de48b82ffac573c9a66",
+      "sha256": "256d2bed9fab9a8f13cb4ad7ca057a30ed431cb378717de48b82ffac573c9a66",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/tracks.js",
+      "upstreamSha256": "c20cb67148317bcea2db1154b6f47f37bb3ce2dbd8483d0c7546ddb43e361f9b",
+      "sha256": "c20cb67148317bcea2db1154b6f47f37bb3ce2dbd8483d0c7546ddb43e361f9b",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/initPair.js",
+      "upstreamSha256": "2e409626010a2d02a952a398e62322bede1d45234b943c27ed0cdbb7f5661fdd",
+      "sha256": "2e409626010a2d02a952a398e62322bede1d45234b943c27ed0cdbb7f5661fdd",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/planarTwin.js",
+      "upstreamSha256": "e0f3e380ebf079f94a31a2c0a7b7e2c61d8ef641696cac711a263ab7f02c4b4f",
+      "sha256": "e0f3e380ebf079f94a31a2c0a7b7e2c61d8ef641696cac711a263ab7f02c4b4f",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/essential.js",
+      "upstreamSha256": "5c4c8c05f4b10b0f805cb16b16cbe9d13a9007b61411ae28756b4ec0e1dee664",
+      "sha256": "5c4c8c05f4b10b0f805cb16b16cbe9d13a9007b61411ae28756b4ec0e1dee664",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/rotations.js",
+      "upstreamSha256": "a985c4098c57375575e6392b08d36d7752bc50dcd63519883260f369a61702e7",
+      "sha256": "a985c4098c57375575e6392b08d36d7752bc50dcd63519883260f369a61702e7",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/extendModel.js",
+      "upstreamSha256": "63a1492c68ca670b9324aaad82a5a554c1d22b198ce4a652b9559f4cb469b5a1",
+      "sha256": "63a1492c68ca670b9324aaad82a5a554c1d22b198ce4a652b9559f4cb469b5a1",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/register.js",
+      "upstreamSha256": "9907564c9d0a1a168af517191d0f44bba36bc5c5c68bbf2a0048752cd9898b02",
+      "sha256": "9907564c9d0a1a168af517191d0f44bba36bc5c5c68bbf2a0048752cd9898b02",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/selfCalSchedule.js",
+      "upstreamSha256": "efa1bd06f1ed0857f791c39e338019fc7c3f4dbb73de4d516c2c3363d4e7c949",
+      "sha256": "efa1bd06f1ed0857f791c39e338019fc7c3f4dbb73de4d516c2c3363d4e7c949",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/resultCodec.js",
+      "upstreamSha256": "b825e262aef69a99910dc3d54c5db74f4927b224f269f50f60f364c368a7a8c1",
+      "sha256": "b825e262aef69a99910dc3d54c5db74f4927b224f269f50f60f364c368a7a8c1",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/trackStore.js",
+      "upstreamSha256": "ee0f5dc0e2dd2765777664379ea080f7100eede5ea77a321fe427b88ba36da58",
+      "sha256": "ee0f5dc0e2dd2765777664379ea080f7100eede5ea77a321fe427b88ba36da58",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/registrationCheck.js",
+      "upstreamSha256": "d18a159f5d414db226b117ffc53bf5e9b907d332ce1bcf49f7931468c15b76fa",
+      "sha256": "d18a159f5d414db226b117ffc53bf5e9b907d332ce1bcf49f7931468c15b76fa",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/focalFromPairs.js",
+      "upstreamSha256": "af8c77e787d8bd8666059d2c2df4b71f8c8bee46a6ee4aa754d5bc0a5a46c785",
+      "sha256": "af8c77e787d8bd8666059d2c2df4b71f8c8bee46a6ee4aa754d5bc0a5a46c785",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/modelStats.js",
+      "upstreamSha256": "0630e12f31a175c3132af5d89c41cb466a62d9bfa72c7b117df5e9e16755437c",
+      "sha256": "0630e12f31a175c3132af5d89c41cb466a62d9bfa72c7b117df5e9e16755437c",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/selfCalFold.js",
+      "upstreamSha256": "0835d827f7a4d4f0347a2cc3933de764a30dbbb7399b4b2c1ffa12842c87f219",
+      "sha256": "0835d827f7a4d4f0347a2cc3933de764a30dbbb7399b4b2c1ffa12842c87f219",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/bundleSession.js",
+      "upstreamSha256": "d026e054fbe8053e15e04871bd192a3d8168883fbb3a5acce248ae1802d474c7",
+      "sha256": "d026e054fbe8053e15e04871bd192a3d8168883fbb3a5acce248ae1802d474c7",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/selfCalGuard.js",
+      "upstreamSha256": "de5603c496e81fc45789663e58136976b2e0849566f9afc850a7c8ac47e01df6",
+      "sha256": "de5603c496e81fc45789663e58136976b2e0849566f9afc850a7c8ac47e01df6",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/focalSigma.js",
+      "upstreamSha256": "a3eb2f7dcb59d56bb918d5bd85a607b18a119cecb4d0a353ec22bf4aa1c74465",
+      "sha256": "a3eb2f7dcb59d56bb918d5bd85a607b18a119cecb4d0a353ec22bf4aa1c74465",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/surveyConstraints.js",
+      "upstreamSha256": "7a2f4048a76558a7844bfbf16b635ebe8904a5e8dbe6f6afc201003eb7961f8b",
+      "sha256": "7a2f4048a76558a7844bfbf16b635ebe8904a5e8dbe6f6afc201003eb7961f8b",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/gcpTriangulation.js",
+      "upstreamSha256": "4c91be9b853e1f878c8b5630bb1d040136a650b25d1557cbfdd4ea071e97ecb4",
+      "sha256": "4c91be9b853e1f878c8b5630bb1d040136a650b25d1557cbfdd4ea071e97ecb4",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/cameraPriors.js",
+      "upstreamSha256": "6cb0c3b7555d062efc4a15998fa8a8edced87cd5765a55e325dae8a4826cd8a6",
+      "sha256": "6cb0c3b7555d062efc4a15998fa8a8edced87cd5765a55e325dae8a4826cd8a6",
+      "adapted": false
+    },
+    {
+      "path": "core/crs.js",
+      "upstreamSha256": "1e64a044b4fd7d92ed2bd70f7fc394a129e496e4804c6ad5aee640d76805748d",
+      "sha256": "84b69aeec41d11f5fda1190f54806e2a58f5453dc11d0291cf24f4869982afd7",
+      "adapted": true
+    },
+    {
+      "path": "core/footprint.js",
+      "upstreamSha256": "a82a59ce2208532698f730a2b7162b562cb7e86a70a33f35938dd416cca31108",
+      "sha256": "a82a59ce2208532698f730a2b7162b562cb7e86a70a33f35938dd416cca31108",
+      "adapted": false
+    },
+    {
+      "path": "core/gcpAccuracy.js",
+      "upstreamSha256": "c4bd4b5a7e54e866bd8e0180efff1771674ebbbd964d38e8b2d3b8e2cea690b3",
+      "sha256": "c4bd4b5a7e54e866bd8e0180efff1771674ebbbd964d38e8b2d3b8e2cea690b3",
+      "adapted": false
+    },
+    {
+      "path": "core/io/gcp.js",
+      "upstreamSha256": "3916932adfb859c807f215e860d0102a30b63c98485e6563f3ed1cdd28a47dd1",
+      "sha256": "3916932adfb859c807f215e860d0102a30b63c98485e6563f3ed1cdd28a47dd1",
+      "adapted": false
+    },
+    {
+      "path": "core/io/nameMatch.js",
+      "upstreamSha256": "084feeb63f58ebd018469c2638b6033ac843fe6cdd2b4ca10cabd7538ca177e3",
+      "sha256": "084feeb63f58ebd018469c2638b6033ac843fe6cdd2b4ca10cabd7538ca177e3",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/baAcceptance.js",
+      "upstreamSha256": "8bc3ce215605ee92ec21941c75960631cc9bf4f6640330a97894296d4b98ae18",
+      "sha256": "8bc3ce215605ee92ec21941c75960631cc9bf4f6640330a97894296d4b98ae18",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/demAnchors.js",
+      "upstreamSha256": "cd9ee7d0139bcb08f4adbc1958887e40fbdf487ca406c2ca5eaa727d9ba98f65",
+      "sha256": "cd9ee7d0139bcb08f4adbc1958887e40fbdf487ca406c2ca5eaa727d9ba98f65",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/demHoldGrid.js",
+      "upstreamSha256": "f8e1113de251c5d9536e76606f96d250eb6c632a546e17c9d6cf6c6532e9b9c5",
+      "sha256": "f8e1113de251c5d9536e76606f96d250eb6c632a546e17c9d6cf6c6532e9b9c5",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/rigModel.js",
+      "upstreamSha256": "0a0cdb42991b2390c32882f1b6a709226f358ba2d5efa4bb0c3b57a1992b7cf5",
+      "sha256": "0a0cdb42991b2390c32882f1b6a709226f358ba2d5efa4bb0c3b57a1992b7cf5",
+      "adapted": false
+    },
+    {
+      "path": "core/sensors/rig.js",
+      "upstreamSha256": "52a67b4ffa10b421f21deabe66090df89fae29bdfbfd8d85908b0f8f25c1d174",
+      "sha256": "52a67b4ffa10b421f21deabe66090df89fae29bdfbfd8d85908b0f8f25c1d174",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/refinePipeline.js",
+      "upstreamSha256": "8b1cd532cbece087f1c9a32657aba6cb13d8752e0c7a0a08cb31ae0e47589936",
+      "sha256": "8b1cd532cbece087f1c9a32657aba6cb13d8752e0c7a0a08cb31ae0e47589936",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/cleanupThreshold.js",
+      "upstreamSha256": "0da983af66f73fa39cc6b36af5107f0c238a7b2121d82cfd750e3b5461e18f45",
+      "sha256": "0da983af66f73fa39cc6b36af5107f0c238a7b2121d82cfd750e3b5461e18f45",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/guidedExtension.js",
+      "upstreamSha256": "60ec064ecc9fe7c54a544833d2590f6dc191fe1403132e57e9c81263981952b2",
+      "sha256": "60ec064ecc9fe7c54a544833d2590f6dc191fe1403132e57e9c81263981952b2",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/runRecord.js",
+      "upstreamSha256": "416a0c703624cba665655024e16023d34a555e5eeb3d7a95eb1870df48ba7998",
+      "sha256": "416a0c703624cba665655024e16023d34a555e5eeb3d7a95eb1870df48ba7998",
+      "adapted": false
+    },
+    {
+      "path": "core/eval/matchGraph.js",
+      "upstreamSha256": "4f1ed8ec2aaab96d167b5614412c37ee5d321df5f2ee529f4af6e3e40166d567",
+      "sha256": "4f1ed8ec2aaab96d167b5614412c37ee5d321df5f2ee529f4af6e3e40166d567",
+      "adapted": false
+    },
+    {
+      "path": "core/sfm/liveSnapshot.js",
+      "upstreamSha256": "87413ef4eb06f9cf554aa6d13af0426a9175302befd2c6a2e645f139d172b793",
+      "sha256": "87413ef4eb06f9cf554aa6d13af0426a9175302befd2c6a2e645f139d172b793",
+      "adapted": false
+    },
+    {
+      "path": "core/dense/mvs.js",
+      "upstreamSha256": "8aad18483763ee4d29c3514ea840d6c7082542864c74bb97fcc21592d1bec265",
+      "sha256": "8aad18483763ee4d29c3514ea840d6c7082542864c74bb97fcc21592d1bec265",
+      "adapted": false
+    },
+    {
+      "path": "core/dense/denseGeometry.js",
+      "upstreamSha256": "2768e0f33d728208e2b082e829a38e0133ccd7bd948f055b2b6e613f7c78c027",
+      "sha256": "2768e0f33d728208e2b082e829a38e0133ccd7bd948f055b2b6e613f7c78c027",
+      "adapted": false
+    },
+    {
+      "path": "core/dense/depthMap.js",
+      "upstreamSha256": "1b41b0e1bad9c58935a49c03cd8498b00210f148be1c9e84cd285127aec8f6fa",
+      "sha256": "1b41b0e1bad9c58935a49c03cd8498b00210f148be1c9e84cd285127aec8f6fa",
+      "adapted": false
+    },
+    {
+      "path": "core/products/region.js",
+      "upstreamSha256": "da292b57b91f764fbe6c4e6d5b54cdfcaf4af208c21a4e9cef952758d0a091f1",
+      "sha256": "da292b57b91f764fbe6c4e6d5b54cdfcaf4af208c21a4e9cef952758d0a091f1",
+      "adapted": false
+    },
+    {
+      "path": "core/dense/sparseInput.js",
+      "upstreamSha256": "4e7f26b96beec154725e1f2f9678434482ee1136323c4a88a927c0fdd0d48edb",
+      "sha256": "4e7f26b96beec154725e1f2f9678434482ee1136323c4a88a927c0fdd0d48edb",
+      "adapted": false
+    },
+    {
+      "path": "core/dense/refineSchedule.js",
+      "upstreamSha256": "9e95fce5c059036b033856006089c155d1e115f0241c87a33641b4d15a4645a8",
+      "sha256": "9e95fce5c059036b033856006089c155d1e115f0241c87a33641b4d15a4645a8",
+      "adapted": false
+    },
+    {
+      "path": "core/dense/denseOptions.js",
+      "upstreamSha256": "2c48059e61a9d5f8b50d81395aa4843fdc5a5452a0159563d9a3d04c8de4efa4",
+      "sha256": "2c48059e61a9d5f8b50d81395aa4843fdc5a5452a0159563d9a3d04c8de4efa4",
+      "adapted": false
+    },
+    {
+      "path": "core/dense/memBudget.js",
+      "upstreamSha256": "97ab6b67aab412137db1b59f17003faef012329ebcd94c3e79f921c536d2aa6a",
+      "sha256": "97ab6b67aab412137db1b59f17003faef012329ebcd94c3e79f921c536d2aa6a",
+      "adapted": false
+    },
+    {
+      "path": "core/formatBytes.js",
+      "upstreamSha256": "9b2e4185a5a23e92c3608a6d09a7cb94f7a014a5a536d61ba071d31926752582",
+      "sha256": "9b2e4185a5a23e92c3608a6d09a7cb94f7a014a5a536d61ba071d31926752582",
+      "adapted": false
+    },
+    {
+      "path": "core/dense/geomFilter.js",
+      "upstreamSha256": "61ad09f223b91f3e824540fa7724c2d8828fef308d3451eff6dcc11bad6ace64",
+      "sha256": "61ad09f223b91f3e824540fa7724c2d8828fef308d3451eff6dcc11bad6ace64",
+      "adapted": false
+    },
+    {
+      "path": "core/dense/planarPrior.js",
+      "upstreamSha256": "1a9634dfa808cf3e13e90d4e9542bd69ce5d3bf4ae8cc161b16b280320dce89a",
+      "sha256": "1a9634dfa808cf3e13e90d4e9542bd69ce5d3bf4ae8cc161b16b280320dce89a",
+      "adapted": false
+    },
+    {
+      "path": "core/dense/fusionPlan.js",
+      "upstreamSha256": "fdf9e210eabb57ecc4cb99d7a2fc3e9b37fca1e186d2b9fd207dc557665457a3",
+      "sha256": "fdf9e210eabb57ecc4cb99d7a2fc3e9b37fca1e186d2b9fd207dc557665457a3",
+      "adapted": false
+    },
+    {
+      "path": "core/dense/fusion.js",
+      "upstreamSha256": "875bbbb3208a49d6bf8677bf7ed6995f790f83abf57ccc8f59e799fd54277d4c",
+      "sha256": "875bbbb3208a49d6bf8677bf7ed6995f790f83abf57ccc8f59e799fd54277d4c",
+      "adapted": false
+    },
+    {
+      "path": "core/features/sift.js",
+      "upstreamSha256": "5381bd7fc60a2041369895f5188397c8e998b4249f699d1750e27660dd72d12b",
+      "sha256": "5381bd7fc60a2041369895f5188397c8e998b4249f699d1750e27660dd72d12b",
+      "adapted": false
+    },
+    {
+      "path": "wasm/detection/sift.js",
+      "upstreamSha256": "dd703c73df8573559143f468b927828bbb9c4a9720c54fca145b0c52d4f380de",
+      "sha256": "dd703c73df8573559143f468b927828bbb9c4a9720c54fca145b0c52d4f380de",
+      "adapted": false
+    },
+    {
+      "path": "wasm/detection/sift_bg.wasm",
+      "upstreamSha256": "5ae2fdd19a98c9f3ab839005898e8a6258ff28588488d96eeb79fb920003e8f2",
+      "sha256": "5ae2fdd19a98c9f3ab839005898e8a6258ff28588488d96eeb79fb920003e8f2",
+      "adapted": false
+    },
+    {
+      "path": "core/features/bruteforce.js",
+      "upstreamSha256": "6ba975bd8cb246612fe314adc3f5ee7898370864f1af2f2eeecf7303715e1328",
+      "sha256": "6ba975bd8cb246612fe314adc3f5ee7898370864f1af2f2eeecf7303715e1328",
+      "adapted": false
+    },
+    {
+      "path": "wasm/matching/matching.js",
+      "upstreamSha256": "10ed1aeeaddc9cf7c9b58192a3f92d9a7148ff7dd9624b9cdbca87e297b62c15",
+      "sha256": "10ed1aeeaddc9cf7c9b58192a3f92d9a7148ff7dd9624b9cdbca87e297b62c15",
+      "adapted": false
+    },
+    {
+      "path": "wasm/matching/matching_bg.wasm",
+      "upstreamSha256": "7a247b71c7655996303cdcb80796e377772c2b3e4bffed69546ed56bb97bf416",
+      "sha256": "7a247b71c7655996303cdcb80796e377772c2b3e4bffed69546ed56bb97bf416",
+      "adapted": false
+    },
+    {
+      "path": "core/features/verify.js",
+      "upstreamSha256": "4986107dace07420d010ead9fc12beebcf3e32ffdb3b5cd5c2c5662cdc8ac80a",
+      "sha256": "4986107dace07420d010ead9fc12beebcf3e32ffdb3b5cd5c2c5662cdc8ac80a",
+      "adapted": false
+    },
+    {
+      "path": "core/products/mesh.js",
+      "upstreamSha256": "b6a0ae7d77367d107bf565e0d707e939e15cd1ba3be4579ffda85fc135f55e2a",
+      "sha256": "b6a0ae7d77367d107bf565e0d707e939e15cd1ba3be4579ffda85fc135f55e2a",
+      "adapted": false
+    },
+    {
+      "path": "core/products/cellIndex.js",
+      "upstreamSha256": "75fd7c33aea5986b78cf890f8d85cb35503afb5c871d58d19382d06e6d883bc0",
+      "sha256": "75fd7c33aea5986b78cf890f8d85cb35503afb5c871d58d19382d06e6d883bc0",
+      "adapted": false
+    },
+    {
+      "path": "core/products/meshTiles.js",
+      "upstreamSha256": "e9428c827cd8a23ee4241d77ce58e03652e5ec55e5b6e61ce089fca8064acc2a",
+      "sha256": "e9428c827cd8a23ee4241d77ce58e03652e5ec55e5b6e61ce089fca8064acc2a",
+      "adapted": false
+    },
+    {
+      "path": "core/products/texture/texture.js",
+      "upstreamSha256": "db96e7e2a8e1c0fb95f356d614ba5756410749cc851650ab20274d9790eae4f9",
+      "sha256": "db96e7e2a8e1c0fb95f356d614ba5756410749cc851650ab20274d9790eae4f9",
+      "adapted": false
+    },
+    {
+      "path": "core/products/colourGains.js",
+      "upstreamSha256": "d66821aa85c0e79e402c72b302fc71063d0d986bf549a851312a25750792e732",
+      "sha256": "d66821aa85c0e79e402c72b302fc71063d0d986bf549a851312a25750792e732",
+      "adapted": false
+    },
+    {
+      "path": "core/products/undistort.js",
+      "upstreamSha256": "0ace6601cf9dcdaad355f5e05976e1a0e2dacae45ed88c18e1930eb464138343",
+      "sha256": "0ace6601cf9dcdaad355f5e05976e1a0e2dacae45ed88c18e1930eb464138343",
+      "adapted": false
+    },
+    {
+      "path": "core/products/texture/meshGraph.js",
+      "upstreamSha256": "0abd7e4d9f756a68e69fec63413f097f089d2058df8ef6090fd6b1dfc4064760",
+      "sha256": "0abd7e4d9f756a68e69fec63413f097f089d2058df8ef6090fd6b1dfc4064760",
+      "adapted": false
+    },
+    {
+      "path": "core/products/meshEdit.js",
+      "upstreamSha256": "9030d59400a852356eaf79a4068d59613fa1073d32cd93e2c0360395e3be9967",
+      "sha256": "9030d59400a852356eaf79a4068d59613fa1073d32cd93e2c0360395e3be9967",
+      "adapted": false
+    },
+    {
+      "path": "core/products/texture/visibility.js",
+      "upstreamSha256": "fd5b0c48295000ee6d0defb49afb013c9fd30de02a6d0bab84e333c31a648b62",
+      "sha256": "fd5b0c48295000ee6d0defb49afb013c9fd30de02a6d0bab84e333c31a648b62",
+      "adapted": false
+    },
+    {
+      "path": "core/products/texture/labeling.js",
+      "upstreamSha256": "bb8399fa9a510f31eb50fc4d8aaea037a7713810d5efe808a4bcca26c3c94276",
+      "sha256": "bb8399fa9a510f31eb50fc4d8aaea037a7713810d5efe808a4bcca26c3c94276",
+      "adapted": false
+    },
+    {
+      "path": "core/products/texture/charts.js",
+      "upstreamSha256": "2e472ff7e165dfd19a65f0efbeb43580a059426497169941def898df10d86d47",
+      "sha256": "2e472ff7e165dfd19a65f0efbeb43580a059426497169941def898df10d86d47",
+      "adapted": false
+    },
+    {
+      "path": "core/products/texture/packing.js",
+      "upstreamSha256": "2e37629401cca4aeee9b2db9b0e4c302a4c6a9da713bcfe6d8c3a4ed8efa81d5",
+      "sha256": "2e37629401cca4aeee9b2db9b0e4c302a4c6a9da713bcfe6d8c3a4ed8efa81d5",
+      "adapted": false
+    },
+    {
+      "path": "core/products/texture/bake.js",
+      "upstreamSha256": "44af1a62e7f366d3727f6d06d21468dec54d461d5e56754359dc9114b91d584d",
+      "sha256": "44af1a62e7f366d3727f6d06d21468dec54d461d5e56754359dc9114b91d584d",
+      "adapted": false
+    },
+    {
+      "path": "core/products/texture/seamLevel.js",
+      "upstreamSha256": "1ca1130d20590468198cf5d8487f7d6a5fbb586b127accfb5e73f63308118327",
+      "sha256": "1ca1130d20590468198cf5d8487f7d6a5fbb586b127accfb5e73f63308118327",
+      "adapted": false
+    },
+    {
+      "path": "wasm/mesh/mesh.js",
+      "upstreamSha256": "49a9a0b5259a0672bc75835ee48d40e732a6ad717745e8dfe6dd62190b6f6100",
+      "sha256": "49a9a0b5259a0672bc75835ee48d40e732a6ad717745e8dfe6dd62190b6f6100",
+      "adapted": false
+    },
+    {
+      "path": "wasm/mesh/mesh_bg.wasm",
+      "upstreamSha256": "438c01ee9ac522d5b1c623d50a741f4d6512a4bc91bd980fd759b932314ea37d",
+      "sha256": "438c01ee9ac522d5b1c623d50a741f4d6512a4bc91bd980fd759b932314ea37d",
+      "adapted": false
+    }
+  ]
+}

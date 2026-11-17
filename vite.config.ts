@@ -5,6 +5,11 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
+    // Workers discover these imports after the initial crawl. Prebundle them at
+    // startup so the first segmentation/reconstruction does not reload the page.
+    optimizeDeps: {
+      include: ['delaunator', 'onnxruntime-web/wasm']
+    },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url))

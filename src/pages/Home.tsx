@@ -4,6 +4,7 @@ import { useColorMode, useColorModeValue } from "../components/ui/color-mode";
 import { useEffect, useMemo, useState } from "react";
 import type { IconType } from "react-icons";
 import SectionCard from "../components/SectionCard.tsx";
+import { NewFeaturesButton, NewFeaturesCard } from "./NewFeaturesModule/NewFeaturesModule";
 import SplitText from "../components/SplitText.tsx";
 import SuperMasterOnboardingModal from "../components/SuperMasterOnboardingModal.tsx";
 import { PiDownloadDuotone } from "react-icons/pi";
@@ -123,6 +124,7 @@ export default function Home() {
                     Inicio
                 </Heading>
                 <Flex gap={2} wrap="wrap" justify={{ base: "flex-start", md: "flex-end" }} align="center">
+                    <NewFeaturesButton />
                     <Box
                         transform={{ base: "none", sm: "skewX(-20deg)" }}
                         px={{ base: 2, md: "1em" }}
@@ -188,23 +190,26 @@ export default function Home() {
                 {cards
                     .filter((card) => card.accesoValido(access))
                     .map((card) => (
-                        <SectionCard
-                            key={card.to}
-                            to={card.to}
-                            name={card.name}
-                            icon={card.icon}
-                            bgColor={card.bgColor}
-                            notification={card.notificationModulo ? getNotificationForModule(card.notificationModulo as Modulo) : undefined}
-                        />
+                        <NewFeaturesCard key={card.to} modulePath={card.to}>
+                            <SectionCard
+                                to={card.to}
+                                name={card.name}
+                                icon={card.icon}
+                                bgColor={card.bgColor}
+                                notification={card.notificationModulo ? getNotificationForModule(card.notificationModulo as Modulo) : undefined}
+                            />
+                        </NewFeaturesCard>
                     ))}
                 {canShowSuperMasterDirectivesCard && (
-                    <SectionCard
-                        to={"/super_master_directives"}
-                        name={"Directivas Super Master"}
-                        icon={FaCogs}
-                        bgColor="red.100"
-                        notification={getNotificationForModule("MASTER_CONFIGS" as Modulo)}
-                    />
+                    <NewFeaturesCard modulePath="/super_master_directives">
+                        <SectionCard
+                            to={"/super_master_directives"}
+                            name={"Directivas Super Master"}
+                            icon={FaCogs}
+                            bgColor="red.100"
+                            notification={getNotificationForModule("MASTER_CONFIGS" as Modulo)}
+                        />
+                    </NewFeaturesCard>
                 )}
             </SimpleGrid>
             <SuperMasterOnboardingModal

@@ -11,13 +11,14 @@ import CategoriaHabilitadaPickerModal from '../components/CategoriaHabilitadaPic
 import { AreaOperativaMutationDTO, CategoriaHabilitada } from '../ConsultaAreasOperativas/types.ts';
 import { LuSearch } from 'react-icons/lu';
 import AreaMpsSettings from '../components/AreaMpsSettings';
-import type { AlcanceMps, VisibilidadMps } from '../../../api/mpsAreaConfig';
+import type { AlcanceEjecucion, AlcanceMps, VisibilidadMps } from '../../../api/mpsAreaConfig';
 
 function CrearAreaProduccionTab() {
     const [nombre, setNombre] = useState('');
     const [descripcion, setDescripcion] = useState('');
     const [visibilidadMps, setVisibilidadMps] = useState<VisibilidadMps>('SOLO_OP');
     const [alcanceMps, setAlcanceMps] = useState<AlcanceMps>('TODOS');
+    const [alcanceEjecucion, setAlcanceEjecucion] = useState<AlcanceEjecucion>('AMBOS');
     const [responsable, setResponsable] = useState<User | null>(null);
     const [categoriasHabilitadas, setCategoriasHabilitadas] = useState<CategoriaHabilitada[]>([]);
     const [isUserPickerOpen, setIsUserPickerOpen] = useState(false);
@@ -49,6 +50,7 @@ function CrearAreaProduccionTab() {
         setDescripcion('');
         setVisibilidadMps('SOLO_OP');
         setAlcanceMps('TODOS');
+        setAlcanceEjecucion('AMBOS');
         setResponsable(null);
         setCategoriasHabilitadas([]);
         setIsValidatingResponsable(false);
@@ -74,6 +76,7 @@ function CrearAreaProduccionTab() {
             descripcion: descripcion.trim(),
             visibilidadMps,
             alcanceMps,
+            alcanceEjecucion,
             responsableId: responsable!.id,
             categoriaIds: categoriasHabilitadas.map((categoria) => categoria.categoriaId),
         };
@@ -225,8 +228,9 @@ function CrearAreaProduccionTab() {
                     )}
                 </Field.Root>
 
-                <AreaMpsSettings visibilidad={visibilidadMps} alcance={alcanceMps}
-                    onVisibilidadChange={setVisibilidadMps} onAlcanceChange={setAlcanceMps} disabled={isSubmitting} />
+                <AreaMpsSettings visibilidad={visibilidadMps} alcance={alcanceMps} alcanceEjecucion={alcanceEjecucion}
+                    onVisibilidadChange={setVisibilidadMps} onAlcanceChange={setAlcanceMps}
+                    onAlcanceEjecucionChange={setAlcanceEjecucion} disabled={isSubmitting} />
 
                 <Button
                     colorPalette="teal"

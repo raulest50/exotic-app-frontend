@@ -18,7 +18,7 @@ import {
 } from './types';
 import { LuSearch } from 'react-icons/lu';
 import AreaMpsSettings from '../components/AreaMpsSettings';
-import type { AlcanceMps, VisibilidadMps } from '../../../api/mpsAreaConfig';
+import type { AlcanceEjecucion, AlcanceMps, VisibilidadMps } from '../../../api/mpsAreaConfig';
 import DespejeAreaConfig from '../../../features/despeje/DespejeAreaConfig';
 
 const endpoints = new EndPointsURL();
@@ -100,6 +100,7 @@ export default function DetalleAreaOperativaDialog({
     const [editDescripcion, setEditDescripcion] = useState('');
     const [editVisibilidadMps, setEditVisibilidadMps] = useState<VisibilidadMps>('SOLO_OP');
     const [editAlcanceMps, setEditAlcanceMps] = useState<AlcanceMps>('TODOS');
+    const [editAlcanceEjecucion, setEditAlcanceEjecucion] = useState<AlcanceEjecucion>('AMBOS');
     const [editResponsable, setEditResponsable] = useState<User | null>(null);
     const [editCategoriasHabilitadas, setEditCategoriasHabilitadas] = useState<CategoriaHabilitada[]>([]);
     const [isUserPickerOpen, setIsUserPickerOpen] = useState(false);
@@ -170,6 +171,7 @@ export default function DetalleAreaOperativaDialog({
         setEditCategoriasHabilitadas(cloneCategorias(area.categoriasHabilitadas ?? []));
         setEditVisibilidadMps(area.visibilidadMps ?? 'SOLO_OP');
         setEditAlcanceMps(area.alcanceMps ?? 'TODOS');
+        setEditAlcanceEjecucion(area.alcanceEjecucion ?? 'AMBOS');
         setResponsableError(null);
         setIsEditing(true);
     };
@@ -182,6 +184,7 @@ export default function DetalleAreaOperativaDialog({
     const hasChanges =
         editVisibilidadMps !== (area.visibilidadMps ?? 'SOLO_OP') ||
         editAlcanceMps !== (area.alcanceMps ?? 'TODOS') ||
+        editAlcanceEjecucion !== (area.alcanceEjecucion ?? 'AMBOS') ||
         editNombre !== area.nombre ||
         editDescripcion !== (area.descripcion || '') ||
         editResponsable?.id !== area.responsableArea?.id ||
@@ -236,6 +239,7 @@ export default function DetalleAreaOperativaDialog({
             descripcion: editDescripcion.trim(),
             visibilidadMps: editVisibilidadMps,
             alcanceMps: editAlcanceMps,
+            alcanceEjecucion: editAlcanceEjecucion,
             responsableId: editResponsable.id,
             categoriaIds: editCategoriasHabilitadas.map((categoria) => categoria.categoriaId),
             categoriasHabilitadas: editCategoriasHabilitadas.map((categoria) => ({
@@ -481,8 +485,10 @@ export default function DetalleAreaOperativaDialog({
                                                     <AreaMpsSettings
                                                         visibilidad={isEditing ? editVisibilidadMps : area.visibilidadMps ?? 'SOLO_OP'}
                                                         alcance={isEditing ? editAlcanceMps : area.alcanceMps ?? 'TODOS'}
+                                                        alcanceEjecucion={isSpecialSystemArea ? 'AMBOS' : isEditing ? editAlcanceEjecucion : area.alcanceEjecucion ?? 'AMBOS'}
                                                         readOnly={!isEditing || isSpecialSystemArea} disabled={isSaving}
-                                                        onVisibilidadChange={setEditVisibilidadMps} onAlcanceChange={setEditAlcanceMps} />
+                                                        onVisibilidadChange={setEditVisibilidadMps} onAlcanceChange={setEditAlcanceMps}
+                                                        onAlcanceEjecucionChange={setEditAlcanceEjecucion} />
                                                 </Box>
                                                 <SimpleGrid columns={{ base: 1, md: 2 }} gap={5} alignItems="stretch">
                                                     <Box

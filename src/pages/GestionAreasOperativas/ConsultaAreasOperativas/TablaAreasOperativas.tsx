@@ -1,5 +1,6 @@
 import { Box, Button, Flex, Spinner, Table, Text } from '@chakra-ui/react';
-import { AreaOperativa } from './types';
+import { type AreaOperativa, isAlmacenGeneralArea } from './types';
+import { ALCANCE_EJECUCION_LABELS } from '../../../api/mpsAreaConfig';
 
 interface TablaAreasOperativasProps {
     areas: AreaOperativa[];
@@ -30,6 +31,7 @@ export default function TablaAreasOperativas({ areas, loading, onVerDetalle }: T
                             <Table.ColumnHeader>Nombre</Table.ColumnHeader>
                             <Table.ColumnHeader>Descripción</Table.ColumnHeader>
                             <Table.ColumnHeader>Responsable</Table.ColumnHeader>
+                            <Table.ColumnHeader>Ejecución</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center">Acciones</Table.ColumnHeader>
                         </Table.Row>
                     </Table.Header>
@@ -47,6 +49,9 @@ export default function TablaAreasOperativas({ areas, loading, onVerDetalle }: T
                                     {area.responsableArea
                                         ? area.responsableArea.nombreCompleto || area.responsableArea.username
                                         : '—'}
+                                </Table.Cell>
+                                <Table.Cell>
+                                    {ALCANCE_EJECUCION_LABELS[isAlmacenGeneralArea(area) ? 'AMBOS' : area.alcanceEjecucion ?? 'AMBOS']}
                                 </Table.Cell>
                                 <Table.Cell>
                                     <Flex justify="center">

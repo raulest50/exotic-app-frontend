@@ -1,0 +1,900 @@
+// Internal tuning knobs — the developer control panel. These are NOT exposed in any
+// modal; the user never sees them. Collected here so they can be swept during
+// development without hunting through the pipeline code (the rationale comments moved
+// here with the numbers — this is the one place to read/change them).
+//
+// The rule (see CLAUDE.md ▸ Conventions): a knob that a modal exposes belongs in
+// `defaults.user.js`, never here. A knob owned by a self-contained pure sub-module
+// (e.g. `core/sfm/initPair.js` seed thresholds) stays co-located with that module's algorithm + rationale — see the
+// pointer notes below rather than duplicating those values here.
+//
+// Pure data module: no Vue/Pinia/OPFS, so it bundles into the worker unchanged.
+
+// Tie-point detection — SuperPoint safety ceiling. Read by core/features/learnedDetect.js
+// (backstop error on OrtRun) AND DetectFeaturesModal.vue (pre-flight tiling prompt), so
+// the two agree on one number. SuperPoint is fully convolutional: ONNX Runtime builds
+// intermediate tensors at the full network-input size, and past ~this many pixels a
+// single untiled pass overflows ORT's int32 shape math (SafeIntOnOverflow) — OrtRun
+// fails outright with "Integer overflow". Tiling keeps each pass small and sidesteps it.
+// Conservative: a 5000×4735 (23.7 MP) input was the observed failure; ≈4000×4000 leaves
+// margin, and the worker's rethrow is the true backstop if a larger input slips past.
+export const DETECT_TUNING = {
+  // The largest image one untiled SIFT pass holds (pixels at the detection size). The
+  // crate's peak is ~60 B/px of wasm memory (measured 2026-11-04, Node, synthetic
+  // texture: 4 MP 231 MB, 16 MP 917 MB, 36 MP 2.06 GB, 64 MP 3.66 GB), and wasm32 stops
+  // at 4 GiB: 74 MP and 100 MP failed ("unreachable"). Above this the Detect Features
+  // dialog asks for Tiling (core/features/detectPlan.js); a tile is far below it.
+  siftOnePassMaxPx: 64e6,
+  // How often a detection run's journal (core/runJournal.js) is rewritten while images
+  // finish (each image's features are saved as it finishes). `_journalMs` in a run's
+  // settings overrides it; the tests use 0.
+  journalIntervalMs: 5000,
+  // SIFT keypoints per scale-space extremum: the dominant orientation plus secondary
+  // histogram peaks within 80 % of it (Lowe 2004 §5; COLMAP max_num_orientations = 2).
+  // A feature with two near-equal peaks otherwise gets a different orientation in
+  // different images and stops matching — the short-track failure the 2026-10-05 SB
+  // runs pointed at (38.7k two-view points with no third correspondence). Siblings
+  // count toward maxKeypoints, as in COLMAP. 1 = the pre-2026-10 detector exactly.
+  // Default 1, measured: on South Building with identical matching settings, 2 gave
+  // 60,480 vs 60,189 >=3-view points (+0.5 %, MAT-08 vs MAT-10) for ~20 % more
+  // descriptors to match. Set 2 to reproduce COLMAP's detector.
+  siftMaxOrientations: 1,
+  // Which SIFT keypoints survive maxKeypoints (core/features/keypointCap.js):
+  // 'coarse-first' keeps the largest scales (COLMAP's rule), 'response' the strongest
+  // |DoG| (the pre-2026-10 rule). Measured on an 8-image SB strip (node bench, ≥3-image
+  // tracks): +1.4 % at 2400 px / 10k, where the cap barely binds, and +10 % at native
+  // 3072 px / 10k, where it binds hard. Response-ranked native 10k scored BELOW 2400 px
+  // 10k: fine-scale texture filled the budget. It matters most where the cap binds.
+  siftCapRule: 'coarse-first',
+  // A faint image — fewer keypoints than this share of the cap at the set contrast —
+  // is detected again at siftFaintRetryContrast × that contrast (core/features/
+  // faintRetry.js, which has the measurements). Untiled SIFT only. On or off is the
+  // user's (DETECT_SIFT_DEFAULTS.faintRetry): its cost is in matching, quarry 347
+  // exhaustive +31 %.
+  siftFaintRetryShare: 0.5,
+  siftFaintRetryContrast: 0.5,
+  spMaxUntiledInputPx: 16_000_000, // ≈4000×4000; above this (tiling off) → prompt / clean fail
+  // DISK's U-Net holds 128 float channels at FULL input resolution (SuperPoint
+  // downsamples 8× first), i.e. 512 B per input pixel in one tensor, so ORT's int32
+  // byte math overflows near 2³¹ / 512 ≈ 4.2 MP. Derived, not yet observed; the
+  // worker's overflow rethrow is the backstop either way.
+  diskMaxUntiledInputPx: 4_000_000,
+  // ALIKED: the same 128 full-resolution channels (its concatenated feature map),
+  // so the same derived ceiling.
+  alikedMaxUntiledInputPx: 4_000_000,
+}
+
+// Sparse SfM knobs read directly in core/sfm/sfm.js (PnP registration + interleaved
+// bundle-adjustment / track filtering). `settings` from the caller still overrides.
+// NOT here (owned by its module): init-pair thresholds → core/sfm/initPair.js.
+export const SFM_TUNING = {
+  // ── Bundle-adjustment linear solver (bundle.rs SolverOpts) ──
+  // Policy for the reduced camera system of every bundle adjustment. null ⇒ the crate
+  // default: PCG from n ≥ 600 (≈ 100 cameras), rel_tol 1e-10, 2,000 iterations, Cholesky
+  // fallback at the cap. The policy here is inexact Newton instead: CG to 1e-6, at most
+  // 200 iterations, and the capped iterate taken as the step (it still lowers the
+  // quadratic model; LM accepts it only if the true cost falls). HANDOVER ▸ B-parity,
+  // corrected sweep: SfM −50 % (PUTI), −24 % (quarry), −14 % (South Building) with the
+  // same LM solve counts, camera/checkpoint accuracy and point counts — the exact default
+  // spent much of its time hitting the 2,000 cap and then paying a dense Cholesky too.
+  // Every BA logs what its solves did and the run totals land in summary.baSolver, so a
+  // bench compares by overriding keys per run (merged key by key, sfm.js): { pcgMinN: 1e9 }
+  // (Cholesky only), { pcgRelTol: 1e-10, pcgMaxIter: 2000, pcgAcceptPartial: false }
+  // (the exact solve), { pcgPreconditioner: 'ic0' } (block IC(0), ≤ 12 % in the sweep).
+  // functionTolerance: LM stops once an accepted step lowers the robust cost by less than
+  // this fraction (Ceres' function_tolerance; 0 ⇒ run to the iteration cap, the old
+  // behaviour). St Nazaire SIFT (HANDOVER ▸ B-ba-ftol): BA 608 → 205 s at 1e-6 with the
+  // same cameras, points, reprojection and GNSS fit to 4 decimals; 1e-5 saved another
+  // 54 s but moved the median reprojection by 0.01 px, so the standard value stays.
+  // direct: wherever PCG would run (≥ ~100 cameras), a sparse block Cholesky of the
+  // reduced camera system instead (crates/reconstruction sparse_chol.rs): exact steps,
+  // where block-Jacobi PCG stalls at its cap on big blocks (1,600 synthetic cameras: 22
+  // of 23 solves capped). With exact steps the LM stop is floored at 10⁻⁵ (bundle.rs
+  // DIRECT_FUNCTION_TOL; the tail past it changed nothing). plan-sfm-scale ▸ S2, bench
+  // 2026-10-16 on identical matches: quarry SfM 259 → 189 s, South Building 85 → 63 s,
+  // same cameras, points, final reprojection and RTK camera fit (13.24 / 18.17 vs
+  // 18.26 cm); synthetic 1,600 cameras 273 → 218 s. { direct: false } is the PCG path.
+  // `threads`: the bundle adjustment's pool size cap (core/sfm/reconstruction.js
+  // threadedWasm; one fewer than the machine's cores), 0 = the single-threaded build.
+  // The result is the same bits either way. Fixed by the first call in a worker.
+  baSolver: {
+    pcgMinN: null,
+    pcgRelTol: 1e-6,
+    pcgMaxIter: 200,
+    pcgAcceptPartial: true,
+    functionTolerance: 1e-6,
+    direct: true,
+    threads: 16,
+  },
+  // ── Interleaved bundle-adjustment / track filtering ──
+  // Observation pruning threshold, in **detection pixels** — sfm.js resolves it to
+  // native px against the run's detection scale (core/scaleContext.js, which owns
+  // the maxFactor/minFactor knobs) before any pass reads it. Bounded separately by
+  // core/sfm/cleanupThreshold.js, which caps how much a pass may remove when the
+  // residual distribution is shifted by wrong intrinsics — different root cause,
+  // and the two compose (the quantile bound applies to the resolved threshold).
+  filterMaxReprojPx: 4.0,
+  filterMinTriAngleDeg: 1.5, // drop points whose rays are too parallel
+  // Final sparse-cloud corroboration gate. Keep 2-view tracks while incremental SfM
+  // needs them, then omit them from the delivered model once a sufficiently large
+  // multi-view core proves that doing so will not erase a two-camera/tiny dataset.
+  finalMinTrackViews: 3,
+  finalTrackPruneMinCount: 50,
+  finalTrackPruneMinShare: 0.2,
+  // …and only where corroborated tracks already cover the image area (a grid of this
+  // many cells a side per image; 0 = the old blanket prune). Casa Grande 1978: the
+  // blanket prune left a lattice of strips around empty squares (tracks.js).
+  finalTrackPruneCoverageGrid: 16,
+  // Track completion (tracks.js `completeTracks`, COLMAP's CompleteTracks) after the
+  // final BA and before each post-filter pass: verified matches with one endpoint in a
+  // point add the other endpoint when it reprojects within the track-filter gate.
+  // Rounds repeat until nothing is added (A↔C enables C↔D); 5 is ample — later rounds
+  // add almost nothing. On 2026-10-05 SB the final prune still dropped 38,990 two-view
+  // points (41 %); completion is the step that turns tracks into ≥3-view ones.
+  completeTracksMaxRounds: 5,
+  // Projection-guided track extension (guidedExtension.js): after the first
+  // self-calibrated post-filter BA, search each point's projection in every registered
+  // camera that misses it for a keypoint with a matching descriptor. Ships the
+  // descriptors to the SfM worker as uint8 RootSIFT (128 B per keypoint; counted by the
+  // sparse memory preflight). Bench (HANDOVER ▸ B-bench): ≥3-view points +5 % SB, +28 %
+  // building, +7 % eagle, +5.9 % quarry, median error and RTK accuracy unchanged.
+  guidedTrackExtension: true,
+  // Search radius = the filter gate capped at this × the model's p90 residual: a coarse
+  // detection scale makes the native-px gate far wider than the model resolves (TMA:
+  // 16.9 px gate, 1 px median). Capped, SB additions sit at 0.39/0.98 px median/p90 vs
+  // the model's 0.31/0.96 (uncapped 0.43/1.42) for −0.6 % points. 0 = gate only.
+  guidedRadiusP90Mult: 3,
+  // Acceptance: best candidate ≤ this quantile of ≥3-view track descriptor distances and
+  // ≤ ratio × the runner-up in the same window (0.95 gave +1 % more on SB, untested
+  // elsewhere; 0.9 ratio and running in both passes changed nothing).
+  guidedQuantile: 0.9,
+  guidedRatio: 0.8,
+  interimBaEvery: 5, // run a global BA after this many newly-registered cameras
+  // …and only once the model has also grown by this factor since the last one (COLMAP's
+  // ba_global_images_ratio is 1.1). Each solve costs the whole model, so every-5 alone
+  // is quadratic: quarry (347 images) registration 1,005 → 143 s, SB 106 → 45 s, points
+  // and RTK accuracy unchanged (SB −0.4 %). 0 = every interimBaEvery cameras.
+  // 2 since 2026-10-11 (HANDOVER ▸ B-parity, interim-BA spacing): against 1.2, SfM −25…33 %
+  // on PUTI, quarry, South Building and St Nazaire with every camera kept and camera /
+  // checkpoint accuracy unchanged, and the hard sets (building's weak bridge, eagle) lose
+  // nothing either. Local BA between the solves bought nothing on top.
+  interimBaGrowth: 2,
+  interimBaIterations: 12, // fewer iters for the interim solves than the final BA
+  // Local BA after each registration (sfm.js runLocalBundleAdjust): the new camera + its
+  // localBaWindow − 1 most co-visible cameras free, their neighbours fixed. 0 = off: on six
+  // bench sets it only added 5–10 % time at growth 2 (B-parity); kept opt-in for a
+  // thousands-of-cameras set, where the gaps between global solves get long.
+  localBaWindow: 0,
+  localBaIterations: 6,
+  // Track storage (core/sfm/trackStore.js): 'typed' is the arena the solver runs on;
+  // 'map' is the Map-based reference it is tested against. Same output, bit for bit.
+  trackStore: 'typed',
+  // Camera-centre priors (imported poses / EXIF GPS) enter one final fixed-K BA.
+  // Targets are mapped into the current arbitrary SfM frame by a similarity fit;
+  // two rounds let that mapping settle after the first constrained deformation.
+  cameraPriorBaRounds: 2,
+  cameraPriorBaMinCameras: 3,
+  // A position-constrained solution may trade a little image residual for better
+  // geometry. Bound that trade so noisy GPS cannot visibly damage tie-point fit.
+  cameraPriorMaxReprojIncreasePx: 0.25,
+  cameraPriorMaxReprojIncreaseFrac: 0.1,
+  // Intrinsics the camera-prior BA refines: 'auto' = the last post-filter pass's
+  // self-cal terms, 'none' = fixed K, or a comma list. Fixed K cannot undo a dome caused
+  // by slightly wrong f/k (nadir focal–height correlation): RTK benches quarry camera
+  // residual 0.43 → 0.20 m, GeoScan checkpoints H 6.1 → 4.4 cm, V 16.4 → 10.8 cm.
+  // Loose priors (5 m default, consumer GNSS) carry too little weight to move K.
+  cameraPriorRefineIntrinsics: 'auto',
+  // Same for the GCP-anchored BA (bundleSession.js), once at least
+  // gcpRefineIntrinsicsMinGcps control points qualify: over a nadir block only control
+  // at different heights pins the focal (Casa Grande 1978 film, HANDOVER ▸ B-hist).
+  gcpRefineIntrinsics: 'auto',
+  gcpRefineIntrinsicsMinGcps: 5,
+  // ── F13: held to a reference DEM (bundleSession.js runDemAnchoredBundleAdjust) ──
+  // Rounds of the DEM-held solve, the anchors rebuilt between them (a point that moves
+  // sideways meets the DEM elsewhere): the synthetic doming block settles in two
+  // (demAnchors.ba.test.js). At most demHoldMaxAnchors tie points, spread over the area;
+  // fewer than demHoldMinAnchors over stable ground and the pass is skipped. The
+  // reference is sampled on at most demHoldGridSide² places over the block.
+  demHoldRounds: 2,
+  demHoldMaxAnchors: 4000,
+  demHoldMinAnchors: 20,
+  demHoldGridSide: 400,
+  // ── In-registration distortion self-calibration (D3) ──
+  // Once the model has this many cameras, the interim BA refines a shared focal + radial
+  // k1 and folds the distortion out of the keypoints (+ Kmap) mid-registration, instead
+  // of deferring it to the post-filter passes. A 2-view model hides distortion in its
+  // points (init reproj looks perfect, 3rd-view PnP collapses at ~13% inliers), so k1 is
+  // only identifiable once several cameras at different angles are in — below this count
+  // the interim BA stays pose/points-only and the fold (which mutates keypoints) is held
+  // back. Only active when refineIntrinsics self-calibrates (no calibrated model at ingest).
+  distortionCalMinCams: 6,
+  // Transactional self-cal guard. These are deliberately broad plausibility bounds,
+  // not calibration priors: normal EXIF recovery remains free, while the observed
+  // thin-block runaways (focal +48…88%, k1 ≈ -0.5) are rejected before their
+  // distortion is destructively folded into every image's keypoints.
+  selfCalMaxFocalStepFrac: 0.25,
+  selfCalMaxFocalNominalFrac: 0.35,
+  selfCalMaxPrincipalOffsetFrac: 0.1,
+  selfCalMaxCornerShiftFrac: 0.25,
+  // The same two focal bounds when the starting focal is only resolveK's default-FOV
+  // guess (no EXIF focal, no sensor format). That guess is not evidence: a 153 mm lens
+  // on a 230 mm film frame sits 33% below it, and the 25% step bound rejected the focal
+  // pre-solve on the CA213732V strip (29.9%), leaving fx at the guess (SFM-12).
+  selfCalGuessFocalStepFrac: 0.6,
+  selfCalGuessFocalNominalFrac: 0.7,
+  // Brown's decentring terms (p1, p2) under the auto schedule are kept only when the
+  // first solve that frees them lowers the reprojection RMS by at least this fraction
+  // against the same solve without them (bundleSession.js). Measured 2026-11-06: quarry
+  // (a decentred senseFly lens) 4 % better, and its GCP-free dome went from 67 to 13 cm
+  // vertical; South Building, ETH3D playground and UseGeo (undistorted photos) 0.0 %,
+  // where freeing them moved the cameras 9–24 % further from the reference.
+  selfCalDecentringMinGain: 0.01,
+  // …but no trial under survey-grade camera positions (cameraPriors.js
+  // surveyGradePositions: at least half the priors within this σ on every axis, metres):
+  // p1, p2 stay. With the camera heights held, a small real decentring that lowers no RMS
+  // (GeoScan PUTI, RTK only: 0.0 %) still trades with the focal and so with the ground
+  // height under the cameras. Measured 2026-11-12: PUTI checkpoints V 9.2 → 7.8 cm with
+  // Metashape's p1, p2 (Metashape 6.4); UseGeo with its positions at ±3/5 cm even (LiDAR
+  // edge dome −3.5 → −2.4 cm). Consumer GPS (PUTI at ±10/20 m) is not held: kept there,
+  // checkpoints H 9 → 45 cm. GCP-held film blocks keep the trial (kept: Casa Grande
+  // 1.09/1.01 → 1.12/1.05 m, Iceland even).
+  selfCalDecentringHeldSigma: 0.1,
+  // Adding images to a saved model (extendModel.js) rebuilds the old images' keypoints in
+  // the model's frame and compares them with the pixels the model saved: above this
+  // median gap (px) they are not the keypoints the model was solved from (re-detected
+  // features) and the run stops.
+  extendFrameMaxMedianPx: 0.5,
+  // ── PnP registration gate ──
+  pnpGateScale: 2, // fixed inlier gate = reprjThreshold × min(pnpGateScale, 2)
+  minPnpInliers: 15, // absolute PnP-inlier floor to accept a pose
+  // …and a fraction of the correspondences. Raised 0.15 → 0.3: on the 2026-07-10
+  // building run every mis-registration was admitted in the 10–25% band. With
+  // self-calibration on by default (refineIntrinsics 'auto' → 'f,k1'), true poses
+  // clear 0.3 comfortably; the band below it is where coincidence fits live.
+  minPnpInlierRatio: 0.3,
+  // Second acceptance gate: after the pose is polished, recount inliers at the
+  // (tighter) reprjThreshold rather than the looser PnP gate and require the ratio
+  // again — a pose that only fits at the loose gate is deferred (P4.3).
+  minPnpRefineInlierRatio: 0.3,
+  // ── Stalled-strip rescue (S1) ──
+  // When a full sweep registers nothing but images still link to the model, the
+  // usual causes on short film strips are (a) a ~10% wrong focal the post-filter
+  // self-cal hasn't corrected yet and (b) strip-end structure gaps. One rescue
+  // round runs a focal-only BA + a retriangulation, then retries the stalled
+  // images ONCE with a relaxed refine-recheck (at the PnP gate, ratio below). The
+  // absolute minPnpInliers floor + gate-1 still apply, and the final BA + track
+  // filter clean any loose observations, so this only rescues genuinely-linked
+  // end images, never manufactures a pose. Set false to restore the strict sweep.
+  rescueStalled: true,
+  rescueRefineRatio: 0.2, // relaxed refine-recheck ratio used on the rescue retry
+  // ── Secondary-model recovery ──
+  secondaryModels: true, // reconstruct coherent blocks stranded outside the primary
+  secondaryMinImages: 8, // avoid recursively solving tiny/noisy leftovers
+  secondaryBoundaryImages: 12, // registered overlap halo used to align arbitrary frames
+  seedRetryMax: 4, // retry alternate initial pairs when the primary stalls tiny
+  seedRetryMinFraction: 0.5, // below this registered share, seed choice is still suspect
+  // ── GCP triangulation, robust mode (gcpTriangulation.js; guides and target detection) ──
+  // Absolute floor (native px) of the median cut max(3 × median, floor): on a clean set
+  // the median is ~0, and a pure multiple would reject honest marks over noise. The cut
+  // is for misclicks, so the floor is a misclick's size, not a marking accuracy.
+  gcpRobustFloorPx: 25,
+}
+
+// Tie-point matching knobs read in useMatchesStore but NOT exposed in
+// MatchFeaturesModal — the user-facing match defaults live in defaults.user.js ▸
+// MATCH_DEFAULTS. `settings` from the caller still overrides.
+export const MATCH_TUNING = {
+  // How often a matching run saves its matches and its journal (core/runJournal.js)
+  // while pairs finish: what a dead tab's run can lose, against one rewrite of the match
+  // document (never more often than ten times that rewrite takes). `_journalMs` in a
+  // run's settings overrides it; the tests use 0.
+  journalIntervalMs: 60_000,
+  // WebGPU brute-force: byte budget of the per-run GPU descriptor cache (LRU). 1 GiB
+  // holds a whole 128-image SIFT run at ~8.4k kp (≈ 4.3 MB/image); a smaller budget
+  // only costs re-uploads (the worker answers a miss and the store resends).
+  gpuDescCacheMiB: 1024,
+  lgMinConf: 0, // LightGlue min match confidence
+  overrideInliers: 30, // inlier count that overrides a failed ratio/H-F gate
+  hfDegenerateRatio: 0.8, // homography-vs-fundamental ratio flagging a degenerate fit
+  minInlierUniqueFrac: 0.5, // reject a pair whose inliers collapse to few unique locations
+  minInlierSpreadPx: 8, // …or into a pinhead region (epipole degeneracy), in px
+  // ── Decoupled match-acceptance floors (WS1) ──
+  // `minMatches` (defaults.user.js, user-facing) is the ACCEPT floor + the H-skip floor.
+  // These two are the other two gates it used to conflate, split out so raising minMatches
+  // (e.g. to 500) can never widen the pre-verification kill zone or sever the match graph:
+  // filterStationary: a match moving at most this % of the image diagonal between
+  // the two images is stationary (1 % = 130 px on a 9139² film scan).
+  stationaryTolPct: 1,
+  rawSkipFloor: 15, // skip verification below this many RAW putatives (clamped to ≤ minMatches)
+  weakMinInliers: 15, // valid-F pairs with ≥ this many inliers but below the accept gate → WEAK
+  // (kept for PnP registration only; never seed init or triangulate)
+  // ── Tiled guided matching (core/features/guidedTiles.js, gated by lgTiled) ──
+  lgCoarseKeypoints: 1024, // per-image cap for the coarse pass that fits the guide H
+  // The coarse pass doubles as the LightGlue pair GATE (the brute-force subset gate
+  // is skipped for LightGlue): a near-empty coarse result on 1024×1024 strong
+  // keypoints means the pair doesn't overlap, so it's returned as-is (~0.3 s, the
+  // store's minMatches then skips it) instead of escalating to the plain capped
+  // match — the single most expensive path — just to confirm the non-overlap.
+  lgCoarseGateMin: 8, // coarse matches below this ⇒ no overlap, skip (don't fall back)
+  lgGuideMinMatches: 24, // min coarse matches before attempting a homography guide
+  lgGuideMinInliers: 15, // min H-inliers for the guide to be trusted (else fall back)
+  // The guide H only needs to predict *where a tile lands* (locality), not fit the
+  // scene tightly — the residual-derived margin absorbs looseness by design. So the
+  // guide RANSAC threshold scales with image size (a fixed ~3 px on a 10k-px aerial
+  // frame with terrain relief rejects nearly every real pair: the 2026-07-10 CA…V
+  // run fell back on 9/10 pairs at ratio 0.04–0.21 while F-RANSAC showed 0.5–0.84
+  // inlier ratios), and the inlier-fraction gate is correspondingly permissive.
+  lgGuideRelThresh: 0.001, // guide-H RANSAC threshold as a fraction of image diagonal (≥3 px)
+  lgGuideMinInlierRatio: 0.15, // min H-inlier fraction (scene too 3D / no overlap ⇒ fall back)
+  lgTileMinKps: 32, // skip a tile with fewer keypoints than this on either side
+  // ── Subset gate applicability ──
+  // The gate trades a small false-negative rate for skipping O(Na·Nb) matches, which is
+  // only a good trade when there are many pairs to skip. Below this count the full
+  // exhaustive match costs seconds, so the trade is all risk and no saving — and the
+  // risk is severing the graph (the 2026-07-24 CA…V run: 7/10 pairs gated, including
+  // the consecutive 33↔34, splitting 5 images into 2 components and registering 3).
+  // The gate's *sample size* is not here: it is derived per pair from the real
+  // keypoint counts by core/features/subsetGate.js resolveSubsetGateSize (which
+  // owns the fraction/floor/ceiling), because a fixed sample makes the gate ~1/N
+  // more severe as keypoint counts rise. The CA…V gating above is consistent with
+  // that failure mode as well as with the low pair count.
+  subsetGateMinPairs: 50,
+  // Gate rescue (useMatchesStore.matchAll): images left with fewer than this many
+  // accepted pairs re-test their gated pairs on a subsetGateRescueScale× larger subset
+  // (scale² more expected putatives). 0 = off. Iceland 1980 film: 7 images stranded.
+  subsetGateRescueDegree: 6,
+  subsetGateRescueScale: 4,
+  // Near misses (matchAll's gate rescue): a gated pair whose sample reached at least
+  // subsetGateNearMiss × the threshold is tested again on a subsetGateNearMissScale×
+  // larger sample against a threshold as many times higher (the count a real pair
+  // reaches grows with the sample size squared, a chance count about linearly).
+  // South Building: 102 of the 918 pairs gated at 6–7 of 8 are pairs COLMAP verifies
+  // with ≥ 50 inliers (one with 498). 0 = off.
+  subsetGateNearMiss: 0.5,
+  subsetGateNearMissScale: 2,
+  // Bridge repair (MATCH_DEFAULTS.repairSplits; core/features/bridgeRepair.js): a match
+  // graph left in pieces of at least bridgeMinComponent images gets up to
+  // bridgePerComponent pairs per piece (bridgeMaxPairs in all) between it and the main
+  // block matched again, without the subset gate and with these looser gates. F-RANSAC
+  // still verifies every pair; LightGlue gets bridgeLgKeypointScale× the keypoints.
+  // Pairs rejected with at least bridgeRetryMinRaw putatives are tried first.
+  // A piece hanging on the main block by a thread is repaired too: one apart from it
+  // without the pairs of fewer than bridgeWeakInliers inliers, and joined to it by fewer
+  // than bridgeWeakCut inliers in all (Starbuck, Jorum: TMA flight lines SfM leaves out).
+  bridgeRounds: 3, // again while the main block grows, each round with fresh pairs
+  bridgeMinComponent: 2,
+  bridgeWeakInliers: 30,
+  bridgeWeakCut: 100,
+  bridgeMaxPairs: 48,
+  bridgePerComponent: 12,
+  bridgeRetryMinRaw: 8,
+  bridgeRatioThreshold: 0.9,
+  bridgeMinInlierRatio: 0.08,
+  bridgeVerifier: 'magsac',
+  bridgeLgKeypointScale: 2,
+  // Detecting gaps again (MATCH_DEFAULTS.gapRedetect; core/features/gapRedetect.js): the
+  // SIFT photos of the pieces still apart after bridge repair, detected at under
+  // gapMaxScale of their size, are detected again at full size with ≤gapMaxKeypoints
+  // (their cap scaled with the area), together with gapPartnerShare as many photos of
+  // the main block, those with candidate pairs to most of them. Not when they would be
+  // more than gapMaxShare of the photos: detecting everything at full size is then the
+  // better run. Starbuck subset, 46 gap photos + 30 partners at 10,400 px: 32 posed.
+  gapMaxScale: 0.8,
+  gapMaxKeypoints: 40000,
+  gapPartnerShare: 0.65,
+  gapMaxShare: 0.5,
+  // Share of the progress bar kept for the gate rescue and bridge repair, which follow
+  // the pair pass when they can run (core/features/matchProgress.js).
+  progressPostShare: 0.1,
+}
+
+// Dense MVS knobs read in core/dense/mvs.js but NOT exposed in DepthMapsModal /
+// DenseModal — the user-facing dense defaults live in defaults.user.js
+// (DEPTHMAP_DEFAULTS / DENSE_FUSE_DEFAULTS). `settings`/`opts` from the caller override.
+export const DENSE_TUNING = {
+  // GPU depth maps: how long one GPU command (a band of rows of one pass) may take, in ms.
+  // An integrated GPU also draws the screen, and the OS resets one that runs a single
+  // command for about 2 s (Windows TDR): long commands froze the display on Intel
+  // laptops. A dedicated GPU runs a whole pass within this and is not slowed.
+  gpuBandMs: 30,
+  // Bands are queued until this many of the browser's fixed waits for finished GPU work
+  // (measured per device) are reached before one wait, when that is more than gpuBandMs:
+  // Firefox answers on a 100 ms timer, so it queues 400 ms of 30 ms bands per wait.
+  gpuWaitsPerQueue: 4,
+  // A fixed wait shorter than this (ms) is left out of the band timing.
+  gpuWaitMinMs: 1,
+  // A first GPU map slower than this (ms) has the second map computed on the CPU to
+  // compare, and the run continues on the faster of the two (workers/ops/dense.js).
+  gpuProbeMs: 8000,
+  // The GPU check on a run's first map (depthMap.js hooks.validate): the median difference
+  // between the GPU's final cost and the Rust cost of the same planes (mvs.rs plane_costs).
+  // Over gpuCheckWarn the log warns (more than this GPU's rounding explains); over
+  // gpuCheckMax the run, and later runs in the session, move to the CPU
+  // (workers/ops/dense.js): the GPU computes something else, a broken kernel or driver.
+  // Smaller drift between the kernels is the nightly browser suite's to catch
+  // (tests/browser/gpu-depth.spec.js, exact f32 on SwiftShader), not a user's run.
+  // The median, not the RMS: a hardware sampler's 8-bit filter weights leave a few
+  // low-texture pixels far off, so a correct kernel's RMS reaches 7e-3 on an NVIDIA Turing
+  // (synthetic scenes, tests/bench/patchmatchCases.js) while its median is ≤ 1.3e-5 there
+  // and 1.4e-4 on five Aukerman photos (SwiftShader: ~5e-7). The shader with its homography
+  // sign flipped (the old "freckle" bug): 2e-1 on the same photos. Rust against itself with
+  // a setting changed: best-K +1 or the other window step 1.5e-4–1.1e-3, a 2 % warp error
+  // 5.5e-3–9e-3 (2026-11-04).
+  gpuCheckWarn: 1e-3,
+  gpuCheckMax: 1e-2,
+  // The CPU map of that comparison gives up after a pyramid level once it is on course
+  // to take gpuProbeGiveUp× the GPU's time for it (core/dense/gpuProbe.js). Melville,
+  // 10,500 px film scans at High: the GPU map 94 s, the CPU map 78 min.
+  gpuProbeGiveUp: 2,
+  // How often a depth-map run's journal (core/runJournal.js) is rewritten while maps
+  // finish: what a dead tab's run can lose and recompute on Continue, against one
+  // small JSON write. (A run's `_journalMs` setting overrides it; the tests use 0.)
+  journalIntervalMs: 5000,
+  coarseLong: 600, // longest-side px at the coarsest pyramid level (sets level count)
+  // Bilateral-weighted NCC in PatchMatch (mvs.rs Bilateral), σc in grey levels; 0 = plain
+  // NCC. COLMAP uses 0.2 of the range (51). ETH3D six scenes, F1 @2 cm (approximate
+  // scorer): plain 52.6, 51 53.2, 25 53.5, 12 53.3, 6 52.3 (narrower: more accuracy, less
+  // completeness); official evaluator plain 56.4 → 25 57.1. 25 better than
+  // plain on every scene. Aukerman 42 unchanged (roughness, points −0.4 %); GPU time
+  // unchanged, CPU +10 % (2026-10-26, docs/METHODS.md §7.1).
+  bilateralSigmaColor: 25,
+  // Depth maps on the CPU: each map on the threaded build's pool, one worker for the run
+  // (mvs.rs sweeps over rows; the same bits as one thread). 640×480, 6 sources, natively:
+  // best-K 91.8 → 8.9 s, ACMH 246 → 22.1 s on 20 cores (2026-10-26).
+  cpuDepthThreads: true,
+  // ACMP planar priors (core/dense/planarPrior.js, depthMapForImage): support points one
+  // per priorGrid² cell below priorMaxCost, then priorIterations sweeps from the finished
+  // map with the prior in the cost (the paper's α, γ, σ_n; σ_d = range / 64). ETH3D +0.7
+  // F1 (3 sweeps; 5 gave +0.8). On or off is the Method's (DEPTHMAP_DEFAULTS.method, the
+  // store resolves it); `planarPrior` here is only the fallback of a call that names none.
+  planarPrior: false,
+  priorGrid: 5,
+  priorMaxCost: 0.1,
+  priorAlpha: 0.18,
+  priorGamma: 0.5,
+  priorSigNDeg: 5,
+  priorIterations: 3,
+  priorPerturbStart: 0.125,
+  // The geometric-consistency pass (depthMap.js geomDepthMapForImage; mvs.rs Geom): ACMP's
+  // λ 0.1, cap 5 px, 2 sweeps from the saved first-pass maps (ETH3D +2.0 F1 on ACMH +
+  // prior maps); the worker keeps the last geomDepthCache neighbour depth planes it read.
+  geomDepthCache: 24,
+  geomWeight: 0.1,
+  geomMaxPx: 5,
+  geomIterations: 2,
+  geomPerturbStart: 0.0625,
+  // Step between PatchMatch window samples (mvs.rs Patch): 1 = every pixel, 2 = every other
+  // row and column (COLMAP / ACMM). Measured 2026-10-26 (ETH3D six scenes, official
+  // evaluator, GPU, ACMH): 7×7 step 1 63.4; radius 5 step 2 61.9, radius 4 step 2 62.1,
+  // both ~30 % faster — a speed knob, not a default.
+  windowStep: 1,
+  minAngleDeg: 3, // source-view triangulation angle floor (too small = degenerate)
+  maxAngleDeg: 60, // …and ceiling (too wide = poor photo-consistency)
+  consistencyPx: 2, // fusion reprojection agreement threshold (px)
+  // Stage A progress split (workers/ops/dense.js): the cross-view filter's expected
+  // cost per depth-map pixel, weighed against the measured per-image loop time to give
+  // the filter its share of the bar. 0.3–0.5 µs/px measured on synthetic 1.25 MP nadir
+  // sets of 24–60 maps (Node/V8, dev machine, 2026-10-07); it rises slowly with map
+  // count and sky share. The run logs the measured value — retune from those.
+  geomFilterUsPerPx: 0.4,
+  // The cross-view filter checks each reference against at most this many overlapping
+  // views, nearest cameras first (0 = all). Every candidate plane is resident while a
+  // reference is judged, and a pixel that fails is tested against all of them: with
+  // ~50 overlapping views a map on a 58-scan film block at High, that was 5.4 GB per
+  // worker and 25 min on the one worker it allowed.
+  filterMaxViews: 12,
+  // The cross-view filter over saved maps takes at most one worker per this many maps
+  // (and no more than the pool or the memory budget holds): contiguous chunks keep each
+  // worker's candidate planes warm. It hardly matters on the sets where it binds: 48 quarry
+  // maps at Medium, 3 workers, filter 16.8 s of a 1,872 s depth run (2026-10-24).
+  filterMapsPerWorker: 16,
+  // Fusion's consistency check, likewise (core/dense/fusionPlan.js fusionViews): at most
+  // this many overlapping views per map, those with enough parallax first (0 = all).
+  fuseMaxViews: 12,
+  // ── Stage B streaming fusion (core/dense/mvs.js fuseDepthMaps) ──
+  // Fusion accumulates kept pixels directly into a voxel-merge structure (never a
+  // raw per-pixel point list — that was the OOM). The scene bbox that sizes the
+  // packed cell keys is estimated from a coarse pixel grid: every Nth row/col of
+  // each depth map (~few k unprojections/map, negligible vs the full fuse).
+  fuseBboxStride: 16, // coarse-grid stride for the scene-bbox estimate
+  fuseProgressMs: 250, // min ms between fusion progress emits (~4/s; no postMessage spam)
+  fuseCostMaxSamples: 2_000_000, // cost-histogram sample budget (stride-subsampled, sorted once)
+  fuseMaxCells: 2 ** 50, // packed-key exactness ceiling (float64); clamp cellSize up past this
+  // Measured pre-flight (fusionCellEstimateSteps): distinct merge cells counted by hash
+  // sampling. The cap bounds the tracked set (~1/√cap ≈ 0.4% relative error once the
+  // scene exceeds it); the margin covers that error so the accumulator presized from
+  // the estimate rarely has to grow.
+  fuseEstimateSampleCap: 65536,
+  fuseEstimateMargin: 1.05,
+  // Over budget at the requested sample step: re-plan at 2× (then 4×) the step before
+  // refusing (fusionPlan.js). 1 = never coarsen.
+  fuseAutoStepMax: 4,
+  // Most workers fusion splits over (store densifyParallel; at most POOL_SIZE, fewer when
+  // the plan cannot hold their inputs in the budget and the tab's buffer pool). It was 1
+  // while 8 workers ran slower (quarry 630 vs 557 s, bound by plane reads); with the view
+  // cap, light pre-passes and slabs in shared memory, quarry at Medium (347 maps, 95 M
+  // points) 478 → 308 s, at half the merge cell (208 M points) 922 → 200 s, the same cloud.
+  fuseWorkers: 8,
+  // ── Post-fusion isolated-cell removal (WS4, gated by removeIsolated) ──
+  // Only low-support cells are tested (a ≥3-pixel cell is never a floater), so this stays
+  // O(noise tail). A tested cell survives if ≥ isolatedMinNeighbors of its 26 (radius 1)
+  // neighbour cells are occupied; otherwise it's a lone flyer (sky/vegetation) and dropped.
+  isolatedRadius: 1, // neighbour search radius in cells (26-neighbourhood)
+  isolatedMinNeighbors: 2, // min occupied neighbours to keep a low-support cell
+  isolatedMaxSupport: 2, // only cells with ≤ this many contributing pixels are tested
+  // The depth-map preview (the image viewer's overlay, stretched to the image) is
+  // rendered at most this many pixels on its long side: a full 27 MP PNG per map was
+  // seconds of encode each for a picture nobody sees at that size.
+  depthPreviewMaxDim: 2048,
+  // A worker streaming depth maps waits while more than this many of its maps are not
+  // saved yet (each is ~23 B/px held on the page until its write lands).
+  depthMapsUnsaved: 2,
+  // The parallel depth filter's comparison cache per worker (stores/reconstruction/
+  // dense.js densifyParallel): a quarter of the budget split over the workers, at most
+  // this. An eighth of the budget split K ways starved the cache (96 MB each on quarry).
+  densifyCacheMaxMiB: 512,
+}
+
+// Mesh (screened Poisson) internals read in core/products/mesh.js but NOT exposed in
+// MeshModal — the user-facing knobs (depth/screening/trim/fillHoles/removeFloaters/
+// colorize) live in defaults.user.js (MESH_DEFAULTS). `settings` from the caller override.
+export const MESH_TUNING = {
+  // Octree depth Auto (products/mesh.js autoMeshDepth): the depths it picks from, and the
+  // one it uses when the cloud's spacing or extent is unknown.
+  autoDepthRange: [6, 11],
+  autoDepthFallback: 8,
+  // Triangles per covered leaf in predictMeshTriangles, fitted on six meshes (aerial
+  // blocks, subsets, a close-range object): the prediction is 0.9–1.4× the real count.
+  trianglesPerLeaf: 1.6,
+  // A depth set by hand that predicts more triangles than this gets a warning: an 11 M
+  // triangle mesh outgrew the 32 GB a tab had after its solve (2026-11-09).
+  warnTriangles: 4_000_000,
+  colorSearchRadius: 1, // vertex-colour transfer: search ±N voxel cells (3³ nhood)
+  // Tiled Poisson (meshTiles.js, MESH_DEFAULTS.tiles 'auto'): a scene whose solve would
+  // pass what one solve holds (the worker's `oneSolveBytes`: ~12 GiB with Memory64, the
+  // 32-bit heap otherwise) is solved in tiles of at most `tileHeapBytes` each, which the
+  // faster 32-bit build holds, with at least `tileOverlapCells` leaves of overlap: the
+  // density trim's support cell is 4 leaves and reaches 2 cells, plus a cell of lattice
+  // rounding. Where a trimmed border (a hole) crosses a seam, the tiles can still decide
+  // the refill differently and leave short open edges there (synthetic terrain with holes:
+  // +1.7 % open seam-band edges at 8 leaves, +0.6 % at 12; none without holes).
+  tileHeapBytes: 3 * 2 ** 30,
+  tileOverlapCells: 12,
+  oneSolveBytes: 3.5 * 2 ** 30,
+  grayFallback: [180, 180, 180], // colour for a vertex with no dense point nearby
+  // Poisson input downsample. A depth-D octree can't resolve detail finer than one leaf
+  // cell (extent / 2^D), so feeding it a much denser cloud is wasted work — octree build,
+  // matrix assembly and the CG solve all scale ~linearly with point count. Voxel-subsample
+  // the input to ≈ this many leaf cells per point before the solve (1 ⇒ ~one point per leaf
+  // cell). Colour transfer still uses the FULL dense cloud, so quality is unaffected. The
+  // subsample only kicks in when it would actually thin the cloud (input denser than a leaf
+  // cell); a sparse cloud passes through untouched. Each kept sample carries how many raw
+  // points it stands for — the support weight the trim and the floater filter read.
+  inputLeafCellsPerPoint: 1,
+  // Support-density trim: drop surface whose support is below this fraction of the median
+  // sample's (crates/mesh `density_ratio`). 0.1 removes the fixture's speck shells and the
+  // bridged cap of a sphere while keeping an open rim (≈ ½ median); 0.3 also eats thinly
+  // observed surface. A ratio, so it means the same at every scale.
+  trimRatio: { off: 0, gentle: 0.1, strong: 0.3 },
+  // Hole refill: a trimmed region that is closed and no larger than this fraction of the
+  // kept piece around it is a hole the solve bridged and goes back in. Relative to the
+  // bordering piece, never the whole mesh (crates/mesh `refill_holes`).
+  holeAreaRatio: 0.05,
+  // Robust extent. The octree spans the input's bounding box, so a few stragglers far from
+  // the object coarsen every leaf. Points outside the [lo, hi] per-axis quantile box,
+  // grown by `robustMargin` × its size on each side, are left out of the solve. The margin
+  // keeps the object's real extremities (they are inside the 1–99 % box ± 25 %).
+  robustQuantiles: [0.01, 0.99],
+  robustMargin: 0.25,
+  robustSampleMax: 200000, // positions sampled to estimate the quantiles
+  // Pre-solve floater filter (cloudEdit `removeIsolated` at this many leaf widths): a cell
+  // holding ≤ 2 points with < 2 occupied neighbours is a stray. A converged solve ignores
+  // lone strays geometrically, but each still costs ~125 finest-layer octree nodes.
+  isolatedCellLeaves: 2,
+  // The auto depth cap: never refine leaves below this many input spacings — finer cells
+  // than the samples resolve nothing and multiply the solve's cost by ~4 per level.
+  minLeafSpacings: 1,
+  minDepth: 5,
+  // Spacing estimate for a cloud without a fusion merge cell (an imported cloud): median
+  // nearest-neighbour distance over this many sampled points.
+  spacingSampleMax: 20000,
+}
+
+// Mesh texture internals (core/products/texture/). User-facing knobs are
+// TEXTURE_DEFAULTS in defaults.user.js.
+// DEM and orthophoto size at Auto (core/products/rasterSize.js). A DEM keeps about one
+// point per cell; past one 4,096 plane it is built in blocks, up to `demAutoMaxSide`. An
+// ortho is `orthoAutoPhotoPx` photo pixels a cell, the photos then read at about native
+// resolution, up to `orthoAutoMaxSide` (never coarser than its surface). Quarry, 347
+// photos (2026-11-09): DEM 4,096 → 6,305 px 40 → 78 s; ortho 4,096 → 12,600 px
+// 253 → 469 s, the tab at 9.1 → 13.2 GB, GeoTIFF 31 → 260 MB.
+export const RASTER_TUNING = {
+  demAutoMaxSide: 8192,
+  orthoAutoPhotoPx: 2,
+  orthoAutoMaxSide: 16384,
+}
+
+export const TEXTURE_TUNING = {
+  // Visibility z-buffer: the mesh is rasterised per view onto a grid of at most this
+  // many pixels on the long side. Visibility needs occlusion, not texel detail.
+  bufferSide: 1536,
+  maxCandidates: 8, // best views kept per face for the view selection
+  minCos: 0.1, // faces seen at more than ~84° from their normal are not candidates
+  depthTolRel: 0.01, // depth-test slack as a share of depth, on top of the pixel-footprint term
+  // A face no view sees whole is textured from the view that hides least of it (else
+  // it would get a flat colour).
+  occludedFallback: true,
+  // View selection (min-sum loopy BP, Potts).
+  bpIterations: 12,
+  // Charts under this many faces are merged into a neighbour's photo where possible.
+  minChartFaces: 12,
+  bpDamping: 0.5,
+  // Charts: padding texels around each chart rectangle (filled with real photo content,
+  // so mipmaps don't bleed); a rectangle less than `minFill` covered by its triangles
+  // and larger than `minSplitTexels` is bisected.
+  padding: 2,
+  minFill: 0.35,
+  minSplitTexels: 1024,
+  gainSamples: 65536, // faces sampled for the colour-levelling fit
+  consistencyMinTol: 0.25, // photo consistency never rejects within ±28 % (log colour)
+  // Seam levelling (texture/seamLevel.js): weight of keeping a chart's offset smooth
+  // along its edges, relative to a seam's two sides meeting; seams far beyond the
+  // model's median seam difference count as misaligned detail and pull less; a small
+  // pull to 0.
+  seamLevelling: true,
+  seamSmoothWeight: 1,
+  seamDelta: 2, // Cauchy scale, × the model's median seam difference
+  seamEpsilon: 1e-3,
+  seamChromaWeight: 0, // colour-difference offsets pull at this share of brightness (0: brightness only)
+  seamMaxOffset: 40, // levels; colour differences get half
+  seamMaxIterations: 2000,
+  // Faces no view sees get a flat colour from a palette of cellSize² cells, the colour
+  // quantised to `paletteBits` per channel.
+  cellSize: 4,
+  paletteBits: 5,
+  grayFallback: [128, 128, 128],
+  jpegQuality: 0.9, // atlas pages are stored as JPEG
+  // A mesh with more open edges than this share is taken as unwelded (an STL: every
+  // face its own corners) and welded first; without shared vertices every face would
+  // be a chart of its own.
+  weldOpenShare: 0.5,
+  // GPU vs CPU depth on the first view the mesh covers enough of to judge (at least
+  // gpuCheckCoverage of its grid): below gpuAgreeMin of the covered pixels agreeing, the
+  // run falls back to the CPU pass (workers/ops/texture.js). Rasterisers differ by a
+  // pixel along occluder edges, which weigh more among covered pixels than among all of
+  // them. A view that covers less is not judged: it takes the CPU pass, and the next
+  // view is checked.
+  gpuAgreeMin: 0.95,
+  gpuCheckCoverage: 0.02,
+}
+
+// ── Resident feature data (stores; TODO ▸ SC-2/SC-3) ─────────────────────────────
+// Keypoints and matches live on disk and are read per image / per pair on demand
+// (utils/byteLru.js). These budgets bound the CLEAN copies kept for re-use — the open
+// image tabs, the match preview, a matching run's working set. Unsaved results are
+// pinned and never count against eviction. A bulk consumer (SfM input, exports,
+// fingerprints) streams past the cache rather than through it. 256 MiB is ~470 images
+// of 20 k keypoints, or ~33 M matches.
+export const RESIDENT_TUNING = {
+  keypointCacheMiB: 256,
+  matchCacheMiB: 256,
+  // Decoded tiles of tiled-pyramid photos (a native scan past the canvas limit; the
+  // fiducial and GCP windows revisit the same tiles), kept in EACH compute worker
+  // (workers/rasterSource.js): the pool may hold this many times its size.
+  rasterTileCacheMiB: 256,
+  // One read of the matches file serves every consecutive pair inside this window
+  // (core/features/matchStorage.js planMatchReads).
+  matchReadWindowMiB: 32,
+}
+
+// The turntable video (components/viewers/useTurntable.js): MediaRecorder bitrate from
+// the canvas size. Point clouds are all fine detail, which a low bitrate smears into
+// blocks; 4 bits per pixel and second is ~8 Mbit/s for a 1920×1080 view.
+export const TURNTABLE_TUNING = {
+  bitsPerPixel: 4,
+  minBitrate: 4e6,
+  maxBitrate: 25e6,
+  minSecondsPerTurn: 5,
+  maxSecondsPerTurn: 600,
+}
+
+// Cloud and mesh exports (composables/exports/clouds.js): from this estimated size on,
+// Chrome and Edge ask where to save before the export runs and write the file there
+// (core/io/exportSize.js), instead of a download of the finished file.
+export const EXPORT_TUNING = {
+  savePickerMinMiB: 256,
+}
+
+// Tools ▸ Images ▸ Image quality (core/features/imageQuality.js). The sharpness score is
+// the Laplacian variance of the image resampled to `analysisMaxDim` (a fixed unit across
+// cameras), over a `tiles`×`tiles` grid. The blur threshold is a user setting
+// (defaults.user.js IMAGE_QUALITY_DEFAULTS.minRelative).
+export const IMAGE_QUALITY_TUNING = {
+  analysisMaxDim: 1024,
+  tiles: 4,
+  // Luma at or above this (of 255) counts as clipped highlight, at or below
+  // `underexposedLevel` as crushed shadow.
+  overexposedLevel: 250,
+  underexposedLevel: 5,
+  // A tile needs this many valid Laplacian samples to report a variance.
+  minTileSamples: 16,
+  // Over- or underexposed when that share of valid pixels is clipped.
+  maxClipped: 0.25,
+}
+
+// Find GCPs ▸ Sentinel-2 (core/sentinel2.js, workers/ops/io.js fetchSentinel2Window).
+export const SENTINEL2_TUNING = {
+  searchLimit: 50, // scenes asked of the catalogue
+  // The window read around the search area: a quarter of its larger side, at least
+  // `minPad` m, and at most `maxPx` 10 m pixels a side (60 km: 3 × 6,000² 16-bit
+  // reads, about 200 MB).
+  padFraction: 0.25,
+  minPad: 1000,
+  maxPx: 6000,
+  // The stretch to 8 bits: these quantiles of the valid reflectances.
+  loQ: 0.005,
+  hiQ: 0.995,
+}
+
+// Co-register DEM ▸ Copernicus DEM (core/copernicusDem.js, workers/ops/io.js
+// fetchCopDemMosaic). The box read around the DEM: a tenth of its larger side, at least
+// `minPadDeg` (about 1 km), so a DEM that is shifted still lies on the reference; at most
+// `maxPx` 1″ cells a side (about 180 km, a 140 MB Float32 grid).
+export const COP_DEM_TUNING = {
+  pad: 0.1,
+  minPadDeg: 0.01,
+  maxPx: 6000,
+}
+
+// Classify Points ▸ vegetation and buildings (core/products/pointClasses.js). Lengths
+// in metres. The features are computed on voxel centroids: `voxel` sets the cost (a
+// dense cloud's points collapse to a few per voxel), `radius` the neighbourhood the
+// covariance sees (a roof plane is flat over a metre; a canopy is not).
+export const CLASSIFY_TUNING = {
+  voxel: 0.25,
+  radius: 1,
+  // A plane: (λ2 − λ3)/λ1 at least this, λ3/λ1 at most `maxScatter`. Above that
+  // scatter a voxel reads as vegetation.
+  minPlanarity: 0.5,
+  maxScatter: 0.06,
+  // Neighbouring plane voxels join one segment when their normals agree within this.
+  normalAngleDeg: 20,
+  // Mean ExG (2g − r − b on chromatic coordinates) above which a voxel is green.
+  greenExg: 0.06,
+  // A segment whose mean |normal z| is below this is a wall (steeper than about 60°): a
+  // building only beside a roof.
+  wallNormalZ: 0.5,
+}
+
+// Adding photos to a project in browser storage (core/io/folderProject.js bigImportOffer):
+// from this many GiB of photos in the project, counting the ones being added, WebSfM
+// offers to move it to a folder on disk first, once per project and page. Keypoints,
+// matches, depth maps and products come to several times the photos, and a browser may
+// cap or clear its storage; a folder is bounded by the disk alone.
+export const FOLDER_OFFER_TUNING = {
+  photosGiB: 3,
+}
+
+// Import ▸ Project into this project (composables/useProjectMerge.js).
+export const PROJECT_IMPORT_TUNING = {
+  // Photos read and ingested at a time: the page never holds a whole project as blobs.
+  photosPerBatch: 16,
+}
+
+// Adding photos, masks and reference rasters (stores/images/ingest.js, maskImport.js,
+// thumbnails.js; workers/ops/io.js).
+export const IMPORT_TUNING = {
+  // Photos whose stored copies are looked up at a time after an import: the lookups are
+  // storage round trips (~5 ms each, measured on 300 images).
+  readBackConcurrency: 16,
+  // TIFF transcodes in flight, bounded by pixels rather than by count. Each holds the
+  // decoded RGBA, its canvas and the JPEG + PNG encodes (~12 bytes per pixel), all in
+  // the renderer process (the workers share it). A batch used to transcode all its
+  // files at once: 32 Iceland 1980 scans (130 MP each) killed the renderer, and with
+  // GPU canvas the overlapping readbacks failed 31 of 125 images. A file larger than
+  // the budget still runs, alone.
+  tiffTranscodePixels: 400e6,
+  // The share of the tab's buffer pool a mask import may hold; image transcodes of the
+  // same folder may still be running beside it.
+  maskPoolShare: 0.25,
+  // Thumbnails generated at a time, in their own worker (workers/thumbnail.worker.js).
+  thumbnailConcurrency: 2,
+  // Import ▸ Reference raster: the memory a conversion to a tiled COG may decode the
+  // source into; a source needing more is used as it is.
+  rasterConversionMiB: 512,
+}
+
+// File ▸ Save project file (utils/projectFile.js): archived files up to this size are
+// read into memory once, so the archive holds the version they had when it started.
+export const PROJECT_FILE_TUNING = {
+  snapshotInMemoryMiB: 64,
+}
+
+// Tools ▸ Cloud and Mesh edits (stores/reconstruction/cloudEdits.js).
+export const CLOUD_EDIT_TUNING = {
+  // A crop of a streamed cloud becomes a resident one: at most this many points.
+  streamedCropMaxPoints: 25_000_000,
+  // From this many points the outlier filter and normals split the cloud into slabs over
+  // the worker pool (each slab with a margin); below it one worker is as quick.
+  splitMinPoints: 1_000_000,
+  splitPointsPerWorker: 400_000,
+  // From this many triangles Decimate splits an untextured mesh into blocks over the pool
+  // (core/products/meshBlocks.js), each worker taking at least splitTrianglesPerWorker.
+  decimateSplitMinTriangles: 500_000,
+  splitTrianglesPerWorker: 250_000,
+  // A streamed REFERENCE (alignment, distance) is read where the source is, at full
+  // detail up to this many points, coarser beyond (the log says so).
+  streamedReferenceMaxPoints: 12_000_000,
+}
+
+// Tools ▸ Georeferencing ▸ Find GCPs, the learned look (workers/ops/referenceGcps.js).
+export const FIND_GCPS_TUNING = {
+  // The coarse look reads both rasters at up to this many samples a side.
+  coarseDim: 1536,
+  // A learned look reads both rasters at up to learnedDim samples a side (a 4-band
+  // orthophoto read stays inside rasterWindow's 16 M-sample budget), detects in tiles
+  // of learnedTile px and gives LightGlue the strongest lightglueKeypoints of each.
+  learnedDim: 2000,
+  learnedTile: 1024,
+  lightglueKeypoints: 2048,
+  // A learned look counts when this many matches agree on one homography (hist-sfm's
+  // minimum); wrong rotations on Rachel gave at most 8.
+  learnedMinInliers: 20,
+}
+
+// Tools ▸ Products ▸ Co-register DEM… (core/products/demCoregistration.js).
+export const COREG_TUNING = {
+  // DEM cells used, on a regular sub-grid: each costs about a dozen reference samples,
+  // and 20,000 pin a metre-scale shift (as Quality Report ▸ DEM vs reference).
+  maxPoints: 20000,
+  // Fewer cells with a reference height than this: no co-registration.
+  minPoints: 200,
+  // Nuth & Kääb on slopes in this range (flat ground shows no shift, cliffs are noise),
+  // until the step is under `tolerance` of a cell, at most maxIterations passes.
+  minSlopeDeg: 5,
+  maxSlopeDeg: 45,
+  maxIterations: 8,
+  tolerance: 0.05,
+  // The tilt fit keeps cells within this many NMAD of the median, then of the first fit.
+  trimNmad: 3,
+  // Points kept with a co-registered georeference, to compose it again after a refit.
+  anchors: 200,
+}
+
+// Sidebar ▸ Sensors: which camera groups may hold photos of more than one camera
+// (core/sensors/splitSuggestions.js).
+export const SENSOR_TUNING = {
+  // A new group with fewer photos than this is marked small: self-calibration frees the
+  // principal point only from 10 cameras on (core/sfm/selfCalSchedule.js cxcyMinCams).
+  splitMinImages: 10,
+  // A scan batch has one exact size (Melville: 10137, 10140 and 10141 px wide were three
+  // cameras). Exact sizes count when at least exactShare of the photos share theirs with
+  // exactMinPhotos or more; otherwise the frames were cropped one by one, and sizes that
+  // differ by less than formatTolFrac in both dimensions are one format.
+  exactMinPhotos: 3,
+  exactShare: 0.9,
+  formatTolFrac: 0.01,
+  // A roll whose median fiducial residual is this many times the rest's, and over half a
+  // scan pixel, fits the group's mark layout badly (Melville: 171 µm against about 30).
+  fiducialMisfitFactor: 3,
+}
+
+// Tools ▸ Images ▸ Detect targets ▸ AprilTag (core/sfm/tagDetect.js, workers/ops/detect.js
+// detectTagsInPhoto).
+export const TAG_DETECT_TUNING = {
+  // The photo is searched in native tiles of `tile` px overlapping by `overlap`: a tag up
+  // to `overlap` px across lies whole in the tile whose core holds its centre, and a
+  // worker holds a few tile-sized buffers instead of the whole photo's.
+  tile: 2048,
+  overlap: 400,
+  // Larger tags are found in the photo downscaled to `tile` px.
+  minSide: 16,
+  // Wrong bits a tag may have (tag36h11 tells codes apart by 11; 2 keeps false tags out).
+  // A 4×4 ArUco dictionary reads exactly (tagDetect.js): with one bit corrected, 5 % of
+  // random patterns inside a dark ring decode to some id of 4x4_50.
+  maxHamming: 2,
+  // With a model, a tag farther than max(gateMinPx, gateFrac × the photo's long side)
+  // from its GCP's predicted place is not placed (useDetectTargets.js runTags).
+  gateMinPx: 40,
+  gateFrac: 0.02,
+}

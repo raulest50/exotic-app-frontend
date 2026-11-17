@@ -1,0 +1,994 @@
+import init, {
+  recover_pose,
+  triangulate_dlt,
+  solve_pnp,
+  bundle_adjust,
+  bundle_adjust_rs,
+  bundle_adjust_rig,
+  compute_depth_map,
+  plane_costs,
+  undistort_brown_pixels,
+  GuidedSearch,
+} from '../../wasm/reconstruction/reconstruction.js'
+import { isObservationList } from './baObservations.js'
+import { SFM_TUNING } from '../tuning.js'
+import { isKnownAerialFilmWidth, scanWidthPx, usesFormatWidth } from './filmFormat.js'
+import { isFisheyeModel } from './distortion.js'
+
+// Re-exported: the known-width list now lives with the sensor table's format helpers.
+export { isKnownAerialFilmWidth }
+
+let initPromise = null
+let wasmReady = false
+function ensureWasm() {
+  if (!initPromise)
+    initPromise = init().then((m) => {
+      wasmReady = true
+      return m
+    })
+  return initPromise
+}
+// Load the single-threaded build ahead of a synchronous call (undistortBrownPixels).
+export const loadReconstructionWasm = ensureWasm
+
+// The threaded build of the same crate (src/wasm/reconstruction-mt, crates/README.md ▸
+// Threads): the bundle adjustment's Schur step, cost and back-substitution on a pool of
+// workers sharing its memory. Its results are the same bits as the single-threaded
+// build's, whatever the thread count (crates/reconstruction/src/par.rs). It needs
+// shared memory (a cross-origin isolated page) and a worker (a rayon thread blocks in
+// Atomics.wait, which the page's main thread may not); anywhere else, and if it fails to
+// start, bundleAdjust uses the single-threaded build. `cap` (solver policy `threads`):
+// the pool size cap, set by the first call; 0 = this call on one thread.
+// Exotic runs the original single-thread WASM; no shared-memory build is shipped.
+function threadedWasm(){return Promise.resolve(null)}
+let threadedThreads = 0
+let threadedModule = null
+
+/**
+ * Start the threaded build's pool now rather than inside the first call that uses it,
+ * so a caller can say so while it starts (the depth maps' first map otherwise sat
+ * seconds at 0 % with no word). Resolves to the pool's thread count, 0 when the build
+ * cannot run here or failed to start (the calls then take one thread).
+ */
+export async function startThreadPool(cap) {
+  return (await threadedWasm(cap)) ? threadedThreads : 0
+}
+
+// Undistort the keypoints of several images through one Brown bag in the crate
+// (crates/reconstruction/src/distort.rs): the same bits as distortion.js undistortPixel,
+// on the thread pool once the bundle adjustment has started it. Synchronous, for the
+// self-calibration fold, which runs between awaited solves; null while no build is
+// loaded yet, and the caller then takes the JS path.
+//   xy: Float64Array of every image's points, image after image; starts: Uint32Array,
+//   each image's first point plus the total; k: Float64Array [fx, fy, cx, cy] per image;
+//   d: the bag ({k1…k6, p1, p2}, absent terms 0).
+export function undistortBrownPixels(xy, starts, k, d, iters = 20) {
+  const run = threadedModule?.undistort_brown_pixels ?? (wasmReady ? undistort_brown_pixels : null)
+  if (!run) return null
+  const bag = Float64Array.of(d.k1 ?? 0, d.k2 ?? 0, d.k3 ?? 0, d.k4 ?? 0, d.k5 ?? 0, d.k6 ?? 0, d.p1 ?? 0, d.p2 ?? 0)
+  return run(xy, starts, k, bag, iters)
+}
+
+// Guided track extension's search in the crate (crates/reconstruction/src/guided.rs):
+// the class from the threaded build once the bundle adjustment has started it (cameras
+// on the pool), else from the single-threaded one; null while neither is loaded, and
+// guidedExtendTracks then searches in JS. Both give the JS search's proposals.
+export function guidedSearchClass() {
+  if (threadedModule?.GuidedSearch) return { GuidedSearch: threadedModule.GuidedSearch, threads: threadedThreads }
+  return wasmReady ? { GuidedSearch, threads: 1 } : null
+}
+
+// Common sensor widths (mm), matched as lowercased substrings of "make model".
+// Last-resort fallback when EXIF carries a real focal length but no 35mm
+// equivalent and no focal-plane resolution. Extend as needed.
+const SENSOR_WIDTH_MM = [
+  // Full-frame (~36mm)
+  ['canon eos 5d', 35.8],
+  ['canon eos 6d', 35.8],
+  ['canon eos r', 36.0],
+  ['canon eos-1d x', 36.0],
+  ['nikon d6', 35.9],
+  ['nikon d8', 35.9],
+  ['nikon z', 35.9],
+  ['sony ilce-7', 35.6],
+  ['sony ilce-9', 35.6],
+  ['sony dsc-rx1', 35.8],
+  // APS-C (~23.5mm)
+  ['canon eos 7d', 22.3],
+  ['canon eos 80d', 22.3],
+  ['canon eos 90d', 22.3],
+  ['canon eos m', 22.3],
+  ['nikon d3', 23.5],
+  ['nikon d5', 23.5],
+  ['nikon d7', 23.5],
+  ['sony ilce-6', 23.5],
+  // Micro-Four-Thirds
+  ['dmc-gh', 17.3],
+  ['dc-gh', 17.3],
+  ['e-m', 17.3],
+]
+
+function sensorWidthFromDb(meta) {
+  const key = `${meta?.make ?? ''} ${meta?.model ?? ''}`.toLowerCase()
+  for (const [needle, mm] of SENSOR_WIDTH_MM) if (key.includes(needle)) return mm
+  return null
+}
+
+// Physical sensor width (mm) from EXIF focal-plane resolution (how exiftool/COLMAP
+// derive sensor size), else a make/model table. FocalPlaneResolutionUnit: 2=inch,
+// 3=cm, 4=mm. Returns null when nothing usable is available.
+export function sensorWidthMm(meta) {
+  const res = meta?.focalPlaneXRes
+  const w = meta?.width
+  if (res && w) {
+    const unitMm = meta?.focalPlaneResUnit === 3 ? 10 : meta?.focalPlaneResUnit === 4 ? 1 : 25.4
+    const mm = (w / res) * unitMm
+    if (mm > 1 && mm < 80) return mm // reject implausible values from bad EXIF
+  }
+  return sensorWidthFromDb(meta)
+}
+
+// Resolve K intrinsics (pixels) for one image, preferring the (user-editable)
+// assigned sensor over raw EXIF. Order of reliability:
+//   1. sensor focal already in pixels        (table value — authoritative)
+//   2. sensor focal (mm) × imageWidth ÷ sensor/film width (mm) (table value —
+//      the natural film-camera input: focal + format from a calibration sheet)
+//   3. sensor focal (mm) ÷ pixel size         (table value — a scan pitch is more
+//      often wrong than a declared format, so it ranks below it; see path 2)
+//   4. EXIF 35mm-equivalent focal
+//   5. focal (mm, from sensor or EXIF) × imageWidth ÷ derivable sensor width
+//   6. default-FOV guess (fx = max(w,h)) — poor; registration may fail
+// Returns { fx, fy, cx, cy, source } where `source` explains the path taken.
+export function resolveK(meta, sensor = null) {
+  const w = scanWidthPx(meta, sensor)
+  const h = sensor?.height || meta?.height || 1000
+  const cx = sensor?.cx ?? w / 2
+  const cy = sensor?.cy ?? h / 2
+
+  // 0. Fiducial interior orientation (F4): a film sensor whose per-image affine
+  //    fit gave a canonical pixel frame. sfm.js computes the frame and stashes it
+  //    on the sensor as `_fiducialK` (a plain K + a source label) — it is
+  //    authoritative, the whole reason the keypoints were moved into that frame.
+  if (sensor?._fiducialK) {
+    const { fx, fy, cx: fcx, cy: fcy } = sensor._fiducialK
+    return { fx, fy, cx: fcx, cy: fcy, source: sensor._fiducialK.source ?? 'fiducial interior orientation' }
+  }
+
+  // A focal in mm only — px focals are handled separately in path 1.
+  const sensorFocalMm = sensor?.focal != null && sensor.focalUnit !== 'px' ? sensor.focal : null
+
+  // 1. Sensor with an explicit pixel focal — the edited table wins outright.
+  if (sensor?.focal != null && sensor.focalUnit === 'px') {
+    return { fx: sensor.focal, fy: sensor.focal, cx, cy, source: 'sensor table (focal in px)' }
+  }
+
+  // 2. Sensor focal in mm + film/sensor width in mm → fx = focal/widthMm × w.
+  //    The standard scanned-aerial-film input: focal length and format size from the
+  //    camera calibration certificate, no pixel size needed. This is checked BEFORE the
+  //    pixel-size path because a declared format is measured ground truth, whereas a
+  //    scan pitch is usually inferred from the scanner setting and is the value that
+  //    goes wrong (the CA…V set's 0.025mm/px implies a 253mm frame — no such film
+  //    exists — for a ~9% focal error). When both are present the certificate wins, and
+  //    the pitch is then only a cross-check.
+  if (usesFormatWidth(sensor)) {
+    const fx = (sensorFocalMm / sensor.sensorWidthMm) * w
+    return { fx, fy: fx, cx, cy, source: `sensor table (${sensorFocalMm}mm, ${sensor.sensorWidthMm}mm format)` }
+  }
+
+  // 3. Sensor focal in mm + a pixel size → fx = focal / pixelSize.
+  if (sensorFocalMm != null && sensor.pixelSize) {
+    const fx = sensorFocalMm / sensor.pixelSize
+    // Sanity check: widthPx × pitch is the physical film width the scan implies.
+    // Standard aerial film is ~230mm or ~240mm; a wildly different value (e.g. a
+    // full-frame scan at the wrong pitch) silently distorts every focal downstream.
+    const impliedFilmWidthMm = w * sensor.pixelSize
+    return {
+      fx,
+      fy: fx,
+      cx,
+      cy,
+      source: `sensor table (${sensorFocalMm}mm ÷ ${sensor.pixelSize}mm/px)`,
+      impliedFilmWidthMm,
+      filmWidthOk: isKnownAerialFilmWidth(impliedFilmWidthMm),
+    }
+  }
+
+  // 4. EXIF 35mm-equivalent focal length. The equivalence is defined by angle of
+  // view / crop factor, so convert through the image diagonal and the 35mm
+  // full-frame diagonal (36x24mm). Using `w / 36` is only valid for an unrotated
+  // 3:2 image: it underestimates focal length badly for portrait and non-3:2
+  // outputs (for example a portrait 4:3 phone image).
+  if (meta?.focalLength35) {
+    const fullFrameDiagonalMm = Math.hypot(36, 24)
+    const fx = (meta.focalLength35 / fullFrameDiagonalMm) * Math.hypot(w, h)
+    return { fx, fy: fx, cx, cy, source: 'EXIF 35mm-equivalent focal' }
+  }
+
+  // 5. A real focal (mm) — sensor's or EXIF's — plus a derivable sensor width.
+  const focalMm = sensorFocalMm ?? meta?.focalLength
+  if (focalMm) {
+    const sw = sensorWidthMm(meta)
+    if (sw) {
+      const fx = (focalMm / sw) * w
+      return { fx, fy: fx, cx, cy, source: `focal ${focalMm}mm (sensor width ${sw.toFixed(1)}mm)` }
+    }
+  }
+
+  // 6. No usable calibration. Distinguish "no focal at all" from "focal known but
+  //    no sensor/pixel size to convert it" — the latter is fixable in the table.
+  //    A fisheye sensor guesses that the image corner is 90° off-axis (r = f·θ, so
+  //    f = half-diagonal ÷ π/2) rather than a ~53° pinhole field of view: a GoPro-
+  //    class 4000×3000 frame gets f ≈ 1590 px against a true ≈ 1700.
+  const fisheye = isFisheyeModel(sensor?.distortionModel)
+  const fx = fisheye ? Math.hypot(w, h) / Math.PI : Math.max(w, h)
+  // Callers test the 'default FOV' prefix, so the fisheye note goes inside the brackets.
+  const lens = fisheye ? 'fisheye; ' : ''
+  const why = focalMm
+    ? `default FOV (${lens}focal ${focalMm}mm present but no pixel size or film/sensor format to convert it)`
+    : `default FOV (${lens}no focal length in metadata)`
+  return { fx, fy: fx, cx, cy, source: why }
+}
+
+// Back-compat / metadata-only estimate (no sensor override).
+export function estimateK(meta) {
+  return resolveK(meta, null)
+}
+
+// Build a flat 12-element projection matrix P = [R|t] (normalised coords, no K).
+// R is row-major 3×3, t is [tx, ty, tz].
+export function makeP34flat(R, t) {
+  return new Float32Array([
+    R[0][0],
+    R[0][1],
+    R[0][2],
+    t[0],
+    R[1][0],
+    R[1][1],
+    R[1][2],
+    t[1],
+    R[2][0],
+    R[2][1],
+    R[2][2],
+    t[2],
+  ])
+}
+
+// Compute E = Kb^T * F * Ka where Ka, Kb are { fx, fy, cx, cy }.
+// F is a 3×3 row-major array [[…],[…],[…]].
+// Returns 9-element Float32Array (row-major).
+export function fundamentalToEssential(F, Ka, Kb) {
+  // K as 3×3
+  const ka = [
+    [Ka.fx, 0, Ka.cx],
+    [0, Ka.fy, Ka.cy],
+    [0, 0, 1],
+  ]
+  const kb = [
+    [Kb.fx, 0, Kb.cx],
+    [0, Kb.fy, Kb.cy],
+    [0, 0, 1],
+  ]
+  // E = Kb^T * F * Ka
+  const mul = (A, B) => {
+    const C = [
+      [0, 0, 0],
+      [0, 0, 0],
+      [0, 0, 0],
+    ]
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) for (let k = 0; k < 3; k++) C[i][j] += A[i][k] * B[k][j]
+    return C
+  }
+  const kbT = [
+    [kb[0][0], kb[1][0], kb[2][0]],
+    [kb[0][1], kb[1][1], kb[2][1]],
+    [kb[0][2], kb[1][2], kb[2][2]],
+  ]
+  const FKa = mul(F, ka)
+  const E = mul(kbT, FKa)
+  return new Float32Array([E[0][0], E[0][1], E[0][2], E[1][0], E[1][1], E[1][2], E[2][0], E[2][1], E[2][2]])
+}
+
+// Recover camera B pose from essential matrix E via cheirality check.
+// ptsA/ptsB: array of { x, y } pixel coords (image A and B respectively).
+// Ka / Kb: intrinsics of cameras A and B (Kb defaults to Ka). Each image's points
+// are normalised with ITS OWN K here and the kernel gets an identity K: the kernel
+// takes a single K, and back-projecting B's pixels with A's intrinsics mis-votes
+// the cheirality test on mixed-sensor or zoom pairs.
+// Returns { R: [[…]×3], t: [tx,ty,tz] } in normalised coords, or null.
+export async function recoverPose(ptsA, ptsB, E, Ka, Kb = Ka) {
+  await ensureWasm()
+  const n = Math.min(ptsA.length, ptsB.length)
+  if (n < 5) return null
+
+  const flatA = new Float32Array(n * 2)
+  const flatB = new Float32Array(n * 2)
+  for (let i = 0; i < n; i++) {
+    flatA[i * 2] = (ptsA[i].x - Ka.cx) / Ka.fx
+    flatA[i * 2 + 1] = (ptsA[i].y - Ka.cy) / Ka.fy
+    flatB[i * 2] = (ptsB[i].x - Kb.cx) / Kb.fx
+    flatB[i * 2 + 1] = (ptsB[i].y - Kb.cy) / Kb.fy
+  }
+
+  const raw = recover_pose(flatA, flatB, E, 1, 1, 0, 0)
+  if (!raw || raw.length < 12) return null
+
+  return {
+    R: [
+      [raw[0], raw[1], raw[2]],
+      [raw[3], raw[4], raw[5]],
+      [raw[6], raw[7], raw[8]],
+    ],
+    t: [raw[9], raw[10], raw[11]],
+  }
+}
+
+// Triangulate N matched point pairs (normalised image coords) given two
+// flat 12-element projection matrices (no K baked in).
+// ptsA/ptsB: arrays of { x, y } in normalised coords ((pixel - c) / f).
+// Returns array of { x, y, z } (NaN entries filtered out).
+export async function triangulateDlt(ptsA, ptsB, PA, PB) {
+  await ensureWasm()
+  const n = Math.min(ptsA.length, ptsB.length)
+  if (n === 0) return []
+
+  const flatA = new Float32Array(n * 2)
+  const flatB = new Float32Array(n * 2)
+  for (let i = 0; i < n; i++) {
+    flatA[i * 2] = ptsA[i].x
+    flatA[i * 2 + 1] = ptsA[i].y
+    flatB[i * 2] = ptsB[i].x
+    flatB[i * 2 + 1] = ptsB[i].y
+  }
+
+  const raw = triangulate_dlt(flatA, flatB, PA, PB)
+  const pts = []
+  for (let i = 0; i < n; i++) {
+    const x = raw[i * 3],
+      y = raw[i * 3 + 1],
+      z = raw[i * 3 + 2]
+    if (!isNaN(x) && !isNaN(y) && !isNaN(z) && isFinite(x) && isFinite(y) && isFinite(z)) {
+      pts.push({ x, y, z, srcIdx: i })
+    }
+  }
+  return pts
+}
+
+// RANSAC PnP: estimate camera pose from 3D-2D correspondences.
+// pts3d: [{ x,y,z }], pts2d: [{ x,y }] (pixel coords).
+// Returns { R, t, inlierMask } or null.
+export async function solvePnp(pts3d, pts2d, K, opts = {}) {
+  await ensureWasm()
+  const { ransacThreshPx = 4.0, maxIters = 200 } = opts
+  const n = Math.min(pts3d.length, pts2d.length)
+  if (n < 6) return null
+
+  const flat3 = new Float32Array(n * 3)
+  const flat2 = new Float32Array(n * 2)
+  for (let i = 0; i < n; i++) {
+    flat3[i * 3] = pts3d[i].x
+    flat3[i * 3 + 1] = pts3d[i].y
+    flat3[i * 3 + 2] = pts3d[i].z
+    flat2[i * 2] = pts2d[i].x
+    flat2[i * 2 + 1] = pts2d[i].y
+  }
+
+  // The RANSAC hypotheses are scored on the thread pool once the bundle adjustment has
+  // started it (the same pose bits either way, crates/reconstruction/src/pose.rs).
+  const run = threadedModule?.solve_pnp ?? solve_pnp
+  const raw = run(flat3, flat2, K.fx, K.fy, K.cx, K.cy, ransacThreshPx, maxIters)
+  if (!raw || raw.length < 12 + n) return null
+
+  return {
+    R: [
+      [raw[0], raw[1], raw[2]],
+      [raw[3], raw[4], raw[5]],
+      [raw[6], raw[7], raw[8]],
+    ],
+    t: [raw[9], raw[10], raw[11]],
+    inlierMask: Array.from(raw.slice(12)),
+  }
+}
+
+// Bundle adjustment: refine camera poses and 3D points.
+// cameras: [{ R, t }], intrinsics: [{ fx,fy,cx,cy }], points3d: [{x,y,z}]
+// observations: [{ camIdx, ptIdx, x, y }] (pixel coords)
+// Returns { cameras: [{ R, t }], points3d: [{x,y,z}], costBefore, costAfter } or null.
+// costBefore/costAfter are RMS reprojection error (px) from the WASM solver.
+// `opts`:
+//   maxIters          — outer LM iterations (default 30)
+//   refineIntrinsics  — comma-separated self-calibration terms, any subset of
+//                       'f','cxcy','k1','k2','k3','k4' (e.g. 'f,k1' or 'f,cxcy,k1,k2,k3');
+//                       'none'/'' disables. Parsed to the crate's refine BITMASK
+//                       (1=f, 2=cxcy, 4=k1, 8=k2, 16=k3, 32=k4) by refineModeMask. On a
+//                       fisheye camera the k terms are its own Kannala–Brandt terms
+//                       (k4 exists only there).
+//   intrinsics        — { fx, fy, cx, cy } per camera; a FISHEYE camera also carries
+//                       `fisheye: true`, its lens k1…k4 and `fisheyeTerms` (how many of
+//                       them may be refined, 1–4). Its observations must then be in the
+//                       pixels the lens recorded (bundle.rs Kannala–Brandt residuals).
+//   sensorOfCam       — per-camera integer sensor id (cameras sharing an id share
+//                       one focal); required for refinement, ignored for 'none'.
+//   gcpAnchors        — [{ ptIdx, target:[x,y,z], precision:3×3 }] — GCP-anchored 3D
+//                       points (see core/sfm/sfm.js), pulled toward `target`
+//                       (already in this same SfM frame) with independently
+//                       covariance-weighted residuals on top of normal reprojection
+//                       observations. Omit/empty for plain SfM-only BA.
+//   refineReadout     — refine each camera group's rolling-shutter readout time (the
+//                       cameras' `rs` records, below; bundle.rs `bundle_adjust_rs`).
+//   cameraPriors      — [{ camIdx, target:[x,y,z], positionPrecision?:3×3,
+//                          weights?:[wx,wy,wz], targetR?:3×3, orientationPrecision?:3×3 }]
+//                       camera-centre constraints in this same SfM frame. The
+//                       position precision (in SfM axes; else diag(weights)) and the
+//                       orientation precision are inverse variances (orientation
+//                       in radians).
+// Returns { cameras, points3d, intrinsics, costBefore, costAfter, costTrace,
+//   anchorRmsAfter, cameraPriorRmsAfter, solver, ms } — `intrinsics` is the refined effective K per camera
+// `{ fx, fy, cx, cy, k1, k2, k3, k4 }` — a pinhole camera's self-calibrated Brown residual
+// (0 for terms not refined), a fisheye camera's full lens plus `fisheye: true`; anchorRmsAfter
+// is the RMS anchor residual in world units (0 when there are no anchors). `solver` is
+// what the reduced solves did (see BA_SOLVER_KEYS / bundle.rs SolveStats) and `ms` the
+// call's wall clock. `opts.solver` overrides the solver policy (SFM_TUNING.baSolver).
+// A camera may carry `rs: { v:[vx,vy,vz], h, tau }` (rollingShutter.js): its rows are
+// read over `tau` seconds while its centre moves at `v` (model units per second), `h`
+// the frame height. With any such camera the call runs bundle_adjust_rs and returns
+// `readout`, each camera's readout time after the solve (null for the others).
+// `opts.rig` (rigModel.js attach): { captureOf: per-camera capture (−1 none), offsets:
+// per-camera lens offset { R, t } to its capture's reference lens, or null } runs
+// bundle_adjust_rig: a capture's cameras share one pose, and with `refineRig` the offsets'
+// rotations are refined. A camera-centre prior then acts on its capture, so one per
+// capture is kept (the reference camera's where it has one).
+// `opts.fullLens`: the observations are the pixels the lens recorded and each camera's
+// intrinsics carry its whole lens: Brown `k1`–`k3`, `p1`, `p2` (OpenCV's), or a fisheye's
+// `k1`–`k4`. The crate then fits that lens as the seed (refine bit `p` = 256 frees
+// p1, p2) and the result's intrinsics carry `p1`, `p2` too. Without it the call is the
+// pinhole-frame one: Brown coefficients in `intrinsics` are ignored.
+const REFINE_BIT = { f: 1, cxcy: 2, k1: 4, k2: 8, k3: 16, k4: 32, p: 256 }
+// Parse a refine-terms string into the crate's bitmask. Unknown / 'none' tokens
+// contribute nothing (so 'none', '', undefined → 0).
+export function refineModeMask(spec) {
+  if (!spec || spec === 'none') return 0
+  let mask = 0
+  for (const tok of String(spec).split(',')) mask |= REFINE_BIT[tok.trim()] ?? 0
+  return mask
+}
+// The fixed solver-stats block bundle.rs writes after the four scalars (BA_STATS_LEN).
+export const BA_SOLVER_KEYS = [
+  'n',
+  'solves',
+  'cholesky',
+  'pcgConverged',
+  'pcgPartial',
+  'pcgFallback',
+  'pcgNotPd',
+  'pcgIters',
+  'pcgItersMax',
+]
+
+// bundle.rs LENS_SIGMA_LEN: per lens group, the standard deviations of these terms
+// (pixels for fx, cx, cy), NaN for a term the call did not refine.
+export const LENS_SIGMA_KEYS = ['fx', 'cx', 'cy', 'k1', 'k2', 'k3', 'k4', 'p1', 'p2']
+
+// bundle.rs `build_groups`: each camera's lens group, numbered by first appearance;
+// a camera without a sensor id (< 0) is a group of its own.
+export function lensGroupOfCamera(sensorIds) {
+  const map = new Map()
+  let next = 0
+  return Array.from(sensorIds, (id) => {
+    if (!(id >= 0)) return next++
+    if (!map.has(id)) map.set(id, next++)
+    return map.get(id)
+  })
+}
+
+// bundle.rs `solver_flat`; NaN keeps that slot's crate default. `lensSigma` (slot 9) asks
+// for the refined lens terms' standard deviations (bundleAdjust ▸ lensSigma).
+export function baSolverFlat(solver = {}, { lensSigma = false } = {}) {
+  const num = (v) => (v == null || v === '' ? NaN : Number(v))
+  const { pcgMinN, pcgRelTol, pcgMaxIter, pcgAcceptPartial, functionTolerance, pcgPreconditioner, direct, warm } =
+    solver ?? {}
+  // pcgPreconditioner: 'jacobi' (default) | 'ic0' (block incomplete Cholesky, opt-in).
+  // direct: a sparse block Cholesky wherever PCG would run (bundle.rs, sparse_chol.rs).
+  // warm: a re-solve of a converged model; the direct solve stops earlier (bundle.rs).
+  return Float32Array.of(
+    num(pcgMinN),
+    num(pcgRelTol),
+    num(pcgMaxIter),
+    pcgAcceptPartial == null ? NaN : pcgAcceptPartial ? 1 : 0,
+    num(functionTolerance),
+    pcgPreconditioner === 'ic0' ? 1 : NaN,
+    direct == null ? NaN : direct ? 1 : 0,
+    warm ? 1 : NaN,
+    NaN, // huber: the crate's adaptive threshold
+    lensSigma ? 1 : NaN,
+  )
+}
+
+// bundle.rs `offset_flat`: [has, R(9), t(3)] per camera.
+function rigOffsetFlat(offsets, nCam) {
+  const out = new Float32Array(nCam * 13)
+  for (let c = 0; c < nCam; c++) {
+    const o = offsets[c]
+    if (o) out.set([1, ...o.R[0], ...o.R[1], ...o.R[2], ...o.t], c * 13)
+  }
+  return out
+}
+
+export async function bundleAdjust(cameras, intrinsics, points3d, observations, opts = {}) {
+  await ensureWasm()
+  const threaded = await threadedWasm((opts.solver ?? SFM_TUNING.baSolver)?.threads ?? 0)
+  const rsCams = cameras.some((c) => c?.rs?.h > 0)
+  const rig = opts.rig?.captureOf?.some((c) => c >= 0) ? opts.rig : null
+  const adjust = rig
+    ? threaded
+      ? threaded.bundle_adjust_rig
+      : bundle_adjust_rig
+    : rsCams
+      ? threaded
+        ? threaded.bundle_adjust_rs
+        : bundle_adjust_rs
+      : threaded
+        ? threaded.bundle_adjust
+        : bundle_adjust
+  const {
+    maxIters = 30,
+    refineIntrinsics = 'none',
+    sensorOfCam = null,
+    gcpAnchors = [],
+    solver = SFM_TUNING.baSolver,
+    flatPoints = false,
+    fixedCams = null,
+    refineReadout = false,
+    refineRig = false,
+    fullLens = false,
+    // Also return `lensSigma`: per camera, its lens group's standard deviations (keys
+    // LENS_SIGMA_KEYS) after the solve, marginal over every pose and point (bundle.rs
+    // ▸ lens σ). One extra undamped factorisation; null when nothing was refined.
+    lensSigma = false,
+  } = opts
+  let { cameraPriors = [] } = opts
+  const refineMode =
+    refineModeMask(refineIntrinsics) | (rsCams && refineReadout ? 64 : 0) | (rig && refineRig ? 128 : 0)
+  if (rig) {
+    // One prior per capture, the one without an offset first.
+    const byCapture = new Map()
+    for (const p of cameraPriors) {
+      const cap = rig.captureOf[p.camIdx] ?? -1
+      if (cap < 0) continue
+      const have = byCapture.get(cap)
+      if (!have || (rig.offsets[have.camIdx] && !rig.offsets[p.camIdx])) byCapture.set(cap, p)
+    }
+    cameraPriors = cameraPriors.filter(
+      (p) => (rig.captureOf[p.camIdx] ?? -1) < 0 || byCapture.get(rig.captureOf[p.camIdx]) === p,
+    )
+  }
+  const nCam = cameras.length
+  // `points3d`: [{x, y, z}] or a flat Float64Array [x0,y0,z0, x1,…]. With
+  // `flatPoints`, the refined points come back as `pos` (Float64Array) instead of
+  // `points3d` objects — no object per point on either side (TODO ▸ MEM).
+  const flatIn = points3d instanceof Float64Array
+  const nPts = flatIn ? points3d.length / 3 : points3d.length
+  // `observations` is either an array of {camIdx, ptIdx, x, y, weightX?, weightY?} or an
+  // ObservationList (baObservations.js) — the same data as parallel typed arrays.
+  const soa = isObservationList(observations)
+  const nObs = soa ? observations.n : observations.length
+  if (nCam === 0 || nPts === 0 || nObs === 0) return null
+
+  // The solver takes Float32: positions far from the frame's origin (a long corridor, a
+  // short seed baseline) lose precision to rounding, a reprojection noise floor of
+  // 0.02 px at 1,000 baselines. The problem is solved about the cameras' centroid `o`
+  // (a translation changes no residual): points and targets move by −o, a camera's t
+  // by +R·o, and back after.
+  const o = [0, 0, 0]
+  for (const { R, t } of cameras)
+    for (let k = 0; k < 3; k++) o[k] -= (R[0][k] * t[0] + R[1][k] * t[1] + R[2][k] * t[2]) / nCam
+  const Ro = (R) => [0, 1, 2].map((i) => R[i][0] * o[0] + R[i][1] * o[1] + R[i][2] * o[2])
+  const camFlat = new Float32Array(nCam * 12)
+  cameras.forEach(({ R, t }, c) => {
+    const b = c * 12
+    const s = Ro(R)
+    camFlat.set(
+      [
+        R[0][0],
+        R[0][1],
+        R[0][2],
+        R[1][0],
+        R[1][1],
+        R[1][2],
+        R[2][0],
+        R[2][1],
+        R[2][2],
+        t[0] + s[0],
+        t[1] + s[1],
+        t[2] + s[2],
+      ],
+      b,
+    )
+  })
+
+  const kFlat = new Float32Array(nCam * 4)
+  intrinsics.forEach(({ fx, fy, cx, cy }, c) => {
+    kFlat.set([fx, fy, cx, cy], c * 4)
+  })
+  // bundle.rs `fisheye_flat`: [terms, k1, k2, k3, k4] per camera, empty when no camera
+  // is a fisheye (the crate then runs exactly as before); with `fullLens`, 7 a camera,
+  // [terms, k1, k2, k3, k4, p1, p2], a Brown camera's terms 0 and its coefficients the seed.
+  const anyFisheye = intrinsics.some((k) => k?.fisheye)
+  const lensStride = fullLens ? 7 : 5
+  const fisheyeFlat = new Float32Array(fullLens || anyFisheye ? nCam * lensStride : 0)
+  intrinsics.forEach((k, c) => {
+    const at = c * lensStride
+    if (k?.fisheye) fisheyeFlat.set([k.fisheyeTerms || 4, k.k1 || 0, k.k2 || 0, k.k3 || 0, k.k4 || 0], at)
+    else if (fullLens) fisheyeFlat.set([0, k?.k1 || 0, k?.k2 || 0, k?.k3 || 0, 0, k?.p1 || 0, k?.p2 || 0], at)
+  })
+
+  // Points about the centroid, subtracted in double before the cast.
+  const ptsFlat = new Float32Array(nPts * 3)
+  if (flatIn) for (let i = 0; i < nPts * 3; i++) ptsFlat[i] = points3d[i] - o[i % 3]
+  else
+    points3d.forEach(({ x, y, z }, i) => {
+      ptsFlat.set([x - o[0], y - o[1], z - o[2]], i * 3)
+    })
+
+  // Indices as integers, pixels as floats: an f32 index is exact only to 2²⁴, so
+  // above 16.7 M points observations attached to the wrong point (TODO ▸ SC-6).
+  const obsIdx = new Uint32Array(nObs * 2)
+  const obsPx = new Float32Array(nObs * 2)
+  const obsWFlat = new Float32Array(nObs * 2)
+  const weight = (v) => (Number.isFinite(v) && v > 0 ? v : 1)
+  if (soa) {
+    const { cam, pt, x, y, wx, wy } = observations
+    for (let i = 0; i < nObs; i++) {
+      obsIdx[i * 2] = cam[i]
+      obsIdx[i * 2 + 1] = pt[i]
+      obsPx[i * 2] = x[i]
+      obsPx[i * 2 + 1] = y[i]
+      obsWFlat[i * 2] = wx ? weight(wx[i]) : 1
+      obsWFlat[i * 2 + 1] = wy ? weight(wy[i]) : 1
+    }
+  } else {
+    observations.forEach(({ camIdx, ptIdx, x, y, weightX = 1, weightY = 1 }, i) => {
+      obsIdx[i * 2] = camIdx
+      obsIdx[i * 2 + 1] = ptIdx
+      obsPx[i * 2] = x
+      obsPx[i * 2 + 1] = y
+      obsWFlat.set([weightX, weightY].map(weight), i * 2)
+    })
+  }
+
+  // Doubles: the point index exact at any size, the survey targets at full precision.
+  const anchorFlat = new Float64Array(gcpAnchors.length * 4)
+  const anchorWFlat = new Float32Array(gcpAnchors.length * 9)
+  gcpAnchors.forEach(({ ptIdx, target, precision, weights, weight }, i) => {
+    anchorFlat.set([ptIdx, target[0] - o[0], target[1] - o[1], target[2] - o[2]], i * 4)
+    const axisWeights = weights ?? [weight, weight, weight]
+    const matrix = precision ?? [
+      [axisWeights[0], 0, 0],
+      [0, axisWeights[1], 0],
+      [0, 0, axisWeights[2]],
+    ]
+    anchorWFlat.set(
+      matrix.flat().map((value, j) => (Number.isFinite(value) ? value : j % 4 === 0 ? 1 : 0)),
+      i * 9,
+    )
+  })
+
+  // Row layout is shared with bundle.rs. A zero orientation-precision matrix
+  // means position-only (EXIF or an imported row without complete OPK angles).
+  const cameraPriorFlat = new Float32Array(cameraPriors.length * 31)
+  cameraPriors.forEach(({ camIdx, target, weights, positionPrecision, targetR, orientationPrecision }, i) => {
+    const W = positionPrecision?.flat() ?? [weights[0], 0, 0, 0, weights[1], 0, 0, 0, weights[2]]
+    const R = targetR?.flat() ?? [1, 0, 0, 0, 1, 0, 0, 0, 1]
+    const P = orientationPrecision?.flat() ?? Array(9).fill(0)
+    cameraPriorFlat.set([camIdx, target[0] - o[0], target[1] - o[1], target[2] - o[2], ...W, ...R, ...P], i * 31)
+  })
+
+  // sensor_of_cam: aligned to `cameras`; -1 (own group) where unknown. Empty/all-−1
+  // is fine — the solver only uses it when refineMode > 0.
+  const sensorFlat = new Int32Array(nCam)
+  for (let c = 0; c < nCam; c++) {
+    const id = sensorOfCam ? sensorOfCam[c] : -1
+    sensorFlat[c] = Number.isInteger(id) ? id : -1
+  }
+
+  // `fixedCams`: indices of cameras held fixed (a local BA window's surroundings);
+  // they keep their observations as constraints. None ⇒ every camera is free.
+  const fixedMask = new Uint8Array(fixedCams?.length ? nCam : 0)
+  for (const c of fixedCams ?? []) if (c >= 0 && c < nCam) fixedMask[c] = 1
+
+  // bundle.rs `rs_flat`: [vx, vy, vz, h, τ0] per camera, h 0 for a global shutter.
+  const rsFlat = new Float32Array(rsCams ? nCam * 5 : 0)
+  if (rsCams)
+    cameras.forEach(({ rs }, c) => {
+      if (rs?.h > 0) rsFlat.set([rs.v[0], rs.v[1], rs.v[2], rs.h, rs.tau ?? 0], c * 5)
+    })
+
+  const tCall = performance.now()
+  const raw = adjust(
+    camFlat,
+    kFlat,
+    ptsFlat,
+    obsIdx,
+    obsPx,
+    obsWFlat,
+    anchorFlat,
+    anchorWFlat,
+    cameraPriorFlat,
+    maxIters,
+    sensorFlat,
+    refineMode,
+    baSolverFlat(solver, { lensSigma }),
+    fixedMask,
+    fisheyeFlat,
+    ...(rig ? [rsFlat, rig.captureOf, rigOffsetFlat(rig.offsets, nCam)] : rsCams ? [rsFlat] : []),
+  )
+  const ms = performance.now() - tCall
+  // Layout: cameras(nCam×12), points(nPts×3), intrinsics(nCam×8 = fx,fy,cx,cy,k1,k2,k3,k4;
+  // ×10 with p1,p2 under `fullLens`), costBefore, costAfter, anchorRmsAfter,
+  // cameraPriorRmsAfter, the solver stats (BA_SOLVER_KEYS), with `lensSigma` the lens
+  // groups' σ ([groups, then LENS_SIGMA_KEYS per group]), the readout times (rolling
+  // shutter), then a variable-length per-iteration RMS convergence trace.
+  const intrStride = fullLens ? 10 : 8
+  const intrBase = nCam * 12 + nPts * 3
+  const base = intrBase + nCam * intrStride
+  const sigmaBase = base + 4 + BA_SOLVER_KEYS.length
+  const nSigmaGroups = lensSigma && raw && raw.length > sigmaBase ? raw[sigmaBase] : 0
+  const readoutBase = sigmaBase + (lensSigma ? 1 + nSigmaGroups * LENS_SIGMA_KEYS.length : 0)
+  const traceBase = readoutBase + (rsCams ? nCam : 0)
+  if (!raw || raw.length < traceBase) return null
+  let outLensSigma = null
+  if (nSigmaGroups > 0) {
+    const group = lensGroupOfCamera(sensorFlat)
+    const perGroup = Array.from({ length: nSigmaGroups }, (_, g) =>
+      Object.fromEntries(
+        LENS_SIGMA_KEYS.map((k, i) => [k, raw[sigmaBase + 1 + g * LENS_SIGMA_KEYS.length + i]]).filter(([, v]) =>
+          Number.isFinite(v),
+        ),
+      ),
+    )
+    outLensSigma = group.map((g) => perGroup[g] ?? null)
+  }
+  const readout = rsCams ? cameras.map((c, i) => (c?.rs?.h > 0 ? raw[readoutBase + i] : null)) : null
+  const costBefore = raw[base]
+  const costAfter = raw[base + 1]
+  const anchorRmsAfter = raw[base + 2]
+  const cameraPriorRmsAfter = raw[base + 3]
+  const solverStats = Object.fromEntries(BA_SOLVER_KEYS.map((k, i) => [k, raw[base + 4 + i]]))
+  const costTrace = raw.length > traceBase ? Array.from(raw.slice(traceBase)) : []
+
+  const outCameras = cameras.map((_, c) => {
+    const b = c * 12
+    const R = [
+      [raw[b], raw[b + 1], raw[b + 2]],
+      [raw[b + 3], raw[b + 4], raw[b + 5]],
+      [raw[b + 6], raw[b + 7], raw[b + 8]],
+    ]
+    const s = Ro(R) // back from the centroid frame: t = t' − R·o
+    return {
+      R,
+      t: [raw[b + 9] - s[0], raw[b + 10] - s[1], raw[b + 11] - s[2]],
+      // The rolling shutter goes with the camera, at the readout time the solve ended with.
+      ...(readout?.[c] != null ? { rs: { ...cameras[c].rs, tau: readout[c] } } : {}),
+    }
+  })
+
+  const ptsBase = nCam * 12
+  const outPos = flatPoints
+    ? Float64Array.from(raw.subarray(ptsBase, ptsBase + nPts * 3), (v, i) => v + o[i % 3])
+    : null
+  const outPoints = flatPoints
+    ? null
+    : Array.from({ length: nPts }, (_, i) => ({
+        x: raw[ptsBase + i * 3] + o[0],
+        y: raw[ptsBase + i * 3 + 1] + o[1],
+        z: raw[ptsBase + i * 3 + 2] + o[2],
+      }))
+
+  const outIntrinsics = cameras.map((_, c) => {
+    const b = intrBase + c * intrStride
+    const k = {
+      fx: raw[b],
+      fy: raw[b + 1],
+      cx: raw[b + 2],
+      cy: raw[b + 3],
+      k1: raw[b + 4],
+      k2: raw[b + 5],
+      k3: raw[b + 6],
+      k4: raw[b + 7],
+      ...(fullLens && !intrinsics[c]?.fisheye ? { p1: raw[b + 8], p2: raw[b + 9] } : {}),
+    }
+    return intrinsics[c]?.fisheye ? { ...k, fisheye: true, fisheyeTerms: intrinsics[c].fisheyeTerms } : k
+  })
+
+  return {
+    cameras: outCameras,
+    points3d: outPoints,
+    pos: outPos,
+    intrinsics: outIntrinsics,
+    costBefore,
+    costAfter,
+    costTrace,
+    anchorRmsAfter,
+    cameraPriorRmsAfter,
+    solver: solverStats,
+    lensSigma: outLensSigma,
+    ms,
+    threads: threaded ? threadedThreads : 1,
+    ...(readout ? { readout } : {}),
+  }
+}
+
+// The source views packed as mvs.rs (compute_depth_map, plane_costs) takes them: pixels,
+// masks and (when `srcDepth` is given) first-pass depth planes concatenated; per source
+// its w,h, its fx,fy,cx,cy and its pose relative to the reference (R row-major, then t).
+function packSources(sources, srcDepth = null) {
+  const n = sources.length
+  let total = 0
+  for (const s of sources) total += s.w * s.h
+  const srcGray = new Uint8Array(total)
+  const srcMask = new Uint8Array(total) // 0/1, parallel to srcGray (0 where no mask)
+  const srcDims = new Uint32Array(n * 2)
+  const srcK = new Float32Array(n * 4)
+  const srcRel = new Float32Array(n * 12)
+  const srcDepthAll = srcDepth ? new Float32Array(total) : new Float32Array(0)
+  let off = 0
+  sources.forEach((s, i) => {
+    srcGray.set(s.gray, off)
+    if (srcDepth?.[i]) srcDepthAll.set(srcDepth[i].subarray(0, s.w * s.h), off)
+    if (s.mask) srcMask.set(s.mask.subarray(0, s.w * s.h), off)
+    off += s.w * s.h
+    srcDims[i * 2] = s.w
+    srcDims[i * 2 + 1] = s.h
+    srcK.set([s.K.fx, s.K.fy, s.K.cx, s.K.cy], i * 4)
+    const { R, t } = s
+    srcRel.set(
+      [R[0][0], R[0][1], R[0][2], R[1][0], R[1][1], R[1][2], R[2][0], R[2][1], R[2][2], t[0], t[1], t[2]],
+      i * 12,
+    )
+  })
+  return { srcGray, srcMask, srcDims, srcK, srcRel, srcDepthAll }
+}
+
+// Sentinel plane cost of a source that gives no measurement (the warp leaves it, lands on
+// a masked texel or covers < 4 px, or the reference patch is flat): mvs.rs INVALID.
+export const PLANE_COST_INVALID = 1e9
+
+// The photometric PatchMatch cost of given plane hypotheses, from the same Rust code a
+// CPU depth map run scores them with (mvs.rs plane_costs). The WebGPU kernel's A/B check
+// compares against it; the tests pin the cost's behaviour through it.
+//   refGray, refW, refH, refK, sources: as computeDepthMap
+//   hyps: [{ u, v, depth, n: [nx, ny, nz] }]  (pixel, depth, unit normal, camera frame)
+//   opts: { window=3, bestK=3, sigmaSpatial=0, sigmaColor=0, windowStep=1 }  (as computeDepthMap)
+// Returns [{ costs: Float32Array (per source; ≥ 1e8 = no measurement), agg }] — agg the
+// best-K cost a depth map hands on — or null on bad input.
+export async function planeCosts(refGray, refW, refH, refK, sources, hyps, opts = {}) {
+  await ensureWasm()
+  const { window = 3, bestK = 3, sigmaSpatial = 0, sigmaColor = 0, windowStep = 1 } = opts
+  const n = sources.length
+  if (n === 0 || refW * refH === 0) return null
+  const { srcGray, srcMask, srcDims, srcK, srcRel } = packSources(sources)
+  const flat = new Float32Array(hyps.length * 6)
+  hyps.forEach((h, i) => flat.set([h.u, h.v, h.depth, h.n[0], h.n[1], h.n[2]], i * 6))
+  const raw = plane_costs(
+    refGray,
+    refW,
+    refH,
+    new Float32Array([refK.fx, refK.fy, refK.cx, refK.cy]),
+    srcGray,
+    srcDims,
+    srcK,
+    srcRel,
+    srcMask,
+    window,
+    bestK,
+    sigmaSpatial,
+    sigmaColor,
+    Math.max(1, windowStep | 0),
+    flat,
+  )
+  if (!raw || raw.length < hyps.length * (n + 1)) return null
+  return hyps.map((_, i) => ({
+    costs: raw.slice(i * (n + 1), i * (n + 1) + n),
+    agg: raw[i * (n + 1) + n],
+  }))
+}
+
+// PatchMatch multi-view-stereo depth map for one reference image (dense recon).
+//   refGray:  Uint8Array grayscale, length refW*refH
+//   refK:     { fx, fy, cx, cy } at the reference's WORKING resolution
+//   sources:  [{ gray: Uint8Array, w, h, K:{fx,fy,cx,cy}, R:[[…]×3], t:[tx,ty,tz], mask? }]
+//             R,t map the reference camera frame → that source's frame. `mask`, when
+//             present, is a length-w*h 0/1 LUT (1 = excluded frame/fiducial) so the
+//             ZNCC match skips a source's border instead of falsely correlating to it.
+//   opts:     { depthMin, depthMax, seedDepth?: Float32Array(refW*refH),
+//               window=3, iterations=3, bestK=3, seed=1, perturbStart=1 }  (the dense pipeline
+//               passes window 3; perturbStart is the refinement scale of the first sweep —
+//               core/dense/refineSchedule.js)
+// Returns { depth: Float32Array, cost: Float32Array, width, height } (cost: lower
+// is more confident; depth in the reconstruction's up-to-scale world units).
+export async function computeDepthMap(refGray, refW, refH, refK, sources, opts = {}) {
+  await ensureWasm()
+  const {
+    depthMin,
+    depthMax,
+    seedDepth = new Float32Array(0),
+    window = 3,
+    iterations = 3,
+    bestK = 3,
+    seed = 1,
+    perturbStart = 1,
+    // Bilateral-weighted NCC (mvs.rs Bilateral): σs px, σc grey levels; σc ≤ 0 = off.
+    sigmaSpatial = 0,
+    sigmaColor = 0,
+    // 'acmh': adaptive checkerboard sampling + multi-hypothesis joint view selection
+    // (mvs.rs ACMH_*, the same steps as patchmatch.wgsl acmhSweep); else best-K.
+    viewSelection = 'bestk',
+    // Step between window samples (mvs.rs Patch): 1 = every pixel, 2 = every other one.
+    windowStep = 1,
+    // Threads for the sweeps (the threaded build, see threadedWasm): its pool size cap;
+    // 0 = the single-threaded build. The same map either way (mvs.rs pixel_rng).
+    threads = 0,
+    // A prior-assisted pass (mvs.rs prior_cost): the previous pass's normals and the ACMP
+    // planar prior (4 per pixel: depth, normal) with its α, γ, σ_d, σ_n (radians).
+    seedNormals = null,
+    prior = null,
+    priorAlpha = 0.18,
+    priorGamma = 0.5,
+    priorSigD = 1,
+    priorSigN = 0.087,
+    // The geometric pass (mvs.rs Geom): per source its first-pass depth plane (srcDepth[k],
+    // its w×h), the term's weight and cap (px).
+    srcDepth = null,
+    geomWeight = 0,
+    geomMax = 5,
+  } = opts
+  const n = sources.length
+  if (n === 0 || refW * refH === 0) return null
+
+  const geomOn = geomWeight > 0 && Array.isArray(srcDepth) && srcDepth.length >= n
+  const { srcGray, srcMask, srcDims, srcK, srcRel, srcDepthAll } = packSources(sources, geomOn ? srcDepth : null)
+  const refKArr = new Float32Array([refK.fx, refK.fy, refK.cx, refK.cy])
+  const mt = await threadedWasm(threads)
+  const raw = (mt ? mt.compute_depth_map : compute_depth_map)(
+    refGray,
+    refW,
+    refH,
+    refKArr,
+    srcGray,
+    srcDims,
+    srcK,
+    srcRel,
+    srcMask,
+    seedDepth,
+    depthMin,
+    depthMax,
+    window,
+    iterations,
+    bestK,
+    seed >>> 0,
+    perturbStart,
+    sigmaSpatial,
+    sigmaColor,
+    viewSelection === 'acmh' ? 1 : 0,
+    Math.max(1, windowStep | 0),
+    seedNormals && seedNormals.length >= refW * refH * 3 ? seedNormals : new Float32Array(0),
+    prior && prior.length >= refW * refH * 4 ? prior : new Float32Array(0),
+    prior ? priorAlpha : 0,
+    priorGamma,
+    priorSigD,
+    priorSigN,
+    srcDepthAll,
+    geomOn ? geomWeight : 0,
+    geomMax,
+  )
+  const npix = refW * refH
+  if (!raw || raw.length < npix * 5) return null
+  return {
+    depth: raw.slice(0, npix),
+    cost: raw.slice(npix, npix * 2),
+    // Per-pixel converged plane normals (camera-frame, unit, nz<0), same shape as
+    // the GPU backend returns — reused by fusion → Poisson meshing.
+    normals: raw.slice(npix * 2, npix * 5),
+    width: refW,
+    height: refH,
+  }
+}

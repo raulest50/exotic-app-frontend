@@ -1,14 +1,32 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent, PointerEvent } from "react";
 import { Box, Button, Field, Heading, IconButton, Input, Text } from "@chakra-ui/react";
 import { LuArrowUp, LuChevronRight, LuEyeOff, LuMessageCircle, LuMinus, LuSparkles } from "react-icons/lu";
 import { ExoticMascot } from "./ExoticMascot";
+import {
+    ASSISTANT_MESSAGE_LIMIT,
+    ASSISTANT_HISTORY_CHARACTER_LIMIT,
+    ASSISTANT_HISTORY_MESSAGE_LIMIT,
+    assistantAccessDenied,
+    assistantErrorMessage,
+    chatWithAssistant,
+    executeAssistantProposal,
+    getAssistantOperation,
+    getAssistantStatus,
+    pollAssistantOperation,
+    type AssistantHistoryMessage,
+    type AssistantOperation,
+    type AssistantProposal,
+    type AssistantStatus,
+} from "./agentAssistantApi";
 import styles from "./AgentAssistant.module.css";
 import "./assistantMotion.css";
 
 export interface AgentAssistantProps {
     initialState?: "open" | "collapsed" | "hidden";
     canWrite?: boolean;
+    /** Keeps the visual stories isolated from authenticated services. */
+    preview?: boolean;
 }
 
 type AssistantCorner = `${"top" | "bottom"}-${"left" | "right"}`;
@@ -28,36 +46,128 @@ const cornerLabels: Record<AssistantCorner, string> = {
 };
 
 const suggestions = [
-    "¿Qué productos necesitan reposición?",
-    "¿Cómo va la producción de esta semana?",
-    "¿Qué órdenes están pendientes?",
+    "¿Qué productos y materiales puedo consultar?",
+    "Propón una consulta para buscar productos por nombre.",
+    "¿Qué materiales pertenecen a una categoría?",
 ];
 
 /**
- * Visual conversation only: drafts never leave this instance. The application
- * mounts it through AuthorizedAgentAssistant; canWrite describes the verified
- * access profile and does not execute or authorize a database operation.
+ * Chat text goes through the backend. SQL remains a proposal until the user
+ * reviews and executes it; results are never included in model history.
+ * The backend authorizes every operation. This phase only supports reading.
  */
-export function AgentAssistant({ initialState = "collapsed", canWrite = false }: AgentAssistantProps) {
+export function AgentAssistant({ initialState = "collapsed", canWrite = false, preview = false }: AgentAssistantProps) {
     const [view, setView] = useState(initialState);
     const [draft, setDraft] = useState("");
-    const [question, setQuestion] = useState<string | null>(null);
+    const [messages, setMessages] = useState<AssistantHistoryMessage[]>([]);
+    const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+    const [status, setStatus] = useState<AssistantStatus | null>(null);
+    const [statusLoading, setStatusLoading] = useState(false);
+    const [statusError, setStatusError] = useState<string | null>(null);
+    const [proposal, setProposal] = useState<AssistantProposal | null>(null);
+    const [operation, setOperation] = useState<AssistantOperation | null>(null);
+    const [busy, setBusy] = useState<"chat" | "execute" | "poll" | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [notice, setNotice] = useState<string | null>(null);
+    const [accessRevoked, setAccessRevoked] = useState(false);
     const [corner, setCorner] = useState<AssistantCorner>("bottom-right");
     const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
     const [motionPaused, setMotionPaused] = useState(() => typeof document !== "undefined" && document.hidden);
     const anchorRef = useRef<HTMLDivElement>(null);
+    const conversationRef = useRef<HTMLDivElement>(null);
     const launcherRef = useRef<HTMLButtonElement>(null);
     const restoreRef = useRef<HTMLButtonElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const pendingFocus = useRef<"launcher" | "restore" | "input" | null>(null);
     const dragRef = useRef<AssistantDrag | null>(null);
     const suppressClick = useRef(false);
+    const requests = useRef(new Set<AbortController>());
+    const statusRequest = useRef<AbortController | null>(null);
+    const actionRequest = useRef<AbortController | null>(null);
+    const previousStatus = useRef<AssistantStatus | null>(null);
+    const revoked = useRef(false);
     const id = useId();
     const panelId = `${id}-panel`;
     const titleId = `${id}-title`;
     const inputId = `${id}-question`;
     const hintId = `${id}-hint`;
     const moveHelpId = `${id}-move-help`;
+    const availabilityId = `${id}-availability`;
+    const hasConversation = !!pendingQuestion || messages.length > 0 || !!proposal || !!operation;
+
+    const clearConversation = useCallback(() => {
+        setMessages([]);
+        setProposal(null);
+        setOperation(null);
+        setPendingQuestion(null);
+    }, []);
+
+    const handleAccessFailure = useCallback((failure: unknown) => {
+        if (!assistantAccessDenied(failure)) return false;
+        revoked.current = true;
+        requests.current.forEach((request) => request.abort());
+        actionRequest.current = null;
+        previousStatus.current = null;
+        setStatus(null);
+        setBusy(null);
+        setStatusLoading(false);
+        setAccessRevoked(true);
+        clearConversation();
+        setNotice(null);
+        setError("La sesión caducó o se retiró tu acceso. Se limpiaron la conversación, el SQL y los resultados. El borrador se conserva mientras este panel siga abierto; no se reenvía automáticamente.");
+        return true;
+    }, [clearConversation]);
+
+    const refreshStatus = useCallback(async () => {
+        if (preview || revoked.current) return;
+        statusRequest.current?.abort();
+        const request = new AbortController();
+        statusRequest.current = request;
+        requests.current.add(request);
+        setStatusLoading(true);
+        try {
+            const next = await getAssistantStatus(request.signal);
+            if (request.signal.aborted) return;
+            const previous = previousStatus.current;
+            if (previous && (previous.connectionId !== next.connectionId || (previous.available && (!next.enabled || !next.available)))) {
+                actionRequest.current?.abort();
+                actionRequest.current = null;
+                setBusy(null);
+                clearConversation();
+                setNotice("La conexión del servicio cambió. Se limpiaron las propuestas y los resultados anteriores; tu borrador se conserva.");
+            }
+            previousStatus.current = next;
+            setStatus(next);
+            setStatusError(null);
+        } catch (failure) {
+            if (request.signal.aborted || handleAccessFailure(failure)) return;
+            setStatus(null);
+            setStatusError("No se pudo verificar el servicio del asistente. Pulsa Reintentar antes de enviar una pregunta.");
+        } finally {
+            requests.current.delete(request);
+            if (!request.signal.aborted) setStatusLoading(false);
+        }
+    }, [clearConversation, handleAccessFailure, preview]);
+
+    useEffect(() => {
+        const activeRequests = requests.current;
+        return () => activeRequests.forEach((request) => request.abort());
+    }, []);
+
+    useEffect(() => {
+        if (view !== "open" || preview || accessRevoked) return;
+        const refreshWhenVisible = () => {
+            if (!document.hidden) void refreshStatus();
+        };
+        refreshWhenVisible();
+        window.addEventListener("focus", refreshWhenVisible);
+        document.addEventListener("visibilitychange", refreshWhenVisible);
+        return () => {
+            statusRequest.current?.abort();
+            window.removeEventListener("focus", refreshWhenVisible);
+            document.removeEventListener("visibilitychange", refreshWhenVisible);
+        };
+    }, [view, preview, accessRevoked, refreshStatus]);
 
     useEffect(() => {
         const updateVisibility = () => setMotionPaused(document.hidden);
@@ -70,6 +180,13 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false }:
         if (pendingFocus.current) target.current?.focus();
         pendingFocus.current = null;
     }, [view]);
+
+    useEffect(() => {
+        if (view !== "open" || (!hasConversation && !error)) return;
+        const conversation = conversationRef.current;
+        if (conversation) conversation.scrollTop = conversation.scrollHeight;
+        // Polling the same operation state must leave the reader's position alone.
+    }, [view, hasConversation, pendingQuestion, messages, proposal?.id, operation?.id, operation?.state, error]);
 
     const minimize = () => {
         pendingFocus.current = "launcher";
@@ -172,13 +289,99 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false }:
         }
     };
 
-    const showQuestion = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        if (!draft.trim()) return;
-        setQuestion(draft.trim());
-        setDraft("");
-        inputRef.current?.focus();
+    const beginAction = (kind: NonNullable<typeof busy>) => {
+        if (preview || revoked.current || actionRequest.current) return null;
+        const request = new AbortController();
+        actionRequest.current = request;
+        requests.current.add(request);
+        setBusy(kind);
+        setError(null);
+        setNotice(null);
+        return request;
     };
+
+    const finishAction = (request: AbortController) => {
+        requests.current.delete(request);
+        if (actionRequest.current === request) {
+            actionRequest.current = null;
+            if (!request.signal.aborted) setBusy(null);
+        }
+    };
+
+    const sendQuestion = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const question = draft.trim();
+        if (!question || !status?.enabled || !status.available) return;
+        if (question.length > ASSISTANT_MESSAGE_LIMIT) {
+            setError(`La pregunta admite hasta ${ASSISTANT_MESSAGE_LIMIT} caracteres. El texto sigue en el campo.`);
+            return;
+        }
+        const request = beginAction("chat");
+        if (!request) return;
+        setPendingQuestion(question);
+        try {
+            const reply = await chatWithAssistant(question, messages, request.signal);
+            if (request.signal.aborted) return;
+            setMessages((current) => [...current, { role: "user" as const, content: question }, { role: "assistant" as const, content: reply.message }].slice(-20));
+            setProposal(reply.proposal ?? null);
+            setOperation(null);
+            setDraft((current) => current.trim() === question ? "" : current);
+            inputRef.current?.focus();
+        } catch (failure) {
+            if (!request.signal.aborted && !handleAccessFailure(failure)) {
+                setError(`${assistantErrorMessage(failure)} Tu pregunta sigue en el campo; no se reintenta automáticamente.`);
+            }
+        } finally {
+            if (!request.signal.aborted) setPendingQuestion(null);
+            finishAction(request);
+        }
+    };
+
+    const followOperation = async (current: AssistantOperation, signal: AbortSignal) => {
+        setOperation(current);
+        await pollAssistantOperation(current, signal, (next) => setOperation(next));
+    };
+
+    const executeProposal = async () => {
+        if (!proposal || operation || !status?.enabled || !status.available) return;
+        if (Date.parse(proposal.expiresAt) <= Date.now()) {
+            setError("La propuesta ha caducado. Envía de nuevo la pregunta para obtener otra; no se ejecutó SQL.");
+            return;
+        }
+        const request = beginAction("execute");
+        if (!request) return;
+        try {
+            const created = await executeAssistantProposal(proposal.id, request.signal);
+            if (!request.signal.aborted) await followOperation(created, request.signal);
+        } catch (failure) {
+            if (!request.signal.aborted && !handleAccessFailure(failure)) setError(assistantErrorMessage(failure));
+        } finally {
+            finishAction(request);
+        }
+    };
+
+    const resumeOperation = async () => {
+        if (!operation || operation.state !== "BACKING_UP" || !status?.enabled || !status.available) return;
+        const request = beginAction("poll");
+        if (!request) return;
+        try {
+            const current = await getAssistantOperation(operation.id, request.signal);
+            if (!request.signal.aborted) await followOperation(current, request.signal);
+        } catch (failure) {
+            if (!request.signal.aborted && !handleAccessFailure(failure)) setError(assistantErrorMessage(failure));
+        } finally {
+            finishAction(request);
+        }
+    };
+
+    const canSend = !preview && !accessRevoked && !!status?.enabled && status.available && !busy && !statusLoading;
+    const unavailableReason = preview ? "Vista previa sin conexión."
+        : accessRevoked ? "No tienes acceso vigente al asistente."
+        : statusLoading ? "Verificando disponibilidad del asistente…"
+        : busy ? "Espera a que termine la operación en curso."
+        : !status ? "No se pudo comprobar la disponibilidad. Pulsa Reintentar."
+        : !status.enabled || !status.available ? status.message : "";
+    const proposalExpired = !!proposal && Date.parse(proposal.expiresAt) <= Date.now();
 
     return (
         <Box
@@ -212,6 +415,7 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false }:
                                     <Box>
                                         <Text className={styles.eyebrow}>Un poco de ayuda</Text>
                                         <Heading as="h2" id={titleId} className={styles.panelTitle}>Asistente Exotic</Heading>
+                                        <Text className={styles.readOnlyBadge} data-assistant-permission="read">Sólo lectura · productos y materiales</Text>
                                     </Box>
                                 </Box>
                                 <IconButton aria-label="Minimizar asistente" onClick={minimize} className={styles.iconButton} variant="plain">
@@ -219,14 +423,28 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false }:
                                 </IconButton>
                             </Box>
 
-                            <Box className={styles.conversation}>
+                            <Box ref={conversationRef} className={styles.conversation} aria-busy={busy === "chat"}>
                                 <Box className={styles.welcome}>
-                                    <Text className={styles.eyebrow} data-assistant-permission={canWrite ? "write" : "read"}>
-                                        {canWrite ? "Lectura y escritura" : "Sólo lectura"}
-                                    </Text>
-                                    <Heading as="h3" className={styles.welcomeTitle}>Hola, ¿qué exploramos hoy?</Heading>
-                                    <Text className={styles.welcomeCopy}>Tu información, un poco más cerca. Empieza con una pregunta.</Text>
-                                    {!question && (
+                                    <Heading as="h3" className={styles.welcomeTitle}>Consulta a Asistente Exotic</Heading>
+                                    <Text className={styles.welcomeCopy}>Pregunta sobre productos y materiales. Revisa cada propuesta SQL antes de ejecutar su lectura. El servicio se administra desde el servidor de Exotic.</Text>
+                                    {canWrite && <Text className={styles.connectionCopy}>Tu perfil incluye escritura, pero esta fase sólo permite lectura. No se modifican datos desde el asistente.</Text>}
+                                    <Box className={styles.connectionCard}>
+                                        {preview ? (
+                                            <Text className={styles.connectionCopy}>Vista previa aislada. La conexión y las consultas están desactivadas en este escenario.</Text>
+                                        ) : (
+                                            <>
+                                                <Text className={styles.connectionTitle}>
+                                                    {accessRevoked ? "Acceso no disponible" : statusLoading ? "Verificando servicio…" : status?.enabled && status.available ? "Asistente disponible" : "Servicio no disponible"}
+                                                </Text>
+                                                {status && <Text className={styles.connectionCopy}>{status.message}</Text>}
+                                                <Box className={styles.connectionActions}>
+                                                    <Button size="xs" variant="outline" onClick={() => void refreshStatus()} disabled={statusLoading || !!busy || accessRevoked}>Reintentar</Button>
+                                                </Box>
+                                                {statusError && <Text className={styles.errorText} role="alert">{statusError}</Text>}
+                                            </>
+                                        )}
+                                    </Box>
+                                    {!messages.length && !pendingQuestion && (
                                         <Box className={styles.suggestions}>
                                             {suggestions.map((suggestion) => (
                                                 <Button
@@ -242,15 +460,55 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false }:
                                         </Box>
                                     )}
                                 </Box>
-                                {question && (
-                                    <Box role="status" aria-live="polite" aria-atomic="true">
-                                        <Text className={`${styles.message} ${styles.userMessage}`}><span className={styles.screenReaderOnly}>Tu pregunta: </span>{question}</Text>
-                                        <Text className={`${styles.message} ${styles.assistantMessage}`}>Así se verá tu pregunta. Las consultas todavía no están conectadas.</Text>
+                                <Box role="log" aria-label="Conversación con Asistente Exotic" aria-live="polite" aria-relevant="additions">
+                                    {messages.map((message, index) => (
+                                        <Text key={`${index}-${message.role}`} className={`${styles.message} ${message.role === "user" ? styles.userMessage : styles.assistantMessage}`}>
+                                            <span className={styles.screenReaderOnly}>{message.role === "user" ? "Tu pregunta: " : "Asistente Exotic: "}</span>{message.content}
+                                        </Text>
+                                    ))}
+                                    {pendingQuestion && <Text className={`${styles.message} ${styles.userMessage}`}>{pendingQuestion}</Text>}
+                                </Box>
+                                {busy === "chat" && <Text className={styles.actionNotice} role="status">Asistente Exotic está preparando la respuesta… Tu pregunta se conserva hasta recibirla.</Text>}
+                                {proposal && (
+                                    <Box className={styles.proposalCard} as="section" aria-label="Propuesta SQL para revisar">
+                                        <Heading as="h3" fontSize="sm">Revisa la consulta SQL</Heading>
+                                        <Text className={styles.connectionCopy}>Esta propuesta aún no es una lectura ejecutada. Sólo se permiten consultas de productos y materiales autorizadas por el servidor.</Text>
+                                        <pre className={styles.sqlBlock}><code>{proposal.sql}</code></pre>
+                                        <Text className={styles.connectionCopy}>Caduca: {new Date(proposal.expiresAt).toLocaleString("es-CO")}{proposalExpired ? " · Propuesta caducada" : ""}</Text>
+                                        <Button size="sm" mt="3" onClick={() => void executeProposal()} disabled={!!busy || !!operation || proposalExpired || !status?.enabled || !status.available || accessRevoked}>
+                                            {busy === "execute" ? "Preparando lectura…" : "Ejecutar lectura revisada"}
+                                        </Button>
                                     </Box>
                                 )}
+                                {operation && (
+                                    <Box className={styles.proposalCard} as="section" aria-label="Estado y resultado de la lectura">
+                                        <Text className={styles.connectionTitle} role="status">{operation.state === "BACKING_UP" ? "Preparando respaldo y lectura" : operation.state === "COMPLETE" ? "Lectura finalizada" : "La lectura falló"}</Text>
+                                        <Text className={styles.connectionCopy}>{operation.message}</Text>
+                                        <Text className={styles.operationId}>Operación: {operation.id}</Text>
+                                        {operation.backupId && <Text className={styles.operationId}>Respaldo: {operation.backupId}</Text>}
+                                        {operation.sql !== proposal?.sql && <pre className={styles.sqlBlock}><code>{operation.sql}</code></pre>}
+                                        {operation.state === "BACKING_UP" && !busy && <Button size="sm" mt="3" variant="outline" onClick={() => void resumeOperation()} disabled={!status?.enabled || !status.available || accessRevoked}>Volver a consultar esta operación</Button>}
+                                        {operation.state === "COMPLETE" && operation.result && (
+                                            <>
+                                                <div className={styles.resultScroll} tabIndex={0} role="region" aria-label="Tabla del resultado de la lectura">
+                                                    <table className={styles.resultTable}>
+                                                        <caption>Resultado: {operation.result.rows.length} filas recibidas</caption>
+                                                        <thead><tr>{operation.result.columns.map((column, index) => <th key={index} scope="col">{column}</th>)}</tr></thead>
+                                                        <tbody>{operation.result.rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, columnIndex) => <td key={columnIndex}>{cell === null ? "NULL" : String(cell)}</td>)}</tr>)}</tbody>
+                                                    </table>
+                                                </div>
+                                                {!operation.result.rows.length && <Text className={styles.connectionCopy}>La consulta no devolvió filas.</Text>}
+                                                {operation.result.truncated && <Text className={styles.connectionCopy}>Resultado limitado por el servidor. Refina la consulta para reducir las filas.</Text>}
+                                                <Text className={styles.connectionCopy}>Las filas se muestran aquí y no se añaden automáticamente a la conversación con el asistente.</Text>
+                                            </>
+                                        )}
+                                    </Box>
+                                )}
+                                {notice && <Text className={styles.actionNotice} role="status">{notice}</Text>}
+                                {error && <Text className={styles.errorNotice} role="alert">{error}</Text>}
                             </Box>
 
-                            <form className={styles.composer} onSubmit={showQuestion}>
+                            <form className={styles.composer} onSubmit={(event) => void sendQuestion(event)}>
                                 <Field.Root>
                                     <Field.Label htmlFor={inputId} className={styles.screenReaderOnly}>Escribe tu pregunta</Field.Label>
                                     <Box className={styles.composerField} w="full">
@@ -260,17 +518,19 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false }:
                                             value={draft}
                                             onChange={(event) => setDraft(event.target.value)}
                                             placeholder="Escribe tu pregunta…"
-                                            aria-describedby={hintId}
+                                            aria-describedby={`${hintId} ${availabilityId}`}
                                             autoComplete="off"
+                                            maxLength={ASSISTANT_MESSAGE_LIMIT}
                                             variant="flushed"
                                         />
-                                        <IconButton type="submit" aria-label="Previsualizar pregunta" disabled={!draft.trim()} className={styles.sendButton}>
+                                        <IconButton type="submit" aria-label="Enviar pregunta a Asistente Exotic" aria-describedby={availabilityId} title={unavailableReason || "Enviar pregunta"} disabled={!draft.trim() || !canSend} className={styles.sendButton}>
                                             <LuArrowUp aria-hidden="true" />
                                         </IconButton>
                                     </Box>
                                 </Field.Root>
                             </form>
-                            <Text id={hintId} className={styles.composerFootnote}>Vista previa visual. Tus preguntas no se envían.</Text>
+                            <Text id={availabilityId} className={styles.composerFootnote} role="status">{unavailableReason}</Text>
+                            <Text id={hintId} className={styles.composerFootnote}>{`Tu pregunta se envía al servicio de IA a través del servidor de Exotic. Hasta ${ASSISTANT_MESSAGE_LIMIT.toLocaleString("es-CO")} caracteres por pregunta. Historial limitado a ${ASSISTANT_HISTORY_MESSAGE_LIMIT} mensajes y ${ASSISTANT_HISTORY_CHARACTER_LIMIT.toLocaleString("es-CO")} caracteres; no incluye filas de resultados. Sólo lectura.`}</Text>
                         </Box>
                     )}
 

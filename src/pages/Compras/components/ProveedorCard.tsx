@@ -27,6 +27,7 @@ import { LuCircleHelp } from 'react-icons/lu';
 interface ProveedorCardProps {
     selectedProveedor: Proveedor | null;
     onSearchClick: () => void;
+    mostrarLeadTimeKpi?: boolean;
     leadTimeKpi?: LeadTimeProveedorKpiDTO | null;
     isLeadTimeKpiLoading?: boolean;
     leadTimeKpiError?: boolean;
@@ -35,6 +36,7 @@ interface ProveedorCardProps {
 const ProveedorCard: React.FC<ProveedorCardProps> = ({
                                                          selectedProveedor,
                                                          onSearchClick,
+                                                         mostrarLeadTimeKpi = false,
                                                          leadTimeKpi,
                                                          isLeadTimeKpiLoading = false,
                                                          leadTimeKpiError = false,
@@ -47,7 +49,7 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
     };
 
     const renderLeadTimeKpi = () => {
-        if (!selectedProveedor) {
+        if (!selectedProveedor || !mostrarLeadTimeKpi) {
             return null;
         }
 
@@ -76,10 +78,10 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
             : "sin informacion";
 
         const label = estado === "DESACTUALIZADO"
-            ? `Ultimo lead time: ${leadTimeLabel}`
+            ? `Último lead time observado: ${leadTimeLabel}`
             : estado === "VIGENTE"
-                ? `Lead time proveedor: ${leadTimeLabel}`
-                : "Lead time proveedor: sin informacion";
+                ? `Lead time observado: ${leadTimeLabel}`
+                : "Lead time observado: sin información";
         const badgeLabel = estado === "DESACTUALIZADO"
             ? "Desactualizado"
             : estado === "VIGENTE"
@@ -93,7 +95,7 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
 
         return (
             <HStack gap={2} px={2} py={1} bg="whiteAlpha.800" borderRadius="md" maxW="360px">
-                <Text fontSize="xs" fontWeight="semibold" lineClamp={1}>
+                <Text fontSize="xs" fontWeight="semibold">
                     {label}
                 </Text>
                 <Badge colorPalette={badgeColor} variant="subtle" flexShrink={0}>
@@ -103,11 +105,19 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
         );
     };
 
+    const negociado = selectedProveedor?.leadTimeNegociado;
+    const observado = leadTimeKpi?.leadTimeMedianoDias;
+    const puedeComparar = mostrarLeadTimeKpi && !isLeadTimeKpiLoading && !leadTimeKpiError &&
+        leadTimeKpi?.estado === "VIGENTE" &&
+        typeof negociado === "number" && Number.isInteger(negociado) && negociado >= 0 && negociado <= 2_147_483_647 &&
+        typeof observado === "number" && Number.isFinite(observado) && observado >= 0;
+    const diferenciaDias = puedeComparar ? Math.round((observado - negociado) * 10) / 10 : null;
+
     return (
         <>
             <Card.Root variant="outline" borderColor="blue.200" w={"full"}>
                 <Card.Header bg="app.stepperBlue">
-                    <HStack w="full" justifyContent="space-between" alignItems="center" gap={3}>
+                    <HStack w="full" justifyContent="space-between" alignItems="center" gap={3} flexWrap="wrap">
                         <HStack minW={0} flex="1">
                             <IconButton aria-label="Buscar Proveedor" onClick={onSearchClick}><FaSearch /></IconButton>
                             <Heading size="sm" lineClamp={1}>
@@ -117,15 +127,17 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
                             </Heading>
                         </HStack>
 
-                        <HStack gap={2} flexShrink={0}>
+                        <HStack gap={2} maxW="full" minW={0}>
                             {renderLeadTimeKpi()}
-                            <Tooltip content="Informacion del KPI de lead time proveedor">
-                                <IconButton
-                                    aria-label="Información del KPI de lead time proveedor"
-                                    onClick={onOpen}
-                                    size="sm"
-                                    variant="ghost"><LuCircleHelp /></IconButton>
-                            </Tooltip>
+                            {mostrarLeadTimeKpi && (
+                                <Tooltip content="Información del KPI de lead time proveedor">
+                                    <IconButton
+                                        aria-label="Información del KPI de lead time proveedor"
+                                        onClick={onOpen}
+                                        size="sm"
+                                        variant="ghost"><LuCircleHelp /></IconButton>
+                                </Tooltip>
+                            )}
                         </HStack>
                     </HStack>
                 </Card.Header>
@@ -160,6 +172,18 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
                             <Text pt="2" fontSize="sm">
                                 Contacto: {selectedProveedor?.contactos?.[0]?.fullName ?? ""}
                             </Text>
+                            {selectedProveedor && (
+                                <>
+                                    <Text pt="2" fontSize="sm">
+                                        Lead time negociado: {negociado == null ? "No definido" : `${negociado} días calendario`}
+                                    </Text>
+                                    {diferenciaDias !== null && (
+                                        <Text fontSize="sm">
+                                            Diferencia (observado − negociado): {diferenciaDias > 0 ? "+" : ""}{formatLeadTimeDays(diferenciaDias)} días
+                                        </Text>
+                                    )}
+                                </>
+                            )}
                         </VStack>
 
                     </HStack>
