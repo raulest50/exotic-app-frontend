@@ -1,4 +1,4 @@
-import type { EstadoRegistroHoraExtra, IntegrantePersonal } from "../../Personal/types.tsx";
+import type { EstadoRegistroHoraExtra, IntegrantePersonal } from "../../GestionHumana/types.tsx";
 
 export type HorasExtraBiGranularidad = "DIA" | "SEMANA" | "MES";
 export type DepartamentoPersonal = NonNullable<IntegrantePersonal["departamento"]>;

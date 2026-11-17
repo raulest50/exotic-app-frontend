@@ -55,7 +55,7 @@ import type {
 import { useAreaOperativaNoiseSampler } from "./Analitica/Noise/useAreaOperativaNoiseSampler.ts";
 import { formatSemanaMpsDisplayDate } from "../Produccion/ProgProdSemanalTab/semanaMps.utils.ts";
 import DespejesLineaPanel from "../../features/despeje/DespejesLineaPanel";
-import { despejeError, prepararDespeje } from "../../features/despeje/despejeApi";
+import { prepararDespeje } from "../../features/despeje/despejeApi";
 import type { PreparacionDespeje } from "../../features/despeje/types";
 
 const endpoints = new EndPointsURL();
@@ -63,6 +63,24 @@ const PoeViewerDialog = lazy(() => import("./PoeViewerDialog.tsx"));
 const TABLERO_VISTA_STORAGE_KEY = "areaOperativaPanel.tableroVista.v2";
 const COMPLETED_PAGE_SIZE = 20;
 const HISTORICAL_SEARCH_DEBOUNCE_MS = 300;
+
+function getActionErrorMessage(error: unknown): string {
+    const fallback = "No fue posible registrar el cambio.";
+    if (axios.isAxiosError(error)) {
+        const data: unknown = error.response?.data;
+        if (data && typeof data === "object") {
+            const body = data as { detail?: unknown; mensaje?: unknown; message?: unknown; error?: unknown; bloqueos?: unknown };
+            const message = [body.detail, body.mensaje, body.message, body.error]
+                .find((value): value is string => typeof value === "string" && value.trim().length > 0);
+            const bloqueos = Array.isArray(body.bloqueos)
+                ? body.bloqueos.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+                : [];
+            if (message || bloqueos.length > 0) return [message, ...bloqueos].filter(Boolean).join(" ");
+        }
+        if (typeof data === "string" && data.trim()) return data;
+    }
+    return error instanceof Error && error.message.trim() ? error.message : fallback;
+}
 
 const EMPTY_BOARD: TableroOperativoDTO = {
     vista: "HOY",
@@ -697,7 +715,7 @@ export default function AreaOperativaPanel() {
         try {
             await prepararInicio(nuevoIntento, familiaId);
         } catch (cause) {
-            setErrorDespeje(despejeError(cause));
+            setErrorDespeje(getActionErrorMessage(cause));
         } finally {
             actionSubmittingRef.current = false;
             setSubmitting(false);
@@ -798,11 +816,12 @@ export default function AreaOperativaPanel() {
             if (boardRefreshed) {
                 setCompletedPage(0);
             }
-        } catch (err: any) {
-            if (selectedAction === "iniciar") setErrorDespeje(despejeError(err));
+        } catch (err) {
+            const message = getActionErrorMessage(err);
+            if (selectedAction === "iniciar") setErrorDespeje(message);
             toast({
                 title: "Error",
-                description: err.response?.data?.message || err.message || "No fue posible registrar el cambio.",
+                description: message,
                 status: "error",
                 duration: 5000,
                 isClosable: true,

@@ -27,7 +27,7 @@ import {
     EstadoRegistroHoraExtra,
     getEstadoRegistroHoraExtraText,
     type IntegrantePersonal,
-} from "../../Personal/types.tsx";
+} from "../../GestionHumana/types.tsx";
 import type {
     DepartamentoPersonal,
     HorasExtraBiGranularidad,

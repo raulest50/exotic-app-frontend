@@ -11,7 +11,7 @@ import ProductosPage from './pages/Productos/ProductosPage.tsx'
 import StockPage from "./pages/Stock/StockPage.tsx";
 import ProduccionPage from "./pages/Produccion/ProduccionPage.tsx";
 
-import {createBrowserRouter, createRoutesFromElements, Route, RouterProvider} from "react-router-dom"
+import {createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider} from "react-router-dom"
 import GestionAreasOperativasPage from "./pages/GestionAreasOperativas/GestionAreasOperativasPage.tsx";
 
 import ProveedoresPage from "./pages/Proveedores/ProveedoresPage.tsx";
@@ -29,7 +29,7 @@ import OperacionesCriticasBDPage from "./pages/OperacionesCriticasBD/Operaciones
 import MonitoreoErroresPage from "./pages/MonitoreoErrores/MonitoreoErroresPage.tsx";
 import ActivosFijosPage from "./pages/ActivosFijos/ActivosFijosPage.tsx";
 import ContabilidadPage from "./pages/Contabilidad/ContabilidadPage.tsx";
-import PersonalPage from "./pages/Personal/PersonalPage.tsx";
+import GestionHumanaPage from "./pages/GestionHumana/GestionHumanaPage.tsx";
 import AdministracionAlertasPage from "./pages/AdministracionAlertas/AdministracionAlertasPage.tsx";
 import AdministracionGlobalPage from "./pages/AdministracionGlobal/AdministracionGlobalPage.tsx";
 import MasterDirectivesPage from "./pages/SuperMasterDirectives/MasterDirectivesPage.tsx";
@@ -249,13 +249,14 @@ const router = createBrowserRouter(
                 />
 
                 <Route
-                    path="personal"
+                    path="GestionHumana"
                     element={
-                        <AccessRoute accessRule={moduleAccessRule(Modulo.PERSONAL_PLANTA)}>
-                            <PersonalPage/>
+                        <AccessRoute accessRule={moduleAccessRule(Modulo.GESTION_HUMANA)}>
+                            <GestionHumanaPage/>
                         </AccessRoute>
                     }
                 />
+                <Route path="personal" element={<Navigate to="/GestionHumana" replace />} />
 
                 <Route
                     path="bintelligence"

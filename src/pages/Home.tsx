@@ -94,7 +94,7 @@ export default function Home() {
         { to: "/monitoreo_errores", name: "Monitoreo de Errores", icon: MdBugReport, bgColor: "red.100", accesoValido: (access) => access.isMasterLike },
         { to: "/Activos", name: "Activos Fijos", icon: FaSteam, notificationModulo: Modulo.ACTIVOS, accesoValido: moduleAccessRule(Modulo.ACTIVOS) },
         { to: "/Contabilidad", name: "Contabilidad", icon: TbReportMoney, notificationModulo: Modulo.CONTABILIDAD, accesoValido: moduleAccessRule(Modulo.CONTABILIDAD) },
-        { to: "/Personal", name: "Personal", icon: PiMicrosoftTeamsLogoFill, notificationModulo: Modulo.PERSONAL_PLANTA, accesoValido: moduleAccessRule(Modulo.PERSONAL_PLANTA) },
+        { to: "/GestionHumana", name: "Gestión Humana", icon: PiMicrosoftTeamsLogoFill, notificationModulo: Modulo.GESTION_HUMANA, accesoValido: moduleAccessRule(Modulo.GESTION_HUMANA) },
         { to: "/Bintelligence", name: "BI", icon: MdOutlineInsights, notificationModulo: Modulo.BINTELLIGENCE, accesoValido: moduleAccessRule(Modulo.BINTELLIGENCE) },
         { to: "/administracion_alertas", name: "Administracion Alertas", icon: MdNotificationsActive, notificationModulo: Modulo.ADMINISTRACION_ALERTAS, accesoValido: moduleAccessRule(Modulo.ADMINISTRACION_ALERTAS) },
         { to: "/administracion_global", name: "Administracion Global", icon: FaCrown, notificationModulo: Modulo.ADMINISTRACION_GLOBAL, accesoValido: moduleAccessRule(Modulo.ADMINISTRACION_GLOBAL) },

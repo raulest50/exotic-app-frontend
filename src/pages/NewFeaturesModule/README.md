@@ -31,7 +31,7 @@ con `access.kind: "area"`; no necesita modificar ese panel.
   Conservar `id` y `revision` hasta solicitar un nuevo aviso; no reiniciarlos por un refactor.
 - Filtros privados, sin reutilizar helpers de otros módulos. Mantener equivalencia
   con permisos reales: módulo/tab/nivel, `MAIN`, alias y excepción master.
-  `exactTab: true` impide heredar `MAIN` (p. ej. Personal/PERMISOS).
+  `exactTab: true` impide heredar `MAIN` (p. ej. Gestión Humana/PERMISOS).
   `requiredTabs` exige además todos los permisos indicados del mismo módulo
   (editar desde el catálogo: Modificaciones ≥ 3 y Process Designer ≥ 2).
   Para funciones con condiciones adicionales, incorporarlas al filtro antes de anunciarlas.
@@ -43,10 +43,12 @@ con `access.kind: "area"`; no necesita modificar ese panel.
 - Imágenes: capturar componentes reales en navegador oculto con datos ficticios,
   sin escritorio, cuentas personales ni escrituras de negocio. Conservar origen y
   guía numerada en `assets/`; revisar que la edición no cambie textos ni controles.
-  La captura de Productos usa API/sesión en memoria y datos de demostración;
-  acredita la interfaz, no una prueba integrada del backend. Recorrido:
-  Básicos → Modificaciones → buscar → Ver Detalle → Modificar en Process Designer v2.
-  `productos-modificaciones-captura.jpg` es el origen; `productos-modificaciones-guia.png`
-  es la guía editada con imagegen. El JPG original conserva la evidencia de pruebas.
+  Las 14 entradas tienen guía propia con `alt` y explicación de los números.
+  Pares `<id>-captura.jpg` (origen) / `<id>-guia.png` (edición con imagegen);
+  Productos conserva el prefijo `productos-modificaciones` aprobado inicialmente.
+  Capturas de componentes actuales con API/sesión en memoria: acreditan la interfaz,
+  no una prueba integrada del backend. Las guías son ediciones gráficas; el JPG
+  original conserva la evidencia. 3D muestra el inicio sin modelo y el asistente
+  una vista previa sin conexión; no simular resultados ni consultas ejecutadas.
   Renovar capturas solo cuando el usuario lo solicite, junto con el catálogo.
 - Gaphor: no había un diagrama específico; cualquier representación nueva es manual.

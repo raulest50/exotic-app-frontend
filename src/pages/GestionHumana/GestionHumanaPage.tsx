@@ -10,15 +10,15 @@ import { useAccessSnapshot } from "../../auth/usePermissions";
 import type { AccessRule } from "../../auth/accessModel.ts";
 import PermisosPersonal from "./Permisos/PermisosPersonal";
 
-export default function PersonalPage() {
+export default function GestionHumanaPage() {
     const access = useAccessSnapshot();
     const [selectedTab, setSelectedTab] = useState("");
 
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
-        { key: "incorporacion", label: "Incorporacion", render: () => <IncorporarPersonal />, accesoValido: tabAccessRule(Modulo.PERSONAL_PLANTA, "INCORPORACION", 1) },
-        { key: "consulta", label: "Consulta", render: () => <ConsultaDePersonal />, accesoValido: tabAccessRule(Modulo.PERSONAL_PLANTA, "CONSULTA", 1) },
-        { key: "horas-extra", label: "Horas Extra", render: () => <HorasExtraPersonal />, accesoValido: tabAccessRule(Modulo.PERSONAL_PLANTA, "CONSULTA", 1) },
-        { key: "permisos", label: "Permisos", render: () => <PermisosPersonal />, accesoValido: exactTabAccessRuleWithMasterBypass(Modulo.PERSONAL_PLANTA, "PERMISOS", 1) },
+        { key: "incorporacion", label: "Incorporacion", render: () => <IncorporarPersonal />, accesoValido: tabAccessRule(Modulo.GESTION_HUMANA, "INCORPORACION", 1) },
+        { key: "consulta", label: "Consulta", render: () => <ConsultaDePersonal />, accesoValido: tabAccessRule(Modulo.GESTION_HUMANA, "CONSULTA", 1) },
+        { key: "horas-extra", label: "Horas Extra", render: () => <HorasExtraPersonal />, accesoValido: tabAccessRule(Modulo.GESTION_HUMANA, "CONSULTA", 1) },
+        { key: "permisos", label: "Permisos", render: () => <PermisosPersonal />, accesoValido: exactTabAccessRuleWithMasterBypass(Modulo.GESTION_HUMANA, "PERMISOS", 1) },
     ];
 
     const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));
@@ -28,7 +28,7 @@ export default function PersonalPage() {
 
     return (
         <Container minW={0} maxW="full" w="full" h="full" px={{ base: 2, md: 5 }}>
-            <MyHeader title={"Personal"} />
+            <MyHeader title={"Gestión Humana"} />
             <Flex direction="column" w="full" h="full">
                 <Tabs.Root value={activeTab} onValueChange={({ value }) => setSelectedTab(value)} w="full" minW={0} lazyMount>
                     <Tabs.List flexWrap="wrap">

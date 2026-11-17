@@ -6,7 +6,7 @@ import {
     EstadoIntegrante,
     getEstadoIntegranteText,
     IntegrantePersonal,
-} from '../../../pages/Personal/types.tsx';
+} from '../../../pages/GestionHumana/types.tsx';
 
 const integrantesMock: IntegrantePersonal[] = [
     {

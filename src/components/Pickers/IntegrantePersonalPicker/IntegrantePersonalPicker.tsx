@@ -21,7 +21,7 @@ import {
     EstadoIntegrante,
     getEstadoIntegranteText,
     IntegrantePersonal,
-} from '../../../pages/Personal/types.tsx';
+} from '../../../pages/GestionHumana/types.tsx';
 import { LuSearch } from 'react-icons/lu';
 
 interface IntegrantePersonalPickerProps {

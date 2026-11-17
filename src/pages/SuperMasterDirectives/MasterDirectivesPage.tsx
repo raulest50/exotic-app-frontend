@@ -8,6 +8,7 @@ import {
     Icon,
     IconButton,
     Input,
+    SimpleGrid,
     Spinner,
     Switch,
     Tabs,
@@ -55,6 +56,10 @@ interface DispensacionRetroactividadDTO {
     ordenesAplicadas: number;
     ordenesOmitidas: number;
     ordenIdsAplicadas: number[];
+    ordenesFabricacionCandidatas?: number;
+    ordenesFabricacionAplicadas?: number;
+    ordenesFabricacionOmitidas?: number;
+    ordenFabricacionIdsAplicadas?: number[];
     mensaje: string;
 }
 
@@ -103,7 +108,7 @@ const PRODUCTION_DIRECTIVE_EXTENDED_HELP: Record<string, string> = {
     [MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED]:
         "Aplica unicamente a ordenes nuevas. Al activarse crea expedientes documentales y habilita nuevas OF. Puede apagarse con expedientes abiertos: estos siguen disponibles y las proyecciones pendientes continúan procesándose. No crea expedientes retroactivos.",
     [MASTER_DIRECTIVE_KEYS.DISPENSACION_NO_BLOQUEA_INICIO_PRODUCCION]:
-        "Esta directiva se copia a cada ODP al momento de crearla. Cambiar el switch no modifica ODPs ya existentes; para esas ODPs use la accion retroactiva controlada de esta pantalla.",
+        "Aplica a nuevas OP y OF. Cambiar el switch no modifica órdenes existentes; para las OP y OF elegibles use la acción retroactiva controlada de esta pantalla.",
     [MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_PERMITIR_AGREGAR_TERMINADOS_APROBADO]:
         "Cuando esta apagada, una MPS aprobada conserva el flujo actual: solo permite mover, aumentar, reducir o cancelar tarjetas existentes. Cuando esta activa, se pueden agregar nuevos terminados a una MPS APROBADA o CERRADA. Si la MPS ya esta cerrada o ya tiene ODPs generadas, el backend genera inmediatamente las ODPs de los nuevos lotes.",
 };
@@ -635,7 +640,7 @@ export default function MasterDirectivesPage() {
         }
 
         const confirmed = window.confirm(
-            `Se aplicara la politica no bloqueante a ${retroactivityPreview.ordenesCandidatas} ODP(s) activas candidatas. Esta accion libera el seguimiento de Almacen General, pero no crea transacciones de almacen ni descuenta inventario. Desea continuar?`
+            `Se aplicará la política no bloqueante a ${retroactivityPreview.ordenesCandidatas ?? 0} OP y ${retroactivityPreview.ordenesFabricacionCandidatas ?? 0} OF candidatas. En las OP se libera el seguimiento de Almacén General. No inicia operaciones, no genera movimientos de almacén ni modifica inventario; tampoco acredita la dispensación real. ¿Desea continuar?`
         );
         if (!confirmed) {
             return;
@@ -948,32 +953,51 @@ export default function MasterDirectivesPage() {
                                     <HStack justify="space-between" align="start" flexWrap="wrap" gap={4}>
                                         <Box flex="1" minW={{ base: "100%", md: "420px" }}>
                                             <Text fontWeight="bold">
-                                                Aplicar politica no bloqueante a ODPs existentes
+                                                Aplicar política no bloqueante a OP y OF existentes
                                             </Text>
                                             <Text fontSize="sm" color="app.textSubtle" mt={1}>
-                                                Solo afecta ODPs activas con Almacen General en espera y sin avances en otras areas. No crea transacciones de almacen, no descuenta inventario y no acredita la dispensacion real.
+                                                OP activas con Almacén General en espera y sin avances en otras áreas. OF planificadas o liberadas con política bloqueante y fabricación sin iniciar. No inicia operaciones, no genera movimientos de almacén ni modifica inventario; tampoco acredita la dispensación real.
                                             </Text>
                                             {retroactivityLoading ? (
                                                 <HStack mt={3}>
                                                     <Spinner size="sm" />
-                                                    <Text fontSize="sm" color="app.textMuted">Consultando ODPs candidatas...</Text>
+                                                    <Text fontSize="sm" color="app.textMuted">Consultando OP y OF candidatas...</Text>
                                                 </HStack>
                                             ) : (
                                                 <Box mt={3}>
                                                     <Text fontSize="sm">
                                                         Directiva persistida: {retroactivityPreview ? (retroactivityPreview.directivaActual ? "activa" : "apagada") : "sin consultar"}
                                                     </Text>
-                                                    <Text fontSize="sm">
-                                                        ODPs candidatas: {retroactivityPreview?.ordenesCandidatas ?? 0}
-                                                    </Text>
-                                                    {retroactivityPreview?.ordenesAplicadas ? (
-                                                        <Text fontSize="sm">
-                                                            Ultima aplicacion: {retroactivityPreview.ordenesAplicadas} ODP(s)
-                                                            {retroactivityPreview.ordenIdsAplicadas.length > 0
-                                                                ? ` (${retroactivityPreview.ordenIdsAplicadas.slice(0, 8).join(", ")}${retroactivityPreview.ordenIdsAplicadas.length > 8 ? ", ..." : ""})`
-                                                                : ""}
-                                                        </Text>
-                                                    ) : null}
+                                                    <SimpleGrid columns={{ base: 1, md: 2 }} gap={3} mt={3}>
+                                                        {[
+                                                            {
+                                                                tipo: "OP",
+                                                                candidatas: retroactivityPreview?.ordenesCandidatas ?? 0,
+                                                                aplicadas: retroactivityPreview?.ordenesAplicadas ?? 0,
+                                                                omitidas: retroactivityPreview?.ordenesOmitidas ?? 0,
+                                                                ids: retroactivityPreview?.ordenIdsAplicadas ?? [],
+                                                            },
+                                                            {
+                                                                tipo: "OF",
+                                                                candidatas: retroactivityPreview?.ordenesFabricacionCandidatas ?? 0,
+                                                                aplicadas: retroactivityPreview?.ordenesFabricacionAplicadas ?? 0,
+                                                                omitidas: retroactivityPreview?.ordenesFabricacionOmitidas ?? 0,
+                                                                ids: retroactivityPreview?.ordenFabricacionIdsAplicadas ?? [],
+                                                            },
+                                                        ].map(grupo => (
+                                                            <Box key={grupo.tipo} borderWidth="1px" borderColor="app.border" borderRadius="md" p={3}>
+                                                                <Text fontWeight="semibold">{grupo.tipo}</Text>
+                                                                <Text fontSize="sm">Candidatas: {grupo.candidatas}</Text>
+                                                                <Text fontSize="sm">Aplicadas: {grupo.aplicadas}</Text>
+                                                                <Text fontSize="sm">Omitidas: {grupo.omitidas}</Text>
+                                                                <Text fontSize="sm" overflowWrap="anywhere">
+                                                                    IDs aplicadas: {grupo.ids.length > 0
+                                                                        ? `${grupo.ids.slice(0, 8).map(id => `${grupo.tipo}-${id}`).join(", ")}${grupo.ids.length > 8 ? ", ..." : ""}`
+                                                                        : "—"}
+                                                                </Text>
+                                                            </Box>
+                                                        ))}
+                                                    </SimpleGrid>
                                                     {retroactivityPreview?.mensaje ? (
                                                         <Text fontSize="sm" color="app.textMuted" mt={1}>
                                                             {retroactivityPreview.mensaje}

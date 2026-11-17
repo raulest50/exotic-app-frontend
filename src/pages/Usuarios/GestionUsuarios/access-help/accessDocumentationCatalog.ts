@@ -586,11 +586,11 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
         condiciones: ["El módulo utiliza un único permiso general y no diferencia operaciones por nivel en la interfaz actual."],
         tabs: [sameScopeTab("MAIN", "Acceso general", "Abre las funciones actuales de contabilidad.", "Consultar y utilizar el catálogo de cuentas contables disponible.")],
     },
-    [Modulo.PERSONAL_PLANTA]: {
-        modulo: Modulo.PERSONAL_PLANTA,
-        label: "Personal de planta",
+    [Modulo.GESTION_HUMANA]: {
+        modulo: Modulo.GESTION_HUMANA,
+        label: "Gestión Humana",
         resumen: "Incorporación, consulta y gestión de información del personal.",
-        condiciones: ["Incorporación y Consulta admiten el permiso general conservado de versiones anteriores. Permisos exige su asignación específica PERSONAL_PLANTA / PERMISOS.", "Master y Super Master tienen acceso administrativo; la excepción no permite firmar por otro trabajador ni sustituir al jefe asignado."],
+        condiciones: ["Incorporación y Consulta admiten el permiso general conservado de versiones anteriores. Permisos exige su asignación específica Gestión Humana / Permisos.", "Master y Super Master tienen acceso administrativo; la excepción no permite firmar por otro trabajador ni sustituir al jefe asignado."],
         tabs: [
             sameScopeTab("INCORPORACION", "Incorporación", "Registra nuevos integrantes del personal.", "Consultar y completar el flujo de incorporación de personal."),
             sameScopeTab("CONSULTA", "Consulta", "Consulta personal y da acceso también a Horas extra.", "Consultar información del personal y utilizar la pestaña de Horas extra."),
