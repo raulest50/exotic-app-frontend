@@ -25,15 +25,19 @@ con `access.kind: "area"`; no necesita modificar ese panel.
   cuentan como consultadas. Respeta movimiento reducido y oculta controles si hay una entrada.
 - `localStorage` propio por usuario e instalación (`BASE_URL`); si falla, memoria.
   No sincroniza entre dispositivos. Solo conserva identificadores del catálogo activo.
-- Reemplazar `currentFeatures.ts` con cada entrega: lenguaje de usuario, resumen,
-  ubicación exacta e imagen local opcional con `alt`. Sin historial de novedades.
-  Cambiar `revision` para volver a anunciar una entrada; no cambiarla por un refactor.
+- Actualizar `currentFeatures.ts` **solo por petición explícita del usuario**.
+  Un commit o despliegue no obliga a renovar el contenido. Mantener un catálogo
+  activo, sin historial; lenguaje de usuario, resumen, ubicación e imagen opcional con `alt`.
+  Conservar `id` y `revision` hasta solicitar un nuevo aviso; no reiniciarlos por un refactor.
 - Filtros privados, sin reutilizar helpers de otros módulos. Mantener equivalencia
   con permisos reales: módulo/tab/nivel, `MAIN`, alias y excepción master.
   `exactTab: true` impide heredar `MAIN` (p. ej. Personal/PERMISOS).
+  `requiredTabs` exige además todos los permisos indicados del mismo módulo
+  (editar desde el catálogo: Modificaciones ≥ 3 y Process Designer ≥ 2).
   Para funciones con condiciones adicionales, incorporarlas al filtro antes de anunciarlas.
 - El catálogo del frontend controla visibilidad, no confidencialidad ni autorización
   del backend. No incluir datos privados en textos o imágenes.
-- Catálogo inicial: presentación de Novedades en Inicio. Los ejemplos de varios
-  módulos están exclusivamente en la historia aislada para revisión manual.
+- Catálogo revisado el 2026-11-17: cambios de usuario de los cuatro commits frontend
+  `72fb3fc`, `bc5b92f`, `aeff8a3`, `66c7772`. Se omiten ajustes internos y pantallas vacías.
+  La historia aislada usa ejemplos propios; el catálogo real es `currentFeatures.ts`.
 - Gaphor: no había un diagrama específico; cualquier representación nueva es manual.

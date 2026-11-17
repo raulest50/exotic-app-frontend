@@ -35,15 +35,19 @@ export function canShowFeature(feature: NewFeature, session: NewFeaturesSession)
     if (rule.kind === "area") return session.isAreaResponsable;
     if (session.isAreaResponsable || (rule.masterOnly && !session.isMasterLike)) return false;
     const minLevel = rule.minLevel ?? 1;
-    if (session.isMasterLike) return 999 >= minLevel;
+    if (session.isMasterLike) return 999 >= minLevel
+        && (rule.requiredTabs ?? []).every((tab) => 999 >= tab.minLevel);
     const tabs = session.moduloAccesos.find((grant) => grant.modulo === rule.module)?.tabs ?? [];
-    if (!rule.tabId) return tabs.some((tab) => tab.nivel >= minLevel);
-    const acceptedTabs = rule.module === "PRODUCCION" && rule.tabId === "MONITOREAR_AREAS_OPERATIVAS"
-        ? ["MONITOREAR_AREAS_OPERATIVAS", "SEGUIMIENTO_AREAS_OPERATIVAS"]
-        : [rule.tabId];
-    const permission = tabs.find((tab) => acceptedTabs.includes(tab.tabId))
-        ?? (rule.exactTab ? undefined : tabs.find((tab) => tab.tabId === "MAIN"));
-    return (permission?.nivel ?? 0) >= minLevel;
+    const hasTab = (tabId: string, level: number, exact?: boolean) => {
+        const acceptedTabs = rule.module === "PRODUCCION" && tabId === "MONITOREAR_AREAS_OPERATIVAS"
+            ? ["MONITOREAR_AREAS_OPERATIVAS", "SEGUIMIENTO_AREAS_OPERATIVAS"]
+            : [tabId];
+        const permission = tabs.find((tab) => acceptedTabs.includes(tab.tabId))
+            ?? (exact ? undefined : tabs.find((tab) => tab.tabId === "MAIN"));
+        return (permission?.nivel ?? 0) >= level;
+    };
+    return (rule.tabId ? hasTab(rule.tabId, minLevel, rule.exactTab) : tabs.some((tab) => tab.nivel >= minLevel))
+        && (rule.requiredTabs ?? []).every((tab) => hasTab(tab.tabId, tab.minLevel, tab.exactTab));
 }
 
 export function featureStorageKey(identity: string, scope: string): string {
