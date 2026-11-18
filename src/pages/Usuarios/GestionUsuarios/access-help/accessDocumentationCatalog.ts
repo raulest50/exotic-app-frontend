@@ -697,7 +697,7 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
     [Modulo.CALIDAD]: {
         modulo: Modulo.CALIDAD,
         label: "Calidad",
-        resumen: "Planes, ensayos, desviaciones, historial y decisiones de liberación de lotes.",
+        resumen: "Planes, ensayos, desviaciones, historial, decisiones de liberación de lotes y consulta de catálogo y formulación.",
         condiciones: [
             "Todas las pestañas actuales exigen permiso exacto y no heredan el permiso general del módulo.",
             "Las cuentas Master y Super Master reciben acceso automático a las pestañas actuales de Calidad.",
@@ -732,6 +732,16 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
                 "El registro de ensayos dentro del expediente depende además de Registro de ensayos nivel 2.",
                 "La consulta de evidencia histórica depende de Historial de ensayos nivel 1.",
                 "La liberación continúa sujeta a bloqueos automáticos, estados del expediente y separación de funciones.",
+            ]),
+            tab("CATALOGO_FORMULACION", "Catálogo y formulación", "Consulta terminados y semiterminados, su formulación y el modelo 3D guardado cuando esté disponible.", [
+                level(1, "Solo consulta", [
+                    "Buscar productos y consultar el árbol de materiales y sus cantidades.",
+                    "Simular localmente los requerimientos teóricos para una unidad o una cantidad indicada.",
+                    "Visualizar el modelo 3D guardado de un terminado cuando esté disponible.",
+                ], [
+                    "Consultar costos o existencias.",
+                    "Editar productos o modelos 3D, emitir órdenes de producción o fabricación, registrar dispensaciones o generar compras.",
+                ]),
             ]),
         ],
     },

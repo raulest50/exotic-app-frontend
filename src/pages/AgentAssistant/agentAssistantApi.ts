@@ -7,6 +7,7 @@ export type AssistantStatus = {
     message: string;
     readOnly: true;
     connectionId: string;
+    usage?: { configured: boolean; remainingPercent: number | null };
 };
 export type AssistantHistoryMessage = { role: "user" | "assistant"; content: string };
 export type AssistantProposal = { id: string; sql: string; expiresAt: string };
@@ -40,8 +41,13 @@ function readStatus(value: unknown): AssistantStatus {
         || !text(value.connectionId, 100) || !value.connectionId) {
         throw invalidResponse();
     }
+    const usage = value.usage;
+    if (usage !== undefined && (!record(usage) || typeof usage.configured !== "boolean"
+        || (usage.configured ? typeof usage.remainingPercent !== "number" || !Number.isFinite(usage.remainingPercent)
+            || usage.remainingPercent < 0 || usage.remainingPercent > 100 : usage.remainingPercent !== null))) throw invalidResponse();
     return { enabled: value.enabled, available: value.available, message: value.message,
-        readOnly: true, connectionId: value.connectionId };
+        readOnly: true, connectionId: value.connectionId,
+        ...(usage ? { usage: usage as AssistantStatus["usage"] } : {}) };
 }
 
 function readProposal(value: unknown): value is AssistantProposal {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent, PointerEvent } from "react";
-import { Box, Button, Field, Heading, IconButton, Input, Text } from "@chakra-ui/react";
+import { Box, Button, Field, Heading, IconButton, Input, Progress, Text } from "@chakra-ui/react";
 import { LuArrowUp, LuChevronRight, LuEyeOff, LuMessageCircle, LuMinus, LuSparkles } from "react-icons/lu";
 import { ExoticMascot } from "./ExoticMascot";
 import {
@@ -27,6 +27,8 @@ export interface AgentAssistantProps {
     canWrite?: boolean;
     /** Keeps the visual stories isolated from authenticated services. */
     preview?: boolean;
+    /** Visual-only allowance for isolated stories; never used by the connected assistant. */
+    previewRemainingPercent?: number;
 }
 
 type AssistantCorner = `${"top" | "bottom"}-${"left" | "right"}`;
@@ -47,16 +49,16 @@ const cornerLabels: Record<AssistantCorner, string> = {
 
 const suggestions = [
     "¿Qué productos y materiales puedo consultar?",
-    "Propón una consulta para buscar productos por nombre.",
+    "Ayúdame a buscar un producto por nombre.",
     "¿Qué materiales pertenecen a una categoría?",
 ];
 
 /**
- * Chat text goes through the backend. SQL remains a proposal until the user
- * reviews and executes it; results are never included in model history.
+ * Chat text goes through the backend. Read operations require confirmation;
+ * SQL is handled by the server and results are never included in model history.
  * The backend authorizes every operation. This phase only supports reading.
  */
-export function AgentAssistant({ initialState = "collapsed", canWrite = false, preview = false }: AgentAssistantProps) {
+export function AgentAssistant({ initialState = "collapsed", canWrite = false, preview = false, previewRemainingPercent }: AgentAssistantProps) {
     const [view, setView] = useState(initialState);
     const [draft, setDraft] = useState("");
     const [messages, setMessages] = useState<AssistantHistoryMessage[]>([]);
@@ -114,7 +116,7 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
         setAccessRevoked(true);
         clearConversation();
         setNotice(null);
-        setError("La sesión caducó o se retiró tu acceso. Se limpiaron la conversación, el SQL y los resultados. El borrador se conserva mientras este panel siga abierto; no se reenvía automáticamente.");
+        setError("La sesión caducó o se retiró tu acceso. Se limpiaron la conversación y los resultados. El borrador se conserva mientras este panel siga abierto; no se reenvía automáticamente.");
         return true;
     }, [clearConversation]);
 
@@ -129,7 +131,7 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
             const next = await getAssistantStatus(request.signal);
             if (request.signal.aborted) return;
             const previous = previousStatus.current;
-            if (previous && (previous.connectionId !== next.connectionId || (previous.available && (!next.enabled || !next.available)))) {
+            if (previous && previous.connectionId !== next.connectionId) {
                 actionRequest.current?.abort();
                 actionRequest.current = null;
                 setBusy(null);
@@ -334,6 +336,7 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
         } finally {
             if (!request.signal.aborted) setPendingQuestion(null);
             finishAction(request);
+            if (!request.signal.aborted) void refreshStatus();
         }
     };
 
@@ -343,9 +346,9 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
     };
 
     const executeProposal = async () => {
-        if (!proposal || operation || !status?.enabled || !status.available) return;
+        if (!proposal || operation || !status?.enabled) return;
         if (Date.parse(proposal.expiresAt) <= Date.now()) {
-            setError("La propuesta ha caducado. Envía de nuevo la pregunta para obtener otra; no se ejecutó SQL.");
+            setError("La consulta ha caducado. Envía de nuevo la pregunta para obtener otra; no se realizó la lectura.");
             return;
         }
         const request = beginAction("execute");
@@ -361,7 +364,7 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
     };
 
     const resumeOperation = async () => {
-        if (!operation || operation.state !== "BACKING_UP" || !status?.enabled || !status.available) return;
+        if (!operation || operation.state !== "BACKING_UP" || !status?.enabled) return;
         const request = beginAction("poll");
         if (!request) return;
         try {
@@ -382,6 +385,7 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
         : !status ? "No se pudo comprobar la disponibilidad. Pulsa Reintentar."
         : !status.enabled || !status.available ? status.message : "";
     const proposalExpired = !!proposal && Date.parse(proposal.expiresAt) <= Date.now();
+    const remainingPercent = preview ? previewRemainingPercent ?? null : status?.usage?.remainingPercent ?? null;
 
     return (
         <Box
@@ -423,10 +427,24 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
                                 </IconButton>
                             </Box>
 
+                            <Box px="5" py="2" borderBottomWidth="1px" borderColor="border.subtle" bg="bg.subtle">
+                                <Progress.Root value={remainingPercent} size="xs"
+                                    colorPalette={remainingPercent !== null && remainingPercent <= 20 ? "orange" : "teal"}
+                                    aria-label="Cupo estimado restante del asistente">
+                                    <Box display="flex" justifyContent="space-between" gap="3" mb="1">
+                                        <Progress.Label fontSize="xs">Cupo estimado restante</Progress.Label>
+                                        <Text fontSize="xs" fontVariantNumeric="tabular-nums">
+                                            {remainingPercent === null ? "No disponible" : `${remainingPercent.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`}
+                                        </Text>
+                                    </Box>
+                                    {remainingPercent !== null && <Progress.Track><Progress.Range /></Progress.Track>}
+                                </Progress.Root>
+                            </Box>
+
                             <Box ref={conversationRef} className={styles.conversation} aria-busy={busy === "chat"}>
                                 <Box className={styles.welcome}>
                                     <Heading as="h3" className={styles.welcomeTitle}>Consulta a Asistente Exotic</Heading>
-                                    <Text className={styles.welcomeCopy}>Pregunta sobre productos y materiales. Revisa cada propuesta SQL antes de ejecutar su lectura. El servicio se administra desde el servidor de Exotic.</Text>
+                                    <Text className={styles.welcomeCopy}>Pregunta sobre productos y materiales. El asistente prepara la consulta y solicita tu confirmación antes de respaldar y leer la información.</Text>
                                     {canWrite && <Text className={styles.connectionCopy}>Tu perfil incluye escritura, pero esta fase sólo permite lectura. No se modifican datos desde el asistente.</Text>}
                                     <Box className={styles.connectionCard}>
                                         {preview ? (
@@ -470,13 +488,12 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
                                 </Box>
                                 {busy === "chat" && <Text className={styles.actionNotice} role="status">Asistente Exotic está preparando la respuesta… Tu pregunta se conserva hasta recibirla.</Text>}
                                 {proposal && (
-                                    <Box className={styles.proposalCard} as="section" aria-label="Propuesta SQL para revisar">
-                                        <Heading as="h3" fontSize="sm">Revisa la consulta SQL</Heading>
-                                        <Text className={styles.connectionCopy}>Esta propuesta aún no es una lectura ejecutada. Sólo se permiten consultas de productos y materiales autorizadas por el servidor.</Text>
-                                        <pre className={styles.sqlBlock}><code>{proposal.sql}</code></pre>
+                                    <Box className={styles.proposalCard} as="section" aria-label="Confirmar consulta de información">
+                                        <Heading as="h3" fontSize="sm">Consulta preparada</Heading>
+                                        <Text className={styles.connectionCopy}>Al confirmar se crea un respaldo previo y se consulta la información autorizada. No se modifican datos.</Text>
                                         <Text className={styles.connectionCopy}>Caduca: {new Date(proposal.expiresAt).toLocaleString("es-CO")}{proposalExpired ? " · Propuesta caducada" : ""}</Text>
-                                        <Button size="sm" mt="3" onClick={() => void executeProposal()} disabled={!!busy || !!operation || proposalExpired || !status?.enabled || !status.available || accessRevoked}>
-                                            {busy === "execute" ? "Preparando lectura…" : "Ejecutar lectura revisada"}
+                                        <Button size="sm" mt="3" onClick={() => void executeProposal()} disabled={!!busy || !!operation || proposalExpired || !status?.enabled || accessRevoked}>
+                                            {busy === "execute" ? "Preparando lectura…" : "Consultar información"}
                                         </Button>
                                     </Box>
                                 )}
@@ -486,8 +503,7 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
                                         <Text className={styles.connectionCopy}>{operation.message}</Text>
                                         <Text className={styles.operationId}>Operación: {operation.id}</Text>
                                         {operation.backupId && <Text className={styles.operationId}>Respaldo: {operation.backupId}</Text>}
-                                        {operation.sql !== proposal?.sql && <pre className={styles.sqlBlock}><code>{operation.sql}</code></pre>}
-                                        {operation.state === "BACKING_UP" && !busy && <Button size="sm" mt="3" variant="outline" onClick={() => void resumeOperation()} disabled={!status?.enabled || !status.available || accessRevoked}>Volver a consultar esta operación</Button>}
+                                        {operation.state === "BACKING_UP" && !busy && <Button size="sm" mt="3" variant="outline" onClick={() => void resumeOperation()} disabled={!status?.enabled || accessRevoked}>Volver a consultar esta operación</Button>}
                                         {operation.state === "COMPLETE" && operation.result && (
                                             <>
                                                 <div className={styles.resultScroll} tabIndex={0} role="region" aria-label="Tabla del resultado de la lectura">

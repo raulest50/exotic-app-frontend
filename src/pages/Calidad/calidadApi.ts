@@ -1,5 +1,6 @@
 import axios from "axios";
 import EndPointsURL from "../../api/EndPointsURL";
+import type { CatalogoFormulacion, CatalogoProducto } from "./catalogoFormulacion";
 import type {
     AreaOperativaOption,
     EjecucionDetalleResponse,
@@ -18,6 +19,25 @@ import type {
 
 const endpoints = new EndPointsURL();
 const axiosOptions = { withCredentials: true };
+
+/** Consultas sin efectos sobre producción, compras o existencias. */
+export async function buscarCatalogoProductos(
+    params: { search: string; tipo: "" | "T" | "S"; page: number; size: number },
+    signal: AbortSignal,
+): Promise<PageResponse<CatalogoProducto>> {
+    const { data } = await axios.get<PageResponse<CatalogoProducto>>(endpoints.calidad_catalogo_productos, {
+        ...axiosOptions, params, signal,
+    });
+    return data;
+}
+
+export async function consultarCatalogoFormulacion(productoId: string, signal: AbortSignal): Promise<CatalogoFormulacion> {
+    const { data } = await axios.get<CatalogoFormulacion>(
+        endpoints.calidad_catalogo_formulacion.replace("{id}", encodeURIComponent(productoId)),
+        { ...axiosOptions, signal },
+    );
+    return data;
+}
 
 export function extractApiError(error: unknown, fallback: string): string {
     if (axios.isAxiosError(error)) {

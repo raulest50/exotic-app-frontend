@@ -6,7 +6,7 @@ import { ExoticMascot } from "./ExoticMascot";
 import styles from "./AgentAssistant.module.css";
 
 /** Isolated visual workspace; intentionally not mounted in the application router. */
-export function AgentAssistantPreview({ initialState = "open", canWrite = false }: AgentAssistantProps) {
+export function AgentAssistantPreview({ initialState = "open", canWrite = false, previewRemainingPercent }: AgentAssistantProps) {
     return (
         <Box as="main" className={styles.stage}>
             <Box as="header" className={styles.stageHeader}>
@@ -46,7 +46,7 @@ export function AgentAssistantPreview({ initialState = "open", canWrite = false 
                     </Box>
                 </Box>
             </Box>
-            <AgentAssistant initialState={initialState} canWrite={canWrite} preview />
+            <AgentAssistant initialState={initialState} canWrite={canWrite} preview previewRemainingPercent={previewRemainingPercent} />
         </Box>
     );
 }

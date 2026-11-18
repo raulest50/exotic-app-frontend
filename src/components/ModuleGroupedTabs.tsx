@@ -15,6 +15,7 @@ export interface ModuleTabGroup {
     key: string;
     label: string;
     tabs: ModuleTabDefinition[];
+    showSingleTab?: boolean;
 }
 
 export interface ModuleTabSelection {
@@ -109,7 +110,7 @@ export default function ModuleGroupedTabs({
             <Tabs.ContentGroup>
                 {visibleGroups.map((group) => (
                     <Tabs.Content key={group.key} value={group.key} px={0} pb={0}>
-                        {group.tabs.length === 1 ? (
+                        {group.tabs.length === 1 && !group.showSingleTab ? (
                             <Box p={group.tabs[0].flushContent ? 0 : { base: 2, md: 4 }}>
                                 {group.tabs[0].render(activeGroup.key === group.key)}
                             </Box>

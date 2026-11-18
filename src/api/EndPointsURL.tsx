@@ -351,6 +351,8 @@ export default class EndPointsURL{
     public calidad_ejecuciones: string;
     public calidad_ejecucion_detalle: string;
     public calidad_batch_records: string;
+    public calidad_catalogo_productos: string;
+    public calidad_catalogo_formulacion: string;
 
     // BI — informes diarios
     public informes_diarios_ping: string;
@@ -981,6 +983,8 @@ export default class EndPointsURL{
         this.calidad_ejecuciones = `${domain}/${calidad_res}/ejecuciones`;
         this.calidad_ejecucion_detalle = `${domain}/${calidad_res}/ejecuciones/{id}`;
         this.calidad_batch_records = `${domain}/${calidad_res}/batch-records`;
+        this.calidad_catalogo_productos = `${domain}/${calidad_res}/catalogo-productos`;
+        this.calidad_catalogo_formulacion = `${domain}/${calidad_res}/catalogo-productos/{id}/formulacion`;
 
         // Planeacion de produccion endpoints
         this.planeacion_asociar_terminados = `${domain}/${planeacion_produccion_res}/asociar_terminados`;

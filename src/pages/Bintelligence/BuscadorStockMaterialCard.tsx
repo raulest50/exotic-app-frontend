@@ -129,6 +129,9 @@ export default function BuscadorStockMaterialCard() {
                                                 <Text mt={2}>
                                                     {formatQuantity(material.stockGeneral)} {material.unidadMedida}
                                                 </Text>
+                                                <Text fontSize="sm">
+                                                    Punto de reorden: {formatReorderPoint(material.puntoReorden, material.unidadMedida)}
+                                                </Text>
                                                 <Text color="app.textMuted" fontSize="sm">
                                                     {material.costoDisponible
                                                         ? `${formatCurrency(material.costoUnitario)} por ${material.unidadMedida} · ${formatCurrency(material.valorEstimado)} estimados`
@@ -145,4 +148,11 @@ export default function BuscadorStockMaterialCard() {
             </Card.Body>
         </Card.Root>
     );
+}
+
+function formatReorderPoint(value: number, unit: string): string {
+    if (value === -1) return "Sin alertas de reorden";
+    if (value === 0) return "Sin umbral definido";
+    if (Number.isFinite(value) && value > 0) return `${formatQuantity(value)} ${unit}`;
+    return "No disponible";
 }

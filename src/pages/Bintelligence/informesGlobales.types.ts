@@ -359,6 +359,7 @@ export interface ResultadoStockMaterial {
     nombre: string;
     unidadMedida: string;
     stockGeneral: number;
+    puntoReorden: number;
     costoUnitario: number;
     costoDisponible: boolean;
     valorEstimado: number;

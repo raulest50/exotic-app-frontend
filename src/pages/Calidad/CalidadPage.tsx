@@ -18,6 +18,7 @@ import {
     PlanesControlCalidadTab,
 } from "./ControlCalidad/ControlCalidadTabs";
 import LiberacionLotesTab from "./LiberacionLotesTab";
+import CatalogoFormulacionTab from "./CatalogoFormulacionTab";
 
 export default function CalidadPage() {
     const access = useAccessSnapshot();
@@ -55,6 +56,19 @@ export default function CalidadPage() {
                     label: "Historial de ensayos",
                     render: () => <HistorialControlesCalidadTab />,
                     accessRule: exactTabAccessRuleWithMasterBypass(Modulo.CALIDAD, "HISTORIAL_CONTROL_CALIDAD"),
+                },
+            ],
+        },
+        {
+            key: "consulta-productos",
+            label: "Consulta de productos",
+            showSingleTab: true,
+            tabs: [
+                {
+                    key: "catalogo-formulacion",
+                    label: "Catálogo y formulación",
+                    render: (isActive) => <CatalogoFormulacionTab isActive={isActive} />,
+                    accessRule: exactTabAccessRuleWithMasterBypass(Modulo.CALIDAD, "CATALOGO_FORMULACION"),
                 },
             ],
         },

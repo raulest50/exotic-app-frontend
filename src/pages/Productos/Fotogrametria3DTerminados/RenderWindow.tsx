@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-export default function RenderWindow({ model, active }: { model: Blob | null; active: boolean }) {
+export default function RenderWindow({ model, active, readOnly = false }: { model: Blob | null; active: boolean; readOnly?: boolean }) {
     const host = useRef<HTMLDivElement>(null);
     const [error, setError] = useState("");
     useEffect(() => {
@@ -53,16 +53,18 @@ export default function RenderWindow({ model, active }: { model: Blob | null; ac
             }).catch(cause => { if (!cancelled) setError(cause instanceof Error ? cause.message : "No se pudo visualizar el modelo."); });
             const draw = () => { if (cancelled) return; controls?.update(); renderer.render(scene!, camera); animation = requestAnimationFrame(draw); };
             draw();
-        } catch { setError("Este navegador no pudo iniciar el visor 3D. El modelo aceptado se conserva para guardarlo."); }
+        } catch { setError(readOnly
+            ? "Este navegador no pudo iniciar el visor 3D para consultar el modelo guardado."
+            : "Este navegador no pudo iniciar el visor 3D. El modelo aceptado se conserva para guardarlo."); }
         return () => {
             cancelled = true; cancelAnimationFrame(animation); observer?.disconnect(); controls?.dispose();
             if (scene) dispose(scene);
             if (renderer!) { renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); }
         };
-    }, [model, active]);
+    }, [model, active, readOnly]);
     return <Box borderWidth="1px" rounded="md" overflow="hidden" bg="bg.subtle">
         <Box ref={host} minH={model && active ? "340px" : undefined} />
-        {!model && <Text p="6" color="fg.muted" textAlign="center">El modelo aparecerá aquí después de reconstruir las fotografías.</Text>}
+        {!model && <Text p="6" color="fg.muted" textAlign="center">{readOnly ? "No hay un modelo guardado disponible para consultar." : "El modelo aparecerá aquí después de reconstruir las fotografías."}</Text>}
         {model && <Text px="3" py="2" fontSize="xs" color="fg.muted">Arrastra para girar · rueda para acercar · botón derecho para desplazar.</Text>}
         {error && <Text role="alert" color="red.fg" p="3">{error}</Text>}
     </Box>;
