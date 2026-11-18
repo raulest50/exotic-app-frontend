@@ -30,6 +30,7 @@ import MonitoreoErroresPage from "./pages/MonitoreoErrores/MonitoreoErroresPage.
 import ActivosFijosPage from "./pages/ActivosFijos/ActivosFijosPage.tsx";
 import ContabilidadPage from "./pages/Contabilidad/ContabilidadPage.tsx";
 import GestionHumanaPage from "./pages/GestionHumana/GestionHumanaPage.tsx";
+import VisitantesRegistroPage from "./pages/GestionHumana/Visitantes/VisitantesRegistroPage.tsx";
 import AdministracionAlertasPage from "./pages/AdministracionAlertas/AdministracionAlertasPage.tsx";
 import AdministracionGlobalPage from "./pages/AdministracionGlobal/AdministracionGlobalPage.tsx";
 import MasterDirectivesPage from "./pages/SuperMasterDirectives/MasterDirectivesPage.tsx";
@@ -56,6 +57,8 @@ const router = createBrowserRouter(
 
             {/* Public reset password route */}
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+            <Route path="/visitantes-registro" element={<VisitantesRegistroPage />} />
 
             <Route path="/" element={<RootLayout />}>
                 {/* Home is protected => if not logged in => go to /login */}

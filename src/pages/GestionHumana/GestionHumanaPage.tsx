@@ -9,6 +9,7 @@ import { exactTabAccessRuleWithMasterBypass, tabAccessRule } from "../../auth/ac
 import { useAccessSnapshot } from "../../auth/usePermissions";
 import type { AccessRule } from "../../auth/accessModel.ts";
 import PermisosPersonal from "./Permisos/PermisosPersonal";
+import ControlVisitantes from "./Visitantes/ControlVisitantes";
 
 export default function GestionHumanaPage() {
     const access = useAccessSnapshot();
@@ -19,6 +20,7 @@ export default function GestionHumanaPage() {
         { key: "consulta", label: "Consulta", render: () => <ConsultaDePersonal />, accesoValido: tabAccessRule(Modulo.GESTION_HUMANA, "CONSULTA", 1) },
         { key: "horas-extra", label: "Horas Extra", render: () => <HorasExtraPersonal />, accesoValido: tabAccessRule(Modulo.GESTION_HUMANA, "CONSULTA", 1) },
         { key: "permisos", label: "Permisos", render: () => <PermisosPersonal />, accesoValido: exactTabAccessRuleWithMasterBypass(Modulo.GESTION_HUMANA, "PERMISOS", 1) },
+        { key: "control-visitantes", label: "Control visitantes", render: () => <ControlVisitantes />, accesoValido: exactTabAccessRuleWithMasterBypass(Modulo.GESTION_HUMANA, "CONTROL_VISITANTES", 1) },
     ];
 
     const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));

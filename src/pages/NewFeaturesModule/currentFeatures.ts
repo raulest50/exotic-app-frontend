@@ -1,4 +1,5 @@
 import productosModificacionesGuia from "./assets/productos-modificaciones-guia.png";
+import duracionNovedadesGuia from "./assets/novedades-duracion-directiva-guia.png";
 import novedadesGuia from "./assets/novedades-personalizadas-guia.png";
 import permisosGuia from "./assets/personal-permisos-laborales-guia.png";
 import costoInicialGuia from "./assets/materiales-costo-inicial-guia.png";
@@ -16,6 +17,7 @@ import asistenteGuia from "./assets/asistente-movible-consultas-guia.png";
 export type NewFeatureAccess =
     | { kind: "home" }
     | { kind: "area" }
+    | { kind: "supermaster" }
     | {
         kind: "module"; module: string; tabId?: string; minLevel?: number; exactTab?: boolean; masterOnly?: boolean;
         requiredTabs?: readonly { tabId: string; minLevel: number; exactTab?: boolean }[];
@@ -24,6 +26,7 @@ export type NewFeatureAccess =
 export type NewFeature = {
     id: string;
     revision: string;
+    publishedAt: string;
     moduleLabel: string;
     modulePath: string;
     title: string;
@@ -38,8 +41,25 @@ export type NewFeature = {
 // Keep one active catalogue; preserve id/revision unless a new notice is requested.
 export const currentFeatures: readonly NewFeature[] = [
     {
+        id: "novedades-duracion-directiva",
+        revision: "1",
+        publishedAt: "2026-11-17T23:24:12Z",
+        moduleLabel: "Directivas Super Master",
+        modulePath: "/super_master_directives",
+        title: "Decide cuántos días se muestra Nuevo",
+        description: "En General puedes definir la duración máxima de los avisos: de 0 a 365 días desde la publicación de cada novedad. El valor inicial es 7; usa 0 para desactivar los indicadores. También se retiran antes cuando el usuario lee la novedad y entra al módulo. El carrusel sigue disponible para consulta.",
+        location: ["Directivas Super Master", "General", "Directivas numéricas", "Duración de la notificación Nuevo"],
+        access: { kind: "supermaster" },
+        image: {
+            src: duracionNovedadesGuia,
+            alt: "Directivas Super Master: 1 duración de Nuevo con ejemplo de 14 días; 2 reglas de vigencia y valor 0; 3 Guardar cambios. Datos de demostración.",
+            caption: "1 Define los días. 2 Revisa las reglas; 0 desactiva los indicadores. 3 Guarda los cambios. Guía anotada con datos de demostración.",
+        },
+    },
+    {
         id: "novedades-personalizadas",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "Inicio",
         modulePath: "/",
         title: "Lo nuevo, al alcance de tu mano",
@@ -55,6 +75,7 @@ export const currentFeatures: readonly NewFeature[] = [
     {
         id: "personal-permisos-laborales",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "Gestión Humana",
         modulePath: "/GestionHumana",
         title: "Tus permisos laborales, en un solo lugar",
@@ -70,6 +91,7 @@ export const currentFeatures: readonly NewFeature[] = [
     {
         id: "materiales-costo-inicial",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "Productos",
         modulePath: "/producto",
         title: "Registra el costo desde el primer día",
@@ -85,6 +107,7 @@ export const currentFeatures: readonly NewFeature[] = [
     {
         id: "productos-edicion-desde-catalogo",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "Productos",
         modulePath: "/producto",
         title: "Del catálogo al diseño, sin perder tu búsqueda",
@@ -103,6 +126,7 @@ export const currentFeatures: readonly NewFeature[] = [
     {
         id: "terminados-modelo-3d",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "Productos",
         modulePath: "/producto",
         title: "Explora una vista 3D de tu terminado",
@@ -118,6 +142,7 @@ export const currentFeatures: readonly NewFeature[] = [
     {
         id: "proveedores-registrar-plazo-negociado",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "Proveedores",
         modulePath: "/Proveedores",
         title: "Guarda el plazo acordado con tu proveedor",
@@ -133,6 +158,7 @@ export const currentFeatures: readonly NewFeature[] = [
     {
         id: "proveedores-consultar-plazo-negociado",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "Proveedores",
         modulePath: "/Proveedores",
         title: "El plazo de entrega, a la vista",
@@ -148,6 +174,7 @@ export const currentFeatures: readonly NewFeature[] = [
     {
         id: "compras-plazo-proveedor",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "Compras",
         modulePath: "/compras",
         title: "Consulta el plazo antes de comprar",
@@ -163,6 +190,7 @@ export const currentFeatures: readonly NewFeature[] = [
     {
         id: "areas-crear-alcance-ejecucion",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "Gestión de Áreas Operativas",
         modulePath: "/gestion_areas_operativas",
         title: "Define qué órdenes ejecutará cada área",
@@ -178,6 +206,7 @@ export const currentFeatures: readonly NewFeature[] = [
     {
         id: "areas-consultar-alcance-ejecucion",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "Gestión de Áreas Operativas",
         modulePath: "/gestion_areas_operativas",
         title: "Identifica las áreas que ejecutan OP y OF",
@@ -193,6 +222,7 @@ export const currentFeatures: readonly NewFeature[] = [
     {
         id: "areas-multiples-plantillas-despeje",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "Gestión de Áreas Operativas",
         modulePath: "/gestion_areas_operativas",
         title: "Varios formularios de despeje por área",
@@ -208,6 +238,7 @@ export const currentFeatures: readonly NewFeature[] = [
     {
         id: "panel-operativo-conjunto-despejes",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "Panel de Área Operativa",
         modulePath: "/area-operativa",
         title: "Revisa todos los despejes antes de iniciar",
@@ -223,6 +254,7 @@ export const currentFeatures: readonly NewFeature[] = [
     {
         id: "bi-menu-simplificado",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "BI",
         modulePath: "/Bintelligence",
         title: "Un menú de BI más simple",
@@ -238,6 +270,7 @@ export const currentFeatures: readonly NewFeature[] = [
     {
         id: "asistente-movible-consultas",
         revision: "1",
+        publishedAt: "2026-11-17T00:00:00-05:00",
         moduleLabel: "Asistente Exotic",
         modulePath: "/",
         title: "El asistente se acomoda a tu trabajo",

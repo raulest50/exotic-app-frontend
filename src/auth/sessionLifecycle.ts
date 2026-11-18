@@ -40,7 +40,9 @@ export const isResetPasswordPath = (pathname: string): boolean =>
     normalizePathname(toRouterPath(pathname) ?? "") === "/reset-password";
 
 export const isPublicAuthPath = (pathname: string): boolean =>
-    isLoginPath(pathname) || isResetPasswordPath(pathname);
+    isLoginPath(pathname)
+    || isResetPasswordPath(pathname)
+    || normalizePathname(toRouterPath(pathname) ?? "") === "/visitantes-registro";
 
 const isSessionEndReason = (value: unknown): value is SessionEndReason =>
     value === "TOKEN_EXPIRED"

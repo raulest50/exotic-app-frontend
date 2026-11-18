@@ -26,8 +26,8 @@ export function NewFeaturesAreaButton() {
 
 // This sibling of SectionCard's link keeps links and notification buttons intact.
 export function NewFeaturesCard({ modulePath, children }: { modulePath: string; children: ReactNode }) {
-    const { features, progress, openDialog } = useNewFeatures();
-    const pending = features.filter((feature) => normalizeFeaturePath(feature.modulePath) === normalizeFeaturePath(modulePath))
+    const { notificationFeatures, progress, openDialog } = useNewFeatures();
+    const pending = notificationFeatures.filter((feature) => normalizeFeaturePath(feature.modulePath) === normalizeFeaturePath(modulePath))
         .filter((feature) => {
             const state = progress[featureKey(feature)];
             return !state?.consulted || !state.visited;
@@ -45,7 +45,7 @@ export function NewFeaturesCard({ modulePath, children }: { modulePath: string; 
 }
 
 export function NewFeaturesDialog() {
-    const { features, progress, dialogOpen, selectedFeature, closeDialog, selectFeature } = useNewFeatures();
+    const { features, notificationFeatures, progress, dialogOpen, selectedFeature, closeDialog, selectFeature } = useNewFeatures();
     const navigate = useNavigate();
     const closeRef = useRef<HTMLButtonElement>(null);
     const touchStart = useRef<{ x: number; y: number } | null>(null);
@@ -120,7 +120,9 @@ export function NewFeaturesDialog() {
                                     <span className={styles.locationLabel}><LuMapPin style={{ display: "inline", marginRight: 5 }} aria-hidden="true" />Dónde encontrarlo</span>
                                     <span className={styles.locationPath}>{selectedFeature.location.map((segment, index) => <span key={`${index}-${segment}`} className={styles.locationSegment}>{index > 0 && <LuChevronRight aria-hidden="true" />}{segment}</span>)}</span>
                                 </div>
-                                <p className={styles.status}>{state?.visited && <LuCheck aria-hidden="true" />}{state?.visited ? "Ya conoces la novedad y entraste a este módulo." : "Entra también al módulo para completar esta novedad."}</p>
+                                <p className={styles.status}>{notificationFeatures.includes(selectedFeature)
+                                    ? <>{state?.visited && <LuCheck aria-hidden="true" />}{state?.visited ? "Ya conoces la novedad y entraste a este módulo." : "Entra también al módulo para completar esta novedad."}</>
+                                    : "Esta novedad sigue disponible para consulta, sin indicador Nuevo."}</p>
                             </div>
                         </Dialog.Body>
                         <Dialog.Footer className={`${styles.footer} ${multiple ? "" : styles.singleFooter}`}>

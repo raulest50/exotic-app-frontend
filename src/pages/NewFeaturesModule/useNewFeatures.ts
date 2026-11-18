@@ -4,6 +4,7 @@ import type { NewFeaturesProgress } from "./newFeaturesState";
 
 type NewFeaturesContextValue = {
     features: readonly NewFeature[];
+    notificationFeatures: readonly NewFeature[];
     progress: NewFeaturesProgress;
     unreadCount: number;
     dialogOpen: boolean;

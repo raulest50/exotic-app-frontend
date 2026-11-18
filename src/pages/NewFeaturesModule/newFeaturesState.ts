@@ -6,6 +6,7 @@ export type NewFeaturesSession = {
     ready: boolean;
     isMasterLike: boolean;
     isAreaResponsable: boolean;
+    canAccessSuperMasterDirectives?: boolean;
     moduloAccesos: readonly {
         modulo: string;
         tabs: readonly { tabId: string; nivel: number }[];
@@ -15,6 +16,27 @@ export type NewFeaturesSession = {
 export type FeatureProgress = { consulted: boolean; visited: boolean };
 export type NewFeaturesProgress = Readonly<Record<string, FeatureProgress>>;
 const emptyProgress: NewFeaturesProgress = {};
+
+// Private notification policy; deliberately independent from other modules' helpers.
+export const NEW_FEATURES_NOTIFICATION_DAYS_KEY = "NEW_FEATURES_NOTIFICATION_DAYS";
+export const DEFAULT_NOTIFICATION_DAYS = 7;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export function parseNotificationDays(value: unknown): number {
+    if (typeof value !== "number" && (typeof value !== "string" || !/^\d+$/.test(value.trim()))) return DEFAULT_NOTIFICATION_DAYS;
+    const days = Number(value);
+    return Number.isInteger(days) && days >= 0 && days <= 365 ? days : DEFAULT_NOTIFICATION_DAYS;
+}
+
+export function featureNotificationWindow(feature: NewFeature, days: number) {
+    const startsAt = Date.parse(feature.publishedAt);
+    return { startsAt, expiresAt: startsAt + days * DAY_MS };
+}
+
+export function isFeatureNotificationActive(feature: NewFeature, days: number, now: number): boolean {
+    const { startsAt, expiresAt } = featureNotificationWindow(feature, days);
+    return days > 0 && Number.isFinite(startsAt) && now >= startsAt && now < expiresAt;
+}
 
 export const featureKey = (feature: NewFeature): string => JSON.stringify([feature.id, feature.revision]);
 
@@ -33,6 +55,7 @@ export function canShowFeature(feature: NewFeature, session: NewFeaturesSession)
     const rule = feature.access;
     if (rule.kind === "home") return !session.isAreaResponsable;
     if (rule.kind === "area") return session.isAreaResponsable;
+    if (rule.kind === "supermaster") return !session.isAreaResponsable && Boolean(session.canAccessSuperMasterDirectives);
     if (session.isAreaResponsable || (rule.masterOnly && !session.isMasterLike)) return false;
     const minLevel = rule.minLevel ?? 1;
     if (session.isMasterLike) return 999 >= minLevel

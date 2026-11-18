@@ -34,6 +34,8 @@ import {
     AREA_OPERATIVA_NOISE_SAMPLE_SECONDS_MAX,
     AREA_OPERATIVA_NOISE_SAMPLE_SECONDS_MIN,
     MASTER_DIRECTIVE_KEYS,
+    NEW_FEATURES_NOTIFICATION_DAYS_MIN,
+    NEW_FEATURES_NOTIFICATION_DAYS_MAX,
 } from "../../context/masterDirectiveConstants";
 import OcmCierreDirectivePanel from "./OcmCierreDirectivePanel";
 import { LuCircleHelp } from 'react-icons/lu';
@@ -120,6 +122,13 @@ function isIntegerInRange(value: string, min: number, max: number) {
 }
 
 function getNumericDirectiveBounds(directive: MasterDirective) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.NEW_FEATURES_NOTIFICATION_DAYS) {
+        return {
+            min: NEW_FEATURES_NOTIFICATION_DAYS_MIN,
+            max: NEW_FEATURES_NOTIFICATION_DAYS_MAX,
+            error: `Debe ser un entero entre ${NEW_FEATURES_NOTIFICATION_DAYS_MIN} y ${NEW_FEATURES_NOTIFICATION_DAYS_MAX}`,
+        };
+    }
     if (directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION
         || directive.nombre === MASTER_DIRECTIVE_KEYS.MPS_FABRICACION_DIAS_BLOQUEO_EDICION) {
         return { min: 0, max: 7, error: "Debe ser un entero entre 0 y 7" };
@@ -756,13 +765,19 @@ export default function MasterDirectivesPage() {
                                             return (
                                                 <Table.Row key={directive.id}>
                                                     <Table.Cell>
-                                                        <Text fontWeight="bold">{directive.nombre}</Text>
+                                                        <Text fontWeight="bold">{directive.nombre === MASTER_DIRECTIVE_KEYS.NEW_FEATURES_NOTIFICATION_DAYS ? "Duración de la notificación Nuevo" : directive.nombre}</Text>
                                                         <Text fontSize="sm" color="app.textSubtle">
                                                             {directive.resumen}
                                                         </Text>
                                                         {directive.nombre === MASTER_DIRECTIVE_KEYS.LIMITE_RECEPCIONES_PARCIALES_OCM && (
                                                             <Text fontSize="xs" color={explanatoryWarningColor} mt={1}>
                                                                 Este tope solo valida cambios futuros en proveedores. No modifica limites ya configurados ni valida ingresos OCM directamente.
+                                                            </Text>
+                                                        )}
+                                                        {directive.nombre === MASTER_DIRECTIVE_KEYS.NEW_FEATURES_NOTIFICATION_DAYS && (
+                                                            <Text fontSize="sm" color="app.textSubtle" mt={1} maxW="65ch" whiteSpace="normal" id={`directive-help-${directive.id}`}>
+                                                                De 0 a 365 días desde la publicación de cada novedad. 0 desactiva los indicadores.
+                                                                También desaparecen antes al leer y visitar el módulo. El carrusel sigue disponible.
                                                             </Text>
                                                         )}
                                                     </Table.Cell>
@@ -773,6 +788,8 @@ export default function MasterDirectivesPage() {
                                                                     type="number"
                                                                     min={getNumericDirectiveBounds(directive).min}
                                                                     max={getNumericDirectiveBounds(directive).max}
+                                                                    aria-label={directive.nombre === MASTER_DIRECTIVE_KEYS.NEW_FEATURES_NOTIFICATION_DAYS ? "Duración de la notificación Nuevo (días)" : directive.nombre}
+                                                                    aria-describedby={directive.nombre === MASTER_DIRECTIVE_KEYS.NEW_FEATURES_NOTIFICATION_DAYS ? `directive-help-${directive.id}` : undefined}
                                                                     step={1}
                                                                     value={value}
                                                                     onChange={e => updateDirectiveDraft(directive.id, e.target.value)}
