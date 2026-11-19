@@ -45,8 +45,8 @@ Mientras la novedad esté dentro de su plazo de vigencia:
   activo, sin historial; lenguaje de usuario, resumen, ubicación e imagen opcional con `alt`.
   Conservar `id` y `revision` hasta solicitar un nuevo aviso; no reiniciarlos por un refactor.
   **Reinicio tras la presentación del 19 de noviembre de 2026, America/Bogota.**
-  Catálogo intencionalmente vacío: se eliminaron del código todas las novedades
-  ya presentadas y sus imágenes, incluida la ampliación del chat. Incorporar solo
+  Se eliminaron del código todas las novedades ya presentadas y sus imágenes,
+  incluida la ampliación del chat. Incorporar solo
   novedades posteriores a esa presentación, verificadas y listas para uso.
   No reintroducir avisos presentados aunque su commit sea de hoy, ni adelantar
   trabajo pendiente. Sin entradas, no aparecen botón Novedades ni etiquetas Nuevo.
@@ -58,8 +58,13 @@ Mientras la novedad esté dentro de su plazo de vigencia:
   Para funciones con condiciones adicionales, incorporarlas al filtro antes de anunciarlas.
 - El catálogo del frontend controla visibilidad, no confidencialidad ni autorización
   del backend. No incluir datos privados en textos o imágenes.
-- La historia aislada usa ejemplos propios que no se publican; el catálogo real
-  es `currentFeatures.ts` y comienza vacío para preparar las próximas novedades.
+- Catálogo del push del 2026-11-19: frontend `9259494`, backend `d0520bc`.
+  Cinco entradas: visitas (filtros/motivo), semiterminados por área, recursos por
+  área, tamaño estándar de lote OF y seguimiento del correo de reorden (solo
+  Directivas). No anunciar contexto interno del asistente ni ajustes técnicos/PDF.
+  Lote OF es una referencia; asociaciones no reservan capacidad; correo depende
+  de configuración y destinatarios, sin envío instantáneo ni tablas en la campana.
+  La historia aislada usa ejemplos propios; el catálogo real es `currentFeatures.ts`.
 - Imágenes: capturar componentes reales en navegador oculto con datos ficticios,
   sin escritorio, cuentas personales ni escrituras de negocio. Conservar origen y
   guía numerada en `assets/`; revisar que la edición no cambie textos ni controles.
