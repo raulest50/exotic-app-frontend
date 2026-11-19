@@ -1,7 +1,7 @@
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, type PointerEvent, type KeyboardEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { CloseButton, Alert, Avatar, Badge, Box, Button, Flex, Heading, HStack, Icon, IconButton, Input, InputGroup, Tabs, SimpleGrid, Text, Textarea, VStack, Field, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
-import { FiEdit, FiLayers, FiSave } from 'react-icons/fi';
+import { FiEdit, FiLayers, FiMaximize2, FiSave } from 'react-icons/fi';
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
 import UserGenericPicker from '../../../components/Pickers/UserPickerGeneric/UserPickerGeneric.tsx';
@@ -9,6 +9,8 @@ import { fetchUserAssignmentStatus } from '../../../api/userAssignmentStatus.ts'
 import { User } from '../../Usuarios/GestionUsuarios/types';
 import CategoriaHabilitadaPickerModal from '../components/CategoriaHabilitadaPickerModal.tsx';
 import AreaOperativaUnidadMedidaConfig from './AreaOperativaUnidadMedidaConfig.tsx';
+import AreaOperativaSemiterminadosManufacturadosTab from './AreaOperativaSemiterminadosManufacturadosTab';
+import AreaOperativaRecursosProduccionTab from './AreaOperativaRecursosProduccionTab';
 import {
     AreaOperativa,
     AreaOperativaMutationDTO,
@@ -20,8 +22,38 @@ import { LuSearch } from 'react-icons/lu';
 import AreaMpsSettings from '../components/AreaMpsSettings';
 import type { AlcanceEjecucion, AlcanceMps, VisibilidadMps } from '../../../api/mpsAreaConfig';
 import DespejeAreaConfig from '../../../features/despeje/DespejeAreaConfig';
+import { useAuth } from '../../../context/AuthContext';
 
 const endpoints = new EndPointsURL();
+
+interface DialogSize {
+    width: number;
+    height: number;
+}
+
+function readDialogSize(key: string | null): DialogSize | null {
+    if (!key) return null;
+    try {
+        const value: unknown = JSON.parse(window.localStorage.getItem(key) ?? 'null');
+        if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+        const { width, height } = value as Partial<DialogSize>;
+        if (typeof width !== 'number' || typeof height !== 'number'
+            || !Number.isFinite(width) || !Number.isFinite(height)
+            || width <= 0 || height <= 0 || width > 10000 || height > 10000) return null;
+        return { width: Math.round(width), height: Math.round(height) };
+    } catch {
+        return null;
+    }
+}
+
+function constrainDialogSize(size: DialogSize): DialogSize {
+    const maxWidth = Math.max(1, window.innerWidth - 24);
+    const maxHeight = Math.max(1, window.innerHeight - 48);
+    return {
+        width: Math.round(Math.min(maxWidth, Math.max(Math.min(640, maxWidth), size.width))),
+        height: Math.round(Math.min(maxHeight, Math.max(Math.min(440, maxHeight), size.height))),
+    };
+}
 
 interface DetalleAreaOperativaDialogProps {
     isOpen: boolean;
@@ -94,6 +126,92 @@ export default function DetalleAreaOperativaDialog({
     onAreaUpdated,
 }: DetalleAreaOperativaDialogProps) {
     const toast = useAppToast();
+    const { meProfile } = useAuth();
+    const sizeStorageKey = meProfile
+        ? `exotic:gestion-areas:detalle:size:v1:${meProfile.id}` : null;
+    const storedDialogSize = useMemo(() => readDialogSize(sizeStorageKey), [sizeStorageKey]);
+    const [dialogSizeState, setDialogSizeState] = useState(() => ({
+        key: sizeStorageKey, size: storedDialogSize, saved: true,
+    }));
+    const dialogSize = dialogSizeState.key === sizeStorageKey ? dialogSizeState.size : storedDialogSize;
+    const sizeSaved = dialogSizeState.key !== sizeStorageKey || dialogSizeState.saved;
+    const dialogContentRef = useRef<HTMLDivElement>(null);
+    const resizeHintId = useId();
+    const suppressResizeClick = useRef(false);
+    const resizeDrag = useRef<{
+        pointerId: number; x: number; y: number; size: DialogSize;
+        previous: DialogSize | null; next: DialogSize; moved: boolean;
+    } | null>(null);
+
+    const persistDialogSize = (size: DialogSize | null) => {
+        let saved = false;
+        if (sizeStorageKey) {
+            try {
+                if (size) window.localStorage.setItem(sizeStorageKey, JSON.stringify(size));
+                else window.localStorage.removeItem(sizeStorageKey);
+                saved = true;
+            } catch {
+                // A browser preference must never prevent using or saving the area.
+            }
+        }
+        setDialogSizeState({ key: sizeStorageKey, size, saved });
+    };
+
+    const startResize = (event: PointerEvent<HTMLButtonElement>) => {
+        if (event.button !== 0 || !event.isPrimary || !dialogContentRef.current) return;
+        event.preventDefault();
+        event.currentTarget.focus({ preventScroll: true });
+        const bounds = dialogContentRef.current.getBoundingClientRect();
+        const size = { width: bounds.width, height: bounds.height };
+        resizeDrag.current = {
+            pointerId: event.pointerId, x: event.clientX, y: event.clientY,
+            size, previous: dialogSize, next: size, moved: false,
+        };
+        suppressResizeClick.current = false;
+        event.currentTarget.setPointerCapture(event.pointerId);
+    };
+
+    const moveResize = (event: PointerEvent<HTMLButtonElement>) => {
+        const drag = resizeDrag.current;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        // Both edges move because the dialog remains centered in its positioner.
+        const next = constrainDialogSize({
+            width: drag.size.width + 2 * (event.clientX - drag.x),
+            height: drag.size.height + 2 * (event.clientY - drag.y),
+        });
+        drag.moved ||= Math.abs(event.clientX - drag.x) + Math.abs(event.clientY - drag.y) > 2;
+        drag.next = next;
+        if (drag.moved) setDialogSizeState({ key: sizeStorageKey, size: next, saved: true });
+    };
+
+    const finishResize = (event: PointerEvent<HTMLButtonElement>, cancel = false) => {
+        const drag = resizeDrag.current;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        resizeDrag.current = null;
+        suppressResizeClick.current = drag.moved;
+        if (cancel) setDialogSizeState({ key: sizeStorageKey, size: drag.previous, saved: sizeSaved });
+        else if (drag.moved) persistDialogSize(drag.next);
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+    };
+
+    const resizeWithKeyboard = (event: KeyboardEvent<HTMLButtonElement>) => {
+        if (event.key === 'Home') {
+            event.preventDefault();
+            persistDialogSize(null);
+            return;
+        }
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)
+            || !dialogContentRef.current) return;
+        event.preventDefault();
+        const bounds = dialogContentRef.current.getBoundingClientRect();
+        const step = event.shiftKey ? 80 : 20;
+        persistDialogSize(constrainDialogSize({
+            width: bounds.width + (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0),
+            height: bounds.height + (event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0),
+        }));
+    };
 
     const [isEditing, setIsEditing] = useState(false);
     const [editNombre, setEditNombre] = useState('');
@@ -107,6 +225,10 @@ export default function DetalleAreaOperativaDialog({
     const [isCategoriaPickerOpen, setIsCategoriaPickerOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isDespejeBusy, setIsDespejeBusy] = useState(false);
+    const [isSemiterminadosBusy, setIsSemiterminadosBusy] = useState(false);
+    const [isRecursosBusy, setIsRecursosBusy] = useState(false);
+    const [semiterminadosDirty, setSemiterminadosDirty] = useState(false);
+    const [recursosDirty, setRecursosDirty] = useState(false);
     const [isValidatingResponsable, setIsValidatingResponsable] = useState(false);
     const [responsableError, setResponsableError] = useState<string | null>(null);
     const [areaUnidades, setAreaUnidades] = useState<UnidadMedidaAreaOperativa[]>([]);
@@ -150,6 +272,13 @@ export default function DetalleAreaOperativaDialog({
     if (!area) return null;
     const isSpecialSystemArea = isAlmacenGeneralArea(area);
     const unidadesDisponibles = areaUnidades;
+    const isAssociationBusy = isSemiterminadosBusy || isRecursosBusy;
+    const hasAssociationChanges = semiterminadosDirty || recursosDirty;
+    const handleClose = () => {
+        if (isSaving || isDespejeBusy || isAssociationBusy) return;
+        if (hasAssociationChanges && !window.confirm('Hay asociaciones sin guardar. ¿Cerrar y descartar esos cambios?')) return;
+        onClose();
+    };
 
     const enterEditMode = () => {
         if (isSpecialSystemArea) {
@@ -191,7 +320,7 @@ export default function DetalleAreaOperativaDialog({
         !sameCategoriaSelection(editCategoriasHabilitadas, area.categoriasHabilitadas ?? []);
 
     const isFormValid = editNombre.trim() !== '' && editResponsable !== null;
-    const canSave = isFormValid && hasChanges && !isSaving && !isDespejeBusy && !isValidatingResponsable && !responsableError;
+    const canSave = isFormValid && hasChanges && !isSaving && !isDespejeBusy && !isAssociationBusy && !isValidatingResponsable && !responsableError;
 
     const handleSelectUser = async (user: User) => {
         setIsValidatingResponsable(true);
@@ -387,28 +516,29 @@ export default function DetalleAreaOperativaDialog({
             open={isOpen}
             size='xl'
             placement='center'
-            closeOnInteractOutside={!isEditing}
+            closeOnInteractOutside={!isEditing && !hasAssociationChanges && !isAssociationBusy}
             scrollBehavior="inside"
             onOpenChange={e => {
-                if (!e.open && !isSaving && !isDespejeBusy) {
-                    onClose();
-                }
+                if (!e.open) handleClose();
             }}
         >
             <Portal>
 
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content maxW="5xl"
-                        w="calc(100% - 24px)"
-                        h={{ base: 'calc(100dvh - 24px)', md: 'min(780px, calc(100dvh - 48px))' }}
+                    <Dialog.Content ref={dialogContentRef}
+                        maxW="calc(100vw - 24px)"
+                        w={{ base: 'calc(100% - 24px)', md: dialogSize ? `${dialogSize.width}px` : 'min(64rem, calc(100vw - 24px))' }}
+                        minW={{ md: 'min(640px, calc(100vw - 24px))' }}
+                        h={{ base: 'calc(100dvh - 24px)', md: dialogSize ? `${dialogSize.height}px` : 'min(780px, calc(100dvh - 48px))' }}
+                        minH={{ md: 'min(440px, calc(100dvh - 48px))' }}
                         maxH={{ base: 'calc(100dvh - 24px)', md: 'calc(100dvh - 48px)' }}
                         my={3}
                         mx={3}
                         overflow="hidden"
                         borderRadius={{ base: 'xl', md: '2xl' }}
                         bg="app.surface">
-                        <Dialog.Header px={{ base: 4, md: 6 }} py={4} borderBottomWidth="1px" borderColor="app.border">
+                        <Dialog.Header px={{ base: 4, md: 6 }} py={4} flexDirection="column" gap={0} flexShrink={0} borderBottomWidth="1px" borderColor="app.border">
                             <Flex align="flex-start" justify="space-between" gap={4} pr={10}>
                                 <Box minW={0}>
                                     <Text
@@ -429,13 +559,23 @@ export default function DetalleAreaOperativaDialog({
                                     </Dialog.Title>
                                 </Box>
                                 <HStack gap={2} flexWrap="wrap" justify="flex-end">
+                                    <Button size="xs" variant="ghost" display={{ base: 'none', md: 'inline-flex' }}
+                                        onClick={() => persistDialogSize(null)}>
+                                        Restablecer tamaño
+                                    </Button>
                                     {isEditing && <Badge colorPalette="teal">Editando</Badge>}
                                     {isSpecialSystemArea && <Badge colorPalette="blue">Área del sistema</Badge>}
                                 </HStack>
                             </Flex>
+                            <Text id={resizeHintId} mt={2} fontSize="xs" color="app.textSubtle"
+                                display={{ base: 'none', md: 'block' }} role={sizeSaved ? undefined : 'status'}>
+                                Arrastra la esquina inferior derecha o usa sus flechas; Mayús aumenta el paso. Clic amplía; Inicio restablece.
+                                {sizeSaved && sizeStorageKey ? ' El tamaño se recuerda para tu usuario en este navegador.'
+                                    : ' El tamaño se conserva en esta vista; no se pudo guardar en el navegador.'}
+                            </Text>
                         </Dialog.Header>
                         <Dialog.CloseTrigger asChild>
-                            <CloseButton aria-label="Cerrar" size="sm" disabled={isSaving || isDespejeBusy} top={4} right={4} />
+                            <CloseButton aria-label="Cerrar" size="sm" disabled={isSaving || isDespejeBusy || isAssociationBusy} top={4} right={4} />
                         </Dialog.CloseTrigger>
                         <Dialog.Body p={0} overflow="hidden" display="flex" flexDirection="column" minH={0}>
                             {isSpecialSystemArea && (
@@ -470,6 +610,8 @@ export default function DetalleAreaOperativaDialog({
                                     <Tabs.Trigger value="categorias" flex="1" whiteSpace="nowrap" py={3}>Categorías</Tabs.Trigger>
                                     <Tabs.Trigger value="unidades" flex="1" whiteSpace="nowrap" py={3}>Unidades</Tabs.Trigger>
                                     <Tabs.Trigger value="despeje" flex="1" whiteSpace="nowrap" py={3}>Despeje</Tabs.Trigger>
+                                    <Tabs.Trigger value="semiterminados" flex="1" whiteSpace="nowrap" py={3}>Semiterminados</Tabs.Trigger>
+                                    <Tabs.Trigger value="recursos" flex="1" whiteSpace="nowrap" py={3}>Recursos</Tabs.Trigger>
                                 </Tabs.List>
                                 <Box flex="1" minH={0} overflowY="auto" bg="app.surfaceSubtle">
                                         <Tabs.Content value="informacion" px={{ base: 4, md: 6 }} py={5} minH="100%">
@@ -666,11 +808,24 @@ export default function DetalleAreaOperativaDialog({
                                         <Tabs.Content value="despeje" px={{ base: 4, md: 6 }} py={5} minH="100%">
                                             <DespejeAreaConfig key={area.areaId} areaId={area.areaId} isReadOnly={isSpecialSystemArea} onBusyChange={setIsDespejeBusy} />
                                         </Tabs.Content>
+                                        <Tabs.Content value="semiterminados" px={{ base: 4, md: 6 }} py={5} minH="100%">
+                                            {isOpen && <AreaOperativaSemiterminadosManufacturadosTab key={area.areaId} areaId={area.areaId}
+                                                isReadOnly={isSpecialSystemArea}
+                                                disabled={isSaving || isDespejeBusy}
+                                                onDirtyChange={setSemiterminadosDirty} onBusyChange={setIsSemiterminadosBusy} />}
+                                        </Tabs.Content>
+                                        <Tabs.Content value="recursos" px={{ base: 4, md: 6 }} py={5} minH="100%">
+                                            {isOpen && <AreaOperativaRecursosProduccionTab key={area.areaId} areaId={area.areaId}
+                                                isReadOnly={isSpecialSystemArea}
+                                                disabled={isSaving || isDespejeBusy}
+                                                onDirtyChange={setRecursosDirty} onBusyChange={setIsRecursosBusy} />}
+                                        </Tabs.Content>
                                 </Box>
                             </Tabs.Root>
                         </Dialog.Body>
                         <Dialog.Footer
                             px={{ base: 4, md: 6 }}
+                            pr={{ md: 10 }}
                             py={4}
                             borderTopWidth="1px"
                             borderColor="app.border"
@@ -689,7 +844,7 @@ export default function DetalleAreaOperativaDialog({
                                         {hasChanges && <Badge colorPalette="orange">Cambios sin guardar</Badge>}
                                     </Box>
                                     <HStack justify="flex-end">
-                                        <Button variant="ghost" onClick={cancelEdit} disabled={isSaving || isDespejeBusy}>
+                                        <Button variant="ghost" onClick={cancelEdit} disabled={isSaving || isDespejeBusy || isAssociationBusy}>
                                             Cancelar
                                         </Button>
                                         <Button
@@ -704,15 +859,30 @@ export default function DetalleAreaOperativaDialog({
                             ) : (
                                 <HStack w="full" justify="flex-end">
                                     {!isSpecialSystemArea && (
-                                        <Button colorPalette="teal" disabled={isDespejeBusy} onClick={enterEditMode}><FiEdit />Editar área
+                                        <Button colorPalette="teal" disabled={isDespejeBusy || isAssociationBusy} onClick={enterEditMode}><FiEdit />Editar área
                                                                             </Button>
                                     )}
-                                    <Button variant="outline" disabled={isDespejeBusy} onClick={onClose}>
+                                    <Button variant="outline" disabled={isDespejeBusy || isAssociationBusy} onClick={handleClose}>
                                         Cerrar
                                     </Button>
                                 </HStack>
                             )}
                         </Dialog.Footer>
+                        <IconButton type="button" aria-label="Ampliar o ajustar tamaño del diálogo"
+                            aria-describedby={resizeHintId} title="Arrastra para ajustar; flechas para cambiar tamaño; clic para ampliar"
+                            position="absolute" bottom={1} right={1} size="xs" variant="ghost"
+                            display={{ base: 'none', md: 'inline-flex' }} cursor="nwse-resize" touchAction="none"
+                            onPointerDown={startResize} onPointerMove={moveResize}
+                            onPointerUp={event => finishResize(event)} onPointerCancel={event => finishResize(event, true)}
+                            onLostPointerCapture={event => finishResize(event)} onKeyDown={resizeWithKeyboard}
+                            onClick={event => {
+                                if (event.detail === 0 || !suppressResizeClick.current) {
+                                    persistDialogSize(constrainDialogSize({ width: window.innerWidth, height: window.innerHeight }));
+                                }
+                                suppressResizeClick.current = false;
+                            }}>
+                            <FiMaximize2 />
+                        </IconButton>
                     </Dialog.Content>
                 </Dialog.Positioner>
 

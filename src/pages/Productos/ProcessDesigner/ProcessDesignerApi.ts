@@ -68,6 +68,7 @@ function buildPreview(dto: ProductoManufacturingDTO, products: Map<string, Produ
         unidadContenidoPorEnvase: dto.unidadContenidoPorEnvase ?? "",
         observaciones: dto.observaciones, costo: dto.costo == null ? undefined : String(dto.costo), ivaPercentual: dto.ivaPercentual,
         inventareable: dto.inventareable, requiereOrdenFabricacion: dto.tipoProducto === "S" && dto.requiereOrdenFabricacion === true,
+        loteSize: dto.tipoProducto === "S" ? quantityText(dto.loteSize ?? undefined) : undefined,
         categoria: dto.categoriaId == null ? undefined : { categoriaId: dto.categoriaId, categoriaNombre: dto.categoriaNombre ?? "", categoriaDescripcion: "" },
         casePack: dto.casePack ? { ...dto.casePack, insumosEmpaque: dto.casePack.insumosEmpaque?.map(i => {
             const material = products.get(i.materialId);
@@ -222,6 +223,7 @@ export function toDesignerPayload(product: DesignerProduct, nodes: DesignerNode[
         inventareable: product.inventareable,
         // Solo SemiTerminado tiene esta configuración; los terminados usan OrdenProduccion.
         requiereOrdenFabricacion: product.tipo_producto === "S" ? product.requiereOrdenFabricacion === true : undefined,
+        loteSize: product.tipo_producto === "S" ? product.loteSize?.trim() || null : undefined,
         categoriaId: product.tipo_producto === "T" ? product.categoria?.categoriaId : undefined, prefijoLote: product.prefijoLote || undefined,
         insumos: nodes.flatMap(node => node.type === "material" || node.type === "semiterminado" ? [{
             productoId: node.data.producto.productoId, cantidadReceta: node.data.cantidad, unidadReceta: node.data.unidad,
@@ -270,6 +272,7 @@ export async function guardarProducto(product: DesignerProduct, nodes: DesignerN
             prefijoLote: data.prefijoLote, tipoUnidades: data.tipoUnidades,
             cantidadUnidad: String(data.cantidadUnidad), unidadContenidoPorEnvase: data.unidadContenidoPorEnvase ?? "",
             inventareable: data.inventareable, requiereOrdenFabricacion: data.tipoProducto === "S" && data.requiereOrdenFabricacion === true,
+            loteSize: data.tipoProducto === "S" ? quantityText(data.loteSize ?? undefined) : undefined,
             rendimientoTeorico: String(data.procesoProduccionCompleto?.rendimientoTeorico ?? 0),
             cantidadSalidaReceta: quantityText(data.procesoProduccionCompleto?.cantidadSalidaReceta),
         };

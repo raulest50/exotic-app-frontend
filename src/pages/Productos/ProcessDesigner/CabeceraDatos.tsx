@@ -8,7 +8,7 @@ import { normalizeProductId } from "../productIdUtils.ts";
 
 // rendimientoTeorico se conserva para compatibilidad con v1; no se edita en este diseñador.
 // cantidadSalidaReceta usa tipoUnidades; ambos se editan en el nodo de salida.
-export type DesignerProduct = Omit<ProductoSemiter, "insumos" | "procesoProduccionCompleto"> & { rendimientoTeorico: string; cantidadSalidaReceta: string };
+export type DesignerProduct = Omit<ProductoSemiter, "insumos" | "procesoProduccionCompleto"> & { rendimientoTeorico: string; cantidadSalidaReceta: string; loteSize?: string };
 const endpoints = new EndPointsURL();
 
 function sugerirPrefijoLote(nombre: string): string {
@@ -54,7 +54,7 @@ export default function CabeceraDatos({ product, onChange, isActive, units, isEd
                 <Field.Root w={{ base: "full", md: "64" }} flexShrink="0">
                     <Field.Label>Tipo de producto</Field.Label>
                     <NativeSelect.Root size="sm" disabled={isEditing}>
-                        <NativeSelect.Field value={product.tipo_producto} onChange={(e) => patch({ tipo_producto: e.target.value, categoria: undefined, casePack: undefined, cantidadUnidad: "", unidadContenidoPorEnvase: "", inventareable: e.target.value === "T", requiereOrdenFabricacion: false })}>
+                        <NativeSelect.Field value={product.tipo_producto} onChange={(e) => patch({ tipo_producto: e.target.value, categoria: undefined, casePack: undefined, cantidadUnidad: "", unidadContenidoPorEnvase: "", inventareable: e.target.value === "T", requiereOrdenFabricacion: false, loteSize: undefined })}>
                             <option value="T">Terminado</option>
                             <option value="S">Semiterminado</option>
                         </NativeSelect.Field>
@@ -142,7 +142,7 @@ export default function CabeceraDatos({ product, onChange, isActive, units, isEd
                     </Fieldset.Root>
                     <Fieldset.Root size="sm" gap="0" minW="0" borderTopWidth="1px" pt="2">
                         <Fieldset.Legend fontSize="xs" fontWeight="semibold" color="fg.muted">Configuración</Fieldset.Legend>
-                        <SimpleGrid columns={{ base: 1, md: isTerminado ? 2 : 3 }} gap="3">
+                        <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
                             <Field.Root>
                                 <Field.Label>IVA (%)</Field.Label>
                                 <NativeSelect.Root size="sm">
@@ -171,6 +171,13 @@ export default function CabeceraDatos({ product, onChange, isActive, units, isEd
                                     {isEditing ? "Se conserva la configuración de inventario del producto existente." : isTerminado ? "Los terminados mantienen existencias." : "Requerido al usar una orden de fabricación."}
                                 </Field.HelperText>}
                             </Field.Root>
+                            {product.tipo_producto === "S" && <Field.Root disabled={!product.requiereOrdenFabricacion}>
+                                <Field.Label>Tamaño estándar de lote OF ({product.tipoUnidades})</Field.Label>
+                                <Input size="sm" type="number" min="0.0001" step="0.0001"
+                                    value={product.loteSize ?? ""} placeholder="Sin configurar"
+                                    onChange={(e) => patch({ loteSize: e.target.value })} />
+                                <Field.HelperText>Opcional. Cantidad nominal por tanda, independiente de la salida de receta. Hasta 4 decimales.</Field.HelperText>
+                            </Field.Root>}
                         </SimpleGrid>
                     </Fieldset.Root>
                     <Field.Root>

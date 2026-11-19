@@ -31,6 +31,13 @@ export interface AreaOperativa {
 
 export const ALMACEN_GENERAL_AREA_ID = -1;
 
+/** Resumen de catalogo; el ID se serializa como texto tanto para productos como recursos. */
+export interface AreaOperativaAsociacionItem {
+    id: string;
+    nombre: string;
+    detalle: string | null;
+}
+
 export function isAlmacenGeneralArea(area: Pick<AreaOperativa, 'areaId'> | null | undefined): boolean {
     return area?.areaId === ALMACEN_GENERAL_AREA_ID;
 }

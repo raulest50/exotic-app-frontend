@@ -36,6 +36,10 @@ import {
     MASTER_DIRECTIVE_KEYS,
     NEW_FEATURES_NOTIFICATION_DAYS_MIN,
     NEW_FEATURES_NOTIFICATION_DAYS_MAX,
+    REORDEN_SEGUIMIENTO_PORCENTAJE_MIN,
+    REORDEN_SEGUIMIENTO_PORCENTAJE_MAX,
+    REORDEN_SEGUIMIENTO_MINIMO_LEAD_TIME_DIAS_MIN,
+    REORDEN_SEGUIMIENTO_MINIMO_LEAD_TIME_DIAS_MAX,
 } from "../../context/masterDirectiveConstants";
 import OcmCierreDirectivePanel from "./OcmCierreDirectivePanel";
 import { LuCircleHelp } from 'react-icons/lu';
@@ -122,6 +126,20 @@ function isIntegerInRange(value: string, min: number, max: number) {
 }
 
 function getNumericDirectiveBounds(directive: MasterDirective) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.REORDEN_SEGUIMIENTO_PORCENTAJE) {
+        return {
+            min: REORDEN_SEGUIMIENTO_PORCENTAJE_MIN,
+            max: REORDEN_SEGUIMIENTO_PORCENTAJE_MAX,
+            error: `Debe ser un porcentaje entero entre ${REORDEN_SEGUIMIENTO_PORCENTAJE_MIN} y ${REORDEN_SEGUIMIENTO_PORCENTAJE_MAX}`,
+        };
+    }
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.REORDEN_SEGUIMIENTO_MINIMO_LEAD_TIME_DIAS) {
+        return {
+            min: REORDEN_SEGUIMIENTO_MINIMO_LEAD_TIME_DIAS_MIN,
+            max: REORDEN_SEGUIMIENTO_MINIMO_LEAD_TIME_DIAS_MAX,
+            error: `Debe ser un entero entre ${REORDEN_SEGUIMIENTO_MINIMO_LEAD_TIME_DIAS_MIN} y ${REORDEN_SEGUIMIENTO_MINIMO_LEAD_TIME_DIAS_MAX} días calendario`,
+        };
+    }
     if (directive.nombre === MASTER_DIRECTIVE_KEYS.NEW_FEATURES_NOTIFICATION_DAYS) {
         return {
             min: NEW_FEATURES_NOTIFICATION_DAYS_MIN,
@@ -167,6 +185,19 @@ function getNumericDirectiveBounds(directive: MasterDirective) {
     }
 
     return { min: 1, max: undefined, error: "Debe ser un entero mayor o igual a 1" };
+}
+
+function getNumericDirectiveLabel(directive: MasterDirective) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.NEW_FEATURES_NOTIFICATION_DAYS) {
+        return "Duración de la notificación Nuevo";
+    }
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.REORDEN_SEGUIMIENTO_PORCENTAJE) {
+        return "Correo de reorden: inicio del seguimiento (%)";
+    }
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.REORDEN_SEGUIMIENTO_MINIMO_LEAD_TIME_DIAS) {
+        return "Correo de reorden: plazo mínimo del proveedor (días)";
+    }
+    return directive.nombre;
 }
 
 function isAreaOperativaDirective(directive: MasterDirective) {
@@ -762,13 +793,20 @@ export default function MasterDirectivesPage() {
                                             const value = directiveDrafts[directive.id] ?? directive.valor;
                                             const hasRowChange = value.trim() !== directive.valor;
                                             const error = directiveErrors[directive.id];
+                                            const isReordenDirective = directive.nombre === MASTER_DIRECTIVE_KEYS.REORDEN_SEGUIMIENTO_PORCENTAJE
+                                                || directive.nombre === MASTER_DIRECTIVE_KEYS.REORDEN_SEGUIMIENTO_MINIMO_LEAD_TIME_DIAS;
                                             return (
                                                 <Table.Row key={directive.id}>
                                                     <Table.Cell>
-                                                        <Text fontWeight="bold">{directive.nombre === MASTER_DIRECTIVE_KEYS.NEW_FEATURES_NOTIFICATION_DAYS ? "Duración de la notificación Nuevo" : directive.nombre}</Text>
+                                                        <Text fontWeight="bold">{getNumericDirectiveLabel(directive)}</Text>
                                                         <Text fontSize="sm" color="app.textSubtle">
                                                             {directive.resumen}
                                                         </Text>
+                                                        {isReordenDirective && (
+                                                            <Text fontSize="sm" color="app.textSubtle" mt={2} maxW="75ch" whiteSpace="normal" id={`directive-help-${directive.id}`}>
+                                                                {directive.ayuda}
+                                                            </Text>
+                                                        )}
                                                         {directive.nombre === MASTER_DIRECTIVE_KEYS.LIMITE_RECEPCIONES_PARCIALES_OCM && (
                                                             <Text fontSize="xs" color={explanatoryWarningColor} mt={1}>
                                                                 Este tope solo valida cambios futuros en proveedores. No modifica limites ya configurados ni valida ingresos OCM directamente.
@@ -783,13 +821,17 @@ export default function MasterDirectivesPage() {
                                                     </Table.Cell>
                                                     <Table.Cell>
                                                         <HStack align="flex-start">
-                                                            <Field.Root invalid={Boolean(error)} maxW="180px">
+                                                            <Field.Root invalid={Boolean(error)} maxW="180px" ids={{ errorText: `directive-error-${directive.id}` }}>
                                                                 <Input
                                                                     type="number"
                                                                     min={getNumericDirectiveBounds(directive).min}
                                                                     max={getNumericDirectiveBounds(directive).max}
-                                                                    aria-label={directive.nombre === MASTER_DIRECTIVE_KEYS.NEW_FEATURES_NOTIFICATION_DAYS ? "Duración de la notificación Nuevo (días)" : directive.nombre}
-                                                                    aria-describedby={directive.nombre === MASTER_DIRECTIVE_KEYS.NEW_FEATURES_NOTIFICATION_DAYS ? `directive-help-${directive.id}` : undefined}
+                                                                    aria-label={getNumericDirectiveLabel(directive)}
+                                                                    aria-describedby={[
+                                                                        directive.nombre === MASTER_DIRECTIVE_KEYS.NEW_FEATURES_NOTIFICATION_DAYS || isReordenDirective
+                                                                            ? `directive-help-${directive.id}` : undefined,
+                                                                        error ? `directive-error-${directive.id}` : undefined,
+                                                                    ].filter(Boolean).join(" ") || undefined}
                                                                     step={1}
                                                                     value={value}
                                                                     onChange={e => updateDirectiveDraft(directive.id, e.target.value)}

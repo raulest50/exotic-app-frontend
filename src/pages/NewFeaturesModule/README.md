@@ -26,7 +26,6 @@ Mientras la novedad esté dentro de su plazo de vigencia:
   las directivas o recargar; no hay sincronización push entre dispositivos.
 - `publishedAt` es una fecha explícita con zona por entrada/revisión. No generarla
   al compilar ni al abrir sesión, ni moverla al editar imágenes o textos menores.
-  Las 14 entradas anteriores comienzan el 2026-11-17; conservan sus ids/revisiones.
 - El aviso administrativo usa `access.kind: "supermaster"`: super_master o master
   con acceso efectivo a Directivas; nunca se muestra a una cuenta ordinaria.
 
@@ -45,6 +44,12 @@ Mientras la novedad esté dentro de su plazo de vigencia:
   Un commit o despliegue no obliga a renovar el contenido. Mantener un catálogo
   activo, sin historial; lenguaje de usuario, resumen, ubicación e imagen opcional con `alt`.
   Conservar `id` y `revision` hasta solicitar un nuevo aviso; no reiniciarlos por un refactor.
+  **Reinicio tras la presentación del 19 de noviembre de 2026, America/Bogota.**
+  Catálogo intencionalmente vacío: se eliminaron del código todas las novedades
+  ya presentadas y sus imágenes, incluida la ampliación del chat. Incorporar solo
+  novedades posteriores a esa presentación, verificadas y listas para uso.
+  No reintroducir avisos presentados aunque su commit sea de hoy, ni adelantar
+  trabajo pendiente. Sin entradas, no aparecen botón Novedades ni etiquetas Nuevo.
 - Filtros privados, sin reutilizar helpers de otros módulos. Mantener equivalencia
   con permisos reales: módulo/tab/nivel, `MAIN`, alias y excepción master.
   `exactTab: true` impide heredar `MAIN` (p. ej. Gestión Humana/PERMISOS).
@@ -53,18 +58,15 @@ Mientras la novedad esté dentro de su plazo de vigencia:
   Para funciones con condiciones adicionales, incorporarlas al filtro antes de anunciarlas.
 - El catálogo del frontend controla visibilidad, no confidencialidad ni autorización
   del backend. No incluir datos privados en textos o imágenes.
-- Catálogo revisado el 2026-11-17: cambios de usuario de los cuatro commits frontend
-  `72fb3fc`, `bc5b92f`, `aeff8a3`, `66c7772`. Se omiten ajustes internos y pantallas vacías.
-  La historia aislada usa ejemplos propios; el catálogo real es `currentFeatures.ts`.
+- La historia aislada usa ejemplos propios que no se publican; el catálogo real
+  es `currentFeatures.ts` y comienza vacío para preparar las próximas novedades.
 - Imágenes: capturar componentes reales en navegador oculto con datos ficticios,
   sin escritorio, cuentas personales ni escrituras de negocio. Conservar origen y
   guía numerada en `assets/`; revisar que la edición no cambie textos ni controles.
   Cada entrada tiene guía propia con `alt` y explicación de los números.
   Pares `<id>-captura.jpg` (origen) / `<id>-guia.png` (edición con imagegen);
-  Productos conserva el prefijo `productos-modificaciones` aprobado inicialmente.
   Capturas de componentes actuales con API/sesión en memoria: acreditan la interfaz,
   no una prueba integrada del backend. Las guías son ediciones gráficas; el JPG
-  original conserva la evidencia. 3D muestra el inicio sin modelo y el asistente
-  una vista previa sin conexión; no simular resultados ni consultas ejecutadas.
+  original conserva la evidencia. No simular resultados ni consultas ejecutadas.
   Renovar capturas solo cuando el usuario lo solicite, junto con el catálogo.
 - Gaphor: no había un diagrama específico; cualquier representación nueva es manual.

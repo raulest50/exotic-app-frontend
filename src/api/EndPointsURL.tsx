@@ -295,6 +295,8 @@ export default class EndPointsURL{
     public search_areas_operativas: string;
     public update_area_operativa: string;
     public area_operativa_unidades: string;
+    public area_operativa_semiterminados_manufacturados: string;
+    public area_operativa_recursos_produccion: string;
     public area_operativa_unidad: string;
     public area_operativa_conversion_unidades: string;
     public monitoreo_areas_operativas: string;
@@ -965,6 +967,8 @@ export default class EndPointsURL{
         this.search_areas_operativas = `${domain}/${area_produccion_res}/search`;
         this.update_area_operativa = `${domain}/${area_produccion_res}/{areaId}`;
         this.area_operativa_unidades = `${domain}/${area_produccion_res}/{areaId}/unidades`;
+        this.area_operativa_semiterminados_manufacturados = `${domain}/${area_produccion_res}/{areaId}/semiterminados-manufacturados`;
+        this.area_operativa_recursos_produccion = `${domain}/${area_produccion_res}/{areaId}/recursos-produccion`;
         this.area_operativa_unidad = `${domain}/${area_produccion_res}/{areaId}/unidades/{unidadId}`;
         this.area_operativa_conversion_unidades = `${domain}/${area_produccion_res}/conversion-unidades`;
         this.monitoreo_areas_operativas = `${domain}/api/produccion/monitoreo-areas-operativas/areas`;

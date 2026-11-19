@@ -53,6 +53,8 @@ export interface Insumo {
 
 export interface Semiterminado extends Producto {
     insumos: Insumo[];
+    /** Nominal OF en tipoUnidades; no es la salida de la receta. */
+    loteSize?: string | number | null;
 }
 
 export interface Node {
@@ -251,6 +253,8 @@ export interface ProductoManufacturingDTO {
     unidadContenidoPorEnvase?: string;
     inventareable?: boolean;
     requiereOrdenFabricacion?: boolean;
+    /** Solo para semiterminados; null permite dejarlo sin configurar. */
+    loteSize?: string | number | null;
     categoriaId?: number;
     categoriaNombre?: string;
     status?: number;

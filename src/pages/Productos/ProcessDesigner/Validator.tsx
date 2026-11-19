@@ -56,6 +56,8 @@ function validateDraft(product: DesignerProduct, nodes: DesignerNode[], edges: E
         { label: "Salida positiva en la unidad del producto, hasta 12 decimales", valid: amount(product.cantidadSalidaReceta) && units.some(u => u.codigo === product.tipoUnidades) },
         { label: "Categoría del terminado", valid: product.tipo_producto === "S" || !!product.categoria?.categoriaId },
         { label: "Prefijo de lote", valid: product.prefijoLote ? /^[A-Z0-9]{1,20}$/.test(product.prefijoLote) : product.tipo_producto === "S" && !product.requiereOrdenFabricacion ? true : null },
+        ...(product.tipo_producto === "S" ? [{ label: "Tamaño de lote OF opcional, positivo y con hasta 4 decimales", valid: !product.loteSize
+            || /^(?:0|[1-9]\d{0,13})(?:\.\d{1,4})?$/.test(product.loteSize) && positive(product.loteSize) }] : []),
         { label: "IVA válido", valid: [0, 5, 19].includes(product.ivaPercentual ?? 0) },
         { label: "Insumos positivos, hasta 12 decimales y unidades compatibles", valid: inputs.length ? inputs.every((n) => amount(n.data.cantidad) && unidadesCompatibles(units, n.data.producto.tipoUnidades).some(u => u.codigo === n.data.unidad)) : null },
         { label: "Insumos distintos del producto destino", valid: inputs.length ? inputs.every((n) => n.data.producto.productoId !== product.productoId) : null },
