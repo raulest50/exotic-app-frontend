@@ -6,3 +6,4 @@ export const Oculto = () => <AgentAssistantPreview initialState="hidden" />;
 export const LecturaYEscritura = () => <AgentAssistantPreview canWrite />;
 export const CupoBajo = () => <AgentAssistantPreview previewRemainingPercent={12.5} />;
 export const CupoAgotado = () => <AgentAssistantPreview previewRemainingPercent={0} />;
+export const PantallaAmplia = () => <AgentAssistantPreview initialExpanded previewRemainingPercent={72.35} />;

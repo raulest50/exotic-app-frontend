@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent, PointerEvent } from "react";
 import { Box, Button, Field, Heading, IconButton, Input, Progress, Text } from "@chakra-ui/react";
-import { LuArrowUp, LuChevronRight, LuEyeOff, LuMessageCircle, LuMinus, LuSparkles } from "react-icons/lu";
+import { LuArrowUp, LuChevronRight, LuEyeOff, LuMaximize2, LuMessageCircle, LuMinimize2, LuMinus, LuSparkles } from "react-icons/lu";
 import { ExoticMascot } from "./ExoticMascot";
 import {
     ASSISTANT_MESSAGE_LIMIT,
@@ -24,6 +24,7 @@ import "./assistantMotion.css";
 
 export interface AgentAssistantProps {
     initialState?: "open" | "collapsed" | "hidden";
+    initialExpanded?: boolean;
     canWrite?: boolean;
     /** Keeps the visual stories isolated from authenticated services. */
     preview?: boolean;
@@ -58,8 +59,9 @@ const suggestions = [
  * SQL is handled by the server and results are never included in model history.
  * The backend authorizes every operation. This phase only supports reading.
  */
-export function AgentAssistant({ initialState = "collapsed", canWrite = false, preview = false, previewRemainingPercent }: AgentAssistantProps) {
+export function AgentAssistant({ initialState = "collapsed", initialExpanded = false, canWrite = false, preview = false, previewRemainingPercent }: AgentAssistantProps) {
     const [view, setView] = useState(initialState);
+    const [expanded, setExpanded] = useState(initialExpanded && initialState === "open");
     const [draft, setDraft] = useState("");
     const [messages, setMessages] = useState<AssistantHistoryMessage[]>([]);
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
@@ -79,6 +81,7 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
     const conversationRef = useRef<HTMLDivElement>(null);
     const launcherRef = useRef<HTMLButtonElement>(null);
     const restoreRef = useRef<HTMLButtonElement>(null);
+    const expandRef = useRef<HTMLButtonElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const pendingFocus = useRef<"launcher" | "restore" | "input" | null>(null);
     const dragRef = useRef<AssistantDrag | null>(null);
@@ -191,6 +194,7 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
     }, [view, hasConversation, pendingQuestion, messages, proposal?.id, operation?.id, operation?.state, error]);
 
     const minimize = () => {
+        setExpanded(false);
         pendingFocus.current = "launcher";
         setView("collapsed");
     };
@@ -201,6 +205,7 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
     };
 
     const hide = () => {
+        setExpanded(false);
         pendingFocus.current = "restore";
         setView("hidden");
     };
@@ -286,7 +291,13 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
             return;
         }
         if (event.key === "Escape" && view === "open") {
+            event.preventDefault();
             event.stopPropagation();
+            if (expanded) {
+                setExpanded(false);
+                expandRef.current?.focus();
+                return;
+            }
             minimize();
         }
     };
@@ -393,6 +404,7 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
             className={styles.assistantAnchor}
             data-agent-assistant=""
             data-state={view}
+            data-expanded={expanded && view === "open" ? "true" : "false"}
             data-corner={corner}
             data-dragging={dragOffset ? "true" : "false"}
             data-motion-paused={motionPaused || dragOffset ? "true" : "false"}
@@ -422,9 +434,20 @@ export function AgentAssistant({ initialState = "collapsed", canWrite = false, p
                                         <Text className={styles.readOnlyBadge} data-assistant-permission="read">Sólo lectura · productos y materiales</Text>
                                     </Box>
                                 </Box>
-                                <IconButton aria-label="Minimizar asistente" onClick={minimize} className={styles.iconButton} variant="plain">
-                                    <LuMinus aria-hidden="true" />
-                                </IconButton>
+                                <Box display="flex" flexShrink="0" gap="1">
+                                    <IconButton ref={expandRef}
+                                        aria-label={expanded ? "Restaurar tamaño del chat" : "Ampliar chat"}
+                                        title={expanded ? "Restaurar tamaño · Esc" : "Ampliar chat"}
+                                        aria-pressed={expanded}
+                                        aria-controls={panelId}
+                                        onClick={() => { cancelDrag(); setExpanded((current) => !current); }}
+                                        className={styles.iconButton} variant="plain">
+                                        {expanded ? <LuMinimize2 aria-hidden="true" /> : <LuMaximize2 aria-hidden="true" />}
+                                    </IconButton>
+                                    <IconButton aria-label="Minimizar asistente" onClick={minimize} className={styles.iconButton} variant="plain">
+                                        <LuMinus aria-hidden="true" />
+                                    </IconButton>
+                                </Box>
                             </Box>
 
                             <Box px="5" py="2" borderBottomWidth="1px" borderColor="border.subtle" bg="bg.subtle">
