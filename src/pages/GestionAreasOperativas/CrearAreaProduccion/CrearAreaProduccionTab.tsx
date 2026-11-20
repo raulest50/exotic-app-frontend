@@ -19,6 +19,7 @@ function CrearAreaProduccionTab() {
     const [visibilidadMps, setVisibilidadMps] = useState<VisibilidadMps>('SOLO_OP');
     const [alcanceMps, setAlcanceMps] = useState<AlcanceMps>('TODOS');
     const [alcanceEjecucion, setAlcanceEjecucion] = useState<AlcanceEjecucion>('AMBOS');
+    const [requiereEquipoLoteOf, setRequiereEquipoLoteOf] = useState(false);
     const [responsable, setResponsable] = useState<User | null>(null);
     const [categoriasHabilitadas, setCategoriasHabilitadas] = useState<CategoriaHabilitada[]>([]);
     const [isUserPickerOpen, setIsUserPickerOpen] = useState(false);
@@ -47,6 +48,7 @@ function CrearAreaProduccionTab() {
 
     const clearFields = () => {
         setNombre('');
+        setRequiereEquipoLoteOf(false);
         setDescripcion('');
         setVisibilidadMps('SOLO_OP');
         setAlcanceMps('TODOS');
@@ -77,6 +79,7 @@ function CrearAreaProduccionTab() {
             visibilidadMps,
             alcanceMps,
             alcanceEjecucion,
+            requiereEquipoLoteOf,
             responsableId: responsable!.id,
             categoriaIds: categoriasHabilitadas.map((categoria) => categoria.categoriaId),
         };
@@ -229,6 +232,7 @@ function CrearAreaProduccionTab() {
                 </Field.Root>
 
                 <AreaMpsSettings visibilidad={visibilidadMps} alcance={alcanceMps} alcanceEjecucion={alcanceEjecucion}
+                    requiereEquipoLoteOf={requiereEquipoLoteOf} onRequiereEquipoLoteOfChange={setRequiereEquipoLoteOf}
                     onVisibilidadChange={setVisibilidadMps} onAlcanceChange={setAlcanceMps}
                     onAlcanceEjecucionChange={setAlcanceEjecucion} disabled={isSubmitting} />
 

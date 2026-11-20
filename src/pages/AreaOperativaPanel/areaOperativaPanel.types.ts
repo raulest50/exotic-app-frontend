@@ -38,6 +38,7 @@ export interface OrdenFabricacionOperativaDTO {
     unidadMedida: string;
     loteId: number;
     lote: string;
+    loteProvisional?: boolean;
     estadoCalidadLote: string;
     batchRecordId: number;
     batchRecordCodigo: string;
@@ -102,6 +103,24 @@ export interface PoeOperativoDTO {
     version: number;
     nombreArchivo: string;
     contentType: string;
+}
+
+export interface EquipoLoteOfOption {
+    id: string;
+    nombre: string;
+    codigoLoteFabricacion: string | null;
+    tipoRecursoId: number;
+    tipoRecursoNombre: string;
+    lotePrevisto: string | null;
+}
+
+export interface EquiposLoteOfContexto {
+    items: EquipoLoteOfOption[];
+    requiereEquipoLoteOf: boolean;
+    esOperacionSalida: boolean;
+    fechaLote: string | null;
+    loteProvisional: boolean;
+    loteActual: string;
 }
 
 export interface ConsumoSemiterminadoRequerimientoDTO {

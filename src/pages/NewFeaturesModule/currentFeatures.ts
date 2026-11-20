@@ -3,6 +3,8 @@ import semiterminadosAreaGuia from "./assets/areas-semiterminados-manufacturados
 import recursosAreaGuia from "./assets/areas-recursos-produccion-guia.png";
 import loteOfGuia from "./assets/semiterminados-lote-of-guia.png";
 import reordenGuia from "./assets/reorden-seguimiento-correo-guia.png";
+import permisosEspacioGuia from "./assets/permisos-espacio-propio-guia.png";
+import aprobacionesGuia from "./assets/aprobaciones-bandeja-asignadas-guia.png";
 
 export type NewFeatureAccess =
     | { kind: "home" }
@@ -27,7 +29,7 @@ export type NewFeature = {
 };
 
 // Active cut after the presentation on 2026-11-19 (America/Bogota).
-// Curated from frontend 9259494 and backend d0520bc; never restore presented notices.
+// Reviewed through frontend 33f638e and backend d48385b; never restore presented notices.
 // Update ONLY on explicit user request, never automatically for a commit/deploy.
 // Keep one active catalogue; preserve id/revision unless a new notice is requested.
 export const currentFeatures: readonly NewFeature[] = [
@@ -109,6 +111,38 @@ export const currentFeatures: readonly NewFeature[] = [
             src: reordenGuia,
             alt: "Directivas numéricas: 1 porcentaje inicial de seguimiento, ejemplo 80; 2 plazo mínimo del proveedor, ejemplo 10 días; 3 Guardar cambios. Vista de demostración.",
             caption: "1 Ajusta el porcentaje. 2 Define el plazo mínimo para seguimiento anticipado. 3 Guarda los cambios. Valores iniciales de demostración.",
+        },
+    },
+    {
+        id: "permisos-espacio-propio",
+        revision: "1",
+        publishedAt: "2026-11-19T19:39:53-05:00",
+        moduleLabel: "Gestión Humana",
+        modulePath: "/GestionHumana",
+        title: "Tus solicitudes tienen su propio espacio",
+        description: "Permisos reúne ahora únicamente tus solicitudes. La revisión de solicitudes de otras personas pasa a Aprobaciones, con acceso independiente. En tus borradores y solicitudes pendientes, la acción para retirarlas se llama Retirar solicitud.",
+        location: ["Gestión Humana", "Permisos", "Mis solicitudes", "Ver solicitud"],
+        access: { kind: "module", module: "PERSONAL_PLANTA", tabId: "PERMISOS", minLevel: 1, exactTab: true },
+        image: {
+            src: permisosEspacioGuia,
+            alt: "Gestión Humana: 1 pestaña Permisos; 2 Mis solicitudes; 3 Ver solicitud en un borrador propio. Datos ficticios.",
+            caption: "1 Entra a Permisos. 2 Consulta tus solicitudes. 3 Abre su expediente. Guía con datos de demostración.",
+        },
+    },
+    {
+        id: "aprobaciones-bandeja-asignadas",
+        revision: "1",
+        publishedAt: "2026-11-19T19:39:53-05:00",
+        moduleLabel: "Gestión Humana",
+        modulePath: "/GestionHumana",
+        title: "La revisión ahora está en Aprobaciones",
+        description: "Consulta las solicitudes pendientes que tienes asignadas desde una bandeja independiente de tus solicitudes personales. Abre cada expediente con Ver solicitud. Las acciones para resolverlo dependen de tu autorización y de que seas el jefe asignado, distinto del solicitante.",
+        location: ["Gestión Humana", "Aprobaciones", "Pendientes asignadas", "Ver solicitud"],
+        access: { kind: "module", module: "PERSONAL_PLANTA", tabId: "APROBACIONES", minLevel: 1, exactTab: true },
+        image: {
+            src: aprobacionesGuia,
+            alt: "Gestión Humana: 1 pestaña Aprobaciones; 2 Pendientes asignadas; 3 Ver solicitud. Perfil de consulta, sin botones de decisión. Datos ficticios.",
+            caption: "1 Abre Aprobaciones. 2 Revisa tus pendientes asignadas. 3 Consulta el expediente. Guía con datos de demostración.",
         },
     },
 ];

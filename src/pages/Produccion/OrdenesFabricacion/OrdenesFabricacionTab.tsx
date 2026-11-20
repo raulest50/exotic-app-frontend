@@ -152,8 +152,8 @@ export default function OrdenesFabricacionTab() {
             return;
         }
         const numeric = Number(cantidad);
-        if (!selected || !Number.isFinite(numeric) || numeric <= 0 || !lote.trim()) {
-            toast({ title: "Complete semiterminado, cantidad y lote", status: "warning" });
+        if (!selected || !Number.isFinite(numeric) || numeric <= 0) {
+            toast({ title: "Complete semiterminado y cantidad", status: "warning" });
             return;
         }
         if (fechaLanzamiento && fechaFinal && fechaFinal < fechaLanzamiento) {
@@ -165,14 +165,16 @@ export default function OrdenesFabricacionTab() {
             const created = await crearOrdenFabricacion({
                 semiTerminadoId: selected.productoId,
                 cantidadPlanificada: numeric,
-                lote: lote.trim(),
+                lote: lote.trim() || null,
                 fechaLanzamiento: fechaLanzamiento || null,
                 fechaFinalPlanificada: fechaFinal || null,
                 observaciones: observaciones.trim() || null,
             });
             toast({
                 title: `OF ${created.ordenFabricacionId} creada`,
-                description: `Se creó el lote ${created.lote} y el expediente ${created.batchRecordCodigo}.`,
+                description: created.loteProvisional
+                    ? `Se reservó el lote provisional ${created.lote} y se creó el expediente ${created.batchRecordCodigo}.`
+                    : `Se creó el lote ${created.lote} y el expediente ${created.batchRecordCodigo}.`,
                 status: "success",
             });
             setSelected(null);
@@ -282,7 +284,7 @@ export default function OrdenesFabricacionTab() {
 
                     <SimpleGrid columns={{ base: 1, md: 2 }} gap={4} mt={4}>
                         <Field.Root required><Field.Label>Cantidad planificada</Field.Label><Input type="number" min="0.0001" step="0.0001" value={cantidad} onChange={(event) => setCantidad(event.target.value)} /></Field.Root>
-                        <Field.Root required><Field.Label>Número de lote propio</Field.Label><Input maxLength={80} value={lote} onChange={(event) => setLote(event.target.value)} /></Field.Root>
+                        <Field.Root><Field.Label>Lote manual (opcional)</Field.Label><Input maxLength={80} value={lote} onChange={(event) => setLote(event.target.value)} placeholder="Automático si se deja vacío" /><Field.HelperText>Vacío reserva un lote automático; se confirma al completar la salida de la OF. Un lote manual conserva el texto indicado.</Field.HelperText></Field.Root>
                         <Field.Root><Field.Label>Fecha de lanzamiento</Field.Label><Input type="datetime-local" value={fechaLanzamiento} onChange={(event) => setFechaLanzamiento(event.target.value)} /></Field.Root>
                         <Field.Root><Field.Label>Fecha final planificada</Field.Label><Input type="datetime-local" value={fechaFinal} onChange={(event) => setFechaFinal(event.target.value)} /></Field.Root>
                     </SimpleGrid>
@@ -306,7 +308,7 @@ export default function OrdenesFabricacionTab() {
                         <Table.Row key={orden.ordenFabricacionId}>
                             <Table.Cell fontWeight="bold">{orden.ordenFabricacionId}</Table.Cell>
                             <Table.Cell>{orden.semiTerminadoId}<Text fontSize="xs" color="app.textSubtle">{orden.semiTerminadoNombre}</Text></Table.Cell>
-                            <Table.Cell>{orden.lote}</Table.Cell>
+                            <Table.Cell>{orden.lote}{orden.loteProvisional && <Badge ml={2} colorPalette="orange">Provisional</Badge>}</Table.Cell>
                             <Table.Cell>{orden.cantidadPlanificada} {orden.unidadMedida}</Table.Cell>
                             <Table.Cell>{orden.ordenProduccionOrigenId ? `OP-${orden.ordenProduccionOrigenId}` : "Independiente"}</Table.Cell>
                             <Table.Cell><Badge colorPalette={orden.estadoDispensacionMateriales === "COMPLETA" ? "green" : orden.estadoDispensacionMateriales === "PARCIAL" ? "orange" : "gray"}>{orden.estadoDispensacionMateriales}</Badge></Table.Cell>
@@ -339,6 +341,7 @@ export default function OrdenesFabricacionTab() {
                             <Dialog.Body>
                                 {selectedDetail ? (
                                     <VStack align="stretch" gap={5}>
+                                        <HStack flexWrap="wrap"><Text>Lote: {selectedDetail.lote}</Text>{selectedDetail.loteProvisional && <Badge colorPalette="orange">Provisional · se confirma al completar la salida</Badge>}</HStack>
                                         <SimpleGrid columns={{ base: 1, md: 2 }} gap={3}>
                                             <Box borderWidth="1px" borderRadius="md" p={3}><Text fontSize="sm" color="app.textSubtle">Expediente</Text><Text>{selectedDetail.batchRecordCodigo}</Text></Box>
                                             <Box borderWidth="1px" borderRadius="md" p={3}><Text fontSize="sm" color="app.textSubtle">Versión manufactura</Text><Text>v{selectedDetail.manufacturingVersionNumber}</Text></Box>

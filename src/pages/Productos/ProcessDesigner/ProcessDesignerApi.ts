@@ -30,6 +30,13 @@ export type LoadedDraft = GraphCopy & (
 export type ProductPage = { content: Producto[]; totalPages: number };
 export type SearchQuery = { kind: "T" | "S"; searchTerm: string; tipoBusqueda: "NOMBRE" | "ID"; page: number };
 export type Preview = GraphCopy & { dto: ProductoManufacturingDTO; product: DesignerProduct; hasSavedGraph: boolean };
+export interface DesignerResourceOption { id: number; nombre: string; detalle?: string | null }
+
+export async function cargarRecursosArea(areaId: number, signal: AbortSignal): Promise<DesignerResourceOption[]> {
+    const { data } = await axios.get<DesignerResourceOption[]>(
+        endpoints.designer_recursos_area.replace("{areaId}", String(areaId)), { signal, withCredentials: true });
+    return data;
+}
 
 // Importar solo el grafo conserva la unidad del destino y convierte la cantidad,
 // sin reinterpretar, por ejemplo, 500 G como 500 KG ni redondear recetas en silencio.
@@ -116,6 +123,7 @@ function buildPreview(dto: ProductoManufacturingDTO, products: Map<string, Produ
                 nodeType: "PROCESO", frontendId: base.id, posicionX: base.position.x, posicionY: base.position.y,
                 label: node.label, procesoId: node.procesoId, procesoNombre: node.procesoNombre,
                 areaOperativaId: node.areaOperativaId, areaOperativaNombre: node.areaOperativaNombre,
+                recursosProduccionIds: node.recursosProduccionIds ?? [],
                 setUpTime: node.setUpTime, model: node.model, constantSeconds: node.constantSeconds,
                 throughputUnitsPerSec: node.throughputUnitsPerSec, secondsPerUnit: node.secondsPerUnit,
                 secondsPerBatch: node.secondsPerBatch, batchSize: node.batchSize,

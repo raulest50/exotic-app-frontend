@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { Badge, Box, Button, Flex, Heading, Text } from "@chakra-ui/react";
+import { Badge, Box, Button, Checkbox, CloseButton, Dialog, Flex, Heading, Portal, Spinner, Text, VStack } from "@chakra-ui/react";
 import {
     addEdge, useEdgesState, useNodesState,
     type Connection, type Edge, type NodeChange, type ReactFlowInstance,
@@ -15,7 +15,7 @@ import CabeceraDatos, { type DesignerProduct } from "./CabeceraDatos.tsx";
 import { useTabPermission } from "../../../auth/usePermissions.ts";
 import { Modulo } from "../../Usuarios/GestionUsuarios/types.tsx";
 import { listarUnidadesMedidaProducto, unidadesCompatibles } from "../UnidadesMedidaApi.ts";
-import { guardarProducto, importedOutputQuantity, toDesignerPayload, type EditingProduct, type SavedProductSummary } from "./ProcessDesignerApi.ts";
+import { cargarRecursosArea, guardarProducto, importedOutputQuantity, toDesignerPayload, type DesignerResourceOption, type EditingProduct, type SavedProductSummary } from "./ProcessDesignerApi.ts";
 import Validator from "./Validator.tsx";
 import ProcessDesignerCanvas from "./ProcessDesignerCanvas.tsx";
 import LoadTerminadoDialog, { type LoadedDraft } from "./LoadTerminadoDialog.tsx";
@@ -53,6 +53,54 @@ function canConnect(connection: Connection | Edge, nodes: DesignerNode[], edges:
     return true;
 }
 
+function DesignerResourcesDialog({ node, onClose, onSave }: {
+    node: ProcessFlowNode; onClose: () => void; onSave: (ids: number[]) => void;
+}) {
+    const [selected, setSelected] = useState(node.data.proceso.recursosProduccionIds ?? []);
+    const [options, setOptions] = useState<DesignerResourceOption[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [retry, setRetry] = useState(0);
+    const areaId = node.data.proceso.areaOperativaId;
+    useEffect(() => {
+        const controller = new AbortController();
+        setLoading(true); setError("");
+        cargarRecursosArea(areaId, controller.signal)
+            .then(data => { if (!controller.signal.aborted) setOptions(data); })
+            .catch(() => { if (!controller.signal.aborted) setError("No se pudieron consultar los recursos del área. La selección se conserva."); })
+            .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+        return () => controller.abort();
+    }, [areaId, retry]);
+    const unavailable = selected.filter(id => !options.some(option => option.id === id));
+    return <Dialog.Root open size="lg" scrollBehavior="inside" onOpenChange={({ open }) => { if (!open) onClose(); }}>
+        <Portal><Dialog.Backdrop /><Dialog.Positioner><Dialog.Content>
+            <Dialog.Header><Dialog.Title>Recursos previstos para la operación</Dialog.Title></Dialog.Header>
+            <Dialog.CloseTrigger asChild><CloseButton aria-label="Cerrar recursos previstos" /></Dialog.CloseTrigger>
+            <Dialog.Body><VStack align="stretch" gap={3}>
+                <Text fontWeight="semibold">{node.data.proceso.procesoNombre} · {node.data.proceso.areaOperativaNombre}</Text>
+                <Text fontSize="sm" color="fg.muted">Selecciona tipos de recurso para este semiterminado. Una etapa manual puede quedar sin recursos. Esta selección no asigna equipos físicos ni reserva capacidad.</Text>
+                {loading ? <Spinner aria-label="Cargando recursos del área" /> : error ? <>
+                    <Text role="alert" color="fg.error">{error}</Text>
+                    <Button variant="outline" onClick={() => setRetry(value => value + 1)}>Reintentar</Button>
+                </> : <>
+                    {!options.length && <Text>El área aún no tiene tipos de recurso asociados.</Text>}
+                    {options.map(option => <Checkbox.Root key={option.id} checked={selected.includes(option.id)}
+                        onCheckedChange={({ checked }) => setSelected(current => checked
+                            ? [...current.filter(id => id !== option.id), option.id] : current.filter(id => id !== option.id))}>
+                        <Checkbox.HiddenInput /><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>
+                        <Checkbox.Label>{option.nombre}</Checkbox.Label>
+                    </Checkbox.Root>)}
+                    {unavailable.length > 0 && <Text role="alert" color="fg.error">Recursos que ya no pertenecen al área: {unavailable.join(", ")}. Retíralos o revisa el área asignada.</Text>}
+                    {unavailable.map(id => <Button key={id} size="sm" variant="outline" onClick={() => setSelected(current => current.filter(value => value !== id))}>Retirar recurso {id}</Button>)}
+                </>}
+            </VStack></Dialog.Body>
+            <Dialog.Footer><Button variant="outline" onClick={onClose}>Cancelar</Button>
+                <Button colorPalette="teal" disabled={loading || !!error || unavailable.length > 0} onClick={() => onSave(selected)}>Aplicar al nodo</Button>
+            </Dialog.Footer>
+        </Dialog.Content></Dialog.Positioner></Portal>
+    </Dialog.Root>;
+}
+
 export default function ProcessDesignerTab({ isActive, editRequest, onEditRequestLoaded, onCancelEditRequest, onReturnToCatalogue, onSaved }: Props) {
     const permission = useTabPermission(Modulo.PRODUCTOS, "PROCESS_DESIGNER");
     const canSave = permission.ready && permission.nivel >= 2;
@@ -74,6 +122,7 @@ export default function ProcessDesignerTab({ isActive, editRequest, onEditReques
     const [flow, setFlow] = useState<ReactFlowInstance<DesignerNode> | null>(null);
     const [processPickerOpen, setProcessPickerOpen] = useState(false);
     const [areaNodeId, setAreaNodeId] = useState<string | null>(null);
+    const [resourceNodeId, setResourceNodeId] = useState<string | null>(null);
     const [cloneSource, setCloneSource] = useState("");
     const [fitRevision, setFitRevision] = useState(0);
     const [resetRevision, setResetRevision] = useState(0);
@@ -98,7 +147,7 @@ export default function ProcessDesignerTab({ isActive, editRequest, onEditReques
     async function save() {
         if (savingRef.current || !isActive || !canSave || !hasUnsavedChanges) return;
         savingRef.current = true; setSaving(true); setSaveError("");
-        setProcessPickerOpen(false); setAreaNodeId(null);
+        setProcessPickerOpen(false); setAreaNodeId(null); setResourceNodeId(null);
         try {
             const saved = await guardarProducto(product, nodes, edges, editingProduct);
             setProduct(saved.product); setEditingProduct(saved.identity);
@@ -177,7 +226,7 @@ export default function ProcessDesignerTab({ isActive, editRequest, onEditReques
         // Importing only a graph keeps the current destination and its create/edit mode.
         setCloneSource(draft.mode === "edit" ? "" : draft.source);
         nextPosition.current = draft.nodes.filter((n) => n.type === "material" || n.type === "semiterminado").length;
-        setProcessPickerOpen(false); setAreaNodeId(null); setFitRevision((n) => n + 1); setSaveRevision(n => n + 1);
+        setProcessPickerOpen(false); setAreaNodeId(null); setResourceNodeId(null); setFitRevision((n) => n + 1); setSaveRevision(n => n + 1);
     }
 
     function clearDraft() {
@@ -188,7 +237,7 @@ export default function ProcessDesignerTab({ isActive, editRequest, onEditReques
         setNodes([{ id: "target", type: "target", position: { x: 850, y: 180 }, deletable: false, data: { producto: initialProduct } }]);
         setEdges([]);
         setCloneSource(""); nextPosition.current = 0;
-        setProcessPickerOpen(false); setAreaNodeId(null);
+        setProcessPickerOpen(false); setAreaNodeId(null); setResourceNodeId(null);
         setSaveError(""); setResult(null); setEditingProduct(null); setSavedDraft("");
         setSaveRevision(n => n + 1);
         setResetRevision(n => n + 1);
@@ -243,6 +292,7 @@ export default function ProcessDesignerTab({ isActive, editRequest, onEditReques
                 product={product} onProductChange={setProduct} units={units}
                 isActive={isActive} nodes={renderedNodes} edges={edges} hasDraft={hasUnsavedChanges || photoPending} editingProductId={editingProduct?.productoId}
                 onAddProduct={addProduct} onLoad={loadDraft} onClear={clearDraft} onAddProcess={() => setProcessPickerOpen(true)} onAssignArea={setAreaNodeId}
+                onConfigureResources={setResourceNodeId}
                 onRemoveSelection={() => {
                     const removed = new Set(nodes.filter((n) => n.selected && n.type !== "target").map((n) => n.id));
                     setNodes((current) => current.filter((n) => !removed.has(n.id)));
@@ -272,6 +322,15 @@ export default function ProcessDesignerTab({ isActive, editRequest, onEditReques
                     onEditRequestLoaded?.();
                 }} />}
             {processPickerOpen && <ProcesoProduccionPicker isOpen onClose={() => setProcessPickerOpen(false)} onConfirm={addProcesses} alreadySelected={[]} />}
+            {resourceNodeId && isActive && !saving && product.tipo_producto === "S" && product.requiereOrdenFabricacion && (() => {
+                const node = nodes.find((item): item is ProcessFlowNode => item.type === "process" && item.id === resourceNodeId);
+                return node && node.data.proceso.areaOperativaId > 0 ? <DesignerResourcesDialog key={`${node.id}:${node.data.proceso.areaOperativaId}`}
+                    node={node} onClose={() => setResourceNodeId(null)} onSave={ids => {
+                        setNodes(current => current.map(item => item.id === node.id && item.type === "process"
+                            ? { ...item, data: { proceso: { ...item.data.proceso, recursosProduccionIds: ids } } } : item));
+                        setResourceNodeId(null);
+                    }} /> : null;
+            })()}
             {areaNodeId && <AreaPickerGeneric isOpen onClose={() => setAreaNodeId(null)} onSelectArea={(area) => {
                 setNodes((current) => current.map((node) => node.id === areaNodeId && node.type === "process"
                     ? { ...node, data: { proceso: { ...node.data.proceso, areaOperativaId: area.areaId, areaOperativaNombre: area.nombre } } } : node));

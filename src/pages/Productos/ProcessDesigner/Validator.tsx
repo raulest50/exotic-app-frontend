@@ -11,6 +11,7 @@ import EndPointsURL from "../../../api/EndPointsURL.tsx";
 import { validateProductId } from "../productIdUtils.ts";
 import type { DesignerProduct } from "./CabeceraDatos.tsx";
 import type { DesignerNode } from "./ProcessDesignerTab.tsx";
+import { cargarRecursosArea } from "./ProcessDesignerApi.ts";
 
 const endpoints = new EndPointsURL();
 type Check = { label: string; valid: boolean | null };
@@ -62,6 +63,10 @@ function validateDraft(product: DesignerProduct, nodes: DesignerNode[], edges: E
         { label: "Insumos positivos, hasta 12 decimales y unidades compatibles", valid: inputs.length ? inputs.every((n) => amount(n.data.cantidad) && unidadesCompatibles(units, n.data.producto.tipoUnidades).some(u => u.codigo === n.data.unidad)) : null },
         { label: "Insumos distintos del producto destino", valid: inputs.length ? inputs.every((n) => n.data.producto.productoId !== product.productoId) : null },
         { label: "Procesos y áreas asignados", valid: processes.length ? processes.every((n) => positive(n.data.proceso.procesoId) && positive(n.data.proceso.areaOperativaId)) : null },
+        { label: "Referencias de recursos sin repetir y con ID válido", valid: processes.every(node => {
+            const ids = node.data.proceso.recursosProduccionIds ?? [];
+            return ids.every(id => Number.isSafeInteger(id) && id > 0) && new Set(ids).size === ids.length;
+        }) },
         { label: "Un único destino final", valid: targets.length === 1 },
         { label: "Dirección y referencias de conexiones", valid: edges.length ? edges.every((e) => {
             const source = nodes.find((n) => n.id === e.source), target = nodes.find((n) => n.id === e.target);
@@ -91,6 +96,19 @@ export default function Validator({ product, nodes, edges, isActive, units, savi
     const [retry, setRetry] = useState(0);
     const [expanded, setExpanded] = useState(false);
     const [availability, setAvailability] = useState<{ key: string; code: boolean | null; prefix: boolean | null; failed?: boolean; pending?: boolean }>({ key: "", code: null, prefix: null });
+    const [resourceCatalog, setResourceCatalog] = useState<{ key: string; areas: Record<number, number[]>; failed?: boolean }>({ key: "", areas: {} });
+    const resourcesApply = product.tipo_producto === "S" && product.requiereOrdenFabricacion === true;
+    const resourceAreasKey = JSON.stringify([...new Set(nodes.flatMap(node => node.type === "process"
+        && node.data.proceso.recursosProduccionIds?.length && node.data.proceso.areaOperativaId > 0 ? [node.data.proceso.areaOperativaId] : []))].sort((a, b) => a - b));
+    useEffect(() => {
+        if (!isActive || !resourcesApply || resourceAreasKey === "[]") return;
+        const controller = new AbortController();
+        const areaIds: number[] = JSON.parse(resourceAreasKey);
+        Promise.all(areaIds.map(async areaId => [areaId, (await cargarRecursosArea(areaId, controller.signal)).map(option => option.id)] as const))
+            .then(entries => { if (!controller.signal.aborted) setResourceCatalog({ key: resourceAreasKey, areas: Object.fromEntries(entries) }); })
+            .catch(() => { if (!controller.signal.aborted) setResourceCatalog({ key: resourceAreasKey, areas: {}, failed: true }); });
+        return () => controller.abort();
+    }, [isActive, resourcesApply, resourceAreasKey, retry, revision]);
     const editingId = editingProduct?.productoId;
     const editingType = editingProduct?.tipoProducto;
     const key = JSON.stringify([product.productoId, product.prefijoLote ?? "", editingId, editingType, revision]);
@@ -121,6 +139,9 @@ export default function Validator({ product, nodes, edges, isActive, units, savi
         return () => { clearTimeout(timer); controller.abort(); };
     }, [isActive, key, product.productoId, product.tipo_producto, product.prefijoLote, editingId, editingType, retry, revision]);
     const checks = [...validateDraft(product, nodes, edges, units),
+        ...(resourcesApply ? [{ label: "Recursos previstos compatibles con el área de cada operación", valid: resourceAreasKey === "[]" ? true
+            : resourceCatalog.key !== resourceAreasKey || resourceCatalog.failed ? null
+            : nodes.every(node => node.type !== "process" || (node.data.proceso.recursosProduccionIds ?? []).every(id => resourceCatalog.areas[node.data.proceso.areaOperativaId]?.includes(id))) }] : []),
         { label: editingProduct ? "Producto existente e identidad conservada" : "Código disponible en el catálogo", valid: availability.key === key ? availability.code : null },
         ...(product.prefijoLote ? [{ label: "Prefijo disponible", valid: availability.key === key ? availability.prefix : null }] : []),
     ];
@@ -139,7 +160,8 @@ export default function Validator({ product, nodes, edges, isActive, units, savi
             onClick={() => { if (!reason) void onSave(); }}>{editingProduct ? "Guardar cambios" : "Crear producto"}</Button>
         </Flex>
         <Text id={reasonId} fontSize="sm" color="fg.muted" mt="2" role="status">{reason || "La receta está lista para guardar."}</Text>
-        {availability.failed && !saving && <Button size="sm" variant="outline" mt="2" onClick={() => setRetry(n => n + 1)}>Reintentar comprobación</Button>}
+        {(availability.failed || resourcesApply && resourceCatalog.failed) && !saving && <Button size="sm" variant="outline" mt="2" onClick={() => setRetry(n => n + 1)}>Reintentar comprobación</Button>}
+        {resourcesApply && resourceAreasKey !== "[]" && resourceCatalog.key === resourceAreasKey && resourceCatalog.failed && <Text role="alert" color="fg.error">No se pudieron verificar los recursos del área. Reintenta la comprobación antes de guardar.</Text>}
         {error && <Text role="alert" color="red.fg" mt="3">{error}</Text>}
         {result && <OperationResultDialog result={result} onClose={onCloseResult} />}
         {expanded && <>

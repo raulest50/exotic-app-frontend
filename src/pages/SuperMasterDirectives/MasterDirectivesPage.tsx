@@ -8,6 +8,7 @@ import {
     Icon,
     IconButton,
     Input,
+    NativeSelect,
     SimpleGrid,
     Spinner,
     Switch,
@@ -104,6 +105,7 @@ const AREA_OPERATIVA_DIRECTIVE_NAMES = new Set<string>([
 ]);
 
 const PRODUCTION_DIRECTIVE_NAMES = new Set<string>([
+    MASTER_DIRECTIVE_KEYS.OF_LOTE_FECHA_FABRICACION,
     MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED,
     MASTER_DIRECTIVE_KEYS.DISPENSACION_NO_BLOQUEA_INICIO_PRODUCCION,
     MASTER_DIRECTIVE_KEYS.MPS_SEMANAL_DIAS_BLOQUEO_EDICION,
@@ -111,6 +113,8 @@ const PRODUCTION_DIRECTIVE_NAMES = new Set<string>([
 ]);
 
 const PRODUCTION_DIRECTIVE_EXTENDED_HELP: Record<string, string> = {
+    [MASTER_DIRECTIVE_KEYS.OF_LOTE_FECHA_FABRICACION]:
+        "Aplica a nuevas OF. Escoge su fecha real de inicio o de terminación para componer el lote automático al completar la salida. Las OF existentes conservan su criterio de fecha. La vista previa de terminación usa la fecha actual y se confirma al guardar.",
     [MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED]:
         "Aplica unicamente a ordenes nuevas. Al activarse crea expedientes documentales y habilita nuevas OF. Puede apagarse con expedientes abiertos: estos siguen disponibles y las proyecciones pendientes continúan procesándose. No crea expedientes retroactivos.",
     [MASTER_DIRECTIVE_KEYS.DISPENSACION_NO_BLOQUEA_INICIO_PRODUCCION]:
@@ -273,6 +277,9 @@ function getAreaOperativaPanelDirectiveLabel(directive: MasterDirective) {
 }
 
 function getProductionDirectiveLabel(directive: MasterDirective) {
+    if (directive.nombre === MASTER_DIRECTIVE_KEYS.OF_LOTE_FECHA_FABRICACION) {
+        return "Fecha de fabricación del lote OF";
+    }
     if (directive.nombre === MASTER_DIRECTIVE_KEYS.BATCH_RECORD_WORKFLOW_ENABLED) {
         return "Expediente Batch Record y OF";
     }
@@ -443,7 +450,8 @@ export default function MasterDirectivesPage() {
     );
 
     const editableMasterDirectives = useMemo(
-        () => masterDirectives.filter(directive => directive.tipoDato === "NUMERO" || directive.tipoDato === "BOOLEANO"),
+        () => masterDirectives.filter(directive => directive.tipoDato === "NUMERO" || directive.tipoDato === "BOOLEANO"
+            || directive.nombre === MASTER_DIRECTIVE_KEYS.OF_LOTE_FECHA_FABRICACION),
         [masterDirectives]
     );
 
@@ -528,8 +536,9 @@ export default function MasterDirectivesPage() {
     );
 
     const productionDirectives = useMemo(
-        () => [batchRecordWorkflowDirective, dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective, mpsOfDiasBloqueoDirective, mpsOfAgregarSemiterminadosDirective].filter(isPresentDirective),
-        [batchRecordWorkflowDirective, dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective, mpsOfDiasBloqueoDirective, mpsOfAgregarSemiterminadosDirective]
+        () => [batchRecordWorkflowDirective, dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective, mpsOfDiasBloqueoDirective, mpsOfAgregarSemiterminadosDirective,
+            findDirectiveByName(masterDirectives, MASTER_DIRECTIVE_KEYS.OF_LOTE_FECHA_FABRICACION)].filter(isPresentDirective),
+        [batchRecordWorkflowDirective, dispensacionNoBloqueaDirective, mpsDiasBloqueoDirective, mpsAgregarTerminadosAprobadoDirective, mpsOfDiasBloqueoDirective, mpsOfAgregarSemiterminadosDirective, masterDirectives]
     );
 
     const panelDirectives = useMemo(
@@ -559,8 +568,12 @@ export default function MasterDirectivesPage() {
                 errors[directive.id] = bounds.error;
             }
         });
+        const fechaLote = masterDirectives.find(directive => directive.nombre === MASTER_DIRECTIVE_KEYS.OF_LOTE_FECHA_FABRICACION);
+        if (fechaLote && !["INICIO", "TERMINACION"].includes((directiveDrafts[fechaLote.id] ?? fechaLote.valor).trim())) {
+            errors[fechaLote.id] = "Seleccione inicio o terminación real de la OF.";
+        }
         return errors;
-    }, [numericEditableDirectives, directiveDrafts]);
+    }, [numericEditableDirectives, directiveDrafts, masterDirectives]);
 
     const masterDirectivesHaveChanges = editableMasterDirectives.some(directive => {
         const value = directiveDrafts[directive.id] ?? directive.valor;
@@ -961,7 +974,20 @@ export default function MasterDirectivesPage() {
                                                     )}
                                                 </Table.Cell>
                                                 <Table.Cell>
-                                                    {directive.tipoDato === "BOOLEANO" ? (
+                                                    {directive.nombre === MASTER_DIRECTIVE_KEYS.OF_LOTE_FECHA_FABRICACION ? (
+                                                        <Field.Root invalid={Boolean(error)} maxW="300px">
+                                                            <Field.Label>Fecha real que compone el lote</Field.Label>
+                                                            <NativeSelect.Root>
+                                                                <NativeSelect.Field value={value} onChange={event => updateDirectiveDraft(directive.id, event.target.value)}>
+                                                                    <option value="INICIO">Inicio real de la OF</option>
+                                                                    <option value="TERMINACION">Terminación real de la OF</option>
+                                                                </NativeSelect.Field>
+                                                                <NativeSelect.Indicator />
+                                                            </NativeSelect.Root>
+                                                            {error && <Field.ErrorText>{error}</Field.ErrorText>}
+                                                            {hasRowChange && <Field.HelperText>Cambio pendiente de guardar.</Field.HelperText>}
+                                                        </Field.Root>
+                                                    ) : directive.tipoDato === "BOOLEANO" ? (
                                                         <HStack>
                                                             <Switch.Root
                                                                 checked={isBooleanEnabled(value)}

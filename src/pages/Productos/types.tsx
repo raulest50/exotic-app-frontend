@@ -106,6 +106,7 @@ export interface NodoInsumoDTO extends ProcesoFabricacionNodoBase {
 }
 
 export interface NodoProcesoDTO extends ProcesoFabricacionNodoBase {
+    recursosProduccionIds?: number[];
     nodeType: "PROCESO";
     procesoId: number;
     procesoNombre?: string;

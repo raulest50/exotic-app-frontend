@@ -88,6 +88,7 @@ export default function AreaOperativaFabricacionDetailDrawer({
                                     <Box>
                                         <HStack gap={2} flexWrap="wrap">
                                             <Badge colorPalette="purple">OF-{detail.ordenFabricacionId}</Badge>
+                                            {detail.loteProvisional && <Badge colorPalette="orange">Lote provisional</Badge>}
                                             <Badge colorPalette="gray" variant="outline">{detail.lote}</Badge>
                                             <Badge colorPalette="blue">{detail.estado}</Badge>
                                         </HStack>

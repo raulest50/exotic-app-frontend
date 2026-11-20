@@ -22,6 +22,7 @@ export default class EndPointsURL{
     public create_producto_manufacturing: string;
     public get_producto_manufacturing: string;
     public update_producto_manufacturing: string;
+    public designer_recursos_area: string;
     public force_delete_semiter: string;
     public mod_mnfacturing_semiter: string;
     public insumos_with_stock:string;
@@ -268,6 +269,7 @@ export default class EndPointsURL{
     public incorporar_activos_fijos: string;
     public get_activo_fijo: string;
     public update_activo_fijo: string;
+    public update_activo_fijo_codigo_lote_fabricacion: string;
     public search_activos_fijos: string;
 
     // just in case of need
@@ -337,6 +339,7 @@ export default class EndPointsURL{
     public area_operativa_panel_iniciar_operacion_fabricacion: string;
     public area_operativa_panel_pausar_operacion_fabricacion: string;
     public area_operativa_panel_completar_operacion_fabricacion: string;
+    public area_operativa_panel_equipos_lote_fabricacion: string;
     public area_operativa_panel_mps_semanal: string;
     public area_operativa_panel_mps_semanal_odps: string;
     public area_operativa_panel_mps_semanal_actual: string;
@@ -680,6 +683,7 @@ export default class EndPointsURL{
         this.create_producto_manufacturing = `${domain}/${productos_res}/manufacturing`;
         this.get_producto_manufacturing = `${domain}/${productos_res}/manufacturing/{productoId}`;
         this.update_producto_manufacturing = `${domain}/${productos_res}/manufacturing/{productoId}`;
+        this.designer_recursos_area = `${domain}/${productos_res}/manufacturing/designer/areas/{areaId}/recursos-produccion`;
         this.force_delete_semiter = `${domain}/${semiter_res}/force_deletion/{productoId}`;
         this.mod_mnfacturing_semiter = `${domain}/${semiter_res}/mod_mnfacturing_semiter`;
         this.insumos_with_stock = `${domain}/${productos_res}/{id}/insumos_with_stock`;
@@ -949,6 +953,7 @@ export default class EndPointsURL{
         this.incorporar_activos_fijos = `${domain}/${activos_fijos_res}/incorporar`;
         this.get_activo_fijo = `${domain}/${activos_fijos_res}/{id}`;
         this.update_activo_fijo = `${domain}/${activos_fijos_res}/{id}`;
+        this.update_activo_fijo_codigo_lote_fabricacion = `${domain}/${activos_fijos_res}/{id}/codigo-lote-fabricacion`;
         this.search_activos_fijos = `${domain}/${activos_fijos_res}/search`;
 
         // notifications endpoint
@@ -1025,6 +1030,7 @@ export default class EndPointsURL{
         this.area_operativa_panel_iniciar_operacion_fabricacion = `${domain}/${area_operativa_panel_res}/ordenes-fabricacion/operaciones/{operacionId}/iniciar`;
         this.area_operativa_panel_pausar_operacion_fabricacion = `${domain}/${area_operativa_panel_res}/ordenes-fabricacion/operaciones/{operacionId}/pausar`;
         this.area_operativa_panel_completar_operacion_fabricacion = `${domain}/${area_operativa_panel_res}/ordenes-fabricacion/operaciones/{operacionId}/completar`;
+        this.area_operativa_panel_equipos_lote_fabricacion = `${domain}/${area_operativa_panel_res}/ordenes-fabricacion/operaciones/{operacionId}/equipos-lote`;
         this.area_operativa_panel_mps_semanal = `${domain}/${area_operativa_panel_res}/mps-semanal`;
         this.area_operativa_panel_mps_semanal_odps = `${domain}/${area_operativa_panel_res}/mps-semanal/odps`;
         this.area_operativa_panel_mps_semanal_actual = `${domain}/${area_operativa_panel_res}/mps-semanal/actual`;

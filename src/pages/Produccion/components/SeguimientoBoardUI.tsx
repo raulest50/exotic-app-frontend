@@ -313,6 +313,7 @@ function SeguimientoOrdenCardContent({
                     <Badge colorPalette="gray" variant="outline" px={2} py={1}>
                         {card.loteAsignado || "Sin lote"}
                     </Badge>
+                    {isOrdenFabricacion(card) && card.loteProvisional && <Badge colorPalette="orange">Provisional</Badge>}
                 </HStack>
                 <Text fontSize="xs" color="app.textSubtle" lineClamp={1}>
                     {card.nodeLabel || "Sin nodo"}

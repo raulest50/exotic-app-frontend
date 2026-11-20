@@ -32,6 +32,7 @@ export default function TablaAreasOperativas({ areas, loading, onVerDetalle }: T
                             <Table.ColumnHeader>Descripción</Table.ColumnHeader>
                             <Table.ColumnHeader>Responsable</Table.ColumnHeader>
                             <Table.ColumnHeader>Ejecución</Table.ColumnHeader>
+                            <Table.ColumnHeader>Equipo en salida OF</Table.ColumnHeader>
                             <Table.ColumnHeader textAlign="center">Acciones</Table.ColumnHeader>
                         </Table.Row>
                     </Table.Header>
@@ -53,6 +54,7 @@ export default function TablaAreasOperativas({ areas, loading, onVerDetalle }: T
                                 <Table.Cell>
                                     {ALCANCE_EJECUCION_LABELS[isAlmacenGeneralArea(area) ? 'AMBOS' : area.alcanceEjecucion ?? 'AMBOS']}
                                 </Table.Cell>
+                                <Table.Cell>{isAlmacenGeneralArea(area) || area.alcanceEjecucion === 'SOLO_OP' ? '—' : area.requiereEquipoLoteOf ? 'Obligatorio' : 'Opcional'}</Table.Cell>
                                 <Table.Cell>
                                     <Flex justify="center">
                                         <Button

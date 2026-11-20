@@ -36,6 +36,7 @@ export default function ProcessNode({ data, selected, isConnectable }: NodeProps
             <Stack p="3" gap="2" bg="bg.subtle" borderTopWidth="2px" textAlign="left" fontWeight="bold">
                 {process.procesoNombre && <Flex align="center" gap="2"><Icon flexShrink="0" aria-hidden="true" asChild><BiRename /></Icon><Text overflowWrap="anywhere">{process.procesoNombre}</Text></Flex>}
                 {process.areaOperativaNombre && <Text overflowWrap="anywhere">Área: {process.areaOperativaNombre}</Text>}
+                {!!process.recursosProduccionIds?.length && <Text fontSize="sm">Recursos previstos: {process.recursosProduccionIds.length}</Text>}
                 {process.setUpTime != null && <Flex align="center" gap="2"><Icon flexShrink="0" color="orange.500" aria-hidden="true" asChild><MdSettings /></Icon><Text>Setup: {process.setUpTime} seg</Text></Flex>}
                 {process.model && <Flex align="center" gap="2" flexWrap="wrap"><Icon aria-hidden="true" asChild><PiClockCountdownFill /></Icon><Text>Modelo:</Text><Badge colorPalette="teal">{process.model}</Badge></Flex>}
                 {parameters.map((parameter) => <Text key={parameter} fontSize="sm">{parameter}</Text>)}

@@ -65,6 +65,11 @@ Mientras la novedad esté dentro de su plazo de vigencia:
   Lote OF es una referencia; asociaciones no reservan capacidad; correo depende
   de configuración y destinatarios, sin envío instantáneo ni tablas en la campana.
   La historia aislada usa ejemplos propios; el catálogo real es `currentFeatures.ts`.
+- Ampliación del mismo corte: frontend `33f638e`, backend `d48385b`.
+  Se añaden dos avisos por la separación Permisos/Aprobaciones, cada uno con
+  acceso exacto a su pestaña. Las cinco entradas previas conservan fechas y revisiones.
+  Solicitar, firmar y retirar ya existían: anunciar el nuevo espacio, sin repetir
+  el aviso original retirado. Omitir código de lote del activo mientras no tenga UI.
 - Imágenes: capturar componentes reales en navegador oculto con datos ficticios,
   sin escritorio, cuentas personales ni escrituras de negocio. Conservar origen y
   guía numerada en `assets/`; revisar que la edición no cambie textos ni controles.

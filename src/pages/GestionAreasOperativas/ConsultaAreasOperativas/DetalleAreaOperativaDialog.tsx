@@ -219,6 +219,7 @@ export default function DetalleAreaOperativaDialog({
     const [editVisibilidadMps, setEditVisibilidadMps] = useState<VisibilidadMps>('SOLO_OP');
     const [editAlcanceMps, setEditAlcanceMps] = useState<AlcanceMps>('TODOS');
     const [editAlcanceEjecucion, setEditAlcanceEjecucion] = useState<AlcanceEjecucion>('AMBOS');
+    const [editRequiereEquipoLoteOf, setEditRequiereEquipoLoteOf] = useState(false);
     const [editResponsable, setEditResponsable] = useState<User | null>(null);
     const [editCategoriasHabilitadas, setEditCategoriasHabilitadas] = useState<CategoriaHabilitada[]>([]);
     const [isUserPickerOpen, setIsUserPickerOpen] = useState(false);
@@ -301,6 +302,7 @@ export default function DetalleAreaOperativaDialog({
         setEditVisibilidadMps(area.visibilidadMps ?? 'SOLO_OP');
         setEditAlcanceMps(area.alcanceMps ?? 'TODOS');
         setEditAlcanceEjecucion(area.alcanceEjecucion ?? 'AMBOS');
+        setEditRequiereEquipoLoteOf(area.requiereEquipoLoteOf ?? false);
         setResponsableError(null);
         setIsEditing(true);
     };
@@ -314,6 +316,7 @@ export default function DetalleAreaOperativaDialog({
         editVisibilidadMps !== (area.visibilidadMps ?? 'SOLO_OP') ||
         editAlcanceMps !== (area.alcanceMps ?? 'TODOS') ||
         editAlcanceEjecucion !== (area.alcanceEjecucion ?? 'AMBOS') ||
+        editRequiereEquipoLoteOf !== (area.requiereEquipoLoteOf ?? false) ||
         editNombre !== area.nombre ||
         editDescripcion !== (area.descripcion || '') ||
         editResponsable?.id !== area.responsableArea?.id ||
@@ -369,6 +372,7 @@ export default function DetalleAreaOperativaDialog({
             visibilidadMps: editVisibilidadMps,
             alcanceMps: editAlcanceMps,
             alcanceEjecucion: editAlcanceEjecucion,
+            requiereEquipoLoteOf: editRequiereEquipoLoteOf,
             responsableId: editResponsable.id,
             categoriaIds: editCategoriasHabilitadas.map((categoria) => categoria.categoriaId),
             categoriasHabilitadas: editCategoriasHabilitadas.map((categoria) => ({
@@ -628,6 +632,8 @@ export default function DetalleAreaOperativaDialog({
                                                         visibilidad={isEditing ? editVisibilidadMps : area.visibilidadMps ?? 'SOLO_OP'}
                                                         alcance={isEditing ? editAlcanceMps : area.alcanceMps ?? 'TODOS'}
                                                         alcanceEjecucion={isSpecialSystemArea ? 'AMBOS' : isEditing ? editAlcanceEjecucion : area.alcanceEjecucion ?? 'AMBOS'}
+                                                        requiereEquipoLoteOf={!isSpecialSystemArea && (isEditing ? editRequiereEquipoLoteOf : area.requiereEquipoLoteOf ?? false)}
+                                                        onRequiereEquipoLoteOfChange={setEditRequiereEquipoLoteOf}
                                                         readOnly={!isEditing || isSpecialSystemArea} disabled={isSaving}
                                                         onVisibilidadChange={setEditVisibilidadMps} onAlcanceChange={setEditAlcanceMps}
                                                         onAlcanceEjecucionChange={setEditAlcanceEjecucion} />

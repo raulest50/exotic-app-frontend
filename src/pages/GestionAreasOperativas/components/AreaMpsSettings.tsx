@@ -1,4 +1,4 @@
-import { Box, Field, NativeSelect, SimpleGrid, Text, VStack } from "@chakra-ui/react";
+import { Box, Field, NativeSelect, SimpleGrid, Switch, Text, VStack } from "@chakra-ui/react";
 import { useId } from "react";
 import {
     ALCANCE_EJECUCION_LABELS, ALCANCE_MPS_LABELS, VISIBILIDAD_MPS_LABELS,
@@ -9,14 +9,16 @@ interface Props {
     visibilidad: VisibilidadMps;
     alcance: AlcanceMps;
     alcanceEjecucion: AlcanceEjecucion;
+    requiereEquipoLoteOf?: boolean;
     readOnly?: boolean;
     disabled?: boolean;
     onVisibilidadChange?: (value: VisibilidadMps) => void;
     onAlcanceChange?: (value: AlcanceMps) => void;
     onAlcanceEjecucionChange?: (value: AlcanceEjecucion) => void;
+    onRequiereEquipoLoteOfChange?: (value: boolean) => void;
 }
 
-export default function AreaMpsSettings({ visibilidad, alcance, alcanceEjecucion, readOnly, disabled, onVisibilidadChange, onAlcanceChange, onAlcanceEjecucionChange }: Props) {
+export default function AreaMpsSettings({ visibilidad, alcance, alcanceEjecucion, requiereEquipoLoteOf = false, readOnly, disabled, onVisibilidadChange, onAlcanceChange, onAlcanceEjecucionChange, onRequiereEquipoLoteOfChange }: Props) {
     const id = useId();
     return (
         <VStack align="stretch" gap={5}>
@@ -27,13 +29,29 @@ export default function AreaMpsSettings({ visibilidad, alcance, alcanceEjecucion
                     {readOnly ? <Text>{ALCANCE_EJECUCION_LABELS[alcanceEjecucion]}</Text> : (
                         <NativeSelect.Root>
                             <NativeSelect.Field id={`${id}-ejecucion`} value={alcanceEjecucion}
-                                onChange={e => onAlcanceEjecucionChange?.(e.target.value as AlcanceEjecucion)}>
+                                onChange={e => {
+                                    const next = e.target.value as AlcanceEjecucion;
+                                    onAlcanceEjecucionChange?.(next);
+                                    if (next === "SOLO_OP") onRequiereEquipoLoteOfChange?.(false);
+                                }}>
                                 {Object.entries(ALCANCE_EJECUCION_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                             </NativeSelect.Field>
                             <NativeSelect.Indicator />
                         </NativeSelect.Root>
                     )}
                     <Field.HelperText>Aplica a nuevas órdenes. Las órdenes existentes conservan su flujo. Es independiente de los MPS que consulta el área.</Field.HelperText>
+                </Field.Root>
+                <Field.Root mt={4} disabled={disabled || alcanceEjecucion === "SOLO_OP"}>
+                    <Field.Label htmlFor={`${id}-equipo-of`}>Equipo para lote OF</Field.Label>
+                    {readOnly ? <Text>{alcanceEjecucion === "SOLO_OP" ? "No aplica" : requiereEquipoLoteOf ? "Obligatorio" : "Opcional"}</Text> : (
+                        <Switch.Root checked={requiereEquipoLoteOf} disabled={disabled || alcanceEjecucion === "SOLO_OP"}
+                            onCheckedChange={({ checked }) => onRequiereEquipoLoteOfChange?.(checked)}>
+                            <Switch.HiddenInput id={`${id}-equipo-of`} />
+                            <Switch.Control><Switch.Thumb /></Switch.Control>
+                            <Switch.Label>Exigir equipo al completar la operación de salida de una OF</Switch.Label>
+                        </Switch.Root>
+                    )}
+                    <Field.HelperText>Aplica a nuevas OF, únicamente en la salida del proceso. Las OF existentes conservan su configuración y las OP no solicitan equipo. Al escoger Solo OP, se desactiva este requisito.</Field.HelperText>
                 </Field.Root>
             </Box>
             <VStack align="stretch" gap={3} borderTopWidth="1px" borderColor="app.border" pt={4}>

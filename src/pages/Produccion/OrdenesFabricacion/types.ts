@@ -9,7 +9,7 @@ export interface SemiterminadoOrdenFabricacionOption {
 export interface OrdenFabricacionRequest {
     semiTerminadoId: string;
     cantidadPlanificada: number;
-    lote: string;
+    lote?: string | null;
     fechaLanzamiento?: string | null;
     fechaFinalPlanificada?: string | null;
     observaciones?: string | null;
@@ -26,6 +26,7 @@ export interface OrdenFabricacion {
     unidadMedida: string;
     loteId: number;
     lote: string;
+    loteProvisional?: boolean;
     estadoCalidadLote: string;
     batchRecordId: number;
     batchRecordCodigo: string;

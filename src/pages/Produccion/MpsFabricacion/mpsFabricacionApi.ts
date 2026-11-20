@@ -79,6 +79,7 @@ export interface MpsOfOrden {
     cantidadPlanificada: number;
     unidadMedida: string;
     lote: string | null;
+    loteProvisional?: boolean;
     estado: OrdenFabricacion["estado"];
     fechaInicioSemana: string;
     usaFechaCreacion: boolean;

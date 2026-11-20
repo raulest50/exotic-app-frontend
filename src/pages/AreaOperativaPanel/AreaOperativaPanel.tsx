@@ -9,7 +9,7 @@ import {
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
-import { CloseButton, Alert, Badge, Box, Button, ButtonGroup, Flex, Grid, HStack, Heading, Input, InputGroup, NumberInput, SimpleGrid, Spinner, Tabs, Text, Textarea, VStack, useDisclosure, Field, Dialog, Portal } from "@chakra-ui/react";
+import { CloseButton, Alert, Badge, Box, Button, ButtonGroup, Flex, Grid, HStack, Heading, Input, InputGroup, NativeSelect, NumberInput, SimpleGrid, Spinner, Tabs, Text, Textarea, VStack, useDisclosure, Field, Dialog, Portal } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
 import {
     FiArchive,
@@ -49,6 +49,7 @@ import AreaOperativaMpsSemanalTab from "./AreaOperativaMpsSemanalTab.tsx";
 import MpsFabricacionPanel from "../Produccion/MpsFabricacion/MpsFabricacionPanel";
 import type {
     AreaOperativaOrdenDetalleDTO,
+    EquiposLoteOfContexto,
     OrdenFabricacionOperativaDTO,
     PoeViewerTarget,
 } from "./areaOperativaPanel.types.ts";
@@ -322,6 +323,11 @@ export default function AreaOperativaPanel() {
     const [cantidadProducida, setCantidadProducida] = useState("");
     const [fechaVencimiento, setFechaVencimiento] = useState("");
     const [motivoDiferenciaCantidad, setMotivoDiferenciaCantidad] = useState("");
+    const [activoFijoId, setActivoFijoId] = useState("");
+    const [equiposLote, setEquiposLote] = useState<EquiposLoteOfContexto | null>(null);
+    const [equiposLoteLoading, setEquiposLoteLoading] = useState(false);
+    const [equiposLoteError, setEquiposLoteError] = useState("");
+    const [equiposLoteRetry, setEquiposLoteRetry] = useState(0);
     const [submitting, setSubmitting] = useState(false);
     const [preparacionDespeje, setPreparacionDespeje] = useState<PreparacionDespeje | null>(null);
     const [despejeBusy, setDespejeBusy] = useState(false);
@@ -334,6 +340,23 @@ export default function AreaOperativaPanel() {
     const [detail, setDetail] = useState<AreaOperativaOrdenDetalleDTO | null>(null);
     const [fabricacionDetail, setFabricacionDetail] = useState<OrdenFabricacionOperativaDTO | null>(null);
     const [poeViewerTarget, setPoeViewerTarget] = useState<PoeViewerTarget | null>(null);
+
+    const completarOperacionOfId = isActionOpen && selectedAction === "completar" && selectedOrden?.tipoOrden === "OF"
+        ? selectedOrden.operacionFabricacionId : null;
+    useEffect(() => {
+        if (!completarOperacionOfId) return;
+        const controller = new AbortController();
+        setEquiposLote(null); setEquiposLoteLoading(true); setEquiposLoteError("");
+        axios.get<EquiposLoteOfContexto>(endpoints.area_operativa_panel_equipos_lote_fabricacion
+            .replace("{operacionId}", String(completarOperacionOfId)), { signal: controller.signal, withCredentials: true })
+            .then(({ data }) => { if (!controller.signal.aborted) {
+                setEquiposLote(data);
+                setActivoFijoId(current => data.items.some(item => item.id === current && /^\d{2}$/.test(item.codigoLoteFabricacion ?? "")) ? current : "");
+            } })
+            .catch(error => { if (!controller.signal.aborted) setEquiposLoteError(getActionErrorMessage(error)); })
+            .finally(() => { if (!controller.signal.aborted) setEquiposLoteLoading(false); });
+        return () => controller.abort();
+    }, [completarOperacionOfId, equiposLoteRetry]);
 
     const scrollToElement = useCallback((element: HTMLDivElement | null) => {
         element?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -653,6 +676,7 @@ export default function AreaOperativaPanel() {
         setCantidadProducida("");
         setFechaVencimiento("");
         setMotivoDiferenciaCantidad("");
+        setActivoFijoId(""); setEquiposLote(null); setEquiposLoteError("");
         onActionOpen();
     };
 
@@ -741,6 +765,11 @@ export default function AreaOperativaPanel() {
         const actionMeta = getActionMeta(selectedAction);
         const isFinalCompletion = selectedAction === "completar" && selectedOrden.esNodoFinal;
         const isFabricacion = selectedOrden.tipoOrden === "OF";
+        if (isFabricacion && selectedAction === "completar" && (!equiposLote || equiposLoteLoading || equiposLoteError
+            || equiposLote.esOperacionSalida && equiposLote.requiereEquipoLoteOf && !activoFijoId)) {
+            toast({ title: "Revise la identificación del lote OF", description: equiposLoteError || "Espere la consulta y seleccione el equipo si el área lo exige.", status: "warning" });
+            return;
+        }
         const parsedCantidad = Number(cantidadProducida);
         if (isFinalCompletion && (!Number.isFinite(parsedCantidad) || parsedCantidad <= 0)) {
             toast({
@@ -778,6 +807,7 @@ export default function AreaOperativaPanel() {
                                 ? fechaVencimiento : null,
                             motivoDiferenciaCantidad: isFinalCompletion
                                 ? motivoDiferenciaCantidad.trim() || null : null,
+                            activoFijoId: equiposLote?.esOperacionSalida ? activoFijoId || null : null,
                         }
                         : { observaciones: observaciones.trim() || null },
                     { withCredentials: true },
@@ -1127,6 +1157,7 @@ export default function AreaOperativaPanel() {
                                                         : `OP-${selectedOrden.ordenId}`}
                                                 </Badge>
                                                 <Text>{selectedOrden.loteAsignado || "Sin lote"}</Text>
+                                                {selectedOrden.tipoOrden === "OF" && selectedOrden.loteProvisional && <Badge colorPalette="orange">Provisional</Badge>}
                                             </HStack>
                                         </Box>
                                         <Box>
@@ -1185,6 +1216,32 @@ export default function AreaOperativaPanel() {
                                                 </Field.HelperText>
                                             </Field.Root>
                                         ) : null}
+                                        {selectedAction === "completar" && selectedOrden.tipoOrden === "OF" && <>
+                                            {equiposLoteLoading && <HStack><Spinner size="sm" /><Text>Consultando identificación del lote…</Text></HStack>}
+                                            {equiposLoteError && <Box role="alert"><Text color="fg.error">{equiposLoteError}</Text><Button mt={2} size="sm" variant="outline" onClick={() => setEquiposLoteRetry(value => value + 1)}>Reintentar consulta de equipos</Button></Box>}
+                                            {equiposLote?.esOperacionSalida && <VStack align="stretch" gap={3} borderWidth="1px" rounded="md" p={3}>
+                                                <Field.Root required={equiposLote.requiereEquipoLoteOf}>
+                                                    <Field.Label>Equipo utilizado para fabricación</Field.Label>
+                                                    <NativeSelect.Root disabled={submitting}>
+                                                        <NativeSelect.Field value={activoFijoId} onChange={event => setActivoFijoId(event.target.value)}>
+                                                            <option value="">{equiposLote.requiereEquipoLoteOf ? "Seleccione un equipo" : "Sin equipo (opcional)"}</option>
+                                                            {equiposLote.items.map(item => <option key={item.id} value={item.id} disabled={!/^\d{2}$/.test(item.codigoLoteFabricacion ?? "")}>
+                                                                {item.nombre} · {item.tipoRecursoNombre} · {item.codigoLoteFabricacion ?? "sin código"}
+                                                            </option>)}
+                                                        </NativeSelect.Field><NativeSelect.Indicator />
+                                                    </NativeSelect.Root>
+                                                    <Field.HelperText>Solo se ofrece en la salida del proceso. El código del equipo debe tener dos dígitos, incluidos los ceros iniciales.</Field.HelperText>
+                                                </Field.Root>
+                                                {!equiposLote.items.some(item => /^\d{2}$/.test(item.codigoLoteFabricacion ?? "")) && <Text color="fg.warning" fontSize="sm">No hay equipos con código válido entre los recursos de esta operación. Configure el activo y vuelva a consultar.</Text>}
+                                                <Box role="status" aria-live="polite">
+                                                    <Text fontWeight="semibold">Lote previsto: {equiposLote.items.find(item => item.id === activoFijoId)?.lotePrevisto || equiposLote.loteActual}</Text>
+                                                    <Text fontSize="sm">Fecha de fabricación: {equiposLote.fechaLote ? equiposLote.fechaLote.slice(0, 10).split("-").reverse().join("/") : "Se confirma al completar"}.</Text>
+                                                    <Text fontSize="sm" color="fg.muted">La identificación se confirma al guardar. La fecha de terminación usa el momento real del cierre.</Text>
+                                                    {!activoFijoId && equiposLote.loteProvisional && <Text fontSize="sm" color="fg.muted">Si el área permite completar sin seleccionar equipo, se conservará el número actual del lote.</Text>}
+                                                </Box>
+                                                <Button size="sm" variant="outline" alignSelf="start" disabled={submitting} onClick={() => setEquiposLoteRetry(value => value + 1)}>Actualizar equipos y vista previa</Button>
+                                            </VStack>}
+                                        </>}
                                         {selectedAction === "completar"
                                             && selectedOrden.esNodoFinal
                                             && selectedOrden.tipoOrden === "OF" ? (
@@ -1246,6 +1303,8 @@ export default function AreaOperativaPanel() {
                                     loading={submitting}
                                     disabled={
                                         boardSnapshotStale
+                                        || (selectedAction === "completar" && selectedOrden?.tipoOrden === "OF" && (equiposLoteLoading || !!equiposLoteError || !equiposLote
+                                            || equiposLote.esOperacionSalida && equiposLote.requiereEquipoLoteOf && !activoFijoId))
                                         || despejeBusy
                                         || (selectedAction === "iniciar" && (despejeDirty || (preparacionDespeje !== null
                                             && !preparacionDespeje.puedeIniciar

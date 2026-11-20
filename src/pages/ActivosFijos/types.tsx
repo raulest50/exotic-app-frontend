@@ -36,6 +36,7 @@ export interface MantenimientoActivo{}
 
 export interface ActivoFijo {
     id: string;
+    codigoLoteFabricacion?: string | null;
     nombre: string; // nombre que se le desea asignar en el sistema
     brand?: string; // ejemplo dell, fluke, lenovo etc. puede ser el mismo o diferente del proveedor segun el caso
     url?: string; // ruta ficha tecnia, la establece el backend con el multiparfile adjunto.

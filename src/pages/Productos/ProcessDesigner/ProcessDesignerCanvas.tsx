@@ -63,6 +63,7 @@ interface Props {
     onClear: () => void;
     onAddProcess: () => void;
     onAssignArea: (nodeId: string) => void;
+    onConfigureResources: (nodeId: string) => void;
     onRemoveSelection: () => void;
     onNodesChange: (changes: NodeChange<DesignerNode>[]) => void;
     onEdgesChange: (changes: EdgeChange<Edge>[]) => void;
@@ -73,7 +74,7 @@ interface Props {
 
 export default function ProcessDesignerCanvas({
     isActive, product, onProductChange, units, nodes, edges, hasDraft, editingProductId, onAddProduct, onLoad, onClear, onAddProcess, onAssignArea,
-    onRemoveSelection, onNodesChange, onEdgesChange, onInit, isValidConnection, onConnect,
+    onConfigureResources, onRemoveSelection, onNodesChange, onEdgesChange, onInit, isValidConnection, onConnect,
 }: Props) {
     const { colorMode } = useColorMode();
     const contentId = useId();
@@ -229,10 +230,14 @@ export default function ProcessDesignerCanvas({
                         <Button size="sm" colorPalette="teal" onClick={onAddProcess}>Agregar proceso</Button>
                         <Button size="sm" variant="outline" disabled={selectedProcesses.length !== 1}
                             onClick={() => onAssignArea(selectedProcesses[0].id)}>Asignar área</Button>
+                        <Button size="sm" variant="outline" disabled={product.tipo_producto !== "S" || !product.requiereOrdenFabricacion
+                            || selectedProcesses.length !== 1 || !selectedProcesses[0].data.proceso.areaOperativaId}
+                            onClick={() => onConfigureResources(selectedProcesses[0].id)}>Recursos previstos OF</Button>
                         <Button size="sm" variant="outline" disabled={!hasSelection} onClick={onRemoveSelection}>Quitar selección</Button>
                     </Flex>
                     <Text px="3" py="1" fontSize="xs" color="fg.muted">
                         Conecta insumos → procesos → destino. Selecciona un proceso para asignarle un área.
+                        {product.tipo_producto === "S" && product.requiereOrdenFabricacion && " Después puedes definir sus recursos previstos."}
                         {preferences.wheelZoom === "ctrl"
                             ? " Ctrl + rueda para acercar o alejar; rueda para desplazar la página."
                             : " Rueda para acercar o alejar el lienzo."}

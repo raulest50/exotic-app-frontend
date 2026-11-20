@@ -5,6 +5,7 @@ export interface SeguimientoOrdenAreaCardDTO {
     ordenFabricacionId?: number | null;
     operacionFabricacionId?: number | null;
     loteAsignado: string | null;
+    loteProvisional?: boolean;
     productoId: string;
     productoNombre: string;
     tipoUnidades: string | null;

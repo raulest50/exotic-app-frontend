@@ -8,6 +8,7 @@ export interface AreaResponsableSummary {
     visibilidadMps?: VisibilidadMps;
     alcanceMps?: AlcanceMps;
     alcanceEjecucion?: AlcanceEjecucion;
+    requiereEquipoLoteOf?: boolean;
 }
 
 export interface UserAssignmentStatus {
