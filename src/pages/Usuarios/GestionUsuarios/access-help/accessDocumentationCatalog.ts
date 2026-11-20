@@ -480,6 +480,12 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
                 level(3, "Mismo alcance funcional", ["Mantiene las capacidades del nivel 2."], ["No añade una operación diferente frente al nivel 2."]),
                 level(4, "Mismo alcance funcional", ["Mantiene las capacidades del nivel 2."], ["No añade una operación diferente frente a los niveles 2 y 3."]),
             ]),
+            tab("PUNTOS_REORDEN", "Puntos de reorden", "Analiza dispensaciones y propone puntos de reorden por material, con revisión y confirmación antes de aplicar.", [
+                level(1, "Consulta y cálculo", ["Consultar materiales, elegir parámetros y proveedores para el cálculo, excluir fechas y calcular propuestas."], ["Preparar, confirmar o aplicar nuevos puntos de reorden."]),
+                level(2, "Aplicación controlada", ["Incluye la consulta y el cálculo del nivel 1.", "Preparar los materiales seleccionados, revisar la propuesta, confirmar sus dos pasos y descargar el comprobante PDF del resultado aplicado."]),
+                level(3, "Mismo alcance funcional", ["Mantiene las capacidades del nivel 2."], ["No añade operaciones diferentes frente al nivel 2."]),
+                level(4, "Mismo alcance funcional", ["Mantiene las capacidades del nivel 2."], ["No añade operaciones diferentes frente a los niveles 2 y 3."]),
+            ]),
         ],
     },
     [Modulo.SEGUIMIENTO_PRODUCCION]: {

@@ -1,5 +1,5 @@
 import { type ReactNode, type PointerEvent, type KeyboardEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { CloseButton, Alert, Avatar, Badge, Box, Button, Flex, Heading, HStack, Icon, IconButton, Input, InputGroup, Tabs, SimpleGrid, Text, Textarea, VStack, Field, Dialog, Portal } from '@chakra-ui/react';
+import { CloseButton, Alert, Avatar, Badge, Box, Button, Flex, Heading, HStack, Icon, IconButton, Input, InputGroup, Switch, Tabs, SimpleGrid, Text, Textarea, VStack, Field, Dialog, Portal } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import { FiEdit, FiLayers, FiMaximize2, FiSave } from 'react-icons/fi';
 import axios from 'axios';
@@ -220,6 +220,7 @@ export default function DetalleAreaOperativaDialog({
     const [editAlcanceMps, setEditAlcanceMps] = useState<AlcanceMps>('TODOS');
     const [editAlcanceEjecucion, setEditAlcanceEjecucion] = useState<AlcanceEjecucion>('AMBOS');
     const [editRequiereEquipoLoteOf, setEditRequiereEquipoLoteOf] = useState(false);
+    const [editRequiereReporteProduccionEtapa, setEditRequiereReporteProduccionEtapa] = useState(false);
     const [editResponsable, setEditResponsable] = useState<User | null>(null);
     const [editCategoriasHabilitadas, setEditCategoriasHabilitadas] = useState<CategoriaHabilitada[]>([]);
     const [isUserPickerOpen, setIsUserPickerOpen] = useState(false);
@@ -303,6 +304,7 @@ export default function DetalleAreaOperativaDialog({
         setEditAlcanceMps(area.alcanceMps ?? 'TODOS');
         setEditAlcanceEjecucion(area.alcanceEjecucion ?? 'AMBOS');
         setEditRequiereEquipoLoteOf(area.requiereEquipoLoteOf ?? false);
+        setEditRequiereReporteProduccionEtapa(area.requiereReporteProduccionEtapa ?? false);
         setResponsableError(null);
         setIsEditing(true);
     };
@@ -317,6 +319,7 @@ export default function DetalleAreaOperativaDialog({
         editAlcanceMps !== (area.alcanceMps ?? 'TODOS') ||
         editAlcanceEjecucion !== (area.alcanceEjecucion ?? 'AMBOS') ||
         editRequiereEquipoLoteOf !== (area.requiereEquipoLoteOf ?? false) ||
+        editRequiereReporteProduccionEtapa !== (area.requiereReporteProduccionEtapa ?? false) ||
         editNombre !== area.nombre ||
         editDescripcion !== (area.descripcion || '') ||
         editResponsable?.id !== area.responsableArea?.id ||
@@ -373,6 +376,7 @@ export default function DetalleAreaOperativaDialog({
             alcanceMps: editAlcanceMps,
             alcanceEjecucion: editAlcanceEjecucion,
             requiereEquipoLoteOf: editRequiereEquipoLoteOf,
+            requiereReporteProduccionEtapa: editRequiereReporteProduccionEtapa,
             responsableId: editResponsable.id,
             categoriaIds: editCategoriasHabilitadas.map((categoria) => categoria.categoriaId),
             categoriasHabilitadas: editCategoriasHabilitadas.map((categoria) => ({
@@ -815,6 +819,19 @@ export default function DetalleAreaOperativaDialog({
                                             <DespejeAreaConfig key={area.areaId} areaId={area.areaId} isReadOnly={isSpecialSystemArea} onBusyChange={setIsDespejeBusy} />
                                         </Tabs.Content>
                                         <Tabs.Content value="semiterminados" px={{ base: 4, md: 6 }} py={5} minH="100%">
+                                            <Box mb={5} p={4} borderWidth="1px" borderColor="app.border" borderRadius="lg">
+                                                <Field.Root disabled={isSaving || isDespejeBusy || isAssociationBusy || isSpecialSystemArea}>
+                                                    <Field.Label>Reporte de cantidades observadas del área</Field.Label>
+                                                    {isEditing && !isSpecialSystemArea ? <Switch.Root checked={editRequiereReporteProduccionEtapa}
+                                                        disabled={isSaving || isDespejeBusy || isAssociationBusy}
+                                                        onCheckedChange={({ checked }) => setEditRequiereReporteProduccionEtapa(checked)}>
+                                                        <Switch.HiddenInput /><Switch.Control><Switch.Thumb /></Switch.Control>
+                                                        <Switch.Label>Exigir cantidades observadas por producto al completar la etapa</Switch.Label>
+                                                    </Switch.Root> : <Text>{!isSpecialSystemArea && area.requiereReporteProduccionEtapa ? 'Requerido para nuevas órdenes' : 'Desactivado'}</Text>}
+                                                    <Field.HelperText>Aplica a nuevas órdenes; las existentes conservan su configuración. Registra la observación en la unidad del producto de referencia, sin implicar fabricación final ni ingreso a inventario. No reemplaza la cantidad final de la orden.</Field.HelperText>
+                                                    {isEditing && <Field.HelperText>Este cambio se guarda con «Guardar datos del área».</Field.HelperText>}
+                                                </Field.Root>
+                                            </Box>
                                             {isOpen && <AreaOperativaSemiterminadosManufacturadosTab key={area.areaId} areaId={area.areaId}
                                                 isReadOnly={isSpecialSystemArea}
                                                 disabled={isSaving || isDespejeBusy}

@@ -9,6 +9,7 @@ export interface AreaResponsableSummary {
     alcanceMps?: AlcanceMps;
     alcanceEjecucion?: AlcanceEjecucion;
     requiereEquipoLoteOf?: boolean;
+    requiereReporteProduccionEtapa?: boolean;
 }
 
 export interface UserAssignmentStatus {

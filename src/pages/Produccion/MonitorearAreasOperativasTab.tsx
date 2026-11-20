@@ -384,7 +384,12 @@ export default function MonitorearAreasOperativasTab() {
     }, [onDetailOpen, toast]);
 
     const handleOpenCorrection = useCallback((orden: SeguimientoOrdenAreaCardDTO, targetEstado?: number) => {
-        const firstTarget = CORRECTION_STATE_OPTIONS.find((option) => option.value !== orden.estado);
+        if (targetEstado === 2 && orden.configuracionReporteProduccion?.requerido) {
+            toast({ title: "Esta etapa requiere cantidades observadas", description: "Debe completarse desde el panel del responsable, registrando las cantidades por producto de referencia.", status: "warning" });
+            return;
+        }
+        const firstTarget = CORRECTION_STATE_OPTIONS.find((option) => option.value !== orden.estado
+            && !(option.value === 2 && orden.configuracionReporteProduccion?.requerido));
         const initialTarget = targetEstado != null && targetEstado !== orden.estado
             ? targetEstado
             : firstTarget?.value;
@@ -393,7 +398,7 @@ export default function MonitorearAreasOperativasTab() {
         setCorrectionMotivo("");
         setCorrectionError(null);
         onCorrectionOpen();
-    }, [onCorrectionOpen]);
+    }, [onCorrectionOpen, toast]);
 
     const handleCorrectionDragEnd = useCallback((event: DragEndEvent) => {
         const card = event.active.data.current?.card as SeguimientoOrdenAreaCardDTO | undefined;
@@ -424,6 +429,10 @@ export default function MonitorearAreasOperativasTab() {
 
     const handleSubmitCorrection = useCallback(async () => {
         if (!selectedArea || !correctionCard || !correctionTarget) {
+            return;
+        }
+        if (correctionTarget === "2" && correctionCard.configuracionReporteProduccion?.requerido) {
+            setCorrectionError("Completa esta etapa desde el panel del responsable para registrar las cantidades por producto.");
             return;
         }
 
@@ -912,6 +921,7 @@ export default function MonitorearAreasOperativasTab() {
                                                 onChange={(event) => setCorrectionTarget(event.target.value)}>
                                                 {CORRECTION_STATE_OPTIONS
                                                     .filter((option) => option.value !== correctionCard?.estado)
+                                                    .filter((option) => !(option.value === 2 && correctionCard?.configuracionReporteProduccion?.requerido))
                                                     .map((option) => (
                                                         <option key={option.value} value={option.value}>
                                                             {option.label}

@@ -55,26 +55,31 @@ Mientras la novedad esté dentro de su plazo de vigencia:
   `exactTab: true` impide heredar `MAIN` (p. ej. Gestión Humana/PERMISOS).
   `requiredTabs` exige además todos los permisos indicados del mismo módulo
   (editar desde el catálogo: Modificaciones ≥ 3 y Process Designer ≥ 2).
+  `requiresBatchRecord` exige el flujo OF habilitado, incluso para master;
+  `area.requiresOf` excluye responsables de áreas Solo OP (ausente: AMBOS).
+  Estas condiciones se reciben de sesión/directivas; su filtro vive aquí.
   Para funciones con condiciones adicionales, incorporarlas al filtro antes de anunciarlas.
 - El catálogo del frontend controla visibilidad, no confidencialidad ni autorización
   del backend. No incluir datos privados en textos o imágenes.
-- Catálogo del push del 2026-11-19: frontend `9259494`, backend `d0520bc`.
-  Cinco entradas: visitas (filtros/motivo), semiterminados por área, recursos por
-  área, tamaño estándar de lote OF y seguimiento del correo de reorden (solo
-  Directivas). No anunciar contexto interno del asistente ni ajustes técnicos/PDF.
-  Lote OF es una referencia; asociaciones no reservan capacidad; correo depende
-  de configuración y destinatarios, sin envío instantáneo ni tablas en la campana.
+- Corte vigente: **16 entradas**, revisado el 2026-11-20 sobre frontend `34c3a10`,
+  backend `1d8a351` y trabajo local de ese día, que debe publicarse junto al catálogo.
+  Se conservan las siete entradas del 19 con sus fechas/revisiones. Nueve nuevas:
+  cálculo de reorden, recursos por operación, código del equipo, requisitos del área,
+  lote automático OF, equipo al cerrar OF, captura/consulta de cantidades y fecha del lote.
+  Reorden exige `PUNTOS_REORDEN` exacto: 1 calcula, 2 aplica con dos confirmaciones;
+  PDF tras aplicar. No son códigos por correo ni cambios automáticos.
+  Recursos no reservan capacidad; tamaño estándar OF sigue siendo referencia.
+  Configuración de área/fecha se fija para órdenes nuevas. Sin equipo opcional se
+  conserva el lote actual; no renumerar manuales. Observaciones positivas, hasta
+  cuatro decimales, sin sumar producción final ni mover inventario.
+  Omitir renombrados internos, compatibilidad del asistente y correcciones técnicas.
   La historia aislada usa ejemplos propios; el catálogo real es `currentFeatures.ts`.
-- Ampliación del mismo corte: frontend `33f638e`, backend `d48385b`.
-  Se añaden dos avisos por la separación Permisos/Aprobaciones, cada uno con
-  acceso exacto a su pestaña. Las cinco entradas previas conservan fechas y revisiones.
-  Solicitar, firmar y retirar ya existían: anunciar el nuevo espacio, sin repetir
-  el aviso original retirado. Omitir código de lote del activo mientras no tenga UI.
 - Imágenes: capturar componentes reales en navegador oculto con datos ficticios,
   sin escritorio, cuentas personales ni escrituras de negocio. Conservar origen y
   guía numerada en `assets/`; revisar que la edición no cambie textos ni controles.
   Cada entrada tiene guía propia con `alt` y explicación de los números.
   Pares `<id>-captura.jpg` (origen) / `<id>-guia.png` (edición con imagegen);
+  `areas-equipo-reporte-equipo-captura.jpg` conserva la segunda pestaña de esa guía.
   Capturas de componentes actuales con API/sesión en memoria: acreditan la interfaz,
   no una prueba integrada del backend. Las guías son ediciones gráficas; el JPG
   original conserva la evidencia. No simular resultados ni consultas ejecutadas.

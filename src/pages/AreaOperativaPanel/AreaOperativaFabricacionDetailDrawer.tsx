@@ -13,6 +13,7 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import EndPointsURL from "../../api/EndPointsURL";
+import { ReporteProduccionEtapaResumen } from "./ReporteProduccionEtapaFields";
 import {
     formatDateTime,
     getEstadoDispensacionMaterialesColor,
@@ -150,6 +151,7 @@ export default function AreaOperativaFabricacionDetailDrawer({
                                                     {operacion.usuarioReporta ? (
                                                         <Text fontSize="sm">Reportado por: {operacion.usuarioReporta}</Text>
                                                     ) : null}
+                                                    <ReporteProduccionEtapaResumen reportes={operacion.reportesProduccion} historial={operacion.historialReportesProduccion} />
                                                     {operacion.observaciones ? (
                                                         <Text mt={1} fontSize="sm" whiteSpace="pre-wrap">{operacion.observaciones}</Text>
                                                     ) : null}

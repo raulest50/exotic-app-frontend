@@ -58,6 +58,8 @@ import { formatSemanaMpsDisplayDate } from "../Produccion/ProgProdSemanalTab/sem
 import DespejesLineaPanel from "../../features/despeje/DespejesLineaPanel";
 import { prepararDespeje } from "../../features/despeje/despejeApi";
 import type { PreparacionDespeje } from "../../features/despeje/types";
+import ReporteProduccionEtapaFields from "./ReporteProduccionEtapaFields";
+import { cantidadReporteProduccionValida } from "./areaOperativaPanel.types";
 
 const endpoints = new EndPointsURL();
 const PoeViewerDialog = lazy(() => import("./PoeViewerDialog.tsx"));
@@ -323,6 +325,7 @@ export default function AreaOperativaPanel() {
     const [cantidadProducida, setCantidadProducida] = useState("");
     const [fechaVencimiento, setFechaVencimiento] = useState("");
     const [motivoDiferenciaCantidad, setMotivoDiferenciaCantidad] = useState("");
+    const [cantidadesReporte, setCantidadesReporte] = useState<Record<string, string>>({});
     const [activoFijoId, setActivoFijoId] = useState("");
     const [equiposLote, setEquiposLote] = useState<EquiposLoteOfContexto | null>(null);
     const [equiposLoteLoading, setEquiposLoteLoading] = useState(false);
@@ -340,6 +343,11 @@ export default function AreaOperativaPanel() {
     const [detail, setDetail] = useState<AreaOperativaOrdenDetalleDTO | null>(null);
     const [fabricacionDetail, setFabricacionDetail] = useState<OrdenFabricacionOperativaDTO | null>(null);
     const [poeViewerTarget, setPoeViewerTarget] = useState<PoeViewerTarget | null>(null);
+    const configuracionReporte = selectedOrden?.configuracionReporteProduccion;
+    const productosReporte = configuracionReporte?.requerido ? configuracionReporte.productos.filter(producto =>
+        !(selectedOrden?.esNodoFinal && producto.productoFinalOrden)) : [];
+    const reporteProduccionValido = !configuracionReporte?.requerido || configuracionReporte.productos.length > 0
+        && productosReporte.every(producto => cantidadReporteProduccionValida(cantidadesReporte[producto.productoId] ?? ""));
 
     const completarOperacionOfId = isActionOpen && selectedAction === "completar" && selectedOrden?.tipoOrden === "OF"
         ? selectedOrden.operacionFabricacionId : null;
@@ -676,6 +684,7 @@ export default function AreaOperativaPanel() {
         setCantidadProducida("");
         setFechaVencimiento("");
         setMotivoDiferenciaCantidad("");
+        setCantidadesReporte({});
         setActivoFijoId(""); setEquiposLote(null); setEquiposLoteError("");
         onActionOpen();
     };
@@ -765,6 +774,12 @@ export default function AreaOperativaPanel() {
         const actionMeta = getActionMeta(selectedAction);
         const isFinalCompletion = selectedAction === "completar" && selectedOrden.esNodoFinal;
         const isFabricacion = selectedOrden.tipoOrden === "OF";
+        if (selectedAction === "completar" && !reporteProduccionValido) {
+            toast({ title: "Complete las cantidades observadas en la etapa", description: "Indique una cantidad positiva con hasta cuatro decimales para cada producto de referencia.", status: "warning" });
+            return;
+        }
+        const reportesProduccion = selectedAction === "completar" && configuracionReporte?.requerido
+            ? productosReporte.map(producto => ({ productoId: producto.productoId, cantidad: cantidadesReporte[producto.productoId].trim() })) : undefined;
         if (isFabricacion && selectedAction === "completar" && (!equiposLote || equiposLoteLoading || equiposLoteError
             || equiposLote.esOperacionSalida && equiposLote.requiereEquipoLoteOf && !activoFijoId)) {
             toast({ title: "Revise la identificación del lote OF", description: equiposLoteError || "Espere la consulta y seleccione el equipo si el área lo exige.", status: "warning" });
@@ -808,6 +823,7 @@ export default function AreaOperativaPanel() {
                             motivoDiferenciaCantidad: isFinalCompletion
                                 ? motivoDiferenciaCantidad.trim() || null : null,
                             activoFijoId: equiposLote?.esOperacionSalida ? activoFijoId || null : null,
+                            reportesProduccion,
                         }
                         : { observaciones: observaciones.trim() || null },
                     { withCredentials: true },
@@ -820,6 +836,7 @@ export default function AreaOperativaPanel() {
                         areaId: selectedOrden.areaId,
                         observaciones: observaciones.trim() || null,
                         cantidadProducida: isFinalCompletion ? parsedCantidad : null,
+                        reportesProduccion: selectedAction === "completar" ? reportesProduccion : undefined,
                     },
                     { withCredentials: true },
                 );
@@ -1216,6 +1233,10 @@ export default function AreaOperativaPanel() {
                                                 </Field.HelperText>
                                             </Field.Root>
                                         ) : null}
+                                        {selectedAction === "completar" && configuracionReporte?.requerido && <ReporteProduccionEtapaFields
+                                            configuracion={configuracionReporte} cantidades={cantidadesReporte}
+                                            onChange={(productoId, cantidad) => setCantidadesReporte(current => ({ ...current, [productoId]: cantidad }))}
+                                            esNodoFinal={selectedOrden.esNodoFinal} cantidadFinal={cantidadProducida} disabled={submitting} />}
                                         {selectedAction === "completar" && selectedOrden.tipoOrden === "OF" && <>
                                             {equiposLoteLoading && <HStack><Spinner size="sm" /><Text>Consultando identificación del lote…</Text></HStack>}
                                             {equiposLoteError && <Box role="alert"><Text color="fg.error">{equiposLoteError}</Text><Button mt={2} size="sm" variant="outline" onClick={() => setEquiposLoteRetry(value => value + 1)}>Reintentar consulta de equipos</Button></Box>}
@@ -1303,6 +1324,7 @@ export default function AreaOperativaPanel() {
                                     loading={submitting}
                                     disabled={
                                         boardSnapshotStale
+                                        || (selectedAction === "completar" && !reporteProduccionValido)
                                         || (selectedAction === "completar" && selectedOrden?.tipoOrden === "OF" && (equiposLoteLoading || !!equiposLoteError || !equiposLote
                                             || equiposLote.esOperacionSalida && equiposLote.requiereEquipoLoteOf && !activoFijoId))
                                         || despejeBusy

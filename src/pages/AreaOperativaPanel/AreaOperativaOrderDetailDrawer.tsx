@@ -2,6 +2,7 @@ import { CloseButton, Accordion, Badge, Box, Button, Drawer, Flex, HStack, Simpl
 import { useColorModeValue } from "../../components/ui/color-mode";
 import EndPointsURL from "../../api/EndPointsURL.tsx";
 import AreaOperativaConsumoSemiterminadosPanel from "./AreaOperativaConsumoSemiterminadosPanel";
+import { ReporteProduccionEtapaResumen } from "./ReporteProduccionEtapaFields";
 import { Background, BackgroundVariant, Edge, Handle, MiniMap, Node, NodeProps, NodeTypes, Position, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
@@ -443,6 +444,7 @@ export default function AreaOperativaOrderDetailDrawer({
                                                                     </Badge>
                                                                 ) : null}
 
+                                                                <ReporteProduccionEtapaResumen reportes={item.reportesProduccion} historial={item.historialReportesProduccion} />
                                                                 {item.observaciones?.trim() ? (
                                                                     <>
                                                                         <Separator my={3} />

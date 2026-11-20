@@ -20,6 +20,7 @@ import { useCallback, type MutableRefObject, type ReactNode } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { FiEdit3, FiEye, FiPause, FiPlay, FiRefreshCw } from "react-icons/fi";
+import { ReporteProduccionEtapaResumen } from "../../AreaOperativaPanel/ReporteProduccionEtapaFields";
 import type {
     EstadoTableroKey,
     OrdenProduccionSeguimientoDetalleDTO,
@@ -850,6 +851,7 @@ export function SeguimientoOrdenDetailDrawer({
                                                         </Text>
                                                     </Stack>
 
+                                                    <ReporteProduccionEtapaResumen reportes={ruta.reportesProduccion} historial={ruta.historialReportesProduccion} />
                                                     {ruta.observaciones?.trim() ? (
                                                         <>
                                                             <Separator my={3} />

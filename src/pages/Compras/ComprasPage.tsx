@@ -3,6 +3,7 @@ import MyHeader from "../../components/MyHeader";
 import { my_style_tab } from "../../styles/styles_general.tsx";
 import CrearOCM from "./CrearOCM.tsx";
 import ReporteOrdenesCompras from "./ReporteOrdenesCompras.tsx";
+import PuntosReordenTab from "./PuntosReorden/PuntosReordenTab";
 import { Modulo } from "../Usuarios/GestionUsuarios/types.tsx";
 import { tabAccessRule } from "../../auth/accessHelpers.ts";
 import { useAccessSnapshot } from "../../auth/usePermissions";
@@ -16,6 +17,7 @@ function ComprasPage() {
     const tabs: Array<{ key: string; label: string; render: () => JSX.Element; accesoValido: AccessRule }> = [
         { key: "crear-ocm", label: "Crear OC-M", render: () => <CrearOCM />, accesoValido: tabAccessRule(Modulo.COMPRAS, "CREAR_OCM", 1) },
         { key: "reportes-ordenes-compra", label: "Reportes Ordenes de Compra", render: () => <ReporteOrdenesCompras />, accesoValido: tabAccessRule(Modulo.COMPRAS, "REPORTES_ORDENES_COMPRA", 1) },
+        { key: "puntos-reorden", label: "Puntos de reorden", render: () => <PuntosReordenTab />, accesoValido: tabAccessRule(Modulo.COMPRAS, "PUNTOS_REORDEN", 1) },
     ];
 
     const visibleTabs = tabs.filter((tab) => tab.accesoValido(access));

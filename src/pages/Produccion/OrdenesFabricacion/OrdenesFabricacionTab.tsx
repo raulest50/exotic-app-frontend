@@ -19,6 +19,7 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import { useAppToast } from "@/components/ui/use-app-toast";
+import { ReporteProduccionEtapaResumen } from "../../AreaOperativaPanel/ReporteProduccionEtapaFields";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { getExactTabNivel, MASTER_EFFECTIVE_NIVEL } from "../../../auth/accessHelpers";
@@ -361,6 +362,7 @@ export default function OrdenesFabricacionTab() {
                                                         </HStack>
                                                         <Text mt={2} fontSize="sm">Último cambio: {formatDateTime(operacion.fechaEstadoActual)}</Text>
                                                         {operacion.usuarioReporta ? <Text fontSize="sm">Responsable: {operacion.usuarioReporta}</Text> : null}
+                                                        <ReporteProduccionEtapaResumen reportes={operacion.reportesProduccion} historial={operacion.historialReportesProduccion} />
                                                         {correctionEnabled
                                                             && nivelMonitoreo >= 3
                                                             && ["LIBERADA", "EN_EJECUCION"].includes(selectedDetail.estado) ? (

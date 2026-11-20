@@ -1,3 +1,36 @@
+export interface ProductoReporteProduccionEtapa {
+    productoId: string;
+    productoNombre: string;
+    unidadMedida: string;
+    manufacturingVersionId: number;
+    nodosOrigen: string[];
+    productoFinalOrden: boolean;
+}
+
+export interface ConfiguracionReporteProduccionEtapa {
+    requerido: boolean;
+    productos: ProductoReporteProduccionEtapa[];
+}
+
+export interface ReporteProduccionEtapaDato {
+    productoId: string;
+    productoNombre: string;
+    unidadMedida: string;
+    cantidad: string | number;
+}
+
+export interface HistorialReporteProduccionEtapa {
+    eventoId: number;
+    fechaEvento?: string | null;
+    usuario?: string | null;
+    vigente: boolean;
+    reportesProduccion: ReporteProduccionEtapaDato[];
+}
+
+export function cantidadReporteProduccionValida(cantidad: string): boolean {
+    return /^\d+(?:\.\d{1,4})?$/.test(cantidad) && Number.isFinite(Number(cantidad)) && Number(cantidad) > 0;
+}
+
 export interface AreaOperativaOrdenDetalleDTO {
     orden: OrdenOperativaResumenDTO;
     seguimiento: SeguimientoOperativoItemDTO[];
@@ -6,6 +39,9 @@ export interface AreaOperativaOrdenDetalleDTO {
 }
 
 export interface OrdenFabricacionOperacionDTO {
+    configuracionReporteProduccion?: ConfiguracionReporteProduccionEtapa | null;
+    reportesProduccion?: ReporteProduccionEtapaDato[];
+    historialReportesProduccion?: HistorialReporteProduccionEtapa[];
     id: number;
     ordenFabricacionId: number;
     frontendNodeId: string;
@@ -78,6 +114,9 @@ export interface OrdenOperativaResumenDTO {
 }
 
 export interface SeguimientoOperativoItemDTO {
+    configuracionReporteProduccion?: ConfiguracionReporteProduccionEtapa | null;
+    reportesProduccion?: ReporteProduccionEtapaDato[];
+    historialReportesProduccion?: HistorialReporteProduccionEtapa[];
     seguimientoId: number;
     nodeId: number;
     nodeLabel: string;

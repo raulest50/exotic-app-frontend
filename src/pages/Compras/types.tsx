@@ -32,7 +32,9 @@ export interface LeadTimeProveedorKpiDTO {
     proveedorId: string;
     proveedorNombre: string;
     estado: EstadoLeadTimeProveedorKpi;
-    leadTimeMedianoDias: number | null;
+    leadTimeCalculado: number | null;
+    /** @deprecated Nombre JSON anterior; usar leadTimeCalculado. */
+    leadTimeMedianoDias?: number | null;
     observaciones: number;
     ordenesConsideradas: number;
     fechaCorte: string | null;

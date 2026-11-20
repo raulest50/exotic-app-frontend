@@ -1,4 +1,5 @@
 import type { PageResponse } from "../BatchRecords/types";
+import type { ConfiguracionReporteProduccionEtapa, HistorialReporteProduccionEtapa, ReporteProduccionEtapaDato } from "../../AreaOperativaPanel/areaOperativaPanel.types";
 
 export interface SemiterminadoOrdenFabricacionOption {
     productoId: string;
@@ -44,6 +45,9 @@ export interface OrdenFabricacion {
 }
 
 export interface OrdenFabricacionOperacion {
+    configuracionReporteProduccion?: ConfiguracionReporteProduccionEtapa | null;
+    reportesProduccion?: ReporteProduccionEtapaDato[];
+    historialReportesProduccion?: HistorialReporteProduccionEtapa[];
     id: number;
     ordenFabricacionId: number;
     frontendNodeId: string;

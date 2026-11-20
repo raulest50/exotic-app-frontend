@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Button, Heading, IconButton, Input, InputGroup, Tag, Text, VStack, Wrap, WrapItem, Field } from '@chakra-ui/react';
+import { Box, Button, Heading, IconButton, Input, InputGroup, Switch, Tag, Text, VStack, Wrap, WrapItem, Field } from '@chakra-ui/react';
 import { useAppToast } from "@/components/ui/use-app-toast";
 import axios from 'axios';
 import EndPointsURL from '../../../api/EndPointsURL.tsx';
@@ -20,6 +20,7 @@ function CrearAreaProduccionTab() {
     const [alcanceMps, setAlcanceMps] = useState<AlcanceMps>('TODOS');
     const [alcanceEjecucion, setAlcanceEjecucion] = useState<AlcanceEjecucion>('AMBOS');
     const [requiereEquipoLoteOf, setRequiereEquipoLoteOf] = useState(false);
+    const [requiereReporteProduccionEtapa, setRequiereReporteProduccionEtapa] = useState(false);
     const [responsable, setResponsable] = useState<User | null>(null);
     const [categoriasHabilitadas, setCategoriasHabilitadas] = useState<CategoriaHabilitada[]>([]);
     const [isUserPickerOpen, setIsUserPickerOpen] = useState(false);
@@ -49,6 +50,7 @@ function CrearAreaProduccionTab() {
     const clearFields = () => {
         setNombre('');
         setRequiereEquipoLoteOf(false);
+        setRequiereReporteProduccionEtapa(false);
         setDescripcion('');
         setVisibilidadMps('SOLO_OP');
         setAlcanceMps('TODOS');
@@ -80,6 +82,7 @@ function CrearAreaProduccionTab() {
             alcanceMps,
             alcanceEjecucion,
             requiereEquipoLoteOf,
+            requiereReporteProduccionEtapa,
             responsableId: responsable!.id,
             categoriaIds: categoriasHabilitadas.map((categoria) => categoria.categoriaId),
         };
@@ -235,6 +238,16 @@ function CrearAreaProduccionTab() {
                     requiereEquipoLoteOf={requiereEquipoLoteOf} onRequiereEquipoLoteOfChange={setRequiereEquipoLoteOf}
                     onVisibilidadChange={setVisibilidadMps} onAlcanceChange={setAlcanceMps}
                     onAlcanceEjecucionChange={setAlcanceEjecucion} disabled={isSubmitting} />
+
+                <Field.Root disabled={isSubmitting}>
+                    <Field.Label>Reporte de cantidades observadas del área</Field.Label>
+                    <Switch.Root checked={requiereReporteProduccionEtapa} disabled={isSubmitting}
+                        onCheckedChange={({ checked }) => setRequiereReporteProduccionEtapa(checked)}>
+                        <Switch.HiddenInput /><Switch.Control><Switch.Thumb /></Switch.Control>
+                        <Switch.Label>Exigir cantidades observadas por producto al completar la etapa</Switch.Label>
+                    </Switch.Root>
+                    <Field.HelperText>Aplica a nuevas órdenes. Registra la observación en la unidad del producto de referencia, sin implicar fabricación final ni ingreso a inventario. No reemplaza la cantidad final de la orden.</Field.HelperText>
+                </Field.Root>
 
                 <Button
                     colorPalette="teal"

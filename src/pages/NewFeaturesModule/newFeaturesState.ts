@@ -6,6 +6,8 @@ export type NewFeaturesSession = {
     ready: boolean;
     isMasterLike: boolean;
     isAreaResponsable: boolean;
+    areaExecution?: string;
+    batchRecordWorkflowEnabled?: boolean;
     canAccessSuperMasterDirectives?: boolean;
     moduloAccesos: readonly {
         modulo: string;
@@ -54,9 +56,11 @@ export function canShowFeature(feature: NewFeature, session: NewFeaturesSession)
     if (!session.ready || !session.identity) return false;
     const rule = feature.access;
     if (rule.kind === "home") return !session.isAreaResponsable;
-    if (rule.kind === "area") return session.isAreaResponsable;
+    if (rule.kind === "area") return session.isAreaResponsable
+        && (!rule.requiresOf || (session.areaExecution ?? "AMBOS") !== "SOLO_OP");
     if (rule.kind === "supermaster") return !session.isAreaResponsable && Boolean(session.canAccessSuperMasterDirectives);
     if (session.isAreaResponsable || (rule.masterOnly && !session.isMasterLike)) return false;
+    if (rule.requiresBatchRecord && !session.batchRecordWorkflowEnabled) return false;
     const minLevel = rule.minLevel ?? 1;
     if (session.isMasterLike) return 999 >= minLevel
         && (rule.requiredTabs ?? []).every((tab) => 999 >= tab.minLevel);

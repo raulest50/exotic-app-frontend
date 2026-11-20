@@ -42,6 +42,7 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
                                                          leadTimeKpiError = false,
                                                      }) => {
     const { open, onOpen, onClose } = useDisclosure();
+    const leadTimeCalculado = leadTimeKpi?.leadTimeCalculado ?? leadTimeKpi?.leadTimeMedianoDias;
 
     const formatLeadTimeDays = (value: number) => {
         const rounded = Math.round(value * 10) / 10;
@@ -72,9 +73,9 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
         }
 
         const estado = leadTimeKpi?.estado ?? "SIN_INFORMACION";
-        const hasLeadTime = leadTimeKpi?.leadTimeMedianoDias != null;
+        const hasLeadTime = leadTimeCalculado != null;
         const leadTimeLabel = hasLeadTime
-            ? `${formatLeadTimeDays(leadTimeKpi.leadTimeMedianoDias as number)} dias`
+            ? `${formatLeadTimeDays(leadTimeCalculado as number)} dias`
             : "sin informacion";
 
         const label = estado === "DESACTUALIZADO"
@@ -106,7 +107,7 @@ const ProveedorCard: React.FC<ProveedorCardProps> = ({
     };
 
     const negociado = selectedProveedor?.leadTimeNegociado;
-    const observado = leadTimeKpi?.leadTimeMedianoDias;
+    const observado = leadTimeCalculado;
     const puedeComparar = mostrarLeadTimeKpi && !isLeadTimeKpiLoading && !leadTimeKpiError &&
         leadTimeKpi?.estado === "VIGENTE" &&
         typeof negociado === "number" && Number.isInteger(negociado) && negociado >= 0 && negociado <= 2_147_483_647 &&

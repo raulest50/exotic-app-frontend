@@ -1,4 +1,7 @@
+import type { ConfiguracionReporteProduccionEtapa, HistorialReporteProduccionEtapa, ReporteProduccionEtapaDato } from "../../AreaOperativaPanel/areaOperativaPanel.types";
+
 export interface SeguimientoOrdenAreaCardDTO {
+    configuracionReporteProduccion?: ConfiguracionReporteProduccionEtapa | null;
     tipoOrden?: "OP" | "OF";
     id: number;
     ordenId: number;
@@ -69,6 +72,9 @@ export interface TableroOperativoDTO {
 }
 
 export interface RutaEstadoDTO {
+    configuracionReporteProduccion?: ConfiguracionReporteProduccionEtapa | null;
+    reportesProduccion?: ReporteProduccionEtapaDato[];
+    historialReportesProduccion?: HistorialReporteProduccionEtapa[];
     seguimientoId: number;
     nodeId: number;
     nodeLabel: string;

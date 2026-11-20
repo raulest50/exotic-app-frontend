@@ -21,6 +21,7 @@ export interface AreaOperativa {
     alcanceMps?: AlcanceMps;
     alcanceEjecucion?: AlcanceEjecucion;
     requiereEquipoLoteOf?: boolean;
+    requiereReporteProduccionEtapa?: boolean;
     responsableArea: {
         id: number;
         cedula: number;
@@ -60,6 +61,7 @@ export interface AreaOperativaMutationDTO {
     alcanceMps?: AlcanceMps;
     alcanceEjecucion?: AlcanceEjecucion;
     requiereEquipoLoteOf?: boolean;
+    requiereReporteProduccionEtapa?: boolean;
     categoriaIds?: number[];
     categoriasHabilitadas?: CategoriaHabilitadaMutation[];
 }

@@ -34,9 +34,11 @@ export function NewFeaturesProvider({ children, features = currentFeatures, sess
         ready: auth.accesosReady,
         isMasterLike: auth.isMasterLike,
         isAreaResponsable: auth.isAreaResponsable,
+        areaExecution: auth.areaResponsable?.alcanceEjecucion,
+        batchRecordWorkflowEnabled: !directivesLoading && directives.BATCH_RECORD_WORKFLOW_ENABLED === true,
         canAccessSuperMasterDirectives,
         moduloAccesos: auth.moduloAccesos,
-    }, [session, auth.user, auth.meProfile?.id, auth.accesosReady, auth.isMasterLike, auth.isAreaResponsable, auth.moduloAccesos, canAccessSuperMasterDirectives]);
+    }, [session, auth.user, auth.meProfile?.id, auth.accesosReady, auth.isMasterLike, auth.isAreaResponsable, auth.areaResponsable?.alcanceEjecucion, auth.moduloAccesos, canAccessSuperMasterDirectives, directivesLoading, directives.BATCH_RECORD_WORKFLOW_ENABLED]);
     const visibleFeatures = useMemo(() => features.filter((feature) => canShowFeature(feature, currentSession)), [features, currentSession]);
     const [now, setNow] = useState(() => Date.now());
     const notificationFeatures = useMemo(() => policyReady
