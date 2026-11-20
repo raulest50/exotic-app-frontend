@@ -19,7 +19,8 @@ export default function GestionHumanaPage() {
         { key: "incorporacion", label: "Incorporacion", render: () => <IncorporarPersonal />, accesoValido: tabAccessRule(Modulo.GESTION_HUMANA, "INCORPORACION", 1) },
         { key: "consulta", label: "Consulta", render: () => <ConsultaDePersonal />, accesoValido: tabAccessRule(Modulo.GESTION_HUMANA, "CONSULTA", 1) },
         { key: "horas-extra", label: "Horas Extra", render: () => <HorasExtraPersonal />, accesoValido: tabAccessRule(Modulo.GESTION_HUMANA, "CONSULTA", 1) },
-        { key: "permisos", label: "Permisos", render: () => <PermisosPersonal />, accesoValido: exactTabAccessRuleWithMasterBypass(Modulo.GESTION_HUMANA, "PERMISOS", 1) },
+        { key: "permisos", label: "Permisos", render: () => <PermisosPersonal key="solicitudes" modo="solicitudes" />, accesoValido: exactTabAccessRuleWithMasterBypass(Modulo.GESTION_HUMANA, "PERMISOS", 1) },
+        { key: "aprobaciones", label: "Aprobaciones", render: () => <PermisosPersonal key="aprobaciones" modo="aprobaciones" />, accesoValido: exactTabAccessRuleWithMasterBypass(Modulo.GESTION_HUMANA, "APROBACIONES", 1) },
         { key: "control-visitantes", label: "Control visitantes", render: () => <ControlVisitantes />, accesoValido: exactTabAccessRuleWithMasterBypass(Modulo.GESTION_HUMANA, "CONTROL_VISITANTES", 1) },
     ];
 

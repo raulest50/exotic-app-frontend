@@ -1,6 +1,7 @@
 export type EstadoPermiso = "BORRADOR" | "SOLICITADA" | "APROBADA" | "RECHAZADA" | "ANULADA";
 export type UnidadPermiso = "HORAS" | "DIAS" | "MESES";
 export type ScopePermiso = "MIAS" | "POR_REVISAR" | "TODAS";
+export type ModoPermisos = "solicitudes" | "aprobaciones";
 export const MOTIVOS_PERMISO = {
     CITA_TRATAMIENTO_MEDICO: "Cita o tratamiento médico",
     CALAMIDAD_DOMESTICA: "Calamidad doméstica",
@@ -22,6 +23,7 @@ export interface EmpleadoPermiso { id: number; nombre: string; cargo: string | n
 export interface ContextoPermisos {
     usuarioId: number; usuarioNombre: string; nivel: number; empleado: EmpleadoPermiso | null; jefe: UsuarioPermiso | null;
     habilitado: boolean; impedimentos: string[]; puedeRevisar: boolean; puedeConsultarTodas: boolean; puedeConfigurar: boolean;
+    nivelAprobaciones: number; puedeSolicitar: boolean;
 }
 export interface ConfiguracionEmpleadoPermiso {
     empleado: EmpleadoPermiso; jefeConfigurado: UsuarioPermiso | null; jefeOrganigrama: UsuarioPermiso | null; version: number | null;

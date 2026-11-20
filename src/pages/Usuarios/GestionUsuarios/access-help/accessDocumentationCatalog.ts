@@ -589,18 +589,24 @@ export const ACCESS_DOCUMENTATION_CATALOG: Record<Modulo, AccessModuleDocumentat
     [Modulo.GESTION_HUMANA]: {
         modulo: Modulo.GESTION_HUMANA,
         label: "Gestión Humana",
-        resumen: "Incorporación, consulta y gestión de información del personal y control de visitantes.",
-        condiciones: ["Incorporación y Consulta admiten el permiso general conservado de versiones anteriores. Permisos y Control visitantes exigen su asignación específica.", "Master y Super Master tienen acceso administrativo; la excepción no permite firmar por otro trabajador ni sustituir al jefe asignado."],
+        resumen: "Incorporación, consulta, solicitudes y aprobaciones del personal y control de visitantes.",
+        condiciones: ["Incorporación y Consulta admiten el permiso general conservado de versiones anteriores. Permisos, Aprobaciones y Control visitantes exigen su asignación específica.", "Permisos y Aprobaciones se asignan por separado: ningún nivel de Permisos concede acceso a la bandeja de aprobaciones.", "Master y Super Master tienen acceso administrativo; la excepción no permite firmar por otro trabajador, aprobar solicitudes propias ni sustituir al jefe asignado."],
         tabs: [
             sameScopeTab("INCORPORACION", "Incorporación", "Registra nuevos integrantes del personal.", "Consultar y completar el flujo de incorporación de personal."),
             sameScopeTab("CONSULTA", "Consulta", "Consulta personal y da acceso también a Horas extra.", "Consultar información del personal y utilizar la pestaña de Horas extra."),
             sameScopeTab("CONTROL_VISITANTES", "Control visitantes", "Código QR, enlace público y consulta de las llegadas registradas.", "Compartir el formulario y consultar los registros de visitantes.", 4, ["Requiere el permiso específico Control visitantes; no hereda el permiso general MAIN.", "El formulario público permite registrar una llegada sin autenticación; no permite consultar registros."]),
-            tab("PERMISOS", "Permisos", "Solicitudes de permiso laboral, firmas, decisión del jefe e historial.", [
-                level(1, "Solicitudes propias", ["Consultar y crear solicitudes propias, editar borradores y firmar para presentarlos cuando la cuenta esté vinculada a un trabajador activo y tenga jefe asignado."]),
-                level(2, "Revisión del jefe", ["Incluye las solicitudes propias del nivel 1.", "Consultar y decidir las solicitudes presentadas que le fueron asignadas como jefe; la aprobación requiere su firma explícita."], ["Aprobar solicitudes propias o sustituir a otro jefe."]),
-                level(3, "Consulta general", ["Incluye las capacidades del nivel 2.", "Consultar todos los expedientes y sus PDF, firmas, soportes e historial."]),
+            tab("PERMISOS", "Permisos", "Creación, firma y seguimiento de las solicitudes propias de permiso laboral.", [
+                level(1, "Solicitudes propias", ["Consultar y crear solicitudes propias, editar borradores y firmar para presentarlos cuando la cuenta esté vinculada a un trabajador activo y tenga jefe asignado.", "Consultar su PDF, soporte e historial y retirar solicitudes propias en borrador o pendientes con un motivo."], ["Consultar expedientes ajenos, aprobar o rechazar solicitudes y configurar identidades o jefes."]),
+                level(2, "Mismo alcance funcional", ["Mantiene las capacidades del nivel 1 sobre solicitudes propias."], ["No concede acceso a Aprobaciones ni permite decidir solicitudes."]),
+                level(3, "Mismo alcance funcional", ["Mantiene las capacidades del nivel 1 sobre solicitudes propias."], ["No concede consulta general ni acceso a Aprobaciones."]),
+                level(4, "Mismo alcance funcional", ["Mantiene las capacidades del nivel 1 sobre solicitudes propias."], ["No concede configuración administrativa ni acceso a Aprobaciones."]),
+            ], ["La identidad, el responsable y las acciones disponibles se verifican en el servidor para cada expediente. La persona solicitante no puede aprobar su propia solicitud."]),
+            tab("APROBACIONES", "Aprobaciones", "Bandeja separada de solicitudes de permiso para revisión, decisión y seguimiento.", [
+                level(1, "Consulta de pendientes asignadas", ["Consultar las solicitudes pendientes asignadas como jefe autorizador, sus PDF, firmas, soportes e historial."], ["Aprobar o rechazar solicitudes y crear solicitudes desde esta bandeja."]),
+                level(2, "Decisión del jefe", ["Incluye la consulta del nivel 1.", "Aprobar con firma explícita o rechazar con motivo las solicitudes presentadas asignadas como jefe."], ["Aprobar solicitudes propias, sustituir a otro jefe o presentar solicitudes desde esta bandeja."]),
+                level(3, "Consulta general", ["Incluye las capacidades del nivel 2.", "Consultar todos los expedientes y sus PDF, firmas, soportes e historial."], ["Decidir sin ser el jefe asignado o configurar identidades y jefes."]),
                 level(4, "Configuración administrativa", ["Incluye las capacidades del nivel 3.", "Vincular trabajadores con cuentas, configurar jefes autorizadores y anular solicitudes con un motivo."], ["Firmar en nombre del trabajador o aprobar sin ser el jefe asignado."]),
-            ], ["La identidad, el responsable y las acciones disponibles se verifican en el servidor para cada expediente."]),
+            ], ["Requiere el permiso específico Aprobaciones; no hereda PERMISOS ni MAIN. La revisión se limita a solicitudes pendientes asignadas; la consulta general requiere nivel 3. Las decisiones y los archivos se autorizan en el servidor para cada expediente."]),
         ],
     },
     [Modulo.BINTELLIGENCE]: {
