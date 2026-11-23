@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Box, Button, Checkbox, CloseButton, Dialog, Field, Image, Input, NativeSelect, Portal, Spinner, Stack, Text } from "@chakra-ui/react";
-import FirmaCanvas from "../../Usuarios/FirmaUsuario/FirmaCanvas";
-import { validarFirmaImagen } from "../../Usuarios/FirmaUsuario/firmaCanvasUtils";
+import FirmaCanvas from "../Firma/FirmaCanvas";
+import { validarFirmaImagen } from "../Firma/firmaCanvasUtils";
 import { cancelado, errorPermiso, imagenFirma, permisosApi } from "./permisosPersonalApi";
 import type { FirmaPermisoRequest, FirmaVigentePermiso } from "./types";
 

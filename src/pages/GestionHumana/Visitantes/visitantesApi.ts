@@ -1,6 +1,20 @@
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
-import type { FiltrosVisitantes, PaginaVisitantes, ReciboVisitante, RegistroVisitanteRequest } from "./types";
+import type { AvisoVisitantes, FiltrosVisitantes, PaginaVisitantes, ReciboVisitante, RegistroVisitanteRequest } from "./types";
+
+export async function obtenerAvisoVisitantes(signal: AbortSignal): Promise<AvisoVisitantes> {
+    const response = await fetch(`${EndPointsURL.getDomain()}/api/public/visitantes/aviso`, {
+        credentials: "omit", cache: "no-store", signal: AbortSignal.any([signal, AbortSignal.timeout(15_000)]),
+    });
+    if (!response.ok) throw new Error("No fue posible consultar el aviso de privacidad.");
+    return response.json() as Promise<AvisoVisitantes>;
+}
+
+export async function obtenerFirmaVisitante(id: number, signal: AbortSignal): Promise<Blob> {
+    return (await axios.get<Blob>(`${EndPointsURL.getDomain()}/gestion-humana/visitantes/${id}/firma`, {
+        responseType: "blob", signal,
+    })).data;
+}
 
 export async function registrarVisitante(body: RegistroVisitanteRequest): Promise<ReciboVisitante> {
     // Fetch deliberately avoids the authenticated Axios defaults and interceptors.
@@ -13,7 +27,9 @@ export async function registrarVisitante(body: RegistroVisitanteRequest): Promis
         signal: AbortSignal.timeout(30_000),
     });
     if (!response.ok) {
-        if (response.status === 400) throw new Error("Revise los datos del formulario y seleccione el motivo de la visita. Si eligió «Otros», descríbalo con un máximo de 300 caracteres.");
+        if (response.status === 400) throw new Error("Revise los datos obligatorios y las autorizaciones. Si el aviso de privacidad cambió, recargue el formulario.");
+        if (response.status === 413) throw new Error("La firma supera el tamaño permitido. Límpiela y vuelva a dibujarla.");
+        if (response.status === 503) throw new Error("El registro está temporalmente fuera de servicio. Diríjase a recepción.");
         if (response.status === 429) throw new Error("Se han recibido varios registros en poco tiempo. Espere un minuto e intente nuevamente.");
         throw new Error("No fue posible confirmar el registro. Intente nuevamente o comuníquese con recepción.");
     }

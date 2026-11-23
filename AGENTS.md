@@ -38,11 +38,12 @@ Estas instrucciones aplican a todo el repositorio `exotic-app-frontend`.
 - La aplicación usa React 19.2.8, TypeScript, Vite, Chakra UI v3 y Bun.
 - Las versiones de runtime están fijadas en `.bun-version` (1.3.14) y
   `.node-version` (24.19.0).
-- El frontend de producción se despliega actualmente como un Static Site de
-  Render. Render ejecuta `vite build` y publica el directorio `dist`.
-- El `Dockerfile` no participa en el despliegue actual del Static Site. No usar
-  Docker como validación predeterminada salvo que la tarea afecte explícitamente
-  el `Dockerfile` o la configuración de despliegue cambie.
+- Producción y staging operan en la VM de Google Cloud. El frontend se compila
+  a `dist` fuera de la VM y el contenedor `web` sirve los archivos con Caddy.
+  Consultar el estado y las evidencias fechadas en el
+  [README de deployment](../exotic-app-architecture/migracion/deployment/README.md).
+- No usar Docker como validación predeterminada salvo que la tarea afecte
+  explícitamente el `Dockerfile` o la configuración de despliegue cambie.
 
 ## Gestor de paquetes
 
@@ -88,7 +89,7 @@ para hacer pasar violaciones nuevas sin justificarlo dentro del alcance de la
 tarea. Cuando se corrija código previamente suprimido, ejecutar
 `bun run lint:suppressions:prune` y conservar la reducción resultante.
 
-`bun run vite build` es el control de paridad con el build actual de Render.
+`bun run vite build` comprueba la compilación de producción con Vite.
 Ambos comandos constituyen la validación automatizada mínima para cambios de
 código del frontend.
 
@@ -145,7 +146,7 @@ diagnóstico hasta que se sanee esa línea base:
 Antes de entregar un cambio de código:
 
 - el gate de regresión `bun run lint` debe pasar sin advertencias nuevas;
-- el build equivalente a Render, `bun run vite build`, debe pasar;
+- el build de producción con Vite, `bun run vite build`, debe pasar;
 - el flujo afectado debe probarse manualmente cuando sus dependencias estén
   disponibles;
 - no deben introducirse lockfiles de otros gestores;

@@ -31,6 +31,20 @@ export const MOTIVOS_VISITA = {
 
 export type MotivoVisita = keyof typeof MOTIVOS_VISITA;
 
+export const TIPOS_INGRESO = {
+    TRABAJADOR: "Trabajador", VISITANTE: "Visitante", CONTRATISTA: "Contratista", PROVEEDOR: "Proveedor", OTRO: "Otro",
+} as const;
+export type TipoIngreso = keyof typeof TIPOS_INGRESO;
+
+export type AvisoVisitantes = {
+    disponible: boolean;
+    version: string;
+    texto: string;
+    politicaUrl: string;
+    autorizacionDatos: string;
+    autorizacionFirma: string;
+};
+
 export type RegistroVisitanteRequest = {
     cedula: string;
     nombreCompleto: string;
@@ -38,14 +52,24 @@ export type RegistroVisitanteRequest = {
     genero: GeneroRegistroVisitante | null;
     motivo: MotivoVisita;
     motivoOtro: string | null;
+    cargoEmpresa: string | null;
+    tipoIngreso: TipoIngreso;
+    areaPersonaVisita: string;
+    aceptaDatosPersonales: boolean;
+    consentimientoVersion: string;
+    autorizaFirma: boolean;
+    firmaBase64: string | null;
 };
 
 export type ReciboVisitante = { fechaRegistro: string };
 
-export type RegistroVisitante = Omit<RegistroVisitanteRequest, "genero" | "motivo"> & ReciboVisitante & {
+export type RegistroVisitante = Omit<RegistroVisitanteRequest, "genero" | "motivo" | "tipoIngreso" | "areaPersonaVisita" | "aceptaDatosPersonales" | "consentimientoVersion" | "autorizaFirma" | "firmaBase64"> & ReciboVisitante & {
     id: number;
     genero: GeneroVisitante | null;
     motivo: MotivoVisita | null;
+    tipoIngreso: TipoIngreso | null;
+    areaPersonaVisita: string | null;
+    firmaRegistrada: boolean;
 };
 
 export type PaginaVisitantes = {

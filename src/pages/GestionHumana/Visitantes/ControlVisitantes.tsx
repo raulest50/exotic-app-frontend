@@ -5,7 +5,8 @@ import { QRCodeSVG } from "qrcode.react";
 import { LuCopy, LuDownload, LuExternalLink, LuRefreshCw } from "react-icons/lu";
 import { deploymentPath } from "../../../utils/deploymentPaths";
 import { consultarVisitantes } from "./visitantesApi";
-import { GENEROS_VISITANTE, MOTIVOS_VISITA, type FiltrosVisitantes, type PaginaVisitantes } from "./types";
+import { GENEROS_VISITANTE, MOTIVOS_VISITA, TIPOS_INGRESO, type FiltrosVisitantes, type PaginaVisitantes } from "./types";
+import FirmaVisitanteDialog from "./FirmaVisitanteDialog";
 
 const fechaVisita = new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Bogota" });
 const fechaColombia = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "America/Bogota" });
@@ -28,6 +29,7 @@ export default function ControlVisitantes() {
     const [pagina, setPagina] = useState<PaginaVisitantes | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [firmaId, setFirmaId] = useState<number | null>(null);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -180,10 +182,15 @@ export default function ControlVisitantes() {
                 {!loading && !error && !!pagina?.content.length && <Box overflowX="auto"><Table.Root size="sm">
                     <Table.Header><Table.Row>
                         <Table.ColumnHeader>Fecha y hora de llegada</Table.ColumnHeader><Table.ColumnHeader>Cédula / documento</Table.ColumnHeader><Table.ColumnHeader>Nombre completo</Table.ColumnHeader><Table.ColumnHeader>Edad</Table.ColumnHeader><Table.ColumnHeader>Género</Table.ColumnHeader><Table.ColumnHeader>Motivo de la visita</Table.ColumnHeader>
+                        <Table.ColumnHeader>Tipo de ingreso</Table.ColumnHeader><Table.ColumnHeader>Cargo / empresa</Table.ColumnHeader><Table.ColumnHeader>Área o persona a visitar</Table.ColumnHeader><Table.ColumnHeader>Firma</Table.ColumnHeader>
                     </Table.Row></Table.Header>
                     <Table.Body>{pagina.content.map((item) => <Table.Row key={item.id}>
                         <Table.Cell whiteSpace="nowrap">{fechaVisita.format(new Date(item.fechaRegistro))}</Table.Cell><Table.Cell>{item.cedula}</Table.Cell><Table.Cell>{item.nombreCompleto}</Table.Cell><Table.Cell>{item.edad ?? "Sin informar"}</Table.Cell><Table.Cell>{item.genero ? GENEROS_VISITANTE[item.genero] : "Sin informar"}</Table.Cell>
                         <Table.Cell minW="220px">{item.motivo ? MOTIVOS_VISITA[item.motivo] : "Sin motivo registrado"}{item.motivo === "OTROS" && item.motivoOtro && <Text fontSize="sm" color="fg.muted" whiteSpace="pre-wrap" overflowWrap="anywhere">{item.motivoOtro}</Text>}</Table.Cell>
+                        <Table.Cell>{item.tipoIngreso ? TIPOS_INGRESO[item.tipoIngreso] : "Sin informar"}</Table.Cell>
+                        <Table.Cell minW="160px" overflowWrap="anywhere">{item.cargoEmpresa || "Sin informar"}</Table.Cell>
+                        <Table.Cell minW="180px" overflowWrap="anywhere">{item.areaPersonaVisita || "Sin informar"}</Table.Cell>
+                        <Table.Cell>{item.firmaRegistrada ? <Button size="xs" variant="outline" aria-label={`Ver firma de ${item.nombreCompleto}`} onClick={() => setFirmaId(item.id)}>Ver firma</Button> : "Sin firma"}</Table.Cell>
                     </Table.Row>)}</Table.Body>
                 </Table.Root></Box>}
                 {!loading && !error && pagina && pagina.totalElements > 0 && <Flex as="nav" aria-label="Paginación de visitantes" align="center" justify="center" gap={3} wrap="wrap">
@@ -192,6 +199,7 @@ export default function ControlVisitantes() {
                     <Button variant="outline" disabled={page >= pagina.totalPages - 1} onClick={() => setPage((value) => value + 1)}>Siguiente</Button>
                 </Flex>}
             </Stack>
+            {firmaId !== null && <FirmaVisitanteDialog key={firmaId} id={firmaId} onClose={() => setFirmaId(null)} />}
         </Stack>
     );
 }
