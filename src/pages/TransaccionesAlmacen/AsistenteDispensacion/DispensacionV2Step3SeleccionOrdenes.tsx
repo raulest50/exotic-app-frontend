@@ -62,7 +62,7 @@ export default function DispensacionV2Step3SeleccionOrdenes({
 }: DispensacionV2Step3SeleccionOrdenesProps) {
     const item = selectedItem.item;
     const context = selectedItem.context;
-    const lotes = item.lotesPlanificados ?? [];
+    const lotes = useMemo(() => item.lotesPlanificados ?? [], [item.lotesPlanificados]);
     const selectedOrdenIds = useMemo(
         () => new Set(selectedOrdenes.map((orden) => orden.ordenProduccionId)),
         [selectedOrdenes],

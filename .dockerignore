@@ -13,3 +13,10 @@ helm-charts
 .editorconfig
 .idea
 coverage*
+dist
+.env.*
+**/*.ppk
+**/*.pem
+**/*.credential.xml
+test-results
+playwright-report

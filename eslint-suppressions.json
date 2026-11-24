@@ -144,7 +144,7 @@
   },
   "src/pages/AreaOperativaPanel/AreaOperativaPanel.tsx": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 3
+      "count": 2
     }
   },
   "src/pages/Bintelligence/InformeGlobalUi.tsx": {
@@ -323,11 +323,6 @@
   "src/pages/Produccion/ProgProdSemanalTab/AprobacionMPSWeekTab.tsx": {
     "react-hooks/exhaustive-deps": {
       "count": 2
-    }
-  },
-  "src/pages/Produccion/ProgProdSemanalTab/ProgramacionProduccionSemanalTab.tsx": {
-    "react-hooks/exhaustive-deps": {
-      "count": 1
     }
   },
   "src/pages/Produccion/ProgProdSemanalTab/pdf/MpsSemanalPdfGenerator.tsx": {
@@ -529,11 +524,6 @@
   },
   "src/pages/TransaccionesAlmacen/AsistenteIngresoOCM/StepZeroComponent_v1.tsx": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/pages/TransaccionesAlmacen/DispensacionV2/DispensacionV2Step3SeleccionOrdenes.tsx": {
-    "react-hooks/exhaustive-deps": {
       "count": 1
     }
   },

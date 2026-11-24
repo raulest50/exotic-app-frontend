@@ -1,38 +1,30 @@
-# Use the official Bun image
-# See all versions at https://hub.docker.com/r/oven/bun/tags
-FROM oven/bun:1 as base
-WORKDIR /usr/src/app
-
-# Install dependencies into temp directory
-# This will cache them and speed up future builds
-FROM base AS install
-RUN mkdir -p /temp/dev
-COPY package.json bun.lockb /temp/dev/
-RUN cd /temp/dev && bun install --frozen-lockfile
-
-# Install with --production (exclude devDependencies)
-RUN mkdir -p /temp/prod
-COPY package.json bun.lockb /temp/prod/
-RUN cd /temp/prod && bun install --frozen-lockfile --production
-
-# Copy node_modules from temp directory
-# Then copy all (non-ignored) project files into the image
-FROM base AS prerelease
-COPY --from=install /temp/dev/node_modules node_modules
+# CI creates both environment images; the VM only pulls reviewed digests.
+FROM oven/bun:1.3.14 AS builder
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 COPY . .
+ARG DEPLOYMENT_ENVIRONMENT
+ARG DEPLOYMENT_IP=34.30.31.30
+RUN set -eu; \
+    case "$DEPLOYMENT_ENVIRONMENT" in \
+      staging) public_segment=staging; prefix=staging ;; \
+      production) public_segment=prod; prefix=prod ;; \
+      *) echo 'DEPLOYMENT_ENVIRONMENT must be staging or production' >&2; exit 2 ;; \
+    esac; \
+    unset VITE_API_BASE_URL VITE_APP_ENV; \
+    bun run vite build --base=/ --outDir=/out/ssh; \
+    VITE_APP_ENV="$DEPLOYMENT_ENVIRONMENT" VITE_API_BASE_URL="https://mrp.api.${public_segment}.exotic.com.co" \
+      bun run vite build --base=/ --outDir=/out/domain; \
+    VITE_APP_ENV="$DEPLOYMENT_ENVIRONMENT" VITE_API_BASE_URL="https://${DEPLOYMENT_IP}/${prefix}/backend" \
+      bun run vite build --base="/${prefix}/" --outDir=/out/ip
 
-# [optional] tests & build
-ENV NODE_ENV=production
-RUN bun test
-RUN bun run build
-
-# Copy production dependencies and source code into final image
-FROM base AS release
-COPY --from=install /temp/prod/node_modules node_modules
-COPY --from=prerelease /usr/src/app/dist /usr/src/app/dist
-COPY --from=prerelease /usr/src/app/package.json .
-
-# Serve the app (assuming you have a static server for the build output)
-USER bun
-EXPOSE 3000
-ENTRYPOINT [ "bun", "run", "serve"]
+FROM caddy:2-alpine@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5
+COPY deploy/Caddyfile /etc/caddy/Caddyfile
+COPY --from=builder --chown=1000:1000 /out/ssh /srv
+COPY --from=builder --chown=1000:1000 /out/domain /srv-public
+COPY --from=builder --chown=1000:1000 /out/ip /srv-ip
+USER 1000:1000
+EXPOSE 8080
+HEALTHCHECK --interval=20s --timeout=5s CMD wget --quiet --output-document=/dev/null http://127.0.0.1:8080/healthz || exit 1
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
