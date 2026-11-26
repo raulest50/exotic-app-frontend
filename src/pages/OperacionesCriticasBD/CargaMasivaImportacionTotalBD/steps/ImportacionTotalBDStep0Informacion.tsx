@@ -21,10 +21,18 @@ export default function ImportacionTotalBDStep0Informacion({
                         <>Se validará un respaldo <strong>.zip V2</strong> y se reemplazará la base de datos del destino,
                             restaurando también los documentos POE vigentes y retirados. Solo disponible en local y staging.
                             Todavía no incluye archivos de otros módulos.</>
-                    ) : <>Esta operacion vaciara completamente el esquema actual de la base de datos y luego restaurara
-                    el contenido de un backup tecnico en formato <strong>.dump</strong>. Es una accion pensada solo
-                    para entornos local y staging.</>}
+                    ) : <>Se comprobará un respaldo <strong>.dump</strong> y, si es compatible, se reemplazará la base
+                    de datos del destino. Esta operación solo está disponible en local y staging.</>}
                 </Text>
+
+                <Alert.Root status="info">
+                    <Alert.Indicator />
+                    <Alert.Description>
+                        Antes de reemplazar los datos se comprobará la compatibilidad del respaldo con esta versión de Exotic.
+                        Si su estructura es anterior y compatible, se actualizará y verificará antes de habilitar el entorno.
+                        Un archivo incompatible se rechazará antes de reemplazar el destino.
+                    </Alert.Description>
+                </Alert.Root>
 
                 <Alert.Root status="error">
                     <Alert.Indicator />
@@ -33,8 +41,8 @@ export default function ImportacionTotalBDStep0Informacion({
                             <>Se reemplazarán usuarios, permisos, configuraciones y datos operativos del destino.
                                 Realice la importación cuando nadie esté trabajando en ese ambiente.
                                 Los archivos de otros módulos y los POE que no aparezcan en el paquete se conservarán.</>
-                        ) : <>La accion es <strong>altamente destructiva e irreversible</strong>. Se eliminaran usuarios,
-                            permisos, configuraciones y datos operativos actuales antes de restaurar el backup cargado.</>}
+                        ) : <>Se reemplazarán usuarios, permisos, configuraciones y datos operativos actuales.
+                            Realice la importación cuando nadie esté trabajando en ese ambiente.</>}
                     </Alert.Description>
                 </Alert.Root>
 
@@ -43,14 +51,15 @@ export default function ImportacionTotalBDStep0Informacion({
                     <Alert.Description>
                         Use unicamente {version === 2 ? "paquetes V2" : "backups completos PostgreSQL"} generados por el sistema. No cargue archivos
                         manipulados manualmente ni archivos de origen desconocido.
+                        Al finalizar correctamente deberá volver a iniciar sesión con los usuarios y permisos restaurados.
+                        Si se requiere recuperación, el entorno permanecerá en mantenimiento hasta que un responsable lo recupere.
                     </Alert.Description>
                 </Alert.Root>
 
                 <Alert.Root status="info">
                     <Alert.Indicator />
                     <Alert.Description>
-                        El backend bloqueara automaticamente esta operacion en produccion aunque alguien intente
-                        invocarla manualmente.
+                        Esta operación está bloqueada en producción.
                     </Alert.Description>
                 </Alert.Root>
 

@@ -1,23 +1,44 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import axios from "axios";
-import { Box, Button, Field, Flex, Heading, Input, Link, NativeSelect, SimpleGrid, Spinner, Stack, Table, Text } from "@chakra-ui/react";
+import { Badge, Box, Button, Field, Flex, Heading, Input, Link, NativeSelect, SimpleGrid, Spinner, Stack, Table, Text } from "@chakra-ui/react";
 import { QRCodeSVG } from "qrcode.react";
 import { LuCopy, LuDownload, LuExternalLink, LuRefreshCw } from "react-icons/lu";
 import { deploymentPath } from "../../../utils/deploymentPaths";
 import { consultarVisitantes } from "./visitantesApi";
-import { GENEROS_VISITANTE, MOTIVOS_VISITA, TIPOS_INGRESO, type FiltrosVisitantes, type PaginaVisitantes } from "./types";
+import { ESTADOS_VISITA, GENEROS_VISITANTE, MOTIVOS_VISITA, TIPOS_INGRESO, type FiltrosVisitantes, type PaginaVisitantes, type RegistroVisitante } from "./types";
 import FirmaVisitanteDialog from "./FirmaVisitanteDialog";
+import VisitanteSalidaDialog from "./VisitanteSalidaDialog";
+import { useAccessSnapshot } from "../../../auth/usePermissions";
+import { exactTabAccessRuleWithMasterBypass } from "../../../auth/accessHelpers";
+import { Modulo } from "../../Usuarios/GestionUsuarios/types";
 
-const fechaVisita = new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Bogota" });
+const fechaVisita = new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeStyle: "medium", timeZone: "America/Bogota" });
 const fechaColombia = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "America/Bogota" });
 
 function filtrosDeHoy(): FiltrosVisitantes {
     const partes = fechaColombia.formatToParts(new Date());
     const valor = (tipo: Intl.DateTimeFormatPartTypes) => partes.find((parte) => parte.type === tipo)?.value;
-    return { fecha: `${valor("year")}-${valor("month")}-${valor("day")}`, horaDesde: "", horaHasta: "", nombre: "", orden: "DESC", size: 20 };
+    return { fecha: `${valor("year")}-${valor("month")}-${valor("day")}`, horaDesde: "", horaHasta: "", nombre: "", size: 20 };
+}
+
+function demoraRegistro(visita: RegistroVisitante): string {
+    if (!visita.fechaSalida || !visita.salidaRegistradaEn) return "—";
+    const milisegundos = Date.parse(visita.salidaRegistradaEn) - Date.parse(visita.fechaSalida);
+    if (!Number.isFinite(milisegundos) || milisegundos < 0) return "—";
+    if (milisegundos > 0 && milisegundos < 1000) return "Menos de 1 s";
+    let segundos = Math.floor(milisegundos / 1000);
+    const dias = Math.floor(segundos / 86400);
+    segundos %= 86400;
+    const horas = Math.floor(segundos / 3600);
+    segundos %= 3600;
+    const minutos = Math.floor(segundos / 60);
+    segundos %= 60;
+    return [dias && `${dias} d`, horas && `${horas} h`, minutos && `${minutos} min`, segundos && `${segundos} s`].filter(Boolean).join(" ") || "0 s";
 }
 
 export default function ControlVisitantes() {
+    const acceso = useAccessSnapshot();
+    const puedeCerrar = exactTabAccessRuleWithMasterBypass(Modulo.GESTION_HUMANA, "CONTROL_VISITANTES", 2)(acceso);
     const urlRegistro = new URL(deploymentPath("/visitantes-registro"), window.location.origin).href;
     const qrRef = useRef<SVGSVGElement>(null);
     const [mensajeEnlace, setMensajeEnlace] = useState("");
@@ -30,6 +51,14 @@ export default function ControlVisitantes() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [firmaId, setFirmaId] = useState<number | null>(null);
+    const [visitaSalida, setVisitaSalida] = useState<RegistroVisitante | null>(null);
+    const [mensajeSalida, setMensajeSalida] = useState("");
+
+    const salidaRegistrada = (visita: RegistroVisitante) => {
+        setVisitaSalida(null);
+        setMensajeSalida(`Salida de ${visita.nombreCompleto}: ${visita.fechaSalida ? fechaVisita.format(new Date(visita.fechaSalida)) : "sin informar"}. Registrada el ${visita.salidaRegistradaEn ? fechaVisita.format(new Date(visita.salidaRegistradaEn)) : "sin informar"} por ${visita.salidaRegistradaPorUsername}. Demora de registro: ${demoraRegistro(visita)}.`);
+        setRevision((value) => value + 1);
+    };
 
     useEffect(() => {
         const controller = new AbortController();
@@ -108,7 +137,7 @@ export default function ControlVisitantes() {
         <Stack as="section" aria-label="Control de visitantes" gap={6} minW={0}>
             <Box>
                 <Heading size="xl">Control de visitantes</Heading>
-                <Text color="fg.muted">Registro de llegada de visitantes a la planta.</Text>
+                <Text color="fg.muted">Registro de ingresos y salidas de visitantes a la planta.</Text>
             </Box>
             <Flex borderWidth="1px" rounded="lg" p={{ base: 4, md: 6 }} gap={6} direction={{ base: "column", md: "row" }} align={{ base: "center", md: "start" }}>
                 <Box bg="white" rounded="md" flexShrink={0}>
@@ -128,14 +157,14 @@ export default function ControlVisitantes() {
             </Flex>
             <Stack gap={3}>
                 <Flex justify="space-between" align="center" gap={3} wrap="wrap">
-                    <Box><Heading as="h2" size="lg">Visitas registradas</Heading><Text fontSize="sm" color="fg.muted">Fecha y horas de Colombia · la hora final incluye todo el minuto seleccionado.</Text></Box>
+                    <Box><Heading as="h2" size="lg">Visitas registradas</Heading><Text fontSize="sm" color="fg.muted">Filtros por ingreso · hora de Colombia · la hora final incluye todo el minuto seleccionado.</Text></Box>
                     <Button variant="outline" disabled={loading} onClick={() => { setPage(0); setRevision((value) => value + 1); }}><LuRefreshCw />Actualizar</Button>
                 </Flex>
                 <form onSubmit={aplicarFiltros} noValidate>
                     <Stack gap={4} borderWidth="1px" rounded="lg" p={4}>
                         <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap={4}>
                             <Field.Root required invalid={!!erroresFiltros.fecha}>
-                                <Field.Label>Fecha de visita</Field.Label>
+                                <Field.Label>Fecha de ingreso</Field.Label>
                                 <Input name="fecha" type="date" value={filtros.fecha} onChange={(event) => setFiltros({ ...filtros, fecha: event.target.value })} />
                                 <Field.ErrorText>{erroresFiltros.fecha}</Field.ErrorText>
                             </Field.Root>
@@ -157,12 +186,6 @@ export default function ControlVisitantes() {
                                 <Field.HelperText>Coincidencia parcial, sin distinguir mayúsculas.</Field.HelperText>
                             </Field.Root>
                             <Field.Root>
-                                <Field.Label>Orden de llegada</Field.Label>
-                                <NativeSelect.Root><NativeSelect.Field value={filtros.orden} onChange={(event) => setFiltros({ ...filtros, orden: event.target.value as FiltrosVisitantes["orden"] })}>
-                                    <option value="DESC">Más recientes primero</option><option value="ASC">Menos recientes primero</option>
-                                </NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root>
-                            </Field.Root>
-                            <Field.Root>
                                 <Field.Label>Registros por página</Field.Label>
                                 <NativeSelect.Root><NativeSelect.Field value={filtros.size} onChange={(event) => setFiltros({ ...filtros, size: Number(event.target.value) })}>
                                     {[10, 20, 50].map((size) => <option key={size} value={size}>{size}</option>)}
@@ -175,17 +198,31 @@ export default function ControlVisitantes() {
                         </Flex>
                     </Stack>
                 </form>
-                <Text fontSize="sm" color="fg.muted">Consulta aplicada: {aplicados.fecha} · {aplicados.horaDesde || "00:00"} a {aplicados.horaHasta || "23:59"} · {aplicados.orden === "DESC" ? "más recientes primero" : "menos recientes primero"}{aplicados.nombre && ` · nombre: ${aplicados.nombre}`}</Text>
+                <Text fontSize="sm" color="fg.muted">Ingresos: {aplicados.fecha} · {aplicados.horaDesde || "00:00"} a {aplicados.horaHasta || "23:59"}{aplicados.nombre && ` · nombre: ${aplicados.nombre}`}. Orden: pendientes, salieron e históricos; ingresos más antiguos primero en cada grupo.</Text>
+                {mensajeSalida && <Text role="status" color="fg.success">{mensajeSalida}</Text>}
                 {loading && <Text role="status"><Spinner size="sm" mr={2} />Consultando visitas…</Text>}
                 {error && <Text role="alert" color="fg.error">{error}</Text>}
                 {!loading && !error && pagina?.content.length === 0 && <Box borderWidth="1px" rounded="md" p={6}><Text role="status">No hay visitas para los filtros seleccionados.</Text></Box>}
                 {!loading && !error && !!pagina?.content.length && <Box overflowX="auto"><Table.Root size="sm">
                     <Table.Header><Table.Row>
-                        <Table.ColumnHeader>Fecha y hora de llegada</Table.ColumnHeader><Table.ColumnHeader>Cédula / documento</Table.ColumnHeader><Table.ColumnHeader>Nombre completo</Table.ColumnHeader><Table.ColumnHeader>Edad</Table.ColumnHeader><Table.ColumnHeader>Género</Table.ColumnHeader><Table.ColumnHeader>Motivo de la visita</Table.ColumnHeader>
+                        <Table.ColumnHeader>Fecha y hora de llegada</Table.ColumnHeader><Table.ColumnHeader>Estado y salida</Table.ColumnHeader><Table.ColumnHeader>Cédula / documento</Table.ColumnHeader><Table.ColumnHeader>Nombre completo</Table.ColumnHeader><Table.ColumnHeader>Edad</Table.ColumnHeader><Table.ColumnHeader>Género</Table.ColumnHeader><Table.ColumnHeader>Motivo de la visita</Table.ColumnHeader>
                         <Table.ColumnHeader>Tipo de ingreso</Table.ColumnHeader><Table.ColumnHeader>Cargo / empresa</Table.ColumnHeader><Table.ColumnHeader>Área o persona a visitar</Table.ColumnHeader><Table.ColumnHeader>Firma</Table.ColumnHeader>
                     </Table.Row></Table.Header>
                     <Table.Body>{pagina.content.map((item) => <Table.Row key={item.id}>
-                        <Table.Cell whiteSpace="nowrap">{fechaVisita.format(new Date(item.fechaRegistro))}</Table.Cell><Table.Cell>{item.cedula}</Table.Cell><Table.Cell>{item.nombreCompleto}</Table.Cell><Table.Cell>{item.edad ?? "Sin informar"}</Table.Cell><Table.Cell>{item.genero ? GENEROS_VISITANTE[item.genero] : "Sin informar"}</Table.Cell>
+                        <Table.Cell whiteSpace="nowrap">{fechaVisita.format(new Date(item.fechaRegistro))}</Table.Cell>
+                        <Table.Cell minW="280px"><Stack gap={1} align="start" lineHeight="moderate">
+                            {item.estado === "PENDIENTE_SALIDA" ? <Button size="sm" colorPalette="orange" variant="outline"
+                                disabled={!puedeCerrar} title={!puedeCerrar ? "Requiere nivel 2 en Control de visitantes" : undefined}
+                                aria-label={`Pendiente salida: ${item.nombreCompleto}`} onClick={() => setVisitaSalida(item)}>Pendiente salida</Button>
+                                : <Badge colorPalette={item.estado === "SALIO" ? "green" : "gray"}>{ESTADOS_VISITA[item.estado]}</Badge>}
+                            {item.estado === "SALIO" && <>
+                                <Text>Salida informada: {item.fechaSalida && fechaVisita.format(new Date(item.fechaSalida))}</Text>
+                                <Text>Registrada el: {item.salidaRegistradaEn && fechaVisita.format(new Date(item.salidaRegistradaEn))}</Text>
+                                <Text>Por: {item.salidaRegistradaPorUsername} (#{item.salidaRegistradaPorId})</Text>
+                                <Text>Demora de registro: {demoraRegistro(item)}</Text>
+                            </>}
+                        </Stack></Table.Cell>
+                        <Table.Cell>{item.cedula}</Table.Cell><Table.Cell>{item.nombreCompleto}</Table.Cell><Table.Cell>{item.edad ?? "Sin informar"}</Table.Cell><Table.Cell>{item.genero ? GENEROS_VISITANTE[item.genero] : "Sin informar"}</Table.Cell>
                         <Table.Cell minW="220px">{item.motivo ? MOTIVOS_VISITA[item.motivo] : "Sin motivo registrado"}{item.motivo === "OTROS" && item.motivoOtro && <Text fontSize="sm" color="fg.muted" whiteSpace="pre-wrap" overflowWrap="anywhere">{item.motivoOtro}</Text>}</Table.Cell>
                         <Table.Cell>{item.tipoIngreso ? TIPOS_INGRESO[item.tipoIngreso] : "Sin informar"}</Table.Cell>
                         <Table.Cell minW="160px" overflowWrap="anywhere">{item.cargoEmpresa || "Sin informar"}</Table.Cell>
@@ -200,6 +237,7 @@ export default function ControlVisitantes() {
                 </Flex>}
             </Stack>
             {firmaId !== null && <FirmaVisitanteDialog key={firmaId} id={firmaId} onClose={() => setFirmaId(null)} />}
+            {visitaSalida !== null && puedeCerrar && <VisitanteSalidaDialog key={visitaSalida.id} visita={visitaSalida} onClose={() => setVisitaSalida(null)} onRegistrada={salidaRegistrada} />}
         </Stack>
     );
 }

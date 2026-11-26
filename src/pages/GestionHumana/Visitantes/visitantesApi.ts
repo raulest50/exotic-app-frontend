@@ -1,6 +1,6 @@
 import axios from "axios";
 import EndPointsURL from "../../../api/EndPointsURL";
-import type { AvisoVisitantes, FiltrosVisitantes, PaginaVisitantes, ReciboVisitante, RegistroVisitanteRequest } from "./types";
+import type { AvisoVisitantes, FiltrosVisitantes, PaginaVisitantes, ReciboVisitante, RegistroVisitante, RegistroVisitanteRequest } from "./types";
 
 export async function obtenerAvisoVisitantes(signal: AbortSignal): Promise<AvisoVisitantes> {
     const response = await fetch(`${EndPointsURL.getDomain()}/api/public/visitantes/aviso`, {
@@ -39,11 +39,17 @@ export async function registrarVisitante(body: RegistroVisitanteRequest): Promis
 export async function consultarVisitantes(page: number, signal: AbortSignal, filtros: FiltrosVisitantes): Promise<PaginaVisitantes> {
     return (await axios.get<PaginaVisitantes>(`${EndPointsURL.getDomain()}/gestion-humana/visitantes`, {
         params: {
-            page, size: filtros.size, fecha: filtros.fecha, orden: filtros.orden,
+            page, size: filtros.size, fecha: filtros.fecha,
             horaDesde: filtros.horaDesde || undefined,
             horaHasta: filtros.horaHasta || undefined,
             nombre: filtros.nombre.trim() || undefined,
         },
         signal,
     })).data;
+}
+
+export async function registrarSalidaVisitante(id: number, fechaSalida: string): Promise<RegistroVisitante> {
+    return (await axios.patch<RegistroVisitante>(`${EndPointsURL.getDomain()}/gestion-humana/visitantes/${id}/salida`, {
+        fechaSalida,
+    }, { timeout: 30_000 })).data;
 }

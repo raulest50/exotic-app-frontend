@@ -63,6 +63,13 @@ export type RegistroVisitanteRequest = {
 
 export type ReciboVisitante = { fechaRegistro: string };
 
+export const ESTADOS_VISITA = {
+    PENDIENTE_SALIDA: "Pendiente salida",
+    SALIO: "Salió",
+    SIN_SEGUIMIENTO: "Sin seguimiento de salida",
+} as const;
+export type EstadoVisita = keyof typeof ESTADOS_VISITA;
+
 export type RegistroVisitante = Omit<RegistroVisitanteRequest, "genero" | "motivo" | "tipoIngreso" | "areaPersonaVisita" | "aceptaDatosPersonales" | "consentimientoVersion" | "autorizaFirma" | "firmaBase64"> & ReciboVisitante & {
     id: number;
     genero: GeneroVisitante | null;
@@ -70,6 +77,11 @@ export type RegistroVisitante = Omit<RegistroVisitanteRequest, "genero" | "motiv
     tipoIngreso: TipoIngreso | null;
     areaPersonaVisita: string | null;
     firmaRegistrada: boolean;
+    estado: EstadoVisita;
+    fechaSalida: string | null;
+    salidaRegistradaEn: string | null;
+    salidaRegistradaPorId: number | null;
+    salidaRegistradaPorUsername: string | null;
 };
 
 export type PaginaVisitantes = {
@@ -84,6 +96,5 @@ export type FiltrosVisitantes = {
     horaDesde: string;
     horaHasta: string;
     nombre: string;
-    orden: "DESC" | "ASC";
     size: number;
 };
