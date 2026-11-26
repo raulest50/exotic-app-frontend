@@ -1,3 +1,4 @@
+# Successful pushes update only frontend staging through the deployment repository.
 name: Verify frontend
 on:
   push:
