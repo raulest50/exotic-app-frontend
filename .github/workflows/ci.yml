@@ -1,4 +1,5 @@
 # Successful pushes update only frontend staging through the deployment repository.
+# Registry publication and Coolify health acceptance are separate checks.
 name: Verify frontend
 on:
   push:
